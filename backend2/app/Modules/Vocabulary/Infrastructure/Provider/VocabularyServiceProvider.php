@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
+use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
 use App\Modules\Vocabulary\Domain\Repository\TermRepository;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExistenceReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,7 @@ final class VocabularyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(TermRepository::class, EloquentTermRepository::class);
+        $this->app->bind(TermExistenceReader::class, EloquentTermExistenceReader::class);
     }
 
     public function boot(): void

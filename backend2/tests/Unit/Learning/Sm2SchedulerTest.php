@@ -1,0 +1,93 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Modules\Learning\Domain\Entity\TermProgress;
+use App\Modules\Learning\Domain\Service\Fuzz;
+use App\Modules\Learning\Domain\Service\Sm2Scheduler;
+use App\Modules\Learning\Domain\ValueObject\Grade;
+use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
+
+/** Build a term in a chosen state; ids are irrelevant to scheduling. */
+function progressAt(LearningState $state, float $ease = TermProgress::DEFAULT_EASE, int $interval = 0, int $lapses = 0): TermProgress
+{
+    return TermProgress::reconstitute(
+        UserId::generate(), TermId::generate(), $state, $ease, $interval, null, reps: 3, lapses: $lapses, lastReviewedAt: null,
+    );
+}
+
+beforeEach(function () {
+    $this->now = new DateTimeImmutable('2026-07-27T08:00:00Z');
+    $this->scheduler = new Sm2Scheduler(Fuzz::none());
+});
+
+dataset('transitions', [
+    // state, ease, interval, grade → expected state, expected interval
+    'new + again stays in learning, due now'   => [LearningState::New, 2.50, 0, Grade::Again, LearningState::Learning, 0],
+    'new + good enters learning'               => [LearningState::New, 2.50, 0, Grade::Good, LearningState::Learning, 1],
+    'new + easy enters learning ahead'         => [LearningState::New, 2.50, 0, Grade::Easy, LearningState::Learning, 3],
+    'learning + hard repeats the step'         => [LearningState::Learning, 2.50, 1, Grade::Hard, LearningState::Learning, 1],
+    'learning + good graduates to review'      => [LearningState::Learning, 2.50, 1, Grade::Good, LearningState::Review, 4],
+    'learning + easy graduates further'        => [LearningState::Learning, 2.50, 1, Grade::Easy, LearningState::Review, 7],
+    'review + good multiplies by ease'         => [LearningState::Review, 2.50, 10, Grade::Good, LearningState::Review, 25],
+    'review + hard grows slowly'               => [LearningState::Review, 2.50, 10, Grade::Hard, LearningState::Review, 12],
+    'review + again lapses to relearning'      => [LearningState::Review, 2.50, 40, Grade::Again, LearningState::Relearning, 0],
+    'relearning + good returns reduced'        => [LearningState::Relearning, 2.00, 0, Grade::Good, LearningState::Review, 1],
+    'relearning + easy returns'                => [LearningState::Relearning, 2.00, 0, Grade::Easy, LearningState::Review, 4],
+    'relearning + again holds'                 => [LearningState::Relearning, 2.00, 0, Grade::Again, LearningState::Relearning, 0],
+]);
+
+it('moves through the state machine', function (
+    LearningState $state,
+    float $ease,
+    int $interval,
+    Grade $grade,
+    LearningState $expectedState,
+    int $expectedInterval,
+) {
+    $result = $this->scheduler->schedule(progressAt($state, $ease, $interval), $grade, $this->now);
+
+    expect($result->state())->toBe($expectedState)
+        ->and($result->intervalDays())->toBe($expectedInterval);
+})->with('transitions');
+
+it('sets due_at from the interval, and due-now for a 0-day interval', function () {
+    $graduated = $this->scheduler->schedule(progressAt(LearningState::Learning, interval: 1), Grade::Good, $this->now);
+    expect($graduated->dueAt()?->format('Y-m-d'))->toBe('2026-07-31');
+
+    $lapsed = $this->scheduler->schedule(progressAt(LearningState::Review, interval: 40), Grade::Again, $this->now);
+    expect($lapsed->dueAt())->toEqual($this->now);
+});
+
+it('counts a lapse and drops ease when a review card is forgotten', function () {
+    $result = $this->scheduler->schedule(progressAt(LearningState::Review, ease: 2.50, interval: 40, lapses: 1), Grade::Again, $this->now);
+
+    expect($result->lapses())->toBe(2)
+        ->and($result->easeFactor())->toBe(2.30);
+});
+
+it('respects the ease floor of 1.30', function () {
+    $result = $this->scheduler->schedule(progressAt(LearningState::Review, ease: 1.30, interval: 10), Grade::Hard, $this->now);
+
+    expect($result->easeFactor())->toBe(1.30);
+});
+
+it('respects the interval ceiling of 365 days', function () {
+    $result = $this->scheduler->schedule(progressAt(LearningState::Review, ease: 3.00, interval: 300), Grade::Good, $this->now);
+
+    expect($result->intervalDays())->toBe(365);
+});
+
+it('advances the review counter on every grade', function () {
+    $result = $this->scheduler->schedule(progressAt(LearningState::Review, interval: 10), Grade::Good, $this->now);
+
+    expect($result->reps())->toBe(4); // started at 3
+});
+
+it('records the moment as last reviewed', function () {
+    $result = $this->scheduler->schedule(progressAt(LearningState::New), Grade::Good, $this->now);
+
+    expect($result->lastReviewedAt())->toEqual($this->now);
+});

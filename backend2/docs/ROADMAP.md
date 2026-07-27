@@ -16,7 +16,7 @@ skills, then continue at the first unchecked item. Build every backend change pe
 - [x] **Collections**: `Collection` aggregate (custom, items, owner rules), `CreateCustomCollection`/`AddTermToCollection`, migration (soft-delete, items_count), repo.
 
 ## Phase 2 — remaining core domain  ⬜ next
-- [ ] **Learning** (`learning-srs` skill): `user_term_progress` keyed `(user_id, term_id)`; SRS scheduler; `study_sessions`; append-only `reviews` (client ULID, ON CONFLICT DO NOTHING); `SubmitReview`, `GetDueTerms`; stats as rebuildable projections (`daily_user_stats`).
+- [x] **Learning** (`learning-srs` skill): `TermProgress` aggregate keyed `(user_id, term_id)`, state machine new→learning→review↔relearning; pure `Sm2Scheduler` behind a `Scheduler` port (+ injectable `Fuzz`); `SubmitReviews` (append-only `reviews`, client ULID + `insertIgnore`, folds in `answered_at` order), `StartStudySession`, `GetDueTerms` query (due-before-new, quota, session cap); `daily_user_stats` via `StatsProjector`. Migration for all four tables (checks/FKs/partial due index). Cross-module: `TransactionManager` (Shared) + `TermExistenceReader` (Vocabulary Application) for unknown-term rejection. 30 unit tests. `arch/stan/test` green. **Presentation (HTTP) deferred to Phase 3.** Note: collection-scoped due + user-tz stats stubbed until Collections query / Identity land.
 - [ ] **Generation** (`ai-collection-generation` skill): `generation_requests`, `CollectionGeneratorPort` + Anthropic/OpenAI adapter, async `GenerateCollectionJob` (Horizon), versioned prompts, quotas/cost. Uses Vocabulary `FindOrCreateTerm` + Collections `CreateCustomCollection` (through their Application layers).
 - [ ] **Identity** (thin, Laravel-native): Sanctum `User`, Google sign-in, devices, settings.
 
