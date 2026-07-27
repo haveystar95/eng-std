@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'google' => [
+        // Accepted OAuth client IDs for verifying Google Sign-In ID tokens:
+        // the iOS client id (from the mobile app) and, optionally, a web/server one.
+        'client_ids' => array_values(array_filter([
+            env('GOOGLE_IOS_CLIENT_ID'),
+            env('GOOGLE_WEB_CLIENT_ID'),
+        ])),
+    ],
+
 ];
