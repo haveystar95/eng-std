@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    container_name: engstd_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    environment:
+      PHP_CLI_SERVER_WORKERS: 4
+    # Apply migrations on startup, then serve.
+    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+
+  # Queue worker for async AI jobs (generation).
+  queue:
+    build: .
+    container_name: engstd_queue
+    volumes:
+      - ./:/app
+    command: php artisan queue:work --sleep=1 --tries=2 --timeout=300
+    depends_on:
+      - app
+
+  # NOTE: Ollama runs natively on the host (Metal GPU) — Docker on Mac has no
+  # GPU access. Containers reach it via http://host.docker.internal:11434.
+  # Start it with: OLLAMA_HOST=0.0.0.0:11434 ollama serve
+
+  # Public tunnel to the API. Web inspector at http://localhost:4040
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: engstd_ngrok
+    command: http app:8000 --log=stdout
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"
+    depends_on:
+      - app

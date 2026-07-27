@@ -1,0 +1,17 @@
+# OS / editor
+.DS_Store
+
+# Session scratch
+/scratchpad/
+
+# Safety net (Laravel subdirs also ignore these) — never commit secrets or deps
+**/.env
+**/.env.*
+!**/.env.example
+**/vendor/
+**/node_modules/
+
+# Tool caches
+**/.deptrac.cache
+**/.phpunit.result.cache
+**/.phpstan.cache

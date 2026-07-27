@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
+
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * @property string $id
+ * @property string $term_id
+ * @property string $lang
+ * @property string $text
+ * @property bool $is_primary
+ */
+final class TermTranslationModel extends Model
+{
+    protected $table = 'term_translations';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
+    protected $guarded = [];
+
+    protected $casts = ['is_primary' => 'bool'];
+}

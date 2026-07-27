@@ -1,0 +1,99 @@
+deptrac:
+  paths:
+    - ./app
+
+  layers:
+    # ---- layers, per module -------------------------------------------------
+    - name: SharedDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Shared\\Domain\\.*' }]
+    - name: SharedInfra
+      collectors: [{ type: classLike, value: 'App\\Modules\\Shared\\Infrastructure\\.*' }]
+
+    - name: IdentityDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Identity\\Domain\\.*' }]
+    - name: IdentityApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Identity\\Application\\.*' }]
+    - name: IdentityInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Identity\\Infrastructure\\.*' }]
+    - name: IdentityPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Identity\\Presentation\\.*' }]
+
+    - name: VocabularyDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Vocabulary\\Domain\\.*' }]
+    - name: VocabularyApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Vocabulary\\Application\\.*' }]
+    - name: VocabularyInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Vocabulary\\Infrastructure\\.*' }]
+    - name: VocabularyPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Vocabulary\\Presentation\\.*' }]
+
+    - name: CollectionsDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Collections\\Domain\\.*' }]
+    - name: CollectionsApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Collections\\Application\\.*' }]
+    - name: CollectionsInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Collections\\Infrastructure\\.*' }]
+    - name: CollectionsPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Collections\\Presentation\\.*' }]
+
+    - name: LearningDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Learning\\Domain\\.*' }]
+    - name: LearningApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Learning\\Application\\.*' }]
+    - name: LearningInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Learning\\Infrastructure\\.*' }]
+    - name: LearningPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Learning\\Presentation\\.*' }]
+
+    - name: GenerationDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Domain\\.*' }]
+    - name: GenerationApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Application\\.*' }]
+    - name: GenerationInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Infrastructure\\.*' }]
+    - name: GenerationPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Presentation\\.*' }]
+
+    - name: Framework
+      collectors:
+        - { type: classLike, value: 'Illuminate\\.*' }
+        - { type: classLike, value: 'Laravel\\.*' }
+        - { type: classLike, value: 'Symfony\\.*' }
+        - { type: classLike, value: 'Carbon\\.*' }
+
+  ruleset:
+    # Domain layers depend on nothing but Shared kernel. NOT on the framework.
+    SharedDomain: ~
+    IdentityDomain: [SharedDomain]
+    VocabularyDomain: [SharedDomain]
+    CollectionsDomain: [SharedDomain]
+    LearningDomain: [SharedDomain]
+    GenerationDomain: [SharedDomain]
+
+    # Application depends on its own Domain, Shared, and other modules' Application only.
+    IdentityApplication: [IdentityDomain, SharedDomain]
+    VocabularyApplication: [VocabularyDomain, SharedDomain]
+    CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication]
+    LearningApplication:
+      [LearningDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+    GenerationApplication:
+      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+
+    # Infrastructure may use the framework and its own module's inner layers.
+    SharedInfra: [SharedDomain, Framework]
+    IdentityInfrastructure: [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework]
+    VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
+    CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
+    LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework]
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
+
+    # Presentation may use the framework, its own Application/Domain — never Infrastructure.
+    IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, Framework]
+    VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, Framework]
+    CollectionsPresentation: [CollectionsApplication, CollectionsDomain, SharedDomain, Framework]
+    LearningPresentation: [LearningApplication, LearningDomain, SharedDomain, Framework]
+    GenerationPresentation: [GenerationApplication, GenerationDomain, SharedDomain, Framework]
+
+# Adding a module = add its four layers above and one ruleset entry.
+# If a rule here starts blocking you regularly, change the rule deliberately —
+# do not add a skip_violations entry to make the build green.
