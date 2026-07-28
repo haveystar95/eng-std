@@ -12,4 +12,7 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/collections/{id}', [CollectionController::class, 'show']);
     Route::patch('/collections/{id}', [CollectionController::class, 'update']);
     Route::delete('/collections/{id}', [CollectionController::class, 'destroy']);
+
+    Route::post('/collections/{id}/items', [CollectionController::class, 'addItem']);
+    Route::delete('/collections/{id}/items/{termId}', [CollectionController::class, 'removeItem']);
 });

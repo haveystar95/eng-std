@@ -8,10 +8,14 @@ use App\Modules\Collections\Application\Dto\CollectionItemView;
 use App\Modules\Collections\Application\Dto\CollectionView;
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
+use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 final readonly class GetCollectionHandler
 {
-    public function __construct(private CollectionRepository $collections) {}
+    public function __construct(
+        private CollectionRepository $collections,
+        private TermContentReader $termContent,
+    ) {}
 
     public function __invoke(GetCollection $query): ?CollectionView
     {
@@ -30,9 +34,23 @@ final readonly class GetCollectionHandler
 
     private function toView(Collection $collection): CollectionView
     {
+        $termIds = array_map(static fn ($item) => $item->termId, $collection->items());
+        $content = $this->termContent->byIds($termIds);
+
         $items = [];
         foreach ($collection->items() as $item) {
-            $items[] = new CollectionItemView($item->termId->value, $item->position, $item->note);
+            $view = $content[$item->termId->value] ?? null;
+            $items[] = new CollectionItemView(
+                termId: $item->termId->value,
+                position: $item->position,
+                note: $item->note,
+                text: $view?->text,
+                type: $view?->type,
+                transcription: $view?->transcription,
+                translation: $view?->translation,
+                example: $view?->example,
+                exampleTranslation: $view?->exampleTranslation,
+            );
         }
 
         return new CollectionView(

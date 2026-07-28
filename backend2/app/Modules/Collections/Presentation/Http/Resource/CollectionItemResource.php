@@ -18,6 +18,12 @@ final class CollectionItemResource extends JsonResource
             'term_id' => $this->resource->termId,
             'position' => $this->resource->position,
             'note' => $this->resource->note,
+            'text' => $this->resource->text,
+            'type' => $this->resource->type,
+            'transcription' => $this->resource->transcription,
+            'translation' => $this->resource->translation,
+            'example' => $this->resource->example,
+            'example_translation' => $this->resource->exampleTranslation,
         ];
     }
 }

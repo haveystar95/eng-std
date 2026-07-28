@@ -137,3 +137,56 @@ it('validates that a title is required', function () {
 it('requires authentication', function () {
     $this->getJson('/api/v1/collections')->assertUnauthorized();
 });
+
+it('adds a word to a collection and hydrates its content', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user, 'Bank');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", [
+            'text' => 'withdraw cash', 'translation' => 'снять наличные', 'type' => 'phrase',
+        ])
+        ->assertStatus(201)
+        ->assertJsonPath('data.items_count', 1)
+        ->assertJsonPath('data.items.0.text', 'withdraw cash')
+        ->assertJsonPath('data.items.0.translation', 'снять наличные')
+        ->assertJsonPath('data.items.0.type', 'phrase');
+
+    $this->assertDatabaseHas('terms', ['text' => 'withdraw cash', 'source' => 'user']);
+    $this->assertDatabaseCount('collection_items', 1);
+});
+
+it('removes a term from a collection', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user);
+    $termId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", ['text' => 'apple', 'translation' => 'яблоко'])
+        ->json('data.items.0.term_id');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$id}/items/{$termId}")
+        ->assertNoContent();
+
+    $this->assertDatabaseCount('collection_items', 0);
+});
+
+it("refuses to add a word to another user's collection", function () {
+    $owner = User::factory()->create();
+    $id = seedCollection($owner);
+
+    [, $token] = userWithToken();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", ['text' => 'x', 'translation' => 'y'])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'collection_not_editable');
+});
+
+it('validates the word input', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['text', 'translation']);
+});

@@ -275,6 +275,55 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  /collections/{id}/items:
+    post:
+      tags: [Collections]
+      summary: Add a word to a collection (owner only)
+      description: Found-or-creates the term in Vocabulary, then attaches it. Idempotent — adding the same word twice is a no-op. Returns the refreshed collection.
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, translation]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 200 }
+                translation: { type: string, minLength: 1, maxLength: 500 }
+                type: { type: string, enum: [word, phrase] }
+      responses:
+        '201':
+          description: Word added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Collection' }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /collections/{id}/items/{termId}:
+    delete:
+      tags: [Collections]
+      summary: Remove a term from a collection (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+        - { name: termId, in: path, required: true, schema: { type: string, minLength: 26, maxLength: 26 } }
+      responses:
+        '204': { description: Removed }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -381,10 +430,17 @@ components:
 
     CollectionItem:
       type: object
+      description: A collection membership with its term content hydrated from Vocabulary.
       properties:
         term_id: { type: string }
         position: { type: integer }
         note: { type: string, nullable: true }
+        text: { type: string, nullable: true }
+        type: { type: string, enum: [word, phrase], nullable: true }
+        transcription: { type: string, nullable: true }
+        translation: { type: string, nullable: true }
+        example: { type: string, nullable: true }
+        example_translation: { type: string, nullable: true }
 
     Collection:
       allOf:

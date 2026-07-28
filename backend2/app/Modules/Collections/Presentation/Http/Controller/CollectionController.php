@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Presentation\Http\Controller;
 
+use App\Modules\Collections\Application\Command\AddWordToCollection;
+use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
 use App\Modules\Collections\Application\Command\DeleteCollection;
 use App\Modules\Collections\Application\Command\DeleteCollectionHandler;
+use App\Modules\Collections\Application\Command\RemoveTermFromCollection;
+use App\Modules\Collections\Application\Command\RemoveTermFromCollectionHandler;
 use App\Modules\Collections\Application\Command\UpdateCollection;
 use App\Modules\Collections\Application\Command\UpdateCollectionHandler;
 use App\Modules\Collections\Application\Query\GetCollection;
 use App\Modules\Collections\Application\Query\GetCollectionHandler;
 use App\Modules\Collections\Application\Query\ListUserCollections;
 use App\Modules\Collections\Application\Query\ListUserCollectionsHandler;
+use App\Modules\Collections\Presentation\Http\Request\AddWordRequest;
 use App\Modules\Collections\Presentation\Http\Request\CreateCollectionRequest;
 use App\Modules\Collections\Presentation\Http\Request\UpdateCollectionRequest;
 use App\Modules\Collections\Presentation\Http\Resource\CollectionResource;
 use App\Modules\Collections\Presentation\Http\Resource\CollectionSummaryResource;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +43,8 @@ final class CollectionController
         private readonly GetCollectionHandler $get,
         private readonly UpdateCollectionHandler $update,
         private readonly DeleteCollectionHandler $delete,
+        private readonly AddWordToCollectionHandler $addWord,
+        private readonly RemoveTermFromCollectionHandler $removeTerm,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -101,6 +109,39 @@ final class CollectionController
     public function destroy(Request $request, string $id): Response
     {
         ($this->delete)(new DeleteCollection($this->collectionId($id), $this->actorId($request)));
+
+        return response()->noContent();
+    }
+
+    public function addItem(AddWordRequest $request, string $id): JsonResponse
+    {
+        $data = $request->validated();
+        $actor = $this->actorId($request);
+        $collectionId = $this->collectionId($id);
+
+        ($this->addWord)(new AddWordToCollection(
+            collectionId: $collectionId,
+            actorId: $actor,
+            text: (string) $data['text'],
+            translation: (string) $data['translation'],
+            type: isset($data['type']) ? (string) $data['type'] : 'word',
+        ));
+
+        return CollectionResource::make(($this->get)(new GetCollection($collectionId, $actor)))
+            ->response()->setStatusCode(Response::HTTP_CREATED);
+    }
+
+    public function removeItem(Request $request, string $id, string $termId): Response
+    {
+        if (! Ulid::isValid($termId)) {
+            throw new NotFoundHttpException();
+        }
+
+        ($this->removeTerm)(new RemoveTermFromCollection(
+            collectionId: $this->collectionId($id),
+            actorId: $this->actorId($request),
+            termId: TermId::fromString($termId),
+        ));
 
         return response()->noContent();
     }
