@@ -18,7 +18,20 @@ use RuntimeException;
  */
 final class OpenAiCollectionGenerator implements CollectionGeneratorPort
 {
-    private const LANGUAGE_NAMES = ['en' => 'English', 'ru' => 'Russian'];
+    private const LANGUAGE_NAMES = [
+        'en' => 'English',
+        'ru' => 'Russian',
+        'uk' => 'Ukrainian',
+        'es' => 'Spanish',
+        'de' => 'German',
+        'fr' => 'French',
+        'it' => 'Italian',
+        'pt' => 'Portuguese',
+        'pl' => 'Polish',
+        'tr' => 'Turkish',
+        'zh' => 'Chinese',
+        'ja' => 'Japanese',
+    ];
 
     public function __construct(
         private readonly string $apiKey,
