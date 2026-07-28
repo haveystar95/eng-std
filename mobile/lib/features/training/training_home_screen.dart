@@ -18,6 +18,9 @@ class TrainingHomeScreen extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).value;
     final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
     final firstName = user?.name.split(' ').first;
+    // The real "to study now" count = due + newly introduced cards from /study/due;
+    // fall back to the stats due count until that request resolves.
+    final dueCards = ref.watch(dueCardsProvider).value;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -28,6 +31,7 @@ class TrainingHomeScreen extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(statsProvider);
               ref.invalidate(collectionsProvider);
+              ref.invalidate(dueCardsProvider);
             },
             child: stats.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -47,7 +51,10 @@ class TrainingHomeScreen extends ConsumerWidget {
                       .animate()
                       .fadeIn(delay: 60.ms),
                   const SizedBox(height: AppSpacing.lg),
-                  _MixCard(dueCount: s.dueToday).animate().fadeIn(delay: 100.ms).slideY(begin: 0.08, end: 0),
+                  _MixCard(dueCount: dueCards?.length ?? s.dueToday)
+                      .animate()
+                      .fadeIn(delay: 100.ms)
+                      .slideY(begin: 0.08, end: 0),
                   const SizedBox(height: AppSpacing.md),
                   _StatsCard(stats: s).animate().fadeIn(delay: 160.ms).slideY(begin: 0.08, end: 0),
                   const SizedBox(height: AppSpacing.lg),
@@ -193,7 +200,7 @@ class _MixCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SpringTap(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => const SessionScreen(title: 'Повторение', shuffle: true),
+        builder: (_) => const SessionScreen(title: 'Занятие', shuffle: true),
       )),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -218,10 +225,10 @@ class _MixCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dueCount > 0 ? 'Повторить' : 'На сегодня всё готово',
+                  Text(dueCount > 0 ? 'Заниматься' : 'На сегодня всё готово',
                       style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 2),
-                  Text(dueCount > 0 ? '$dueCount карточек к повторению' : 'Свободная тренировка из всех слов',
+                  Text(dueCount > 0 ? '$dueCount карточек: повторение и новые' : 'Свободная тренировка из всех слов',
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
                 ],
               ),
