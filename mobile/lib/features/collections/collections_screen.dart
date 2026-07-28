@@ -19,7 +19,6 @@ class CollectionsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: _GenerateFab(onTap: () => showGenerateDialog(context, ref)),
       body: AmbientBackground(
         child: SafeArea(
           bottom: false,
@@ -49,38 +48,6 @@ class CollectionsScreen extends ConsumerWidget {
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Frosted pill FAB that matches the glass language (gradient fill + glow).
-class _GenerateFab extends StatelessWidget {
-  const _GenerateFab({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 72),
-      child: SpringTap(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          decoration: BoxDecoration(
-            gradient: AppGradients.brand,
-            borderRadius: BorderRadius.circular(AppRadii.pill),
-            boxShadow: AppShadows.glow(AppColors.primary),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 10),
-              Text('Сгенерировать', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
-            ],
           ),
         ),
       ),
@@ -128,6 +95,12 @@ class _Header extends ConsumerWidget {
               const SizedBox(width: 12),
               _stat(context, '$totalWords', 'слов', Icons.translate_rounded),
             ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          GlassButton(
+            label: 'Сгенерировать коллекцию',
+            icon: Icons.auto_awesome_rounded,
+            onTap: () => showGenerateDialog(context, ref),
           ),
         ],
       ),
