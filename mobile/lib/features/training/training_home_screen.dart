@@ -14,6 +14,7 @@ class TrainingHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(statsProvider);
     final user = ref.watch(authControllerProvider).value;
+    final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
 
     return Scaffold(
       body: SafeArea(
@@ -38,13 +39,13 @@ class TrainingHomeScreen extends ConsumerWidget {
                 Text('По коллекциям',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: AppSpacing.md),
-                if (s.collections.isEmpty)
+                if (collections.isEmpty)
                   Text('Сгенерируй коллекцию во вкладке «Коллекции»',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted))
                 else
-                  ...s.collections.asMap().entries.map((e) => Padding(
+                  ...collections.asMap().entries.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _CollectionRow(stat: e.value, index: e.key)
+                        child: _CollectionRow(collection: e.value, index: e.key)
                             .animate()
                             .fadeIn(delay: (40 * e.key).ms)
                             .slideY(begin: 0.06, end: 0),
@@ -154,8 +155,8 @@ class _MixCard extends StatelessWidget {
 }
 
 class _CollectionRow extends StatelessWidget {
-  const _CollectionRow({required this.stat, required this.index});
-  final CollectionStat stat;
+  const _CollectionRow({required this.collection, required this.index});
+  final WordCollection collection;
   final int index;
 
   @override
@@ -166,7 +167,11 @@ class _CollectionRow extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadii.lg),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SessionScreen(title: stat.title, collectionId: stat.id),
+          builder: (_) => SessionScreen(
+            title: collection.title,
+            collectionId: collection.id,
+            shuffle: true,
+          ),
         )),
         child: Container(
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadii.lg), boxShadow: AppShadows.card),
@@ -175,46 +180,27 @@ class _CollectionRow extends StatelessWidget {
             children: [
               Container(
                 width: 52, height: 52,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
-                child: Icon(stat.source == 'ai' ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
+                child: collection.emoji != null
+                    ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
+                    : Icon(collection.isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(stat.title,
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                        ),
-                        if (stat.due > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: AppColors.review.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(AppRadii.sm)),
-                            child: Text('${stat.due}',
-                                style: const TextStyle(color: AppColors.review, fontWeight: FontWeight.w700, fontSize: 12)),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadii.pill),
-                      child: LinearProgressIndicator(
-                        value: stat.progress,
-                        minHeight: 6,
-                        backgroundColor: AppColors.surfaceAlt,
-                        valueColor: const AlwaysStoppedAnimation(AppColors.know),
-                      ),
-                    ),
+                    Text(collection.title,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text('${stat.learned} из ${stat.total} выучено',
+                    Text('${collection.wordsCount} слов',
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   ],
                 ),
               ),
+              const Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
             ],
           ),
         ),

@@ -3,8 +3,10 @@
 /// Values default to the current dev setup but can be overridden at run time:
 ///   flutter run --dart-define=API_BASE_URL=https://xxxx.ngrok-free.dev
 class AppConfig {
-  /// Base URL of the Laravel backend (without trailing `/api`).
-  /// The ngrok free URL changes when the tunnel restarts — override it then.
+  /// Base host of the backend (without a path). The client appends `/api/v1`.
+  /// The app now targets **backend2** — point this at an exposed backend2
+  /// (ngrok tunnel to host :8001, or a deployed URL). Override at run time:
+  ///   flutter run --dart-define=API_BASE_URL=https://xxxx.ngrok-free.dev
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'https://greedily-thermos-finer.ngrok-free.dev',

@@ -9,14 +9,14 @@ import '../../data/providers.dart';
 Future<void> showWordEditor(
   BuildContext context,
   WidgetRef ref, {
-  required int collectionId,
+  required String collectionId,
   Word? existing,
 }) async {
   final term = TextEditingController(text: existing?.term ?? '');
   final translation = TextEditingController(text: existing?.translation ?? '');
   final transcription = TextEditingController(text: existing?.transcription ?? '');
   final example = TextEditingController(text: existing?.example ?? '');
-  String? level = existing?.cefrLevel;
+  String? level;
 
   await showDialog<void>(
     context: context,
@@ -62,20 +62,19 @@ Future<void> showWordEditor(
             onPressed: () async {
               if (term.text.trim().isEmpty || translation.text.trim().isEmpty) return;
               Navigator.pop(context);
-              final data = {
-                'term': term.text.trim(),
-                'translation': translation.text.trim(),
-                'transcription': transcription.text.trim().isEmpty ? null : transcription.text.trim(),
-                'example': example.text.trim().isEmpty ? null : example.text.trim(),
-                'cefr_level': level,
-              };
+              final type = term.text.trim().contains(' ') ? 'phrase' : 'word';
               final api = ref.read(apiClientProvider);
               try {
-                if (existing == null) {
-                  await api.addWord(collectionId, data);
-                } else {
-                  await api.updateWord(collectionId, existing.id, data);
+                // backend2 has no word-update; editing = remove old + add new.
+                if (existing != null) {
+                  await api.removeWord(collectionId, existing.termId);
                 }
+                await api.addWord(
+                  collectionId,
+                  text: term.text.trim(),
+                  translation: translation.text.trim(),
+                  type: type,
+                );
                 ref.invalidate(collectionWordsProvider(collectionId));
                 ref.invalidate(collectionsProvider);
                 ref.invalidate(statsProvider);

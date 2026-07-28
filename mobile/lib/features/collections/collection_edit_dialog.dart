@@ -84,10 +84,11 @@ Future<void> showCollectionEditor(BuildContext context, WidgetRef ref, {WordColl
               Navigator.pop(context);
               final api = ref.read(apiClientProvider);
               try {
+                // Emoji is chosen locally for the tile look; backend2 has no emoji field.
                 if (existing == null) {
-                  await api.createCollection(title: title, emoji: emoji);
+                  await api.createCollection(title: title);
                 } else {
-                  await api.updateCollection(existing.id, title: title, emoji: emoji);
+                  await api.updateCollection(existing.id, title: title);
                 }
                 ref.invalidate(collectionsProvider);
                 ref.invalidate(statsProvider);

@@ -10,7 +10,7 @@ import 'word_edit_dialog.dart';
 class CollectionDetailScreen extends ConsumerStatefulWidget {
   const CollectionDetailScreen({super.key, required this.collectionId, required this.title});
 
-  final int collectionId;
+  final String collectionId;
   final String title;
 
   @override
@@ -27,7 +27,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
   }
 
   Future<void> _delete(Word word) async {
-    await ref.read(apiClientProvider).deleteWord(widget.collectionId, word.id);
+    await ref.read(apiClientProvider).removeWord(widget.collectionId, word.termId);
     ref.invalidate(collectionWordsProvider(widget.collectionId));
     ref.invalidate(collectionsProvider);
     ref.invalidate(statsProvider);
@@ -119,11 +119,11 @@ class _WordCard extends StatelessWidget {
                   Expanded(
                     child: Text(word.term, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   ),
-                  if (word.cefrLevel != null)
+                  if (word.type == 'phrase')
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(AppRadii.sm)),
-                      child: Text(word.cefrLevel!, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+                      child: Text('фраза', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
                     ),
                   IconButton(
                     onPressed: onSpeak,

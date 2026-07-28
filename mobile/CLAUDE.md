@@ -1,8 +1,8 @@
 # mobile — Flutter/iOS app
 
-The product: a personal English vocabulary trainer. Talks to the **old `../backend`** API
-(via ngrok) today. Auto-loads for sessions in `mobile/`. See root `../CLAUDE.md` for the
-whole project.
+The product: a personal English vocabulary trainer. **Cut over to `../backend2`** (modular
+API, `/api/v1`, ULID ids, RFC 7807 errors) — see `../backend2/openapi/openapi.yaml` for the
+contract. Auto-loads for sessions in `mobile/`. See root `../CLAUDE.md` for the whole project.
 
 ## Stack
 
@@ -46,10 +46,16 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 
 ## API config
 
-`lib/core/config.dart` defaults `API_BASE_URL` to the ngrok URL of the **old backend**
-(`https://greedily-thermos-finer.ngrok-free.dev`) and `GOOGLE_IOS_CLIENT_ID` to the value in
-`../credentials.plist`. Override at run time: `flutter run --dart-define=API_BASE_URL=…`.
-When backend2 is ready (ROADMAP Phase 4), repoint this / regenerate the client from OpenAPI.
+The data layer targets **backend2** (`{API_BASE_URL}/api/v1`, bearer token, responses wrapped
+in `data`, ULID string ids, `/reviews/batch`, `/study/due`, `/generations`). `lib/data/`
+(`models.dart`, `api_client.dart`, `providers.dart`) was hand-adapted to the OpenAPI contract
+(not codegen). **backend2 must be exposed** for on-device use: it has no ngrok service yet —
+run one against host `:8001` and pass `--dart-define=API_BASE_URL=…`. The old-backend ngrok
+default in `config.dart` is stale; override it. `GOOGLE_IOS_CLIENT_ID` unchanged (`../credentials.plist`).
+
+Gaps vs the old app (backend2 doesn't provide): per-item CEFR badge, collection emoji
+(chosen locally, not persisted), word editing (done as remove+add), per-collection progress
+on the training home (now shows word counts), and AI open-answer check.
 
 ## Verify without the phone
 

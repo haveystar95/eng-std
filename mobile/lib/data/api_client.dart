@@ -1,24 +1,43 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 
 import '../core/config.dart';
 import 'models.dart';
 import 'token_store.dart';
 
-/// HTTP client for the Laravel backend. Attaches the Sanctum bearer token
-/// (from [TokenStore]) to every request via an interceptor.
+/// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,
+/// single resources wrapped in `data`). Attaches the token via an interceptor.
 class ApiClient {
   ApiClient(TokenStore tokens) : _dio = _buildDio(tokens);
 
   final Dio _dio;
 
+  static final Random _rand = Random.secure();
+  static const String _crockford = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+  /// Client-generated ULID (uppercase Crockford, 26 chars) — matches backend2 so
+  /// reviews/collections created offline are idempotent.
+  static String ulid() {
+    var ts = DateTime.now().millisecondsSinceEpoch;
+    final chars = List<String>.filled(26, '0');
+    for (var i = 9; i >= 0; i--) {
+      chars[i] = _crockford[ts % 32];
+      ts = ts ~/ 32;
+    }
+    for (var i = 10; i < 26; i++) {
+      chars[i] = _crockford[_rand.nextInt(32)];
+    }
+    return chars.join();
+  }
+
   static Dio _buildDio(TokenStore tokens) {
     final dio = Dio(BaseOptions(
-      baseUrl: '${AppConfig.apiBaseUrl}/api',
+      baseUrl: '${AppConfig.apiBaseUrl}/api/v1',
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 40),
       headers: {
         'Accept': 'application/json',
-        // Skip ngrok's browser interstitial for API calls.
         'ngrok-skip-browser-warning': 'true',
       },
     ));
@@ -36,21 +55,24 @@ class ApiClient {
     return dio;
   }
 
+  /// Unwrap the `{ "data": ... }` envelope backend2 uses for single resources/lists.
+  static dynamic _data(Response r) => (r.data as Map<String, dynamic>)['data'];
+
   // ---- Auth -----------------------------------------------------------------
 
-  /// Exchange a Google ID token for a Sanctum token + user.
+  /// Exchange a Google ID token for a Sanctum token + user. (Not wrapped in `data`.)
   Future<({String token, AppUser user})> googleLogin(String idToken) async {
     final r = await _dio.post('/auth/google', data: {'id_token': idToken});
-    final data = r.data as Map<String, dynamic>;
+    final body = r.data as Map<String, dynamic>;
     return (
-      token: data['token'] as String,
-      user: AppUser.fromJson(data['user'] as Map<String, dynamic>),
+      token: body['token'] as String,
+      user: AppUser.fromJson(body['user'] as Map<String, dynamic>),
     );
   }
 
   Future<AppUser> me() async {
     final r = await _dio.get('/auth/me');
-    return AppUser.fromJson(r.data as Map<String, dynamic>);
+    return AppUser.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   Future<void> logout() async {
@@ -59,108 +81,109 @@ class ApiClient {
 
   // ---- Profile --------------------------------------------------------------
 
-  Future<Profile> updateProfile(Map<String, dynamic> changes) async {
+  Future<AppUser> updateProfile(Map<String, dynamic> changes) async {
     final r = await _dio.put('/profile', data: changes);
-    return Profile.fromJson(r.data as Map<String, dynamic>);
+    return AppUser.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   // ---- Collections ----------------------------------------------------------
 
   Future<List<WordCollection>> collections() async {
     final r = await _dio.get('/collections');
-    return (r.data as List)
+    return (_data(r) as List)
         .map((e) => WordCollection.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<List<Word>> collectionWords(int collectionId) async {
+  Future<List<Word>> collectionWords(String collectionId) async {
     final r = await _dio.get('/collections/$collectionId');
-    return ((r.data as Map<String, dynamic>)['words'] as List)
+    return (((_data(r) as Map<String, dynamic>)['items']) as List)
         .map((e) => Word.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<WordCollection> createCollection({required String title, String? emoji}) async {
-    final r = await _dio.post('/collections', data: {'title': title, 'emoji': ?emoji});
-    return WordCollection.fromJson(r.data as Map<String, dynamic>);
+  Future<WordCollection> createCollection({required String title}) async {
+    final r = await _dio.post('/collections', data: {'title': title});
+    return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<WordCollection> updateCollection(int id, {String? title, String? emoji}) async {
-    final r = await _dio.put('/collections/$id', data: {'title': ?title, 'emoji': ?emoji});
-    return WordCollection.fromJson(r.data as Map<String, dynamic>);
+  Future<WordCollection> updateCollection(String id, {String? title, String? description}) async {
+    final r = await _dio.patch('/collections/$id', data: {
+      'title': ?title,
+      'description': ?description,
+    });
+    return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<void> deleteCollection(int id) async {
+  Future<void> deleteCollection(String id) async {
     await _dio.delete('/collections/$id');
   }
 
-  Future<Word> addWord(int collectionId, Map<String, dynamic> data) async {
-    final r = await _dio.post('/collections/$collectionId/words', data: data);
-    return Word.fromJson(r.data as Map<String, dynamic>);
+  /// Add a word by text; backend2 finds-or-creates the term and returns the collection.
+  Future<void> addWord(
+    String collectionId, {
+    required String text,
+    required String translation,
+    String type = 'word',
+  }) async {
+    await _dio.post('/collections/$collectionId/items',
+        data: {'text': text, 'translation': translation, 'type': type});
   }
 
-  Future<Word> updateWord(int collectionId, int wordId, Map<String, dynamic> data) async {
-    final r = await _dio.put('/collections/$collectionId/words/$wordId', data: data);
-    return Word.fromJson(r.data as Map<String, dynamic>);
-  }
-
-  Future<void> deleteWord(int collectionId, int wordId) async {
-    await _dio.delete('/collections/$collectionId/words/$wordId');
+  Future<void> removeWord(String collectionId, String termId) async {
+    await _dio.delete('/collections/$collectionId/items/$termId');
   }
 
   // ---- Training -------------------------------------------------------------
 
-  Future<List<ReviewCard>> dueCards({int limit = 40, int? collectionId, bool shuffle = false}) async {
-    final r = await _dio.get('/reviews/due', queryParameters: {
-      'limit': limit,
-      'collection_id': ?collectionId,
-      if (shuffle) 'shuffle': 1,
-    });
-    return (r.data as List)
+  /// Cards due for review now (global), content included.
+  Future<List<ReviewCard>> dueCards({int limit = 40}) async {
+    final r = await _dio.get('/study/due', queryParameters: {'limit': limit});
+    return (_data(r) as List)
         .map((e) => ReviewCard.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<Stats> stats() async {
     final r = await _dio.get('/stats');
-    return Stats.fromJson(r.data as Map<String, dynamic>);
+    return Stats.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  Future<void> answer(int wordId, Rating rating) async {
-    await _dio.post('/reviews/$wordId/answer', data: {'rating': rating.value});
+  /// Submit a single graded answer as a one-item idempotent batch.
+  Future<void> answer(String termId, Rating rating) async {
+    await _dio.post('/reviews/batch', data: {
+      'reviews': [
+        {
+          'id': ulid(),
+          'term_id': termId,
+          'grade': rating.grade,
+          'answered_at': DateTime.now().toUtc().toIso8601String(),
+        }
+      ],
+    });
   }
 
-  // ---- AI -------------------------------------------------------------------
+  // ---- AI generation --------------------------------------------------------
 
-  /// Kicks off async generation; returns the job id to poll.
+  /// Kicks off async generation; returns the request id to poll.
   Future<String> generateCollection({
     required String topic,
     required List<String> levels,
     required int size,
   }) async {
-    final r = await _dio.post('/collections/generate',
-        data: {'topic': topic, 'levels': levels, 'size': size});
-    return (r.data as Map<String, dynamic>)['job_id'] as String;
+    final r = await _dio.post('/generations',
+        data: {'prompt': topic, 'levels': levels, 'size': size});
+    return (_data(r) as Map<String, dynamic>)['id'] as String;
   }
 
-  /// Poll an AI job: returns (status, collectionId, error).
-  Future<({String status, int? collectionId, String? error})> jobStatus(String jobId) async {
-    final r = await _dio.get('/ai/jobs/$jobId');
-    final data = r.data as Map<String, dynamic>;
+  /// Poll a generation request: returns (status, collectionId, error).
+  Future<({String status, String? collectionId, String? error})> jobStatus(String id) async {
+    final r = await _dio.get('/generations/$id');
+    final data = _data(r) as Map<String, dynamic>;
     return (
       status: data['status'] as String,
-      collectionId: data['collection_id'] as int?,
+      collectionId: data['collection_id'] as String?,
       error: data['error'] as String?,
     );
-  }
-
-  Future<AiCheckResult> check({
-    required int wordId,
-    required String userAnswer,
-    String mode = 'translation',
-  }) async {
-    final r = await _dio.post('/ai/check',
-        data: {'word_id': wordId, 'user_answer': userAnswer, 'mode': mode});
-    return AiCheckResult.fromJson(r.data as Map<String, dynamic>);
   }
 }

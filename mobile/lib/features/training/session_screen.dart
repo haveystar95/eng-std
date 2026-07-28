@@ -12,7 +12,7 @@ class SessionScreen extends ConsumerWidget {
   const SessionScreen({super.key, required this.title, this.collectionId, this.shuffle = false});
 
   final String title;
-  final int? collectionId;
+  final String? collectionId;
   final bool shuffle;
 
   @override
@@ -314,12 +314,12 @@ class _Flashcard extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (word.cefrLevel != null)
+                    if (word.type == 'phrase')
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(AppRadii.sm)),
-                        child: Text(word.cefrLevel!,
-                            style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 12)),
+                        child: const Text('фраза',
+                            style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 12)),
                       ),
                     const SizedBox(height: AppSpacing.md),
                     Text(word.term,

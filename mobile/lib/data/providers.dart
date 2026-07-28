@@ -45,7 +45,7 @@ final collectionsProvider = FutureProvider<List<WordCollection>>((ref) async {
 });
 
 final collectionWordsProvider =
-    FutureProvider.family<List<Word>, int>((ref, collectionId) async {
+    FutureProvider.family<List<Word>, String>((ref, collectionId) async {
   return ref.watch(apiClientProvider).collectionWords(collectionId);
 });
 
@@ -57,13 +57,20 @@ final statsProvider = FutureProvider<Stats>((ref) async {
   return ref.watch(apiClientProvider).stats();
 });
 
-typedef SessionArgs = ({int? collectionId, bool shuffle});
+typedef SessionArgs = ({String? collectionId, bool shuffle});
 
-/// Cards for one training session (mixed due, or a specific collection).
+/// Cards for one training session: a specific collection's words, or the global
+/// due queue when [collectionId] is null.
 final sessionCardsProvider =
     FutureProvider.family<List<ReviewCard>, SessionArgs>((ref, args) async {
-  return ref.watch(apiClientProvider).dueCards(
-        collectionId: args.collectionId,
-        shuffle: args.shuffle,
-      );
+  final api = ref.watch(apiClientProvider);
+  final List<ReviewCard> cards;
+  if (args.collectionId != null) {
+    final words = await api.collectionWords(args.collectionId!);
+    cards = words.map((w) => ReviewCard(word: w)).toList();
+  } else {
+    cards = await api.dueCards();
+  }
+  if (args.shuffle) cards.shuffle();
+  return cards;
 });
