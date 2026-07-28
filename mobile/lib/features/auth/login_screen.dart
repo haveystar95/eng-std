@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design.dart';
+import '../../core/glass.dart';
 import '../../data/providers.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -15,6 +16,7 @@ class LoginScreen extends ConsumerWidget {
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.hasError) {
+        AppFeedback.warn();
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
           ..showSnackBar(SnackBar(content: Text('${next.error}')));
@@ -22,59 +24,95 @@ class LoginScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            children: [
-              const Spacer(),
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.accent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      backgroundColor: Colors.transparent,
+      body: AmbientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                const Spacer(),
+                Container(
+                  width: 104,
+                  height: 104,
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.brand,
+                    borderRadius: BorderRadius.circular(AppRadii.xl),
+                    boxShadow: AppShadows.glow(AppColors.primary),
                   ),
-                  borderRadius: BorderRadius.circular(AppRadii.lg),
-                  boxShadow: AppShadows.card,
-                ),
-                child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 48),
-              ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Eng Std',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ).animate().fadeIn(delay: 150.ms),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Твой личный тренажёр английских слов\nс интервальным повторением и ИИ',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-              ).animate().fadeIn(delay: 250.ms),
-              const Spacer(),
-              _GoogleButton(
-                loading: isLoading,
-                onTap: () => ref.read(authControllerProvider.notifier).signIn(),
-              ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.2, end: 0),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Входя, ты создаёшь личный профиль обучения',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
+                  child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 52),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(begin: const Offset(1, 1), end: const Offset(1.06, 1.06), duration: 1800.ms, curve: Curves.easeInOut)
+                    .animate()
+                    .fadeIn(duration: 500.ms)
+                    .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1), curve: Curves.easeOutBack),
+                const SizedBox(height: AppSpacing.lg),
+                Text('Eng Std',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800))
+                    .animate()
+                    .fadeIn(delay: 150.ms),
+                const SizedBox(height: AppSpacing.sm),
+                Text('Твой личный тренажёр английских слов\nс интервальным повторением и ИИ',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary, height: 1.5))
+                    .animate()
+                    .fadeIn(delay: 250.ms),
+                const SizedBox(height: AppSpacing.xl),
+                const _FeatureRow().animate().fadeIn(delay: 320.ms).slideY(begin: 0.15, end: 0),
+                const Spacer(),
+                _GoogleButton(
+                  loading: isLoading,
+                  onTap: () => ref.read(authControllerProvider.notifier).signIn(),
+                ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                const SizedBox(height: AppSpacing.md),
+                Text('Входя, ты создаёшь личный профиль обучения',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                const SizedBox(height: AppSpacing.md),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _Feature(icon: Icons.style_rounded, label: 'Коллекции'),
+        SizedBox(width: 10),
+        _Feature(icon: Icons.bolt_rounded, label: 'ИИ-подбор'),
+        SizedBox(width: 10),
+        _Feature(icon: Icons.repeat_rounded, label: 'Повторение'),
+      ],
+    );
+  }
+}
+
+class _Feature extends StatelessWidget {
+  const _Feature({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: 18,
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 22),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
@@ -87,32 +125,21 @@ class _GoogleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.surface,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
-            side: const BorderSide(color: Color(0xFFE3E7F0)),
-          ),
-        ),
-        onPressed: loading ? null : onTap,
+    return SpringTap(
+      onTap: loading ? () {} : onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(vertical: 17),
         child: loading
-            ? const SizedBox(
-                width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4))
-            : Row(
+            ? const Center(
+                child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white)),
+              )
+            : const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const _GoogleGlyph(),
-                  const SizedBox(width: 12),
+                  _GoogleGlyph(),
+                  SizedBox(width: 12),
                   Text('Войти через Google',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          )),
+                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 16)),
                 ],
               ),
       ),
@@ -126,13 +153,6 @@ class _GoogleGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Simple multi-color "G" mark without bundling an asset.
-    return const Text(
-      'G',
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        color: AppColors.primary,
-      ),
-    );
+    return const Text('G', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary));
   }
 }

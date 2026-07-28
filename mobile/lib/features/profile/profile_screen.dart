@@ -36,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
           child: user == null
               ? const SizedBox.shrink()
               : ListView(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 120),
                   children: [
                     _Header(user: user).animate().fadeIn().slideY(begin: 0.08, end: 0),
                     const SizedBox(height: AppSpacing.md),
