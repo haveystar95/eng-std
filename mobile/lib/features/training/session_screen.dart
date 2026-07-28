@@ -142,8 +142,9 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
     ref.read(reviewSyncProvider).record(rating, wordId, latencyMs: latencyMs);
   }
 
+  // Two-swipe model: right = Знаю (good), left = Не знаю (again). The finer grades
+  // (Трудно / Легко) are button-only, so swiping stays fast and unambiguous.
   Rating? _ratingFor(Offset d) {
-    if (d.dy < -_threshold && d.dy.abs() > d.dx.abs()) return Rating.hard; // up = трудно
     if (d.dx > _threshold) return Rating.good; // right = знаю
     if (d.dx < -_threshold) return Rating.again; // left = не знаю
     return null;
@@ -165,9 +166,7 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
     final r = _ratingFor(_drag);
     _from = _drag;
     _pending = r;
-    if (r == Rating.hard) {
-      _to = const Offset(0, -1200);
-    } else if (r == Rating.good) {
+    if (r == Rating.good) {
       _to = Offset(1200, _drag.dy);
     } else if (r == Rating.again) {
       _to = Offset(-1200, _drag.dy);
@@ -220,10 +219,12 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          if (_revealed)
-            _Answers(onAnswer: _answer)
-          else
+          const SizedBox(height: AppSpacing.sm),
+          if (_revealed) ...[
+            const _SwipeLegend(),
+            const SizedBox(height: 10),
+            _Answers(onAnswer: _answer),
+          ] else
             GlassButton(
               label: 'Показать перевод',
               icon: Icons.visibility_outlined,
@@ -245,9 +246,7 @@ class _SwipeHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (rating) {
-      Rating.easy => ('Легко', AppColors.accent),
       Rating.good => ('Знаю', AppColors.know),
-      Rating.hard => ('Трудно', AppColors.review),
       Rating.again => ('Не знаю', AppColors.dontKnow),
       _ => ('', AppColors.textMuted),
     };
@@ -261,6 +260,31 @@ class _SwipeHint extends StatelessWidget {
       ),
       child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
     ).animate().scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1), duration: 140.ms, curve: Curves.easeOutBack);
+  }
+}
+
+/// A quiet one-line legend teaching the swipe directions, mirroring the button sides.
+class _SwipeLegend extends StatelessWidget {
+  const _SwipeLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _hint(Icons.west_rounded, 'Не знаю', AppColors.dontKnow, iconFirst: true),
+        _hint(Icons.east_rounded, 'Знаю', AppColors.know, iconFirst: false),
+      ],
+    );
+  }
+
+  Widget _hint(IconData arrow, String label, Color color, {required bool iconFirst}) {
+    final tint = color.withValues(alpha: 0.7);
+    final text = Text(label, style: TextStyle(color: tint, fontSize: 12, fontWeight: FontWeight.w600));
+    final icon = Icon(arrow, color: tint, size: 15);
+    return Row(
+      children: iconFirst ? [icon, const SizedBox(width: 5), text] : [text, const SizedBox(width: 5), icon],
+    );
   }
 }
 
@@ -328,12 +352,13 @@ class _Flashcard extends StatelessWidget {
           radius: 28,
           blur: 26,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(height: 6, decoration: const BoxDecoration(gradient: AppGradients.brand)),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (word.type == 'phrase')
                       Container(
@@ -424,34 +449,71 @@ class _Answers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      _btn('Не знаю', Icons.close_rounded, AppColors.dontKnow, Rating.again),
-      const SizedBox(width: 8),
-      _btn('Трудно', Icons.trending_down_rounded, AppColors.review, Rating.hard),
-      const SizedBox(width: 8),
-      _btn('Знаю', Icons.check_rounded, AppColors.know, Rating.good),
-      const SizedBox(width: 8),
-      _btn('Легко', Icons.bolt_rounded, AppColors.accent, Rating.easy),
-    ]).animate().fadeIn(duration: 180.ms).slideY(begin: 0.15, end: 0);
+    return Column(
+      children: [
+        // Primary — mirrors the two swipes.
+        Row(children: [
+          _primary('Не знаю', Icons.close_rounded, AppColors.dontKnow, Rating.again),
+          const SizedBox(width: 12),
+          _primary('Знаю', Icons.check_rounded, AppColors.know, Rating.good),
+        ]),
+        const SizedBox(height: 10),
+        // Nuance — optional fine-tuning, visually secondary.
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _nuance('Трудно', Icons.trending_down_rounded, AppColors.review, Rating.hard),
+            const SizedBox(width: 10),
+            _nuance('Легко', Icons.bolt_rounded, AppColors.accent, Rating.easy),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(duration: 180.ms).slideY(begin: 0.15, end: 0);
   }
 
-  Widget _btn(String label, IconData icon, Color color, Rating rating) {
+  Widget _primary(String label, IconData icon, Color color, Rating rating) {
     return Expanded(
       child: SpringTap(
         feedback: false, // _answer plays a rating-specific sound/haptic
         onTap: () => onAnswer(rating),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.18),
+            color: color.withValues(alpha: 0.20),
             borderRadius: BorderRadius.circular(AppRadii.md),
-            border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+            border: Border.all(color: color.withValues(alpha: 0.55), width: 1),
           ),
-          child: Column(children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 5),
-            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-          ]),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 8),
+              Text(label, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _nuance(String label, IconData icon, Color color, Rating rating) {
+    return SpringTap(
+      feedback: false,
+      onTap: () => onAnswer(rating),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 17),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+          ],
         ),
       ),
     );
