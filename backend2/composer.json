@@ -12,6 +12,7 @@
         "laravel/horizon": "^5.48",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "phpseclib/phpseclib": "^3.0",
         "predis/predis": "^3.5"
     },
     "require-dev": {
