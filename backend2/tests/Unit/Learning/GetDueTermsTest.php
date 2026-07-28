@@ -9,19 +9,39 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Tests\Doubles\InMemoryDueTermsReader;
+use Tests\Doubles\InMemoryProgressExistenceReader;
+use Tests\Doubles\InMemoryUserCollectionTermsReader;
 
 /**
- * @param int $count
  * @return list<DueTermView>
  */
-function dueViews(int $count, LearningState $state): array
+function dueViews(int $count): array
 {
     $views = [];
     for ($i = 0; $i < $count; $i++) {
-        $views[] = new DueTermView(TermId::generate(), $state, 4, null);
+        $views[] = new DueTermView(TermId::generate(), LearningState::Review, 4, null);
     }
 
     return $views;
+}
+
+/** @return list<string> */
+function newCandidates(int $count): array
+{
+    return array_map(static fn (): string => TermId::generate()->value, range(1, $count));
+}
+
+/**
+ * @param list<string> $candidates
+ * @param list<string> $started
+ */
+function dueHandler(InMemoryDueTermsReader $due, array $candidates = [], array $started = []): GetDueTermsHandler
+{
+    return new GetDueTermsHandler(
+        $due,
+        new InMemoryUserCollectionTermsReader($candidates),
+        new InMemoryProgressExistenceReader($started),
+    );
 }
 
 beforeEach(function () {
@@ -30,26 +50,17 @@ beforeEach(function () {
 });
 
 it('fills leftover session slots with new terms, due first', function () {
-    $reader = new InMemoryDueTermsReader(
-        dueTerms: dueViews(5, LearningState::Review),
-        newTerms: dueViews(10, LearningState::New),
-    );
-
-    $result = (new GetDueTermsHandler($reader))(
+    $result = dueHandler(new InMemoryDueTermsReader(dueViews(5)), candidates: newCandidates(10))(
         new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
     );
 
     expect($result)->toHaveCount(15);
     expect($result[0]->state)->toBe(LearningState::Review);
+    expect($result[14]->state)->toBe(LearningState::New);
 });
 
 it('shows no new terms when due cards already fill the session', function () {
-    $reader = new InMemoryDueTermsReader(
-        dueTerms: dueViews(25, LearningState::Review),
-        newTerms: dueViews(10, LearningState::New),
-    );
-
-    $result = (new GetDueTermsHandler($reader))(
+    $result = dueHandler(new InMemoryDueTermsReader(dueViews(25)), candidates: newCandidates(10))(
         new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
     );
 
@@ -58,24 +69,27 @@ it('shows no new terms when due cards already fill the session', function () {
 });
 
 it('never exceeds the remaining daily new-term quota', function () {
-    $reader = new InMemoryDueTermsReader(
-        dueTerms: dueViews(5, LearningState::Review),
-        newTerms: dueViews(10, LearningState::New),
-    );
-
-    $result = (new GetDueTermsHandler($reader))(
+    $result = dueHandler(new InMemoryDueTermsReader(dueViews(5)), candidates: newCandidates(10))(
         new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 3),
     );
 
     expect($result)->toHaveCount(8); // 5 due + 3 new
 });
 
-it('caps the session size at 100', function () {
-    $reader = new InMemoryDueTermsReader(dueTerms: dueViews(150, LearningState::Review));
-
-    $result = (new GetDueTermsHandler($reader))(
-        new GetDueTerms($this->user, $this->now, sessionSize: 500),
+it('skips collection terms that already have progress', function () {
+    $ids = newCandidates(3);
+    $result = dueHandler(new InMemoryDueTermsReader(), candidates: $ids, started: [$ids[1]])(
+        new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
     );
+
+    expect($result)->toHaveCount(2);
+    expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe([$ids[0], $ids[2]]);
+});
+
+it('caps the session size at 100', function () {
+    $reader = new InMemoryDueTermsReader(dueViews(150));
+
+    $result = dueHandler($reader)(new GetDueTerms($this->user, $this->now, sessionSize: 500));
 
     expect($result)->toHaveCount(100)
         ->and($reader->dueLimits[0])->toBe(100);

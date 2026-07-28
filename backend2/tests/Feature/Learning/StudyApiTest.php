@@ -123,6 +123,45 @@ it('validates the review batch', function () {
         ->assertJsonValidationErrors('reviews');
 });
 
+it('offers unreviewed collection terms as new study cards', function () {
+    [$user, $token] = learner();
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    $bank = seedWordFor($user, 'bank', 'банк');
+
+    $data = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/study/due')
+        ->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.state', 'new')
+        ->assertJsonPath('data.1.state', 'new')
+        ->json('data');
+
+    expect(array_column($data, 'term_id'))->toEqualCanonicalizing([$apple, $bank]);
+    // New cards carry their content so the client can study offline.
+    expect(array_column($data, 'text'))->toEqualCanonicalizing(['apple', 'bank']);
+});
+
+it('drops a term from the new pool once it has progress', function () {
+    [$user, $token] = learner();
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    $bank = seedWordFor($user, 'bank', 'банк');
+
+    // Study "apple" now → it becomes learning (due in the future), no longer new.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $apple, 'grade' => 'good',
+            'answered_at' => now()->toIso8601String(),
+        ]]])
+        ->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/study/due')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.term_id', $bank)
+        ->assertJsonPath('data.0.state', 'new');
+});
+
 it('requires authentication for stats', function () {
     $this->getJson('/api/v1/stats')->assertUnauthorized();
 });

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Infrastructure\Provider;
 
 use App\Modules\Learning\Application\Port\DueTermsReader;
+use App\Modules\Learning\Application\Port\IntroducedTermsReader;
+use App\Modules\Learning\Application\Port\ProgressExistenceReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Application\Port\StatsReader;
 use App\Modules\Learning\Domain\Repository\ReviewRepository;
@@ -15,6 +17,8 @@ use App\Modules\Learning\Domain\Service\Scheduler;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentIntroducedTermsReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressExistenceReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentReviewRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStatsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStudySessionRepository;
@@ -30,6 +34,8 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(ReviewRepository::class, EloquentReviewRepository::class);
         $this->app->bind(StudySessionRepository::class, EloquentStudySessionRepository::class);
         $this->app->bind(DueTermsReader::class, EloquentDueTermsReader::class);
+        $this->app->bind(ProgressExistenceReader::class, EloquentProgressExistenceReader::class);
+        $this->app->bind(IntroducedTermsReader::class, EloquentIntroducedTermsReader::class);
         $this->app->bind(StatsProjector::class, EloquentDailyStatsProjector::class);
         $this->app->bind(StatsReader::class, EloquentStatsReader::class);
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));

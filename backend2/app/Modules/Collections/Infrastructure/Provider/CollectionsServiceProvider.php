@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Collections\Infrastructure\Provider;
 
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
+use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionsReader;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionTermsReader;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -17,6 +19,7 @@ final class CollectionsServiceProvider extends ServiceProvider
     {
         $this->app->bind(CollectionRepository::class, EloquentCollectionRepository::class);
         $this->app->bind(UserCollectionsReader::class, EloquentUserCollectionsReader::class);
+        $this->app->bind(UserCollectionTermsReader::class, EloquentUserCollectionTermsReader::class);
     }
 
     public function boot(): void

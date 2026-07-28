@@ -14,6 +14,6 @@ final readonly class GetStudyCards
         public UserId $userId,
         public DateTimeImmutable $now,
         public int $sessionSize = 20,
-        public int $newTermsRemaining = 0,
+        public int $newTermsPerDay = 10,
     ) {}
 }

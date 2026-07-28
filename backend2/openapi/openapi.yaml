@@ -328,7 +328,12 @@ paths:
   /study/due:
     get:
       tags: [Study]
-      summary: Cards due for review now, content included (self-contained session)
+      summary: The next study session — due cards then new cards, content included (self-contained)
+      description: >-
+        Returns due cards first (state <> new, ordered by due date), then fills the remaining
+        session slots with new cards (terms in the user's collections never studied yet,
+        state = new) up to the day's remaining new-term quota. Cards carry their content so the
+        client can run the session offline.
       parameters:
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
       responses:

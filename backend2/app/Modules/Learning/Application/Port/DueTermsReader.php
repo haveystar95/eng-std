@@ -21,11 +21,4 @@ interface DueTermsReader
      * @return list<DueTermView>
      */
     public function due(UserId $userId, DateTimeImmutable $now, int $limit): array;
-
-    /**
-     * Terms enrolled but never answered (`state = 'new'`), for introducing at a capped rate.
-     *
-     * @return list<DueTermView>
-     */
-    public function newTerms(UserId $userId, int $limit): array;
 }

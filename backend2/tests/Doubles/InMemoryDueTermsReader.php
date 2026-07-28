@@ -16,11 +16,9 @@ final class InMemoryDueTermsReader implements DueTermsReader
 
     /**
      * @param list<DueTermView> $dueTerms
-     * @param list<DueTermView> $newTerms
      */
     public function __construct(
         private readonly array $dueTerms = [],
-        private readonly array $newTerms = [],
     ) {}
 
     public function due(UserId $userId, DateTimeImmutable $now, int $limit): array
@@ -28,10 +26,5 @@ final class InMemoryDueTermsReader implements DueTermsReader
         $this->dueLimits[] = $limit;
 
         return array_slice($this->dueTerms, 0, $limit);
-    }
-
-    public function newTerms(UserId $userId, int $limit): array
-    {
-        return array_slice($this->newTerms, 0, $limit);
     }
 }

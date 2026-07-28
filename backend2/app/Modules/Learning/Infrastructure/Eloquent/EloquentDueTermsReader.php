@@ -34,18 +34,6 @@ final class EloquentDueTermsReader implements DueTermsReader
         return array_values($rows->map($this->toView(...))->all());
     }
 
-    public function newTerms(UserId $userId, int $limit): array
-    {
-        $rows = DB::table(self::TABLE)
-            ->where('user_id', $userId->value)
-            ->where('state', LearningState::New->value)
-            ->orderBy('created_at')
-            ->limit($limit)
-            ->get(self::COLUMNS);
-
-        return array_values($rows->map($this->toView(...))->all());
-    }
-
     private function toView(stdClass $row): DueTermView
     {
         return new DueTermView(
