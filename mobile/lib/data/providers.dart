@@ -33,6 +33,12 @@ class AuthController extends AsyncNotifier<AppUser?> {
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncData(null);
   }
+
+  /// Persist profile changes and refresh the in-memory user.
+  Future<void> updateProfile(Map<String, dynamic> changes) async {
+    final user = await ref.read(apiClientProvider).updateProfile(changes);
+    state = AsyncData(user);
+  }
 }
 
 final authControllerProvider =
