@@ -13,5 +13,7 @@ final readonly class GeneratedItem
         public string $translation,   // source language (e.g. Russian)
         public ?string $example,
         public ?string $cefr,
+        public ?string $transcription = null,      // IPA of the target-language text
+        public ?string $exampleTranslation = null, // example rendered in the source language
     ) {}
 }

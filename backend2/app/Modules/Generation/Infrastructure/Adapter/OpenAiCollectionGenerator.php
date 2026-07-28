@@ -96,6 +96,8 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
                 translation: is_string($row['translation'] ?? null) ? $row['translation'] : '',
                 example: is_string($row['example'] ?? null) ? $row['example'] : null,
                 cefr: is_string($row['cefr'] ?? null) ? $row['cefr'] : null,
+                transcription: is_string($row['transcription'] ?? null) ? $row['transcription'] : null,
+                exampleTranslation: is_string($row['example_translation'] ?? null) ? $row['example_translation'] : null,
             );
         }
 
@@ -104,7 +106,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
 
     private function systemPrompt(GenerationBrief $brief): string
     {
-        $template = (string) file_get_contents(__DIR__ . '/../Prompt/generate_collection.v1.md');
+        $template = (string) file_get_contents(__DIR__ . '/../Prompt/generate_collection.v2.md');
 
         return strtr($template, [
             '{{source_lang}}' => $this->languageName($brief->sourceLang->value),
@@ -136,11 +138,13 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
                         'properties' => [
                             'text' => ['type' => 'string'],
                             'type' => ['type' => 'string', 'enum' => ['word', 'phrase']],
+                            'transcription' => ['type' => 'string'],
                             'translation' => ['type' => 'string'],
                             'example' => ['type' => 'string'],
+                            'example_translation' => ['type' => 'string'],
                             'cefr' => ['type' => 'string', 'enum' => ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']],
                         ],
-                        'required' => ['text', 'type', 'translation', 'example', 'cefr'],
+                        'required' => ['text', 'type', 'transcription', 'translation', 'example', 'example_translation', 'cefr'],
                     ],
                 ],
             ],

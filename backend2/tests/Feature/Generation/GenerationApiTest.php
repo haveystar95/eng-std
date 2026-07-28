@@ -11,6 +11,7 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -41,6 +42,22 @@ it('accepts a generation and completes it end-to-end on the sync queue', functio
     $this->assertDatabaseHas('collections', ['source' => 'ai', 'source_lang' => 'ru', 'target_lang' => 'en']);
     $this->assertDatabaseCount('collection_items', 8);
     $this->assertDatabaseCount('terms', 8);
+
+    // Generated terms carry pronunciation and a usage example (persisted, not dropped).
+    expect(DB::table('terms')->whereNotNull('ipa')->count())->toBe(8);
+    $this->assertDatabaseCount('term_examples', 8);
+    $this->assertDatabaseHas('term_examples', ['sentence_translation' => 'Это образец предложения номер 1.']);
+});
+
+it('respects the requested term count', function () {
+    $token = bearerToken();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/generations', ['prompt' => 'путешествие', 'size' => 15])
+        ->assertStatus(202);
+
+    // The sync queue runs the job inline, so the terms exist right after the request.
+    $this->assertDatabaseCount('terms', 15);
 });
 
 it('validates that a prompt is required', function () {

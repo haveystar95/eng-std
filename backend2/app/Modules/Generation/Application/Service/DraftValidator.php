@@ -53,14 +53,20 @@ final class DraftValidator
                 translation: $translation,
                 example: $this->nullableText($item->example),
                 cefr: $cefr,
+                transcription: $this->nullableText($item->transcription),
+                exampleTranslation: $this->nullableText($item->exampleTranslation),
             );
         }
 
-        if (count($clean) > self::MAX_ITEMS) {
-            $clean = array_slice($clean, 0, self::MAX_ITEMS);
-        }
         if (count($clean) < self::MIN_ITEMS) {
             throw InvalidGeneratedDraft::because('only ' . count($clean) . ' usable items after validation');
+        }
+
+        // Honour the requested count: trim any over-generation down to exactly what the user
+        // asked for (bounded by the hard ceiling). Under-generation is kept as-is.
+        $target = max(self::MIN_ITEMS, min(self::MAX_ITEMS, $brief->size));
+        if (count($clean) > $target) {
+            $clean = array_slice($clean, 0, $target);
         }
 
         return new GeneratedCollectionDraft(

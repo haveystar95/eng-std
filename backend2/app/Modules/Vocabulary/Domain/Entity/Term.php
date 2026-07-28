@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Domain\Entity;
 
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Vocabulary\Domain\ValueObject\Example;
 use App\Modules\Vocabulary\Domain\ValueObject\PartOfSpeech;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Domain\ValueObject\TermSource;
@@ -15,14 +16,22 @@ use DateTimeImmutable;
 
 /**
  * A canonical dictionary entry — one row per (lang, normalized_text, pos).
- * Aggregate root for its translations.
+ * Aggregate root for its translations, pronunciation (IPA) and usage examples.
  */
 final class Term
 {
     /** @var list<Translation> */
     private array $translations;
 
-    /** @param list<Translation> $translations */
+    /** @var list<Example> */
+    private array $examples;
+
+    private ?string $ipa;
+
+    /**
+     * @param list<Translation> $translations
+     * @param list<Example> $examples
+     */
     private function __construct(
         private readonly TermId $id,
         private readonly LanguageCode $lang,
@@ -33,14 +42,24 @@ final class Term
         private readonly TermSource $source,
         private readonly DateTimeImmutable $createdAt,
         array $translations,
+        ?string $ipa,
+        array $examples,
     ) {
         $this->translations = [];
         foreach ($translations as $translation) {
             $this->addTranslation($translation);
         }
+        $this->ipa = $this->cleanIpa($ipa);
+        $this->examples = [];
+        foreach ($examples as $example) {
+            $this->addExample($example);
+        }
     }
 
-    /** @param list<Translation> $translations */
+    /**
+     * @param list<Translation> $translations
+     * @param list<Example> $examples
+     */
     public static function create(
         TermId $id,
         LanguageCode $lang,
@@ -51,8 +70,10 @@ final class Term
         TermSource $source,
         DateTimeImmutable $createdAt,
         array $translations = [],
+        ?string $ipa = null,
+        array $examples = [],
     ): self {
-        return new self($id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations);
+        return new self($id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples);
     }
 
     /** Add a translation, ignoring exact (lang,text) duplicates. */
@@ -64,6 +85,37 @@ final class Term
             }
         }
         $this->translations[] = $translation;
+    }
+
+    /** Add a usage example, ignoring duplicates by sentence (case-insensitive). */
+    public function addExample(Example $example): void
+    {
+        $key = mb_strtolower($example->sentence);
+        foreach ($this->examples as $existing) {
+            if (mb_strtolower($existing->sentence) === $key) {
+                return;
+            }
+        }
+        $this->examples[] = $example;
+    }
+
+    /** Fill in the pronunciation only when the term doesn't have one yet (dedup-merge safe). */
+    public function ensureIpa(?string $ipa): void
+    {
+        $clean = $this->cleanIpa($ipa);
+        if ($this->ipa === null && $clean !== null) {
+            $this->ipa = $clean;
+        }
+    }
+
+    private function cleanIpa(?string $ipa): ?string
+    {
+        if ($ipa === null) {
+            return null;
+        }
+        $trimmed = trim($ipa);
+
+        return $trimmed !== '' ? $trimmed : null;
     }
 
     public function id(): TermId
@@ -110,5 +162,16 @@ final class Term
     public function translations(): array
     {
         return $this->translations;
+    }
+
+    public function ipa(): ?string
+    {
+        return $this->ipa;
+    }
+
+    /** @return list<Example> */
+    public function examples(): array
+    {
+        return $this->examples;
     }
 }

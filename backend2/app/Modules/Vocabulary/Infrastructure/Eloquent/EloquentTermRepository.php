@@ -60,6 +60,20 @@ final class EloquentTermRepository implements TermRepository
                     ],
                 );
             }
+
+            foreach ($term->examples() as $example) {
+                TermExampleModel::query()->firstOrCreate(
+                    [
+                        'term_id' => $term->id()->value,
+                        'sentence' => $example->sentence,
+                    ],
+                    [
+                        'id' => Ulid::generate(),
+                        'sentence_translation' => $example->sentenceTranslation,
+                        'source' => $term->source()->value,
+                    ],
+                );
+            }
         });
     }
 }

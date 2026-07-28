@@ -58,10 +58,17 @@ it('deduplicates by text within the draft', function () {
     expect($result->items)->toHaveCount(8);
 });
 
-it('caps the draft at 25 items', function () {
+it('trims over-generation down to the requested size', function () {
+    // brief() asks for 12; the model over-produced 30.
     $result = (new DraftValidator())->validate(draftOf(manyItems(30)), brief());
 
-    expect($result->items)->toHaveCount(25);
+    expect($result->items)->toHaveCount(12);
+});
+
+it('keeps under-generation as-is when still above the floor', function () {
+    $result = (new DraftValidator())->validate(draftOf(manyItems(10)), brief());
+
+    expect($result->items)->toHaveCount(10);
 });
 
 it('infers phrase type from whitespace when omitted', function () {

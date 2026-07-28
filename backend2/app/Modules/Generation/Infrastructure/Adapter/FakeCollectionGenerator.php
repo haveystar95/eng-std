@@ -29,6 +29,8 @@ final class FakeCollectionGenerator implements CollectionGeneratorPort
                 translation: "образец {$i}",
                 example: "This is sample sentence number {$i}.",
                 cefr: $cefr,
+                transcription: "ˈsæmpəl {$i}",
+                exampleTranslation: "Это образец предложения номер {$i}.",
             );
         }
 

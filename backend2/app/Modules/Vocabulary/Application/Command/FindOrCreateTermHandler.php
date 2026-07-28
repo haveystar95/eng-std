@@ -31,6 +31,10 @@ final readonly class FindOrCreateTermHandler
             foreach ($command->translations as $translation) {
                 $existing->addTranslation($translation);
             }
+            foreach ($command->examples as $example) {
+                $existing->addExample($example);
+            }
+            $existing->ensureIpa($command->ipa);
             $this->terms->save($existing);
 
             return $existing->id();
@@ -46,6 +50,8 @@ final readonly class FindOrCreateTermHandler
             source: $command->source,
             createdAt: $this->clock->now(),
             translations: $command->translations,
+            ipa: $command->ipa,
+            examples: $command->examples,
         );
 
         $this->terms->save($term);

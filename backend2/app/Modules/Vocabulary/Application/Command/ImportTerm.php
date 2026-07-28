@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Application\Command;
 
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 
 /**
@@ -14,7 +15,10 @@ use App\Modules\Vocabulary\Application\Dto\TranslationInput;
  */
 final readonly class ImportTerm
 {
-    /** @param list<TranslationInput> $translations */
+    /**
+     * @param list<TranslationInput> $translations
+     * @param list<ExampleInput> $examples
+     */
     public function __construct(
         public LanguageCode $lang,
         public string $text,
@@ -22,5 +26,7 @@ final readonly class ImportTerm
         public ?string $pos,       // PartOfSpeech value, or null
         public string $source,     // 'curated' | 'ai' | 'user'
         public array $translations = [],
+        public ?string $ipa = null,
+        public array $examples = [],
     ) {}
 }

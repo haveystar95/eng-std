@@ -20,6 +20,7 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
+use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 
 /**
@@ -104,6 +105,10 @@ final readonly class ProcessGenerationHandler
                 pos: null,
                 source: 'ai',
                 translations: [new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true)],
+                ipa: $item->transcription,
+                examples: $item->example !== null
+                    ? [new ExampleInput($item->example, $item->exampleTranslation)]
+                    : [],
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));

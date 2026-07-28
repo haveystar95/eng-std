@@ -32,6 +32,7 @@ final class TermMapper
             source: TermSource::from($model->source),
             createdAt: $model->created_at->toDateTimeImmutable(),
             translations: $translations,
+            ipa: $model->ipa !== null ? (string) $model->ipa : null,
         );
     }
 
@@ -44,6 +45,7 @@ final class TermMapper
             'normalized_text' => $term->normalizedText(),
             'type' => $term->type()->value,
             'pos' => $term->pos()?->value,
+            'ipa' => $term->ipa(),
             'source' => $term->source()->value,
             'created_at' => $term->createdAt(),
         ];
