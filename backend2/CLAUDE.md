@@ -29,6 +29,7 @@ Then, depending on the task:
 | `Collections` | collections (system/shared/custom), items, subscriptions, forks |
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |
 | `Generation` | AI collection generation: requests, prompts, quotas, cost |
+| `Observability` | API request/response log — inbound requests + outbound (external) calls, with secret redaction |
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.
 
@@ -53,7 +54,7 @@ PHPStan level 8 · Deptrac · OpenAPI 3.1 → generated Dart client.
 
 ## Non-negotiables (short version)
 
-- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation}`, four layers each.
+- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation,Observability}`, four layers each (Shared and Observability are thin — they omit layers they don't need).
 - `Domain/` imports nothing from Laravel. Cross-module calls go through `Application` only.
 - Commands mutate and return ids; Queries read and return DTOs. Controllers translate, nothing more.
 - ULIDs everywhere; clients may generate ids for reviews and custom collections.

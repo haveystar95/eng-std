@@ -54,6 +54,13 @@ deptrac:
     - name: GenerationPresentation
       collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Presentation\\.*' }]
 
+    - name: ObservabilityDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Domain\\.*' }]
+    - name: ObservabilityApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Application\\.*' }]
+    - name: ObservabilityInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Infrastructure\\.*' }]
+
     - name: Framework
       collectors:
         - { type: classLike, value: 'Illuminate\\.*' }
@@ -86,6 +93,11 @@ deptrac:
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework]
     GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
+
+    # Observability: a thin, cross-cutting technical module (no Presentation layer).
+    ObservabilityDomain: [SharedDomain]
+    ObservabilityApplication: [ObservabilityDomain, SharedDomain]
+    ObservabilityInfrastructure: [ObservabilityApplication, ObservabilityDomain, SharedDomain, SharedInfra, Framework]
 
     # Presentation may use the framework, its own Application/Domain — never Infrastructure.
     IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, Framework]
