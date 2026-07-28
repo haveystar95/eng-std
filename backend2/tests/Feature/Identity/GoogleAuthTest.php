@@ -55,7 +55,7 @@ it('rejects an invalid Google token with 422', function () {
 
     $this->postJson('/api/v1/auth/google', ['id_token' => 'bad-token'])
         ->assertStatus(422)
-        ->assertJsonValidationErrors('id_token');
+        ->assertJsonPath('code', 'invalid_google_token');
 });
 
 it('validates that id_token is required', function () {

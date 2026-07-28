@@ -127,6 +127,17 @@ final class Collection
         $this->title = self::cleanTitle($title);
     }
 
+    /** Partial update: only non-null fields change. An empty-string description clears it. */
+    public function updateDetails(?string $title, ?string $description): void
+    {
+        if ($title !== null) {
+            $this->title = self::cleanTitle($title);
+        }
+        if ($description !== null) {
+            $this->description = $description === '' ? null : $description;
+        }
+    }
+
     public function id(): CollectionId
     {
         return $this->id;

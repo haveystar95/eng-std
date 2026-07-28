@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: WordTrainer API
+  version: 0.1.0
+  description: >
+    Backend2 API for the WordTrainer mobile app. Base path `/api/v1`, Sanctum bearer
+    tokens, JSON, snake_case. This file is the contract — the Dart client is generated
+    from it, so an endpoint not described here effectively does not exist.
+    Errors are RFC 7807 `application/problem+json` with a stable machine `code`, except
+    input validation which uses Laravel's 422 `{message, errors}` shape.
+
+servers:
+  - url: https://api.wordtrainer.app/api/v1
+    description: Production (placeholder)
+  - url: http://localhost:8001/api/v1
+    description: Local (docker)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Collections
+  - name: Generation
+
+paths:
+  /auth/google:
+    post:
+      tags: [Auth]
+      summary: Sign in with a Google ID token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_token]
+              properties:
+                id_token: { type: string }
+                device_name: { type: string, maxLength: 100 }
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '422':
+          $ref: '#/components/responses/Problem'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: The authenticated user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current device token
+      responses:
+        '204': { description: Logged out }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /profile:
+    put:
+      tags: [Auth]
+      summary: Update learning preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                native_language: { type: string, minLength: 2, maxLength: 5 }
+                target_language: { type: string, minLength: 2, maxLength: 5 }
+                cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+                daily_goal: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /generations:
+    post:
+      tags: [Generation]
+      summary: Request an AI-generated collection (async)
+      description: Returns 202 with a pending request; poll GET /generations/{id} until succeeded|failed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string, minLength: 2, maxLength: 500 }
+                levels:
+                  type: array
+                  items: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+                size: { type: integer, minimum: 8, maximum: 25 }
+                source_lang: { type: string, minLength: 2, maxLength: 5 }
+                target_lang: { type: string, minLength: 2, maxLength: 5 }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GenerationRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: Daily generation quota reached (code `generation_quota_exceeded`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /generations/{id}:
+    get:
+      tags: [Generation]
+      summary: Poll a generation request (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GenerationRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found (or not the owner) }
+
+  /collections:
+    get:
+      tags: [Collections]
+      summary: List the user's collections (cursor-paginated, newest first)
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/CollectionSummary' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Collections]
+      summary: Create a custom collection
+      description: Accepts a client-generated `id` (ULID) for offline idempotency; re-sending the same id does not duplicate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                id: { type: string, minLength: 26, maxLength: 26 }
+                title: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string, maxLength: 2000, nullable: true }
+                source_lang: { type: string, minLength: 2, maxLength: 5 }
+                target_lang: { type: string, minLength: 2, maxLength: 5 }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Collection' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /collections/{id}:
+    get:
+      tags: [Collections]
+      summary: Show a collection with its items (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Collection' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found (or not the owner) }
+    patch:
+      tags: [Collections]
+      summary: Update title/description (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string, maxLength: 2000, nullable: true }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Collection' }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Not found (code `collection_not_found`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Collections]
+      summary: Soft-delete a collection (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      responses:
+        '204': { description: Deleted }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Not found (code `collection_not_found`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    UlidId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, minLength: 26, maxLength: 26 }
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+    Problem:
+      description: RFC 7807 problem
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: Input validation failed (Laravel shape)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+
+  schemas:
+    Problem:
+      type: object
+      description: RFC 7807 with a stable machine `code`.
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        meta: { type: object, additionalProperties: true }
+      required: [title, status, code]
+
+    PageMeta:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true }
+        has_more: { type: boolean }
+      required: [has_more]
+
+    Profile:
+      type: object
+      properties:
+        native_language: { type: string }
+        target_language: { type: string }
+        cefr_level: { type: string }
+        daily_goal: { type: integer }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, nullable: true }
+        avatar: { type: string, nullable: true }
+        profile:
+          oneOf:
+            - { $ref: '#/components/schemas/Profile' }
+            - { type: 'null' }
+
+    GenerationRequest:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [pending, running, succeeded, failed] }
+        prompt: { type: string }
+        collection_id: { type: string, nullable: true }
+        error: { type: string, nullable: true }
+        model: { type: string, nullable: true }
+        tokens_in: { type: integer, nullable: true }
+        tokens_out: { type: integer, nullable: true }
+        cost_usd: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time, nullable: true }
+
+    CollectionSummary:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [system, shared, custom] }
+        source: { type: string, enum: [curated, ai, user] }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        source_lang: { type: string }
+        target_lang: { type: string }
+        visibility: { type: string, enum: [private, link, public] }
+        items_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    CollectionItem:
+      type: object
+      properties:
+        term_id: { type: string }
+        position: { type: integer }
+        note: { type: string, nullable: true }
+
+    Collection:
+      allOf:
+        - $ref: '#/components/schemas/CollectionSummary'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/CollectionItem' }

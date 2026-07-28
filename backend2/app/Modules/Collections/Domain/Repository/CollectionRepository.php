@@ -12,4 +12,7 @@ interface CollectionRepository
     public function findById(CollectionId $id): ?Collection;
 
     public function save(Collection $collection): void;
+
+    /** Soft-delete so offline clients receive a tombstone via delta sync. */
+    public function delete(CollectionId $id): void;
 }

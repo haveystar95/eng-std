@@ -23,6 +23,11 @@ final class InMemoryCollectionRepository implements CollectionRepository
         $this->byId[$collection->id()->value] = $collection;
     }
 
+    public function delete(CollectionId $id): void
+    {
+        unset($this->byId[$id->value]);
+    }
+
     public function count(): int
     {
         return count($this->byId);

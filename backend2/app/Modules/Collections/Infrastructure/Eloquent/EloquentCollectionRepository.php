@@ -54,4 +54,10 @@ final class EloquentCollectionRepository implements CollectionRepository
             }
         });
     }
+
+    public function delete(CollectionId $id): void
+    {
+        // SoftDeletes on the model → sets deleted_at (cascades to items via FK on hard delete only).
+        CollectionModel::query()->whereKey($id->value)->delete();
+    }
 }

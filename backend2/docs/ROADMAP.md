@@ -23,12 +23,12 @@ skills, then continue at the first unchecked item. Build every backend change pe
 ## Phase 3 — HTTP surface (endpoints)  ⬜
 Per `api-endpoint` + `mobile-sync-contract`. Each module's `Presentation/Http` (controller → Command/Query → Resource, FormRequest, Policy, `routes.php` under `/api/v1`).
 - [x] Auth endpoints (Identity, built 2026-07-27): `POST /api/v1/auth/google`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`, `PUT /api/v1/profile`. First live HTTP surface in backend2. RFC7807-lite: `InvalidGoogleToken` → 422 mapped in `bootstrap/app.php`. 9 feature tests (fake Google verifier). **Still to do for this bullet: author `openapi/openapi.yaml` for these routes.**
-- [ ] Collections: list/create/show/update/delete, items add/remove/reorder, fork/subscribe.
+- [~] Collections (built 2026-07-27): **CRUD done** — `GET /collections` (cursor-paginated summaries), `POST /collections` (client-id idempotent), `GET/PATCH/DELETE /collections/{id}` (owner-only; soft-delete tombstone). Query side added (`ListUserCollections`+reader, `GetCollection`); commands `UpdateCollection`/`DeleteCollection` + repo `delete`. **Still TODO: items add/remove/reorder, fork/subscribe, term-content hydration on show.**
 - [ ] Terms: lookup/search.
 - [ ] Study: `POST /study/sessions`, `POST /reviews/batch` (idempotent), stats endpoints.
 - [x] Generation (built 2026-07-27): `POST /api/v1/generations` (202 + pending, client polls), `GET /api/v1/generations/{id}` (owner-only → 404 otherwise). Quota → 429 (mapped in `bootstrap/app.php`). Plus an artisan `generation:make {user} {prompt}` command (runs synchronously, same Application handlers). 19 tests (domain state machine, DraftValidator, cross-module ProcessGeneration, feature). **Still to do for this bullet: `openapi/openapi.yaml`.**
 - [ ] `GET /sync?since=` delta sync.
-- [ ] Author `openapi/openapi.yaml` (source of truth) alongside the routes.
+- [~] `openapi/openapi.yaml` started (source of truth): documents Auth + Generation + Collections. Extend as new endpoints land. **Also established:** RFC 7807 `application/problem+json` errors via a polymorphic `Shared\Domain\Exception\ProblemDetails` interface + one renderer in `bootstrap/app.php` (domain exceptions carry a stable `code`); input validation keeps Laravel's 422 `{message, errors}`.
 
 ## Phase 4 — mobile cutover  ⬜
 - [ ] Generate the Dart client from `openapi/openapi.yaml`.

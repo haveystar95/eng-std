@@ -1,8 +1,7 @@
 <?php
 
-use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
-use App\Modules\Identity\Domain\Exception\InvalidGoogleToken;
+use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,16 +26,17 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
-        // Domain exception → HTTP mapping. Kept in a Laravel-validation shape so the
-        // Flutter client parses auth errors the same way it does field validation.
-        $exceptions->render(fn (InvalidGoogleToken $e): JsonResponse => new JsonResponse([
-            'message' => $e->getMessage(),
-            'errors' => ['id_token' => [$e->getMessage()]],
-        ], 422));
-
-        // Daily generation quota reached → 429 with the limit.
-        $exceptions->render(fn (GenerationQuotaExceeded $e): JsonResponse => new JsonResponse([
-            'message' => $e->getMessage(),
-            'limit' => $e->limit,
-        ], 429));
+        // One place turns any ProblemDetails domain exception into RFC 7807
+        // application/problem+json. A new domain error surfaces correctly by implementing
+        // the interface — no change here. (Input validation keeps Laravel's 422 shape.)
+        $exceptions->render(function (ProblemDetails $e): JsonResponse {
+            return new JsonResponse([
+                'type' => 'https://api.wordtrainer.app/errors/' . str_replace('_', '-', $e->problemCode()),
+                'title' => $e->problemTitle(),
+                'status' => $e->problemStatus(),
+                'code' => $e->problemCode(),
+                'detail' => $e instanceof Throwable ? $e->getMessage() : '',
+                'meta' => $e->problemMeta(),
+            ], $e->problemStatus(), ['Content-Type' => 'application/problem+json']);
+        });
     })->create();

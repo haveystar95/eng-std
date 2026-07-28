@@ -18,8 +18,13 @@ final readonly class CreateCustomCollectionHandler
 
     public function __invoke(CreateCustomCollection $command): CollectionId
     {
+        // Idempotent on a client-supplied id: re-sending returns the existing one.
+        if ($command->id !== null && $this->collections->findById($command->id) !== null) {
+            return $command->id;
+        }
+
         $collection = Collection::createCustom(
-            id: CollectionId::generate(),
+            id: $command->id ?? CollectionId::generate(),
             ownerId: $command->ownerId,
             title: $command->title,
             sourceLang: $command->sourceLang,
