@@ -12,15 +12,15 @@ final class UserViewMapper
 {
     public function toView(User $user): UserView
     {
-        $user->loadMissing('profile');
-        $profile = $user->profile;
+        // Load via the relation explicitly (the model declares a same-named property).
+        $profile = $user->getRelationValue('profile');
 
         return new UserView(
             id: $user->id,
             name: $user->name,
             email: $user->email,
             avatar: $user->avatar,
-            profile: $profile !== null ? new ProfileView(
+            profile: $profile instanceof Profile ? new ProfileView(
                 nativeLanguage: $profile->native_language,
                 targetLanguage: $profile->target_language,
                 cefrLevel: $profile->cefr_level,

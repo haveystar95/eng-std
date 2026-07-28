@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
+use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
 use App\Modules\Identity\Domain\Exception\InvalidGoogleToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        GenerateCollectionCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })
@@ -28,4 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'message' => $e->getMessage(),
             'errors' => ['id_token' => [$e->getMessage()]],
         ], 422));
+
+        // Daily generation quota reached → 429 with the limit.
+        $exceptions->render(fn (GenerationQuotaExceeded $e): JsonResponse => new JsonResponse([
+            'message' => $e->getMessage(),
+            'limit' => $e->limit,
+        ], 429));
     })->create();

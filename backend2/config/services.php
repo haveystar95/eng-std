@@ -44,4 +44,14 @@ return [
         ])),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'generate_model' => env('OPENAI_GENERATE_MODEL', 'gpt-4o'),
+    ],
+
+    'generation' => [
+        // 'openai' (default) or 'fake' (deterministic, no network — for local/dev/tests).
+        'driver' => env('GENERATION_DRIVER', 'openai'),
+    ],
+
 ];

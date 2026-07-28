@@ -33,6 +33,7 @@ class User extends Authenticatable
     use HasUlids;
     use Notifiable;
 
+    public mixed $profile;
     protected $keyType = 'string';
 
     public $incrementing = false;

@@ -55,6 +55,23 @@ final class Collection
         );
     }
 
+    /** A personal collection produced by AI generation: still custom + owned, but source=ai. */
+    public static function createGenerated(
+        CollectionId $id,
+        UserId $ownerId,
+        string $title,
+        LanguageCode $sourceLang,
+        LanguageCode $targetLang,
+        DateTimeImmutable $createdAt,
+        ?string $description = null,
+        ?string $topic = null,
+    ): self {
+        return new self(
+            $id, $ownerId, CollectionType::Custom, self::cleanTitle($title), $description, $topic,
+            $sourceLang, $targetLang, Visibility::Private, CollectionSource::Ai, $createdAt, [],
+        );
+    }
+
     /**
      * Rebuild an existing collection from persistence.
      *
