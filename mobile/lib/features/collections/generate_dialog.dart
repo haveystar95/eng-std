@@ -11,7 +11,10 @@ import '../../data/providers.dart';
 
 Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
   final topicCtrl = TextEditingController();
-  final levels = <String>{'B1'};
+  final profile = ref.read(authControllerProvider).value?.profile;
+  final source = languageByCode(profile?.nativeLanguage ?? 'ru');
+  final target = languageByCode(profile?.targetLanguage ?? 'en');
+  final levels = <String>{profile?.cefrLevel ?? 'B1'};
   int size = 15;
 
   await showDialog<void>(
@@ -40,9 +43,17 @@ Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
                       child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text('Новая коллекция',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Новая коллекция',
+                              style: TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 2),
+                          Text('${target.flag} ${target.name} → ${source.flag} ${source.name}',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -99,9 +110,9 @@ Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
                   ),
                   child: Slider(
                     value: size.toDouble(),
-                    min: 5,
-                    max: 30,
-                    divisions: 5,
+                    min: 8,
+                    max: 25,
+                    divisions: 17,
                     label: '$size',
                     onChanged: (v) => setState(() => size = v.round()),
                   ),
@@ -110,20 +121,7 @@ Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
                 Row(
                   children: [
                     Expanded(
-                      child: SpringTap(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          height: 52,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(AppRadii.md),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-                          ),
-                          child: const Text('Отмена',
-                              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 15)),
-                        ),
-                      ),
+                      child: GlassSecondaryButton(label: 'Отмена', onTap: () => Navigator.pop(context)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -138,7 +136,15 @@ Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
                             return;
                           }
                           Navigator.pop(context);
-                          await _runGeneration(context, ref, topic: topic, levels: levels.toList(), size: size);
+                          await _runGeneration(
+                            context,
+                            ref,
+                            topic: topic,
+                            levels: levels.toList(),
+                            size: size,
+                            sourceLang: source.code,
+                            targetLang: target.code,
+                          );
                         },
                       ),
                     ),
@@ -159,6 +165,8 @@ Future<void> _runGeneration(
   required String topic,
   required List<String> levels,
   required int size,
+  required String sourceLang,
+  required String targetLang,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   final api = ref.read(apiClientProvider);
@@ -168,7 +176,13 @@ Future<void> _runGeneration(
   );
 
   try {
-    final jobId = await api.generateCollection(topic: topic, levels: levels, size: size);
+    final jobId = await api.generateCollection(
+      topic: topic,
+      levels: levels,
+      size: size,
+      sourceLang: sourceLang,
+      targetLang: targetLang,
+    );
 
     for (var i = 0; i < 30; i++) {
       await Future<void>.delayed(const Duration(seconds: 2));

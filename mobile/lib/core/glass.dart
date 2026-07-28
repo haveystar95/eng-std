@@ -149,6 +149,90 @@ class _SpringTapState extends State<SpringTap> {
   }
 }
 
+/// A labelled text field with a translucent glass fill — the input building
+/// block for glass forms (word / collection editors, dialogs).
+class GlassField extends StatelessWidget {
+  const GlassField({
+    super.key,
+    required this.controller,
+    this.label,
+    this.hint,
+    this.autofocus = false,
+    this.minLines = 1,
+    this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
+  });
+
+  final TextEditingController controller;
+  final String? label;
+  final String? hint;
+  final bool autofocus;
+  final int minLines;
+  final int maxLines;
+  final TextCapitalization textCapitalization;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null) ...[
+          Text(label!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+        ],
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          child: TextField(
+            controller: controller,
+            autofocus: autofocus,
+            minLines: minLines,
+            maxLines: maxLines,
+            textCapitalization: textCapitalization,
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w400),
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A secondary (outline) glass action — the "Отмена" counterpart to GlassButton.
+class GlassSecondaryButton extends StatelessWidget {
+  const GlassSecondaryButton({super.key, required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SpringTap(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 15)),
+      ),
+    );
+  }
+}
+
 /// A selectable pill (language / level chip) with a glass look.
 class GlassChip extends StatelessWidget {
   const GlassChip({super.key, required this.label, required this.selected, required this.onTap, this.leading});

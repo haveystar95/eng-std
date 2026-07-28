@@ -5,6 +5,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/design.dart';
 import '../../core/glass.dart';
+import '../../core/languages.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 
@@ -96,7 +97,8 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
 
   Future<void> _speak() async {
     AppFeedback.tap();
-    await _tts.setLanguage('en-US');
+    final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+    await _tts.setLanguage(ttsLocaleFor(target));
     await _tts.setSpeechRate(0.45);
     await _tts.speak(_word.term);
   }

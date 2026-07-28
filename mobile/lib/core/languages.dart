@@ -25,3 +25,22 @@ const List<String> kCefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 Language languageByCode(String code) =>
     kLanguages.firstWhere((l) => l.code == code, orElse: () => kLanguages.first);
+
+/// BCP-47 locales for `flutter_tts`, keyed by our 2-letter language code, so a
+/// word is pronounced in the language actually being learned.
+const Map<String, String> _ttsLocales = {
+  'en': 'en-US',
+  'ru': 'ru-RU',
+  'uk': 'uk-UA',
+  'es': 'es-ES',
+  'de': 'de-DE',
+  'fr': 'fr-FR',
+  'it': 'it-IT',
+  'pt': 'pt-PT',
+  'pl': 'pl-PL',
+  'tr': 'tr-TR',
+  'zh': 'zh-CN',
+  'ja': 'ja-JP',
+};
+
+String ttsLocaleFor(String code) => _ttsLocales[code] ?? 'en-US';

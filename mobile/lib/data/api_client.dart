@@ -102,8 +102,16 @@ class ApiClient {
         .toList();
   }
 
-  Future<WordCollection> createCollection({required String title}) async {
-    final r = await _dio.post('/collections', data: {'title': title});
+  Future<WordCollection> createCollection({
+    required String title,
+    String? sourceLang,
+    String? targetLang,
+  }) async {
+    final r = await _dio.post('/collections', data: {
+      'title': title,
+      'source_lang': ?sourceLang,
+      'target_lang': ?targetLang,
+    });
     return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -170,9 +178,16 @@ class ApiClient {
     required String topic,
     required List<String> levels,
     required int size,
+    String? sourceLang,
+    String? targetLang,
   }) async {
-    final r = await _dio.post('/generations',
-        data: {'prompt': topic, 'levels': levels, 'size': size});
+    final r = await _dio.post('/generations', data: {
+      'prompt': topic,
+      'levels': levels,
+      'size': size,
+      'source_lang': ?sourceLang,
+      'target_lang': ?targetLang,
+    });
     return (_data(r) as Map<String, dynamic>)['id'] as String;
   }
 
