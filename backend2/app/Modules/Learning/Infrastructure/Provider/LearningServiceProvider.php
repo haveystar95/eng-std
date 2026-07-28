@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Provider;
 
 use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
+use App\Modules\Learning\Application\Port\StatsReader;
 use App\Modules\Learning\Domain\Repository\ReviewRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Repository\TermProgressRepository;
@@ -15,6 +16,7 @@ use App\Modules\Learning\Domain\Service\Sm2Scheduler;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentReviewRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentStatsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStudySessionRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTermProgressRepository;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +31,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(StudySessionRepository::class, EloquentStudySessionRepository::class);
         $this->app->bind(DueTermsReader::class, EloquentDueTermsReader::class);
         $this->app->bind(StatsProjector::class, EloquentDailyStatsProjector::class);
+        $this->app->bind(StatsReader::class, EloquentStatsReader::class);
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));
     }
 
