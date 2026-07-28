@@ -113,10 +113,14 @@ class GlassCard extends StatelessWidget {
 
 /// Scale-and-settle press with feedback — the spring every tappable thing gets.
 class SpringTap extends StatefulWidget {
-  const SpringTap({super.key, required this.child, required this.onTap, this.scale = 0.96});
+  const SpringTap({super.key, required this.child, required this.onTap, this.scale = 0.96, this.feedback = true});
   final Widget child;
   final VoidCallback onTap;
   final double scale;
+
+  /// When false, presses give the scale spring but no automatic click/haptic
+  /// (for places that fire their own, e.g. per-answer feedback).
+  final bool feedback;
 
   @override
   State<SpringTap> createState() => _SpringTapState();
@@ -132,7 +136,7 @@ class _SpringTapState extends State<SpringTap> {
       onTapCancel: () => setState(() => _down = false),
       onTapUp: (_) => setState(() => _down = false),
       onTap: () {
-        AppFeedback.select();
+        if (widget.feedback) AppFeedback.select();
         widget.onTap();
       },
       child: AnimatedScale(
