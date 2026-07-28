@@ -44,6 +44,14 @@ class AuthController extends AsyncNotifier<AppUser?> {
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AppUser?>(AuthController.new);
 
+/// Whether first-run onboarding has been completed (per device). Re-evaluated
+/// whenever the signed-in user changes so a fresh login re-checks the flag.
+final onboardedProvider = FutureProvider<bool>((ref) async {
+  final user = ref.watch(authControllerProvider).value;
+  if (user == null) return true; // not applicable when signed out
+  return ref.read(tokenStoreProvider).isOnboarded();
+});
+
 // ---- Data providers ---------------------------------------------------------
 
 final collectionsProvider = FutureProvider<List<WordCollection>>((ref) async {

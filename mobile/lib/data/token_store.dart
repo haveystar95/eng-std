@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Persists the Sanctum bearer token in the iOS keychain.
 class TokenStore {
   static const _key = 'api_token';
+  static const _onboardedKey = 'onboarded';
   final _storage = const FlutterSecureStorage();
 
   String? _cached;
@@ -24,4 +25,9 @@ class TokenStore {
     _cached = null;
     await _storage.delete(key: _key);
   }
+
+  /// Whether the user has finished the first-run onboarding on this device.
+  Future<bool> isOnboarded() async => (await _storage.read(key: _onboardedKey)) == '1';
+
+  Future<void> setOnboarded() async => _storage.write(key: _onboardedKey, value: '1');
 }
