@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../core/config.dart';
 import 'models.dart';
+import 'review_queue.dart';
 import 'token_store.dart';
 
 /// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,
@@ -157,18 +158,18 @@ class ApiClient {
     return Stats.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// Submit a single graded answer as a one-item idempotent batch.
-  Future<void> answer(String termId, Rating rating) async {
-    await _dio.post('/reviews/batch', data: {
-      'reviews': [
-        {
-          'id': ulid(),
-          'term_id': termId,
-          'grade': rating.grade,
-          'answered_at': DateTime.now().toUtc().toIso8601String(),
-        }
-      ],
+  /// Upload a batch of graded answers (idempotent by each review's client ULID).
+  /// Returns backend2's tally so the caller can reconcile the local queue.
+  Future<({int accepted, int duplicates, int unknown})> submitReviews(List<PendingReview> reviews) async {
+    final r = await _dio.post('/reviews/batch', data: {
+      'reviews': reviews.map((e) => e.toBatchJson()).toList(),
     });
+    final d = _data(r) as Map<String, dynamic>;
+    return (
+      accepted: (d['accepted'] as int?) ?? 0,
+      duplicates: (d['duplicates'] as int?) ?? 0,
+      unknown: (d['unknown'] as int?) ?? 0,
+    );
   }
 
   // ---- AI generation --------------------------------------------------------

@@ -1,24 +1,47 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design.dart';
 import '../../core/glass.dart';
+import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
 import '../profile/profile_screen.dart';
 import '../training/training_home_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   int _index = 0;
 
   static const _pages = [TrainingHomeScreen(), CollectionsScreen(), ProfileScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Drain any answers left over from a previous (possibly offline) session.
+    WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(reviewSyncProvider).flush());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(reviewSyncProvider).flush();
+    }
+  }
 
   static const _items = [
     (icon: Icons.school_outlined, active: Icons.school_rounded, label: 'Тренировка'),

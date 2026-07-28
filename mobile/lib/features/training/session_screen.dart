@@ -54,6 +54,7 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
   bool _revealed = false;
   int _know = 0, _review = 0, _dontKnow = 0;
   bool _finished = false;
+  DateTime _shownAt = DateTime.now(); // when the current card first appeared (for latency)
 
   late final AnimationController _anim =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 240));
@@ -104,23 +105,25 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
   }
 
   void _feedbackFor(Rating r) => switch (r) {
-        Rating.easy => AppFeedback.success(),
+        Rating.good || Rating.easy => AppFeedback.success(),
         Rating.hard => AppFeedback.select(),
-        _ => AppFeedback.warn(),
+        Rating.again => AppFeedback.warn(),
       };
 
   void _answer(Rating rating) {
     _feedbackFor(rating);
     final wordId = _word.id;
+    final latencyMs = DateTime.now().difference(_shownAt).inMilliseconds;
     final isLast = _pos + 1 >= widget.cards.length;
 
     setState(() {
-      if (rating == Rating.easy) {
-        _know++;
-      } else if (rating == Rating.hard) {
-        _review++;
-      } else {
-        _dontKnow++;
+      switch (rating) {
+        case Rating.good || Rating.easy:
+          _know++;
+        case Rating.hard:
+          _review++;
+        case Rating.again:
+          _dontKnow++;
       }
       _drag = Offset.zero;
       _from = Offset.zero;
@@ -131,18 +134,17 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
       } else {
         _pos++;
         _revealed = false;
+        _shownAt = DateTime.now();
       }
     });
 
-    ref.read(apiClientProvider).answer(wordId, rating).whenComplete(() {
-      ref.invalidate(statsProvider);
-      ref.invalidate(dueCardsProvider);
-    });
+    // Offline-first: record locally (survives no network), flush as a batch.
+    ref.read(reviewSyncProvider).record(rating, wordId, latencyMs: latencyMs);
   }
 
   Rating? _ratingFor(Offset d) {
-    if (d.dy < -_threshold && d.dy.abs() > d.dx.abs()) return Rating.hard; // up = повторить
-    if (d.dx > _threshold) return Rating.easy; // right = знаю
+    if (d.dy < -_threshold && d.dy.abs() > d.dx.abs()) return Rating.hard; // up = трудно
+    if (d.dx > _threshold) return Rating.good; // right = знаю
     if (d.dx < -_threshold) return Rating.again; // left = не знаю
     return null;
   }
@@ -165,7 +167,7 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
     _pending = r;
     if (r == Rating.hard) {
       _to = const Offset(0, -1200);
-    } else if (r == Rating.easy) {
+    } else if (r == Rating.good) {
       _to = Offset(1200, _drag.dy);
     } else if (r == Rating.again) {
       _to = Offset(-1200, _drag.dy);
@@ -243,8 +245,9 @@ class _SwipeHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (rating) {
-      Rating.easy => ('Знаю', AppColors.know),
-      Rating.hard => ('Повторить', AppColors.review),
+      Rating.easy => ('Легко', AppColors.accent),
+      Rating.good => ('Знаю', AppColors.know),
+      Rating.hard => ('Трудно', AppColors.review),
       Rating.again => ('Не знаю', AppColors.dontKnow),
       _ => ('', AppColors.textMuted),
     };
@@ -423,10 +426,12 @@ class _Answers extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(children: [
       _btn('Не знаю', Icons.close_rounded, AppColors.dontKnow, Rating.again),
-      const SizedBox(width: 10),
-      _btn('Повторить', Icons.autorenew_rounded, AppColors.review, Rating.hard),
-      const SizedBox(width: 10),
-      _btn('Знаю', Icons.check_rounded, AppColors.know, Rating.easy),
+      const SizedBox(width: 8),
+      _btn('Трудно', Icons.trending_down_rounded, AppColors.review, Rating.hard),
+      const SizedBox(width: 8),
+      _btn('Знаю', Icons.check_rounded, AppColors.know, Rating.good),
+      const SizedBox(width: 8),
+      _btn('Легко', Icons.bolt_rounded, AppColors.accent, Rating.easy),
     ]).animate().fadeIn(duration: 180.ms).slideY(begin: 0.15, end: 0);
   }
 
@@ -436,16 +441,16 @@ class _Answers extends StatelessWidget {
         feedback: false, // _answer plays a rating-specific sound/haptic
         onTap: () => onAnswer(rating),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
           ),
           child: Column(children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 5),
+            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
           ]),
         ),
       ),
@@ -466,6 +471,8 @@ class _SummaryState extends ConsumerState<_Summary> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => AppFeedback.success());
+    // Push the session's answers now rather than waiting for the next trigger.
+    ref.read(reviewSyncProvider).flush();
   }
 
   @override

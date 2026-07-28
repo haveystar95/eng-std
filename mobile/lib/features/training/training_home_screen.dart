@@ -193,7 +193,7 @@ class _MixCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SpringTap(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => const SessionScreen(title: 'Перемешка', shuffle: true),
+        builder: (_) => const SessionScreen(title: 'Повторение', shuffle: true),
       )),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -211,17 +211,17 @@ class _MixCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.22),
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
-              child: const Icon(Icons.shuffle_rounded, color: Colors.white, size: 28),
+              child: Icon(dueCount > 0 ? Icons.bolt_rounded : Icons.check_rounded, color: Colors.white, size: 28),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Перемешать всё',
-                      style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
+                  Text(dueCount > 0 ? 'Повторить' : 'На сегодня всё готово',
+                      style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 2),
-                  Text(dueCount > 0 ? '$dueCount карточек на сегодня' : 'Повторение из всех коллекций',
+                  Text(dueCount > 0 ? '$dueCount карточек к повторению' : 'Свободная тренировка из всех слов',
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
                 ],
               ),

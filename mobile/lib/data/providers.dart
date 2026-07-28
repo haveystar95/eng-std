@@ -3,9 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import 'auth_repository.dart';
 import 'models.dart';
+import 'review_queue.dart';
+import 'review_sync.dart';
 import 'token_store.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
+
+final reviewQueueProvider = Provider<ReviewQueue>((ref) => ReviewQueue());
+
+/// Offline-first review upload pipeline (record locally → batch flush).
+final reviewSyncProvider = Provider<ReviewSync>((ref) {
+  return ReviewSync(ref.watch(apiClientProvider), ref.watch(reviewQueueProvider), ref);
+});
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(ref.watch(tokenStoreProvider));
