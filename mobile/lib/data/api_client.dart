@@ -145,12 +145,26 @@ class ApiClient {
 
   // ---- Training -------------------------------------------------------------
 
-  /// Cards due for review now (global), content included.
-  Future<List<ReviewCard>> dueCards({int limit = 40}) async {
-    final r = await _dio.get('/study/due', queryParameters: {'limit': limit});
+  /// Study cards now (due + new). Scoped to one collection when [collectionId] is set.
+  Future<List<ReviewCard>> dueCards({int limit = 40, String? collectionId}) async {
+    final r = await _dio.get('/study/due', queryParameters: {
+      'limit': limit,
+      'collection_id': ?collectionId,
+    });
     return (_data(r) as List)
         .map((e) => ReviewCard.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Derived per-collection progress, keyed by collection id.
+  Future<Map<String, CollectionProgress>> collectionsProgress() async {
+    final r = await _dio.get('/study/progress');
+    final map = <String, CollectionProgress>{};
+    for (final e in _data(r) as List) {
+      final p = CollectionProgress.fromJson(e as Map<String, dynamic>);
+      map[p.collectionId] = p;
+    }
+    return map;
   }
 
   Future<Stats> stats() async {

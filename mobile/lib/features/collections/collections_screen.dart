@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import 'collection_detail_screen.dart';
 import 'collection_edit_dialog.dart';
+import 'collection_progress_bar.dart';
 import 'generate_dialog.dart';
 
 class CollectionsScreen extends ConsumerWidget {
@@ -26,7 +27,10 @@ class CollectionsScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
             data: (items) => RefreshIndicator(
-              onRefresh: () async => ref.invalidate(collectionsProvider),
+              onRefresh: () async {
+                ref.invalidate(collectionsProvider);
+                ref.invalidate(collectionsProgressProvider);
+              },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
@@ -154,67 +158,75 @@ class _CollectionTile extends ConsumerWidget {
       await ref.read(apiClientProvider).deleteCollection(collection.id);
       ref.invalidate(collectionsProvider);
       ref.invalidate(statsProvider);
+      ref.invalidate(collectionsProgressProvider);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isAi = collection.source == 'ai';
+    final progress = ref.watch(collectionsProgressProvider).value?[collection.id];
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => CollectionDetailScreen(collectionId: collection.id, title: collection.title),
       )),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
-            child: collection.emoji != null
-                ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
-                : Icon(isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(collection.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Row(
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
+                child: collection.emoji != null
+                    ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
+                    : Icon(isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${collection.wordsCount} слов',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-                    if (isAi) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(AppRadii.sm)),
-                        child: Text('ИИ', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.accent, fontWeight: FontWeight.w700)),
-                      ),
-                    ],
+                    Text(collection.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text('${collection.wordsCount} слов',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+                        if (isAi) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(AppRadii.sm)),
+                            child: Text('ИИ', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
-            color: AppColors.surfaceHi,
-            onSelected: (v) {
-              if (v == 'edit') showCollectionEditor(context, ref, existing: collection);
-              if (v == 'delete') _confirmDelete(context, ref);
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Изменить')),
-              PopupMenuItem(value: 'delete', child: Text('Удалить')),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
+                color: AppColors.surfaceHi,
+                onSelected: (v) {
+                  if (v == 'edit') showCollectionEditor(context, ref, existing: collection);
+                  if (v == 'delete') _confirmDelete(context, ref);
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Изменить')),
+                  PopupMenuItem(value: 'delete', child: Text('Удалить')),
+                ],
+              ),
             ],
           ),
+          if (progress != null) CollectionProgressBar(progress: progress),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import '../../core/design.dart';
 import '../../core/glass.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../collections/collection_progress_bar.dart';
 import 'session_screen.dart';
 
 /// Home / training dashboard — glass stats + collection deck launchers.
@@ -32,6 +33,7 @@ class TrainingHomeScreen extends ConsumerWidget {
               ref.invalidate(statsProvider);
               ref.invalidate(collectionsProvider);
               ref.invalidate(dueCardsProvider);
+              ref.invalidate(collectionsProgressProvider);
             },
             child: stats.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -241,13 +243,14 @@ class _MixCard extends StatelessWidget {
   }
 }
 
-class _CollectionRow extends StatelessWidget {
+class _CollectionRow extends ConsumerWidget {
   const _CollectionRow({required this.collection, required this.index});
   final WordCollection collection;
   final int index;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(collectionsProgressProvider).value?[collection.id];
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -257,33 +260,39 @@ class _CollectionRow extends StatelessWidget {
           shuffle: true,
         ),
       )),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
-            child: collection.emoji != null
-                ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
-                : Icon(collection.isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
+                child: collection.emoji != null
+                    ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
+                    : Icon(collection.isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(collection.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text('${collection.wordsCount} слов',
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
+            ],
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(collection.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text('${collection.wordsCount} слов',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              ],
-            ),
-          ),
-          const Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
+          if (progress != null) CollectionProgressBar(progress: progress),
         ],
       ),
     );

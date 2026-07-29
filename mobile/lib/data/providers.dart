@@ -80,6 +80,11 @@ final statsProvider = FutureProvider<Stats>((ref) async {
   return ref.watch(apiClientProvider).stats();
 });
 
+/// Derived per-collection progress (total/learned/mastered/due), keyed by collection id.
+final collectionsProgressProvider = FutureProvider<Map<String, CollectionProgress>>((ref) async {
+  return ref.watch(apiClientProvider).collectionsProgress();
+});
+
 typedef SessionArgs = ({String? collectionId, bool shuffle});
 
 /// Cards for one training session: a specific collection's words, or the global
@@ -87,13 +92,9 @@ typedef SessionArgs = ({String? collectionId, bool shuffle});
 final sessionCardsProvider =
     FutureProvider.family<List<ReviewCard>, SessionArgs>((ref, args) async {
   final api = ref.watch(apiClientProvider);
-  final List<ReviewCard> cards;
-  if (args.collectionId != null) {
-    final words = await api.collectionWords(args.collectionId!);
-    cards = words.map((w) => ReviewCard(word: w)).toList();
-  } else {
-    cards = await api.dueCards();
-  }
+  // Both branches use the SRS study queue (due + new). A collection session is just the
+  // same queue scoped to that collection, so mastered words stop reappearing every time.
+  final cards = await api.dueCards(collectionId: args.collectionId);
   if (args.shuffle) cards.shuffle();
   return cards;
 });

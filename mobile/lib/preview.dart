@@ -27,12 +27,23 @@ void main() {
   final stats = Stats(
     totalWords: 33, learned: 14, mastered: 5, dueToday: 8, reviewsTotal: 61, streakDays: 4,
   );
+  final progress = {
+    for (final (i, c) in collections.indexed)
+      c.id: CollectionProgress(
+        collectionId: c.id,
+        total: c.wordsCount,
+        learned: [8, 2, 15][i],
+        mastered: [3, 0, 5][i],
+        due: [4, 0, 0][i],
+      ),
+  };
 
   runApp(ProviderScope(
     overrides: [
       statsProvider.overrideWith((ref) async => stats),
       dueCardsProvider.overrideWith((ref) async => cards),
       collectionsProvider.overrideWith((ref) async => collections),
+      collectionsProgressProvider.overrideWith((ref) async => progress),
       sessionCardsProvider.overrideWith((ref, args) async => cards),
       authControllerProvider.overrideWith(_PreviewAuth.new),
     ],

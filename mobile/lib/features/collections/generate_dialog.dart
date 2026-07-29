@@ -191,6 +191,7 @@ Future<void> _runGeneration(
         ref.invalidate(collectionsProvider);
         ref.invalidate(statsProvider);
         ref.invalidate(dueCardsProvider);
+        ref.invalidate(collectionsProgressProvider);
         AppFeedback.success();
         messenger
           ..clearSnackBars()

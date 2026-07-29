@@ -58,6 +58,7 @@ class ReviewSync {
 
       _ref.invalidate(statsProvider);
       _ref.invalidate(dueCardsProvider);
+      _ref.invalidate(collectionsProgressProvider);
     } catch (_) {
       // Offline or server error — leave the queue intact and try again later.
     } finally {

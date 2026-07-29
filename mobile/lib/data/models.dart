@@ -136,6 +136,34 @@ class Stats {
       );
 }
 
+/// Derived learning progress for one collection (from `GET /study/progress`).
+class CollectionProgress {
+  final String collectionId;
+  final int total;
+  final int learned;
+  final int mastered;
+  final int due;
+
+  CollectionProgress({
+    required this.collectionId,
+    required this.total,
+    required this.learned,
+    required this.mastered,
+    required this.due,
+  });
+
+  /// Share of the collection's terms that are learned (state = review), 0..1.
+  double get ratio => total == 0 ? 0 : (learned / total).clamp(0, 1);
+
+  factory CollectionProgress.fromJson(Map<String, dynamic> j) => CollectionProgress(
+        collectionId: j['collection_id'] as String,
+        total: (j['total'] as int?) ?? 0,
+        learned: (j['learned'] as int?) ?? 0,
+        mastered: (j['mastered'] as int?) ?? 0,
+        due: (j['due'] as int?) ?? 0,
+      );
+}
+
 class AppUser {
   final String id;
   final String name;
