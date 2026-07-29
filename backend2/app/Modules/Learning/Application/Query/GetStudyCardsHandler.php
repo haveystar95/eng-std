@@ -24,7 +24,11 @@ final readonly class GetStudyCardsHandler
     /** @return list<StudyCardView> */
     public function __invoke(GetStudyCards $query): array
     {
-        $newRemaining = max(0, $query->newTermsPerDay - $this->introduced->countForDay($query->userId, $query->now));
+        // The daily new-term cap keeps the *global* mix from drowning the user. When they
+        // explicitly open one collection to study, give them its new words regardless.
+        $newRemaining = $query->collectionId !== null
+            ? $query->sessionSize
+            : max(0, $query->newTermsPerDay - $this->introduced->countForDay($query->userId, $query->now));
 
         $due = ($this->dueTerms)(new GetDueTerms(
             userId: $query->userId,

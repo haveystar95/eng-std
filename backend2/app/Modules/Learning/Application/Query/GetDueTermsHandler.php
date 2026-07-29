@@ -37,15 +37,19 @@ final readonly class GetDueTermsHandler
     {
         $size = max(1, min(self::MAX_SESSION_SIZE, $query->sessionSize));
 
-        // Collection-scoped session: candidate pool is that one collection; otherwise the
-        // whole (user, due) index feeds due, and all of the user's collections feed new.
-        $scopeTermIds = $query->collectionId !== null
+        // Study only terms that are still in the user's (non-deleted) collections — scoped to
+        // one collection or across all of them. Both due and new draw from this pool, so a
+        // deleted collection's words drop out of the trainer even though their progress rows
+        // (which are per-term, not per-collection) live on.
+        $candidates = $query->collectionId !== null
             ? $this->collectionTerms->termIdsForCollection($query->userId, $query->collectionId, self::NEW_CANDIDATE_CAP)
-            : null;
+            : $this->collectionTerms->termIdsForUser($query->userId, self::NEW_CANDIDATE_CAP);
 
-        $due = $scopeTermIds !== null
-            ? $this->reader->dueAmong($query->userId, $query->now, $scopeTermIds, $size)
-            : $this->reader->due($query->userId, $query->now, $size);
+        if ($candidates === []) {
+            return [];
+        }
+
+        $due = $this->reader->dueAmong($query->userId, $query->now, $candidates, $size);
 
         $remaining = $size - count($due);
         $newLimit = min($remaining, max(0, $query->newTermsRemaining));
@@ -53,21 +57,15 @@ final readonly class GetDueTermsHandler
             return $due;
         }
 
-        $candidates = $scopeTermIds ?? $this->collectionTerms->termIdsForUser($query->userId, self::NEW_CANDIDATE_CAP);
-
         return array_merge($due, $this->newTerms($query->userId, $candidates, $newLimit));
     }
 
     /**
-     * @param  list<string>  $candidates
+     * @param  non-empty-list<string>  $candidates
      * @return list<DueTermView>
      */
     private function newTerms(UserId $userId, array $candidates, int $limit): array
     {
-        if ($candidates === []) {
-            return [];
-        }
-
         $started = $this->progress->existingTermIds($userId, $candidates);
 
         $views = [];

@@ -16,14 +16,8 @@ use DateTimeImmutable;
 interface DueTermsReader
 {
     /**
-     * Terms whose interval has elapsed (`state <> 'new'`, `due_at <= now`), soonest first.
-     *
-     * @return list<DueTermView>
-     */
-    public function due(UserId $userId, DateTimeImmutable $now, int $limit): array;
-
-    /**
-     * Same as {@see due()} but restricted to a set of term ids (collection-scoped session).
+     * Terms whose interval has elapsed (`state <> 'new'`, `due_at <= now`), soonest first,
+     * restricted to a set of term ids (the user's current collection terms).
      *
      * @param  list<string>  $termIds
      * @return list<DueTermView>

@@ -20,20 +20,6 @@ final class EloquentDueTermsReader implements DueTermsReader
     /** @var list<string> */
     private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at'];
 
-    public function due(UserId $userId, DateTimeImmutable $now, int $limit): array
-    {
-        // Backed by the partial index user_term_progress (user_id, due_at) WHERE state <> 'new'.
-        $rows = DB::table(self::TABLE)
-            ->where('user_id', $userId->value)
-            ->where('state', '<>', LearningState::New->value)
-            ->where('due_at', '<=', $now)
-            ->orderBy('due_at')
-            ->limit($limit)
-            ->get(self::COLUMNS);
-
-        return array_values($rows->map($this->toView(...))->all());
-    }
-
     public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
         if ($termIds === []) {

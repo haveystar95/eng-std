@@ -21,13 +21,6 @@ final class InMemoryDueTermsReader implements DueTermsReader
         private readonly array $dueTerms = [],
     ) {}
 
-    public function due(UserId $userId, DateTimeImmutable $now, int $limit): array
-    {
-        $this->dueLimits[] = $limit;
-
-        return array_slice($this->dueTerms, 0, $limit);
-    }
-
     public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
         $this->dueLimits[] = $limit;

@@ -12,47 +12,48 @@ use Tests\Doubles\InMemoryDueTermsReader;
 use Tests\Doubles\InMemoryProgressExistenceReader;
 use Tests\Doubles\InMemoryUserCollectionTermsReader;
 
-/**
- * @return list<DueTermView>
- */
-function dueViews(int $count): array
-{
-    $views = [];
-    for ($i = 0; $i < $count; $i++) {
-        $views[] = new DueTermView(TermId::generate(), LearningState::Review, 4, null);
-    }
-
-    return $views;
-}
-
 /** @return list<string> */
-function newCandidates(int $count): array
+function termIds(int $count): array
 {
-    return array_map(static fn (): string => TermId::generate()->value, range(1, $count));
+    return array_map(static fn (): string => TermId::generate()->value, range(1, max(1, $count)));
+}
+
+function dueView(string $id): DueTermView
+{
+    return new DueTermView(TermId::fromString($id), LearningState::Review, 4, null);
 }
 
 /**
- * @param list<string> $candidates
- * @param list<string> $started
+ * @param list<DueTermView> $due
+ * @param list<string> $candidates  the user's current collection terms (global) or one collection
+ * @param list<string> $started     which candidates already have progress
+ * @param array<string, list<string>> $byCollection  per-collection candidates for scoped tests
  */
-function dueHandler(InMemoryDueTermsReader $due, array $candidates = [], array $started = []): GetDueTermsHandler
+function dueHandler(array $due, array $candidates = [], array $started = [], array $byCollection = []): array
 {
-    return new GetDueTermsHandler(
-        $due,
-        new InMemoryUserCollectionTermsReader($candidates),
-        new InMemoryProgressExistenceReader($started),
-    );
+    $reader = new InMemoryDueTermsReader($due);
+
+    return [
+        new GetDueTermsHandler(
+            $reader,
+            new InMemoryUserCollectionTermsReader($candidates, $byCollection),
+            new InMemoryProgressExistenceReader($started),
+        ),
+        $reader,
+    ];
 }
 
 beforeEach(function () {
     $this->user = UserId::generate();
-    $this->now = new DateTimeImmutable('2026-07-27T08:00:00Z');
+    $this->now = new DateTimeImmutable('2026-07-29T08:00:00Z');
 });
 
 it('fills leftover session slots with new terms, due first', function () {
-    $result = dueHandler(new InMemoryDueTermsReader(dueViews(5)), candidates: newCandidates(10))(
-        new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
-    );
+    $dueIds = termIds(5);
+    $newIds = termIds(10);
+    [$handler] = dueHandler(array_map('dueView', $dueIds), candidates: [...$dueIds, ...$newIds], started: $dueIds);
+
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10));
 
     expect($result)->toHaveCount(15);
     expect($result[0]->state)->toBe(LearningState::Review);
@@ -60,56 +61,71 @@ it('fills leftover session slots with new terms, due first', function () {
 });
 
 it('shows no new terms when due cards already fill the session', function () {
-    $result = dueHandler(new InMemoryDueTermsReader(dueViews(25)), candidates: newCandidates(10))(
-        new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
-    );
+    $dueIds = termIds(25);
+    [$handler] = dueHandler(array_map('dueView', $dueIds), candidates: $dueIds, started: $dueIds);
+
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10));
 
     expect($result)->toHaveCount(20)
         ->and(array_filter($result, fn (DueTermView $v): bool => $v->state === LearningState::New))->toBe([]);
 });
 
 it('never exceeds the remaining daily new-term quota', function () {
-    $result = dueHandler(new InMemoryDueTermsReader(dueViews(5)), candidates: newCandidates(10))(
-        new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 3),
-    );
+    $dueIds = termIds(5);
+    $newIds = termIds(10);
+    [$handler] = dueHandler(array_map('dueView', $dueIds), candidates: [...$dueIds, ...$newIds], started: $dueIds);
+
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 3));
 
     expect($result)->toHaveCount(8); // 5 due + 3 new
 });
 
 it('skips collection terms that already have progress', function () {
-    $ids = newCandidates(3);
-    $result = dueHandler(new InMemoryDueTermsReader(), candidates: $ids, started: [$ids[1]])(
-        new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10),
-    );
+    $ids = termIds(3);
+    [$handler] = dueHandler([], candidates: $ids, started: [$ids[1]]);
+
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10));
 
     expect($result)->toHaveCount(2);
     expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe([$ids[0], $ids[2]]);
 });
 
-it('scopes due and new to a collection when collection_id is set', function () {
-    $inCollection = newCandidates(2);
-    $dueInside = new DueTermView(TermId::fromString($inCollection[0]), LearningState::Review, 4, null);
-    $dueOutside = new DueTermView(TermId::generate(), LearningState::Review, 4, null);
+it('studies only terms still in the user’s collections', function () {
+    // A due card whose term is no longer in any (non-deleted) collection is excluded.
+    $inCollection = termIds(1);
+    $orphan = TermId::generate()->value; // has progress but its collection was deleted
+    [$handler] = dueHandler([dueView($inCollection[0]), dueView($orphan)], candidates: $inCollection, started: $inCollection);
 
-    $handler = new GetDueTermsHandler(
-        new InMemoryDueTermsReader([$dueInside, $dueOutside]),
-        new InMemoryUserCollectionTermsReader([], ['COL' => $inCollection]),
-        new InMemoryProgressExistenceReader([$inCollection[0]]), // [0] studied, [1] still new
-    );
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 20, newTermsRemaining: 10));
+
+    expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe($inCollection);
+});
+
+it('scopes due and new to one collection when collection_id is set', function () {
+    $inCollection = termIds(2);
+    $dueInside = dueView($inCollection[0]);
+    $dueOutside = dueView(TermId::generate()->value);
+    [$handler] = dueHandler([$dueInside, $dueOutside], byCollection: ['COL' => $inCollection], started: [$inCollection[0]]);
 
     $result = $handler(new GetDueTerms(
         $this->user, $this->now, sessionSize: 20, newTermsRemaining: 10, collectionId: 'COL',
     ));
 
-    // Due limited to the collection (outside card dropped) + the one unstudied collection term.
     expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe([$inCollection[0], $inCollection[1]]);
     expect($result[1]->state)->toBe(LearningState::New);
 });
 
-it('caps the session size at 100', function () {
-    $reader = new InMemoryDueTermsReader(dueViews(150));
+it('returns nothing when the user has no collections', function () {
+    [$handler] = dueHandler([dueView(TermId::generate()->value)]);
 
-    $result = dueHandler($reader)(new GetDueTerms($this->user, $this->now, sessionSize: 500));
+    expect($handler(new GetDueTerms($this->user, $this->now)))->toBe([]);
+});
+
+it('caps the session size at 100', function () {
+    $dueIds = termIds(150);
+    [$handler, $reader] = dueHandler(array_map('dueView', $dueIds), candidates: $dueIds, started: $dueIds);
+
+    $result = $handler(new GetDueTerms($this->user, $this->now, sessionSize: 500));
 
     expect($result)->toHaveCount(100)
         ->and($reader->dueLimits[0])->toBe(100);
