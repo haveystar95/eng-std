@@ -31,10 +31,55 @@ Per `api-endpoint` + `mobile-sync-contract`. Each module's `Presentation/Http` (
 - [ ] `GET /sync?since=` delta sync.
 - [~] `openapi/openapi.yaml` started (source of truth): documents Auth + Generation + Collections. Extend as new endpoints land. **Also established:** RFC 7807 `application/problem+json` errors via a polymorphic `Shared\Domain\Exception\ProblemDetails` interface + one renderer in `bootstrap/app.php` (domain exceptions carry a stable `code`); input validation keeps Laravel's 422 `{message, errors}`.
 
-## Phase 4 — mobile cutover  ⬜
-- [ ] Generate the Dart client from `openapi/openapi.yaml`.
-- [ ] Point the Flutter app (`../mobile`) at backend2; migrate/replace the hand-written `api_client.dart`.
-- [ ] Verify on device; retire the old `../backend`.
+## Phase 4 — mobile cutover  ✅ effectively done (2026-07-29)
+- [~] ~~Generate the Dart client from `openapi/openapi.yaml`~~ — **skipped by choice**: the
+  hand-written `mobile/lib/data/` (models/api_client/providers) was adapted directly to the
+  contract (`/api/v1`, `data`-wrapped, ULID strings, `/reviews/batch`, `/study/*`,
+  `/generations`). Codegen deferred indefinitely; not worth it for one client.
+- [x] Flutter app points at backend2. Exposed via ngrok service `wt_ngrok` (static domain
+  `https://greedily-thermos-finer.ngrok-free.dev`, = default in `mobile/lib/core/config.dart`).
+- [x] Verified on device (user runs `flutter run --release` on the iPhone; iterating on UX).
+- [ ] Retire the old `../backend` — **not yet** (kept as reference/fallback; no data to migrate
+  beyond the single user's test data).
+
+## Phase 5 — product polish & feature depth (this session, 2026-07-29)
+Built on top of the cutover; branch `feat/mobile-backend2-cutover` (not merged to main yet).
+
+- [x] **Mobile "liquid glass" redesign** — `mobile/lib/core/glass.dart` (AmbientBackground,
+  GlassCard/Chip/Button/Field, SpringTap, AppFeedback haptics+click). All screens redone:
+  login, onboarding (first-run language/level/goal, local `onboarded` flag), training home
+  (glass dashboard), collections + generate/word/collection dialogs, collection detail,
+  profile/settings, and a floating glass bottom tab bar.
+- [x] **Learning Tier 1 (offline-first reviews)** — `ReviewQueue` + `ReviewSync`: each answer
+  is recorded locally (client ULID + answer-time `answered_at`) then flushed as a batch to
+  `/reviews/batch`; flush on answer/finish/launch/resume. Idempotent, survives no-network.
+- [x] **Learning Tier 2 (new words enter SRS)** — `/study/due` returns due **then new** (terms
+  in the user's collections with no progress row), capped by a daily quota (`GetStudyCards`
+  → `IntroducedTermsReader`). "New" is derived, not seeded. Home counts due+new.
+- [x] **Collection progress + scoped study (2026-07-29)** — `GET /study/progress` (derived
+  per-collection learned/mastered/due, Learning folds `ProgressSnapshotReader` over
+  Collections' `UserCollectionTermsReader`) → progress bars on tiles; `GET
+  /study/due?collection_id=` → collection sessions use the scoped SRS queue.
+- [x] **Training UX** — 2-swipe model (right=Знаю/good, left=Не знаю/again) + secondary
+  Трудно/Легко buttons + full SM-2 grades; content-hugging card; swipe legend.
+- [x] **AI generation quality (prompt v2)** — persist IPA + examples on terms (were being
+  dropped), enforce the requested term count (validator trims to `size`), richer prompt with
+  `transcription` + `example_translation`; `prompt_version=v2`.
+- [x] **Observability module** — `api_request_logs` table; terminable middleware logs inbound
+  requests, an Http-client listener logs outbound (OpenAI) calls; pure `SecretRedactor`
+  keeps credentials out; debug stack traces trimmed, bodies capped 16KB.
+
+## Where the finish line is (definition of done for the app)
+The app is **usable end-to-end today**. "Done" for this single-user product means:
+- [ ] **Delta sync** `GET /sync?since=` + client reconciliation — the one real gap for true
+  offline (Phase 3). Everything else is offline-*friendly* (idempotent writes) but not full sync.
+- [ ] **Log retention** — prune `api_request_logs` (grows unbounded); a scheduled cleanup.
+- [ ] **Generation depth (optional)** — prompt cache by `(normalized_prompt, langs, version)`,
+  semantic dedup (pgvector), an eval set in `tests/Fixtures/`.
+- [ ] **Retire `../backend`** once confident backend2 covers everything on device.
+- [ ] **Merge `feat/mobile-backend2-cutover` → main** (only on the user's explicit ask).
+Nice-to-haves, not blockers: undo-last-swipe + end-of-session flush, `Terms lookup/search`,
+push notifications, `POST /study/sessions`, per-item CEFR badge, AI open-answer check.
 
 ## Decisions & conventions already established (don't re-derive)
 
