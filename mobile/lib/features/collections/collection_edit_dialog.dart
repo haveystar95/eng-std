@@ -27,82 +27,96 @@ Future<void> showCollectionEditor(BuildContext context, WidgetRef ref, {WordColl
       builder: (context, setState) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 40),
+        insetPadding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: 24,
+          bottom: 24 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: GlassCard(
           solid: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           radius: 28,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(existing == null ? 'Новая коллекция' : 'Изменить коллекцию',
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.brand,
-                        borderRadius: BorderRadius.circular(AppRadii.md),
-                        boxShadow: AppShadows.glow(AppColors.primary),
-                      ),
-                      child: Text(emoji, style: const TextStyle(fontSize: 32)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: GlassField(
-                        controller: titleCtrl,
-                        label: 'Название',
-                        hint: 'напр.: Путешествия',
-                        autofocus: true,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const Text('Эмодзи',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _emojis.map((e) {
-                    final selected = e == emoji;
-                    return SpringTap(
-                      scale: 0.85,
-                      onTap: () => setState(() => emoji = e),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        width: 44,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: selected ? AppColors.primary.withValues(alpha: 0.28) : Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(AppRadii.sm),
-                          border: Border.all(
-                            color: selected ? AppColors.primary : Colors.white.withValues(alpha: 0.12),
-                            width: selected ? 1.5 : 1,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(existing == null ? 'Новая коллекция' : 'Изменить коллекцию',
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
+              const SizedBox(height: AppSpacing.md),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              gradient: AppGradients.brand,
+                              borderRadius: BorderRadius.circular(AppRadii.md),
+                              boxShadow: AppShadows.glow(AppColors.primary),
+                            ),
+                            child: Text(emoji, style: const TextStyle(fontSize: 32)),
                           ),
-                        ),
-                        child: Text(e, style: const TextStyle(fontSize: 22)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GlassField(
+                              controller: titleCtrl,
+                              label: 'Название',
+                              hint: 'напр.: Путешествия',
+                              autofocus: true,
+                              textCapitalization: TextCapitalization.sentences,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  }).toList(),
+                      const SizedBox(height: AppSpacing.md),
+                      const Text('Эмодзи',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _emojis.map((e) {
+                          final selected = e == emoji;
+                          return SpringTap(
+                            scale: 0.85,
+                            onTap: () => setState(() => emoji = e),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              width: 44,
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: selected ? AppColors.primary.withValues(alpha: 0.28) : Colors.white.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(AppRadii.sm),
+                                border: Border.all(
+                                  color: selected ? AppColors.primary : Colors.white.withValues(alpha: 0.12),
+                                  width: selected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Text(e, style: const TextStyle(fontSize: 22)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(child: GlassSecondaryButton(label: 'Отмена', onTap: () => Navigator.pop(context))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: GlassButton(
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  Expanded(child: GlassSecondaryButton(label: 'Отмена', onTap: () => Navigator.pop(context))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: GlassButton(
                         label: existing == null ? 'Создать' : 'Сохранить',
                         icon: existing == null ? Icons.add_rounded : Icons.check_rounded,
                         onTap: () async {
@@ -126,6 +140,7 @@ Future<void> showCollectionEditor(BuildContext context, WidgetRef ref, {WordColl
                             }
                             ref.invalidate(collectionsProvider);
                             ref.invalidate(statsProvider);
+                            ref.invalidate(collectionsProgressProvider);
                           } catch (e) {
                             AppFeedback.warn();
                             if (context.mounted) {
@@ -139,7 +154,6 @@ Future<void> showCollectionEditor(BuildContext context, WidgetRef ref, {WordColl
                 ),
               ],
             ),
-          ),
         ).animate().fadeIn(duration: 180.ms).scale(begin: const Offset(0.92, 0.92), end: const Offset(1, 1), curve: Curves.easeOutBack),
       ),
     ),

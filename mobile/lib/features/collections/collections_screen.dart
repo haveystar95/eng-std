@@ -24,6 +24,7 @@ class CollectionsScreen extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: collections.when(
+            skipLoadingOnReload: true,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
             data: (items) => RefreshIndicator(

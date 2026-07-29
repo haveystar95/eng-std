@@ -36,6 +36,7 @@ class TrainingHomeScreen extends ConsumerWidget {
               ref.invalidate(collectionsProgressProvider);
             },
             child: stats.when(
+              skipLoadingOnReload: true,
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => _errorList('$e'),
               data: (s) => ListView(

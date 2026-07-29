@@ -62,6 +62,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           if (i == _index) return;
           AppFeedback.select();
           setState(() => _index = i);
+          // Refresh on tab entry so a create/delete on another tab is reflected without a
+          // manual pull. Screens keep showing current data during the reload (no spinner).
+          ref.invalidate(collectionsProvider);
+          ref.invalidate(collectionsProgressProvider);
+          ref.invalidate(statsProvider);
+          ref.invalidate(dueCardsProvider);
         },
       ),
     );
