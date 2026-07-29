@@ -28,12 +28,8 @@ Future<void> showWordEditor(
       builder: (context, setState) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: 24,
-          bottom: 24 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
+        // Dialog already adds MediaQuery.viewInsets, so this stays fixed.
+        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 24),
         child: GlassCard(
           solid: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
