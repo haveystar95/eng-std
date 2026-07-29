@@ -152,9 +152,10 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
 
   void _onPanUpdate(DragUpdateDetails d) {
     // Swiping works on both sides of the card: a confident learner can answer the front
-    // (Знаю / Не знаю) without flipping it first.
+    // (Знаю / Не знаю) without flipping it first. Only the horizontal axis carries meaning,
+    // so damp the vertical so the card slides sideways instead of drifting onto the button.
     if (_anim.isAnimating) return;
-    setState(() => _drag += d.delta);
+    setState(() => _drag += Offset(d.delta.dx, d.delta.dy * 0.2));
     // A subtle tick each time the drag crosses into a new answer zone.
     final r = _ratingFor(_drag);
     if (r != _lastHint) {
