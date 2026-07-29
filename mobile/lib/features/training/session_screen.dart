@@ -151,7 +151,9 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
   }
 
   void _onPanUpdate(DragUpdateDetails d) {
-    if (!_revealed || _anim.isAnimating) return;
+    // Swiping works on both sides of the card: a confident learner can answer the front
+    // (Знаю / Не знаю) without flipping it first.
+    if (_anim.isAnimating) return;
     setState(() => _drag += d.delta);
     // A subtle tick each time the drag crosses into a new answer zone.
     final r = _ratingFor(_drag);
@@ -162,7 +164,6 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
   }
 
   void _onPanEnd(DragEndDetails _) {
-    if (!_revealed) return;
     final r = _ratingFor(_drag);
     _from = _drag;
     _pending = r;
@@ -214,17 +215,17 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
                       ),
                     ),
                   ),
-                  if (_revealed && _drag.distance > 24) _SwipeHint(rating: hint),
+                  if (_drag.distance > 24) _SwipeHint(rating: hint),
                 ],
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (_revealed) ...[
-            const _SwipeLegend(),
-            const SizedBox(height: 10),
-            _Answers(onAnswer: _answer),
-          ] else
+          const _SwipeLegend(),
+          const SizedBox(height: 10),
+          if (_revealed)
+            _Answers(onAnswer: _answer)
+          else
             GlassButton(
               label: 'Показать перевод',
               icon: Icons.visibility_outlined,

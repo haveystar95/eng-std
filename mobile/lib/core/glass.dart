@@ -72,6 +72,7 @@ class GlassCard extends StatelessWidget {
     this.onTap,
     this.blur = 22,
     this.tint,
+    this.solid = false,
   });
 
   final Widget child;
@@ -81,8 +82,18 @@ class GlassCard extends StatelessWidget {
   final double blur;
   final Color? tint;
 
+  /// Near-opaque dark frosted panel — for modals/menus, where content must stay
+  /// readable over the vivid ambient background instead of letting it bleed through.
+  final bool solid;
+
   @override
   Widget build(BuildContext context) {
+    final fill = solid
+        ? [AppColors.surface.withValues(alpha: 0.94), AppColors.surfaceAlt.withValues(alpha: 0.88)]
+        : [
+            (tint ?? Colors.white).withValues(alpha: tint != null ? 0.28 : 0.12),
+            (tint ?? Colors.white).withValues(alpha: tint != null ? 0.10 : 0.04),
+          ];
     final content = ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
@@ -91,15 +102,8 @@ class GlassCard extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                (tint ?? Colors.white).withValues(alpha: tint != null ? 0.28 : 0.12),
-                (tint ?? Colors.white).withValues(alpha: tint != null ? 0.10 : 0.04),
-              ],
-            ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.14), width: 1),
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: fill),
+            border: Border.all(color: Colors.white.withValues(alpha: solid ? 0.16 : 0.14), width: 1),
           ),
           child: child,
         ),

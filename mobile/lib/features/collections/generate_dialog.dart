@@ -19,13 +19,14 @@ Future<void> showGenerateDialog(BuildContext context, WidgetRef ref) async {
 
   await showDialog<void>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
+    barrierColor: Colors.black.withValues(alpha: 0.72),
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 40),
         child: GlassCard(
+          solid: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           radius: 28,
           child: SingleChildScrollView(
