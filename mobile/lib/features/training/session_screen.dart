@@ -22,10 +22,24 @@ class SessionScreen extends ConsumerWidget {
     final args = (collectionId: collectionId, shuffle: shuffle);
     final cards = ref.watch(sessionCardsProvider(args));
 
+    final loaded = cards.value ?? const <ReviewCard>[];
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          if (loaded.isNotEmpty)
+            IconButton(
+              tooltip: 'Список слов',
+              icon: const Icon(Icons.format_list_bulleted_rounded),
+              onPressed: () {
+                AppFeedback.tap();
+                _showWordList(context, loaded);
+              },
+            ),
+        ],
+      ),
       body: AmbientBackground(
         child: SafeArea(
           child: cards.when(
@@ -34,6 +48,99 @@ class SessionScreen extends ConsumerWidget {
             data: (list) => list.isEmpty ? const _EmptySession() : _Deck(cards: list, args: args),
           ),
         ),
+      ),
+    );
+  }
+
+  /// A quick overview of everything the session will drill, so the user can see the set
+  /// before/while studying.
+  void _showWordList(BuildContext context, List<ReviewCard> cards) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.78),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.lg)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, 12, AppSpacing.md, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.format_list_bulleted_rounded, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Text('${cards.length} ${cards.length == 1 ? 'слово' : 'слов'} в занятии',
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+            Flexible(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
+                itemCount: cards.length,
+                separatorBuilder: (_, _) => Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+                itemBuilder: (_, i) => _WordListRow(word: cards[i].word),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WordListRow extends StatelessWidget {
+  const _WordListRow({required this.word});
+  final Word word;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(word.term,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                    if (word.transcription != null && word.transcription!.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Text('/${word.transcription}/', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(word.translation, style: const TextStyle(color: AppColors.primary, fontSize: 14)),
+              ],
+            ),
+          ),
+          if (word.type == 'phrase') ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(AppRadii.sm)),
+              child: const Text('фраза', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ],
       ),
     );
   }
