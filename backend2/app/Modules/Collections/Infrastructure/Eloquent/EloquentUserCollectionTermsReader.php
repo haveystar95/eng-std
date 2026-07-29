@@ -34,4 +34,36 @@ final class EloquentUserCollectionTermsReader implements UserCollectionTermsRead
 
         return array_keys($seen);
     }
+
+    public function termIdsForCollection(UserId $userId, string $collectionId, int $limit): array
+    {
+        $rows = DB::table('collection_items as ci')
+            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+            ->where('c.id', $collectionId)
+            ->where('c.owner_id', $userId->value)
+            ->whereNull('c.deleted_at')
+            ->orderBy('ci.position')
+            ->limit($limit)
+            ->pluck('ci.term_id');
+
+        return array_values(array_unique(array_map(static fn ($id): string => (string) $id, $rows->all())));
+    }
+
+    public function termIdsByCollection(UserId $userId): array
+    {
+        $rows = DB::table('collection_items as ci')
+            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+            ->where('c.owner_id', $userId->value)
+            ->whereNull('c.deleted_at')
+            ->orderBy('ci.position')
+            ->get(['ci.collection_id', 'ci.term_id']);
+
+        /** @var array<string, list<string>> $map */
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(string) $row->collection_id][] = (string) $row->term_id;
+        }
+
+        return $map;
+    }
 }

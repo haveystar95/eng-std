@@ -27,4 +27,13 @@ final class InMemoryDueTermsReader implements DueTermsReader
 
         return array_slice($this->dueTerms, 0, $limit);
     }
+
+    public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
+    {
+        $this->dueLimits[] = $limit;
+        $set = array_flip($termIds);
+        $filtered = array_values(array_filter($this->dueTerms, static fn ($v): bool => isset($set[$v->termId->value])));
+
+        return array_slice($filtered, 0, $limit);
+    }
 }

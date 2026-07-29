@@ -21,4 +21,12 @@ interface DueTermsReader
      * @return list<DueTermView>
      */
     public function due(UserId $userId, DateTimeImmutable $now, int $limit): array;
+
+    /**
+     * Same as {@see due()} but restricted to a set of term ids (collection-scoped session).
+     *
+     * @param  list<string>  $termIds
+     * @return list<DueTermView>
+     */
+    public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array;
 }

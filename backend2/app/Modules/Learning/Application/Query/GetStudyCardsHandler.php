@@ -31,6 +31,7 @@ final readonly class GetStudyCardsHandler
             now: $query->now,
             sessionSize: $query->sessionSize,
             newTermsRemaining: $newRemaining,
+            collectionId: $query->collectionId,
         ));
 
         $content = $this->termContent->byIds(array_map(static fn ($view) => $view->termId, $due));

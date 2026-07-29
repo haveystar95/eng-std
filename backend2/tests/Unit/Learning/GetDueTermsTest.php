@@ -86,6 +86,26 @@ it('skips collection terms that already have progress', function () {
     expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe([$ids[0], $ids[2]]);
 });
 
+it('scopes due and new to a collection when collection_id is set', function () {
+    $inCollection = newCandidates(2);
+    $dueInside = new DueTermView(TermId::fromString($inCollection[0]), LearningState::Review, 4, null);
+    $dueOutside = new DueTermView(TermId::generate(), LearningState::Review, 4, null);
+
+    $handler = new GetDueTermsHandler(
+        new InMemoryDueTermsReader([$dueInside, $dueOutside]),
+        new InMemoryUserCollectionTermsReader([], ['COL' => $inCollection]),
+        new InMemoryProgressExistenceReader([$inCollection[0]]), // [0] studied, [1] still new
+    );
+
+    $result = $handler(new GetDueTerms(
+        $this->user, $this->now, sessionSize: 20, newTermsRemaining: 10, collectionId: 'COL',
+    ));
+
+    // Due limited to the collection (outside card dropped) + the one unstudied collection term.
+    expect(array_map(fn (DueTermView $v): string => $v->termId->value, $result))->toBe([$inCollection[0], $inCollection[1]]);
+    expect($result[1]->state)->toBe(LearningState::New);
+});
+
 it('caps the session size at 100', function () {
     $reader = new InMemoryDueTermsReader(dueViews(150));
 

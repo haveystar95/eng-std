@@ -37,7 +37,15 @@ final readonly class GetDueTermsHandler
     {
         $size = max(1, min(self::MAX_SESSION_SIZE, $query->sessionSize));
 
-        $due = $this->reader->due($query->userId, $query->now, $size);
+        // Collection-scoped session: candidate pool is that one collection; otherwise the
+        // whole (user, due) index feeds due, and all of the user's collections feed new.
+        $scopeTermIds = $query->collectionId !== null
+            ? $this->collectionTerms->termIdsForCollection($query->userId, $query->collectionId, self::NEW_CANDIDATE_CAP)
+            : null;
+
+        $due = $scopeTermIds !== null
+            ? $this->reader->dueAmong($query->userId, $query->now, $scopeTermIds, $size)
+            : $this->reader->due($query->userId, $query->now, $size);
 
         $remaining = $size - count($due);
         $newLimit = min($remaining, max(0, $query->newTermsRemaining));
@@ -45,13 +53,17 @@ final readonly class GetDueTermsHandler
             return $due;
         }
 
-        return array_merge($due, $this->newTerms($query->userId, $newLimit));
+        $candidates = $scopeTermIds ?? $this->collectionTerms->termIdsForUser($query->userId, self::NEW_CANDIDATE_CAP);
+
+        return array_merge($due, $this->newTerms($query->userId, $candidates, $newLimit));
     }
 
-    /** @return list<DueTermView> */
-    private function newTerms(UserId $userId, int $limit): array
+    /**
+     * @param  list<string>  $candidates
+     * @return list<DueTermView>
+     */
+    private function newTerms(UserId $userId, array $candidates, int $limit): array
     {
-        $candidates = $this->collectionTerms->termIdsForUser($userId, self::NEW_CANDIDATE_CAP);
         if ($candidates === []) {
             return [];
         }

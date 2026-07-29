@@ -336,6 +336,11 @@ paths:
         client can run the session offline.
       parameters:
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - name: collection_id
+          in: query
+          required: false
+          description: Restrict the session to one owned collection (due + new from that collection only).
+          schema: { type: string, minLength: 26, maxLength: 26 }
       responses:
         '200':
           description: OK
@@ -347,6 +352,27 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/StudyCard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /study/progress:
+    get:
+      tags: [Study]
+      summary: Per-collection learning progress (derived, not stored)
+      description: >-
+        For each of the user's own collections, the count of its terms that are learned
+        (state = review), mastered (review and interval >= 21 days) and due now, plus the
+        total. Computed by folding the (user, term) progress snapshot over collection membership.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/CollectionProgress' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /reviews/batch:
@@ -535,6 +561,15 @@ components:
             items:
               type: array
               items: { $ref: '#/components/schemas/CollectionItem' }
+
+    CollectionProgress:
+      type: object
+      properties:
+        collection_id: { type: string }
+        total: { type: integer }
+        learned: { type: integer }
+        mastered: { type: integer }
+        due: { type: integer }
 
     StudyCard:
       type: object

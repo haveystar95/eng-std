@@ -18,5 +18,6 @@ final readonly class GetDueTerms
         public DateTimeImmutable $now,
         public int $sessionSize = 20,
         public int $newTermsRemaining = 10,
+        public ?string $collectionId = null, // when set, restrict the session to that collection
     ) {}
 }

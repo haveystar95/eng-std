@@ -15,5 +15,6 @@ final readonly class GetStudyCards
         public DateTimeImmutable $now,
         public int $sessionSize = 20,
         public int $newTermsPerDay = 10,
+        public ?string $collectionId = null, // restrict to one collection when set
     ) {}
 }
