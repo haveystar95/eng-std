@@ -35,6 +35,7 @@ final readonly class FindOrCreateTermHandler
                 $existing->addExample($example);
             }
             $existing->ensureIpa($command->ipa);
+            $existing->ensureCefr($command->cefr);
             $this->terms->save($existing);
 
             return $existing->id();
@@ -52,6 +53,7 @@ final readonly class FindOrCreateTermHandler
             translations: $command->translations,
             ipa: $command->ipa,
             examples: $command->examples,
+            cefr: $command->cefr,
         );
 
         $this->terms->save($term);

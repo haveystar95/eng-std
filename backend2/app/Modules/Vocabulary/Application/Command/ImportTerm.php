@@ -28,5 +28,6 @@ final readonly class ImportTerm
         public array $translations = [],
         public ?string $ipa = null,
         public array $examples = [],
+        public ?string $cefr = null,   // 'A1'..'C2' or null; validated/normalized downstream
     ) {}
 }

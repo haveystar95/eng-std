@@ -33,6 +33,7 @@ final class TermMapper
             createdAt: $model->created_at->toDateTimeImmutable(),
             translations: $translations,
             ipa: $model->ipa !== null ? (string) $model->ipa : null,
+            cefr: $model->cefr !== null ? (string) $model->cefr : null,
         );
     }
 
@@ -46,6 +47,7 @@ final class TermMapper
             'type' => $term->type()->value,
             'pos' => $term->pos()?->value,
             'ipa' => $term->ipa(),
+            'cefr' => $term->cefr(),
             'source' => $term->source()->value,
             'created_at' => $term->createdAt(),
         ];

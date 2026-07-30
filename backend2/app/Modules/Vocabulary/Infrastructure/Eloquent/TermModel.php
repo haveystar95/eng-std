@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property string|null $pos
  * @property string|null $ipa
+ * @property string|null $cefr
  * @property string|null $audio_url
  * @property string $source
  * @property string|null $created_by

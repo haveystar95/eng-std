@@ -60,3 +60,47 @@ it('merges new translations into an existing term', function () {
 
     expect($repo->findById($id)?->translations())->toHaveCount(2);
 });
+
+it('persists a normalized cefr level, and stores null for an invalid one', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $good = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        cefr: 'b1',
+    ));
+    $bad = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('overdraft'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        cefr: 'nonsense',
+    ));
+
+    expect($repo->findById($good)?->cefr())->toBe('B1')
+        ->and($repo->findById($bad)?->cefr())->toBeNull();
+});
+
+it('back-fills a missing cefr on dedup but never overwrites an existing one', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    // First created without a level, second supplies one → back-filled.
+    $filled = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('withdraw'), TermType::Word, PartOfSpeech::Verb, TermSource::User,
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('withdraw'), TermType::Word, PartOfSpeech::Verb, TermSource::Ai,
+        cefr: 'B2',
+    ));
+
+    // First created with a level, second differs → original kept.
+    $kept = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('deposit'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        cefr: 'A2',
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('deposit'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        cefr: 'C1',
+    ));
+
+    expect($repo->findById($filled)?->cefr())->toBe('B2')
+        ->and($repo->findById($kept)?->cefr())->toBe('A2');
+});

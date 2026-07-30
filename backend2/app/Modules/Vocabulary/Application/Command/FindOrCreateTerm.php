@@ -27,5 +27,6 @@ final readonly class FindOrCreateTerm
         public array $translations = [],
         public ?string $ipa = null,
         public array $examples = [],
+        public ?string $cefr = null,
     ) {}
 }

@@ -109,6 +109,7 @@ final readonly class ProcessGenerationHandler
                 examples: $item->example !== null
                     ? [new ExampleInput($item->example, $item->exampleTranslation)]
                     : [],
+                cefr: $item->cefr,
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));

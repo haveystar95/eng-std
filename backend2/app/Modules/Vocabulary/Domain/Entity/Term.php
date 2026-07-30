@@ -28,6 +28,8 @@ final class Term
 
     private ?string $ipa;
 
+    private ?string $cefr;
+
     /**
      * @param list<Translation> $translations
      * @param list<Example> $examples
@@ -44,12 +46,14 @@ final class Term
         array $translations,
         ?string $ipa,
         array $examples,
+        ?string $cefr,
     ) {
         $this->translations = [];
         foreach ($translations as $translation) {
             $this->addTranslation($translation);
         }
         $this->ipa = $this->cleanIpa($ipa);
+        $this->cefr = $this->cleanCefr($cefr);
         $this->examples = [];
         foreach ($examples as $example) {
             $this->addExample($example);
@@ -72,8 +76,9 @@ final class Term
         array $translations = [],
         ?string $ipa = null,
         array $examples = [],
+        ?string $cefr = null,
     ): self {
-        return new self($id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples);
+        return new self($id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples, $cefr);
     }
 
     /** Add a translation, ignoring exact (lang,text) duplicates. */
@@ -108,6 +113,15 @@ final class Term
         }
     }
 
+    /** Fill in the CEFR level only when the term doesn't have one yet (dedup-merge safe). */
+    public function ensureCefr(?string $cefr): void
+    {
+        $clean = $this->cleanCefr($cefr);
+        if ($this->cefr === null && $clean !== null) {
+            $this->cefr = $clean;
+        }
+    }
+
     private function cleanIpa(?string $ipa): ?string
     {
         if ($ipa === null) {
@@ -116,6 +130,17 @@ final class Term
         $trimmed = trim($ipa);
 
         return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /** Uppercase and validate; anything not one of A1..C2 becomes null ("unknown"). */
+    private function cleanCefr(?string $cefr): ?string
+    {
+        if ($cefr === null) {
+            return null;
+        }
+        $upper = strtoupper(trim($cefr));
+
+        return in_array($upper, ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], true) ? $upper : null;
     }
 
     public function id(): TermId
@@ -167,6 +192,12 @@ final class Term
     public function ipa(): ?string
     {
         return $this->ipa;
+    }
+
+    /** CEFR level (A1..C2), or null when unknown — read neutrally, never as a risk. */
+    public function cefr(): ?string
+    {
+        return $this->cefr;
     }
 
     /** @return list<Example> */

@@ -40,6 +40,7 @@ final readonly class ImportTermHandler
             translations: $translations,
             ipa: $command->ipa,
             examples: $examples,
+            cefr: $command->cefr,
         ));
     }
 }
