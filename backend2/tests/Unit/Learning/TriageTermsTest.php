@@ -64,13 +64,21 @@ it('leaves an unknown-swiped term new — no progress row', function () {
         ->and($this->progress->count())->toBe(0);
 });
 
-it('returns a known term to new when swiped unknown, dropping its row', function () {
+it('returns a known term to new when swiped unknown, keeping its history', function () {
     $term = TermId::generate();
-    $this->progress->save(TermProgress::knownFromTriage($this->user, $term));
+    // A known term that carries history (e.g. later manually marked known from the word list):
+    // the return must reset state but preserve reps/lapses, not blank the term out.
+    $this->progress->save(TermProgress::reconstitute(
+        $this->user, $term, LearningState::Known, 2.5, 0, null, reps: 12, lapses: 3, lastReviewedAt: $this->now,
+    ));
 
     triageHandler($this)(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now)]));
 
-    expect($this->progress->get($this->user, $term))->toBeNull();
+    $p = $this->progress->get($this->user, $term);
+    expect($p?->state())->toBe(LearningState::New)
+        ->and($p?->reps())->toBe(12)
+        ->and($p?->lapses())->toBe(3)
+        ->and($p?->dueAt())->toBeNull();
 });
 
 it('does not clobber real study progress with a stray unknown swipe', function () {

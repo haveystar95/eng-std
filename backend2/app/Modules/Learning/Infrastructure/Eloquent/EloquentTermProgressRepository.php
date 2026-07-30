@@ -42,12 +42,4 @@ final class EloquentTermProgressRepository implements TermProgressRepository
 
         DB::table(self::TABLE)->insert([...$key, ...$values, 'created_at' => $now]);
     }
-
-    public function delete(UserId $userId, TermId $termId): void
-    {
-        DB::table(self::TABLE)
-            ->where('user_id', $userId->value)
-            ->where('term_id', $termId->value)
-            ->delete();
-    }
 }

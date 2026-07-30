@@ -56,6 +56,21 @@ final class TermProgress
         return new self($userId, $termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now, 0, 0, null);
     }
 
+    /**
+     * Return a term to `new` without erasing what we know about it: state and schedule reset,
+     * but `reps`/`lapses` survive. Used when a `known` mark is undone — a term with a long
+     * history that a user manually marked known must not be reduced to a blank slate. To
+     * selection, a `new` row and a missing row mean the same thing, so nothing is lost by
+     * keeping the row.
+     */
+    public function returnToNew(): self
+    {
+        return new self(
+            $this->userId, $this->termId, LearningState::New, self::DEFAULT_EASE, 0, null,
+            $this->reps, $this->lapses, $this->lastReviewedAt,
+        );
+    }
+
     /** Rebuild from persistence, or from the scheduler producing the next state. */
     public static function reconstitute(
         UserId $userId,

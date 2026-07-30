@@ -97,8 +97,9 @@ final readonly class TriageTermsHandler
             $existing = $this->progress->findForUpdate($command->actorId, $termId);
 
             // Triage only ever acts on a still-new term (create a row) — except the return
-            // path, where an unknown swipe drops a self-marked `known` row back to new. Real
-            // study progress (learning/review) is never destroyed by a stray unknown swipe.
+            // path, where an unknown swipe sends a self-marked `known` row back to new. That
+            // return keeps reps/lapses (never erases a term's history) and never touches real
+            // study progress (learning/review) on a stray unknown swipe.
             if ($verdict === TriageVerdict::Known) {
                 if ($existing === null) {
                     $this->progress->save(TermProgress::knownFromTriage($command->actorId, $termId));
@@ -108,7 +109,7 @@ final readonly class TriageTermsHandler
                     $this->progress->save(TermProgress::learningFromTriage($command->actorId, $termId, $this->clock->now()));
                 }
             } elseif ($existing !== null && $existing->state() === LearningState::Known) {
-                $this->progress->delete($command->actorId, $termId);
+                $this->progress->save($existing->returnToNew());
             }
         }
     }
