@@ -90,7 +90,7 @@ paths:
                 native_language: { type: string, minLength: 2, maxLength: 5 }
                 target_language: { type: string, minLength: 2, maxLength: 5 }
                 cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
-                daily_goal: { type: integer, minimum: 1, maximum: 100 }
+                daily_goal: { type: integer, minimum: 0, maximum: 100 }
       responses:
         '200':
           description: OK

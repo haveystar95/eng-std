@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Learning\Application\Dto\StudyCardView;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
+use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 /**
@@ -19,16 +20,17 @@ final readonly class GetStudyCardsHandler
         private GetDueTermsHandler $dueTerms,
         private TermContentReader $termContent,
         private IntroducedTermsReader $introduced,
+        private LearnerProfileReader $learnerProfile,
     ) {}
 
     /** @return list<StudyCardView> */
     public function __invoke(GetStudyCards $query): array
     {
-        // The daily new-term cap keeps the *global* mix from drowning the user. When they
-        // explicitly open one collection to study, give them its new words regardless.
-        $newRemaining = $query->collectionId !== null
-            ? $query->sessionSize
-            : max(0, $query->newTermsPerDay - $this->introduced->countForDay($query->userId, $query->now));
+        // One global daily new-term quota, from the user's profile. A scoped session draws from
+        // the SAME remaining quota — opening five collections must not grant five times the norm.
+        $perDay = $this->learnerProfile->newTermsPerDay($query->userId);
+        $remaining = max(0, $perDay - $this->introduced->countForDay($query->userId, $query->now));
+        $newRemaining = min($query->sessionSize, $remaining);
 
         $due = ($this->dueTerms)(new GetDueTerms(
             userId: $query->userId,

@@ -21,7 +21,7 @@ final class UpdateProfileRequest extends FormRequest
             'native_language' => ['sometimes', 'string', 'min:2', 'max:5'],
             'target_language' => ['sometimes', 'string', 'min:2', 'max:5'],
             'cefr_level' => ['sometimes', 'string', 'in:A1,A2,B1,B2,C1,C2'],
-            'daily_goal' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'daily_goal' => ['sometimes', 'integer', 'min:0', 'max:100'], // 0 = introduce no new terms
         ];
     }
 }

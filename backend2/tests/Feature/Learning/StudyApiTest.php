@@ -6,6 +6,7 @@ use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
+use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
@@ -211,6 +212,30 @@ it('reports per-collection progress (learned once a term graduates)', function (
         ->assertJsonPath('data.0.total', 1)
         ->assertJsonPath('data.0.learned', 1)
         ->assertJsonPath('data.0.mastered', 0);
+});
+
+it('caps new cards at the profile daily new-term quota', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 1]);
+    seedWordFor($user, 'apple', 'яблоко');
+    seedWordFor($user, 'bank', 'банк');
+
+    // Two new terms are available, but the user's daily quota is 1.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/study/due')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});
+
+it('introduces no new cards when the daily goal is zero', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 0]);
+    seedWordFor($user, 'apple', 'яблоко');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/study/due')
+        ->assertOk()
+        ->assertJsonPath('data', []);
 });
 
 it('requires authentication for stats', function () {
