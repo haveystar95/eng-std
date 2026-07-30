@@ -32,9 +32,12 @@ it('derives learned, mastered and due per collection', function () {
     expect($result)->toHaveCount(1);
     expect($result[0]->collectionId)->toBe('COL');
     expect($result[0]->total)->toBe(4);
-    expect($result[0]->learned)->toBe(2);   // both review-state terms (known is not "learned")
-    expect($result[0]->mastered)->toBe(2);  // the interval >= 21 one, plus the known one
-    expect($result[0]->due)->toBe(1);       // only the overdue one
+    expect($result[0]->newCount)->toBe(1);    // the fresh term with no row
+    expect($result[0]->confirmed)->toBe(1);   // review & interval >= 21
+    expect($result[0]->familiar)->toBe(1);    // the known term
+    expect($result[0]->inProgress)->toBe(1);  // review with interval 5
+    expect($result[0]->mastered)->toBe(2);    // confirmed + familiar
+    expect($result[0]->due)->toBe(1);         // only the overdue one
 });
 
 it('returns nothing when the user has no collections', function () {

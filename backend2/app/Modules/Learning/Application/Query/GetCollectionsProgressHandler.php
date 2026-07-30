@@ -35,30 +35,40 @@ final readonly class GetCollectionsProgressHandler
 
         $views = [];
         foreach ($byCollection as $collectionId => $termIds) {
-            $learned = 0;
-            $mastered = 0;
+            $newCount = 0;
             $due = 0;
+            $confirmed = 0;
+            $familiar = 0;
+            $inProgress = 0;
             foreach ($termIds as $termId) {
                 $snapshot = $snapshots[$termId] ?? null;
-                if ($snapshot === null) {
+                // No row, or a `new` row (returned from known), both mean "not started".
+                if ($snapshot === null || $snapshot->state === LearningState::New) {
+                    $newCount++;
+
                     continue;
                 }
-                if ($snapshot->state === LearningState::Review) {
-                    $learned++;
-                }
+
                 if (Mastery::isMastered($snapshot->state, $snapshot->intervalDays)) {
-                    $mastered++;
+                    // Breakdown of the one «усвоено»: self-marked known vs proven by exercises.
+                    $snapshot->state === LearningState::Known ? $familiar++ : $confirmed++;
+                } else {
+                    $inProgress++;
                 }
-                if ($snapshot->state !== LearningState::New && $snapshot->dueAt !== null && $snapshot->dueAt <= $query->now) {
+
+                if ($snapshot->dueAt !== null && $snapshot->dueAt <= $query->now) {
                     $due++;
                 }
             }
             $views[] = new CollectionProgressView(
                 collectionId: (string) $collectionId,
                 total: count($termIds),
-                learned: $learned,
-                mastered: $mastered,
+                newCount: $newCount,
                 due: $due,
+                mastered: $confirmed + $familiar,
+                confirmed: $confirmed,
+                familiar: $familiar,
+                inProgress: $inProgress,
             );
         }
 

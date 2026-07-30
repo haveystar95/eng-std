@@ -211,9 +211,9 @@ it('reports per-collection progress (learned once a term graduates)', function (
         ->getJson('/api/v1/study/progress')
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.total', 1)
-        ->assertJsonPath('data.0.learned', 1)
-        ->assertJsonPath('data.0.mastered', 0);
+        ->assertJsonPath('data.0.terms_total', 1)
+        ->assertJsonPath('data.0.in_progress_count', 1) // review, interval 4 (< 21) → in progress
+        ->assertJsonPath('data.0.mastered_count', 0);
 });
 
 it('caps new cards at the profile daily new-term quota', function () {

@@ -371,9 +371,9 @@ paths:
       tags: [Study]
       summary: Per-collection learning progress (derived, not stored)
       description: >-
-        For each of the user's own collections, the count of its terms that are learned
-        (state = review), mastered (review and interval >= 21 days) and due now, plus the
-        total. Computed by folding the (user, term) progress snapshot over collection membership.
+        For each of the user's own collections: total, new, due, and mastered counts, with
+        mastered broken into confirmed (proven by exercises) vs familiar (marked known) and the
+        rest in progress. Computed by folding the (user, term) progress over collection membership.
       responses:
         '200':
           description: OK
@@ -659,12 +659,18 @@ components:
 
     CollectionProgress:
       type: object
+      description: >-
+        Derived from (user, term) progress. mastered_count is the single "mastered" figure;
+        confirmed + familiar + in_progress + new_count sum to terms_total.
       properties:
         collection_id: { type: string }
-        total: { type: integer }
-        learned: { type: integer }
-        mastered: { type: integer }
-        due: { type: integer }
+        terms_total: { type: integer }
+        new_count: { type: integer, description: Not started (no progress, or returned to new) }
+        due_count: { type: integer }
+        mastered_count: { type: integer, description: confirmed + familiar }
+        confirmed_count: { type: integer, description: Proven by exercises (review, interval >= 21) }
+        familiar_count: { type: integer, description: Marked known (self-assessed) }
+        in_progress_count: { type: integer, description: Started but not yet mastered }
 
     SessionCard:
       type: object

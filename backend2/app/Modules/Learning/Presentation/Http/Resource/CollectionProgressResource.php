@@ -16,10 +16,14 @@ final class CollectionProgressResource extends JsonResource
     {
         return [
             'collection_id' => $this->resource->collectionId,
-            'total' => $this->resource->total,
-            'learned' => $this->resource->learned,
-            'mastered' => $this->resource->mastered,
-            'due' => $this->resource->due,
+            'terms_total' => $this->resource->total,
+            'new_count' => $this->resource->newCount,
+            'due_count' => $this->resource->due,
+            'mastered_count' => $this->resource->mastered,
+            // Breakdown of mastered for the three-segment progress bar.
+            'confirmed_count' => $this->resource->confirmed,
+            'familiar_count' => $this->resource->familiar,
+            'in_progress_count' => $this->resource->inProgress,
         ];
     }
 }
