@@ -435,6 +435,83 @@ paths:
                   data: { $ref: '#/components/schemas/Stats' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /triage/queue:
+    get:
+      tags: [Study]
+      summary: The first-pass swipe queue for one collection (not-yet-triaged, not-yet-studied terms)
+      description: >-
+        A collection's terms that have neither a progress row nor a triage record, capped at
+        limit. Content is included so the whole batch can be swiped offline. Excluding
+        already-triaged terms is what stops a term from being asked twice, even when an
+        "unknown" swipe leaves it new.
+      parameters:
+        - name: collection_id
+          in: query
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 40, default: 40 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TriageCard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /triage/batch:
+    post:
+      tags: [Study]
+      summary: Upload a batch of triage swipes (idempotent by triage id)
+      description: >-
+        A swipe is a self-assessment, kept out of the review log. Projects onto (user, term)
+        progress: known → a known row, unsure → learning (due now), unknown → stays new (and,
+        for a term currently known, drops the row to return it to learning). Re-sending an id
+        is a duplicate, not an error; a swipe for an unknown term is skipped.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [triages]
+              properties:
+                triages:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [id, term_id, verdict, decided_at]
+                    properties:
+                      id: { type: string, minLength: 26, maxLength: 26 }
+                      term_id: { type: string, minLength: 26, maxLength: 26 }
+                      verdict: { type: string, enum: [known, unknown, unsure] }
+                      decided_at: { type: string, format: date-time }
+                      collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                      latency_ms: { type: integer, minimum: 0, nullable: true }
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted: { type: integer }
+                      duplicates: { type: integer }
+                      unknown: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -575,9 +652,20 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        state: { type: string, enum: [new, learning, review, relearning] }
+        state: { type: string, enum: [new, learning, review, relearning, known] }
         interval_days: { type: integer }
         due_at: { type: string, format: date-time, nullable: true }
+        text: { type: string, nullable: true }
+        type: { type: string, enum: [word, phrase], nullable: true }
+        transcription: { type: string, nullable: true }
+        translation: { type: string, nullable: true }
+        example: { type: string, nullable: true }
+        example_translation: { type: string, nullable: true }
+
+    TriageCard:
+      type: object
+      properties:
+        term_id: { type: string }
         text: { type: string, nullable: true }
         type: { type: string, enum: [word, phrase], nullable: true }
         transcription: { type: string, nullable: true }

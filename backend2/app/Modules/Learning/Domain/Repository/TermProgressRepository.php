@@ -17,4 +17,10 @@ interface TermProgressRepository
     public function findForUpdate(UserId $userId, TermId $termId): ?TermProgress;
 
     public function save(TermProgress $progress): void;
+
+    /**
+     * Drop the (user, term) progress row so the term reverts to "new" (no row = never
+     * studied). Used when a `known` term is returned to learning from triage.
+     */
+    public function delete(UserId $userId, TermId $termId): void;
 }

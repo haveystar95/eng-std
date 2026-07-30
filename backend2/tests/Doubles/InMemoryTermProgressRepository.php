@@ -24,6 +24,11 @@ final class InMemoryTermProgressRepository implements TermProgressRepository
         $this->byKey[$this->key($progress->userId()->value, $progress->termId()->value)] = $progress;
     }
 
+    public function delete(UserId $userId, TermId $termId): void
+    {
+        unset($this->byKey[$this->key($userId->value, $termId->value)]);
+    }
+
     public function get(UserId $userId, TermId $termId): ?TermProgress
     {
         return $this->findForUpdate($userId, $termId);

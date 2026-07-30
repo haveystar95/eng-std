@@ -37,6 +37,25 @@ final class TermProgress
         return new self($userId, $termId, LearningState::New, self::DEFAULT_EASE, 0, null, 0, 0, null);
     }
 
+    /**
+     * A term triaged as "known": self-assessed, not proven. It has no SRS due date — a
+     * verification check is scheduled separately (TriageVerificationPlanner). Not scheduled
+     * by SM-2 while in this state.
+     */
+    public static function knownFromTriage(UserId $userId, TermId $termId): self
+    {
+        return new self($userId, $termId, LearningState::Known, self::DEFAULT_EASE, 0, null, 0, 0, null);
+    }
+
+    /**
+     * A term triaged as "unsure": enters `learning` directly, due immediately, so it skips the
+     * intro recognition step and shows up in the next session at the assembly level.
+     */
+    public static function learningFromTriage(UserId $userId, TermId $termId, DateTimeImmutable $now): self
+    {
+        return new self($userId, $termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now, 0, 0, null);
+    }
+
     /** Rebuild from persistence, or from the scheduler producing the next state. */
     public static function reconstitute(
         UserId $userId,
