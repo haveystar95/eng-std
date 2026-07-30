@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
+use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\TermAnswerKeyReader;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 use App\Modules\Vocabulary\Application\Query\TermDifficultyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
 use App\Modules\Vocabulary\Domain\Repository\TermRepository;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAnswerKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermContentReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermDifficultyReader;
@@ -26,6 +28,7 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermContentReader::class, EloquentTermContentReader::class);
         $this->app->bind(TermDifficultyReader::class, EloquentTermDifficultyReader::class);
         $this->app->bind(TermAnswerKeyReader::class, EloquentTermAnswerKeyReader::class);
+        $this->app->bind(DistractorReader::class, EloquentDistractorReader::class);
     }
 
     public function boot(): void
