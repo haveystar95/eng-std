@@ -91,7 +91,7 @@ deptrac:
     IdentityInfrastructure: [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework]
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
-    LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework]
+    LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]
     GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
 
     # Observability: a thin, cross-cutting technical module (no Presentation layer).

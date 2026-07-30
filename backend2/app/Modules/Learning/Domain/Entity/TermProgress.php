@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Domain\Entity;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateInterval;
 use DateTimeImmutable;
 
 /**
@@ -38,13 +39,13 @@ final class TermProgress
     }
 
     /**
-     * A term triaged as "known": self-assessed, not proven. It has no SRS due date — a
-     * verification check is scheduled separately (TriageVerificationPlanner). Not scheduled
-     * by SM-2 while in this state.
+     * A term triaged as "known": self-assessed, not proven. Its `due_at` is a verification
+     * check (scheduled by TriageVerificationPlanner), not an SRS interval — SM-2 never
+     * touches it while known.
      */
-    public static function knownFromTriage(UserId $userId, TermId $termId): self
+    public static function knownFromTriage(UserId $userId, TermId $termId, DateTimeImmutable $verificationDueAt): self
     {
-        return new self($userId, $termId, LearningState::Known, self::DEFAULT_EASE, 0, null, 0, 0, null);
+        return new self($userId, $termId, LearningState::Known, self::DEFAULT_EASE, 0, $verificationDueAt, 0, 0, null);
     }
 
     /**
@@ -68,6 +69,30 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, LearningState::New, self::DEFAULT_EASE, 0, null,
             $this->reps, $this->lapses, $this->lastReviewedAt,
+        );
+    }
+
+    /**
+     * The "known" check failed — the self-assessment was wrong. Start learning the term for
+     * real, due now. Written as an explicit transition (known → learning), never routed through
+     * the SM-2 scheduler, whose lapse path (→ relearning) assumes an ease/interval a known
+     * term never had. reps/lapses are preserved.
+     */
+    public function failVerification(DateTimeImmutable $now): self
+    {
+        return new self(
+            $this->userId, $this->termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now,
+            $this->reps, $this->lapses, $now,
+        );
+    }
+
+    /** The "known" check passed — stay known, next check a long way out. */
+    public function passVerification(DateTimeImmutable $now, int $days): self
+    {
+        return new self(
+            $this->userId, $this->termId, LearningState::Known, self::DEFAULT_EASE, 0,
+            $now->add(new DateInterval('P' . $days . 'D')),
+            $this->reps, $this->lapses, $now,
         );
     }
 

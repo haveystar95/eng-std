@@ -6,11 +6,15 @@ use App\Modules\Learning\Application\Command\TriageTerms;
 use App\Modules\Learning\Application\Command\TriageTermsHandler;
 use App\Modules\Learning\Application\Dto\TriageInput;
 use App\Modules\Learning\Domain\Entity\TermProgress;
+use App\Modules\Learning\Domain\Service\TriageVerificationPlanner;
+use App\Modules\Learning\Domain\ValueObject\CefrLevel;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\TriageId;
 use App\Modules\Learning\Domain\ValueObject\TriageVerdict;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Tests\Doubles\FakeLearnerProfileReader;
+use Tests\Doubles\FakeTermDifficultyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
@@ -30,6 +34,9 @@ function triageHandler(object $ctx): TriageTermsHandler
         $ctx->triages,
         $ctx->progress,
         FakeTermExistenceReader::knowingAll(),
+        new TriageVerificationPlanner(),
+        new FakeLearnerProfileReader(CefrLevel::B1),
+        new FakeTermDifficultyReader(), // unknown difficulty → not risky → 90-day check
         new ImmediateTransactionManager(),
         new FixedClock($ctx->now),
     );
@@ -40,11 +47,14 @@ function swipe(TermId $term, TriageVerdict $verdict, DateTimeImmutable $at): Tri
     return new TriageInput(TriageId::generate(), $term, $verdict, $at);
 }
 
-it('projects known to a known progress row', function () {
+it('projects known to a known progress row with a scheduled verification check', function () {
     $term = TermId::generate();
     triageHandler($this)(new TriageTerms($this->user, [swipe($term, TriageVerdict::Known, $this->now)]));
 
-    expect($this->progress->get($this->user, $term)?->state())->toBe(LearningState::Known);
+    $p = $this->progress->get($this->user, $term);
+    expect($p?->state())->toBe(LearningState::Known)
+        // unknown difficulty → not risky → the 90-day check.
+        ->and($p?->dueAt())->toEqual($this->now->modify('+90 days'));
 });
 
 it('projects unsure straight into learning, due now', function () {
@@ -110,6 +120,9 @@ it('skips unknown term ids', function () {
     $handler = new TriageTermsHandler(
         $this->triages, $this->progress,
         FakeTermExistenceReader::knowing([]), // nothing exists
+        new TriageVerificationPlanner(),
+        new FakeLearnerProfileReader(CefrLevel::B1),
+        new FakeTermDifficultyReader(),
         new ImmediateTransactionManager(), new FixedClock($this->now),
     );
 
