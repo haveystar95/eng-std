@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-
 import '../../core/design.dart';
 import '../../core/glass.dart';
-import '../../core/languages.dart';
+import '../../core/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import 'word_edit_dialog.dart';
@@ -21,14 +19,12 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen> {
-  final _tts = FlutterTts();
+  final _pronouncer = Pronouncer();
 
-  Future<void> _speak(String term) async {
+  Future<void> _speak(Word word) async {
     AppFeedback.tap();
     final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-    await _tts.setLanguage(ttsLocaleFor(target));
-    await _tts.setSpeechRate(0.45);
-    await _tts.speak(term);
+    await _pronouncer.speak(word, targetLang: target);
   }
 
   Future<void> _delete(Word word) async {
@@ -80,7 +76,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                         },
                         child: _WordCard(
                           word: w,
-                          onSpeak: () => _speak(w.term),
+                          onSpeak: () => _speak(w),
                           onEdit: () => showWordEditor(context, ref, collectionId: widget.collectionId, existing: w),
                         ),
                       ).animate().fadeIn(delay: (30 * i).ms).slideY(begin: 0.06, end: 0);

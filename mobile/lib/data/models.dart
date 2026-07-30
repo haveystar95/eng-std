@@ -56,6 +56,8 @@ class Word {
   final String? transcription;
   final String? example;
   final String type; // word | phrase
+  final String? audioUrl; // optional override; null → system TTS
+  final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
 
   Word({
     required this.termId,
@@ -64,6 +66,8 @@ class Word {
     this.transcription,
     this.example,
     required this.type,
+    this.audioUrl,
+    this.ttsHint,
   });
 
   /// Convenience so existing screens that used `word.id` keep working.
@@ -76,6 +80,8 @@ class Word {
         transcription: j['transcription'] as String?,
         example: j['example'] as String?,
         type: (j['type'] as String?) ?? 'word',
+        audioUrl: j['audio_url'] as String?,
+        ttsHint: j['tts_hint'] as String?,
       );
 }
 

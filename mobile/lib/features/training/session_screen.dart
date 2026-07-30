@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-
 import '../../core/design.dart';
 import '../../core/glass.dart';
-import '../../core/languages.dart';
+import '../../core/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 
@@ -156,7 +154,7 @@ class _Deck extends ConsumerStatefulWidget {
 }
 
 class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixin {
-  final _tts = FlutterTts();
+  final _pronouncer = Pronouncer();
   int _pos = 0;
   bool _revealed = false;
   int _know = 0, _review = 0, _dontKnow = 0;
@@ -206,9 +204,7 @@ class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixi
   Future<void> _speak() async {
     AppFeedback.tap();
     final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-    await _tts.setLanguage(ttsLocaleFor(target));
-    await _tts.setSpeechRate(0.45);
-    await _tts.speak(_word.term);
+    await _pronouncer.speak(_word, targetLang: target);
   }
 
   void _feedbackFor(Rating r) => switch (r) {
