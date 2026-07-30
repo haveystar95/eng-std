@@ -56,7 +56,7 @@ it('submits reviews, creating progress and daily stats', function () {
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $termId, 'grade' => 'good',
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
             'answered_at' => now()->toIso8601String(),
         ]]])
         ->assertOk()
@@ -76,7 +76,7 @@ it('ignores a re-uploaded review batch', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user);
     $batch = ['reviews' => [[
-        'id' => Ulid::generate(), 'term_id' => $termId, 'grade' => 'good',
+        'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
         'answered_at' => now()->toIso8601String(),
     ]]];
 
@@ -94,7 +94,7 @@ it('reports unknown terms in a batch', function () {
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => Ulid::generate(), 'grade' => 'good',
+            'id' => Ulid::generate(), 'term_id' => Ulid::generate(), 'exercise_mode' => 'typing', 'response' => 'whatever',
             'answered_at' => now()->toIso8601String(),
         ]]])
         ->assertOk()
@@ -118,7 +118,7 @@ it('lists a due card once it is overdue, with hydrated content', function () {
     // Answered 5 days ago: new + good → learning (interval 1 day) → due ~4 days ago.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $termId, 'grade' => 'good',
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'withdraw cash',
             'answered_at' => now()->subDays(5)->toIso8601String(),
         ]]])
         ->assertOk();
@@ -166,7 +166,7 @@ it('drops a term from the new pool once it has progress', function () {
     // Study "apple" now → it becomes learning (due in the future), no longer new.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $apple, 'grade' => 'good',
+            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'typing', 'response' => 'apple',
             'answered_at' => now()->toIso8601String(),
         ]]])
         ->assertOk();
@@ -200,8 +200,8 @@ it('reports per-collection progress (learned once a term graduates)', function (
     // Two good answers in order: new → learning → review (learned).
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'grade' => 'good', 'answered_at' => now()->subDays(6)->toIso8601String()],
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'grade' => 'good', 'answered_at' => now()->subDays(5)->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(6)->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(5)->toIso8601String()],
         ]])
         ->assertOk();
 

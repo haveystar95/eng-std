@@ -70,7 +70,7 @@ it('excludes studied and triaged terms from the triage queue', function () {
         ]])->assertOk();
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $bank, 'grade' => 'good', 'answered_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'typing', 'response' => 'bank', 'answered_at' => now()->toIso8601String()],
         ]])->assertOk();
 
     $data = $this->withHeader('Authorization', "Bearer {$token}")

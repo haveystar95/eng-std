@@ -7,15 +7,16 @@ namespace App\Modules\Learning\Presentation\Http\Controller;
 use App\Modules\Learning\Application\Command\SubmitReviews;
 use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Application\Dto\ReviewInput;
-use App\Modules\Learning\Domain\ValueObject\Grade;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ReviewId;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\SubmitReviewsRequest;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 
-/** Uploads a batch of graded answers (an offline session's worth). Idempotent by review id. */
+/** Uploads a batch of raw answers (an offline session's worth); the server grades them. Idempotent by id. */
 final class ReviewController
 {
     public function __construct(private readonly SubmitReviewsHandler $submit) {}
@@ -32,9 +33,13 @@ final class ReviewController
             $reviews[] = new ReviewInput(
                 reviewId: ReviewId::fromString((string) $row['id']),
                 termId: TermId::fromString((string) $row['term_id']),
-                grade: Grade::from((string) $row['grade']),
+                exerciseMode: ExerciseMode::from((string) $row['exercise_mode']),
+                response: (string) ($row['response'] ?? ''),
                 answeredAt: new DateTimeImmutable((string) $row['answered_at']),
+                usedHint: (bool) ($row['used_hint'] ?? false),
+                isPractice: (bool) ($row['is_practice'] ?? false),
                 latencyMs: isset($row['latency_ms']) ? (int) $row['latency_ms'] : null,
+                sessionId: isset($row['session_id']) ? StudySessionId::fromString((string) $row['session_id']) : null,
             );
         }
 

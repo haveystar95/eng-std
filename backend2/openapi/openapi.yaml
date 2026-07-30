@@ -378,10 +378,12 @@ paths:
   /reviews/batch:
     post:
       tags: [Study]
-      summary: Upload a batch of graded answers (idempotent by review id)
+      summary: Upload a batch of raw answers (server-graded, idempotent by review id)
       description: >
-        Offline-friendly: up to 200 reviews with client-generated ULIDs. Re-sending an id
-        is counted as a duplicate, not an error; a review for an unknown term is skipped.
+        Offline-friendly: up to 200 answers with client-generated ULIDs. The client sends the
+        RAW answer (response text, mode, latency, hint) — the SERVER grades it, so the grading
+        rule lives in one place. Re-sending an id is a duplicate, not an error; an answer for an
+        unknown term is skipped. A practice answer (is_practice) is recorded but never schedules.
       requestBody:
         required: true
         content:
@@ -396,13 +398,17 @@ paths:
                   maxItems: 200
                   items:
                     type: object
-                    required: [id, term_id, grade, answered_at]
+                    required: [id, term_id, exercise_mode, response, answered_at]
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
-                      grade: { type: string, enum: [again, hard, good, easy] }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
+                      response: { type: string, description: The user's raw answer text }
                       answered_at: { type: string, format: date-time }
+                      used_hint: { type: boolean, default: false }
+                      is_practice: { type: boolean, default: false }
                       latency_ms: { type: integer, minimum: 0, nullable: true }
+                      session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
       responses:
         '200':
           description: Applied

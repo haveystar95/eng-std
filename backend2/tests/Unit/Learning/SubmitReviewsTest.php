@@ -5,13 +5,16 @@ declare(strict_types=1);
 use App\Modules\Learning\Application\Command\SubmitReviews;
 use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Application\Dto\ReviewInput;
+use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
-use App\Modules\Learning\Domain\ValueObject\Grade;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ReviewId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Tests\Doubles\FakeLatencyMedianReader;
+use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
@@ -19,13 +22,16 @@ use Tests\Doubles\InMemoryReviewRepository;
 use Tests\Doubles\InMemoryTermProgressRepository;
 use Tests\Doubles\SpyStatsProjector;
 
-function reviewInput(TermId $termId, Grade $grade, string $answeredAt): ReviewInput
+/** The fake answer key accepts "correct"; the server grades a matching response as good, else again. */
+function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPractice = false): ReviewInput
 {
     return new ReviewInput(
         reviewId: ReviewId::generate(),
         termId: $termId,
-        grade: $grade,
+        exerciseMode: ExerciseMode::Typing,
+        response: $correct ? 'correct' : 'wrong',
         answeredAt: new DateTimeImmutable($answeredAt),
+        isPractice: $isPractice,
     );
 }
 
@@ -35,12 +41,16 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
     $ctx->reviews = new InMemoryReviewRepository();
     $ctx->progress = new InMemoryTermProgressRepository();
     $ctx->stats = new SpyStatsProjector();
+    $ctx->median = new FakeLatencyMedianReader();
 
     return new SubmitReviewsHandler(
         reviews: $ctx->reviews,
         progress: $ctx->progress,
         scheduler: new Sm2Scheduler(Fuzz::none()),
         terms: $known === null ? FakeTermExistenceReader::knowingAll() : FakeTermExistenceReader::knowing($known),
+        answerKeys: new FakeTermAnswerKeyReader(),
+        grader: new AnswerGrader(),
+        median: $ctx->median,
         stats: $ctx->stats,
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
@@ -51,13 +61,13 @@ beforeEach(function () {
     $this->user = UserId::generate();
 });
 
-it('appends reviews and folds them into progress in order', function () {
+it('grades raw answers server-side and folds them into progress in order', function () {
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
 
     $result = $handler(new SubmitReviews($this->user, [
-        reviewInput($term, Grade::Good, '2026-07-27T10:00:00Z'), // new → learning (1)
-        reviewInput($term, Grade::Good, '2026-07-27T10:05:00Z'), // learning → review (4)
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z'), // new → learning (1)
+        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z'), // learning → review (4)
     ]));
 
     expect($result->accepted)->toBe(2)
@@ -69,23 +79,24 @@ it('appends reviews and folds them into progress in order', function () {
         ->and($progress?->intervalDays())->toBe(4);
 });
 
-it('projects a stats event carrying the introduced term', function () {
+it('projects a stats event carrying the introduced term and invalidates the median cache', function () {
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
 
-    $handler(new SubmitReviews($this->user, [reviewInput($term, Grade::Good, '2026-07-27T10:00:00Z')]));
+    $handler(new SubmitReviews($this->user, [answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z')]));
 
     expect($this->stats->events)->toHaveCount(1)
         ->and($this->stats->events[0]->accepted)->toHaveCount(1)
-        ->and($this->stats->events[0]->introducedTermIds)->toBe([$term->value]);
+        ->and($this->stats->events[0]->introducedTermIds)->toBe([$term->value])
+        ->and($this->median->forgotten)->toBe(1); // typing touched → cache forgotten once
 });
 
 it('ignores a re-uploaded batch (idempotent by review id)', function () {
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
     $batch = new SubmitReviews($this->user, [
-        reviewInput($term, Grade::Good, '2026-07-27T10:00:00Z'),
-        reviewInput($term, Grade::Good, '2026-07-27T10:05:00Z'),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z'),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z'),
     ]);
 
     $handler($batch);
@@ -104,11 +115,11 @@ it('folds an out-of-order offline batch by answered_at, not upload order', funct
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
 
-    // Uploaded later-first: again(10:05) before good(10:00). Answered order is good then again,
-    // which is new→learning(1) then learning→learning(0). Upload order would wrongly graduate it.
+    // Uploaded later-first: wrong(10:05) before correct(10:00). Answered order is correct then
+    // wrong → new→learning(1) then learning→learning(0). Upload order would wrongly graduate it.
     $handler(new SubmitReviews($this->user, [
-        reviewInput($term, Grade::Again, '2026-07-27T10:05:00Z'),
-        reviewInput($term, Grade::Good, '2026-07-27T10:00:00Z'),
+        answer($term, correct: false, answeredAt: '2026-07-27T10:05:00Z'),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z'),
     ]));
 
     $progress = $this->progress->get($this->user, $term);
@@ -116,18 +127,32 @@ it('folds an out-of-order offline batch by answered_at, not upload order', funct
         ->and($progress?->intervalDays())->toBe(0);
 });
 
-it('rejects reviews for unknown terms and applies the rest', function () {
+it('rejects answers for unknown terms and applies the rest', function () {
     $known = TermId::generate();
     $unknown = TermId::generate();
     $handler = buildSubmitHandler($this, known: [$known]);
 
     $result = $handler(new SubmitReviews($this->user, [
-        reviewInput($known, Grade::Good, '2026-07-27T10:00:00Z'),
-        reviewInput($unknown, Grade::Good, '2026-07-27T10:00:00Z'),
+        answer($known, correct: true, answeredAt: '2026-07-27T10:00:00Z'),
+        answer($unknown, correct: true, answeredAt: '2026-07-27T10:00:00Z'),
     ]));
 
     expect($result->accepted)->toBe(1)
         ->and($result->unknown)->toBe(1)
         ->and($this->progress->get($this->user, $known))->not->toBeNull()
         ->and($this->progress->get($this->user, $unknown))->toBeNull();
+});
+
+it('records a practice answer in the log but never schedules it', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+
+    $result = $handler(new SubmitReviews($this->user, [
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', isPractice: true),
+    ]));
+
+    expect($result->accepted)->toBe(1)
+        ->and($this->reviews->count())->toBe(1)                       // appended to the log
+        ->and($this->progress->get($this->user, $term))->toBeNull()  // but progress untouched
+        ->and($this->stats->events[0]->introducedTermIds)->toBe([]); // and nothing introduced
 });

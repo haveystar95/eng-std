@@ -76,6 +76,17 @@ it('treats a leading article as optional in both directions', function () {
         ->and($this->grader->grade(new Answer('the bank'), ExerciseMode::Typing, answerKey(['bank']), LatencyBaseline::insufficient()))->toBe(Grade::Good);
 });
 
+it('expands common contractions so "I\'d like" matches "I would like"', function () {
+    $grade = $this->grader->grade(
+        new Answer("I'd like to withdraw"),
+        ExerciseMode::Typing,
+        answerKey(['I would like to withdraw'], isPhrase: true),
+        LatencyBaseline::insufficient(),
+    );
+
+    expect($grade)->toBe(Grade::Good);
+});
+
 it('accepts a single-character typo on a long word but caps it at hard', function () {
     $grade = $this->grader->grade(new Answer('withdaw'), ExerciseMode::Typing, answerKey(['withdraw']), LatencyBaseline::insufficient());
 
