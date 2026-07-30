@@ -31,4 +31,21 @@ final readonly class SubmitReviews
 
         return array_values($unique);
     }
+
+    /**
+     * The distinct session ids referenced by this batch (answers may omit a session).
+     *
+     * @return list<string>
+     */
+    public function sessionIds(): array
+    {
+        $unique = [];
+        foreach ($this->reviews as $review) {
+            if ($review->sessionId !== null) {
+                $unique[$review->sessionId->value] = true;
+            }
+        }
+
+        return array_keys($unique);
+    }
 }

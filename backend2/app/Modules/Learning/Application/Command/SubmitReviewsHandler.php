@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Dto\ReviewBatchResult;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
+use App\Modules\Learning\Application\Port\SessionCompositionReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Domain\Entity\Review;
 use App\Modules\Learning\Domain\Entity\TermProgress;
@@ -39,6 +40,7 @@ final readonly class SubmitReviewsHandler
         private TermAnswerKeyReader $answerKeys,
         private AnswerGrader $grader,
         private LatencyMedianReader $median,
+        private SessionCompositionReader $sessionComposition,
         private StatsProjector $stats,
         private TransactionManager $tx,
         private Clock $clock,
@@ -48,8 +50,9 @@ final readonly class SubmitReviewsHandler
     {
         $known = $this->knownTermIds($command);
         $keys = $this->answerKeys->byIds($command->termIds());
+        $compositions = $this->sessionComposition->compositionsByIds($command->sessionIds());
 
-        return $this->tx->run(function () use ($command, $known, $keys): ReviewBatchResult {
+        return $this->tx->run(function () use ($command, $known, $keys, $compositions): ReviewBatchResult {
             /** @var list<Review> $accepted */
             $accepted = [];
             /** @var array<string, ExerciseMode> $touchedModes */
@@ -65,6 +68,13 @@ final readonly class SubmitReviewsHandler
                 }
                 $key = $keys[$input->termId->value] ?? null;
                 if ($key === null) {
+                    $unknown++;
+
+                    continue;
+                }
+                // An answer that names a session must be for a term in that session's fixed
+                // composition — otherwise a stale/abandoned session's retries land out of context.
+                if ($input->sessionId !== null && ! isset($compositions[$input->sessionId->value][$input->termId->value])) {
                     $unknown++;
 
                     continue;

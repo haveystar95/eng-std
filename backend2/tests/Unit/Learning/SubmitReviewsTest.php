@@ -14,6 +14,7 @@ use App\Modules\Learning\Domain\ValueObject\ReviewId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Tests\Doubles\FakeLatencyMedianReader;
+use Tests\Doubles\FakeSessionCompositionReader;
 use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
@@ -51,6 +52,7 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         answerKeys: new FakeTermAnswerKeyReader(),
         grader: new AnswerGrader(),
         median: $ctx->median,
+        sessionComposition: new FakeSessionCompositionReader(),
         stats: $ctx->stats,
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),

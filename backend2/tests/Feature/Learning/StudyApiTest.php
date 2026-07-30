@@ -240,6 +240,28 @@ it('introduces no new cards when the daily goal is zero', function () {
         ->assertJsonPath('data.cards', []);
 });
 
+it('rejects an answer for a term outside the session composition', function () {
+    [$user, $token] = learner();
+    [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    [, $bank] = seedCollectionWith($user, 'bank', 'банк');
+
+    // Session scoped to collection A → its fixed composition is [apple].
+    $sessionId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->json('data.session_id');
+
+    // bank is a real term but not in this session → rejected; apple is in it → accepted.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [
+            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'multiple_choice', 'response' => 'bank', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId],
+            ['id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId],
+        ]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 1)
+        ->assertJsonPath('data.unknown', 1);
+});
+
 it('requires authentication for stats', function () {
     $this->getJson('/api/v1/stats')->assertUnauthorized();
 });
