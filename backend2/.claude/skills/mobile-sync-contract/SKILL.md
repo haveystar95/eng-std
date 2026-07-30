@@ -88,15 +88,22 @@ stay small and permissions stay enforced.
 
 ## Versioning and breaking changes
 
-The App Store means old clients live for months. Therefore:
+> **Pre-release: breaking changes are free, no deprecation cycle. Revisit at App Store launch.**
+> There are no shipped clients — the app and this API move together, and the database can be
+> wiped. Break the contract cleanly (rename, retype, remove a field, narrow an enum) and update
+> the client in the same change. A dead endpoint kept "for compatibility" is just code to
+> maintain that someone will mistake for a live contract — delete it instead of deprecating it.
+
+Once there are clients in the wild (App Store), the App Store means old builds live for months,
+and the rules below start to apply:
 
 - Adding an optional field is safe. Removing or renaming a field, changing a type, or
   narrowing an enum is **breaking** and requires `/api/v2` alongside `/api/v1`.
-- Enums are the classic trap: the client parses `state` and `grade`. Adding a value breaks
-  old builds. Add new enum values only with a documented fallback, and have the client
-  treat unknown values as a neutral default from day one.
-- Every response includes `X-Api-Version`; the client sends `X-Client-Version`. Log the
-  pair so you know when a version is safe to retire.
+- Enums are the classic trap: the client parses `state`, `grade`, `exercise_mode`. Adding a
+  value breaks old builds. Add new enum values only with a documented fallback, and have the
+  client treat unknown values as a neutral default from day one.
+- Every response includes `X-Api-Version`; the client sends `X-Client-Version`. Log the pair
+  so you know when a version is safe to retire.
 - Deprecate with `Deprecation` and `Sunset` headers, and give at least two release cycles.
 
 ## Checklist for any API change

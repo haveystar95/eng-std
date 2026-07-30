@@ -281,3 +281,29 @@ CREATE INDEX ON terms USING hnsw (embedding vector_cosine_ops);   -- near-duplic
 
 The due-cards query (`user_id`, `due_at <= now()`, ordered, limited) runs on every
 session start on mobile. Any change near `user_term_progress` needs an `EXPLAIN` check.
+
+---
+
+## Appendix C — Addendum: decisions that evolved
+
+The sections above are the frozen initial design. Where a decision has since changed, the old
+text stays and the change is recorded here (the migrations and `.claude/skills/` are authoritative
+for current behaviour).
+
+- **Progress states** — `> Superseded 2026-07-30 (§3.2)`: a fifth state `known` was added (the
+  triage "I know this" shortcut). It is not an SRS state — the scheduler refuses it; its `due_at`
+  is a verification check. New `term_triages` table (append-only, client ULID) is the source of
+  triage verdicts.
+- **Reviews & grading** — `> Superseded 2026-07-30 (§3.4, §5)`: the client uploads the RAW answer
+  (`exercise_mode`, `response`, `latency_ms`, `used_hint`, `is_practice`); the **server grades**
+  it (`AnswerGrader` + per-mode latency median), so the grading rule lives in one runtime.
+  `reviews` gained `exercise_mode`, `is_correct`, `is_practice`, `response`.
+- **Study endpoint** — `> Superseded 2026-07-30 (§5, Appendix A)`: `POST /study/sessions` returns
+  a self-contained package (mode per card, distractors, chips) and fixes the session composition;
+  the earlier content-only `GET /study/due` was deleted (no shipped clients — clean break).
+- **Daily quota** — `> Superseded 2026-07-30`: the new-term quota is read from the profile's
+  `daily_goal` (clamped `[0, 100]`), one global cap per user; a scoped session does not multiply it.
+- **AI provider** — `> Superseded 2026-07-27 (§1)`: implemented against **OpenAI** (structured
+  outputs), not Anthropic, behind the same port; swappable.
+- **"Mastered"** now `(review AND interval ≥ 21) OR known`, defined once (`Mastery::isMastered`).
+- **Pre-release**: breaking API changes are free with no deprecation cycle until App Store launch.
