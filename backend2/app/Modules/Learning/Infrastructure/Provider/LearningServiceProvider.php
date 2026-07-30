@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Provider;
 
 use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
+use App\Modules\Learning\Application\Port\LatencyMedianReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressExistenceReader;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
@@ -28,6 +29,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentReviewRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStatsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStudySessionRepository;
 use App\Modules\Learning\Infrastructure\Adapter\IdentityLearnerProfileReader;
+use App\Modules\Learning\Infrastructure\Eloquent\CachedLatencyMedianReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTermProgressRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTriagedTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTriageRepository;
@@ -43,6 +45,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(TriageRepository::class, EloquentTriageRepository::class);
         $this->app->bind(TriagedTermsReader::class, EloquentTriagedTermsReader::class);
         $this->app->bind(LearnerProfileReader::class, IdentityLearnerProfileReader::class);
+        $this->app->bind(LatencyMedianReader::class, CachedLatencyMedianReader::class);
         $this->app->bind(StudySessionRepository::class, EloquentStudySessionRepository::class);
         $this->app->bind(DueTermsReader::class, EloquentDueTermsReader::class);
         $this->app->bind(ProgressExistenceReader::class, EloquentProgressExistenceReader::class);
