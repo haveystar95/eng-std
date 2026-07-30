@@ -49,3 +49,10 @@ it('accepts an unhurried swipe on a phrase', function () {
 
     expect($plan->risky)->toBeFalse();
 });
+
+it('treats a missing or zero latency as neutral, not impossibly fast', function () {
+    // No client latency (null) or a 0/negative placeholder must not flag every "known" verdict.
+    expect($this->planner->plan(CefrLevel::A1, CefrLevel::C2, null, false)->risky)->toBeFalse()
+        ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 0, false)->risky)->toBeFalse()
+        ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 0, true)->risky)->toBeFalse();
+});

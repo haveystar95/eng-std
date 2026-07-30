@@ -48,7 +48,10 @@ final class TriageVerificationPlanner
 
     private function tooFastToBeRead(?int $latencyMs, bool $isPhrase): bool
     {
-        if ($latencyMs === null) {
+        // A missing measurement — no client latency (null), or a non-positive placeholder (0,
+        // which no real swipe produces) — is neutral, never risk. Treating 0 as "impossibly
+        // fast" would flag every "known" verdict and erase the whole benefit of triage.
+        if ($latencyMs === null || $latencyMs <= 0) {
             return false;
         }
 

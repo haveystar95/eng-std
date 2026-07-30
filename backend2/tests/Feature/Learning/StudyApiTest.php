@@ -262,6 +262,56 @@ it('rejects an answer for a term outside the session composition', function () {
         ->assertJsonPath('data.unknown', 1);
 });
 
+it('records a free-practice answer: streak counts, but progress is untouched', function () {
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'apple', 'яблоко');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
+            'answered_at' => now()->toIso8601String(), 'is_practice' => true,
+        ]]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 1);
+
+    // Never scheduled → no progress row; but logged and counted toward the day's reviews (streak).
+    $this->assertDatabaseMissing('user_term_progress', ['user_id' => $user->id, 'term_id' => $termId]);
+    $this->assertDatabaseHas('reviews', ['term_id' => $termId, 'is_practice' => true]);
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/stats')
+        ->assertOk()
+        ->assertJsonPath('data.reviews_today', 1)
+        ->assertJsonPath('data.total_terms', 0);
+});
+
+it('does not double the daily new-term quota across two scoped sessions', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 1]);
+    [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    [$colB] = seedCollectionWith($user, 'bank', 'банк');
+
+    // Session A offers its one allowed new card; answering it spends the day's global quota.
+    $sessionA = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->assertJsonCount(1, 'data.cards')
+        ->json('data.session_id');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple',
+            'answered_at' => now()->toIso8601String(), 'session_id' => $sessionA,
+        ]]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 1);
+
+    // A different collection, same day → no new cards: the quota is one per user, not per collection.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colB])
+        ->assertOk()
+        ->assertJsonPath('data.cards', []);
+});
+
 it('requires authentication for stats', function () {
     $this->getJson('/api/v1/stats')->assertUnauthorized();
 });
