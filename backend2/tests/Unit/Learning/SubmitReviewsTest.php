@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Learning\Application\Command\SubmitReviews;
 use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Application\Dto\ReviewInput;
+use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
@@ -143,6 +144,28 @@ it('rejects answers for unknown terms and applies the rest', function () {
         ->and($result->unknown)->toBe(1)
         ->and($this->progress->get($this->user, $known))->not->toBeNull()
         ->and($this->progress->get($this->user, $unknown))->toBeNull();
+});
+
+it('resolves a wrong answer to a known term as a failed verification, not via the scheduler', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+    $this->progress->save(TermProgress::knownFromTriage($this->user, $term, new DateTimeImmutable('2026-07-27T09:00:00Z')));
+
+    $handler(new SubmitReviews($this->user, [answer($term, correct: false, answeredAt: '2026-07-27T10:00:00Z')]));
+
+    expect($this->progress->get($this->user, $term)?->state())->toBe(LearningState::Learning);
+});
+
+it('keeps a known term known when its verification passes, pushing the next check out', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+    $this->progress->save(TermProgress::knownFromTriage($this->user, $term, new DateTimeImmutable('2026-07-27T09:00:00Z')));
+
+    $handler(new SubmitReviews($this->user, [answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z')]));
+
+    $p = $this->progress->get($this->user, $term);
+    expect($p?->state())->toBe(LearningState::Known)
+        ->and($p?->dueAt())->toEqual((new DateTimeImmutable('2026-07-27T10:00:00Z'))->modify('+90 days'));
 });
 
 it('records a practice answer in the log but never schedules it', function () {

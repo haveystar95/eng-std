@@ -18,6 +18,9 @@ use App\Modules\Learning\Domain\Service\Scheduler;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
+use App\Modules\Learning\Domain\ValueObject\Grade;
+use App\Modules\Learning\Domain\ValueObject\LearningState;
+use DateTimeImmutable;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Vocabulary\Application\Query\TermAnswerKeyReader;
@@ -32,6 +35,9 @@ use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
  */
 final readonly class SubmitReviewsHandler
 {
+    /** How far out the next check is pushed when a "known" verification passes. */
+    private const VERIFICATION_PASS_DAYS = 90;
+
     public function __construct(
         private ReviewRepository $reviews,
         private TermProgressRepository $progress,
@@ -158,13 +164,25 @@ final readonly class SubmitReviewsHandler
             }
 
             foreach ($termReviews as $review) {
-                $termProgress = $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt);
+                // An answer to a `known` term is its verification check, not an SRS review — the
+                // scheduler refuses `known`, so resolve pass/fail explicitly here.
+                $termProgress = $termProgress->state() === LearningState::Known
+                    ? $this->resolveVerification($termProgress, $review->grade, $review->answeredAt)
+                    : $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt);
             }
 
             $this->progress->save($termProgress);
         }
 
         return $introduced;
+    }
+
+    /** A wrong verification answer sends a known term to learning; anything correct keeps it known. */
+    private function resolveVerification(TermProgress $progress, Grade $grade, DateTimeImmutable $answeredAt): TermProgress
+    {
+        return $grade === Grade::Again
+            ? $progress->failVerification($answeredAt)
+            : $progress->passVerification($answeredAt, self::VERIFICATION_PASS_DAYS);
     }
 
     /** @return array<string, true> */
