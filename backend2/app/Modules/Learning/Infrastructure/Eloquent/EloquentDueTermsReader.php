@@ -18,7 +18,7 @@ final class EloquentDueTermsReader implements DueTermsReader
     private const TABLE = 'user_term_progress';
 
     /** @var list<string> */
-    private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at'];
+    private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at', 'reps'];
 
     public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
@@ -45,6 +45,7 @@ final class EloquentDueTermsReader implements DueTermsReader
             state: LearningState::from((string) $row->state),
             intervalDays: (int) $row->interval_days,
             dueAt: $row->due_at !== null ? new DateTimeImmutable((string) $row->due_at) : null,
+            reps: (int) $row->reps,
         );
     }
 }

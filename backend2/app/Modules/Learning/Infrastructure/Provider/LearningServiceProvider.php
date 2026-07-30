@@ -20,6 +20,8 @@ use App\Modules\Learning\Domain\Repository\TriageRepository;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Scheduler;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentIntroducedTermsReader;
@@ -54,6 +56,13 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(StatsProjector::class, EloquentDailyStatsProjector::class);
         $this->app->bind(StatsReader::class, EloquentStatsReader::class);
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));
+
+        $this->app->singleton(EnabledModes::class, static function (): EnabledModes {
+            /** @var list<string> $modes */
+            $modes = config('learning.enabled_modes', ['multiple_choice', 'word_bank', 'typing']);
+
+            return new EnabledModes(array_map(static fn (string $m): ExerciseMode => ExerciseMode::from($m), $modes));
+        });
     }
 
     public function boot(): void

@@ -325,22 +325,29 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
 
-  /study/due:
-    get:
+  /study/sessions:
+    post:
       tags: [Study]
-      summary: The next study session — due cards then new cards, content included (self-contained)
+      summary: Build a self-contained study session (due then new cards, one card per exercise)
       description: >-
-        Returns due cards first (state <> new, ordered by due date), then fills the remaining
-        session slots with new cards (terms in the user's collections never studied yet,
-        state = new) up to the day's remaining new-term quota. Cards carry their content so the
-        client can run the session offline.
-      parameters:
-        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
-        - name: collection_id
-          in: query
-          required: false
-          description: Restrict the session to one owned collection (due + new from that collection only).
-          schema: { type: string, minLength: 26, maxLength: 26 }
+        Assembles a ready-to-play session: due cards first (state <> new, by due date), then new
+        cards up to the day's remaining new-term quota (one global quota — a scoped session does
+        not multiply it). Each card carries its exercise mode (chosen from the term's state), the
+        prompt (user's language), the answer (target language) and mode-specific extras — shuffled
+        options for multiple_choice, shuffled chips for word_bank — so the client runs it offline.
+        The session's composition is fixed server-side under the returned session_id; a practice
+        session introduces no new terms and never schedules.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true, description: Scope to one owned collection }
+                limit: { type: integer, minimum: 1, maximum: 100, default: 20 }
+                practice: { type: boolean, default: false }
+                session_id: { type: string, minLength: 26, maxLength: 26, nullable: true, description: Client-generated ULID (idempotent) }
       responses:
         '200':
           description: OK
@@ -350,9 +357,14 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items: { $ref: '#/components/schemas/StudyCard' }
+                    type: object
+                    properties:
+                      session_id: { type: string }
+                      cards:
+                        type: array
+                        items: { $ref: '#/components/schemas/SessionCard' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /study/progress:
     get:
@@ -654,19 +666,27 @@ components:
         mastered: { type: integer }
         due: { type: integer }
 
-    StudyCard:
+    SessionCard:
       type: object
       properties:
         term_id: { type: string }
-        state: { type: string, enum: [new, learning, review, relearning, known] }
-        interval_days: { type: integer }
-        due_at: { type: string, format: date-time, nullable: true }
-        text: { type: string, nullable: true }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
         type: { type: string, enum: [word, phrase], nullable: true }
+        prompt: { type: string, nullable: true, description: The cue, in the user's language }
+        answer: { type: string, description: The correct target-language answer }
         transcription: { type: string, nullable: true }
-        translation: { type: string, nullable: true }
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
+        options:
+          type: array
+          nullable: true
+          description: multiple_choice — the answer plus distractors, shuffled
+          items: { type: string }
+        chips:
+          type: array
+          nullable: true
+          description: word_bank — the answer's tokens (words, or letters for a single word), shuffled
+          items: { type: string }
 
     TriageCard:
       type: object

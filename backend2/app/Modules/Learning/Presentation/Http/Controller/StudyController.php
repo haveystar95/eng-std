@@ -4,41 +4,45 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Controller;
 
+use App\Modules\Learning\Application\Command\BuildStudySession;
+use App\Modules\Learning\Application\Command\BuildStudySessionHandler;
 use App\Modules\Learning\Application\Query\GetCollectionsProgress;
 use App\Modules\Learning\Application\Query\GetCollectionsProgressHandler;
-use App\Modules\Learning\Application\Query\GetStudyCards;
-use App\Modules\Learning\Application\Query\GetStudyCardsHandler;
 use App\Modules\Learning\Application\Query\GetUserStats;
 use App\Modules\Learning\Application\Query\GetUserStatsHandler;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
+use App\Modules\Learning\Presentation\Http\Request\BuildSessionRequest;
 use App\Modules\Learning\Presentation\Http\Resource\CollectionProgressResource;
+use App\Modules\Learning\Presentation\Http\Resource\SessionResource;
 use App\Modules\Learning\Presentation\Http\Resource\StatsResource;
-use App\Modules\Learning\Presentation\Http\Resource\StudyCardResource;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/** Study session cards (due for review), per-collection progress and the dashboard stats. */
+/** Study sessions (self-contained card packages), per-collection progress and dashboard stats. */
 final class StudyController
 {
     public function __construct(
-        private readonly GetStudyCardsHandler $studyCards,
+        private readonly BuildStudySessionHandler $buildSession,
         private readonly GetUserStatsHandler $userStats,
         private readonly GetCollectionsProgressHandler $collectionsProgress,
     ) {}
 
-    public function due(Request $request): AnonymousResourceCollection
+    public function session(BuildSessionRequest $request): SessionResource
     {
         $collectionId = $request->string('collection_id')->toString();
+        $sessionId = $request->string('session_id')->toString();
 
-        $cards = ($this->studyCards)(new GetStudyCards(
-            userId: $this->actorId($request),
-            now: new DateTimeImmutable(),
-            sessionSize: $request->integer('limit', 20),
+        $session = ($this->buildSession)(new BuildStudySession(
+            actorId: $this->actorId($request),
+            isPractice: $request->boolean('practice'),
             collectionId: $collectionId !== '' ? $collectionId : null,
+            sessionSize: $request->integer('limit', 20),
+            sessionId: $sessionId !== '' ? StudySessionId::fromString($sessionId) : null,
         ));
 
-        return StudyCardResource::collection($cards);
+        return new SessionResource($session);
     }
 
     public function stats(Request $request): StatsResource

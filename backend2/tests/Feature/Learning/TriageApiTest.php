@@ -92,22 +92,22 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
 
     // known → no due, not new → nothing to study.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due?collection_id=' . $col)
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
         ->assertOk()
-        ->assertJsonPath('data', []);
+        ->assertJsonPath('data.cards', []);
 
-    // return to learning: drops the row → new again → shows up in study.
+    // return to learning: resets the row to new → shows up in study again.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
             ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String()],
         ]])->assertOk();
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due?collection_id=' . $col)
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.term_id', $money)
-        ->assertJsonPath('data.0.state', 'new');
+        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonPath('data.cards.0.term_id', $money)
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 
 it('validates the triage batch', function () {

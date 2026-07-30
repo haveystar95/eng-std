@@ -106,9 +106,10 @@ it('has no due cards before anything is studied', function () {
     [, $token] = learner();
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonPath('data', []);
+        ->assertJsonStructure(['data' => ['session_id', 'cards']])
+        ->assertJsonPath('data.cards', []);
 });
 
 it('lists a due card once it is overdue, with hydrated content', function () {
@@ -123,12 +124,14 @@ it('lists a due card once it is overdue, with hydrated content', function () {
         ]]])
         ->assertOk();
 
+    // Due, in learning state → word_bank; prompt is the translation, answer the target text.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonPath('data.0.term_id', $termId)
-        ->assertJsonPath('data.0.text', 'withdraw cash')
-        ->assertJsonPath('data.0.translation', 'снять наличные');
+        ->assertJsonPath('data.cards.0.term_id', $termId)
+        ->assertJsonPath('data.cards.0.exercise_mode', 'word_bank')
+        ->assertJsonPath('data.cards.0.answer', 'withdraw cash')
+        ->assertJsonPath('data.cards.0.prompt', 'снять наличные');
 });
 
 it('validates the review batch', function () {
@@ -145,17 +148,16 @@ it('offers unreviewed collection terms as new study cards', function () {
     $apple = seedWordFor($user, 'apple', 'яблоко');
     $bank = seedWordFor($user, 'bank', 'банк');
 
-    $data = $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+    // New terms → multiple_choice; cards carry the answer so the client can play offline.
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.state', 'new')
-        ->assertJsonPath('data.1.state', 'new')
-        ->json('data');
+        ->assertJsonCount(2, 'data.cards')
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice')
+        ->json('data.cards');
 
-    expect(array_column($data, 'term_id'))->toEqualCanonicalizing([$apple, $bank]);
-    // New cards carry their content so the client can study offline.
-    expect(array_column($data, 'text'))->toEqualCanonicalizing(['apple', 'bank']);
+    expect(array_column($cards, 'term_id'))->toEqualCanonicalizing([$apple, $bank]);
+    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
 });
 
 it('drops a term from the new pool once it has progress', function () {
@@ -172,11 +174,11 @@ it('drops a term from the new pool once it has progress', function () {
         ->assertOk();
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.term_id', $bank)
-        ->assertJsonPath('data.0.state', 'new');
+        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonPath('data.cards.0.term_id', $bank)
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 
 it('scopes the due session to one collection', function () {
@@ -184,13 +186,13 @@ it('scopes the due session to one collection', function () {
     [$collectionA] = seedCollectionWith($user, 'apple');
     seedCollectionWith($user, 'bank'); // a second collection, must not leak in
 
-    $data = $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due?collection_id=' . $collectionA)
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionA])
         ->assertOk()
-        ->json('data');
+        ->json('data.cards');
 
-    expect($data)->toHaveCount(1);
-    expect($data[0]['text'])->toBe('apple');
+    expect($cards)->toHaveCount(1);
+    expect($cards[0]['answer'])->toBe('apple');
 });
 
 it('reports per-collection progress (learned once a term graduates)', function () {
@@ -222,9 +224,9 @@ it('caps new cards at the profile daily new-term quota', function () {
 
     // Two new terms are available, but the user's daily quota is 1.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(1, 'data');
+        ->assertJsonCount(1, 'data.cards');
 });
 
 it('introduces no new cards when the daily goal is zero', function () {
@@ -233,9 +235,9 @@ it('introduces no new cards when the daily goal is zero', function () {
     seedWordFor($user, 'apple', 'яблоко');
 
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/study/due')
+        ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonPath('data', []);
+        ->assertJsonPath('data.cards', []);
 });
 
 it('requires authentication for stats', function () {

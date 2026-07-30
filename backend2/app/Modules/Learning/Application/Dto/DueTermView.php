@@ -20,5 +20,6 @@ final readonly class DueTermView
         public LearningState $state,
         public int $intervalDays,
         public ?DateTimeImmutable $dueAt,
+        public int $reps = 0, // review counter, drives the ExerciseSelector's review-mode rotation
     ) {}
 }
