@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Query;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\CollectionProgressView;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
+use App\Modules\Learning\Domain\Service\Mastery;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 
 /**
@@ -16,8 +17,6 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
  */
 final readonly class GetCollectionsProgressHandler
 {
-    private const MASTERED_INTERVAL_DAYS = 21;
-
     public function __construct(
         private UserCollectionTermsReader $collectionTerms,
         private ProgressSnapshotReader $progress,
@@ -46,9 +45,9 @@ final readonly class GetCollectionsProgressHandler
                 }
                 if ($snapshot->state === LearningState::Review) {
                     $learned++;
-                    if ($snapshot->intervalDays >= self::MASTERED_INTERVAL_DAYS) {
-                        $mastered++;
-                    }
+                }
+                if (Mastery::isMastered($snapshot->state, $snapshot->intervalDays)) {
+                    $mastered++;
                 }
                 if ($snapshot->state !== LearningState::New && $snapshot->dueAt !== null && $snapshot->dueAt <= $query->now) {
                     $due++;

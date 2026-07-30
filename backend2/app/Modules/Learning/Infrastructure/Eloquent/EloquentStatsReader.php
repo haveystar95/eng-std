@@ -6,24 +6,30 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Application\Dto\StatsView;
 use App\Modules\Learning\Application\Port\StatsReader;
+use App\Modules\Learning\Domain\Service\Mastery;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use DateTimeZone;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentStatsReader implements StatsReader
 {
-    private const MASTERED_INTERVAL_DAYS = 21;
-
     public function read(UserId $userId, DateTimeImmutable $now): StatsView
     {
         $uid = $userId->value;
 
         $totalTerms = DB::table('user_term_progress')->where('user_id', $uid)->count();
         $learned = DB::table('user_term_progress')->where('user_id', $uid)->where('state', 'review')->count();
+        // Same definition as Mastery::isMastered, expressed in SQL for an aggregate count.
         $mastered = DB::table('user_term_progress')
-            ->where('user_id', $uid)->where('state', 'review')
-            ->where('interval_days', '>=', self::MASTERED_INTERVAL_DAYS)->count();
+            ->where('user_id', $uid)
+            ->where(function (Builder $q): void {
+                $q->where('state', 'known')
+                    ->orWhere(function (Builder $q2): void {
+                        $q2->where('state', 'review')->where('interval_days', '>=', Mastery::MASTERED_INTERVAL_DAYS);
+                    });
+            })->count();
         $dueToday = DB::table('user_term_progress')
             ->where('user_id', $uid)->where('state', '<>', 'new')
             ->where('due_at', '<=', $now)->count();

@@ -48,6 +48,11 @@ final readonly class Sm2Scheduler implements Scheduler
             LearningState::Learning => $this->fromLearning($progress, $grade, $now),
             LearningState::Review => $this->fromReview($progress, $grade, $now),
             LearningState::Relearning => $this->fromRelearning($progress, $grade, $now),
+            // `known` is a triage self-assessment, not an SRS state: it is verified and
+            // transitioned by TriageVerificationPlanner, never fed through SM-2.
+            LearningState::Known => throw new \LogicException(
+                'A known term is scheduled by TriageVerificationPlanner, not the SM-2 scheduler.',
+            ),
         };
     }
 

@@ -91,3 +91,7 @@ it('records the moment as last reviewed', function () {
 
     expect($result->lastReviewedAt())->toEqual($this->now);
 });
+
+it('refuses to schedule a known term — that is the verification planner\'s job', function () {
+    $this->scheduler->schedule(progressAt(LearningState::Known), Grade::Good, $this->now);
+})->throws(LogicException::class);
