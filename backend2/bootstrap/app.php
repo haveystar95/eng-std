@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
+use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         GenerateCollectionCommand::class,
+        VerificationStatsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         //

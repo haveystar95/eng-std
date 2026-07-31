@@ -28,6 +28,7 @@ final class Review
         public readonly DateTimeImmutable $answeredAt,
         public readonly ?ExerciseMode $exerciseMode = null,
         public readonly bool $isPractice = false,
+        public readonly bool $isVerification = false,
         public readonly ?string $response = null,
         public readonly ?StudySessionId $sessionId = null,
         public readonly ?int $latencyMs = null,

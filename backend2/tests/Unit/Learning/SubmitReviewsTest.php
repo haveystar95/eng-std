@@ -54,6 +54,7 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         grader: new AnswerGrader(),
         median: $ctx->median,
         sessionComposition: new FakeSessionCompositionReader(),
+        snapshots: $ctx->progress, // the in-memory repo doubles as the snapshot reader
         stats: $ctx->stats,
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
@@ -166,6 +167,28 @@ it('keeps a known term known when its verification passes, pushing the next chec
     $p = $this->progress->get($this->user, $term);
     expect($p?->state())->toBe(LearningState::Known)
         ->and($p?->dueAt())->toEqual((new DateTimeImmutable('2026-07-27T10:00:00Z'))->modify('+90 days'));
+});
+
+it('flags a non-practice answer to a known term as a verification', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+    $this->progress->save(TermProgress::knownFromTriage($this->user, $term, new DateTimeImmutable('2026-07-27T09:00:00Z')));
+
+    $handler(new SubmitReviews($this->user, [answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z')]));
+
+    expect($this->reviews->all()[0]->isVerification)->toBeTrue();
+});
+
+it('does not flag a practice answer to a known term as a verification', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+    $this->progress->save(TermProgress::knownFromTriage($this->user, $term, new DateTimeImmutable('2026-07-27T09:00:00Z')));
+
+    $handler(new SubmitReviews($this->user, [answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', isPractice: true)]));
+
+    $review = $this->reviews->all()[0];
+    expect($review->isVerification)->toBeFalse()          // practice never resolves a check
+        ->and($this->progress->get($this->user, $term)?->state())->toBe(LearningState::Known); // state untouched
 });
 
 it('records a practice answer in the log but never schedules it', function () {

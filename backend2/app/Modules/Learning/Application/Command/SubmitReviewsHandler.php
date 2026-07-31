@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Dto\ReviewBatchResult;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
+use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
 use App\Modules\Learning\Application\Port\SessionCompositionReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Domain\Entity\Review;
@@ -23,6 +24,7 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
 use DateTimeImmutable;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Query\TermAnswerKeyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
 
@@ -47,6 +49,7 @@ final readonly class SubmitReviewsHandler
         private AnswerGrader $grader,
         private LatencyMedianReader $median,
         private SessionCompositionReader $sessionComposition,
+        private ProgressSnapshotReader $snapshots,
         private StatsProjector $stats,
         private TransactionManager $tx,
         private Clock $clock,
@@ -57,8 +60,14 @@ final readonly class SubmitReviewsHandler
         $known = $this->knownTermIds($command);
         $keys = $this->answerKeys->byIds($command->termIds());
         $compositions = $this->sessionComposition->compositionsByIds($command->sessionIds());
+        // Pre-batch states, so an answer can be flagged as a verification (the term was `known`
+        // when answered) — a fact that is gone once the fold changes the state.
+        $states = $this->snapshots->forTerms(
+            $command->actorId,
+            array_map(static fn (TermId $id): string => $id->value, $command->termIds()),
+        );
 
-        return $this->tx->run(function () use ($command, $known, $keys, $compositions): ReviewBatchResult {
+        return $this->tx->run(function () use ($command, $known, $keys, $compositions, $states): ReviewBatchResult {
             /** @var list<Review> $accepted */
             $accepted = [];
             /** @var array<string, ExerciseMode> $touchedModes */
@@ -94,6 +103,11 @@ final readonly class SubmitReviewsHandler
                     $this->median->medianFor($command->actorId, $input->exerciseMode),
                 );
 
+                // A verification is a non-practice answer to a term that was `known`. Practice
+                // answers are never verifications — free training doesn't resolve the check.
+                $isVerification = ! $input->isPractice
+                    && (($states[$input->termId->value] ?? null)?->state === LearningState::Known);
+
                 $review = new Review(
                     id: $input->reviewId,
                     userId: $command->actorId,
@@ -102,6 +116,7 @@ final readonly class SubmitReviewsHandler
                     answeredAt: $input->answeredAt,
                     exerciseMode: $input->exerciseMode,
                     isPractice: $input->isPractice,
+                    isVerification: $isVerification,
                     response: $input->response,
                     sessionId: $input->sessionId,
                     latencyMs: $input->latencyMs,
@@ -144,6 +159,9 @@ final readonly class SubmitReviewsHandler
      */
     private function foldIntoProgress(SubmitReviews $command, array $accepted): array
     {
+        // Practice answers are dropped here: they never touch progress — and, deliberately, an
+        // answer to a `known` term in a practice session does NOT resolve its verification. Free
+        // training has no stake, so it must not settle the "do you really know this" check.
         $scheduled = array_values(array_filter($accepted, static fn (Review $r): bool => ! $r->isPractice));
         usort($scheduled, static fn (Review $a, Review $b): int => $a->answeredAt <=> $b->answeredAt);
 

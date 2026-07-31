@@ -21,6 +21,7 @@ final class EloquentReviewRepository implements ReviewRepository
             'exercise_mode' => $review->exerciseMode?->value,
             'is_correct' => $review->isCorrect(),
             'is_practice' => $review->isPractice,
+            'is_verification' => $review->isVerification,
             'response' => $review->response,
             'latency_ms' => $review->latencyMs,
             'answered_at' => $review->answeredAt,

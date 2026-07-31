@@ -110,6 +110,48 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
         ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 
+it('does not resolve a known-term verification in a practice session', function () {
+    [$user, $token] = learner();
+    [, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String()],
+        ]])->assertOk();
+
+    // A practice answer (even a wrong one) to the known term: recorded, but it must not fail the
+    // check or crash the fold — practice is dropped before scheduling / verification resolution.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'exercise_mode' => 'typing', 'response' => 'wrong',
+            'answered_at' => now()->toIso8601String(), 'is_practice' => true,
+        ]]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 1);
+
+    $this->assertDatabaseHas('reviews', ['term_id' => $money, 'is_practice' => true, 'is_verification' => false]);
+    $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'known']);
+});
+
+it('clears the verification due_at when a known term is returned to new', function () {
+    [$user, $token] = learner();
+    [, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String()],
+        ]])->assertOk();
+
+    // Return to learning: state resets to new and the scheduled check is dropped, so the selector
+    // gives it the intro mode, not a forced typing verification.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String()],
+        ]])->assertOk();
+
+    $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'new', 'due_at' => null]);
+});
+
 it('validates the triage batch', function () {
     [, $token] = learner();
 
