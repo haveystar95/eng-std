@@ -6,6 +6,7 @@ import '../../core/glass.dart';
 import '../../core/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../training/triage_screen.dart';
 import 'word_edit_dialog.dart';
 
 class CollectionDetailScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,21 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            tooltip: 'Разобрать (триаж)',
+            icon: const Icon(Icons.style_outlined),
+            onPressed: () {
+              AppFeedback.tap();
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
+              ));
+            },
+          ),
+        ],
+      ),
       floatingActionButton: _AddWordFab(
         onTap: () => showWordEditor(context, ref, collectionId: widget.collectionId),
       ),

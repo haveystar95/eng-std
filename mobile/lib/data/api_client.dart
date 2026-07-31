@@ -6,6 +6,7 @@ import '../core/config.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'token_store.dart';
+import 'triage_queue.dart';
 
 /// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,
 /// single resources wrapped in `data`). Attaches the token via an interceptor.
@@ -177,6 +178,33 @@ class ApiClient {
   Future<({int accepted, int duplicates, int unknown})> submitReviews(List<PendingReview> reviews) async {
     final r = await _dio.post('/reviews/batch', data: {
       'reviews': reviews.map((e) => e.toBatchJson()).toList(),
+    });
+    final d = _data(r) as Map<String, dynamic>;
+    return (
+      accepted: (d['accepted'] as int?) ?? 0,
+      duplicates: (d['duplicates'] as int?) ?? 0,
+      unknown: (d['unknown'] as int?) ?? 0,
+    );
+  }
+
+  // ---- Triage ---------------------------------------------------------------
+
+  /// The first-pass swipe queue for one collection — its not-yet-triaged,
+  /// not-yet-studied terms, self-contained so the whole stack swipes offline.
+  Future<List<TriageCard>> triageQueue(String collectionId, {int limit = 40}) async {
+    final r = await _dio.get('/triage/queue', queryParameters: {
+      'collection_id': collectionId,
+      'limit': limit,
+    });
+    return (_data(r) as List)
+        .map((e) => TriageCard.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Upload a batch of triage swipes (idempotent by each swipe's client ULID).
+  Future<({int accepted, int duplicates, int unknown})> submitTriages(List<PendingTriage> triages) async {
+    final r = await _dio.post('/triage/batch', data: {
+      'triages': triages.map((e) => e.toBatchJson()).toList(),
     });
     final d = _data(r) as Map<String, dynamic>;
     return (

@@ -195,3 +195,48 @@ class AppUser {
             : null,
       );
 }
+
+/// A triage swipe verdict. Three, not two — a binary choice makes people lie
+/// toward "known". The value is exactly what `POST /triage/batch` expects.
+enum TriageVerdict {
+  known('known'), // → known
+  unknown('unknown'), // ← not known → stays new
+  unsure('unsure'); // ↑ not sure → straight to learning
+
+  const TriageVerdict(this.value);
+  final String value;
+}
+
+/// One card in the triage queue (`GET /triage/queue`) — self-contained, so the
+/// whole stack can be swiped offline after a single fetch.
+class TriageCard {
+  final String termId;
+  final String text;
+  final String translation;
+  final String type; // word | phrase
+  final String? transcription;
+  final String? example;
+  final String? exampleTranslation;
+
+  TriageCard({
+    required this.termId,
+    required this.text,
+    required this.translation,
+    required this.type,
+    this.transcription,
+    this.example,
+    this.exampleTranslation,
+  });
+
+  bool get isPhrase => type == 'phrase';
+
+  factory TriageCard.fromJson(Map<String, dynamic> j) => TriageCard(
+        termId: j['term_id'] as String,
+        text: (j['text'] as String?) ?? '',
+        translation: (j['translation'] as String?) ?? '',
+        type: (j['type'] as String?) ?? 'word',
+        transcription: j['transcription'] as String?,
+        example: j['example'] as String?,
+        exampleTranslation: j['example_translation'] as String?,
+      );
+}

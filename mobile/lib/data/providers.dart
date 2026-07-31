@@ -6,6 +6,8 @@ import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'token_store.dart';
+import 'triage_queue.dart';
+import 'triage_sync.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
 
@@ -14,6 +16,21 @@ final reviewQueueProvider = Provider<ReviewQueue>((ref) => ReviewQueue());
 /// Offline-first review upload pipeline (record locally → batch flush).
 final reviewSyncProvider = Provider<ReviewSync>((ref) {
   return ReviewSync(ref.watch(apiClientProvider), ref.watch(reviewQueueProvider), ref);
+});
+
+final triageQueueProvider = Provider<TriageQueue>((ref) => TriageQueue());
+
+/// Offline-first triage upload pipeline (record locally → batch flush).
+final triageSyncProvider = Provider<TriageSync>((ref) {
+  return TriageSync(ref.watch(apiClientProvider), ref.watch(triageQueueProvider), ref);
+});
+
+/// The triage deck for one collection: the server queue minus terms already
+/// swiped locally (sent or not), so a swiped-but-unsent card isn't re-shown.
+final triageDeckProvider = FutureProvider.family<List<TriageCard>, String>((ref, collectionId) async {
+  final cards = await ref.watch(apiClientProvider).triageQueue(collectionId);
+  final pending = await ref.watch(triageSyncProvider).pendingTermIds();
+  return cards.where((c) => !pending.contains(c.termId)).toList();
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {
