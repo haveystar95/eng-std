@@ -3,16 +3,17 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// One triage swipe waiting to be uploaded. Carries its own client ULID (the
-/// idempotency key `POST /triage/batch` dedupes on) and the moment it was
-/// decided, so a replayed offline batch is the same as the online one. The
-/// server keeps the whole log and treats the latest by `decided_at` as current,
-/// so a re-swipe after upload simply overrides — no need to mutate a sent row.
+/// idempotency key `POST /triage/batch` dedupes on) and a per-user monotonic
+/// `clientSeq`: the server picks the current verdict for a (user, term) by the
+/// greatest clientSeq, NOT by `decidedAt` (a device clock that can lag and roll
+/// back a genuinely-later verdict). `decidedAt` rides along for analytics only.
 class PendingTriage {
   final String id; // client ULID — the idempotency key
   final String termId;
   final String verdict; // known | unknown | unsure
   final String? collectionId; // where the swipe came from (analytics)
-  final String decidedAt; // ISO-8601 UTC, captured at swipe time
+  final String decidedAt; // ISO-8601 UTC, captured at swipe time (reference-only)
+  final int clientSeq; // per-user monotonic order key — decides the current verdict
   final int? latencyMs; // measured by the client; null when it couldn't be measured
 
   const PendingTriage({
@@ -20,6 +21,7 @@ class PendingTriage {
     required this.termId,
     required this.verdict,
     required this.decidedAt,
+    required this.clientSeq,
     this.collectionId,
     this.latencyMs,
   });
@@ -30,6 +32,7 @@ class PendingTriage {
         'verdict': verdict,
         'collection_id': collectionId,
         'decided_at': decidedAt,
+        'client_seq': clientSeq,
         'latency_ms': latencyMs,
       };
 
@@ -42,6 +45,7 @@ class PendingTriage {
         'verdict': verdict,
         if (collectionId != null) 'collection_id': collectionId,
         'decided_at': decidedAt,
+        'client_seq': clientSeq,
         'latency_ms': latencyMs, // null-safe: null stays null
       };
 
@@ -51,6 +55,7 @@ class PendingTriage {
         verdict: j['verdict'] as String,
         collectionId: j['collection_id'] as String?,
         decidedAt: j['decided_at'] as String,
+        clientSeq: (j['client_seq'] as int?) ?? 0, // legacy queued items → 0 (server treats as oldest)
         latencyMs: j['latency_ms'] as int?,
       );
 }

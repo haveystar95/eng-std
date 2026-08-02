@@ -214,6 +214,18 @@ class ApiClient {
     );
   }
 
+  /// The server's client_seq high-water mark per log. Read on login to seed the
+  /// local monotonic counter so a reinstall or a fresh device can't emit sequences
+  /// that would lose to already-stored rows.
+  Future<({int triage, int review})> syncCursor() async {
+    final r = await _dio.get('/sync/cursor');
+    final d = _data(r) as Map<String, dynamic>;
+    return (
+      triage: (d['max_triage_seq'] as int?) ?? 0,
+      review: (d['max_review_seq'] as int?) ?? 0,
+    );
+  }
+
   // ---- AI generation --------------------------------------------------------
 
   /// Kicks off async generation; returns the request id to poll.

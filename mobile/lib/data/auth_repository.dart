@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../core/config.dart';
 import 'api_client.dart';
 import 'models.dart';
+import 'seq_counter.dart';
 import 'token_store.dart';
 
 class AuthException implements Exception {
@@ -15,10 +16,11 @@ class AuthException implements Exception {
 /// Owns the sign-in flow: native Google Sign-In → backend token exchange →
 /// persisted Sanctum token.
 class AuthRepository {
-  AuthRepository(this._api, this._tokens);
+  AuthRepository(this._api, this._tokens, this._seq);
 
   final ApiClient _api;
   final TokenStore _tokens;
+  final SeqCounter _seq;
   bool _googleReady = false;
 
   Future<void> _ensureGoogle() async {
@@ -36,11 +38,25 @@ class AuthRepository {
     final token = await _tokens.load();
     if (token == null || token.isEmpty) return null;
     try {
-      return await _api.me();
+      final user = await _api.me();
+      await _seedSeqCounters();
+      return user;
     } catch (_) {
       await _tokens.clear();
       return null;
     }
+  }
+
+  /// Lift the local monotonic counters to the server's high-water mark, so a reinstall
+  /// (keychain wiped → counters at 0) or a fresh device can't emit client_seq values
+  /// that would lose to rows the server already holds. Best-effort: offline just keeps
+  /// the local counters, which are still monotonic for this device.
+  Future<void> _seedSeqCounters() async {
+    try {
+      final cursor = await _api.syncCursor();
+      await _seq.seedAtLeast(SeqCounter.triage, cursor.triage);
+      await _seq.seedAtLeast(SeqCounter.review, cursor.review);
+    } catch (_) {/* offline or endpoint unavailable — keep local counters */}
   }
 
   Future<AppUser> signInWithGoogle() async {
@@ -67,6 +83,7 @@ class AuthRepository {
 
     final result = await _api.googleLogin(idToken);
     await _tokens.save(result.token);
+    await _seedSeqCounters();
     return result.user;
   }
 

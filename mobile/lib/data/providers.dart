@@ -5,11 +5,16 @@ import 'auth_repository.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
+import 'seq_counter.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 import 'triage_sync.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
+
+/// Per-user monotonic sequence counters (triage / review), persisted in the keychain
+/// separately from the durable queues so they survive a queue clear.
+final seqCounterProvider = Provider<SeqCounter>((ref) => SeqCounter());
 
 final reviewQueueProvider = Provider<ReviewQueue>((ref) => ReviewQueue());
 
@@ -22,7 +27,12 @@ final triageQueueProvider = Provider<TriageQueue>((ref) => TriageQueue());
 
 /// Offline-first triage upload pipeline (record locally → batch flush).
 final triageSyncProvider = Provider<TriageSync>((ref) {
-  return TriageSync(ref.watch(apiClientProvider), ref.watch(triageQueueProvider), ref);
+  return TriageSync(
+    ref.watch(apiClientProvider),
+    ref.watch(triageQueueProvider),
+    ref.watch(seqCounterProvider),
+    ref,
+  );
 });
 
 /// The triage deck for one collection: the server queue minus terms already
@@ -38,7 +48,11 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(ref.watch(apiClientProvider), ref.watch(tokenStoreProvider));
+  return AuthRepository(
+    ref.watch(apiClientProvider),
+    ref.watch(tokenStoreProvider),
+    ref.watch(seqCounterProvider),
+  );
 });
 
 /// Holds the signed-in user (or null). `loading` while restoring/authing.

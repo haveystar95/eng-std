@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import 'models.dart';
 import 'providers.dart';
+import 'seq_counter.dart';
 import 'triage_queue.dart';
 
 /// Offline-first triage pipeline. Every swipe is recorded on disk first (so it
@@ -12,10 +13,11 @@ import 'triage_queue.dart';
 /// batch. Uploads are idempotent by the client ULID, so retries are free and a
 /// 2xx lets us drop the sent ids.
 class TriageSync {
-  TriageSync(this._api, this._queue, this._ref);
+  TriageSync(this._api, this._queue, this._seq, this._ref);
 
   final ApiClient _api;
   final TriageQueue _queue;
+  final SeqCounter _seq;
   final Ref _ref;
 
   List<PendingTriage>? _mem; // in-memory mirror of the persisted queue
@@ -44,6 +46,7 @@ class TriageSync {
       verdict: verdict.value,
       collectionId: collectionId,
       decidedAt: DateTime.now().toUtc().toIso8601String(),
+      clientSeq: await _seq.next(SeqCounter.triage),
       latencyMs: latencyMs,
     ));
     await _queue.save(list);

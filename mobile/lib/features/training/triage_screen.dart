@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -101,10 +104,20 @@ class _DeckState extends ConsumerState<_Deck>
   TriageVerdict? _lastHint;
   static const _threshold = 90.0;
 
+  /// Flush the moment the network returns — the app-lifecycle triggers only fire on
+  /// resume/dispose, so a flaky connection recovering while the user sits on this
+  /// screen would otherwise leave the queue waiting.
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _connSub = Connectivity().onConnectivityChanged.listen((results) {
+      if (results.any((r) => r != ConnectivityResult.none)) {
+        ref.read(triageSyncProvider).flush();
+      }
+    });
     _armLatencyClock();
     _anim
       ..addListener(() {
@@ -132,6 +145,7 @@ class _DeckState extends ConsumerState<_Deck>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _connSub?.cancel();
     _anim.dispose();
     ref.read(triageSyncProvider).flush(); // last chance to send on the way out
     super.dispose();
