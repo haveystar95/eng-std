@@ -81,6 +81,19 @@ The app is **usable end-to-end today**. "Done" for this single-user product mean
 Nice-to-haves, not blockers: undo-last-swipe + end-of-session flush, `Terms lookup/search`,
 push notifications, `POST /study/sessions`, per-item CEFR badge, AI open-answer check.
 
+Deferred from the triage-contract close-out (2026-08-03; `triage-contract-findings.md` is now
+frozen — closed items live there, open ones here):
+- **Online triage sends one POST per swipe** (~35/deck) — battery + log noise. Left as-is:
+  batching online is a behaviour change not worth landing unverified, and the durable queue
+  already guarantees delivery. If addressed: small size-based batches + keep the immediate
+  flush of the last swipe on screen-exit. Offline is already chunked (Задача 4).
+- **Per-term `cefr` badge on the triage card** — the field exists on the term; the card omits it
+  by design (minimal card). Purely a client nicety.
+- **`client_seq` collides across two devices used in parallel** — accepted for pre-release; the
+  real fix (server-assigned arrival order) belongs with delta-sync / multi-device.
+- **Reviews upload pipeline is stale** (pre-`client_seq`, pre-raw-answer) → 422s every flush;
+  wire it up when the exercise/session screens are (re)built. The `seq_review` counter is ready.
+
 ## Decisions & conventions already established (don't re-derive)
 
 - **Where knowledge auto-loads:** `CLAUDE.md` files (root `../CLAUDE.md`, this dir's `CLAUDE.md`, `../mobile/CLAUDE.md`) load automatically; the 7 skills in `.claude/skills/` are directory-scoped to `backend2/`; the user's memory notes load each session. Plain docs like this one are read on demand — start by reading them.

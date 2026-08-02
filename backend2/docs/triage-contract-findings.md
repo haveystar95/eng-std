@@ -1,7 +1,31 @@
 # Triage vertical slice — contract findings
 
+> **STATUS: CLOSED (2026-08-03).** Every finding below is resolved or deliberately deferred;
+> see the table. This document is frozen — new findings go to `docs/ROADMAP.md`, not here.
+
 What building the triage client surfaced about the API contract. The point of the slice.
 Read this before writing delta-sync — some of it is cheaper to fix now.
+
+## Resolution
+
+| Finding | Resolution | Commit |
+|---|---|---|
+| No "how many remain beyond the cap" | Envelope `{cards, remaining}`; `remaining` = eligible after exclusion | `ff9711c` |
+| `latency_ms = 0` trap undocumented | OpenAPI: optional, `null`=unmeasured, never send `0` | `72ca50e` |
+| Batch cap 200 vs offline backlog | Client chunks at 100 (triage + review), partial-success + 422-drop | `74e94a6` |
+| Ordering relies on device `decided_at` | Reordered on per-user monotonic `client_seq` (data-corruption fix) | `72ca50e` |
+| Over-fetch (`transcription`, word-card `example`) | Kept; documented as reserved for future exercise modes | `f157735` |
+| No per-term `cefr` badge on the card | **Deferred** — optional client nicety, not part of the cutover → ROADMAP |
+| Client must subtract locally-pending ids | Working as designed (`triageDeckProvider`); inherent to offline-first | — |
+| Also fixed in passing: 422 wedging the queue | Permanent rejects dropped with a log, not retried forever | `349ec11` |
+| Also fixed: triaged cards reappearing on re-entry (BUG-1) | Re-fetch queue on every entry | `154f6c9` |
+| Also fixed: word latency floor unreachable on-device | Latency risk is phrase-only; word risk via cefr | `c175d18` |
+
+On-device verification of all of the above (incl. the full-reinstall `client_seq` seed and the
+independent connectivity flush) is recorded in `session-handoff.md`. The one item verified by
+code review only, not on device, is the 422-drop path — noted there.
+
+---
 
 ## Was the package self-contained? Mostly yes.
 
