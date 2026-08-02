@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,9 @@ import 'triage_queue.dart';
 /// 2xx lets us drop the sent ids.
 class TriageSync {
   TriageSync(this._api, this._queue, this._seq, this._ref);
+
+  /// Server caps a batch at 200; 100 leaves headroom for an offline backlog.
+  static const int _chunkSize = 100;
 
   final ApiClient _api;
   final TriageQueue _queue;
@@ -68,37 +72,45 @@ class TriageSync {
     return true;
   }
 
-  /// Upload the whole pending batch. Safe to call anytime (guarded against
-  /// re-entrancy); keeps everything on failure for the next attempt.
+  /// Upload the pending queue in chunks. Safe to call anytime (guarded against re-entrancy).
+  ///
+  /// Online this is one swipe = one 1-item chunk = one POST (unchanged). Offline the queue can
+  /// grow past the server's 200-item batch cap, so it goes out in [_chunkSize] chunks:
+  ///  - a chunk that succeeds is dropped from the queue (partial progress is saved);
+  ///  - a chunk rejected permanently (422/413) is dropped with a log — it would never succeed,
+  ///    and it must not block the chunks after it;
+  ///  - a transient failure (offline/5xx/401/429) stops the run and keeps that chunk and the
+  ///    rest for next time. Order is carried by client_seq, so chunks needn't be strictly
+  ///    sequential — but we send them in order anyway; it's cheaper and clearer in the logs.
   Future<void> flush() async {
     if (_flushing) return;
     final list = await _list();
     if (list.isEmpty) return;
 
     _flushing = true;
-    final batch = List<PendingTriage>.from(list);
     try {
-      await _api.submitTriages(batch);
-
-      final sent = batch.map((e) => e.id).toSet();
-      list.removeWhere((e) => sent.contains(e.id));
-      await _queue.save(list);
-
-      _ref.invalidate(collectionsProvider);
-      _ref.invalidate(collectionsProgressProvider);
-    } on DioException catch (e) {
-      // A 422 (or 413) is a rejection, not a connectivity failure — resending the same batch
-      // will never succeed, so drop those records instead of retrying them forever and wedging
-      // the queue. Everything else (offline, 5xx, 401, 429) is transient: keep and retry.
-      if (isPermanentReject(e)) {
-        final sent = batch.map((e) => e.id).toSet();
-        list.removeWhere((e) => sent.contains(e.id));
-        await _queue.save(list);
-        debugPrint('TriageSync: dropped ${sent.length} rejected swipe(s) '
-            '(${e.response?.statusCode}): ${e.response?.data}');
+      final snapshot = List<PendingTriage>.from(list);
+      final drop = <String>{};
+      for (var i = 0; i < snapshot.length; i += _chunkSize) {
+        final chunk = snapshot.sublist(i, min(i + _chunkSize, snapshot.length));
+        try {
+          await _api.submitTriages(chunk);
+          drop.addAll(chunk.map((e) => e.id)); // success → drop
+        } on DioException catch (e) {
+          if (!isPermanentReject(e)) break; // transient → keep this + remaining chunks, retry later
+          drop.addAll(chunk.map((e) => e.id)); // 422/413 → drop with a log, don't block the rest
+          debugPrint('TriageSync: dropped ${chunk.length} rejected swipe(s) '
+              '(${e.response?.statusCode}): ${e.response?.data}');
+        } catch (_) {
+          break; // unknown → treat as transient
+        }
       }
-    } catch (_) {
-      // Unknown error — treat as transient, keep the queue and try again later.
+      if (drop.isNotEmpty) {
+        list.removeWhere((e) => drop.contains(e.id));
+        await _queue.save(list);
+        _ref.invalidate(collectionsProvider);
+        _ref.invalidate(collectionsProgressProvider);
+      }
     } finally {
       _flushing = false;
     }

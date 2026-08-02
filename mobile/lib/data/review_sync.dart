@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,9 @@ import 'review_queue.dart';
 /// would never be accepted on a retry anyway.
 class ReviewSync {
   ReviewSync(this._api, this._queue, this._ref);
+
+  /// Server caps a batch at 200; 100 leaves headroom for an offline backlog.
+  static const int _chunkSize = 100;
 
   final ApiClient _api;
   final ReviewQueue _queue;
@@ -42,39 +46,44 @@ class ReviewSync {
     unawaited(flush());
   }
 
-  /// Upload the whole pending batch. Safe to call anytime (guarded against
-  /// re-entrancy); keeps everything on failure for the next attempt.
+  /// Upload the pending queue in chunks (see TriageSync.flush for the full rationale).
+  /// Success drops the chunk; a permanent reject (422/413) drops it with a log without blocking
+  /// the rest; a transient failure stops and keeps the remainder for next time. Order rides on
+  /// client_seq once the review pipeline supplies it; chunks are still sent in order.
+  ///
+  /// NOTE: the review pipeline is still stale (pre-`client_seq`, pre-raw-answer), so every flush
+  /// currently 422s and the records are dropped here rather than piling up. Full wiring lands
+  /// with the exercise/session screens.
   Future<void> flush() async {
     if (_flushing) return;
     final list = await _list();
     if (list.isEmpty) return;
 
     _flushing = true;
-    final batch = List<PendingReview>.from(list);
     try {
-      await _api.submitReviews(batch);
-
-      final sent = batch.map((e) => e.id).toSet();
-      list.removeWhere((e) => sent.contains(e.id));
-      await _queue.save(list);
-
-      _ref.invalidate(statsProvider);
-      _ref.invalidate(dueCardsProvider);
-      _ref.invalidate(collectionsProgressProvider);
-    } on DioException catch (e) {
-      // A 422 (or 413) is a rejection, not a connectivity failure — resending won't help, so
-      // drop those records instead of retrying forever and wedging the queue. (Until the review
-      // pipeline is rebuilt for the raw-answer contract, its batches 422 on every flush — this
-      // keeps them from accumulating as dead records.) Transient failures are kept and retried.
-      if (isPermanentReject(e)) {
-        final sent = batch.map((e) => e.id).toSet();
-        list.removeWhere((e) => sent.contains(e.id));
-        await _queue.save(list);
-        debugPrint('ReviewSync: dropped ${sent.length} rejected answer(s) '
-            '(${e.response?.statusCode}): ${e.response?.data}');
+      final snapshot = List<PendingReview>.from(list);
+      final drop = <String>{};
+      for (var i = 0; i < snapshot.length; i += _chunkSize) {
+        final chunk = snapshot.sublist(i, min(i + _chunkSize, snapshot.length));
+        try {
+          await _api.submitReviews(chunk);
+          drop.addAll(chunk.map((e) => e.id)); // success → drop
+        } on DioException catch (e) {
+          if (!isPermanentReject(e)) break; // transient → keep this + remaining chunks
+          drop.addAll(chunk.map((e) => e.id)); // 422/413 → drop with a log, don't block the rest
+          debugPrint('ReviewSync: dropped ${chunk.length} rejected answer(s) '
+              '(${e.response?.statusCode}): ${e.response?.data}');
+        } catch (_) {
+          break; // unknown → treat as transient
+        }
       }
-    } catch (_) {
-      // Unknown error — treat as transient, keep the queue and try again later.
+      if (drop.isNotEmpty) {
+        list.removeWhere((e) => drop.contains(e.id));
+        await _queue.save(list);
+        _ref.invalidate(statsProvider);
+        _ref.invalidate(dueCardsProvider);
+        _ref.invalidate(collectionsProgressProvider);
+      }
     } finally {
       _flushing = false;
     }
