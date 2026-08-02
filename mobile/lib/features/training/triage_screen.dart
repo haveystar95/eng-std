@@ -12,19 +12,38 @@ import '../../data/providers.dart';
 /// The triage vertical slice: swipe a collection's new terms → знаю / не знаю /
 /// не уверен. Its job is to exercise the contract — self-contained queue,
 /// client ULIDs, client-measured latency, on-disk queue, offline flush.
-class TriageScreen extends ConsumerWidget {
+class TriageScreen extends ConsumerStatefulWidget {
   const TriageScreen({super.key, required this.collectionId, required this.title});
 
   final String collectionId;
   final String title;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final deck = ref.watch(triageDeckProvider(collectionId));
+  ConsumerState<TriageScreen> createState() => _TriageScreenState();
+}
+
+class _TriageScreenState extends ConsumerState<TriageScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Re-fetch the queue on EVERY entry. The server excludes terms already triaged (uploaded),
+    // which a cached deck would keep showing — so a completed deck would re-show its swiped
+    // cards. The deck provider only re-runs on Riverpod's auto-dispose timing, which is not
+    // guaranteed on every navigation path back into this screen (observed: some re-entries
+    // re-fetched, one served a stale deck). Invalidating here, before the first build watches
+    // it, makes the refetch deterministic regardless of disposal timing. Offline-only swipes
+    // are still excluded locally by triageDeckProvider (pendingTermIds); a full re-fetch while
+    // offline surfaces the load error, which is honest — nothing is lost, the queue is intact.
+    ref.invalidate(triageDeckProvider(widget.collectionId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deck = ref.watch(triageDeckProvider(widget.collectionId));
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text('Разбор · $title')),
+      appBar: AppBar(title: Text('Разбор · ${widget.title}')),
       body: AmbientBackground(
         child: SafeArea(
           child: deck.when(
@@ -35,7 +54,7 @@ class TriageScreen extends ConsumerWidget {
             ),
             data: (cards) => cards.isEmpty
                 ? const _AllTriaged()
-                : _Deck(cards: cards, collectionId: collectionId),
+                : _Deck(cards: cards, collectionId: widget.collectionId),
           ),
         ),
       ),
