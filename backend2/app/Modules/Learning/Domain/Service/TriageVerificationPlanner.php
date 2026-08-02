@@ -24,10 +24,13 @@ final class TriageVerificationPlanner
     private const LONG_INTERVAL_DAYS = 90;
 
     /**
-     * "I know" faster than a person can read is a tell. The floor differs by kind: 400 ms on a
-     * single word is plausible, on a four-word phrase it means they never finished reading.
+     * "I know" faster than a person can read is a tell — but only for phrases. A single word is
+     * taken in at a glance (three letters register in peripheral vision), so there is no "didn't
+     * finish reading" state to catch: on-device the fastest honest swipe floors around ~490 ms
+     * (paint + reaction + gesture), well above any word threshold worth setting, so a word floor
+     * is either dead or, if raised to reach, flags every fast swipe — an inversion of its meaning.
+     * Latency risk therefore applies to PHRASES only; word risk comes from cefr alone.
      */
-    private const WORD_MIN_READ_MS = 300;
     private const PHRASE_MIN_READ_MS = 900;
 
     public function plan(?CefrLevel $termLevel, CefrLevel $userLevel, ?int $latencyMs, bool $isPhrase): VerificationPlan
@@ -48,6 +51,11 @@ final class TriageVerificationPlanner
 
     private function tooFastToBeRead(?int $latencyMs, bool $isPhrase): bool
     {
+        // Not applicable to single words (see PHRASE_MIN_READ_MS) — their risk is cefr-only.
+        if (! $isPhrase) {
+            return false;
+        }
+
         // A missing measurement — no client latency (null), or a non-positive placeholder (0,
         // which no real swipe produces) — is neutral, never risk. Treating 0 as "impossibly
         // fast" would flag every "known" verdict and erase the whole benefit of triage.
@@ -55,6 +63,6 @@ final class TriageVerificationPlanner
             return false;
         }
 
-        return $latencyMs < ($isPhrase ? self::PHRASE_MIN_READ_MS : self::WORD_MIN_READ_MS);
+        return $latencyMs < self::PHRASE_MIN_READ_MS;
     }
 }

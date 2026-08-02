@@ -25,17 +25,11 @@ it('treats an unknown (null) cefr as neutral, not risky', function () {
     expect($plan->risky)->toBeFalse()->and($plan->dueInDays)->toBe(90);
 });
 
-it('flags an impossibly fast swipe on a word as risky', function () {
-    // cefr below level so only the latency signal can trip the flag.
-    $plan = $this->planner->plan(CefrLevel::A1, CefrLevel::C2, 200, false);
-
-    expect($plan->risky)->toBeTrue();
-});
-
-it('accepts a plausible 400 ms swipe on a single word', function () {
-    $plan = $this->planner->plan(CefrLevel::A1, CefrLevel::C2, 400, false);
-
-    expect($plan->risky)->toBeFalse();
+it('never uses latency for words — even an impossibly fast word swipe is not risky', function () {
+    // Single words have no "didn't finish reading" state, and on-device the honest floor (~490 ms)
+    // sits above any usable word threshold, so word risk is cefr-only. cefr below level → not risky.
+    expect($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 200, false)->risky)->toBeFalse()
+        ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 400, false)->risky)->toBeFalse();
 });
 
 it('flags the same 400 ms on a phrase — not enough time to read it', function () {
