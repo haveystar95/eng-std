@@ -481,7 +481,8 @@ paths:
         A collection's terms that have neither a progress row nor a triage record, capped at
         limit. Content is included so the whole batch can be swiped offline. Excluding
         already-triaged terms is what stops a term from being asked twice, even when an
-        "unknown" swipe leaves it new.
+        "unknown" swipe leaves it new. The response is an envelope: `cards` plus `remaining`,
+        the count of eligible terms beyond this page.
       parameters:
         - name: collection_id
           in: query
@@ -497,8 +498,20 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items: { $ref: '#/components/schemas/TriageCard' }
+                    type: object
+                    required: [cards, remaining]
+                    properties:
+                      cards:
+                        type: array
+                        items: { $ref: '#/components/schemas/TriageCard' }
+                      remaining:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Eligible (not-yet-triaged, not-yet-studied) terms left AFTER this page —
+                          i.e. what subsequent GETs will still serve, NOT the collection's total
+                          new-term count. Lets the client show honest progress ("N more after
+                          sync") without diverging from the real queue. 0 means this is the last page.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 

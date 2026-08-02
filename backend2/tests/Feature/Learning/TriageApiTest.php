@@ -76,9 +76,40 @@ it('excludes studied and triaged terms from the triage queue', function () {
     $data = $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/v1/triage/queue?collection_id=' . $col)
         ->assertOk()
-        ->json('data');
+        ->assertJsonPath('data.remaining', 0)   // cherry is the only eligible term → nothing beyond this page
+        ->json('data.cards');
 
     expect(array_column($data, 'term_id'))->toBe([$cherry]);
+});
+
+it('caps the queue page and reports the eligible remainder', function () {
+    [$user, $token] = learner();
+    [$col] = seedCollectionWith($user, 'w0', 'п0');
+    for ($i = 1; $i < 45; $i++) {          // 45 eligible terms total (w0..w44)
+        addWordTo($col, $user->id, "w{$i}", "п{$i}");
+    }
+
+    // Page 1: capped at the default limit of 40, with 5 left beyond it.
+    $page1 = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/triage/queue?collection_id=' . $col)
+        ->assertOk()
+        ->assertJsonCount(40, 'data.cards')
+        ->assertJsonPath('data.remaining', 5)
+        ->json('data.cards');
+
+    // Triage the whole first page, then the next GET returns exactly the remainder, remaining 0.
+    $triages = array_map(fn (array $c): array => [
+        'id' => Ulid::generate(), 'term_id' => $c['term_id'], 'verdict' => 'unknown',
+        'decided_at' => now()->toIso8601String(), 'client_seq' => 1,
+    ], $page1);
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => $triages])->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/triage/queue?collection_id=' . $col)
+        ->assertOk()
+        ->assertJsonCount(5, 'data.cards')
+        ->assertJsonPath('data.remaining', 0);
 });
 
 it('keeps a known term out of study and returns it to new when triaged unknown', function () {

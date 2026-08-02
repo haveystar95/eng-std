@@ -52,9 +52,9 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
               child: Text('Не удалось загрузить: $e',
                   style: const TextStyle(color: AppColors.textSecondary)),
             ),
-            data: (cards) => cards.isEmpty
-                ? const _AllTriaged()
-                : _Deck(cards: cards, collectionId: widget.collectionId),
+            data: (deck) => deck.cards.isEmpty
+                ? _AllTriaged(remaining: deck.remaining)
+                : _Deck(cards: deck.cards, remaining: deck.remaining, collectionId: widget.collectionId),
           ),
         ),
       ),
@@ -63,24 +63,35 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
 }
 
 class _AllTriaged extends StatelessWidget {
-  const _AllTriaged();
+  const _AllTriaged({required this.remaining});
+
+  final int remaining;
 
   @override
   Widget build(BuildContext context) {
+    // "Всё разобрано" only when there is genuinely nothing left server-side. If the page came
+    // back empty but the server still has eligible terms (e.g. all of this page is locally
+    // pending), say so honestly rather than claiming the set is done.
+    final done = remaining == 0;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.done_all_rounded, color: AppColors.know, size: 48),
+            Icon(done ? Icons.done_all_rounded : Icons.cloud_sync_rounded,
+                color: AppColors.know, size: 48),
             const SizedBox(height: AppSpacing.md),
-            const Text('Всё разобрано',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(done ? 'Всё разобрано' : 'На сейчас всё',
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: AppSpacing.sm),
-            const Text('В этом наборе не осталось новых слов для разбора.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Text(
+              done
+                  ? 'В этом наборе не осталось новых слов для разбора.'
+                  : 'Ещё $remaining после синхронизации — зайдите снова, когда будет сеть.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
             const SizedBox(height: AppSpacing.lg),
             GlassSecondaryButton(label: 'Готово', onTap: () => Navigator.of(context).maybePop()),
           ],
@@ -97,8 +108,9 @@ class _Swiped {
 }
 
 class _Deck extends ConsumerStatefulWidget {
-  const _Deck({required this.cards, required this.collectionId});
+  const _Deck({required this.cards, required this.remaining, required this.collectionId});
   final List<TriageCard> cards;
+  final int remaining; // eligible terms left server-side beyond this page
   final String collectionId;
 
   @override
@@ -292,7 +304,8 @@ class _DeckState extends ConsumerState<_Deck>
   @override
   Widget build(BuildContext context) {
     if (_pos >= widget.cards.length) {
-      return _TriageSummary(known: _known, unsure: _unsure, unknown: _unknown);
+      return _TriageSummary(
+          known: _known, unsure: _unsure, unknown: _unknown, remaining: widget.remaining);
     }
 
     final total = widget.cards.length;
@@ -497,8 +510,10 @@ class _VerdictButton extends StatelessWidget {
 }
 
 class _TriageSummary extends ConsumerWidget {
-  const _TriageSummary({required this.known, required this.unsure, required this.unknown});
+  const _TriageSummary(
+      {required this.known, required this.unsure, required this.unknown, required this.remaining});
   final int known, unsure, unknown;
+  final int remaining; // eligible terms still on the server beyond the page just finished
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -508,8 +523,8 @@ class _TriageSummary extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Разбор завершён',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
+            Text(remaining > 0 ? 'Пачка разобрана' : 'Разбор завершён',
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: AppSpacing.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -519,6 +534,13 @@ class _TriageSummary extends ConsumerWidget {
                 _Tally(label: 'Не уверены', value: unsure, color: AppColors.review),
               ],
             ),
+            // Honest remainder: only claim the set is done when the server has nothing left.
+            if (remaining > 0) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Text('Ещё $remaining после синхронизации',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            ],
             const SizedBox(height: AppSpacing.xl),
             GlassSecondaryButton(label: 'Готово', onTap: () => Navigator.of(context).maybePop()),
           ],

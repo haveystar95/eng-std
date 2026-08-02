@@ -19,7 +19,6 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * The first-pass swipe endpoints. GET the queue (one collection's not-yet-triaged terms),
@@ -32,20 +31,25 @@ final class TriageController
         private readonly GetTriageQueueHandler $queue,
     ) {}
 
-    public function queue(Request $request): AnonymousResourceCollection
+    public function queue(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'collection_id' => ['required', 'string', 'size:26'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:40'],
         ]);
 
-        $cards = ($this->queue)(new GetTriageQueue(
+        $view = ($this->queue)(new GetTriageQueue(
             userId: $this->actor($request),
             collectionId: (string) $validated['collection_id'],
             limit: (int) ($validated['limit'] ?? 40),
         ));
 
-        return TriageCardResource::collection($cards);
+        // Envelope, not a bare list: `remaining` lets the client show honest progress and decide
+        // whether to pre-fetch the rest for offline. It is the eligible count beyond this page.
+        return response()->json(['data' => [
+            'cards' => TriageCardResource::collection($view->cards)->resolve($request),
+            'remaining' => $view->remaining,
+        ]]);
     }
 
     public function batch(TriageBatchRequest $request): JsonResponse

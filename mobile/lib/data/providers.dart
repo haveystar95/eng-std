@@ -35,12 +35,17 @@ final triageSyncProvider = Provider<TriageSync>((ref) {
   );
 });
 
-/// The triage deck for one collection: the server queue minus terms already
-/// swiped locally (sent or not), so a swiped-but-unsent card isn't re-shown.
-final triageDeckProvider = FutureProvider.family<List<TriageCard>, String>((ref, collectionId) async {
-  final cards = await ref.watch(apiClientProvider).triageQueue(collectionId);
+/// The triage deck for one collection: the server page minus terms already swiped locally but
+/// not yet uploaded, so a swiped-but-unsent card isn't re-shown. `remaining` (eligible terms
+/// beyond this page, per the server) is passed through untouched — it is the honest count of
+/// what a later sync will still fetch.
+final triageDeckProvider = FutureProvider.family<TriageDeck, String>((ref, collectionId) async {
+  final deck = await ref.watch(apiClientProvider).triageQueue(collectionId);
   final pending = await ref.watch(triageSyncProvider).pendingTermIds();
-  return cards.where((c) => !pending.contains(c.termId)).toList();
+  return TriageDeck(
+    cards: deck.cards.where((c) => !pending.contains(c.termId)).toList(),
+    remaining: deck.remaining,
+  );
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {

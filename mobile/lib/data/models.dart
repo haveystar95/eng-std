@@ -240,3 +240,13 @@ class TriageCard {
         exampleTranslation: j['example_translation'] as String?,
       );
 }
+
+/// One page of the triage queue: the cards to swipe now, plus [remaining] — how many eligible
+/// terms are left AFTER this page on the server (what the next GET will serve). Lets the screen
+/// show honest progress ("N more after sync") without claiming a total it can't swipe offline.
+class TriageDeck {
+  final List<TriageCard> cards;
+  final int remaining;
+
+  const TriageDeck({required this.cards, required this.remaining});
+}
