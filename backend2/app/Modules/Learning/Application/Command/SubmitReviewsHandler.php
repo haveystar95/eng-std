@@ -114,6 +114,7 @@ final readonly class SubmitReviewsHandler
                     termId: $input->termId,
                     grade: $grade,
                     answeredAt: $input->answeredAt,
+                    clientSeq: $input->clientSeq,
                     exerciseMode: $input->exerciseMode,
                     isPractice: $input->isPractice,
                     isVerification: $isVerification,
@@ -151,8 +152,10 @@ final readonly class SubmitReviewsHandler
     }
 
     /**
-     * Fold accepted, non-practice answers into progress, in global answered_at order, one term
-     * at a time. Practice answers are skipped: they never affect intervals, state or lapses.
+     * Fold accepted, non-practice answers into progress, in client_seq order, one term at a time.
+     * Ordering by the per-user monotonic client_seq (not answered_at, a device clock) means a
+     * replayed or clock-skewed offline batch yields the same progress it would have online.
+     * Practice answers are skipped: they never affect intervals, state or lapses.
      *
      * @param  list<Review>  $accepted
      * @return list<string>  ids of terms answered (for real) for the first time
@@ -163,7 +166,7 @@ final readonly class SubmitReviewsHandler
         // answer to a `known` term in a practice session does NOT resolve its verification. Free
         // training has no stake, so it must not settle the "do you really know this" check.
         $scheduled = array_values(array_filter($accepted, static fn (Review $r): bool => ! $r->isPractice));
-        usort($scheduled, static fn (Review $a, Review $b): int => $a->answeredAt <=> $b->answeredAt);
+        usort($scheduled, static fn (Review $a, Review $b): int => $a->clientSeq <=> $b->clientSeq);
 
         /** @var array<string, list<Review>> $byTerm */
         $byTerm = [];

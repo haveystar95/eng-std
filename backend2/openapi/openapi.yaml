@@ -410,16 +410,36 @@ paths:
                   maxItems: 200
                   items:
                     type: object
-                    required: [id, term_id, exercise_mode, response, answered_at]
+                    required: [id, term_id, exercise_mode, response, answered_at, client_seq]
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
                       exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
                       response: { type: string, description: The user's raw answer text }
-                      answered_at: { type: string, format: date-time }
+                      answered_at:
+                        type: string
+                        format: date-time
+                        description: >-
+                          Reference-only (device clock). NOT used to order the fold — see client_seq.
+                      client_seq:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Per-user monotonic sequence assigned by the client at answer time,
+                          surviving queue clears. The server folds answers into progress in
+                          client_seq order (not answered_at, a device clock that can lag). Must
+                          be strictly increasing per user across the whole history; initialise
+                          from GET /auth/me `max_review_seq` after a reinstall.
                       used_hint: { type: boolean, default: false }
                       is_practice: { type: boolean, default: false }
-                      latency_ms: { type: integer, minimum: 0, nullable: true }
+                      latency_ms:
+                        type: integer
+                        minimum: 0
+                        nullable: true
+                        description: >-
+                          Client-measured, from the card's paint to the answer. Optional: null
+                          means unmeasured (treated neutrally). Do NOT send 0 for an unmeasured
+                          answer — send null.
                       session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
       responses:
         '200':
@@ -505,14 +525,36 @@ paths:
                   maxItems: 200
                   items:
                     type: object
-                    required: [id, term_id, verdict, decided_at]
+                    required: [id, term_id, verdict, decided_at, client_seq]
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
                       verdict: { type: string, enum: [known, unknown, unsure] }
-                      decided_at: { type: string, format: date-time }
+                      decided_at:
+                        type: string
+                        format: date-time
+                        description: >-
+                          Reference-only (device clock). NOT used to decide the current verdict —
+                          see client_seq.
+                      client_seq:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Per-user monotonic sequence assigned by the client at swipe time,
+                          surviving queue clears. The current verdict for a (user, term) is the
+                          one with the greatest client_seq (not the latest decided_at, a device
+                          clock that can lag and roll back a genuinely-later verdict). Must be
+                          strictly increasing per user across the whole history; initialise from
+                          GET /auth/me `max_triage_seq` after a reinstall.
                       collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
-                      latency_ms: { type: integer, minimum: 0, nullable: true }
+                      latency_ms:
+                        type: integer
+                        minimum: 0
+                        nullable: true
+                        description: >-
+                          Client-measured, from the card's paint to the swipe. Optional: null
+                          means unmeasured (treated neutrally — never risky). Do NOT send 0 for an
+                          unmeasured swipe — send null. (Risk-by-latency applies to phrases only.)
       responses:
         '200':
           description: Applied
@@ -529,6 +571,30 @@ paths:
                       unknown: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /sync/cursor:
+    get:
+      tags: [Study]
+      summary: The client_seq high-water mark per log
+      description: >-
+        Greatest client_seq the server holds for this user, per append-only log. Clients seed
+        their monotonic client_seq counter from here on login, so a reinstall (counter reset) or
+        a second device does not emit sequences that would lose to already-stored rows. Values
+        are 0 when a log is empty. (Delta sync, GET /sync?since=, will grow alongside this.)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      max_triage_seq: { type: integer, minimum: 0 }
+                      max_review_seq: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
 components:
   securitySchemes:

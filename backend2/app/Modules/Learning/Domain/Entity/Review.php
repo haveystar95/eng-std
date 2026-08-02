@@ -26,6 +26,7 @@ final class Review
         public readonly TermId $termId,
         public readonly Grade $grade,
         public readonly DateTimeImmutable $answeredAt,
+        public readonly int $clientSeq,
         public readonly ?ExerciseMode $exerciseMode = null,
         public readonly bool $isPractice = false,
         public readonly bool $isVerification = false,

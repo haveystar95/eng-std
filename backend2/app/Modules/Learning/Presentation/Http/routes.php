@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Learning\Presentation\Http\Controller\ReviewController;
 use App\Modules\Learning\Presentation\Http\Controller\StudyController;
+use App\Modules\Learning\Presentation\Http\Controller\SyncController;
 use App\Modules\Learning\Presentation\Http\Controller\TriageController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,6 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
 
     Route::get('/triage/queue', [TriageController::class, 'queue']);
     Route::post('/triage/batch', [TriageController::class, 'batch']);
+
+    Route::get('/sync/cursor', [SyncController::class, 'cursor']);
 });

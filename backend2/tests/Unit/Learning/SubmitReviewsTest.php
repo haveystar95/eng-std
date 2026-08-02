@@ -25,7 +25,7 @@ use Tests\Doubles\InMemoryTermProgressRepository;
 use Tests\Doubles\SpyStatsProjector;
 
 /** The fake answer key accepts "correct"; the server grades a matching response as good, else again. */
-function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPractice = false): ReviewInput
+function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPractice = false, int $seq = 1): ReviewInput
 {
     return new ReviewInput(
         reviewId: ReviewId::generate(),
@@ -33,6 +33,7 @@ function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPract
         exerciseMode: ExerciseMode::Typing,
         response: $correct ? 'correct' : 'wrong',
         answeredAt: new DateTimeImmutable($answeredAt),
+        clientSeq: $seq,
         isPractice: $isPractice,
     );
 }
@@ -70,8 +71,8 @@ it('grades raw answers server-side and folds them into progress in order', funct
     $handler = buildSubmitHandler($this);
 
     $result = $handler(new SubmitReviews($this->user, [
-        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z'), // new → learning (1)
-        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z'), // learning → review (4)
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1), // new → learning (1)
+        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z', seq: 2), // learning → review (4)
     ]));
 
     expect($result->accepted)->toBe(2)
@@ -115,15 +116,17 @@ it('ignores a re-uploaded batch (idempotent by review id)', function () {
         ->and($this->stats->events)->toHaveCount(1); // no event on the no-op replay
 });
 
-it('folds an out-of-order offline batch by answered_at, not upload order', function () {
+it('folds an out-of-order offline batch by client_seq, not upload or answered_at order', function () {
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
 
-    // Uploaded later-first: wrong(10:05) before correct(10:00). Answered order is correct then
-    // wrong → new→learning(1) then learning→learning(0). Upload order would wrongly graduate it.
+    // True order is client_seq: correct(1) then wrong(2). It is uploaded reversed AND the device
+    // clock even stamped the genuinely-later "wrong" with an EARLIER answered_at — both are red
+    // herrings. Folded by seq (correct→wrong): new→learning(1), then wrong keeps it learning(0).
+    // Folding by answered_at (wrong→correct) would instead graduate it to review.
     $handler(new SubmitReviews($this->user, [
-        answer($term, correct: false, answeredAt: '2026-07-27T10:05:00Z'),
-        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z'),
+        answer($term, correct: false, answeredAt: '2026-07-27T09:00:00Z', seq: 2),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1),
     ]));
 
     $progress = $this->progress->get($this->user, $term);

@@ -23,6 +23,7 @@ final readonly class ReviewInput
         public ExerciseMode $exerciseMode,
         public string $response,
         public DateTimeImmutable $answeredAt,
+        public int $clientSeq,
         public bool $usedHint = false,
         public bool $isPractice = false,
         public ?int $latencyMs = null,

@@ -18,6 +18,7 @@ final readonly class TriageInput
         public TermId $termId,
         public TriageVerdict $verdict,
         public DateTimeImmutable $decidedAt,
+        public int $clientSeq,
         public ?CollectionId $collectionId = null,
         public ?int $latencyMs = null,
     ) {}

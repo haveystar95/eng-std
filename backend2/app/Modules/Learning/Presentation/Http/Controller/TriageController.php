@@ -65,6 +65,7 @@ final class TriageController
                 termId: TermId::fromString((string) $row['term_id']),
                 verdict: TriageVerdict::from((string) $row['verdict']),
                 decidedAt: new DateTimeImmutable((string) $row['decided_at']),
+                clientSeq: (int) $row['client_seq'],
                 collectionId: $collectionId,
                 latencyMs: isset($row['latency_ms']) ? (int) $row['latency_ms'] : null,
             );

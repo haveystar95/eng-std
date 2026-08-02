@@ -36,6 +36,7 @@ final class ReviewController
                 exerciseMode: ExerciseMode::from((string) $row['exercise_mode']),
                 response: (string) ($row['response'] ?? ''),
                 answeredAt: new DateTimeImmutable((string) $row['answered_at']),
+                clientSeq: (int) $row['client_seq'],
                 usedHint: (bool) ($row['used_hint'] ?? false),
                 isPractice: (bool) ($row['is_practice'] ?? false),
                 latencyMs: isset($row['latency_ms']) ? (int) $row['latency_ms'] : null,

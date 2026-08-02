@@ -57,7 +57,7 @@ it('submits reviews, creating progress and daily stats', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(),
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
         ]]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 1)
@@ -77,7 +77,7 @@ it('ignores a re-uploaded review batch', function () {
     $termId = seedWordFor($user);
     $batch = ['reviews' => [[
         'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
-        'answered_at' => now()->toIso8601String(),
+        'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
     ]]];
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/reviews/batch', $batch)->assertOk();
@@ -95,7 +95,7 @@ it('reports unknown terms in a batch', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => Ulid::generate(), 'exercise_mode' => 'typing', 'response' => 'whatever',
-            'answered_at' => now()->toIso8601String(),
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
         ]]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 0)
@@ -120,7 +120,7 @@ it('lists a due card once it is overdue, with hydrated content', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'withdraw cash',
-            'answered_at' => now()->subDays(5)->toIso8601String(),
+            'answered_at' => now()->subDays(5)->toIso8601String(), 'client_seq' => 1,
         ]]])
         ->assertOk();
 
@@ -169,7 +169,7 @@ it('drops a term from the new pool once it has progress', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'typing', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(),
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
         ]]])
         ->assertOk();
 
@@ -202,8 +202,8 @@ it('reports per-collection progress (learned once a term graduates)', function (
     // Two good answers in order: new → learning → review (learned).
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(6)->toIso8601String()],
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(5)->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(6)->toIso8601String(), 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(5)->toIso8601String(), 'client_seq' => 2],
         ]])
         ->assertOk();
 
@@ -254,8 +254,8 @@ it('rejects an answer for a term outside the session composition', function () {
     // bank is a real term but not in this session → rejected; apple is in it → accepted.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'multiple_choice', 'response' => 'bank', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId],
-            ['id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId],
+            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'multiple_choice', 'response' => 'bank', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId, 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId, 'client_seq' => 2],
         ]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 1)
@@ -269,7 +269,7 @@ it('records a free-practice answer: streak counts, but progress is untouched', f
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(), 'is_practice' => true,
+            'answered_at' => now()->toIso8601String(), 'is_practice' => true, 'client_seq' => 1,
         ]]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 1);
@@ -300,7 +300,7 @@ it('does not double the daily new-term quota across two scoped sessions', functi
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(), 'session_id' => $sessionA,
+            'answered_at' => now()->toIso8601String(), 'session_id' => $sessionA, 'client_seq' => 1,
         ]]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 1);

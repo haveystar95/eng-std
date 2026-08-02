@@ -25,8 +25,10 @@ use DateTimeImmutable;
 
 /**
  * Applies a triage batch: append each swipe to its own log (idempotent by client ULID),
- * then project the latest verdict per term onto (user, term) progress. Only newly-accepted
- * swipes drive the projection, so a re-uploaded batch changes nothing.
+ * then re-project the GOVERNING verdict per touched term onto (user, term) progress. The
+ * governing verdict is the row with the greatest client_seq across the whole log — never the
+ * latest by decided_at (a device clock that can lag) — so an out-of-order or clock-skewed
+ * swipe cannot revive a superseded verdict. Only terms this batch touched are re-projected.
  *
  * Projection (a term is "new" iff it has no non-`new` progress row):
  *   known   → a `known` row whose due_at is a verification check (timing from the planner:
@@ -72,6 +74,7 @@ final readonly class TriageTermsHandler
                     termId: $input->termId,
                     verdict: $input->verdict,
                     decidedAt: $input->decidedAt,
+                    clientSeq: $input->clientSeq,
                     collectionId: $input->collectionId,
                     latencyMs: $input->latencyMs,
                 );
@@ -96,22 +99,33 @@ final readonly class TriageTermsHandler
     }
 
     /**
-     * Apply the latest accepted verdict per term to its progress row.
+     * Re-project the governing verdict for every term this batch touched. The governing verdict
+     * is read from the log by client_seq (see currentByTerm), so a lower-seq swipe arriving in a
+     * later chunk, or a verdict stamped with a lagging clock, never overwrites the real latest.
      *
      * @param  list<Triage>  $accepted
      */
     private function project(TriageTerms $command, array $accepted): void
     {
-        $latest = $this->latestPerTerm($accepted);
-        if ($latest === []) {
+        /** @var array<string, TermId> $affected */
+        $affected = [];
+        foreach ($accepted as $triage) {
+            $affected[$triage->termId->value] = $triage->termId;
+        }
+        if ($affected === []) {
+            return;
+        }
+
+        $governing = $this->triages->currentByTerm($command->actorId, array_values($affected));
+        if ($governing === []) {
             return;
         }
 
         $now = $this->clock->now();
         $userLevel = $this->learnerProfile->cefrLevelFor($command->actorId);
-        $difficulty = $this->termDifficulty->byIds($this->knownVerdictTermIds($latest));
+        $difficulty = $this->termDifficulty->byIds($this->knownVerdictTermIds($governing));
 
-        foreach ($latest as $termIdValue => $triage) {
+        foreach ($governing as $termIdValue => $triage) {
             $termId = TermId::fromString($termIdValue);
             $existing = $this->progress->findForUpdate($command->actorId, $termId);
 
@@ -150,29 +164,13 @@ final readonly class TriageTermsHandler
     }
 
     /**
-     * @param  list<Triage>  $accepted
-     * @return array<string, Triage>  term id → its latest swipe
-     */
-    private function latestPerTerm(array $accepted): array
-    {
-        usort($accepted, static fn (Triage $a, Triage $b): int => $a->decidedAt <=> $b->decidedAt);
-
-        $latest = [];
-        foreach ($accepted as $triage) {
-            $latest[$triage->termId->value] = $triage; // later decided_at overwrites
-        }
-
-        return $latest;
-    }
-
-    /**
-     * @param  array<string, Triage>  $latest
+     * @param  array<string, Triage>  $governing
      * @return list<TermId>
      */
-    private function knownVerdictTermIds(array $latest): array
+    private function knownVerdictTermIds(array $governing): array
     {
         $ids = [];
-        foreach ($latest as $triage) {
+        foreach ($governing as $triage) {
             if ($triage->verdict === TriageVerdict::Known) {
                 $ids[] = $triage->termId;
             }

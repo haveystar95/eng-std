@@ -24,6 +24,7 @@ final class EloquentReviewRepository implements ReviewRepository
             'is_verification' => $review->isVerification,
             'response' => $review->response,
             'latency_ms' => $review->latencyMs,
+            'client_seq' => $review->clientSeq,
             'answered_at' => $review->answeredAt,
             'created_at' => now(),
         ]);

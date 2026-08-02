@@ -22,7 +22,8 @@ final class SubmitReviewsRequest extends FormRequest
             'reviews.*.term_id' => ['required', 'string', 'size:26'],
             'reviews.*.exercise_mode' => ['required', 'string', 'in:multiple_choice,word_bank,typing,listening,cloze'],
             'reviews.*.response' => ['present', 'string'],             // raw answer; the server grades it
-            'reviews.*.answered_at' => ['required', 'date'],
+            'reviews.*.answered_at' => ['required', 'date'],           // reference-only (device clock)
+            'reviews.*.client_seq' => ['required', 'integer', 'min:0'], // per-user monotonic; orders the fold
             'reviews.*.used_hint' => ['sometimes', 'boolean'],
             'reviews.*.is_practice' => ['sometimes', 'boolean'],
             'reviews.*.latency_ms' => ['sometimes', 'nullable', 'integer', 'min:0'],

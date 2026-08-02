@@ -42,9 +42,9 @@ function triageHandler(object $ctx): TriageTermsHandler
     );
 }
 
-function swipe(TermId $term, TriageVerdict $verdict, DateTimeImmutable $at): TriageInput
+function swipe(TermId $term, TriageVerdict $verdict, DateTimeImmutable $at, int $seq = 1): TriageInput
 {
-    return new TriageInput(TriageId::generate(), $term, $verdict, $at);
+    return new TriageInput(TriageId::generate(), $term, $verdict, $at, $seq);
 }
 
 it('projects known to a known progress row with a scheduled verification check', function () {
@@ -101,6 +101,34 @@ it('does not clobber real study progress with a stray unknown swipe', function (
     triageHandler($this)(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now)]));
 
     expect($this->progress->get($this->user, $term)?->state())->toBe(LearningState::Review);
+});
+
+it('picks the current verdict by client_seq, not decided_at, within a batch', function () {
+    $term = TermId::generate();
+    // Real order: known first, then the user returns it to learning (unknown). A lagging device
+    // clock stamps the genuinely-later unknown with an EARLIER decided_at than the known.
+    $known = swipe($term, TriageVerdict::Known, $this->now, seq: 1);
+    $unknown = swipe($term, TriageVerdict::Unknown, $this->now->modify('-2 days'), seq: 2);
+
+    triageHandler($this)(new TriageTerms($this->user, [$known, $unknown]));
+
+    // Governing verdict is the higher seq (unknown) → the term stays new. Ordering by decided_at
+    // would have let the older "known" win and wrongly parked the term as known.
+    expect($this->progress->count())->toBe(0);
+});
+
+it('keeps the higher-seq verdict when a lower-seq swipe arrives in a later batch (out-of-order chunks)', function () {
+    $term = TermId::generate();
+    $handler = triageHandler($this);
+
+    // The genuinely-later "unknown" (seq 2) arrives FIRST — its chunk landed first...
+    $handler(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now, seq: 2)]));
+    // ...then the earlier "known" (seq 1) arrives in a later chunk.
+    $handler(new TriageTerms($this->user, [swipe($term, TriageVerdict::Known, $this->now, seq: 1)]));
+
+    // The re-projection reads the governing verdict across the whole log by client_seq, so the
+    // stale "known" must NOT create a row. Arrival-order guards alone would have parked it known.
+    expect($this->progress->count())->toBe(0);
 });
 
 it('ignores a re-uploaded triage batch (idempotent by id)', function () {

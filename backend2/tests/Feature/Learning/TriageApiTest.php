@@ -27,9 +27,9 @@ it('projects triage verdicts onto progress and never writes reviews', function (
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'collection_id' => $col, 'decided_at' => now()->toIso8601String()],
-            ['id' => Ulid::generate(), 'term_id' => $withdraw, 'verdict' => 'unsure', 'collection_id' => $col, 'decided_at' => now()->toIso8601String()],
-            ['id' => Ulid::generate(), 'term_id' => $overdraft, 'verdict' => 'unknown', 'collection_id' => $col, 'decided_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'collection_id' => $col, 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $withdraw, 'verdict' => 'unsure', 'collection_id' => $col, 'decided_at' => now()->toIso8601String(), 'client_seq' => 2],
+            ['id' => Ulid::generate(), 'term_id' => $overdraft, 'verdict' => 'unknown', 'collection_id' => $col, 'decided_at' => now()->toIso8601String(), 'client_seq' => 3],
         ]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 3)
@@ -45,7 +45,7 @@ it('ignores a re-uploaded triage batch', function () {
     [$user, $token] = learner();
     [, $money] = seedCollectionWith($user, 'money', 'деньги');
     $batch = ['triages' => [[
-        'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(),
+        'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1,
     ]]];
 
     $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/triage/batch', $batch)->assertOk();
@@ -66,11 +66,11 @@ it('excludes studied and triaged terms from the triage queue', function () {
     // apple is triaged (stays new, but must not be re-asked); bank is studied (has a row).
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $apple, 'verdict' => 'unknown', 'decided_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $apple, 'verdict' => 'unknown', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
         ]])->assertOk();
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'typing', 'response' => 'bank', 'answered_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'typing', 'response' => 'bank', 'answered_at' => now()->toIso8601String(), 'client_seq' => 1],
         ]])->assertOk();
 
     $data = $this->withHeader('Authorization', "Bearer {$token}")
@@ -87,7 +87,7 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
         ]])->assertOk();
 
     // known → no due, not new → nothing to study.
@@ -99,7 +99,7 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
     // return to learning: resets the row to new → shows up in study again.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 2],
         ]])->assertOk();
 
     $this->withHeader('Authorization', "Bearer {$token}")
@@ -116,7 +116,7 @@ it('does not resolve a known-term verification in a practice session', function 
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
         ]])->assertOk();
 
     // A practice answer (even a wrong one) to the known term: recorded, but it must not fail the
@@ -124,7 +124,7 @@ it('does not resolve a known-term verification in a practice session', function 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => [[
             'id' => Ulid::generate(), 'term_id' => $money, 'exercise_mode' => 'typing', 'response' => 'wrong',
-            'answered_at' => now()->toIso8601String(), 'is_practice' => true,
+            'answered_at' => now()->toIso8601String(), 'is_practice' => true, 'client_seq' => 1,
         ]]])
         ->assertOk()
         ->assertJsonPath('data.accepted', 1);
@@ -139,14 +139,14 @@ it('clears the verification due_at when a known term is returned to new', functi
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
         ]])->assertOk();
 
     // Return to learning: state resets to new and the scheduled check is dropped, so the selector
     // gives it the intro mode, not a forced typing verification.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String()],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 2],
         ]])->assertOk();
 
     $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'new', 'due_at' => null]);
