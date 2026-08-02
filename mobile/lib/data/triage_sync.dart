@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -74,8 +76,8 @@ class TriageSync {
     if (list.isEmpty) return;
 
     _flushing = true;
+    final batch = List<PendingTriage>.from(list);
     try {
-      final batch = List<PendingTriage>.from(list);
       await _api.submitTriages(batch);
 
       final sent = batch.map((e) => e.id).toSet();
@@ -84,8 +86,19 @@ class TriageSync {
 
       _ref.invalidate(collectionsProvider);
       _ref.invalidate(collectionsProgressProvider);
+    } on DioException catch (e) {
+      // A 422 (or 413) is a rejection, not a connectivity failure — resending the same batch
+      // will never succeed, so drop those records instead of retrying them forever and wedging
+      // the queue. Everything else (offline, 5xx, 401, 429) is transient: keep and retry.
+      if (isPermanentReject(e)) {
+        final sent = batch.map((e) => e.id).toSet();
+        list.removeWhere((e) => sent.contains(e.id));
+        await _queue.save(list);
+        debugPrint('TriageSync: dropped ${sent.length} rejected swipe(s) '
+            '(${e.response?.statusCode}): ${e.response?.data}');
+      }
     } catch (_) {
-      // Offline or server error — leave the queue intact and try again later.
+      // Unknown error — treat as transient, keep the queue and try again later.
     } finally {
       _flushing = false;
     }

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -48,8 +50,8 @@ class ReviewSync {
     if (list.isEmpty) return;
 
     _flushing = true;
+    final batch = List<PendingReview>.from(list);
     try {
-      final batch = List<PendingReview>.from(list);
       await _api.submitReviews(batch);
 
       final sent = batch.map((e) => e.id).toSet();
@@ -59,8 +61,20 @@ class ReviewSync {
       _ref.invalidate(statsProvider);
       _ref.invalidate(dueCardsProvider);
       _ref.invalidate(collectionsProgressProvider);
+    } on DioException catch (e) {
+      // A 422 (or 413) is a rejection, not a connectivity failure — resending won't help, so
+      // drop those records instead of retrying forever and wedging the queue. (Until the review
+      // pipeline is rebuilt for the raw-answer contract, its batches 422 on every flush — this
+      // keeps them from accumulating as dead records.) Transient failures are kept and retried.
+      if (isPermanentReject(e)) {
+        final sent = batch.map((e) => e.id).toSet();
+        list.removeWhere((e) => sent.contains(e.id));
+        await _queue.save(list);
+        debugPrint('ReviewSync: dropped ${sent.length} rejected answer(s) '
+            '(${e.response?.statusCode}): ${e.response?.data}');
+      }
     } catch (_) {
-      // Offline or server error — leave the queue intact and try again later.
+      // Unknown error — treat as transient, keep the queue and try again later.
     } finally {
       _flushing = false;
     }

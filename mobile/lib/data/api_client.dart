@@ -8,6 +8,14 @@ import 'review_queue.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 
+/// A response the client cannot fix by resending the same payload: a validation/shape
+/// rejection (422) or a too-large body (413). Durable-queue flushes drop these instead of
+/// retrying forever; everything else (offline, timeouts, 5xx, 401, 429) is transient and kept.
+bool isPermanentReject(DioException e) {
+  final status = e.response?.statusCode;
+  return status == 422 || status == 413;
+}
+
 /// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,
 /// single resources wrapped in `data`). Attaches the token via an interceptor.
 class ApiClient {
