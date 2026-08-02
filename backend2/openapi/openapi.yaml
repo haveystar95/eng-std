@@ -775,14 +775,30 @@ components:
 
     TriageCard:
       type: object
+      description: >-
+        A minimal triage card. The triage screen only renders text + translation (and, for
+        phrases, an example). `transcription` and `example`/`example_translation` are optional
+        and may be absent; they are carried for FUTURE exercise modes — `transcription` as a
+        typing hint, examples for cloze — not used by triage itself. Kept deliberately rather
+        than trimmed, so those modes don't have to re-add them later.
+      required: [term_id]
       properties:
         term_id: { type: string }
         text: { type: string, nullable: true }
         type: { type: string, enum: [word, phrase], nullable: true }
-        transcription: { type: string, nullable: true }
+        transcription:
+          type: string
+          nullable: true
+          description: IPA. Optional; unused by triage — reserved as a future `typing` hint.
         translation: { type: string, nullable: true }
-        example: { type: string, nullable: true }
-        example_translation: { type: string, nullable: true }
+        example:
+          type: string
+          nullable: true
+          description: Optional; triage shows it only for phrases — reserved for `cloze` (phase 2).
+        example_translation:
+          type: string
+          nullable: true
+          description: Optional; pairs with `example`. Reserved for future exercise modes.
 
     Stats:
       type: object
