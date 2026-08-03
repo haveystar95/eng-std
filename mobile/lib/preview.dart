@@ -40,10 +40,10 @@ void main() {
 
   runApp(ProviderScope(
     overrides: [
-      statsProvider.overrideWith((ref) async => stats),
+      statsProvider.overrideWith((ref) => Stream.value(stats)),
       dueCardsProvider.overrideWith((ref) async => cards),
-      collectionsProvider.overrideWith((ref) async => collections),
-      collectionsProgressProvider.overrideWith((ref) async => progress),
+      collectionsProvider.overrideWith((ref) => Stream.value(collections)),
+      collectionsProgressProvider.overrideWith((ref) => Stream.value(progress)),
       sessionCardsProvider.overrideWith((ref, args) async => cards),
       authControllerProvider.overrideWith(_PreviewAuth.new),
     ],

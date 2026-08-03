@@ -28,10 +28,7 @@ class CollectionsScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
             data: (items) => RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(collectionsProvider);
-                ref.invalidate(collectionsProgressProvider);
-              },
+              onRefresh: () => ref.read(syncServiceProvider).sync(),
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
@@ -157,9 +154,8 @@ class _CollectionTile extends ConsumerWidget {
     );
     if (ok == true) {
       await ref.read(apiClientProvider).deleteCollection(collection.id);
-      ref.invalidate(collectionsProvider);
-      ref.invalidate(statsProvider);
-      ref.invalidate(collectionsProgressProvider);
+      // The server tombstone comes back through sync and removes the local row (no ghost).
+      ref.read(syncServiceProvider).sync();
     }
   }
 

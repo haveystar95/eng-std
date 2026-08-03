@@ -102,9 +102,9 @@ Future<void> showWordEditor(
                               translation: translation.text.trim(),
                               type: type,
                             );
-                            ref.invalidate(collectionWordsProvider(collectionId));
-                            ref.invalidate(collectionsProvider);
-                            ref.invalidate(statsProvider);
+                            // Pull the new term/item into the local mirror; the read streams
+                            // (word list, collection counts) update when it lands.
+                            ref.read(syncServiceProvider).sync();
                           } catch (e) {
                             AppFeedback.warn();
                             if (context.mounted) {

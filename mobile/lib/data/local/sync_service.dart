@@ -10,10 +10,17 @@ import 'app_database.dart';
 /// underground; the UI shows nothing alarming for it.
 enum SyncState { idle, syncing, offline }
 
-/// Meta keys in [AppDatabase].
-const _kCursor = 'sync_cursor'; // last server_time; the next `since`
-const _kStreak = 'streak'; // cached — not in the delta feed
-const _kReviewsToday = 'reviews_today'; // cached — not in the delta feed
+/// Meta keys in [AppDatabase]'s sync_meta table. Public so the stats provider can read the two
+/// cached values the delta feed doesn't carry.
+abstract final class SyncKeys {
+  static const cursor = 'sync_cursor'; // last server_time; the next `since`
+  static const streak = 'streak'; // cached — not in the delta feed
+  static const reviewsToday = 'reviews_today'; // cached — not in the delta feed
+}
+
+const _kCursor = SyncKeys.cursor;
+const _kStreak = SyncKeys.streak;
+const _kReviewsToday = SyncKeys.reviewsToday;
 
 /// Pulls the delta feed into the local DB. Read-through screens never call this; it runs in the
 /// background (app start, network return, app resume) and writes to drift, whose reactive queries

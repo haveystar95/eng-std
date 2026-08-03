@@ -200,10 +200,9 @@ Future<void> _runGeneration(
       await Future<void>.delayed(const Duration(seconds: 2));
       final s = await api.jobStatus(jobId);
       if (s.status == 'done') {
-        ref.invalidate(collectionsProvider);
-        ref.invalidate(statsProvider);
+        // Pull the generated collection + its terms into the local mirror.
+        ref.read(syncServiceProvider).sync();
         ref.invalidate(dueCardsProvider);
-        ref.invalidate(collectionsProgressProvider);
         AppFeedback.success();
         messenger
           ..clearSnackBars()

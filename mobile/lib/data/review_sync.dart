@@ -80,9 +80,10 @@ class ReviewSync {
       if (drop.isNotEmpty) {
         list.removeWhere((e) => drop.contains(e.id));
         await _queue.save(list);
-        _ref.invalidate(statsProvider);
+        // Uploaded answers changed server-side progress; pull it back into the local mirror
+        // (stats + per-collection progress read from there). Study cards stay on the network.
+        _ref.read(syncServiceProvider).sync();
         _ref.invalidate(dueCardsProvider);
-        _ref.invalidate(collectionsProgressProvider);
       }
     } finally {
       _flushing = false;

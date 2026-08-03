@@ -30,9 +30,8 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 
   Future<void> _delete(Word word) async {
     await ref.read(apiClientProvider).removeWord(widget.collectionId, word.termId);
-    ref.invalidate(collectionWordsProvider(widget.collectionId));
-    ref.invalidate(collectionsProvider);
-    ref.invalidate(statsProvider);
+    // The item tombstone comes back through sync and drops the local row.
+    ref.read(syncServiceProvider).sync();
   }
 
   @override

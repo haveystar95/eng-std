@@ -30,10 +30,8 @@ class TrainingHomeScreen extends ConsumerWidget {
           bottom: false,
           child: RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(statsProvider);
-              ref.invalidate(collectionsProvider);
+              await ref.read(syncServiceProvider).sync();
               ref.invalidate(dueCardsProvider);
-              ref.invalidate(collectionsProgressProvider);
             },
             child: stats.when(
               skipLoadingOnReload: true,

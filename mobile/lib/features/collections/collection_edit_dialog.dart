@@ -134,9 +134,9 @@ Future<void> showCollectionEditor(BuildContext context, WidgetRef ref, {WordColl
                             } else {
                               await api.updateCollection(existing.id, title: title);
                             }
-                            ref.invalidate(collectionsProvider);
-                            ref.invalidate(statsProvider);
-                            ref.invalidate(collectionsProgressProvider);
+                            // Pull the new/updated collection into the local mirror; the read
+                            // streams update when it lands.
+                            ref.read(syncServiceProvider).sync();
                           } catch (e) {
                             AppFeedback.warn();
                             if (context.mounted) {

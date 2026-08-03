@@ -58,6 +58,7 @@ class Word {
   final String type; // word | phrase
   final String? audioUrl; // optional override; null → system TTS
   final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
+  final String? status; // learning state from local progress (new|learning|review|relearning|known); null → not started
 
   Word({
     required this.termId,
@@ -68,6 +69,7 @@ class Word {
     required this.type,
     this.audioUrl,
     this.ttsHint,
+    this.status,
   });
 
   /// Convenience so existing screens that used `word.id` keep working.

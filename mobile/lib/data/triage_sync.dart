@@ -108,8 +108,9 @@ class TriageSync {
       if (drop.isNotEmpty) {
         list.removeWhere((e) => drop.contains(e.id));
         await _queue.save(list);
-        _ref.invalidate(collectionsProvider);
-        _ref.invalidate(collectionsProgressProvider);
+        // Uploaded verdicts changed server-side progress; pull it back so the local mirror
+        // (collection lists + progress) reflects it. Upload/queue logic is untouched.
+        _ref.read(syncServiceProvider).sync();
       }
     } finally {
       _flushing = false;

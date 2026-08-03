@@ -114,29 +114,120 @@ final onboardedProvider = FutureProvider<bool>((ref) async {
   return ref.read(tokenStoreProvider).isOnboarded();
 });
 
-// ---- Data providers ---------------------------------------------------------
+// ---- Data providers (read-through: local DB is the source of truth) ----------
+//
+// These read the local mirror, never the network. The background SyncService writes the mirror;
+// drift's reactive `watch` queries push each write straight into these streams, so a screen
+// rebuilds on sync without invalidation. No data yet → an empty list/zeroes, never a spinner or
+// error. The write paths (create/delete a collection, add/remove a word) still POST to the API;
+// the change comes back through the next sync — until then the mutating screen refetches once.
 
-final collectionsProvider = FutureProvider<List<WordCollection>>((ref) async {
-  return ref.watch(apiClientProvider).collections();
+final collectionsProvider = StreamProvider<List<WordCollection>>((ref) {
+  return ref.watch(appDatabaseProvider).watchCollections().map(
+        (rows) => rows.map(_toCollection).toList(),
+      );
 });
 
-final collectionWordsProvider =
-    FutureProvider.family<List<Word>, String>((ref, collectionId) async {
-  return ref.watch(apiClientProvider).collectionWords(collectionId);
+final collectionWordsProvider = StreamProvider.family<List<Word>, String>((ref, collectionId) {
+  return ref.watch(appDatabaseProvider).watchCollectionTerms(collectionId).map(
+        (rows) => rows.map(_toWord).toList(),
+      );
 });
 
+/// Local stats: total/learned/mastered/due are counted from the synced progress rows; streak and
+/// reviews-today are read from the cache the SyncService refreshes while online (not in the delta
+/// feed). Re-derived on every progress change.
+final statsProvider = StreamProvider<Stats>((ref) async* {
+  final db = ref.watch(appDatabaseProvider);
+  await for (final rows in db.watchAllProgress()) {
+    final streak = int.tryParse(await db.getMeta(SyncKeys.streak) ?? '') ?? 0;
+    final reviews = int.tryParse(await db.getMeta(SyncKeys.reviewsToday) ?? '') ?? 0;
+    yield _deriveStats(rows, streak: streak, reviewsToday: reviews);
+  }
+});
+
+/// Derived per-collection progress (total/learned/mastered/due), keyed by collection id — folded
+/// locally over the synced (item, progress) pairs, the same way the server derives it.
+final collectionsProgressProvider = StreamProvider<Map<String, CollectionProgress>>((ref) {
+  return ref.watch(appDatabaseProvider).watchItemProgress().map(_deriveCollectionsProgress);
+});
+
+/// Study cards stay on the network — sessions are online-only (out of the offline scope). Consumers
+/// read this via `.value`, so an offline error degrades to null rather than surfacing.
 final dueCardsProvider = FutureProvider<List<ReviewCard>>((ref) async {
   return ref.watch(apiClientProvider).dueCards();
 });
 
-final statsProvider = FutureProvider<Stats>((ref) async {
-  return ref.watch(apiClientProvider).stats();
-});
+// ---- Local mappers / derivations --------------------------------------------
 
-/// Derived per-collection progress (total/learned/mastered/due), keyed by collection id.
-final collectionsProgressProvider = FutureProvider<Map<String, CollectionProgress>>((ref) async {
-  return ref.watch(apiClientProvider).collectionsProgress();
-});
+WordCollection _toCollection(Collection r) => WordCollection(
+      id: r.id,
+      title: r.title ?? '',
+      description: r.description,
+      // The sync payload carries no source/type; the "ИИ" badge is a known offline gap (ROADMAP).
+      source: 'user',
+      type: 'custom',
+      wordsCount: r.itemsCount,
+      sourceLang: r.sourceLang ?? 'ru',
+      targetLang: r.targetLang ?? 'en',
+    );
+
+Word _toWord(CollectionTermRow r) => Word(
+      termId: r.term.id,
+      term: r.term.termText ?? '',
+      translation: r.term.translation ?? '',
+      transcription: r.term.transcription,
+      example: r.term.example,
+      type: r.term.type,
+      status: r.state,
+    );
+
+/// Mirror of the server's `Mastery`: a term is mastered once self-marked `known`, or proven by
+/// exercises (`review` state) with an interval of at least this many days. Source of truth is
+/// `Learning\Domain\Service\Mastery::MASTERED_INTERVAL_DAYS` — keep in step.
+const int _masteredIntervalDays = 21;
+
+bool _isMastered(String? state, int intervalDays) =>
+    state == 'known' || (state == 'review' && intervalDays >= _masteredIntervalDays);
+
+Stats _deriveStats(List<TermProgressData> rows, {required int streak, required int reviewsToday}) {
+  final now = DateTime.now();
+  var learned = 0, mastered = 0, due = 0;
+  for (final r in rows) {
+    if (r.state == 'review') learned++;
+    if (_isMastered(r.state, r.intervalDays)) mastered++;
+    if (r.state != 'new' && r.dueAt != null && !r.dueAt!.isAfter(now)) due++;
+  }
+  return Stats(
+    totalWords: rows.length,
+    learned: learned,
+    mastered: mastered,
+    dueToday: due,
+    reviewsTotal: reviewsToday,
+    streakDays: streak,
+  );
+}
+
+Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow> rows) {
+  final now = DateTime.now();
+  final agg = <String, ({int total, int learned, int mastered, int due})>{};
+  for (final r in rows) {
+    final cur = agg[r.collectionId] ?? (total: 0, learned: 0, mastered: 0, due: 0);
+    final isLearned = r.state == 'review';
+    final isMastered = _isMastered(r.state, r.intervalDays ?? 0);
+    final isDue = r.state != null && r.state != 'new' && r.dueAt != null && !r.dueAt!.isAfter(now);
+    agg[r.collectionId] = (
+      total: cur.total + 1,
+      learned: cur.learned + (isLearned ? 1 : 0),
+      mastered: cur.mastered + (isMastered ? 1 : 0),
+      due: cur.due + (isDue ? 1 : 0),
+    );
+  }
+  return agg.map((id, v) => MapEntry(
+        id,
+        CollectionProgress(collectionId: id, total: v.total, learned: v.learned, mastered: v.mastered, due: v.due),
+      ));
+}
 
 typedef SessionArgs = ({String? collectionId, bool shuffle});
 

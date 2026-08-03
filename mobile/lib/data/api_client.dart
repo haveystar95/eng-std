@@ -98,20 +98,6 @@ class ApiClient {
 
   // ---- Collections ----------------------------------------------------------
 
-  Future<List<WordCollection>> collections() async {
-    final r = await _dio.get('/collections');
-    return (_data(r) as List)
-        .map((e) => WordCollection.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<List<Word>> collectionWords(String collectionId) async {
-    final r = await _dio.get('/collections/$collectionId');
-    return (((_data(r) as Map<String, dynamic>)['items']) as List)
-        .map((e) => Word.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
   Future<WordCollection> createCollection({
     required String title,
     String? sourceLang,
@@ -163,17 +149,6 @@ class ApiClient {
     return (_data(r) as List)
         .map((e) => ReviewCard.fromJson(e as Map<String, dynamic>))
         .toList();
-  }
-
-  /// Derived per-collection progress, keyed by collection id.
-  Future<Map<String, CollectionProgress>> collectionsProgress() async {
-    final r = await _dio.get('/study/progress');
-    final map = <String, CollectionProgress>{};
-    for (final e in _data(r) as List) {
-      final p = CollectionProgress.fromJson(e as Map<String, dynamic>);
-      map[p.collectionId] = p;
-    }
-    return map;
   }
 
   Future<Stats> stats() async {
