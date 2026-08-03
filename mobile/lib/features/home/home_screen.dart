@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,6 +21,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   int _index = 0;
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
 
   static const _pages = [TrainingHomeScreen(), CollectionsScreen(), ProfileScreen()];
 
@@ -26,12 +29,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Drain any answers left over from a previous (possibly offline) session.
-    WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(reviewSyncProvider).flush());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Pull the delta feed into the local DB, and drain any answers left over from a
+      // previous (possibly offline) session. Both are background; neither blocks the UI.
+      ref.read(syncServiceProvider).sync();
+      ref.read(reviewSyncProvider).flush();
+    });
+    // Network returned → pull fresh data and push the queued answers.
+    _connSub = Connectivity().onConnectivityChanged.listen((results) {
+      if (results.any((r) => r != ConnectivityResult.none)) {
+        ref.read(syncServiceProvider).sync();
+        ref.read(reviewSyncProvider).flush();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _connSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -39,6 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      ref.read(syncServiceProvider).sync();
       ref.read(reviewSyncProvider).flush();
     }
   }

@@ -225,6 +225,19 @@ class ApiClient {
     );
   }
 
+  /// One page of the delta feed the local DB mirrors. Returns the raw `data` map
+  /// (`server_time`, `next_cursor`, `has_more`, `changes`) for the SyncService to apply.
+  /// [since] is the last stored `server_time` (never the device clock); [cursor] pages within
+  /// a frozen snapshot. Omitting [since] asks for a full snapshot (first sync after install).
+  Future<Map<String, dynamic>> syncDelta({String? since, String? cursor, int limit = 500}) async {
+    final r = await _dio.get('/sync', queryParameters: {
+      'since': ?since,
+      'cursor': ?cursor,
+      'limit': limit,
+    });
+    return _data(r) as Map<String, dynamic>;
+  }
+
   /// The server's client_seq high-water mark per log. Read on login to seed the
   /// local monotonic counter so a reinstall or a fresh device can't emit sequences
   /// that would lose to already-stored rows.

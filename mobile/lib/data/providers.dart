@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'auth_repository.dart';
+import 'local/app_database.dart';
+import 'local/sync_service.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
@@ -11,6 +13,18 @@ import 'triage_queue.dart';
 import 'triage_sync.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
+
+/// The local-first store. One instance for the app; screens read through it.
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
+  final db = AppDatabase();
+  ref.onDispose(db.close);
+  return db;
+});
+
+/// Background delta-sync: pulls GET /sync into the local DB. Never on a read path.
+final syncServiceProvider = Provider<SyncService>((ref) {
+  return SyncService(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
+});
 
 /// Per-user monotonic sequence counters (triage / review), persisted in the keychain
 /// separately from the durable queues so they survive a queue clear.
@@ -76,6 +90,9 @@ class AuthController extends AsyncNotifier<AppUser?> {
 
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
+    // Wipe the local mirror + sync cursor so the next account starts from a full snapshot,
+    // never a delta against someone else's data.
+    await ref.read(appDatabaseProvider).clearAll();
     state = const AsyncData(null);
   }
 
