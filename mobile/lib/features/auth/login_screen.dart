@@ -13,6 +13,7 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final isLoading = auth.isLoading;
+    final online = ref.watch(connectivityProvider).value ?? true;
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.hasError) {
@@ -61,6 +62,10 @@ class LoginScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 const _FeatureRow().animate().fadeIn(delay: 320.ms).slideY(begin: 0.15, end: 0),
                 const Spacer(),
+                if (!online) ...[
+                  const _OfflineHint(),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 _GoogleButton(
                   loading: isLoading,
                   onTap: () => ref.read(authControllerProvider.notifier).signIn(),
@@ -76,6 +81,34 @@ class LoginScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Shown only when the device is offline: the first sign-in genuinely needs the network (Google
+/// auth + backend token exchange), so say so plainly instead of letting a tap fail cryptically.
+class _OfflineHint extends StatelessWidget {
+  const _OfflineHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.review.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: AppColors.review.withValues(alpha: 0.30)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.cloud_off_rounded, color: AppColors.review, size: 20),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text('Нет подключения к интернету. Для первого входа нужна сеть.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    ).animate().fadeIn();
   }
 }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -26,6 +27,16 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 /// Background delta-sync: pulls GET /sync into the local DB. Never on a read path.
 final syncServiceProvider = Provider<SyncService>((ref) {
   return SyncService(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
+});
+
+/// Whether the device currently has any network. Seeded with the current state, then live.
+/// Read screens don't need this (they read the local DB); it's for the login screen, the one
+/// place offline honestly can't proceed and should say so up front.
+final connectivityProvider = StreamProvider<bool>((ref) async* {
+  final conn = Connectivity();
+  bool online(List<ConnectivityResult> rs) => rs.any((r) => r != ConnectivityResult.none);
+  yield online(await conn.checkConnectivity());
+  yield* conn.onConnectivityChanged.map(online);
 });
 
 /// Per-user monotonic sequence counters (triage / review), persisted in the keychain

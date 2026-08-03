@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -87,6 +88,14 @@ class AuthRepository {
   }
 
   Future<AppUser> signInWithGoogle() async {
+    // Sign-in is the one flow that genuinely needs the network (Google auth + backend token
+    // exchange). Fail fast with a clear message instead of a cryptic Google/Dio error deep in
+    // the flow — this is the honest "offline doesn't work here" case for a brand-new user.
+    final conn = await Connectivity().checkConnectivity();
+    if (conn.every((r) => r == ConnectivityResult.none)) {
+      throw AuthException('Нет подключения к интернету. Для входа нужна сеть.');
+    }
+
     await _ensureGoogle();
 
     if (!GoogleSignIn.instance.supportsAuthenticate()) {
@@ -108,7 +117,16 @@ class AuthRepository {
       throw AuthException('Не удалось получить ID-токен Google.');
     }
 
-    final result = await _api.googleLogin(idToken);
+    final ({String token, AppUser user}) result;
+    try {
+      result = await _api.googleLogin(idToken);
+    } on DioException catch (e) {
+      // No response = the request never reached the backend (offline / DNS / timeout).
+      if (e.response == null) {
+        throw AuthException('Нет подключения к интернету. Для входа нужна сеть.');
+      }
+      throw AuthException('Не удалось войти (${e.response?.statusCode}). Попробуй ещё раз.');
+    }
     await _tokens.save(result.token);
     await _tokens.saveUser(jsonEncode(result.user.toJson())); // enable offline restore next launch
     await _seedSeqCounters();
