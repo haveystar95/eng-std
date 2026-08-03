@@ -19,9 +19,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Demo data for the triage vertical slice: a "Triage Demo" collection of ~60 brand-new terms
+ * Demo data for the triage vertical slice: a "Triage Demo" collection of ~35 brand-new terms
  * (words + phrases, CEFR spread up to C1/C2 so a B1 profile trips the planner's "risky" branch).
- * ~60 is deliberate: above the queue cap of 40, so the `remaining` field has a real remainder to show.
  *
  * Attaches to EXISTING users — sign in on the device first (which creates your user), then run
  * `php artisan db:seed --class=TriageDemoSeeder`. Idempotent: skips a user who already has it.
@@ -62,7 +61,7 @@ final class TriageDemoSeeder extends Seeder
             title: self::COLLECTION_TITLE,
             sourceLang: new LanguageCode('ru'),
             targetLang: new LanguageCode('en'),
-            description: 'Vertical-slice demo — ~60 new terms for the triage screen.',
+            description: 'Vertical-slice demo — ~35 new terms for the triage screen.',
         ));
 
         foreach (self::terms() as $term) {
@@ -138,44 +137,6 @@ final class TriageDemoSeeder extends Seeder
                 'ex' => 'The business finally broke even.', 'exru' => 'Бизнес наконец вышел в ноль.'],
             ['text' => 'could you break this into smaller bills', 'ru' => 'можете разменять помельче', 'type' => 'phrase', 'cefr' => 'B2',
                 'ex' => 'Could you break this into smaller bills?', 'exru' => 'Можете разменять это помельче?'],
-
-            // --- Second batch: brings the set to ~60 so the queue cap (40) leaves a real remainder
-            //     to test. Same shape: word/phrase mix, and several C1/C2 terms for the risky branch.
-            ['text' => 'wallet', 'ru' => 'кошелёк', 'type' => 'word', 'cefr' => 'A1'],
-            ['text' => 'receipt', 'ru' => 'чек (квитанция)', 'type' => 'word', 'cefr' => 'A2'],
-            ['text' => 'budget', 'ru' => 'бюджет', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'income', 'ru' => 'доход', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'expense', 'ru' => 'расход', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'tax', 'ru' => 'налог', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'currency', 'ru' => 'валюта', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'profit', 'ru' => 'прибыль', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'savings', 'ru' => 'сбережения', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'fine', 'ru' => 'штраф', 'type' => 'word', 'cefr' => 'B1'],
-            ['text' => 'fee', 'ru' => 'комиссия', 'type' => 'word', 'cefr' => 'B2'],
-            ['text' => 'refund', 'ru' => 'возврат средств', 'type' => 'word', 'cefr' => 'B2'],
-            ['text' => 'wage', 'ru' => 'заработок (почасовой)', 'type' => 'word', 'cefr' => 'B2'],
-
-            // More C1/C2 words — extra fuel for the risky branch on a B1 profile.
-            ['text' => 'dividend', 'ru' => 'дивиденд', 'type' => 'word', 'cefr' => 'C1'],
-            ['text' => 'inflation', 'ru' => 'инфляция', 'type' => 'word', 'cefr' => 'C1'],
-            ['text' => 'remittance', 'ru' => 'денежный перевод', 'type' => 'word', 'cefr' => 'C1'],
-            ['text' => 'arrears', 'ru' => 'задолженность', 'type' => 'word', 'cefr' => 'C2'],
-            ['text' => 'solvency', 'ru' => 'платёжеспособность', 'type' => 'word', 'cefr' => 'C2'],
-            ['text' => 'creditworthiness', 'ru' => 'кредитоспособность', 'type' => 'word', 'cefr' => 'C2'],
-
-            // More phrases (with examples).
-            ['text' => 'to check the balance', 'ru' => 'проверить баланс', 'type' => 'phrase', 'cefr' => 'A2',
-                'ex' => 'Let me check the balance first.', 'exru' => 'Дай сначала проверю баланс.'],
-            ['text' => 'to make a deposit', 'ru' => 'сделать вклад', 'type' => 'phrase', 'cefr' => 'B1',
-                'ex' => 'I want to make a deposit today.', 'exru' => 'Я хочу сегодня сделать вклад.'],
-            ['text' => 'to cut costs', 'ru' => 'сокращать расходы', 'type' => 'phrase', 'cefr' => 'B2',
-                'ex' => 'The company had to cut costs.', 'exru' => 'Компании пришлось сокращать расходы.'],
-            ['text' => 'to go bankrupt', 'ru' => 'обанкротиться', 'type' => 'phrase', 'cefr' => 'B2',
-                'ex' => 'The shop went bankrupt last year.', 'exru' => 'Магазин обанкротился в прошлом году.'],
-            ['text' => 'to live beyond your means', 'ru' => 'жить не по средствам', 'type' => 'phrase', 'cefr' => 'C1',
-                'ex' => 'They live beyond their means.', 'exru' => 'Они живут не по средствам.'],
-            ['text' => 'to tighten your belt', 'ru' => 'затянуть пояса', 'type' => 'phrase', 'cefr' => 'C1',
-                'ex' => 'We need to tighten our belts this month.', 'exru' => 'В этом месяце нужно затянуть пояса.'],
         ];
     }
 }
