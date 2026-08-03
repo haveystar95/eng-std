@@ -94,6 +94,33 @@ frozen — closed items live there, open ones here):
 - **Reviews upload pipeline is stale** (pre-`client_seq`, pre-raw-answer) → 422s every flush;
   wire it up when the exercise/session screens are (re)built. The `seq_review` counter is ready.
 
+Deferred from the offline-mode build (Parts 2 & 3, 2026-08-03 — local DB + delta sync + collection
+view landed; client reads now come from drift, not the network):
+- **`/sync` collections payload carries no `source`/`type`** → the "ИИ" badge and AI icon are lost
+  now that the collection list reads from the local mirror (not just offline — everywhere). Cosmetic,
+  so deferred per the "findings→ROADMAP unless data-corrupting" rule. Fix: add `source` + `type` to
+  `CollectionSyncRow`/`CollectionChange`, the reader `select`, the serializer and the client mapper
+  (`_toCollection`); it's the same faithful-mirror principle as the Part-1 deviations.
+- **`GET /study/progress` field names never matched the client.** The resource sends `terms_total`/
+  `due_count`/`mastered_count`; the mobile model reads `total`/`learned`/`mastered`/`due` (+ a
+  `learned` the resource never had) → the progress bars parsed to all-zeros and rendered nothing
+  online. The client now derives per-collection progress locally (bars work for the first time), so
+  the endpoint is **unused by the app**. Either delete it (pre-release) or realign the contract if a
+  server-computed progress read is wanted again.
+- **Streak / reviews-today are cached, not delta'd.** They come from `daily_user_stats`, which isn't
+  in `/sync`; the client caches them opportunistically from `/stats` while online, so offline they're
+  last-known (never wrong-to-zero, but stale). For accurate offline streak, add `daily_user_stats`
+  (today's row) to the delta feed.
+- **Orphaned local `terms`/`progress` after a collection delete aren't GC'd on the client.** Harmless
+  (reads join through `collection_items`, so orphans don't render; future syncs stop re-sending them),
+  but the rows linger. GC on the client if local size ever matters.
+- **Two Part-1 review items — both VERIFIED clean, no action.** (1) Same-second pagination is safe:
+  the cursor is an offset into a frozen, totally-ordered stream (`ORDER BY updated_at, <unique id>` in
+  every reader), not a bare timestamp — no boundary loss. (2) No soft-deleted `collection_items` leak
+  past `SoftDeletes`: the only raw readers are the sync reader (must see tombstones) and
+  `EloquentUserCollectionTermsReader` (all three methods filter `ci.deleted_at`); the model uses
+  `SoftDeletes`; Learning never touches the table directly.
+
 ## Decisions & conventions already established (don't re-derive)
 
 - **Where knowledge auto-loads:** `CLAUDE.md` files (root `../CLAUDE.md`, this dir's `CLAUDE.md`, `../mobile/CLAUDE.md`) load automatically; the 7 skills in `.claude/skills/` are directory-scoped to `backend2/`; the user's memory notes load each session. Plain docs like this one are read on demand — start by reading them.

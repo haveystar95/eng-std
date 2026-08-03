@@ -10,114 +10,99 @@ Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 202
 
 ## Current task: offline mode — delta-sync + local DB on the client
 
-**Part 1 (backend `GET /sync`) — DONE this session. Part 2 (client local DB) and Part 3
-(collection view screen) — NOT STARTED.** I stopped at the Part 1 commit boundary rather than
-begin the client rewrite on low context (a half-migrated client = a broken app).
+**Part 1 (backend `GET /sync`) — DONE (prior session). Part 2 (client local DB + sync) and
+Part 3 (collection view screen) — DONE this session, in code. NOT YET RUN ON THE DEVICE.**
 
-### Part 1 — landed (gates green: arch 0, stan L8, 201 pest, migrate:fresh clean)
+The whole offline read path was built and the gates are green (`flutter analyze` clean, all
+Dart tests pass, backend untouched so its arch/stan/pest stay as Part 1 left them). But per this
+project's hard-won rule — the device has disproved correct-looking code three times — **treat the
+client offline path as UNVERIFIED until the acceptance run below passes.** The `/sync` endpoint
+itself is also still only pest-proven, never device-run; the acceptance run covers it too.
 
-- `4787cc8` — **soft-delete `collection_items`** (the item-removal tombstone mechanism). Partial
-  unique `(collection_id, term_id) WHERE deleted_at IS NULL` so a removed term re-adds; the repo
-  restores the trashed row on re-add; the one raw reader (`EloquentUserCollectionTermsReader`,
-  triage/study) filters `ci.deleted_at`; `items_count` is unaffected (only ever written from the
-  aggregate's live count). Reworked from a separate tombstone table after review — soft-delete is
-  uniform with `collections` and the partial index was always the answer.
-- `029efd5` — **`GET /api/v1/sync`**. Cross-module readers via Application ports (deptrac-clean):
-  `CollectionSyncReader` (collections + items with op, live term-ids), Vocabulary `TermChangeReader`,
-  Learning `ProgressSyncReader`. `GetSyncDeltaHandler` concatenates the four ordered streams,
-  offset-slices one page, hydrates only that page's terms via `TermContentReader`. Opaque
-  `SyncCursor` freezes the upper bound so paging is stable. Response: `{server_time, next_cursor,
-  has_more, changes:{collections, collection_items, terms, progress}}`. Deletions are `op:delete`
-  tombstones; a full snapshot (no `since`) omits deletes; only owned-collection terms sync.
-  OpenAPI + tests (snapshot, delta, both tombstones, progress, pagination, empty delta).
+### What landed this session (each a separate commit, in order)
 
-### TWO decisions in Part 1 that differ from the brief — read these
+1. **drift local DB** (`mobile/lib/data/local/app_database.dart` + generated `.g.dart`). Tables
+   mirror the `/sync` payload: `collections`, `collection_items`, `terms`, `term_progress`, plus a
+   `sync_meta` key/value. `applyDelta()` writes one page atomically (upsert=LWW by id,
+   tombstone=row delete). **The cursor lives in `sync_meta`, NOT the keychain** (the Part-1
+   deviation — a reinstall wipes it with the data → next sync is a full snapshot).
+2. **SyncService** (`mobile/lib/data/local/sync_service.dart`). Pages `GET /sync?since=&cursor=`
+   until `has_more=false`, applies each page, advances the cursor **only after the whole run**
+   (mid-fail → re-fetch from old `since`, idempotent). Triggers: app start, network return
+   (`connectivity_plus`), app resume — wired in `home_screen.dart`. Non-blocking, silent offline.
+   Caches streak/reviews-today from `/stats` opportunistically (they're not in the delta feed).
+3. **Read-path flip** (`providers.dart`). `collectionsProvider`, `collectionWordsProvider`,
+   `statsProvider`, `collectionsProgressProvider` are now **drift `StreamProvider`s over the local
+   DB** — never the network. No data → empty state, never a spinner/error. total/learned/mastered/
+   due are folded locally from synced progress (mirrors `Learning\Mastery`, interval≥21); streak/
+   reviews from the cache. Mutations now call `syncService.sync()` (pull the change) instead of
+   invalidating a stream over unchanged local state. Dead API read methods removed. `dueCards`
+   stays network (sessions are out of scope; read via `.value`, degrades to null offline).
+4. **Quiet sync indicator** — a 2.5px hairline under the status bar, only while syncing. Offline
+   is silent by design.
+5. **Collection view (Part 3)** — `collection_detail_screen.dart` already read the flipped
+   `collectionWordsProvider` with system TTS; added a per-word status badge (Выучено/Усвоено/Учу;
+   not-started shows nothing) from local progress. This IS the "metro" screen; entry is the
+   collection card. Fully offline.
+6. **Unit tests** (`test/sync_apply_test.dart`) pin the delta application against in-memory SQLite:
+   upsert=LWW, both tombstone kinds, inclusive-boundary no-op, cursor round-trip, clearAll.
 
-1. **`since` is INCLUSIVE (`>=`), not exclusive.** Timestamps are second-precision (Laravel's
-   pgsql grammar is `Y-m-d H:i:s`, no microseconds — verified). A strict `>` would silently drop
-   any change made in the same second as the client's last sync = data loss. So `>=` is used; it
-   re-sends only the boundary second, which the client MUST apply idempotently by id (last-write-
-   wins by `updated_at`). Re-applying a row you already have is a no-op. This is the standard
-   second-precision delta contract and is documented in OpenAPI.
+### Backend verification asked for in the brief — BOTH CLEAN, no code changed
 
-2. **The sync cursor (`server_time`) must live in the CLIENT'S LOCAL DB, NOT in the keychain
-   alongside `client_seq`.** The brief says "persist the cursor next to client_seq in the same
-   durable store." That would BREAK reinstall: the keychain survives app deletion but the local DB
-   does not, so after a reinstall the client would hold a cursor with an empty DB and fetch only a
-   delta — missing the full snapshot. The cursor must be wiped together with the synced data (store
-   it in the local DB, e.g. a `sync_meta` row). A fresh install then has no cursor → first sync
-   omits `since` → full snapshot. This is the opposite of the brief on purpose.
+- **Same-second pagination:** safe. The cursor is an offset into a re-materialised, frozen-`upper`
+  stream; every reader orders by `(updated_at, <unique id>)` — a total order identical across
+  page requests. The tiebreaker is real; no boundary loss.
+- **Soft-delete leakage:** none. Only raw `collection_items` readers are the sync reader (must see
+  tombstones) and `EloquentUserCollectionTermsReader` (all 3 methods filter `ci.deleted_at`). Model
+  uses `SoftDeletes`; Learning never touches the table directly. Session assembly + progress both
+  route through that one filtered port.
 
 ---
 
-## Part 2 — client local DB as source of truth (NOT STARTED)
+## THE NEXT STEP: device acceptance run (I watch logs + DB; you run the phone)
 
-The architectural core. Flip the read path from `screen → network` to `screen → local DB →
-(background) sync → network`. A screen never awaits the network; no data → empty state, never a
-spinner or error.
+Same loop as triage. Run: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release
+-d 00008110-000A7CCC3492801E` (first build re-runs `pod install` for `sqlite3_flutter_libs`;
+`debugPrint` is invisible in `--release`, so lean on the DB + the on-screen behaviour).
 
-**Local DB: use `drift` (SQLite).** Reason: drift exposes reactive `watch` queries as streams, so
-a Riverpod `StreamProvider` per screen rebuilds automatically when the background sync writes —
-which is exactly the `screen ← local DB ← sync` flow. Type-safe, well-maintained, codegen. (sqflite
-is lower-level and needs manual change notification.)
+1. **First run online → airplane:** open the app online once (let the sync indicator finish), then
+   turn on airplane mode and cold-start. App opens, **all three tabs work**, collections visible,
+   a collection opens showing terms + translations + examples + per-word status, **TTS speaks**.
+2. **Server change → sync → airplane:** change a collection on the server, foreground the app
+   (sync runs), airplane, confirm the new state shows.
+3. **Deletion:** delete a collection AND a single item on the server → after a sync they disappear
+   locally, no ghost. (Covered in code + unit test; confirm on-device.)
+4. **Reinstall (the key deviation check):** delete the app, reinstall, sign in. The cursor went
+   with the DB → first sync is a full snapshot → the app fills up completely (not half-empty).
+5. **Triage regression:** offline triage still records + uploads on reconnect exactly as before.
 
-Plan:
-1. **Drift schema** mirroring the sync payload: `collections`, `collection_items`, `terms`
-   (text, type, transcription, translation, example, example_translation), `user_term_progress`,
-   plus `sync_meta(server_time)` for the cursor. Model deletes by actually deleting local rows when
-   a tombstone arrives.
-2. **SyncService**: loop `GET /sync?since=<stored>&cursor=…` until `has_more=false`, applying each
-   change by `op` (upsert/delete) inside a transaction, then persist the new `server_time`. First
-   run has no `server_time` → full snapshot. Triggers: app start, connectivity regain
-   (`connectivity_plus`, already wired + device-verified), app resume. Non-blocking (background).
-3. **Read-through providers**: convert `collectionsProvider`, `collectionWordsProvider`,
-   `statsProvider` (the read screens) to drift `StreamProvider`s over the local tables. Network is
-   no longer read on these paths.
-4. **Quiet sync status** — a subtle indicator, no modal errors. Offline is normal.
-5. **Do NOT break triage.** Its durable upload queue + `client_seq` (keychain) stay; the deck still
-   subtracts locally-pending term ids. Triage FETCHING the queue is a network flow (out of scope);
-   only its offline upload must keep working.
-
-## Part 3 — collection view screen (NOT STARTED)
-
-The "metro" screen: a collection's terms with translation, example (phrases), system-TTS
-pronunciation (`flutter_tts`, offline), and per-word status from local progress. Reads entirely
-from drift; reachable from the collection card. (A `word_edit_dialog`/`collection_detail_screen`
-exist; extend or replace for the read view.)
-
-### Device acceptance criteria (next session runs these)
-1. Airplane cold start: app opens, all tabs work, collections visible, collection screen shows
-   terms + translations + examples, TTS speaks.
-2. First run online → airplane: first-sync data is available offline.
-3. Server change → sync → airplane: the new state shows offline.
-4. Deletion: a deleted collection disappears after sync (no ghost).
-5. Triage offline still works (no regression).
+If something fails: the DB is at the app's Documents dir `wordtrainer.sqlite` (pull via Xcode
+device container) — inspect `sync_meta` for the cursor and the tables for what synced.
 
 ---
 
 ## On-later decisions (RECORD, do not implement now)
 
-- **Offline training = prefetch ready-made session packages (3–5, refreshed in background), NOT
-  client-side session assembly.** Assembling on the client would mean porting `ExerciseSelector`,
-  distractor selection with fallback, and near-duplicate exclusion into Dart — duplicating rules we
-  consistently keep server-side (grading, "mastered"). Decided; implement with the exercise screens.
-- **Review ordering will use `seq_review`** (the keychain counter key already exists; the review
-  pipeline is still stale). Sync and the exercise screens hit this at the same time — the review
-  upload pipeline needs its `client_seq`/raw-answer rebuild alongside them.
+- **Offline training = prefetch ready-made session packages, NOT client-side session assembly.**
+  Porting `ExerciseSelector`/distractors/dedup to Dart duplicates server-owned rules. Implement
+  with the exercise screens.
+- **Review ordering will use `seq_review`**; the review upload pipeline still needs its
+  `client_seq`/raw-answer rebuild (stale, 422s every flush). Pair with the exercise screens.
 
-## Known limitations / deferred (ROADMAP)
+## Deferred findings from this session — all in ROADMAP
 
-- **Subscriptions aren't synced** — no read path uses `user_collections` yet; `/sync` covers owned
-  collections only. Add when subscribe is wired.
-- **Term content edits without a term-row bump aren't delta'd** — detection is on `terms.updated_at`;
-  content is set at term creation in this app, so new terms are caught. Fine until a term-content
-  edit flow exists.
-- Online triage = one POST/swipe; two-device `client_seq` collision; **422-drop path is code-only,
-  not device-verified**; per-term cefr badge. All in ROADMAP.
+See ROADMAP's "Deferred from the offline-mode build" block. Headlines: `/sync` collections omit
+`source`/`type` (AI badge gone — cosmetic); `/study/progress` field names never matched the client
+(bars were dead online, now derived locally, endpoint unused); streak/reviews are cached not
+delta'd (stale offline); local orphan terms/progress after a collection delete aren't GC'd
+(harmless). None corrupt data — hence deferred, not fixed inline.
+
+## Not in scope (unchanged)
+- Exercise/session screens, offline training + package prefetch, language workspaces
+  (`listening`/`cloze`), `seq_review` wiring in the reviews pipeline.
 
 ## Running / verifying
 - Backend2 in Docker; gates `composer arch && composer stan && composer test`; ngrok domain
-  `https://greedily-thermos-finer.ngrok-free.dev` (app default). `migrate:fresh` clean.
-- Device: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E`.
-  Deleting the app needs a one-time Trust. `debugPrint` is invisible in `--release`.
-- Part 1 `/sync` is proven by pest, NOT yet device-run — pair that verification with the Part 2 client work.
+  `https://greedily-thermos-finer.ngrok-free.dev` (app default). backend2 still needs its own
+  ngrok/tunnel for on-device use (see `../mobile/CLAUDE.md`). Mobile gates: `flutter analyze` clean,
+  `flutter test` green.
