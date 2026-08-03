@@ -19,4 +19,5 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/triage/batch', [TriageController::class, 'batch']);
 
     Route::get('/sync/cursor', [SyncController::class, 'cursor']);
+    Route::get('/sync', [SyncController::class, 'sync']);
 });

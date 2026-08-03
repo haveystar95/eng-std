@@ -609,6 +609,111 @@ paths:
                       max_review_seq: { type: integer, minimum: 0 }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /sync:
+    get:
+      tags: [Study]
+      summary: Delta sync — changes to mirror into the client's local database
+      description: >-
+        The offline feed. The client mirrors collections, items, terms (with content) and progress
+        into a local DB and reads every screen from there; this endpoint only refreshes it.
+
+
+        Send `since` = the `server_time` from your last completed sync (NOT the device clock — it
+        drifts). Omit `since` for the first, full snapshot after install. Page with `next_cursor`
+        (opaque) until `has_more` is false, then store the new `server_time` as your next `since`.
+
+
+        `since` is INCLUSIVE: timestamps are second-precision, so the boundary second is re-sent
+        to guarantee no change is ever missed. Apply changes idempotently by id (last-write-wins by
+        `updated_at`) — re-applying a row you already have is a no-op. Deletions arrive as
+        `op: "delete"` tombstones (collection soft-delete, item soft-delete) so ghosts don't linger;
+        a full snapshot (no `since`) omits deletes. Only terms in the user's own collections are
+        synced — never the global dictionary.
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+          description: A prior response's server_time. Inclusive. Omit for a full snapshot.
+        - { name: cursor, in: query, required: false, schema: { type: string }, description: Opaque, from a previous page's next_cursor. }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [server_time, has_more, changes]
+                    properties:
+                      server_time: { type: string, format: date-time, description: Store as the next `since` once has_more is false. }
+                      next_cursor: { type: string, nullable: true, description: Pass back verbatim while has_more is true. }
+                      has_more: { type: boolean }
+                      changes:
+                        type: object
+                        properties:
+                          collections:
+                            type: array
+                            items:
+                              type: object
+                              description: 'op=upsert carries the fields; op=delete carries id + updated_at only.'
+                              properties:
+                                id: { type: string }
+                                op: { type: string, enum: [upsert, delete] }
+                                updated_at: { type: string, format: date-time }
+                                title: { type: string, nullable: true }
+                                description: { type: string, nullable: true }
+                                topic: { type: string, nullable: true }
+                                source_lang: { type: string, nullable: true }
+                                target_lang: { type: string, nullable: true }
+                                items_count: { type: integer }
+                          collection_items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                collection_id: { type: string }
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert, delete] }
+                                updated_at: { type: string, format: date-time }
+                                position: { type: integer }
+                                note: { type: string, nullable: true }
+                          terms:
+                            type: array
+                            items:
+                              type: object
+                              description: Content for the offline card; audio is optional (system TTS works offline).
+                              properties:
+                                id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time }
+                                text: { type: string, nullable: true }
+                                type: { type: string, enum: [word, phrase], nullable: true }
+                                transcription: { type: string, nullable: true }
+                                translation: { type: string, nullable: true }
+                                example: { type: string, nullable: true }
+                                example_translation: { type: string, nullable: true }
+                          progress:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time }
+                                state: { type: string, enum: [new, learning, review, relearning, known] }
+                                ease_factor: { type: number }
+                                interval_days: { type: integer }
+                                due_at: { type: string, format: date-time, nullable: true }
+                                reps: { type: integer }
+                                lapses: { type: integer }
+                                last_reviewed_at: { type: string, format: date-time, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
