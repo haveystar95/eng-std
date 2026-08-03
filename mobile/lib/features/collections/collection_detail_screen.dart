@@ -149,6 +149,16 @@ class _AddWordFab extends StatelessWidget {
   }
 }
 
+/// The per-word learning status shown on the collection view, mapped from the local progress
+/// state. A not-started word (no progress row, or `new`) shows no badge — the absence is the
+/// status. `review`/`known` mirror the "Выучено"/"Усвоено" wording used on the stats card.
+({Color color, String label})? _statusOf(String? status) => switch (status) {
+      'known' => (color: AppColors.accent, label: 'Усвоено'),
+      'review' => (color: AppColors.know, label: 'Выучено'),
+      'learning' || 'relearning' => (color: AppColors.review, label: 'Учу'),
+      _ => null,
+    };
+
 class _WordCard extends StatelessWidget {
   const _WordCard({required this.word, required this.onSpeak, required this.onEdit});
   final Word word;
@@ -201,6 +211,18 @@ class _WordCard extends StatelessWidget {
           Text(word.translation, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
           if (word.transcription != null && word.transcription!.isNotEmpty)
             Text('/${word.transcription}/', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+          if (_statusOf(word.status) case final st?) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: st.color, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text(st.label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: st.color, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ],
           if (word.example != null && word.example!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('“${word.example}”',
