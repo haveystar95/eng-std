@@ -42,10 +42,20 @@ dependencies:
   google_fonts: ^8.2.0
   flutter_animate: ^4.5.2
   connectivity_plus: ^6.1.0 # flush the durable queues when the network returns
+  # Local-first store: drift = reactive SQLite. `watch` queries stream, so a screen's
+  # StreamProvider rebuilds when the background sync writes (screen ← local DB ← sync).
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.0 # bundles the SQLite native lib for iOS
+  path_provider: ^2.1.0 # app documents dir for the db file
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # drift codegen
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
