@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/config.dart';
@@ -33,16 +37,39 @@ class AuthRepository {
     _googleReady = true;
   }
 
-  /// Try to restore a session from a stored token. Returns the user or null.
+  /// Restore a session from the stored token. Offline-first: if a cached user is present, return
+  /// it immediately (the app must open on a plane) and refresh in the background. The token is
+  /// cleared ONLY on a genuine auth rejection (401/403) — never on a network failure, which would
+  /// otherwise log the user out the first time they cold-start offline and lose their token.
   Future<AppUser?> restore() async {
     final token = await _tokens.load();
     if (token == null || token.isEmpty) return null;
+
+    final cached = await _tokens.loadUser();
+    if (cached != null) {
+      unawaited(_refresh()); // best-effort; updates the cache + seq counters when online
+      return AppUser.fromJson(jsonDecode(cached) as Map<String, dynamic>);
+    }
+    // No cache (e.g. an upgrade from before caching existed): fetch once, but still only drop the
+    // token on a real 401/403.
+    return _refresh();
+  }
+
+  /// Re-fetch the user from the server and update the cache. Returns null (keeping the token) on
+  /// any network trouble; only a 401/403 clears the token.
+  Future<AppUser?> _refresh() async {
     try {
       final user = await _api.me();
+      await _tokens.saveUser(jsonEncode(user.toJson()));
       await _seedSeqCounters();
       return user;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        await _tokens.clear(); // genuinely unauthorized → sign out
+      }
+      return null; // offline / timeout / 5xx → keep the token and the cached user
     } catch (_) {
-      await _tokens.clear();
       return null;
     }
   }
@@ -83,6 +110,7 @@ class AuthRepository {
 
     final result = await _api.googleLogin(idToken);
     await _tokens.save(result.token);
+    await _tokens.saveUser(jsonEncode(result.user.toJson())); // enable offline restore next launch
     await _seedSeqCounters();
     return result.user;
   }

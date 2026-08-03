@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -96,9 +98,10 @@ class AuthController extends AsyncNotifier<AppUser?> {
     state = const AsyncData(null);
   }
 
-  /// Persist profile changes and refresh the in-memory user.
+  /// Persist profile changes and refresh the in-memory user (and the offline cache).
   Future<void> updateProfile(Map<String, dynamic> changes) async {
     final user = await ref.read(apiClientProvider).updateProfile(changes);
+    await ref.read(tokenStoreProvider).saveUser(jsonEncode(user.toJson()));
     state = AsyncData(user);
   }
 }

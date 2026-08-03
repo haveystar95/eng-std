@@ -115,6 +115,13 @@ class Profile {
         cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
         dailyGoal: (j['daily_goal'] as int?) ?? 20,
       );
+
+  Map<String, dynamic> toJson() => {
+        'native_language': nativeLanguage,
+        'target_language': targetLanguage,
+        'cefr_level': cefrLevel,
+        'daily_goal': dailyGoal,
+      };
 }
 
 class Stats {
@@ -196,6 +203,14 @@ class AppUser {
             ? Profile.fromJson(j['profile'] as Map<String, dynamic>)
             : null,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': ?email,
+        'avatar': ?avatar,
+        'profile': ?profile?.toJson(),
+      };
 }
 
 /// A triage swipe verdict. Three, not two — a binary choice makes people lie
