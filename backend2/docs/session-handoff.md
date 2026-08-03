@@ -1,114 +1,101 @@
 # Session handoff — snapshot
 
 > **Overwrite this file each session. It is a snapshot of current state, not a growing log.**
-> Read it alongside `CLAUDE.md`, `ARCHITECTURE.md`, `.claude/skills/` (esp. `learning-srs`),
-> `deptrac.yaml`, and `docs/triage-contract-findings.md`.
+> Read it alongside `CLAUDE.md`, `ARCHITECTURE.md`, `.claude/skills/` (esp. `learning-srs`,
+> `mobile-sync-contract`), `deptrac.yaml`, and `docs/triage-contract-findings.md` (now frozen).
 
-Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 2026-08-02.
-
----
-
-## Done since the on-device protocol run (5 commits)
-
-The run report and the contract findings it acted on are in `docs/triage-contract-findings.md`.
-Commits (oldest→newest):
-
-- `c175d18` — **word triage risk is cefr-only**; `WORD_MIN_READ_MS` removed as inapplicable
-  (on-device the honest swipe floor is ~490 ms, so a 300 ms word threshold is either dead or
-  flags every fast swipe). Latency risk applies to **phrases only** (900 ms, confirmed reachable).
-- `72ca50e` — **Задача 1: order by `client_seq`, not the device clock.** `term_triages` and
-  `reviews` gained `client_seq` (bigint, default 0; real values start at 1). The current triage
-  verdict per `(user, term)` is the greatest `client_seq` across the whole log
-  (`TriageRepository::currentByTerm`), re-projected for touched terms only; reviews fold by
-  `client_seq` instead of `answered_at`. `decided_at`/`answered_at` are now reference-only.
-  New `GET /sync/cursor` returns `{max_triage_seq, max_review_seq}` for client counter seeding.
-- `773d47f` — **mobile: per-user monotonic `client_seq`.** `SeqCounter` (keychain, two keys
-  `seq_triage`/`seq_review`, survives queue clears), assigned per triage swipe; seeded from
-  `/sync/cursor` on login/restore; `connectivity_plus` flush on network return.
-- `154f6c9` — **BUG-1: re-fetch triage queue on every entry.** `TriageScreen` is a
-  `ConsumerStatefulWidget` that invalidates the deck provider in `initState`, so triaged cards
-  don't reappear on re-entry (was Riverpod auto-dispose timing, non-deterministic).
-- `349ec11` — **drop 422/413-rejected records from durable queues** (was: retry forever).
-  `isPermanentReject` in `api_client.dart`; applied to both triage and review flush.
-
-Gates on every backend commit: `composer arch` (0 violations), `composer stan` (level 8, clean),
-`composer test` (192 pass). Mobile: `flutter analyze` clean.
+Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 2026-08-03.
 
 ---
 
-## Verification status — device vs code only
+## The "triage contract" task is CLOSED
 
-| Item | How verified |
-|---|---|
-| BUG-1 (re-entry re-fetch, no Riverpod assert) | **on device** ✅ |
-| Seed on login + **full reinstall** (keychain wiped → counter seeds to server max; next swipe got `client_seq 10`, not 1) | **on device** ✅ |
-| Connectivity flush (flush fired while Control Center held open, before `resumed`; `connectivity_plus` links natively via SPM) | **on device** ✅ — this cleared the earlier false positive where "auto-flush on network return" was really the Control-Center→resume trigger |
-| `client_seq` monotonic (1→10 across swipes, relaunch, reinstall) | **on device** ✅ |
-| Задача 1 ordering (within-batch clock skew; out-of-order chunk arrival) — triage & reviews | **automated tests** (Pest). Not hand-reproducible in the triage UI: undo removes the unsent verdict and a swiped card leaves the deck, so two verdicts for one term can't be produced by hand. |
-| **422 drop (`349ec11`)** | **code review only — NOT run-tested.** Release hides the drop log, the reviews screen is stale, the keychain queue isn't inspectable. **Treat as unverified.** |
+Everything the triage vertical slice surfaced is resolved or deliberately deferred.
+`docs/triage-contract-findings.md` carries the per-finding resolution table and is now frozen —
+**new findings go to `docs/ROADMAP.md`, not there.**
+
+### Landed across the last few sessions
+
+- **client_seq ordering** (`72ca50e`, mobile `773d47f`) — the current triage verdict and the
+  review fold are ordered by a per-user monotonic `client_seq`, never the device clock. Fixes
+  silent data corruption (a lagging clock rolling back a later verdict). `GET /sync/cursor`
+  exposes the high-water mark; the client seeds its counter from it on login.
+- **BUG-1** (`154f6c9`) — triaged cards no longer reappear on re-entry (deck re-fetches on entry).
+- **422/413 drop** (`349ec11`) — permanent rejects are dropped with a log, not retried forever.
+- **word latency floor** (`c175d18`) — triage risk on single words is cefr-only.
+- **Задача 3 — `remaining` envelope** (`ff9711c`) — `GET /triage/queue` → `{cards, remaining}`;
+  `remaining` = eligible terms AFTER this page (what the next GET serves), not the collection
+  total. Client shows "N из 40" over the loaded page and "Ещё N после синхронизации".
+- **Задача 4 — chunked upload** (`74e94a6`) — durable queues flush in 100-item chunks
+  (server cap 200); partial success saved, transient failure keeps the rest, 422/413 chunk
+  dropped without blocking others. Triage + review sync.
+- **Задача 5 — over-fetch** (`f157735`) — `transcription` / `example*` documented as optional,
+  reserved for future exercise modes; kept, not cut.
+- **Seeder** (`031cdd8` bumped to 60 for the device cap test, then `4137dab` reverted to a
+  realistic 35). Idempotent.
+
+### Verified on device this session (2026-08-03)
+
+- **Задача 3 end-to-end** — 60-term collection: page = 40 + `remaining 20`, screen "1 из 40";
+  finishing the page showed "Пачка разобрана" + "Ещё 20 после синхронизации" (NOT "Всё
+  разобрано"); re-entry loaded the 20 with `remaining 0`; all 60 triaged once, no dupes.
+- **Задача 4 — interrupt between chunks** (chunk temporarily set to 5 + a 3s inter-chunk pause,
+  both reverted after): 12 offline swipes; cut the network after chunk 1 → server had exactly 5,
+  the other 7 stayed queued; on restore they flushed as 5+2 → 12 total, 12 distinct ULIDs, the
+  first 5 NOT re-sent. This is the case code review can't show — the reason it was worth running.
+
+### Verified by code review only — treat as unverified
+
+- **The 422-drop branch itself.** The chunk interrupt test exercised the *transient-failure*
+  path (keep + retry); the *permanent-reject* (422/413) drop was not triggered on device
+  (release hides the log; the reviews screen is stale). The logic is a small shared branch
+  (`isPermanentReject`), but it has not run on a device.
 
 ---
 
 ## Decisions that must not be silently revised
 
-Carried over from the run brief, plus this session's:
-
 - Progress is keyed `(user_id, term_id)`, never a collection item. Terms globally deduplicated.
-- `reviews` and `term_triages` append-only; idempotent by client ULID.
+- `reviews` and `term_triages` are append-only; idempotent by client ULID.
 - **Ordering is by `client_seq`, never the device clock.** Within one batch all rows share
-  `created_at` (single write), so `created_at` can't disambiguate — the per-user monotonic
-  `client_seq` is the order key. `decided_at`/`answered_at` are analytics-only.
-- **`/sync/cursor` lives in Learning, not on `/auth/me`.** deptrac forbids Identity→Learning;
-  the cursor is a Learning concept and will grow next to `GET /sync?since=`. Do not move it.
-- Server grades; client's local check must be no stricter. Recognition modes never award `easy`.
-- `Mastery::isMastered` is the one definition of "mastered".
+  `created_at`, so it can't disambiguate — the monotonic `client_seq` is the order key.
+- **`remaining` is computed after excluding triaged/studied** — the same count the next GET
+  serves, never "total new in the collection". A total that diverges from the real queue is the
+  "усвоено" class of bug.
+- **`/sync/cursor` lives in Learning, not `/auth/me`** (deptrac forbids Identity→Learning; it's
+  a Learning concept and will grow next to `GET /sync?since=`).
+- Server grades; the client's local check must be no stricter. Recognition modes never award
+  `easy`. `Mastery::isMastered` is the one definition of "mastered".
 - Pre-release: contract breaks cleanly, no deprecation.
+- **Collection size is not limited; generation is** (draft validator 8–25). User-grown
+  collections just add terms into `new` → next triage.
 
 ---
 
-## Known limitations / non-obvious (so they don't resurface as surprises)
+## Known limitations / deferred (in ROADMAP, not blockers)
 
-- **`client_seq` is single-device.** Two phones used in parallel keep independent counters and
-  **will collide** — accepted deliberately for pre-release. The real fix (server-assigned arrival
-  order) belongs with multi-device sync. Documented on `/sync/cursor` and in `SeqCounter`.
-- **Reviews pipeline is stale.** The mobile review upload still sends a pre-computed `grade`
-  (not the raw-answer shape) and no `client_seq`, so every `/reviews/batch` flush **422s by
-  contract**. The `seq_review` counter key already exists; wire it up when the exercise/session
-  screens are rebuilt. Until then, `349ec11` keeps those 422s from wedging the queue.
-- **Offline entry to Разбор shows a load error** (the deck now always re-fetches on entry). Not a
-  bug — the durable queue is intact, nothing is lost. Expected consequence of the BUG-1 fix.
-- **`debugPrint` is invisible under `flutter run --release`** (routed to os_log). Don't rely on
-  app-side prints for on-device diagnosis; verify via the server (`api_request_logs`) and DB.
-
----
-
-## Next up — Задача 3 + Задача 4 together (form of sending & queues)
-
-Do them in one pass; both touch backend + client. **Do not start mid-way if context is tight —
-a broken contract half-landed is worse than not starting.**
-
-- **Задача 3 — `remaining`/`total_new` in `GET /triage/queue`.** Return an envelope so the client
-  can show honest progress and decide whether to pre-fetch the rest.
-  **DECISION (make it this way, or it defaults wrong):** `remaining` must be computed **after
-  excluding already-triaged terms** — i.e. the same count the *next* `GET` would return, not
-  "total new terms in the collection". Otherwise the client shows a remainder that won't match
-  the real queue — the same class of divergence we hit with "усвоено". OpenAPI + test.
-- **Задача 4 — client chunking at 200.** A single collection's queue is ≤40 so one pass is fine,
-  but an accumulated offline backlog can exceed the 200-item batch cap and 422 the whole batch.
-  Chunk on the client. Because ordering rides on `client_seq` (not arrival), chunks need not be
-  strictly sequential — but keep it simple. Same latent issue exists for `review_sync`.
-
-Then: **Задача 5** (over-fetch — `transcription`, word-card `example`/`example_translation`; low
-priority, keep until session screens confirm they're unused). Then **delta-sync `GET /sync?since=`**,
-which builds on this same model.
+- **Online triage = one POST per swipe** (~35/deck) — battery + log noise. Left as-is
+  deliberately: batching online is an unverifiable behaviour change and the durable queue
+  already guarantees delivery. If done: small size-based batches + keep the immediate flush of
+  the last swipe on screen-exit.
+- **`client_seq` collides across two devices** used in parallel — accepted for pre-release; the
+  real fix (server-assigned arrival order) belongs with delta-sync / multi-device.
+- **Reviews upload pipeline is stale** (pre-`client_seq`, pre-raw-answer) → 422s every flush;
+  `349ec11`/`74e94a6` keep those from wedging the queue. Wire it up with the exercise/session
+  screens; the `seq_review` counter is ready.
+- **Per-term `cefr` badge** on the triage card — field exists, card omits it by design.
+- **Offline entry to Разбор shows a load error** (the deck re-fetches on entry) — expected, not
+  a bug; the durable queue is intact.
+- **`debugPrint` is invisible under `flutter run --release`** — diagnose via `api_request_logs`
+  + DB, not app logs.
 
 ---
 
-## Deferred to Phase 2 (not this cutover)
+## Next task (separate session — do NOT start on low context)
 
-- Exercise modes `listening` / `cloze` (need TTS + good examples).
-- `term_forms` (alternative answer-key forms) and `frequency_rank`.
-- Squashing the migration history.
+**Delta sync `GET /sync?since=`** + client reconciliation — the one real gap for true offline.
+Builds on the same model (client ULIDs, `client_seq`, append-only logs, the `/sync/cursor`
+cursor). Everything else is offline-*friendly* but not full sync. See ROADMAP "finish line".
 
 ---
 
@@ -116,14 +103,17 @@ which builds on this same model.
 
 - Backend2 in Docker (`backend2/`): `docker compose up -d`; artisan via
   `docker compose exec app php artisan …`; Postgres on `localhost:5433`
-  (`wordtrainer`/`wordtrainer`/`secret`). Code is volume-mounted (live). Gates:
-  `composer arch && composer stan && composer test`.
+  (`wordtrainer`/`wordtrainer`/`secret`). Code is volume-mounted (live).
+  Gates: `composer arch && composer stan && composer test` (currently: arch 0, stan clean,
+  193 pest green; `migrate:fresh` clean).
 - Backend2 is fronted by the stable ngrok domain `https://greedily-thermos-finer.ngrok-free.dev`
   (the app's `apiBaseUrl` default already points there — no `--dart-define` needed).
 - App on device (`mobile/`), wireless iPhone `00008110-000A7CCC3492801E`:
   `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d <id>`.
-  After **deleting** the app, the free personal team needs a manual "Trust" (Settings → General →
-  VPN & Device Management) before it will launch. `connectivity_plus`/`flutter_secure_storage`
-  resolve via SPM; only `flutter_tts` uses CocoaPods.
-- On-device observation: watch `api_request_logs` (method/path/status/bodies, secrets redacted) and
-  the DB directly; the app can't show release logs.
+  Deleting the app needs a one-time "Trust" (Settings → General → VPN & Device Management).
+  `connectivity_plus`/`flutter_secure_storage` resolve via SPM; only `flutter_tts` uses CocoaPods.
+  `flutter run --release` does not surface `debugPrint`.
+- On-device observation: watch `api_request_logs` (method/path/status/bodies, redacted) + DB.
+- To reproduce the Задача 3 device check: `migrate:fresh`, sign in on the device (creates the
+  user), `db:seed --class=TriageDemoSeeder` — but at 35 terms the cap no longer leaves a
+  remainder; bump the seeder temporarily if you need >40 again.
