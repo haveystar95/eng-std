@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design.dart';
 import '../../core/glass.dart';
+import '../../data/local/sync_service.dart';
 import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
 import '../profile/profile_screen.dart';
@@ -70,7 +71,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.bg,
-      body: IndexedStack(index: _index, children: _pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: _index, children: _pages),
+          const Positioned(top: 0, left: 0, right: 0, child: _SyncIndicator()),
+        ],
+      ),
       bottomNavigationBar: _GlassNavBar(
         index: _index,
         items: _items,
@@ -83,6 +89,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
           ref.read(syncServiceProvider).sync();
           ref.invalidate(dueCardsProvider);
         },
+      ),
+    );
+  }
+}
+
+/// A hairline progress bar just under the status bar, shown only while a background sync is in
+/// flight. Offline is deliberately silent — being offline is normal, not a fault to flag.
+class _SyncIndicator extends ConsumerWidget {
+  const _SyncIndicator();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final syncState = ref.watch(syncServiceProvider).state;
+    return SafeArea(
+      bottom: false,
+      child: ValueListenableBuilder<SyncState>(
+        valueListenable: syncState,
+        builder: (_, s, _) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: s == SyncState.syncing
+              ? const SizedBox(
+                  height: 2.5,
+                  child: LinearProgressIndicator(
+                    minHeight: 2.5,
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                  ),
+                )
+              : const SizedBox(height: 2.5, width: double.infinity),
+        ),
       ),
     );
   }
