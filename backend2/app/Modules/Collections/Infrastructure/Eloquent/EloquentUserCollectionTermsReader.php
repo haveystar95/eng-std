@@ -19,6 +19,7 @@ final class EloquentUserCollectionTermsReader implements UserCollectionTermsRead
             ->join('collections as c', 'c.id', '=', 'ci.collection_id')
             ->where('c.owner_id', $userId->value)
             ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
             ->orderBy('c.created_at')
             ->orderBy('ci.position')
             ->limit(max($limit * 4, $limit))
@@ -42,6 +43,7 @@ final class EloquentUserCollectionTermsReader implements UserCollectionTermsRead
             ->where('c.id', $collectionId)
             ->where('c.owner_id', $userId->value)
             ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
             ->orderBy('ci.position')
             ->limit($limit)
             ->pluck('ci.term_id');
@@ -55,6 +57,7 @@ final class EloquentUserCollectionTermsReader implements UserCollectionTermsRead
             ->join('collections as c', 'c.id', '=', 'ci.collection_id')
             ->where('c.owner_id', $userId->value)
             ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
             ->orderBy('ci.position')
             ->get(['ci.collection_id', 'ci.term_id']);
 
