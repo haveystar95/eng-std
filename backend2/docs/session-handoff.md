@@ -46,6 +46,14 @@ itself is also still only pest-proven, never device-run; the acceptance run cove
    collection card. Fully offline.
 6. **Unit tests** (`test/sync_apply_test.dart`) pin the delta application against in-memory SQLite:
    upsert=LWW, both tombstone kinds, inclusive-boundary no-op, cursor round-trip, clearAll.
+7. **Offline-first session restore (the most important fix).** `restore()` was calling `/auth/me`
+   on every cold start and clearing the token on ANY failure — the first offline launch logged the
+   user out AND destroyed their keychain token, killing the whole feature at the front door. Now
+   the user is cached in the keychain (survives reinstall); restore returns it immediately and
+   refreshes in the background, clearing the token ONLY on a real 401/403. Data loss, not cosmetic.
+8. **Sensible offline for a brand-new user's first sign-in.** No token → login screen shows with no
+   network call (no white screen/hang); sign-in fails fast with a clear "нужна сеть" and the login
+   screen shows a quiet offline hint (`connectivityProvider`).
 
 ### Backend verification asked for in the brief — BOTH CLEAN, no code changed
 
@@ -62,22 +70,46 @@ itself is also still only pest-proven, never device-run; the acceptance run cove
 ## THE NEXT STEP: device acceptance run (I watch logs + DB; you run the phone)
 
 Same loop as triage. Run: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release
--d 00008110-000A7CCC3492801E` (first build re-runs `pod install` for `sqlite3_flutter_libs`;
+-d 00008110-000A7CCC3492801E` (SPM is disabled + pods installed — see "Build setup" below;
 `debugPrint` is invisible in `--release`, so lean on the DB + the on-screen behaviour).
 
-1. **First run online → airplane:** open the app online once (let the sync indicator finish), then
-   turn on airplane mode and cold-start. App opens, **all three tabs work**, collections visible,
-   a collection opens showing terms + translations + examples + per-word status, **TTS speaks**.
-2. **Server change → sync → airplane:** change a collection on the server, foreground the app
+**Run the checks in THIS order — reinstall first.** It exercises the cursor-in-DB deviation; if
+that's wrong, every other check would have to be redone on a clean install anyway, so prove it first.
+
+1. **Reinstall (the key deviation check):** with data already synced once, delete the app,
+   reinstall, sign in online. The cursor went with the DB → no stored `since` → first sync is a
+   FULL snapshot → the app fills up completely (not half-empty). Confirm `sync_meta.sync_cursor`
+   is set only after the fill, and the tables are fully populated.
+2. **Cold start in airplane:** (after a completed online sync) turn on airplane mode and
+   cold-start. App opens, **all three tabs work**, collections visible, a collection opens showing
+   terms + translations + examples + per-word status, **TTS speaks**.
+3. **Server change → sync → airplane:** change a collection on the server, foreground the app
    (sync runs), airplane, confirm the new state shows.
-3. **Deletion:** delete a collection AND a single item on the server → after a sync they disappear
+4. **Deletion:** delete a collection AND a single item on the server → after a sync they disappear
    locally, no ghost. (Covered in code + unit test; confirm on-device.)
-4. **Reinstall (the key deviation check):** delete the app, reinstall, sign in. The cursor went
-   with the DB → first sync is a full snapshot → the app fills up completely (not half-empty).
-5. **Triage regression:** offline triage still records + uploads on reconnect exactly as before.
+5. **Triage regression (last):** offline triage still records + uploads on reconnect as before.
+
+Bonus (not a numbered criterion, but confirm it looks sane): **new user, first launch, no
+network** — no token, no DB, sync impossible. Should land on the login screen with the offline
+hint + a clear "нужна сеть" on tap; never a white screen or endless spinner. (Handled in code.)
 
 If something fails: the DB is at the app's Documents dir `wordtrainer.sqlite` (pull via Xcode
 device container) — inspect `sync_meta` for the cursor and the tables for what synced.
+
+## After the device run passes — one small planned commit
+
+Add `source` + `type` to the `/sync` collections payload (DTOs `CollectionSyncRow`/
+`CollectionChange`, the reader `select`, the serializer, the client `_toCollection`). Restores the
+"ИИ" badge and the my/store/generated distinction on the collection card, which is wanted going
+forward — not just cosmetic. Deferred deliberately: DON'T touch the freshly-validated `/sync`
+until the device run proves the current contract. Separate small commit, its own OpenAPI + test.
+
+## Build setup (done this session — don't redo unless it breaks)
+Flutter's Swift Package Manager integration was pulling drift's CSQLite SPM package and colliding
+with the CocoaPods setup ("Package.swift modified during the build"). Fixed the aligned way:
+`flutter config --no-enable-swift-package-manager`, `flutter clean`, `pub get`, then
+`ios/ $ pod install` (Homebrew pod 1.17). `sqlite3`/`sqlite3_flutter_libs` now come via Pods like
+every other plugin. If SPM re-enables and the error returns, same fix.
 
 ---
 

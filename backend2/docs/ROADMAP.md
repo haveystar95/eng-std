@@ -97,10 +97,12 @@ frozen — closed items live there, open ones here):
 Deferred from the offline-mode build (Parts 2 & 3, 2026-08-03 — local DB + delta sync + collection
 view landed; client reads now come from drift, not the network):
 - **`/sync` collections payload carries no `source`/`type`** → the "ИИ" badge and AI icon are lost
-  now that the collection list reads from the local mirror (not just offline — everywhere). Cosmetic,
-  so deferred per the "findings→ROADMAP unless data-corrupting" rule. Fix: add `source` + `type` to
-  `CollectionSyncRow`/`CollectionChange`, the reader `select`, the serializer and the client mapper
-  (`_toCollection`); it's the same faithful-mirror principle as the Part-1 deviations.
+  now that the collection list reads from the local mirror (not just offline — everywhere). PLANNED
+  (not "someday"): the my/store/generated distinction on the collection card is wanted going forward,
+  not only the badge. Add `source` + `type` to `CollectionSyncRow`/`CollectionChange`, the reader
+  `select`, the serializer and the client mapper (`_toCollection`) — same faithful-mirror principle
+  as the Part-1 deviations. **Sequencing: do it as one small commit AFTER the device acceptance run**,
+  so the just-validated `/sync` isn't touched before it's verified on the phone.
 - **`GET /study/progress` field names never matched the client.** The resource sends `terms_total`/
   `due_count`/`mastered_count`; the mobile model reads `total`/`learned`/`mastered`/`due` (+ a
   `learned` the resource never had) → the progress bars parsed to all-zeros and rendered nothing
