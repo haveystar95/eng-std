@@ -112,6 +112,15 @@ UI/UX). Plan agreed with the user; working in Part-C order, one commit per point
   copying the source URL — accepted. Also fixed a latent test-isolation flake (RefreshDatabase on two
   outbound-calling generation tests whose `api_request_logs` leaked).
 
+**Post-device-run UX fixes (DONE, `9eab408` backend + `e651608` client):** flip-card triage
+(front = target term only; tap → back with image + translation + example; verdict from either face)
++ a `revealed` signal (flipped before deciding) that rides `/triage/batch` into `term_triages` and
+makes a peeked «known» a verification risk factor (planner, on par with a too-fast swipe; latency now
+measured to the FIRST event); photo attribution hidden behind `kShowPhotoAttribution=false`
+(**must be flipped on before any public release — Pexels API requires crediting the photographer**;
+data still syncs); create-screen keyboard no longer covers «Создать»; term translations calmed from
+loud coral to secondary. Backend: gates green + invariant-reviewer CLEAN. Client: analyze + 27 tests.
+
 **Part B — client generation UX (DONE, `42fd584`):** create screen (situation + rotating placeholder,
 size маленькая/средняя/большая→10/15/22, level from profile, target-language dropdown, quota-greyed
 button with remaining+resets_at); pending card backed by a client-only `PendingGenerations` drift
