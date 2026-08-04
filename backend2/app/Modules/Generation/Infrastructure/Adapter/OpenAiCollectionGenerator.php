@@ -36,6 +36,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
     public function __construct(
         private readonly string $apiKey,
         private readonly string $model,
+        private readonly string $promptVersion = 'v2',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
     ) {}
 
@@ -125,7 +126,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
 
     private function systemPrompt(GenerationBrief $brief): string
     {
-        $template = (string) file_get_contents(__DIR__ . '/../Prompt/generate_collection.v2.md');
+        $template = (string) file_get_contents(__DIR__ . "/../Prompt/generate_collection.{$this->promptVersion}.md");
 
         return strtr($template, [
             '{{source_lang}}' => $this->languageName($brief->sourceLang->value),

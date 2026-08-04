@@ -33,6 +33,7 @@ final class EvalGenerationCommand extends Command
     protected $signature = 'generation:eval
         {--fake : use the deterministic fake generator (no network, no spend — smoke test only)}
         {--out= : also write the full report as JSON to this path}
+        {--prompt= : prompt version to trial (e.g. v3); defaults to the production PROMPT_VERSION}
         {--source=ru : source (native) language}
         {--target=en : target (learned) language}';
 
@@ -48,6 +49,14 @@ final class EvalGenerationCommand extends Command
         if ($this->option('fake')) {
             config(['services.generation.driver' => 'fake']);
         }
+
+        // Trial a prompt version (e.g. v3) without flipping production: override the config the
+        // adapter reads to pick its prompt file, BEFORE the generator is resolved.
+        $promptVersion = $this->option('prompt') !== null
+            ? $this->asString($this->option('prompt'))
+            : RequestCollectionGenerationHandler::PROMPT_VERSION;
+        config(['services.generation.prompt_version' => $promptVersion]);
+
         /** @var CollectionGeneratorPort $generator */
         $generator = app(CollectionGeneratorPort::class);
 
@@ -57,7 +66,6 @@ final class EvalGenerationCommand extends Command
 
         $source = new LanguageCode($this->asString($this->option('source')));
         $target = new LanguageCode($this->asString($this->option('target')));
-        $promptVersion = RequestCollectionGenerationHandler::PROMPT_VERSION;
         $imgSupported = property_exists(GeneratedItem::class, 'imageApiPrompt');
 
         $this->info("Eval set: {$fixtures['count']} prompts · prompt {$promptVersion} · driver "

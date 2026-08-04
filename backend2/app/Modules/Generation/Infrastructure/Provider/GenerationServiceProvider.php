@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Infrastructure\Provider;
 
+use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\GenerationQuota;
@@ -32,6 +33,10 @@ final class GenerationServiceProvider extends ServiceProvider
             return new OpenAiCollectionGenerator(
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.generate_model', 'gpt-4o'),
+                // Which prompt file to load. Defaults to the production version so the recorded
+                // prompt_version and the file used always match; the eval command overrides it via
+                // config to trial a new version (e.g. v3) without flipping production.
+                promptVersion: (string) config('services.generation.prompt_version', RequestCollectionGenerationHandler::PROMPT_VERSION),
             );
         });
     }
