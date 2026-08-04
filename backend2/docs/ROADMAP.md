@@ -81,6 +81,50 @@ The app is **usable end-to-end today**. "Done" for this single-user product mean
 Nice-to-haves, not blockers: undo-last-swipe + end-of-session flush, `Terms lookup/search`,
 push notifications, `POST /study/sessions`, per-item CEFR badge, AI open-answer check.
 
+## Generation → full feature (in progress, started 2026-08-04)
+Turning the built-on-the-fly generator into the product's headline feature (backend + contract +
+UI/UX). Plan agreed with the user; working in Part-C order, one commit per point, gates green.
+
+**Done this session (committed):**
+- **A5 — eval set + `generation:eval`** (`135a056`): `tests/Fixtures/generation-prompts.json` (~20
+  prompts across categories) + a manual quality command (delivered-vs-requested, phrase &
+  idiom+phrasal ratio, dup rate, CEFR spread, image-prompt coverage, tokens/cost; `--fake` for a
+  no-spend smoke). **v2 baseline saved** at `docs/generation-eval-v2-baseline.json` (20/20 ok, 1
+  under-delivered, avg phrase 56%, idiom/phrasal 0%, no dupes, ~$0.27). Diff v3 against this.
+- **A4 hygiene, part 1** (`1201122`): retry only transient errors (a rejected `InvalidGeneratedDraft`
+  fails terminally now, no 3× re-spend); `recordAttempt()` persists tokens/cost the moment the model
+  answers so a validation failure no longer vanishes from the spend model; truncated raw response
+  kept on `generation_requests.raw_response` for diagnosis.
+
+**Next (Part C order):**
+- **A4 hygiene, part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
+  prompt_version)` hit, reuse the prior succeeded request's **term set** (build a fresh personal
+  collection, no LLM call). Needs a Generation repo finder + a non-owner-scoped Collections read for
+  the cached collection's term ids/title. Minor decisions to make: reuse cached title? (yes), no
+  quota refund on a hit, label model `cache`/cost 0.
+- **A4 hygiene, part 3 — quota in `GET /me`**: `generation: {limit, used, remaining, resets_at}`.
+  deptrac edge `Identity/Presentation → Generation/Application` (legal, cross-module via Application).
+  **OPEN QUESTION (below): no per-user timezone is stored, so `resets_at` in the user's tz can't be
+  computed — decide absolute-UTC-instant vs. adding a profile timezone.**
+- Then **A2** (overshoot + one top-up + honest `requested/delivered`), **A1+A6** (type enum
+  `word|phrase|idiom|phrasal_verb` + prompt v3, eval-compare v2↔v3 before flipping `PROMPT_VERSION`),
+  **A3** (Pexels images: `ImageSearchPort`/adapter/fake, async `AttachImagesJob`, `image_url` +
+  attribution on terms/collections, arriving via `/sync`), **B** (contract + drift v4 + the create
+  screen, the generating→ready card, first-contact «Разобрать», type badges).
+
+**Decided with the user (do not silently revise):** system decides collection composition (no
+size-slider — client sends маленькая/средняя/большая → 10/15/22); pending-generation card lives in a
+**drift table** (survives app kill) with start-up reconciliation (succeeded→drop, failed→error+retry,
+pending→poll, 404-or->24h→drop+log); Pexels attribution stored **on the term** (`image_author`,
+`image_author_url`) next to `image_url` and shipped in `/sync`; images cached **per term globally**
+(shared terms, one search), empty result = null + placeholder, no retry on empty.
+
+**Out of scope for this feature (deferred here, per the user):**
+- **Extending an existing collection** (passing already-owned terms into the prompt) — next block.
+- **«Как прошло» / post-session feedback loop** — next block.
+- **Curated starter content** — separate; needs a user-facing situation picker.
+- **Push instead of polling** for generation-ready — client polls for now.
+
 Deferred from the triage-contract close-out (2026-08-03; `triage-contract-findings.md` is now
 frozen — closed items live there, open ones here):
 - **Online triage sends one POST per swipe** (~35/deck) — battery + log noise. Left as-is:
@@ -144,3 +188,9 @@ view landed; client reads now come from drift, not the network):
 - **SRS algorithm**: ARCHITECTURE.md sketches SM-2 (`ease_factor/interval`); the old MVP used FSRS and it worked well. The `learning-srs` skill is authoritative — reconcile there before building Learning.
 - Data migration from old `../backend` (if any real user data must be carried over — currently just the single user's test data).
 - `generation_request_id` on collections: column exists; a `Shared` `GenerationRequestId` VO will be added when the Generation module is built.
+- **No per-user timezone is stored** (profiles have native/target language + CEFR, no tz). The
+  generation quota resets on **UTC-day** boundaries (`EloquentGenerationQuota`). So the planned
+  `GET /me` `generation.resets_at` "in the user's timezone" can't be computed from stored data.
+  Options: (a) return an **absolute next-UTC-midnight instant** and let the client render it in
+  device-local time — no schema change, quota stays UTC-day; or (b) add a `profiles.timezone`
+  column, have the client send it, reset at **local midnight**. Blocking A4 part 3 until decided.

@@ -4,73 +4,94 @@
 > Read with `CLAUDE.md`, `ARCHITECTURE.md`, `.claude/skills/`, `deptrac.yaml`, `docs/ROADMAP.md`.
 > `triage-contract-findings.md` is frozen.
 
-Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 2026-08-04.
+Branch: `feat/mobile-backend2-cutover` — **not merged to `main`**. Last updated: 2026-08-04.
 
 ---
 
-## Current task: NONE OPEN — offline mode is done + device-verified; process tooling is done.
+## Current task: Generation → full feature (in progress)
 
-The offline-first client (delta sync + local DB + collection view + triage-from-local) is
-**built, device-verified, and committed**. The process tooling (commit-gate hook, /handoff,
-/audit, /close-task, invariant-reviewer) is **built and committed**. Next up is the **Generation
-module** — start it with `/audit Generation` (see "What's next").
+Turning the built-on-the-fly generator into the product's headline feature: backend + contract +
+UI/UX. Plan agreed with the user (see ROADMAP "Generation → full feature"); working in **Part-C
+order**, one commit per point, gates green, `invariant-reviewer` before `/close-task`. **Contract
+(OpenAPI + `/sync` + drift) not yet touched — safe stopping point.**
 
-## What's done (with commit hashes)
+## What's done this session (with commit hashes)
 
-**Offline mode (Parts 2 & 3 + triage-from-local):**
-- `fef69ef` drift local DB (schema mirrors `/sync`; `applyDelta` atomic; **cursor in `sync_meta`, not keychain**).
-- `a6e387d` SyncService (pages `/sync`, cursor advances only after full run, triggers on start/network/resume).
-- `a800364` read-path flip — `collections/collectionWords/stats/collectionsProgress` are drift StreamProviders; mutations trigger `sync()`.
-- `6057288` quiet sync indicator. `c1f144f` collection view (Part 3) + per-word status. `7ba9d44` delta-application unit tests.
-- `b1a0aeb` **offline-first session restore** (user cached in keychain; token cleared only on real 401/403 — was the front-door blocker).
-- `3fe2013` sensible offline for a brand-new user's first sign-in. `786dad6`/`a19f73b` iOS build via CocoaPods (SPM off).
-- `f4b83ca` **triage deck built from the local DB** + durable `TriagedTerms` marker so an `unknown` swipe doesn't resurrect after sync; `1adeff2` its reinstall limitation noted.
-- `4f48e91` `source`/`type` on `/sync` collections (ИИ badge / origin) + «Не знаю» marker for triaged-unknown words. `baeef47` diagnostics panel behind a flag.
+- **A5 — eval set + `generation:eval`** (`135a056`): `tests/Fixtures/generation-prompts.json` (~20
+  prompts: everyday/travel/professional/thematic/abstract/very-short/English/adversarial) + a manual
+  quality command in `Generation/Presentation/Console` (delivered-vs-requested, phrase & idiom+phrasal
+  ratio, dup rate, CEFR spread, image-prompt coverage read reflectively, tokens/cost; `--fake` for a
+  no-spend smoke; fake toggled via `config`, no Infrastructure import → deptrac green). **Real v2
+  baseline saved** at `docs/generation-eval-v2-baseline.json` (20/20 ok, 1 under-delivered, avg phrase
+  56%, idiom/phrasal 0%, no dupes, ~$0.27). Diff v3 against this.
+- **A4 hygiene, part 1** (`1201122`): retry only transient errors — a rejected `InvalidGeneratedDraft`
+  now fails terminally (no 3× re-spend on a deterministic bad draft); `GenerationRequest::recordAttempt()`
+  persists model/tokens/cost the instant the model answers, so a later validation failure keeps its
+  spend; truncated raw response kept on new `generation_requests.raw_response` for diagnosis. 18
+  Generation unit tests + 6 feature tests green.
 
-**Process tooling (all in `.claude/`):**
-- `838daa2` commit-gate hook · `b5f7d96` /handoff · `269d5a0` /audit · `c78d22f` /close-task · `aec2eff` invariant-reviewer · `2e31d97` CLAUDE.md doc.
+## What's next (Part-C order)
 
-## Verified on device vs. code-only
+1. **A4 part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
+   prompt_version)` hit, reuse the prior succeeded request's **term set** (fresh personal collection,
+   no LLM call). Needs a Generation repo finder + a non-owner-scoped Collections read of a collection's
+   term ids/title. Decisions to make: reuse cached title (yes), no quota refund on hit, model=`cache`/cost 0.
+2. **A4 part 3 — quota in `GET /me`** (`generation: {limit, used, remaining, resets_at}`).
+   **BLOCKED on an open decision:** no per-user timezone is stored, quota resets on UTC-day boundaries,
+   so `resets_at` "in the user's tz" can't be computed — pick (a) absolute-UTC-instant, client renders
+   local, or (b) add `profiles.timezone`. See ROADMAP Open questions.
+3. **A2** overshoot (size+30%) + one top-up ("avoid these terms") + honest `requested/delivered`.
+4. **A1+A6** type enum `word|phrase|idiom|phrasal_verb` (migration + `TermType` VO + every word/phrase
+   branch treats idiom/phrasal_verb as phrase-like) + prompt **v3** → **eval-compare v2↔v3** before
+   flipping `PROMPT_VERSION` to `v3`.
+5. **A3** Pexels images: `ImageSearchPort` + adapter + fake; async `AttachImagesJob` (throttled, empty=null,
+   no retry, skip terms that already have an image); `image_url` + `image_author`/`image_author_url` on
+   terms and `image_url` on collections; **arrive via `/sync`** (additive) — client re-syncs a few times
+   after generation to pull them promptly.
+6. **B** contract (OpenAPI + `/sync` additive: term `image_url`, collection `image_url`, new type values)
+   → drift **v4** (`Terms.imageUrl`, `Collections.imageUrl`, new `PendingGenerations` table) → create
+   screen (size chips, placeholder rotation, quota-aware button) → generating→ready card → first-contact
+   «Разобрать» → type badges.
+
+## Decisions that must not be silently revised (this feature)
+
+- **System decides composition** — no size slider; client sends маленькая/средняя/большая → 10/15/22.
+- **Pending-generation card lives in a drift table** (survives app kill) with start-up reconciliation:
+  succeeded→drop (collection arrives via sync), failed→error+retry (drop on dismiss), pending/running→poll,
+  **404 or >24h old→drop with a log note** (the ceiling against "forever generating").
+- **Pexels attribution stored on the term** (`image_author`, `image_author_url`) next to `image_url`,
+  shipped in `/sync`; UI credit is unobtrusive. Images cached **per term globally** (shared terms, one
+  search), never overwrite an existing image.
+- **`resets_at` must not be a naive wall-clock** — return an absolute instant (client renders local);
+  quota reset boundary is UTC-day until/unless a profile timezone is added.
+- (carried) sync cursor in `sync_meta` not keychain · `since` inclusive · triage `TriagedTerms` marker ·
+  `restore()` clears token only on 401/403 · process rules change in `.claude/` files, not silently.
+
+## Verified vs. code-only
 
 | Item | How verified | Status |
 |---|---|---|
-| Reinstall → full snapshot (cursor-in-DB deviation) | device, panel `since=∅` + full fill | ✅ device |
-| Cold start in airplane: all tabs, terms, TTS | device | ✅ device |
-| Server change → sync → airplane | device (renamed collection propagated) | ✅ device |
-| Deletions: collection + item, no ghosts | device (2→1 coll, 40→14 items) | ✅ device |
-| Reverse path: un-delete → sync → reappears, no dupes | device (back to 2/40/38) | ✅ device |
-| Triage: offline entry, swipe, BUG-1, upload after reconnect | device + backend `term_triages` (3 verdicts) | ✅ device |
-| Per-word status (Усвоено/Учу/Не знаю) | device | ✅ device |
-| `source`/`type` on `/sync` | backend pest only; NO AI collection exists to show the ИИ badge | ⚠️ code-only visually |
-| Commit-gate hook | ran manually (green allows, red exit 2, SKIP_GATES, scoping) | ✅ verified (not via a real session-loaded hook yet) |
-| invariant-reviewer | ran the checklist via `general-purpose` (named agent not registered until next session) | ⚠️ logic verified, not yet by-name |
-| /handoff, /audit, /close-task | built; `migrate:fresh`-on-test-DB step validated; slash-invocation needs a fresh session | ⚠️ not yet run as commands |
+| `generation:eval --fake` and real v2 baseline | ran in Docker (`wt_app`); baseline JSON committed | ✅ (backend) |
+| A4 part 1 (retry/failed-usage/raw) | 18 unit + 6 feature Generation tests green in Docker | ✅ (backend) |
+| Commit-gate hook fires on a real session commit | two commits this session passed the gate (not blocked) | ✅ now confirmed by-session |
+| `/handoff`, `/audit`, `invariant-reviewer` by name | all three ran this session | ✅ registered |
+| Anything on the **device** | nothing this session touched the client yet | ⚠️ device run pending (whole Part B) |
 
-## Decisions that must not be silently revised
-
-- **Sync cursor lives in the local DB (`sync_meta`), NOT the keychain** — so a reinstall wipes it and the next sync is a full snapshot. Reversing this reintroduces the half-empty-after-reinstall bug.
-- **`since` is inclusive (`>=`)** — second-precision timestamps; the client applies deltas idempotently by id (LWW).
-- **Triage exclusion uses a durable local `TriagedTerms` marker** (mirrors server `term_triages`, which isn't synced) — an `unknown` swipe writes no progress row, so without the marker it resurrects.
-- **`restore()` clears the token only on 401/403, never on a network error** — offline cold start must not log the user out.
-- **Process rules change in the `.claude/` files, never silently in a commit.**
-
-## What's next
-
-**Generation module.** First action in the new session (also the tooling registration check):
-1. `/handoff` (refreshes this snapshot; confirms the command registered).
-2. `/audit Generation` (Stage-1 read-only audit of the next module — what's really there, whether the skills' eval set is used, how the prompt cache works — and confirms /audit works).
-3. Call `invariant-reviewer` by name (confirms the subagent registered).
-Then the user provides the Generation-block prompt, informed by the audit.
+## Offline mode (prior work, still true) — done + device-verified
+Delta sync + local drift DB + collection view + triage-from-local: built, device-verified, committed
+(`b1a0aeb`, `f4b83ca`, `4f48e91`, …). Cursor in `sync_meta`; deletions/reverse-path/triage verified on
+device. See git log if detail is needed.
 
 ## Known limitations / deferred (also in ROADMAP)
-
-- Two-device `client_seq` collision (pre-release accepted).
-- Reviews upload pipeline is stale (pre-`client_seq`/raw-answer) → 422s; rebuild with the exercise screens; `seq_review` counter ready.
-- Triage after a **reinstall**: `unknown`-swiped terms reappear (marker wiped, `term_triages` not synced) — acceptable.
-- Streak/reviews-today are cached from `/stats`, stale offline. Orphan local `terms`/`progress` after a collection delete aren't GC'd (harmless).
-- `source`/`type` badge only shows on an AI-generated collection (existing user collections look the same).
-- New commands/subagent + edited `settings.json` register on a **fresh** Claude Code session.
+- **No per-user timezone stored** → blocks `resets_at`-in-local-tz (A4 part 3). Decide before building it.
+- Out of scope for this feature (next block): extending an existing collection, «как прошло» loop,
+  curated starter content, push instead of polling.
+- (carried) two-device `client_seq` collision; stale reviews upload pipeline (422s); triage-after-reinstall
+  resurrection; stale offline streak/reviews-today; orphan local terms/progress not GC'd.
 
 ## Running / verifying
-- Backend2 in Docker; gates `composer check` (arch+stan+test) — now enforced by the commit hook.
-- ngrok domain `https://greedily-thermos-finer.ngrok-free.dev`. Device: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E` (release only; `pod install` on first build; `debugPrint` invisible in release — use the diagnostics panel via `--dart-define=SYNC_DIAG=true`).
+- Backend2 in Docker (`wt_app` :8001, `wt_db` :5433). Gates: commit hook runs `composer check`
+  (arch+stan+test). Manual: `docker compose exec app composer arch|stan|test`. **`composer stan` analyzes
+  `app/` only** — don't be alarmed by phpstan errors when you point it at `tests/` by hand.
+- `generation:eval [--fake] [--out=path]` — manual quality gauge (real driver costs money).
+- Device: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E`.
