@@ -35,6 +35,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       // previous (possibly offline) session. Both are background; neither blocks the UI.
       ref.read(syncServiceProvider).sync();
       ref.read(reviewSyncProvider).flush();
+      // Reconcile generations that were in flight when the app was last killed (poll / drop / retry).
+      ref.read(generationControllerProvider).reconcile();
     });
     // Network returned → pull fresh data and push the queued answers.
     _connSub = Connectivity().onConnectivityChanged.listen((results) {
@@ -57,6 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     if (state == AppLifecycleState.resumed) {
       ref.read(syncServiceProvider).sync();
       ref.read(reviewSyncProvider).flush();
+      ref.read(generationControllerProvider).reconcile();
     }
   }
 

@@ -105,6 +105,28 @@ class TriagedTerms extends Table {
   Set<Column<Object>> get primaryKey => {termId};
 }
 
+/// A generation the user kicked off, tracked locally so the pending card survives an app kill and
+/// reconciles on launch. NOT synced — purely client-side bookkeeping. `id` is the server request id.
+class PendingGenerations extends Table {
+  TextColumn get id => text()();
+  TextColumn get topic => text()();
+  TextColumn get status => text().withDefault(const Constant('pending'))(); // pending|running|succeeded|failed
+  TextColumn get collectionId => text().nullable()();
+  TextColumn get error => text().nullable()();
+  IntColumn get requested => integer().nullable()();
+  IntColumn get delivered => integer().nullable()();
+  // Original request params — kept so «повторить» works even after an app kill.
+  TextColumn get sourceLang => text().withDefault(const Constant('ru'))();
+  TextColumn get targetLang => text().withDefault(const Constant('en'))();
+  TextColumn get levelsCsv => text().withDefault(const Constant('A2,B1'))();
+  IntColumn get size => integer().withDefault(const Constant(15))();
+  DateTimeColumn get createdAt => dateTime()(); // device time — drives the >24h drop rule
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// One term as shown on the collection view screen: content joined with its live position and
 /// (optional) learning state, so a single reactive query feeds the whole screen.
 class CollectionTermRow {
@@ -131,13 +153,14 @@ class ItemProgressRow {
   final DateTime? dueAt;
 }
 
-@DriftDatabase(tables: [Collections, CollectionItems, Terms, TermProgress, SyncMeta, TriagedTerms])
+@DriftDatabase(
+    tables: [Collections, CollectionItems, Terms, TermProgress, SyncMeta, TriagedTerms, PendingGenerations])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -157,6 +180,7 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(terms, terms.imageAuthor);
             await m.addColumn(terms, terms.imageAuthorUrl);
           }
+          if (from < 5) await m.createTable(pendingGenerations); // pending-generation card (Part B)
         },
       );
 
@@ -237,6 +261,26 @@ class AppDatabase extends _$AppDatabase {
         }).toList());
   }
 
+  // ---- Pending generations (client-only, not synced) ------------------------
+
+  /// Live list of in-flight / just-finished generations, newest first — feeds the pending cards.
+  Stream<List<PendingGeneration>> watchPendingGenerations() {
+    return (select(pendingGenerations)..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
+  }
+
+  /// Snapshot for start-up reconciliation (poll each, then drop/keep/mark).
+  Future<List<PendingGeneration>> allPendingGenerations() => select(pendingGenerations).get();
+
+  Future<void> upsertPendingGeneration(PendingGenerationsCompanion row) =>
+      into(pendingGenerations).insertOnConflictUpdate(row);
+
+  /// Partial update by id — only the columns set in [patch] change (status transitions).
+  Future<void> updatePendingGeneration(String id, PendingGenerationsCompanion patch) =>
+      (update(pendingGenerations)..where((t) => t.id.equals(id))).write(patch);
+
+  Future<void> deletePendingGeneration(String id) =>
+      (delete(pendingGenerations)..where((t) => t.id.equals(id))).go();
+
   // ---- Meta -----------------------------------------------------------------
 
   Future<String?> getMeta(String key) async {
@@ -313,6 +357,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(terms).go();
       await delete(termProgress).go();
       await delete(triagedTerms).go();
+      await delete(pendingGenerations).go();
       await delete(syncMeta).go();
     });
   }

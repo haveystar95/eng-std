@@ -48,6 +48,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.0 # bundles the SQLite native lib for iOS
   path_provider: ^2.1.0 # app documents dir for the db file
   path: ^1.9.0
+  url_launcher: ^6.3.0 # open a Pexels photographer's page (image attribution)
 
 dev_dependencies:
   flutter_test:

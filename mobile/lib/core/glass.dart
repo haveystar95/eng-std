@@ -282,33 +282,52 @@ class GlassChip extends StatelessWidget {
   }
 }
 
-/// Full-width gradient CTA with press spring + feedback.
+/// Full-width gradient CTA with press spring + feedback. `disabled` greys it out and swallows taps
+/// (e.g. an exhausted daily quota); `busy` shows a spinner.
 class GlassButton extends StatelessWidget {
-  const GlassButton({super.key, required this.label, required this.onTap, this.icon, this.busy = false});
+  const GlassButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.busy = false,
+    this.disabled = false,
+  });
   final String label;
   final VoidCallback onTap;
   final IconData? icon;
   final bool busy;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
+    final inert = disabled || busy;
     return SpringTap(
-      onTap: busy ? () {} : onTap,
+      onTap: inert ? () {} : onTap,
       child: Container(
         height: 56,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: AppGradients.brand,
+          gradient: disabled ? null : AppGradients.brand,
+          color: disabled ? Colors.white.withValues(alpha: 0.07) : null,
           borderRadius: BorderRadius.circular(AppRadii.md),
-          boxShadow: AppShadows.glow(AppColors.primary),
+          border: disabled ? Border.all(color: Colors.white.withValues(alpha: 0.12)) : null,
+          boxShadow: disabled ? null : AppShadows.glow(AppColors.primary),
         ),
         child: busy
             ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[Icon(icon, color: Colors.white, size: 20), const SizedBox(width: 10)],
-                  Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                  if (icon != null) ...[
+                    Icon(icon, color: disabled ? AppColors.textMuted : Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(label,
+                      style: TextStyle(
+                          color: disabled ? AppColors.textMuted : Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16)),
                 ],
               ),
       ),

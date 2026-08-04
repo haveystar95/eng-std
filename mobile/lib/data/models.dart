@@ -19,6 +19,9 @@ class WordCollection {
   final int wordsCount;
   final String sourceLang;
   final String targetLang;
+  final String? imageUrl; // Pexels cover; null → gradient placeholder
+  final String? imageAuthor;
+  final String? imageAuthorUrl;
 
   WordCollection({
     required this.id,
@@ -30,6 +33,9 @@ class WordCollection {
     required this.wordsCount,
     required this.sourceLang,
     required this.targetLang,
+    this.imageUrl,
+    this.imageAuthor,
+    this.imageAuthorUrl,
   });
 
   bool get isAi => source == 'ai';
@@ -44,6 +50,9 @@ class WordCollection {
         wordsCount: (j['items_count'] as int?) ?? 0,
         sourceLang: (j['source_lang'] as String?) ?? 'ru',
         targetLang: (j['target_lang'] as String?) ?? 'en',
+        imageUrl: j['image_url'] as String?,
+        imageAuthor: j['image_author'] as String?,
+        imageAuthorUrl: j['image_author_url'] as String?,
       );
 }
 
@@ -55,10 +64,13 @@ class Word {
   final String translation;
   final String? transcription;
   final String? example;
-  final String type; // word | phrase
+  final String type; // word | phrase | idiom | phrasal_verb
   final String? audioUrl; // optional override; null → system TTS
   final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
   final String? status; // learning state from local progress (new|learning|review|relearning|known); null → not started
+  final String? imageUrl; // Pexels photo; null → type-badge placeholder
+  final String? imageAuthor;
+  final String? imageAuthorUrl;
 
   Word({
     required this.termId,
@@ -70,6 +82,9 @@ class Word {
     this.audioUrl,
     this.ttsHint,
     this.status,
+    this.imageUrl,
+    this.imageAuthor,
+    this.imageAuthorUrl,
   });
 
   /// Convenience so existing screens that used `word.id` keep working.
@@ -184,6 +199,32 @@ class CollectionProgress {
       );
 }
 
+/// Daily AI-generation allowance, from `/auth/me`'s `generation` block. `resetsAt` is an absolute
+/// UTC instant (the quota's next-day boundary) — render it in device-local time.
+class GenerationQuota {
+  final int limit;
+  final int used;
+  final int remaining;
+  final DateTime resetsAt;
+
+  const GenerationQuota({
+    required this.limit,
+    required this.used,
+    required this.remaining,
+    required this.resetsAt,
+  });
+
+  bool get exhausted => remaining <= 0;
+
+  factory GenerationQuota.fromJson(Map<String, dynamic> j) => GenerationQuota(
+        limit: (j['limit'] as int?) ?? 0,
+        used: (j['used'] as int?) ?? 0,
+        remaining: (j['remaining'] as int?) ?? 0,
+        resetsAt: DateTime.tryParse((j['resets_at'] as String?) ?? '')?.toLocal() ??
+            DateTime.now(),
+      );
+}
+
 class AppUser {
   final String id;
   final String name;
@@ -191,12 +232,17 @@ class AppUser {
   final String? avatar;
   final Profile? profile;
 
+  /// The generation allowance, present on `/auth/me` responses. Transient (NOT persisted in
+  /// [toJson]) so a cached user never carries a stale quota — the create screen fetches it fresh.
+  final GenerationQuota? quota;
+
   AppUser({
     required this.id,
     required this.name,
     this.email,
     this.avatar,
     this.profile,
+    this.quota,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -206,6 +252,9 @@ class AppUser {
         avatar: j['avatar'] as String?,
         profile: j['profile'] != null
             ? Profile.fromJson(j['profile'] as Map<String, dynamic>)
+            : null,
+        quota: j['generation'] != null
+            ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
             : null,
       );
 
@@ -217,6 +266,37 @@ class AppUser {
         'profile': ?profile?.toJson(),
       };
 }
+
+/// The pollable state of a generation request (`GET /generations/{id}`).
+class GenerationStatusView {
+  final String status; // pending | running | succeeded | failed
+  final String? collectionId;
+  final String? error;
+  final int? requested;
+  final int? delivered;
+
+  const GenerationStatusView({
+    required this.status,
+    this.collectionId,
+    this.error,
+    this.requested,
+    this.delivered,
+  });
+
+  bool get isSucceeded => status == 'succeeded';
+  bool get isFailed => status == 'failed';
+  bool get isTerminal => isSucceeded || isFailed;
+}
+
+/// Russian badge label for a term type. Unknown values fall back to phrase-like — the same
+/// forward-compat rule as [Word.isPhrase], so a future server type never renders as a bare word.
+String termTypeLabel(String type) => switch (type) {
+      'word' => 'слово',
+      'phrase' => 'фраза',
+      'idiom' => 'идиома',
+      'phrasal_verb' => 'фраз. глагол',
+      _ => 'фраза',
+    };
 
 /// A triage swipe verdict. Three, not two — a binary choice makes people lie
 /// toward "known". The value is exactly what `POST /triage/batch` expects.

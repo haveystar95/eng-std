@@ -234,14 +234,17 @@ class ApiClient {
     return (_data(r) as Map<String, dynamic>)['id'] as String;
   }
 
-  /// Poll a generation request: returns (status, collectionId, error).
-  Future<({String status, String? collectionId, String? error})> jobStatus(String id) async {
+  /// Poll a generation request. Status is one of pending|running|succeeded|failed. `requested`/
+  /// `delivered` let the client show "получилось N из M" on an under-delivered set.
+  Future<GenerationStatusView> jobStatus(String id) async {
     final r = await _dio.get('/generations/$id');
     final data = _data(r) as Map<String, dynamic>;
-    return (
+    return GenerationStatusView(
       status: data['status'] as String,
       collectionId: data['collection_id'] as String?,
       error: data['error'] as String?,
+      requested: data['requested'] as int?,
+      delivered: data['delivered'] as int?,
     );
   }
 }

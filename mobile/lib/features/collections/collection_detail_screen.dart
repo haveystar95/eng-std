@@ -8,12 +8,22 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../training/triage_screen.dart';
 import 'word_edit_dialog.dart';
+import 'word_media.dart';
 
 class CollectionDetailScreen extends ConsumerStatefulWidget {
-  const CollectionDetailScreen({super.key, required this.collectionId, required this.title});
+  const CollectionDetailScreen({
+    super.key,
+    required this.collectionId,
+    required this.title,
+    this.offerTriage = false,
+  });
 
   final String collectionId;
   final String title;
+
+  /// First-contact nudge: when arriving from a freshly generated collection, offer «Разобрать»
+  /// (triage) at the top so the user's first move is to sort what they already know.
+  final bool offerTriage;
 
   @override
   ConsumerState<CollectionDetailScreen> createState() => _CollectionDetailScreenState();
@@ -21,6 +31,14 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
 
 class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen> {
   final _pronouncer = Pronouncer();
+  late bool _showTriagePrompt = widget.offerTriage;
+
+  void _openTriage() {
+    AppFeedback.tap();
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
+    ));
+  }
 
   Future<void> _speak(Word word) async {
     AppFeedback.tap();
@@ -46,12 +64,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
           IconButton(
             tooltip: 'Разобрать (триаж)',
             icon: const Icon(Icons.style_outlined),
-            onPressed: () {
-              AppFeedback.tap();
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
-              ));
-            },
+            onPressed: _openTriage,
           ),
         ],
       ),
@@ -67,9 +80,17 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                 ? _empty(context)
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 110),
-                    itemCount: items.length,
+                    // A leading slot for the «Разобрать» banner, only when it's showing.
+                    itemCount: items.length + (_showTriagePrompt ? 1 : 0),
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) {
+                    itemBuilder: (context, rawIndex) {
+                      if (_showTriagePrompt && rawIndex == 0) {
+                        return _TriageBanner(
+                          onStart: _openTriage,
+                          onDismiss: () => setState(() => _showTriagePrompt = false),
+                        ).animate().fadeIn().slideY(begin: -0.1, end: 0);
+                      }
+                      final i = rawIndex - (_showTriagePrompt ? 1 : 0);
                       final w = items[i];
                       return Dismissible(
                         key: ValueKey(w.id),
@@ -119,6 +140,56 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
           ],
         ),
       );
+}
+
+/// First-contact nudge on a freshly generated collection: sort what you already know before study.
+class _TriageBanner extends StatelessWidget {
+  const _TriageBanner({required this.onStart, required this.onDismiss});
+  final VoidCallback onStart;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      tint: AppColors.accent,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          const Icon(Icons.style_rounded, color: AppColors.accent, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Разбери коллекцию',
+                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
+                SizedBox(height: 2),
+                Text('Отметь, что уже знаешь — остальное пойдёт в тренировку',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SpringTap(
+            onTap: onStart,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(gradient: AppGradients.brand, borderRadius: BorderRadius.circular(AppRadii.pill)),
+              child: const Text('Начать', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+            ),
+          ),
+          SpringTap(
+            feedback: false,
+            onTap: onDismiss,
+            child: const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _AddWordFab extends StatelessWidget {
@@ -174,46 +245,55 @@ class _WordCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              TermThumb(word: word),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(word.term,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-              ),
-              if (word.isPhrase)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: Text('фраза',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-                ),
-              const SizedBox(width: 4),
-              SpringTap(
-                feedback: false,
-                scale: 0.85,
-                onTap: onSpeak,
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.06),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-                  ),
-                  child: const Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(word.term,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        ),
+                        const SizedBox(width: 6),
+                        TypeBadge(type: word.type),
+                        const SizedBox(width: 4),
+                        SpringTap(
+                          feedback: false,
+                          scale: 0.85,
+                          onTap: onSpeak,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.06),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+                            ),
+                            child: const Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 19),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(word.translation,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    if (word.transcription != null && word.transcription!.isNotEmpty)
+                      Text('/${word.transcription}/',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(word.translation, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
-          if (word.transcription != null && word.transcription!.isNotEmpty)
-            Text('/${word.transcription}/', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
           if (_statusOf(word.status) case final st?) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -228,6 +308,10 @@ class _WordCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text('“${word.example}”',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.textSecondary)),
+          ],
+          if (word.imageAuthor != null) ...[
+            const SizedBox(height: 8),
+            PexelsCredit(author: word.imageAuthor, authorUrl: word.imageAuthorUrl),
           ],
         ],
       ),

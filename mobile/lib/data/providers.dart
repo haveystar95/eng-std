@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'auth_repository.dart';
+import 'generation_controller.dart';
 import 'local/app_database.dart';
 import 'local/sync_service.dart';
 import 'models.dart';
@@ -183,6 +184,34 @@ final dueCardsProvider = FutureProvider<List<ReviewCard>>((ref) async {
   return ref.watch(apiClientProvider).dueCards();
 });
 
+// ---- AI generation (client lifecycle) ---------------------------------------
+
+/// Drives generation from the client: POST, a local pending row that survives a kill, polling and
+/// start-up reconciliation. Screens watch [pendingGenerationsProvider], never poll themselves.
+final generationControllerProvider = Provider<GenerationController>((ref) {
+  return GenerationController(
+    ref.watch(apiClientProvider),
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncServiceProvider),
+  );
+});
+
+/// In-flight / just-finished generations for the pending cards (local DB, reactive).
+final pendingGenerationsProvider = StreamProvider<List<PendingGeneration>>((ref) {
+  return ref.watch(appDatabaseProvider).watchPendingGenerations();
+});
+
+/// The current generation allowance, fetched fresh from /me (network). Used by the create screen to
+/// grey the button + show remaining/resets_at. Invalidate after a generation to refresh. Degrades to
+/// null offline (the screen then lets the user try; the server is the real gate).
+final generationQuotaProvider = FutureProvider<GenerationQuota?>((ref) async {
+  try {
+    return (await ref.watch(apiClientProvider).me()).quota;
+  } catch (_) {
+    return null;
+  }
+});
+
 // ---- Local mappers / derivations --------------------------------------------
 
 WordCollection _toCollection(Collection r) => WordCollection(
@@ -194,6 +223,9 @@ WordCollection _toCollection(Collection r) => WordCollection(
       wordsCount: r.itemsCount,
       sourceLang: r.sourceLang ?? 'ru',
       targetLang: r.targetLang ?? 'en',
+      imageUrl: r.imageUrl, // Pexels cover (docks in via sync; null → gradient placeholder)
+      imageAuthor: r.imageAuthor,
+      imageAuthorUrl: r.imageAuthorUrl,
     );
 
 Word _toWord(CollectionTermRow r) {
@@ -212,6 +244,9 @@ Word _toWord(CollectionTermRow r) {
     example: r.term.example,
     type: r.term.type,
     status: status,
+    imageUrl: r.term.imageUrl, // Pexels photo (docks in via sync)
+    imageAuthor: r.term.imageAuthor,
+    imageAuthorUrl: r.term.imageAuthorUrl,
   );
 }
 

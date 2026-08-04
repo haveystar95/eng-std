@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design.dart';
 import '../../core/glass.dart';
+import '../../data/local/app_database.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import 'collection_cover.dart';
 import 'collection_detail_screen.dart';
 import 'collection_edit_dialog.dart';
 import 'collection_progress_bar.dart';
-import 'generate_dialog.dart';
+import 'generate_screen.dart';
+import 'pending_generation_card.dart';
 
 class CollectionsScreen extends ConsumerWidget {
   const CollectionsScreen({super.key});
@@ -17,6 +20,7 @@ class CollectionsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final collections = ref.watch(collectionsProvider);
+    final pending = ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[];
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -33,7 +37,17 @@ class CollectionsScreen extends ConsumerWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(child: _Header(items: items)),
-                  if (items.isEmpty)
+                  // Pending / just-finished generations sit above the list (survive an app kill).
+                  if (pending.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 12),
+                      sliver: SliverList.separated(
+                        itemCount: pending.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => PendingGenerationCard(row: pending[i], index: i),
+                      ),
+                    ),
+                  if (items.isEmpty && pending.isEmpty)
                     const SliverFillRemaining(hasScrollBody: false, child: _EmptyState())
                   else
                     SliverPadding(
@@ -102,7 +116,9 @@ class _Header extends ConsumerWidget {
           GlassButton(
             label: 'Сгенерировать коллекцию',
             icon: Icons.auto_awesome_rounded,
-            onTap: () => showGenerateDialog(context, ref),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GenerateScreen()),
+            ),
           ),
         ],
       ),
@@ -173,15 +189,7 @@ class _CollectionTile extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
-                child: collection.emoji != null
-                    ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
-                    : Icon(isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
-              ),
+              CollectionCover(collection: collection, index: index),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

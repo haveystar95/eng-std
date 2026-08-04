@@ -2887,6 +2887,754 @@ class TriagedTermsCompanion extends UpdateCompanion<TriagedTerm> {
   }
 }
 
+class $PendingGenerationsTable extends PendingGenerations
+    with TableInfo<$PendingGenerationsTable, PendingGeneration> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingGenerationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _topicMeta = const VerificationMeta('topic');
+  @override
+  late final GeneratedColumn<String> topic = GeneratedColumn<String>(
+    'topic',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _errorMeta = const VerificationMeta('error');
+  @override
+  late final GeneratedColumn<String> error = GeneratedColumn<String>(
+    'error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requestedMeta = const VerificationMeta(
+    'requested',
+  );
+  @override
+  late final GeneratedColumn<int> requested = GeneratedColumn<int>(
+    'requested',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deliveredMeta = const VerificationMeta(
+    'delivered',
+  );
+  @override
+  late final GeneratedColumn<int> delivered = GeneratedColumn<int>(
+    'delivered',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceLangMeta = const VerificationMeta(
+    'sourceLang',
+  );
+  @override
+  late final GeneratedColumn<String> sourceLang = GeneratedColumn<String>(
+    'source_lang',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ru'),
+  );
+  static const VerificationMeta _targetLangMeta = const VerificationMeta(
+    'targetLang',
+  );
+  @override
+  late final GeneratedColumn<String> targetLang = GeneratedColumn<String>(
+    'target_lang',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('en'),
+  );
+  static const VerificationMeta _levelsCsvMeta = const VerificationMeta(
+    'levelsCsv',
+  );
+  @override
+  late final GeneratedColumn<String> levelsCsv = GeneratedColumn<String>(
+    'levels_csv',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('A2,B1'),
+  );
+  static const VerificationMeta _sizeMeta = const VerificationMeta('size');
+  @override
+  late final GeneratedColumn<int> size = GeneratedColumn<int>(
+    'size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(15),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    topic,
+    status,
+    collectionId,
+    error,
+    requested,
+    delivered,
+    sourceLang,
+    targetLang,
+    levelsCsv,
+    size,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_generations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingGeneration> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('topic')) {
+      context.handle(
+        _topicMeta,
+        topic.isAcceptableOrUnknown(data['topic']!, _topicMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_topicMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('error')) {
+      context.handle(
+        _errorMeta,
+        error.isAcceptableOrUnknown(data['error']!, _errorMeta),
+      );
+    }
+    if (data.containsKey('requested')) {
+      context.handle(
+        _requestedMeta,
+        requested.isAcceptableOrUnknown(data['requested']!, _requestedMeta),
+      );
+    }
+    if (data.containsKey('delivered')) {
+      context.handle(
+        _deliveredMeta,
+        delivered.isAcceptableOrUnknown(data['delivered']!, _deliveredMeta),
+      );
+    }
+    if (data.containsKey('source_lang')) {
+      context.handle(
+        _sourceLangMeta,
+        sourceLang.isAcceptableOrUnknown(data['source_lang']!, _sourceLangMeta),
+      );
+    }
+    if (data.containsKey('target_lang')) {
+      context.handle(
+        _targetLangMeta,
+        targetLang.isAcceptableOrUnknown(data['target_lang']!, _targetLangMeta),
+      );
+    }
+    if (data.containsKey('levels_csv')) {
+      context.handle(
+        _levelsCsvMeta,
+        levelsCsv.isAcceptableOrUnknown(data['levels_csv']!, _levelsCsvMeta),
+      );
+    }
+    if (data.containsKey('size')) {
+      context.handle(
+        _sizeMeta,
+        size.isAcceptableOrUnknown(data['size']!, _sizeMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingGeneration map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingGeneration(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      topic: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}topic'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      ),
+      error: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error'],
+      ),
+      requested: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}requested'],
+      ),
+      delivered: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}delivered'],
+      ),
+      sourceLang: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_lang'],
+      )!,
+      targetLang: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_lang'],
+      )!,
+      levelsCsv: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}levels_csv'],
+      )!,
+      size: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingGenerationsTable createAlias(String alias) {
+    return $PendingGenerationsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingGeneration extends DataClass
+    implements Insertable<PendingGeneration> {
+  final String id;
+  final String topic;
+  final String status;
+  final String? collectionId;
+  final String? error;
+  final int? requested;
+  final int? delivered;
+  final String sourceLang;
+  final String targetLang;
+  final String levelsCsv;
+  final int size;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const PendingGeneration({
+    required this.id,
+    required this.topic,
+    required this.status,
+    this.collectionId,
+    this.error,
+    this.requested,
+    this.delivered,
+    required this.sourceLang,
+    required this.targetLang,
+    required this.levelsCsv,
+    required this.size,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['topic'] = Variable<String>(topic);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || collectionId != null) {
+      map['collection_id'] = Variable<String>(collectionId);
+    }
+    if (!nullToAbsent || error != null) {
+      map['error'] = Variable<String>(error);
+    }
+    if (!nullToAbsent || requested != null) {
+      map['requested'] = Variable<int>(requested);
+    }
+    if (!nullToAbsent || delivered != null) {
+      map['delivered'] = Variable<int>(delivered);
+    }
+    map['source_lang'] = Variable<String>(sourceLang);
+    map['target_lang'] = Variable<String>(targetLang);
+    map['levels_csv'] = Variable<String>(levelsCsv);
+    map['size'] = Variable<int>(size);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PendingGenerationsCompanion toCompanion(bool nullToAbsent) {
+    return PendingGenerationsCompanion(
+      id: Value(id),
+      topic: Value(topic),
+      status: Value(status),
+      collectionId: collectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(collectionId),
+      error: error == null && nullToAbsent
+          ? const Value.absent()
+          : Value(error),
+      requested: requested == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requested),
+      delivered: delivered == null && nullToAbsent
+          ? const Value.absent()
+          : Value(delivered),
+      sourceLang: Value(sourceLang),
+      targetLang: Value(targetLang),
+      levelsCsv: Value(levelsCsv),
+      size: Value(size),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PendingGeneration.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingGeneration(
+      id: serializer.fromJson<String>(json['id']),
+      topic: serializer.fromJson<String>(json['topic']),
+      status: serializer.fromJson<String>(json['status']),
+      collectionId: serializer.fromJson<String?>(json['collectionId']),
+      error: serializer.fromJson<String?>(json['error']),
+      requested: serializer.fromJson<int?>(json['requested']),
+      delivered: serializer.fromJson<int?>(json['delivered']),
+      sourceLang: serializer.fromJson<String>(json['sourceLang']),
+      targetLang: serializer.fromJson<String>(json['targetLang']),
+      levelsCsv: serializer.fromJson<String>(json['levelsCsv']),
+      size: serializer.fromJson<int>(json['size']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'topic': serializer.toJson<String>(topic),
+      'status': serializer.toJson<String>(status),
+      'collectionId': serializer.toJson<String?>(collectionId),
+      'error': serializer.toJson<String?>(error),
+      'requested': serializer.toJson<int?>(requested),
+      'delivered': serializer.toJson<int?>(delivered),
+      'sourceLang': serializer.toJson<String>(sourceLang),
+      'targetLang': serializer.toJson<String>(targetLang),
+      'levelsCsv': serializer.toJson<String>(levelsCsv),
+      'size': serializer.toJson<int>(size),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  PendingGeneration copyWith({
+    String? id,
+    String? topic,
+    String? status,
+    Value<String?> collectionId = const Value.absent(),
+    Value<String?> error = const Value.absent(),
+    Value<int?> requested = const Value.absent(),
+    Value<int?> delivered = const Value.absent(),
+    String? sourceLang,
+    String? targetLang,
+    String? levelsCsv,
+    int? size,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => PendingGeneration(
+    id: id ?? this.id,
+    topic: topic ?? this.topic,
+    status: status ?? this.status,
+    collectionId: collectionId.present ? collectionId.value : this.collectionId,
+    error: error.present ? error.value : this.error,
+    requested: requested.present ? requested.value : this.requested,
+    delivered: delivered.present ? delivered.value : this.delivered,
+    sourceLang: sourceLang ?? this.sourceLang,
+    targetLang: targetLang ?? this.targetLang,
+    levelsCsv: levelsCsv ?? this.levelsCsv,
+    size: size ?? this.size,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PendingGeneration copyWithCompanion(PendingGenerationsCompanion data) {
+    return PendingGeneration(
+      id: data.id.present ? data.id.value : this.id,
+      topic: data.topic.present ? data.topic.value : this.topic,
+      status: data.status.present ? data.status.value : this.status,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      error: data.error.present ? data.error.value : this.error,
+      requested: data.requested.present ? data.requested.value : this.requested,
+      delivered: data.delivered.present ? data.delivered.value : this.delivered,
+      sourceLang: data.sourceLang.present
+          ? data.sourceLang.value
+          : this.sourceLang,
+      targetLang: data.targetLang.present
+          ? data.targetLang.value
+          : this.targetLang,
+      levelsCsv: data.levelsCsv.present ? data.levelsCsv.value : this.levelsCsv,
+      size: data.size.present ? data.size.value : this.size,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingGeneration(')
+          ..write('id: $id, ')
+          ..write('topic: $topic, ')
+          ..write('status: $status, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('error: $error, ')
+          ..write('requested: $requested, ')
+          ..write('delivered: $delivered, ')
+          ..write('sourceLang: $sourceLang, ')
+          ..write('targetLang: $targetLang, ')
+          ..write('levelsCsv: $levelsCsv, ')
+          ..write('size: $size, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    topic,
+    status,
+    collectionId,
+    error,
+    requested,
+    delivered,
+    sourceLang,
+    targetLang,
+    levelsCsv,
+    size,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingGeneration &&
+          other.id == this.id &&
+          other.topic == this.topic &&
+          other.status == this.status &&
+          other.collectionId == this.collectionId &&
+          other.error == this.error &&
+          other.requested == this.requested &&
+          other.delivered == this.delivered &&
+          other.sourceLang == this.sourceLang &&
+          other.targetLang == this.targetLang &&
+          other.levelsCsv == this.levelsCsv &&
+          other.size == this.size &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
+  final Value<String> id;
+  final Value<String> topic;
+  final Value<String> status;
+  final Value<String?> collectionId;
+  final Value<String?> error;
+  final Value<int?> requested;
+  final Value<int?> delivered;
+  final Value<String> sourceLang;
+  final Value<String> targetLang;
+  final Value<String> levelsCsv;
+  final Value<int> size;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const PendingGenerationsCompanion({
+    this.id = const Value.absent(),
+    this.topic = const Value.absent(),
+    this.status = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.error = const Value.absent(),
+    this.requested = const Value.absent(),
+    this.delivered = const Value.absent(),
+    this.sourceLang = const Value.absent(),
+    this.targetLang = const Value.absent(),
+    this.levelsCsv = const Value.absent(),
+    this.size = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingGenerationsCompanion.insert({
+    required String id,
+    required String topic,
+    this.status = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.error = const Value.absent(),
+    this.requested = const Value.absent(),
+    this.delivered = const Value.absent(),
+    this.sourceLang = const Value.absent(),
+    this.targetLang = const Value.absent(),
+    this.levelsCsv = const Value.absent(),
+    this.size = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       topic = Value(topic),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PendingGeneration> custom({
+    Expression<String>? id,
+    Expression<String>? topic,
+    Expression<String>? status,
+    Expression<String>? collectionId,
+    Expression<String>? error,
+    Expression<int>? requested,
+    Expression<int>? delivered,
+    Expression<String>? sourceLang,
+    Expression<String>? targetLang,
+    Expression<String>? levelsCsv,
+    Expression<int>? size,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (topic != null) 'topic': topic,
+      if (status != null) 'status': status,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (error != null) 'error': error,
+      if (requested != null) 'requested': requested,
+      if (delivered != null) 'delivered': delivered,
+      if (sourceLang != null) 'source_lang': sourceLang,
+      if (targetLang != null) 'target_lang': targetLang,
+      if (levelsCsv != null) 'levels_csv': levelsCsv,
+      if (size != null) 'size': size,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingGenerationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? topic,
+    Value<String>? status,
+    Value<String?>? collectionId,
+    Value<String?>? error,
+    Value<int?>? requested,
+    Value<int?>? delivered,
+    Value<String>? sourceLang,
+    Value<String>? targetLang,
+    Value<String>? levelsCsv,
+    Value<int>? size,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PendingGenerationsCompanion(
+      id: id ?? this.id,
+      topic: topic ?? this.topic,
+      status: status ?? this.status,
+      collectionId: collectionId ?? this.collectionId,
+      error: error ?? this.error,
+      requested: requested ?? this.requested,
+      delivered: delivered ?? this.delivered,
+      sourceLang: sourceLang ?? this.sourceLang,
+      targetLang: targetLang ?? this.targetLang,
+      levelsCsv: levelsCsv ?? this.levelsCsv,
+      size: size ?? this.size,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (topic.present) {
+      map['topic'] = Variable<String>(topic.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (error.present) {
+      map['error'] = Variable<String>(error.value);
+    }
+    if (requested.present) {
+      map['requested'] = Variable<int>(requested.value);
+    }
+    if (delivered.present) {
+      map['delivered'] = Variable<int>(delivered.value);
+    }
+    if (sourceLang.present) {
+      map['source_lang'] = Variable<String>(sourceLang.value);
+    }
+    if (targetLang.present) {
+      map['target_lang'] = Variable<String>(targetLang.value);
+    }
+    if (levelsCsv.present) {
+      map['levels_csv'] = Variable<String>(levelsCsv.value);
+    }
+    if (size.present) {
+      map['size'] = Variable<int>(size.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingGenerationsCompanion(')
+          ..write('id: $id, ')
+          ..write('topic: $topic, ')
+          ..write('status: $status, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('error: $error, ')
+          ..write('requested: $requested, ')
+          ..write('delivered: $delivered, ')
+          ..write('sourceLang: $sourceLang, ')
+          ..write('targetLang: $targetLang, ')
+          ..write('levelsCsv: $levelsCsv, ')
+          ..write('size: $size, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2898,6 +3646,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TermProgressTable termProgress = $TermProgressTable(this);
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   late final $TriagedTermsTable triagedTerms = $TriagedTermsTable(this);
+  late final $PendingGenerationsTable pendingGenerations =
+      $PendingGenerationsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2909,6 +3659,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     termProgress,
     syncMeta,
     triagedTerms,
+    pendingGenerations,
   ];
 }
 
@@ -4386,6 +5137,377 @@ typedef $$TriagedTermsTableProcessedTableManager =
       TriagedTerm,
       PrefetchHooks Function()
     >;
+typedef $$PendingGenerationsTableCreateCompanionBuilder =
+    PendingGenerationsCompanion Function({
+      required String id,
+      required String topic,
+      Value<String> status,
+      Value<String?> collectionId,
+      Value<String?> error,
+      Value<int?> requested,
+      Value<int?> delivered,
+      Value<String> sourceLang,
+      Value<String> targetLang,
+      Value<String> levelsCsv,
+      Value<int> size,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PendingGenerationsTableUpdateCompanionBuilder =
+    PendingGenerationsCompanion Function({
+      Value<String> id,
+      Value<String> topic,
+      Value<String> status,
+      Value<String?> collectionId,
+      Value<String?> error,
+      Value<int?> requested,
+      Value<int?> delivered,
+      Value<String> sourceLang,
+      Value<String> targetLang,
+      Value<String> levelsCsv,
+      Value<int> size,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PendingGenerationsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingGenerationsTable> {
+  $$PendingGenerationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requested => $composableBuilder(
+    column: $table.requested,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get delivered => $composableBuilder(
+    column: $table.delivered,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get levelsCsv => $composableBuilder(
+    column: $table.levelsCsv,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingGenerationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingGenerationsTable> {
+  $$PendingGenerationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requested => $composableBuilder(
+    column: $table.requested,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get delivered => $composableBuilder(
+    column: $table.delivered,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get levelsCsv => $composableBuilder(
+    column: $table.levelsCsv,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingGenerationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingGenerationsTable> {
+  $$PendingGenerationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get topic =>
+      $composableBuilder(column: $table.topic, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get error =>
+      $composableBuilder(column: $table.error, builder: (column) => column);
+
+  GeneratedColumn<int> get requested =>
+      $composableBuilder(column: $table.requested, builder: (column) => column);
+
+  GeneratedColumn<int> get delivered =>
+      $composableBuilder(column: $table.delivered, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get levelsCsv =>
+      $composableBuilder(column: $table.levelsCsv, builder: (column) => column);
+
+  GeneratedColumn<int> get size =>
+      $composableBuilder(column: $table.size, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PendingGenerationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingGenerationsTable,
+          PendingGeneration,
+          $$PendingGenerationsTableFilterComposer,
+          $$PendingGenerationsTableOrderingComposer,
+          $$PendingGenerationsTableAnnotationComposer,
+          $$PendingGenerationsTableCreateCompanionBuilder,
+          $$PendingGenerationsTableUpdateCompanionBuilder,
+          (
+            PendingGeneration,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingGenerationsTable,
+              PendingGeneration
+            >,
+          ),
+          PendingGeneration,
+          PrefetchHooks Function()
+        > {
+  $$PendingGenerationsTableTableManager(
+    _$AppDatabase db,
+    $PendingGenerationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingGenerationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingGenerationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingGenerationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> topic = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> collectionId = const Value.absent(),
+                Value<String?> error = const Value.absent(),
+                Value<int?> requested = const Value.absent(),
+                Value<int?> delivered = const Value.absent(),
+                Value<String> sourceLang = const Value.absent(),
+                Value<String> targetLang = const Value.absent(),
+                Value<String> levelsCsv = const Value.absent(),
+                Value<int> size = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingGenerationsCompanion(
+                id: id,
+                topic: topic,
+                status: status,
+                collectionId: collectionId,
+                error: error,
+                requested: requested,
+                delivered: delivered,
+                sourceLang: sourceLang,
+                targetLang: targetLang,
+                levelsCsv: levelsCsv,
+                size: size,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String topic,
+                Value<String> status = const Value.absent(),
+                Value<String?> collectionId = const Value.absent(),
+                Value<String?> error = const Value.absent(),
+                Value<int?> requested = const Value.absent(),
+                Value<int?> delivered = const Value.absent(),
+                Value<String> sourceLang = const Value.absent(),
+                Value<String> targetLang = const Value.absent(),
+                Value<String> levelsCsv = const Value.absent(),
+                Value<int> size = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingGenerationsCompanion.insert(
+                id: id,
+                topic: topic,
+                status: status,
+                collectionId: collectionId,
+                error: error,
+                requested: requested,
+                delivered: delivered,
+                sourceLang: sourceLang,
+                targetLang: targetLang,
+                levelsCsv: levelsCsv,
+                size: size,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingGenerationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingGenerationsTable,
+      PendingGeneration,
+      $$PendingGenerationsTableFilterComposer,
+      $$PendingGenerationsTableOrderingComposer,
+      $$PendingGenerationsTableAnnotationComposer,
+      $$PendingGenerationsTableCreateCompanionBuilder,
+      $$PendingGenerationsTableUpdateCompanionBuilder,
+      (
+        PendingGeneration,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingGenerationsTable,
+          PendingGeneration
+        >,
+      ),
+      PendingGeneration,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4402,4 +5524,6 @@ class $AppDatabaseManager {
       $$SyncMetaTableTableManager(_db, _db.syncMeta);
   $$TriagedTermsTableTableManager get triagedTerms =>
       $$TriagedTermsTableTableManager(_db, _db.triagedTerms);
+  $$PendingGenerationsTableTableManager get pendingGenerations =>
+      $$PendingGenerationsTableTableManager(_db, _db.pendingGenerations);
 }
