@@ -29,6 +29,7 @@ final class GenerationRequest
         private readonly LanguageCode $targetLang,
         private readonly array $levels,
         private readonly int $size,
+        private ?int $deliveredCount,
         private readonly string $promptVersion,
         private GenerationStatus $status,
         private ?string $model,
@@ -57,7 +58,7 @@ final class GenerationRequest
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
-            $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, null, $createdAt, null,
+            null, $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, null, $createdAt, null,
         );
     }
 
@@ -75,6 +76,7 @@ final class GenerationRequest
         LanguageCode $targetLang,
         array $levels,
         int $size,
+        ?int $deliveredCount,
         string $promptVersion,
         GenerationStatus $status,
         ?string $model,
@@ -89,7 +91,7 @@ final class GenerationRequest
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
-            $promptVersion, $status, $model, $tokensIn, $tokensOut, $costUsd, $collectionId, $error,
+            $deliveredCount, $promptVersion, $status, $model, $tokensIn, $tokensOut, $costUsd, $collectionId, $error,
             $rawResponse, $createdAt, $finishedAt,
         );
     }
@@ -128,6 +130,7 @@ final class GenerationRequest
         ?int $tokensIn,
         ?int $tokensOut,
         ?string $costUsd,
+        int $deliveredCount,
         DateTimeImmutable $finishedAt,
     ): void {
         if ($this->status->isTerminal()) {
@@ -139,6 +142,7 @@ final class GenerationRequest
         $this->tokensIn = $tokensIn;
         $this->tokensOut = $tokensOut;
         $this->costUsd = $costUsd;
+        $this->deliveredCount = $deliveredCount;
         $this->error = null;
         $this->finishedAt = $finishedAt;
     }
@@ -192,6 +196,12 @@ final class GenerationRequest
     public function size(): int
     {
         return $this->size;
+    }
+
+    /** How many items actually landed in the collection; null until the request succeeds. */
+    public function deliveredCount(): ?int
+    {
+        return $this->deliveredCount;
     }
 
     public function promptVersion(): string

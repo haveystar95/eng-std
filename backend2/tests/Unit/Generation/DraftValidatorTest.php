@@ -65,6 +65,21 @@ it('trims over-generation down to the requested size', function () {
     expect($result->items)->toHaveCount(12);
 });
 
+it('trims to an explicit target count independent of the brief size', function () {
+    // The model brief now carries an overshoot count, so the validator must trim to the target
+    // it is handed (9), not to brief()->size (12). 9 is above the MIN_ITEMS floor, so it survives.
+    $result = (new DraftValidator())->validate(draftOf(manyItems(30)), brief(), targetCount: 9);
+
+    expect($result->items)->toHaveCount(9);
+});
+
+it('accepts a below-floor batch in supplemental mode without throwing', function () {
+    // A top-up returning 2 fresh items is valid, not a truncated-response failure.
+    $result = (new DraftValidator())->validate(draftOf(manyItems(2)), brief(), targetCount: 5, supplemental: true);
+
+    expect($result->items)->toHaveCount(2);
+});
+
 it('keeps under-generation as-is when still above the floor', function () {
     $result = (new DraftValidator())->validate(draftOf(manyItems(10)), brief());
 

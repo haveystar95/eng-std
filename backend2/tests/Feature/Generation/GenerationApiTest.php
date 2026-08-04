@@ -35,7 +35,10 @@ it('accepts a generation and completes it end-to-end on the sync queue', functio
     $id = $created->json('data.id');
 
     $shown = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/generations/{$id}");
-    $shown->assertOk()->assertJsonPath('data.status', 'succeeded');
+    $shown->assertOk()
+        ->assertJsonPath('data.status', 'succeeded')
+        ->assertJsonPath('data.requested', 8)   // honest requested/delivered surfaced for the client
+        ->assertJsonPath('data.delivered', 8);
     expect($shown->json('data.collection_id'))->not->toBeNull();
 
     $this->assertDatabaseHas('generation_requests', ['id' => $id, 'status' => 'succeeded']);

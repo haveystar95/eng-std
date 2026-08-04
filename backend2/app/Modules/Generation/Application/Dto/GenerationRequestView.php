@@ -13,6 +13,8 @@ final readonly class GenerationRequestView
         public string $id,
         public string $status,
         public string $prompt,
+        public int $requested,        // how many items the user asked for
+        public ?int $delivered,       // how many actually landed; null until succeeded
         public ?string $collectionId,
         public ?string $error,
         public ?string $model,

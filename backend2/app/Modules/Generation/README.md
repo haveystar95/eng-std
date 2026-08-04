@@ -12,10 +12,12 @@ collection of the words and phrases they'd actually need. Treated as a first-cla
 POST /generations → RequestCollectionGeneration (quota check, insert pending) → 202 {id}
                   → dispatch GenerateCollectionJob
 GenerateCollectionJob → ProcessGeneration:
-     markRunning → CollectionGeneratorPort::generate (slow, OUTSIDE any tx)
-     → DraftValidator (size/CEFR/dedup) → [tx: CreateGeneratedCollection + ImportTerm×N + AddTerm]
-     → markSucceeded (collection_id, tokens, cost)
-GET /generations/{id} → the client polls until succeeded|failed
+     markRunning → CollectionGeneratorPort::generate (slow, OUTSIDE any tx) — ask ceil(size×1.3)
+     → DraftValidator (CEFR/dedup, trim to requested)
+     → if still short: ONE top-up with an avoid list → merge+dedup+trim (tokens/cost SUMMED)
+     → [tx: CreateGeneratedCollection + ImportTerm×N + AddTerm]
+     → markSucceeded (collection_id, tokens, cost, delivered_count)
+GET /generations/{id} → the client polls until succeeded|failed; reads `requested`/`delivered`
 ```
 
 The console command `php artisan generation:make {user} {prompt}` runs the same
@@ -41,9 +43,14 @@ Generation never touches other modules' tables or Domain. It calls, through Appl
 
 - **Quota:** a daily cap counted as today's non-failed requests — a failure refunds itself.
   Exceeding it throws `GenerationQuotaExceeded` → 429.
-- **Validation:** reject drafts with too few usable items; drop out-of-level, empty and
-  duplicate items; cap at 25. A truncated draft is a failure, not a shipped broken set.
-- **Cost:** `tokens_in/out`, `model`, `cost_usd` recorded per request for the spend read model.
+- **Validation:** reject a *primary* draft with too few usable items; drop out-of-level, empty and
+  duplicate items; cap at 25. A truncated primary draft is a terminal failure (no retry), not a
+  shipped broken set. A **top-up** batch is supplemental — it skips the floor (2 fresh items is fine).
+- **Under-delivery:** ask for ~30% more than requested and trim back; if still short, one top-up
+  with an avoid list closes the gap. Still short after that is an **honest success** — `delivered_count`
+  records what actually landed (client shows "13 из 15"), never a failure.
+- **Cost:** `tokens_in/out`, `model`, `cost_usd` recorded per request for the spend read model; a
+  top-up's tokens/cost are **summed onto** the primary call, never overwritten.
 - **Idempotency:** reprocessing a finished request is a no-op.
 
 **Deferred:** embedding/semantic dedup, prompt-cache reuse by normalized prompt, language

@@ -30,6 +30,8 @@ final readonly class GetGenerationRequestHandler
             id: $request->id()->value,
             status: $request->status()->value,
             prompt: $request->prompt(),
+            requested: $request->size(),
+            delivered: $request->deliveredCount(),
             collectionId: $request->collectionId()?->value,
             error: $request->error(),
             model: $request->model(),

@@ -808,6 +808,8 @@ components:
         id: { type: string }
         status: { type: string, enum: [pending, running, succeeded, failed] }
         prompt: { type: string }
+        requested: { type: integer, description: Items the user asked for }
+        delivered: { type: integer, nullable: true, description: Items actually produced; may be fewer than requested; null until succeeded }
         collection_id: { type: string, nullable: true }
         error: { type: string, nullable: true }
         model: { type: string, nullable: true }

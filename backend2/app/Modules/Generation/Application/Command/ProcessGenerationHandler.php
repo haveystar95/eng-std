@@ -12,6 +12,7 @@ use App\Modules\Collections\Application\Dto\CollectionTermSetView;
 use App\Modules\Collections\Application\Query\GetCollectionTermSet;
 use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
+use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
@@ -87,6 +88,7 @@ final readonly class ProcessGenerationHandler
                     tokensIn: 0,
                     tokensOut: 0,
                     costUsd: '0.000000',
+                    deliveredCount: count($termSet->termIds),
                     finishedAt: $this->clock->now(),
                 );
                 $this->requests->save($request);
@@ -95,43 +97,137 @@ final readonly class ProcessGenerationHandler
             }
         }
 
-        $brief = new GenerationBrief(
-            prompt: $request->prompt(),
-            sourceLang: $request->sourceLang(),
-            targetLang: $request->targetLang(),
-            levels: $request->levels(),
-            size: $request->size(),
-        );
+        $requested = $request->size();
+
+        // Overshoot: models routinely under-deliver ("asked 15, got 13"), so ask for ~30% more and
+        // trim back. Capped at the hard ceiling — for a request already at the max there's no headroom.
+        $overshoot = min(DraftValidator::MAX_ITEMS, (int) ceil($requested * 1.3));
 
         // Slow model call — deliberately outside any transaction. A transient transport error
         // bubbles up so the queue can retry; the validation below is deterministic and must not.
-        $raw = $this->generator->generate($brief);
+        $raw = $this->generator->generate($this->brief($request, $overshoot));
 
         // Persist the spend + raw output the instant the model answers, before validation can
         // reject the draft: a rejected draft still cost tokens, and its raw response is what we
-        // need to diagnose the rejection. markSucceeded re-sets the same usage on the happy path.
-        $request->recordAttempt(
-            model: $raw->model,
-            tokensIn: $raw->tokensIn,
-            tokensOut: $raw->tokensOut,
-            costUsd: $this->estimateCost($raw->model, $raw->tokensIn, $raw->tokensOut),
-            rawResponse: $raw->rawResponse,
-        );
-        $this->requests->save($request);
+        // need to diagnose the rejection. Tokens/cost accumulate across the top-up below —
+        // one generation_request, one running total, never overwritten by the second call.
+        $model = $raw->model;
+        $tokensIn = $raw->tokensIn;
+        $tokensOut = $raw->tokensOut;
+        $costUsd = $this->estimateCost($raw->model, $raw->tokensIn, $raw->tokensOut);
+        $this->recordSpend($request, $model, $tokensIn, $tokensOut, $costUsd, $raw->rawResponse);
 
-        $draft = $this->validator->validate($raw, $brief);
+        // Primary pass: filter/dedup and trim to the *requested* count. The MIN_ITEMS floor still
+        // applies here — a genuinely broken/truncated first response fails terminally (no retry).
+        $draft = $this->validator->validate($raw, $this->brief($request, $overshoot), targetCount: $requested);
 
+        // One top-up, never a loop: if the accepted set is still short, ask once more with an avoid
+        // list of what we already have, then merge + dedup + trim. Still short after that is an honest
+        // under-delivery, not a failure — the client shows "13 из 15".
+        if (count($draft->items) < $requested) {
+            $shortfall = $requested - count($draft->items);
+            $topUpSize = min(DraftValidator::MAX_ITEMS, (int) ceil($shortfall * 1.3));
+            $avoid = array_map(static fn (GeneratedItem $i): string => $i->text, $draft->items);
+
+            $topUpRaw = $this->generator->generate($this->brief($request, $topUpSize, $avoid));
+
+            // Sum, never overwrite: tokens/cost of the request are the total of both model calls.
+            $tokensIn = $this->sumTokens($tokensIn, $topUpRaw->tokensIn);
+            $tokensOut = $this->sumTokens($tokensOut, $topUpRaw->tokensOut);
+            $costUsd = $this->sumCost($costUsd, $this->estimateCost($topUpRaw->model, $topUpRaw->tokensIn, $topUpRaw->tokensOut));
+            $this->recordSpend($request, $model, $tokensIn, $tokensOut, $costUsd, $topUpRaw->rawResponse);
+
+            // Supplemental: no floor — a top-up of a couple of items is valid. Cross-dedup + trim to
+            // the requested size happens in the merge.
+            $topUp = $this->validator->validate($topUpRaw, $this->brief($request, $topUpSize, $avoid), targetCount: $topUpSize, supplemental: true);
+            $draft = $this->merge($draft, $topUp, $requested);
+        }
+
+        // Materialize the *final accepted* set (after filter + top-up). This is also what the prompt
+        // cache stores, so the next identical prompt reuses the fixed-up set, not the raw under-delivery.
         $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $draft));
 
         $request->markSucceeded(
             collectionId: $collectionId,
-            model: $draft->model,
-            tokensIn: $draft->tokensIn,
-            tokensOut: $draft->tokensOut,
-            costUsd: $this->estimateCost($draft->model, $draft->tokensIn, $draft->tokensOut),
+            model: $model,
+            tokensIn: $tokensIn,
+            tokensOut: $tokensOut,
+            costUsd: $costUsd,
+            deliveredCount: count($draft->items),
             finishedAt: $this->clock->now(),
         );
         $this->requests->save($request);
+    }
+
+    /** @param list<string> $excludeTexts */
+    private function brief(GenerationRequest $request, int $size, array $excludeTexts = []): GenerationBrief
+    {
+        return new GenerationBrief(
+            prompt: $request->prompt(),
+            sourceLang: $request->sourceLang(),
+            targetLang: $request->targetLang(),
+            levels: $request->levels(),
+            size: $size,
+            excludeTexts: $excludeTexts,
+        );
+    }
+
+    private function recordSpend(GenerationRequest $request, string $model, ?int $tokensIn, ?int $tokensOut, ?string $costUsd, ?string $rawResponse): void
+    {
+        $request->recordAttempt(
+            model: $model,
+            tokensIn: $tokensIn,
+            tokensOut: $tokensOut,
+            costUsd: $costUsd,
+            rawResponse: $rawResponse,
+        );
+        $this->requests->save($request);
+    }
+
+    private function sumTokens(?int $a, ?int $b): ?int
+    {
+        if ($a === null && $b === null) {
+            return null;
+        }
+
+        return (int) $a + (int) $b;
+    }
+
+    private function sumCost(?string $a, ?string $b): ?string
+    {
+        if ($a === null && $b === null) {
+            return null;
+        }
+
+        return number_format((float) $a + (float) $b, 6, '.', '');
+    }
+
+    /**
+     * Primary items first, then the fresh top-up items, deduped by lowercased text and trimmed to
+     * the requested count. Keeps the primary pass's title/description.
+     */
+    private function merge(GeneratedCollectionDraft $primary, GeneratedCollectionDraft $topUp, int $requested): GeneratedCollectionDraft
+    {
+        $seen = [];
+        $items = [];
+        foreach ([...$primary->items, ...$topUp->items] as $item) {
+            $key = mb_strtolower($item->text);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $items[] = $item;
+        }
+
+        return new GeneratedCollectionDraft(
+            title: $primary->title,
+            description: $primary->description,
+            items: array_slice($items, 0, $requested),
+            model: $primary->model,
+            tokensIn: $primary->tokensIn,
+            tokensOut: $primary->tokensOut,
+            rawResponse: $primary->rawResponse,
+        );
     }
 
     private function materialize(GenerationRequest $request, GeneratedCollectionDraft $draft): CollectionId

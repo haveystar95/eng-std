@@ -16,12 +16,25 @@ use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
  */
 final class DraftValidator
 {
-    private const MIN_ITEMS = 8;
-    private const MAX_ITEMS = 25;
+    public const MIN_ITEMS = 8;
+    public const MAX_ITEMS = 25;
     private const CEFR_ORDER = ['A1' => 1, 'A2' => 2, 'B1' => 3, 'B2' => 4, 'C1' => 5, 'C2' => 6];
 
-    public function validate(GeneratedCollectionDraft $draft, GenerationBrief $brief): GeneratedCollectionDraft
-    {
+    /**
+     * @param  int|null  $targetCount  how many items to keep (the requested size). Explicit because the
+     *                                 model brief now carries an *overshoot* count, not the requested one;
+     *                                 defaults to the brief size for callers that don't over-ask.
+     * @param  bool  $supplemental     a top-up batch: skip the MIN_ITEMS floor. A top-up returning 2 fresh
+     *                                 items is valid, not a truncated-response failure — the primary pass
+     *                                 already guaranteed a non-broken set.
+     */
+    public function validate(
+        GeneratedCollectionDraft $draft,
+        GenerationBrief $brief,
+        ?int $targetCount = null,
+        bool $supplemental = false,
+    ): GeneratedCollectionDraft {
+        $targetCount ??= $brief->size;
         [$min, $max] = $this->levelRange($brief->levels);
 
         $seen = [];
@@ -58,13 +71,17 @@ final class DraftValidator
             );
         }
 
-        if (count($clean) < self::MIN_ITEMS) {
+        if (! $supplemental && count($clean) < self::MIN_ITEMS) {
             throw InvalidGeneratedDraft::because('only ' . count($clean) . ' usable items after validation');
         }
 
-        // Honour the requested count: trim any over-generation down to exactly what the user
-        // asked for (bounded by the hard ceiling). Under-generation is kept as-is.
-        $target = max(self::MIN_ITEMS, min(self::MAX_ITEMS, $brief->size));
+        // Trim over-generation down to the requested count (bounded by the hard ceiling). The floor
+        // only applies to a primary pass; a top-up may legitimately land below MIN_ITEMS.
+        // Under-generation is kept as-is — the caller decides whether to top up.
+        $target = min(self::MAX_ITEMS, $targetCount);
+        if (! $supplemental) {
+            $target = max(self::MIN_ITEMS, $target);
+        }
         if (count($clean) > $target) {
             $clean = array_slice($clean, 0, $target);
         }
