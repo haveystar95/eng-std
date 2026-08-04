@@ -171,21 +171,10 @@ class ApiClient {
   }
 
   // ---- Triage ---------------------------------------------------------------
-
-  /// The first-pass swipe queue for one collection — its not-yet-triaged,
-  /// not-yet-studied terms, self-contained so the whole page swipes offline.
-  /// Returns the page plus `remaining` (eligible terms left beyond this page).
-  Future<TriageDeck> triageQueue(String collectionId, {int limit = 40}) async {
-    final r = await _dio.get('/triage/queue', queryParameters: {
-      'collection_id': collectionId,
-      'limit': limit,
-    });
-    final d = _data(r) as Map<String, dynamic>;
-    final cards = ((d['cards'] as List?) ?? const [])
-        .map((e) => TriageCard.fromJson(e as Map<String, dynamic>))
-        .toList();
-    return TriageDeck(cards: cards, remaining: (d['remaining'] as int?) ?? 0);
-  }
+  //
+  // The deck is now built from the local DB (see triageDeckProvider) so it opens offline; the
+  // server's GET /triage/queue still exists but the client no longer calls it. Only the swipe
+  // UPLOAD stays here — the one part that must reach the backend.
 
   /// Upload a batch of triage swipes (idempotent by each swipe's client ULID).
   Future<({int accepted, int duplicates, int unknown})> submitTriages(List<PendingTriage> triages) async {

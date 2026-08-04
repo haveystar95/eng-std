@@ -26,14 +26,12 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
   @override
   void initState() {
     super.initState();
-    // Re-fetch the queue on EVERY entry. The server excludes terms already triaged (uploaded),
-    // which a cached deck would keep showing — so a completed deck would re-show its swiped
-    // cards. The deck provider only re-runs on Riverpod's auto-dispose timing, which is not
-    // guaranteed on every navigation path back into this screen (observed: some re-entries
-    // re-fetched, one served a stale deck). Invalidating here, before the first build watches
-    // it, makes the refetch deterministic regardless of disposal timing. Offline-only swipes
-    // are still excluded locally by triageDeckProvider (pendingTermIds); a full re-fetch while
-    // offline surfaces the load error, which is honest — nothing is lost, the queue is intact.
+    // Rebuild the deck from the local DB on EVERY entry. The deck excludes terms already triaged
+    // (locally marked), which a cached deck would keep showing — so a completed deck would re-show
+    // its swiped cards. Riverpod's auto-dispose timing isn't guaranteed on every navigation path
+    // back into this screen (observed: some re-entries re-read, one served a stale deck), so
+    // invalidating here — before the first build watches it — makes the re-read deterministic.
+    // The read is now local (no network), so this works identically offline; nothing is fetched.
     ref.invalidate(triageDeckProvider(widget.collectionId));
   }
 

@@ -58,22 +58,33 @@ final triageSyncProvider = Provider<TriageSync>((ref) {
     ref.watch(apiClientProvider),
     ref.watch(triageQueueProvider),
     ref.watch(seqCounterProvider),
+    ref.watch(appDatabaseProvider),
     ref,
   );
 });
 
-/// The triage deck for one collection: the server page minus terms already swiped locally but
-/// not yet uploaded, so a swiped-but-unsent card isn't re-shown. `remaining` (eligible terms
-/// beyond this page, per the server) is passed through untouched — it is the honest count of
-/// what a later sync will still fetch.
+/// The triage deck for one collection, built ENTIRELY from the local DB (no network) so it opens
+/// on a plane: the collection's never-studied, never-triaged terms in study order, capped at the
+/// page limit. `remaining` is the eligible terms beyond this page — same rule as the cards, from
+/// the same query, so counter and deck can't diverge (BUG-1). Loaded as a snapshot on entry; the
+/// screen manages the session (swipes advance a local index and mark the term triaged, which the
+/// next entry's query excludes). GET /triage/queue still exists on the backend but is unused here.
 final triageDeckProvider = FutureProvider.family<TriageDeck, String>((ref, collectionId) async {
-  final deck = await ref.watch(apiClientProvider).triageQueue(collectionId);
-  final pending = await ref.watch(triageSyncProvider).pendingTermIds();
-  return TriageDeck(
-    cards: deck.cards.where((c) => !pending.contains(c.termId)).toList(),
-    remaining: deck.remaining,
-  );
+  const pageLimit = 40;
+  final eligible = await ref.watch(appDatabaseProvider).triageEligible(collectionId);
+  final page = eligible.take(pageLimit).map(_toTriageCard).toList();
+  return TriageDeck(cards: page, remaining: eligible.length - page.length);
 });
+
+TriageCard _toTriageCard(Term t) => TriageCard(
+      termId: t.id,
+      text: t.termText ?? '',
+      translation: t.translation ?? '',
+      type: t.type,
+      transcription: t.transcription,
+      example: t.example,
+      exampleTranslation: t.exampleTranslation,
+    );
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(ref.watch(tokenStoreProvider));

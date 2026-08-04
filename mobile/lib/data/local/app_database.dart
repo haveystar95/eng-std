@@ -81,6 +81,20 @@ class SyncMeta extends Table {
   Set<Column<Object>> get primaryKey => {key};
 }
 
+/// Local mirror of the server's `term_triages` exclusion, keyed by (user→implicit, term). A term
+/// swiped in triage is marked here so it leaves the offline deck and does not return — the server's
+/// term_triages isn't in the delta feed, and an `unknown` swipe writes NO progress row, so without
+/// this marker such a term would resurrect after a sync (BUG-1). Wiped with the DB on sign-out /
+/// reinstall (a fresh install re-triages from scratch, same as everything else re-syncing).
+class TriagedTerms extends Table {
+  TextColumn get termId => text()();
+  TextColumn get collectionId => text().nullable()(); // where it was swiped (informational)
+  DateTimeColumn get decidedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {termId};
+}
+
 /// One term as shown on the collection view screen: content joined with its live position and
 /// (optional) learning state, so a single reactive query feeds the whole screen.
 class CollectionTermRow {
@@ -106,13 +120,21 @@ class ItemProgressRow {
   final DateTime? dueAt;
 }
 
-@DriftDatabase(tables: [Collections, CollectionItems, Terms, TermProgress, SyncMeta])
+@DriftDatabase(tables: [Collections, CollectionItems, Terms, TermProgress, SyncMeta, TriagedTerms])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) await m.createTable(triagedTerms); // triage-from-local-DB
+        },
+      );
 
   // ---- Reads (reactive) -----------------------------------------------------
 
@@ -141,6 +163,35 @@ class AppDatabase extends _$AppDatabase {
 
   /// Every progress row — the input for the local stats derivation.
   Stream<List<TermProgressData>> watchAllProgress() => select(termProgress).watch();
+
+  /// The triage-eligible terms of a collection, in study order — mirrors the server's queue rule:
+  /// a collection's terms that are never-studied (no progress row) AND never-triaged (not in the
+  /// local marker), capped at [cap]. Returned in full (not sliced to the page) so the caller can
+  /// compute `remaining` exactly like the backend. This is the single source for both the deck and
+  /// its counter — deriving them separately is what caused BUG-1.
+  Future<List<Term>> triageEligible(String collectionId, {int cap = 500}) {
+    final query = select(collectionItems).join([
+      innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
+      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+    ])
+      ..where(collectionItems.collectionId.equals(collectionId) &
+          termProgress.termId.isNull() & // never studied (no progress row)
+          triagedTerms.termId.isNull()) // never triaged (local marker)
+      ..orderBy([OrderingTerm(expression: collectionItems.position)])
+      ..limit(cap);
+
+    return query.map((r) => r.readTable(terms)).get();
+  }
+
+  /// Mark a term triaged so it leaves the deck and stays out (durable, not synced). Idempotent.
+  Future<void> markTriaged(String termId, String? collectionId, DateTime at) => into(triagedTerms)
+      .insertOnConflictUpdate(TriagedTermsCompanion.insert(
+          termId: termId, collectionId: Value(collectionId), decidedAt: at));
+
+  /// Undo a triage mark (used when the last swipe is undone before it leaves the screen).
+  Future<void> unmarkTriaged(String termId) =>
+      (delete(triagedTerms)..where((t) => t.termId.equals(termId))).go();
 
   /// Every (collection item, progress) pair — the input for per-collection progress.
   Stream<List<ItemProgressRow>> watchItemProgress() {
@@ -235,6 +286,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(collections).go();
       await delete(terms).go();
       await delete(termProgress).go();
+      await delete(triagedTerms).go();
       await delete(syncMeta).go();
     });
   }

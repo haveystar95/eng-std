@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
+import 'local/app_database.dart';
 import 'models.dart';
 import 'providers.dart';
 import 'seq_counter.dart';
@@ -16,7 +17,7 @@ import 'triage_queue.dart';
 /// batch. Uploads are idempotent by the client ULID, so retries are free and a
 /// 2xx lets us drop the sent ids.
 class TriageSync {
-  TriageSync(this._api, this._queue, this._seq, this._ref);
+  TriageSync(this._api, this._queue, this._seq, this._db, this._ref);
 
   /// Server caps a batch at 200; 100 leaves headroom for an offline backlog.
   static const int _chunkSize = 100;
@@ -24,19 +25,13 @@ class TriageSync {
   final ApiClient _api;
   final TriageQueue _queue;
   final SeqCounter _seq;
+  final AppDatabase _db;
   final Ref _ref;
 
   List<PendingTriage>? _mem; // in-memory mirror of the persisted queue
   bool _flushing = false;
 
   Future<List<PendingTriage>> _list() async => _mem ??= await _queue.load();
-
-  Future<int> pendingCount() async => (await _list()).length;
-
-  /// Term ids that already have a swipe queued locally (sent or not). The deck
-  /// subtracts these so a swiped-but-not-yet-uploaded card is not shown again
-  /// after a restart — the server can't exclude what it hasn't received.
-  Future<Set<String>> pendingTermIds() async => (await _list()).map((e) => e.termId).toSet();
 
   /// Persist one swipe (client ULID, client-measured latency), then flush.
   Future<void> record({
@@ -56,6 +51,10 @@ class TriageSync {
       latencyMs: latencyMs,
     ));
     await _queue.save(list);
+    // Mark it triaged in the local DB so the deck (built from the DB) excludes it on re-entry and
+    // it never resurrects after a sync — the exclusion the server does via term_triages, which the
+    // delta feed doesn't carry. Independent of upload success; a swipe is a swipe.
+    await _db.markTriaged(termId, collectionId, DateTime.now());
     unawaited(flush());
   }
 
@@ -66,6 +65,10 @@ class TriageSync {
   Future<bool> removePending(String termId) async {
     final list = await _list();
     final idx = list.lastIndexWhere((e) => e.termId == termId);
+    // Also lift the deck-exclusion mark so the undone card can be shown again. If the verdict was
+    // already uploaded there's nothing in the queue to drop, but clearing the mark still lets the
+    // card reappear; the re-swipe that follows appends a newer verdict the server takes as current.
+    await _db.unmarkTriaged(termId);
     if (idx < 0) return false;
     list.removeAt(idx);
     await _queue.save(list);

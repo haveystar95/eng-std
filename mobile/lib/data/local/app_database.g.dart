@@ -2204,6 +2204,279 @@ class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
   }
 }
 
+class $TriagedTermsTable extends TriagedTerms
+    with TableInfo<$TriagedTermsTable, TriagedTerm> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TriagedTermsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+    'term_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _decidedAtMeta = const VerificationMeta(
+    'decidedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> decidedAt = GeneratedColumn<DateTime>(
+    'decided_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [termId, collectionId, decidedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'triaged_terms';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TriagedTerm> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('term_id')) {
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('decided_at')) {
+      context.handle(
+        _decidedAtMeta,
+        decidedAt.isAcceptableOrUnknown(data['decided_at']!, _decidedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_decidedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {termId};
+  @override
+  TriagedTerm map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TriagedTerm(
+      termId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}term_id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      ),
+      decidedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}decided_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TriagedTermsTable createAlias(String alias) {
+    return $TriagedTermsTable(attachedDatabase, alias);
+  }
+}
+
+class TriagedTerm extends DataClass implements Insertable<TriagedTerm> {
+  final String termId;
+  final String? collectionId;
+  final DateTime decidedAt;
+  const TriagedTerm({
+    required this.termId,
+    this.collectionId,
+    required this.decidedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['term_id'] = Variable<String>(termId);
+    if (!nullToAbsent || collectionId != null) {
+      map['collection_id'] = Variable<String>(collectionId);
+    }
+    map['decided_at'] = Variable<DateTime>(decidedAt);
+    return map;
+  }
+
+  TriagedTermsCompanion toCompanion(bool nullToAbsent) {
+    return TriagedTermsCompanion(
+      termId: Value(termId),
+      collectionId: collectionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(collectionId),
+      decidedAt: Value(decidedAt),
+    );
+  }
+
+  factory TriagedTerm.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TriagedTerm(
+      termId: serializer.fromJson<String>(json['termId']),
+      collectionId: serializer.fromJson<String?>(json['collectionId']),
+      decidedAt: serializer.fromJson<DateTime>(json['decidedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'termId': serializer.toJson<String>(termId),
+      'collectionId': serializer.toJson<String?>(collectionId),
+      'decidedAt': serializer.toJson<DateTime>(decidedAt),
+    };
+  }
+
+  TriagedTerm copyWith({
+    String? termId,
+    Value<String?> collectionId = const Value.absent(),
+    DateTime? decidedAt,
+  }) => TriagedTerm(
+    termId: termId ?? this.termId,
+    collectionId: collectionId.present ? collectionId.value : this.collectionId,
+    decidedAt: decidedAt ?? this.decidedAt,
+  );
+  TriagedTerm copyWithCompanion(TriagedTermsCompanion data) {
+    return TriagedTerm(
+      termId: data.termId.present ? data.termId.value : this.termId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TriagedTerm(')
+          ..write('termId: $termId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('decidedAt: $decidedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(termId, collectionId, decidedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TriagedTerm &&
+          other.termId == this.termId &&
+          other.collectionId == this.collectionId &&
+          other.decidedAt == this.decidedAt);
+}
+
+class TriagedTermsCompanion extends UpdateCompanion<TriagedTerm> {
+  final Value<String> termId;
+  final Value<String?> collectionId;
+  final Value<DateTime> decidedAt;
+  final Value<int> rowid;
+  const TriagedTermsCompanion({
+    this.termId = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TriagedTermsCompanion.insert({
+    required String termId,
+    this.collectionId = const Value.absent(),
+    required DateTime decidedAt,
+    this.rowid = const Value.absent(),
+  }) : termId = Value(termId),
+       decidedAt = Value(decidedAt);
+  static Insertable<TriagedTerm> custom({
+    Expression<String>? termId,
+    Expression<String>? collectionId,
+    Expression<DateTime>? decidedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (termId != null) 'term_id': termId,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (decidedAt != null) 'decided_at': decidedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TriagedTermsCompanion copyWith({
+    Value<String>? termId,
+    Value<String?>? collectionId,
+    Value<DateTime>? decidedAt,
+    Value<int>? rowid,
+  }) {
+    return TriagedTermsCompanion(
+      termId: termId ?? this.termId,
+      collectionId: collectionId ?? this.collectionId,
+      decidedAt: decidedAt ?? this.decidedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (decidedAt.present) {
+      map['decided_at'] = Variable<DateTime>(decidedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TriagedTermsCompanion(')
+          ..write('termId: $termId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2214,6 +2487,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TermsTable terms = $TermsTable(this);
   late final $TermProgressTable termProgress = $TermProgressTable(this);
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
+  late final $TriagedTermsTable triagedTerms = $TriagedTermsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2224,6 +2498,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     terms,
     termProgress,
     syncMeta,
+    triagedTerms,
   ];
 }
 
@@ -3377,6 +3652,170 @@ typedef $$SyncMetaTableProcessedTableManager =
       SyncMetaData,
       PrefetchHooks Function()
     >;
+typedef $$TriagedTermsTableCreateCompanionBuilder =
+    TriagedTermsCompanion Function({
+      required String termId,
+      Value<String?> collectionId,
+      required DateTime decidedAt,
+      Value<int> rowid,
+    });
+typedef $$TriagedTermsTableUpdateCompanionBuilder =
+    TriagedTermsCompanion Function({
+      Value<String> termId,
+      Value<String?> collectionId,
+      Value<DateTime> decidedAt,
+      Value<int> rowid,
+    });
+
+class $$TriagedTermsTableFilterComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
+  $$TriagedTermsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TriagedTermsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
+  $$TriagedTermsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TriagedTermsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
+  $$TriagedTermsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get decidedAt =>
+      $composableBuilder(column: $table.decidedAt, builder: (column) => column);
+}
+
+class $$TriagedTermsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TriagedTermsTable,
+          TriagedTerm,
+          $$TriagedTermsTableFilterComposer,
+          $$TriagedTermsTableOrderingComposer,
+          $$TriagedTermsTableAnnotationComposer,
+          $$TriagedTermsTableCreateCompanionBuilder,
+          $$TriagedTermsTableUpdateCompanionBuilder,
+          (
+            TriagedTerm,
+            BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>,
+          ),
+          TriagedTerm,
+          PrefetchHooks Function()
+        > {
+  $$TriagedTermsTableTableManager(_$AppDatabase db, $TriagedTermsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TriagedTermsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TriagedTermsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TriagedTermsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> termId = const Value.absent(),
+                Value<String?> collectionId = const Value.absent(),
+                Value<DateTime> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TriagedTermsCompanion(
+                termId: termId,
+                collectionId: collectionId,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String termId,
+                Value<String?> collectionId = const Value.absent(),
+                required DateTime decidedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TriagedTermsCompanion.insert(
+                termId: termId,
+                collectionId: collectionId,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TriagedTermsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TriagedTermsTable,
+      TriagedTerm,
+      $$TriagedTermsTableFilterComposer,
+      $$TriagedTermsTableOrderingComposer,
+      $$TriagedTermsTableAnnotationComposer,
+      $$TriagedTermsTableCreateCompanionBuilder,
+      $$TriagedTermsTableUpdateCompanionBuilder,
+      (
+        TriagedTerm,
+        BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>,
+      ),
+      TriagedTerm,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3391,4 +3830,6 @@ class $AppDatabaseManager {
       $$TermProgressTableTableManager(_db, _db.termProgress);
   $$SyncMetaTableTableManager get syncMeta =>
       $$SyncMetaTableTableManager(_db, _db.syncMeta);
+  $$TriagedTermsTableTableManager get triagedTerms =>
+      $$TriagedTermsTableTableManager(_db, _db.triagedTerms);
 }
