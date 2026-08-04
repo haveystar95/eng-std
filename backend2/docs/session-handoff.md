@@ -17,14 +17,14 @@ module** — start it with `/audit Generation` (see "What's next").
 
 ## What's done (with commit hashes)
 
-**Offline mode (Parts 2 & 3 + ODBD-3191):**
+**Offline mode (Parts 2 & 3 + triage-from-local):**
 - `fef69ef` drift local DB (schema mirrors `/sync`; `applyDelta` atomic; **cursor in `sync_meta`, not keychain**).
 - `a6e387d` SyncService (pages `/sync`, cursor advances only after full run, triggers on start/network/resume).
 - `a800364` read-path flip — `collections/collectionWords/stats/collectionsProgress` are drift StreamProviders; mutations trigger `sync()`.
 - `6057288` quiet sync indicator. `c1f144f` collection view (Part 3) + per-word status. `7ba9d44` delta-application unit tests.
 - `b1a0aeb` **offline-first session restore** (user cached in keychain; token cleared only on real 401/403 — was the front-door blocker).
 - `3fe2013` sensible offline for a brand-new user's first sign-in. `786dad6`/`a19f73b` iOS build via CocoaPods (SPM off).
-- `f4b83ca` **triage deck built from the local DB** (ODBD-3191) + durable `TriagedTerms` marker so an `unknown` swipe doesn't resurrect after sync; `1adeff2` its reinstall limitation noted.
+- `f4b83ca` **triage deck built from the local DB** + durable `TriagedTerms` marker so an `unknown` swipe doesn't resurrect after sync; `1adeff2` its reinstall limitation noted.
 - `4f48e91` `source`/`type` on `/sync` collections (ИИ badge / origin) + «Не знаю» marker for triaged-unknown words. `baeef47` diagnostics panel behind a flag.
 
 **Process tooling (all in `.claude/`):**
