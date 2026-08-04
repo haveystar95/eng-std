@@ -77,6 +77,7 @@ final readonly class TriageTermsHandler
                     clientSeq: $input->clientSeq,
                     collectionId: $input->collectionId,
                     latencyMs: $input->latencyMs,
+                    revealed: $input->revealed,
                 );
 
                 if (! $this->triages->insertIgnore($triage)) {
@@ -156,6 +157,7 @@ final readonly class TriageTermsHandler
             $userLevel,
             $triage->latencyMs,
             $difficulty !== null && $difficulty->isPhrase,
+            $triage->revealed,
         );
 
         $dueAt = $now->add(new DateInterval('P' . $plan->dueInDays . 'D'));

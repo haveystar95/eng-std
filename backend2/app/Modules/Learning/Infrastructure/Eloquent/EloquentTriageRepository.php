@@ -25,6 +25,7 @@ final class EloquentTriageRepository implements TriageRepository
             'verdict' => $triage->verdict->value,
             'collection_id' => $triage->collectionId?->value,
             'latency_ms' => $triage->latencyMs,
+            'revealed' => $triage->revealed,
             'client_seq' => $triage->clientSeq,
             'decided_at' => $triage->decidedAt,
             'created_at' => now(),
@@ -44,7 +45,7 @@ final class EloquentTriageRepository implements TriageRepository
         // DISTINCT ON keeps the first row per term_id under the ORDER BY, i.e. the greatest
         // client_seq — the governing verdict. Backed by term_triages_user_term_seq_idx.
         $rows = DB::table('term_triages')
-            ->select(['id', 'term_id', 'verdict', 'collection_id', 'latency_ms', 'client_seq', 'decided_at'])
+            ->select(['id', 'term_id', 'verdict', 'collection_id', 'latency_ms', 'revealed', 'client_seq', 'decided_at'])
             ->where('user_id', $userId->value)
             ->whereIn('term_id', $ids)
             ->orderBy('term_id')
@@ -63,6 +64,7 @@ final class EloquentTriageRepository implements TriageRepository
                 clientSeq: (int) $row->client_seq,
                 collectionId: $row->collection_id !== null ? CollectionId::fromString((string) $row->collection_id) : null,
                 latencyMs: $row->latency_ms !== null ? (int) $row->latency_ms : null,
+                revealed: $row->revealed !== null ? (bool) $row->revealed : null,
             );
         }
 

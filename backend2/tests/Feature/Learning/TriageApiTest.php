@@ -41,6 +41,30 @@ it('projects triage verdicts onto progress and never writes reviews', function (
     $this->assertDatabaseCount('reviews', 0);
 });
 
+it('persists revealed and brings a revealed «known» check far sooner than a clean one', function () {
+    [$user, $token] = learner();
+    [$col, $peeked] = seedCollectionWith($user, 'money', 'деньги');
+    $clean = addWordTo($col, $user->id, 'overdraft', 'овердрафт');
+
+    // Both below level / no latency → the only difference is the peek.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [
+            ['id' => Ulid::generate(), 'term_id' => $peeked, 'verdict' => 'known', 'collection_id' => $col, 'decided_at' => now()->toIso8601String(), 'client_seq' => 1, 'revealed' => true],
+            ['id' => Ulid::generate(), 'term_id' => $clean, 'verdict' => 'known', 'collection_id' => $col, 'decided_at' => now()->toIso8601String(), 'client_seq' => 2, 'revealed' => false],
+        ]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 2);
+
+    // The flip flag is recorded on the append-only log…
+    $this->assertDatabaseHas('term_triages', ['term_id' => $peeked, 'revealed' => true]);
+    $this->assertDatabaseHas('term_triages', ['term_id' => $clean, 'revealed' => false]);
+
+    // …and it pulled the peeked term's verification check in (early ~7d vs the trusted ~90d).
+    $peekedDue = \Illuminate\Support\Facades\DB::table('user_term_progress')->where('term_id', $peeked)->value('due_at');
+    $cleanDue = \Illuminate\Support\Facades\DB::table('user_term_progress')->where('term_id', $clean)->value('due_at');
+    expect(new DateTimeImmutable((string) $peekedDue))->toBeLessThan(new DateTimeImmutable((string) $cleanDue));
+});
+
 it('ignores a re-uploaded triage batch', function () {
     [$user, $token] = learner();
     [, $money] = seedCollectionWith($user, 'money', 'деньги');

@@ -33,9 +33,16 @@ final class TriageVerificationPlanner
      */
     private const PHRASE_MIN_READ_MS = 900;
 
-    public function plan(?CefrLevel $termLevel, CefrLevel $userLevel, ?int $latencyMs, bool $isPhrase): VerificationPlan
-    {
-        $risky = $this->aboveUserLevel($termLevel, $userLevel) || $this->tooFastToBeRead($latencyMs, $isPhrase);
+    public function plan(
+        ?CefrLevel $termLevel,
+        CefrLevel $userLevel,
+        ?int $latencyMs,
+        bool $isPhrase,
+        ?bool $revealed = null,
+    ): VerificationPlan {
+        $risky = $this->aboveUserLevel($termLevel, $userLevel)
+            || $this->tooFastToBeRead($latencyMs, $isPhrase)
+            || $revealed === true; // needed the hint (translation/example) to say "known" → check it soon
 
         return new VerificationPlan(
             dueInDays: $risky ? self::EARLY_CHECK_DAYS : self::LONG_INTERVAL_DAYS,

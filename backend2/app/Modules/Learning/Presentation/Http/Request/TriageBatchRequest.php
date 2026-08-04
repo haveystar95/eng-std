@@ -25,6 +25,7 @@ final class TriageBatchRequest extends FormRequest
             'triages.*.client_seq' => ['required', 'integer', 'min:0'], // per-user monotonic; orders verdicts
             'triages.*.collection_id' => ['sometimes', 'nullable', 'string', 'size:26'],
             'triages.*.latency_ms' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'triages.*.revealed' => ['sometimes', 'nullable', 'boolean'], // flipped the card before deciding
         ];
     }
 }

@@ -50,3 +50,22 @@ it('treats a missing or zero latency as neutral, not impossibly fast', function 
         ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 0, false)->risky)->toBeFalse()
         ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 0, true)->risky)->toBeFalse();
 });
+
+it('flags a revealed «known» as risky — the hint was needed, so check it soon', function () {
+    // An otherwise-safe verdict (below level, unhurried) becomes risky once the card was flipped:
+    // «known» reached by reading the translation/example is recognition of a hint, not recall.
+    $plan = $this->planner->plan(CefrLevel::A1, CefrLevel::C2, 1000, true, true);
+
+    expect($plan->risky)->toBeTrue()->and($plan->dueInDays)->toBe(7);
+});
+
+it('applies the revealed factor to words too, not just phrases', function () {
+    // Unlike latency (phrases only), peeking is a valid tell for a single word as well.
+    expect($this->planner->plan(CefrLevel::A1, CefrLevel::C2, null, false, true)->risky)->toBeTrue();
+});
+
+it('does not flag a not-revealed «known» on that account', function () {
+    // false and null are both "no peek" → neutral; risk must come from level/latency instead.
+    expect($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 1000, true, false)->risky)->toBeFalse()
+        ->and($this->planner->plan(CefrLevel::A1, CefrLevel::C2, 1000, true, null)->risky)->toBeFalse();
+});

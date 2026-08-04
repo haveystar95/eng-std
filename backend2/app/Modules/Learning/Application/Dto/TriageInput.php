@@ -21,5 +21,6 @@ final readonly class TriageInput
         public int $clientSeq,
         public ?CollectionId $collectionId = null,
         public ?int $latencyMs = null,
+        public ?bool $revealed = null, // flipped the card before deciding
     ) {}
 }

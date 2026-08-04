@@ -30,5 +30,6 @@ final class Triage
         public readonly int $clientSeq,
         public readonly ?CollectionId $collectionId = null,
         public readonly ?int $latencyMs = null,
+        public readonly ?bool $revealed = null, // flipped the card before deciding — a risk signal for «known»
     ) {}
 }

@@ -72,6 +72,7 @@ final class TriageController
                 clientSeq: (int) $row['client_seq'],
                 collectionId: $collectionId,
                 latencyMs: isset($row['latency_ms']) ? (int) $row['latency_ms'] : null,
+                revealed: isset($row['revealed']) ? (bool) $row['revealed'] : null,
             );
         }
 

@@ -565,9 +565,19 @@ paths:
                         minimum: 0
                         nullable: true
                         description: >-
-                          Client-measured, from the card's paint to the swipe. Optional: null
-                          means unmeasured (treated neutrally — never risky). Do NOT send 0 for an
-                          unmeasured swipe — send null. (Risk-by-latency applies to phrases only.)
+                          Client-measured, from the card's paint to the FIRST event (flip or swipe,
+                          whichever comes first). Optional: null means unmeasured (treated neutrally
+                          — never risky). Do NOT send 0 for an unmeasured swipe — send null.
+                          (Risk-by-latency applies to phrases only.)
+                      revealed:
+                        type: boolean
+                        nullable: true
+                        description: >-
+                          Whether the learner flipped the card (revealing the translation/example)
+                          before deciding. A `known` verdict reached after peeking is a weaker
+                          signal — recognition of a hint, not recall — so it drives an early
+                          verification check, on par with a too-fast swipe. Null/false = no peek
+                          (neutral); applies to words and phrases alike.
       responses:
         '200':
           description: Applied
