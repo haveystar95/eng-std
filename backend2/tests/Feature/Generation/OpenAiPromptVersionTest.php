@@ -5,8 +5,13 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+
+// The Observability listener logs each outbound OpenAI call to api_request_logs; wrap in a
+// transaction so those rows roll back instead of leaking into other tests' queries.
+uses(RefreshDatabase::class);
 
 function fakeOpenAi(): void
 {

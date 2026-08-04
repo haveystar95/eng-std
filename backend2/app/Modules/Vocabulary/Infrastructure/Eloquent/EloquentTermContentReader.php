@@ -43,6 +43,9 @@ final class EloquentTermContentReader implements TermContentReader
                 translation: $translations[$id] ?? null,
                 example: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 exampleTranslation: $example !== null && $example->sentence_translation !== null ? (string) $example->sentence_translation : null,
+                imageUrl: $term->image_url !== null ? (string) $term->image_url : null,
+                imageAuthor: $term->image_author !== null ? (string) $term->image_author : null,
+                imageAuthorUrl: $term->image_author_url !== null ? (string) $term->image_author_url : null,
             );
         }
 

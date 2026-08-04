@@ -21,5 +21,8 @@ final readonly class CollectionSyncRow
         public int $itemsCount,
         public ?string $source, // curated | ai | user — drives the client's badge/origin
         public ?string $type,   // system | shared | custom — my / store / generated distinction
+        public ?string $imageUrl = null,        // Pexels cover (null = none/placeholder)
+        public ?string $imageAuthor = null,     // photographer credit
+        public ?string $imageAuthorUrl = null,  // link to the photographer
     ) {}
 }

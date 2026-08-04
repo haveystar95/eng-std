@@ -102,6 +102,9 @@ final class SyncController
             'items_count' => $r->itemsCount,
             'source' => $r->source,
             'type' => $r->type,
+            'image_url' => $r->imageUrl,
+            'image_author' => $r->imageAuthor,
+            'image_author_url' => $r->imageAuthorUrl,
         ];
     }
 
@@ -133,6 +136,9 @@ final class SyncController
             'translation' => $c?->translation,
             'example' => $c?->example,
             'example_translation' => $c?->exampleTranslation,
+            'image_url' => $c?->imageUrl,
+            'image_author' => $c?->imageAuthor,
+            'image_author_url' => $c?->imageAuthorUrl,
         ];
     }
 

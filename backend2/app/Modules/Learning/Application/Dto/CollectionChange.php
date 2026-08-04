@@ -25,5 +25,8 @@ final readonly class CollectionChange
         public int $itemsCount,
         public ?string $source,
         public ?string $type,
+        public ?string $imageUrl = null,
+        public ?string $imageAuthor = null,
+        public ?string $imageAuthorUrl = null,
     ) {}
 }

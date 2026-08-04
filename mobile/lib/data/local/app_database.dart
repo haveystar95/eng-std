@@ -22,6 +22,10 @@ class Collections extends Table {
   IntColumn get itemsCount => integer().withDefault(const Constant(0))();
   TextColumn get source => text().nullable()(); // curated | ai | user — origin badge
   TextColumn get type => text().nullable()(); // system | shared | custom
+  // Pexels cover + attribution (A3). Populated by sync; screens/badges are Part B.
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get imageAuthor => text().nullable()();
+  TextColumn get imageAuthorUrl => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -50,6 +54,10 @@ class Terms extends Table {
   TextColumn get translation => text().nullable()();
   TextColumn get example => text().nullable()();
   TextColumn get exampleTranslation => text().nullable()();
+  // Pexels photo + attribution (A3). Populated by sync; the card image is Part B.
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get imageAuthor => text().nullable()();
+  TextColumn get imageAuthorUrl => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -129,7 +137,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -139,6 +147,15 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(collections, collections.source); // origin badge
             await m.addColumn(collections, collections.type);
+          }
+          if (from < 4) {
+            // Pexels imagery (A3): cover on collections, photo on terms, + attribution each.
+            await m.addColumn(collections, collections.imageUrl);
+            await m.addColumn(collections, collections.imageAuthor);
+            await m.addColumn(collections, collections.imageAuthorUrl);
+            await m.addColumn(terms, terms.imageUrl);
+            await m.addColumn(terms, terms.imageAuthor);
+            await m.addColumn(terms, terms.imageAuthorUrl);
           }
         },
       );

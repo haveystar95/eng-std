@@ -136,6 +136,9 @@ class SyncService {
           itemsCount: Value((c['items_count'] as int?) ?? 0),
           source: Value(c['source'] as String?),
           type: Value(c['type'] as String?),
+          imageUrl: Value(c['image_url'] as String?),
+          imageAuthor: Value(c['image_author'] as String?),
+          imageAuthorUrl: Value(c['image_author_url'] as String?),
         ));
       }
     }
@@ -171,6 +174,9 @@ class SyncService {
         translation: Value(t['translation'] as String?),
         example: Value(t['example'] as String?),
         exampleTranslation: Value(t['example_translation'] as String?),
+        imageUrl: Value(t['image_url'] as String?),
+        imageAuthor: Value(t['image_author'] as String?),
+        imageAuthorUrl: Value(t['image_author_url'] as String?),
       ));
     }
 

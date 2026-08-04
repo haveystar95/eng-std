@@ -672,6 +672,9 @@ paths:
                                 items_count: { type: integer }
                                 source: { type: string, nullable: true, enum: [curated, ai, user], description: 'origin; drives the client badge' }
                                 type: { type: string, nullable: true, enum: [system, shared, custom], description: 'my / store / generated distinction' }
+                                image_url: { type: string, nullable: true, description: 'Pexels cover; null = none, show a placeholder' }
+                                image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
+                                image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
                           collection_items:
                             type: array
                             items:
@@ -698,6 +701,9 @@ paths:
                                 translation: { type: string, nullable: true }
                                 example: { type: string, nullable: true }
                                 example_translation: { type: string, nullable: true }
+                                image_url: { type: string, nullable: true, description: 'Pexels photo; null = none, show a placeholder' }
+                                image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
+                                image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
                           progress:
                             type: array
                             items:

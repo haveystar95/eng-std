@@ -28,7 +28,7 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
         }
 
         $rows = $q->orderBy('updated_at')->orderBy('id')
-            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count', 'source', 'type']);
+            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count', 'source', 'type', 'image_url', 'image_author', 'image_author_url']);
 
         return array_values($rows->map(fn ($r): CollectionSyncRow => new CollectionSyncRow(
             id: (string) $r->id,
@@ -42,6 +42,9 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
             itemsCount: (int) $r->items_count,
             source: $r->source !== null ? (string) $r->source : null,
             type: $r->type !== null ? (string) $r->type : null,
+            imageUrl: $r->image_url !== null ? (string) $r->image_url : null,
+            imageAuthor: $r->image_author !== null ? (string) $r->image_author : null,
+            imageAuthorUrl: $r->image_author_url !== null ? (string) $r->image_author_url : null,
         ))->all());
     }
 

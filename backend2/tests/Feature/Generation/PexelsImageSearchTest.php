@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+
+// The Observability listener logs each outbound call to api_request_logs; wrap in a transaction so
+// those rows roll back and don't leak into other tests (e.g. the outbound-logging assertion).
+uses(RefreshDatabase::class);
 
 function pexels(): PexelsImageSearch
 {

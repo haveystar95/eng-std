@@ -43,6 +43,46 @@ it('returns a full snapshot when since is omitted', function () {
         ->and($collection['type'])->toBe('custom');
 });
 
+it('ships image url + attribution on terms and collections when present', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    DB::table('terms')->where('id', $money)->update([
+        'image_url' => 'https://img/money.jpg',
+        'image_author' => 'Jane Doe',
+        'image_author_url' => 'https://pexels.com/@jane',
+    ]);
+    DB::table('collections')->where('id', $col)->update([
+        'image_url' => 'https://img/cover.jpg',
+        'image_author' => 'Cover Photographer',
+        'image_author_url' => 'https://pexels.com/@cover',
+    ]);
+
+    $data = sync($this, $token);
+
+    $term = collect($data['changes']['terms'])->firstWhere('id', $money);
+    expect($term['image_url'])->toBe('https://img/money.jpg')
+        ->and($term['image_author'])->toBe('Jane Doe')
+        ->and($term['image_author_url'])->toBe('https://pexels.com/@jane')
+        ->and($term)->not->toHaveKey('image_api_prompt');   // server-internal, never shipped
+
+    $collection = collect($data['changes']['collections'])->firstWhere('id', $col);
+    expect($collection['image_url'])->toBe('https://img/cover.jpg')
+        ->and($collection['image_author'])->toBe('Cover Photographer')
+        ->and($collection['image_author_url'])->toBe('https://pexels.com/@cover');
+});
+
+it('leaves image fields null when a term has no photo', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $data = sync($this, $token);
+    $term = collect($data['changes']['terms'])->firstWhere('id', $money);
+
+    expect($term['image_url'])->toBeNull()
+        ->and($term['image_author'])->toBeNull();
+});
+
 it('returns only changes after since', function () {
     [$user, $token] = learner();
     [$colA] = seedCollectionWith($user, 'apple', 'яблоко');

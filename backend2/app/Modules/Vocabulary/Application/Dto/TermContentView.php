@@ -16,5 +16,8 @@ final readonly class TermContentView
         public ?string $translation,     // primary translation (source language)
         public ?string $example,
         public ?string $exampleTranslation,
+        public ?string $imageUrl = null,        // Pexels photo (null = none/placeholder)
+        public ?string $imageAuthor = null,     // photographer credit (Pexels licence)
+        public ?string $imageAuthorUrl = null,  // link to the photographer
     ) {}
 }

@@ -99,6 +99,39 @@ class $CollectionsTable extends Collections
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageAuthorMeta = const VerificationMeta(
+    'imageAuthor',
+  );
+  @override
+  late final GeneratedColumn<String> imageAuthor = GeneratedColumn<String>(
+    'image_author',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta(
+    'imageAuthorUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageAuthorUrl = GeneratedColumn<String>(
+    'image_author_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -121,6 +154,9 @@ class $CollectionsTable extends Collections
     itemsCount,
     source,
     type,
+    imageUrl,
+    imageAuthor,
+    imageAuthorUrl,
     updatedAt,
   ];
   @override
@@ -191,6 +227,30 @@ class $CollectionsTable extends Collections
         type.isAcceptableOrUnknown(data['type']!, _typeMeta),
       );
     }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    if (data.containsKey('image_author')) {
+      context.handle(
+        _imageAuthorMeta,
+        imageAuthor.isAcceptableOrUnknown(
+          data['image_author']!,
+          _imageAuthorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_author_url')) {
+      context.handle(
+        _imageAuthorUrlMeta,
+        imageAuthorUrl.isAcceptableOrUnknown(
+          data['image_author_url']!,
+          _imageAuthorUrlMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -244,6 +304,18 @@ class $CollectionsTable extends Collections
         DriftSqlType.string,
         data['${effectivePrefix}type'],
       ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+      imageAuthor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_author'],
+      ),
+      imageAuthorUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_author_url'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -267,6 +339,9 @@ class Collection extends DataClass implements Insertable<Collection> {
   final int itemsCount;
   final String? source;
   final String? type;
+  final String? imageUrl;
+  final String? imageAuthor;
+  final String? imageAuthorUrl;
   final DateTime updatedAt;
   const Collection({
     required this.id,
@@ -278,6 +353,9 @@ class Collection extends DataClass implements Insertable<Collection> {
     required this.itemsCount,
     this.source,
     this.type,
+    this.imageUrl,
+    this.imageAuthor,
+    this.imageAuthorUrl,
     required this.updatedAt,
   });
   @override
@@ -306,6 +384,15 @@ class Collection extends DataClass implements Insertable<Collection> {
     if (!nullToAbsent || type != null) {
       map['type'] = Variable<String>(type);
     }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || imageAuthor != null) {
+      map['image_author'] = Variable<String>(imageAuthor);
+    }
+    if (!nullToAbsent || imageAuthorUrl != null) {
+      map['image_author_url'] = Variable<String>(imageAuthorUrl);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -333,6 +420,15 @@ class Collection extends DataClass implements Insertable<Collection> {
           ? const Value.absent()
           : Value(source),
       type: type == null && nullToAbsent ? const Value.absent() : Value(type),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      imageAuthor: imageAuthor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthor),
+      imageAuthorUrl: imageAuthorUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthorUrl),
       updatedAt: Value(updatedAt),
     );
   }
@@ -352,6 +448,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       itemsCount: serializer.fromJson<int>(json['itemsCount']),
       source: serializer.fromJson<String?>(json['source']),
       type: serializer.fromJson<String?>(json['type']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
+      imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -368,6 +467,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       'itemsCount': serializer.toJson<int>(itemsCount),
       'source': serializer.toJson<String?>(source),
       'type': serializer.toJson<String?>(type),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'imageAuthor': serializer.toJson<String?>(imageAuthor),
+      'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -382,6 +484,9 @@ class Collection extends DataClass implements Insertable<Collection> {
     int? itemsCount,
     Value<String?> source = const Value.absent(),
     Value<String?> type = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
+    Value<String?> imageAuthor = const Value.absent(),
+    Value<String?> imageAuthorUrl = const Value.absent(),
     DateTime? updatedAt,
   }) => Collection(
     id: id ?? this.id,
@@ -393,6 +498,11 @@ class Collection extends DataClass implements Insertable<Collection> {
     itemsCount: itemsCount ?? this.itemsCount,
     source: source.present ? source.value : this.source,
     type: type.present ? type.value : this.type,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    imageAuthor: imageAuthor.present ? imageAuthor.value : this.imageAuthor,
+    imageAuthorUrl: imageAuthorUrl.present
+        ? imageAuthorUrl.value
+        : this.imageAuthorUrl,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Collection copyWithCompanion(CollectionsCompanion data) {
@@ -414,6 +524,13 @@ class Collection extends DataClass implements Insertable<Collection> {
           : this.itemsCount,
       source: data.source.present ? data.source.value : this.source,
       type: data.type.present ? data.type.value : this.type,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      imageAuthor: data.imageAuthor.present
+          ? data.imageAuthor.value
+          : this.imageAuthor,
+      imageAuthorUrl: data.imageAuthorUrl.present
+          ? data.imageAuthorUrl.value
+          : this.imageAuthorUrl,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -430,6 +547,9 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('itemsCount: $itemsCount, ')
           ..write('source: $source, ')
           ..write('type: $type, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAuthor: $imageAuthor, ')
+          ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -446,6 +566,9 @@ class Collection extends DataClass implements Insertable<Collection> {
     itemsCount,
     source,
     type,
+    imageUrl,
+    imageAuthor,
+    imageAuthorUrl,
     updatedAt,
   );
   @override
@@ -461,6 +584,9 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.itemsCount == this.itemsCount &&
           other.source == this.source &&
           other.type == this.type &&
+          other.imageUrl == this.imageUrl &&
+          other.imageAuthor == this.imageAuthor &&
+          other.imageAuthorUrl == this.imageAuthorUrl &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -474,6 +600,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<int> itemsCount;
   final Value<String?> source;
   final Value<String?> type;
+  final Value<String?> imageUrl;
+  final Value<String?> imageAuthor;
+  final Value<String?> imageAuthorUrl;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const CollectionsCompanion({
@@ -486,6 +615,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.itemsCount = const Value.absent(),
     this.source = const Value.absent(),
     this.type = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAuthor = const Value.absent(),
+    this.imageAuthorUrl = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -499,6 +631,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.itemsCount = const Value.absent(),
     this.source = const Value.absent(),
     this.type = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAuthor = const Value.absent(),
+    this.imageAuthorUrl = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -513,6 +648,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<int>? itemsCount,
     Expression<String>? source,
     Expression<String>? type,
+    Expression<String>? imageUrl,
+    Expression<String>? imageAuthor,
+    Expression<String>? imageAuthorUrl,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -526,6 +664,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (itemsCount != null) 'items_count': itemsCount,
       if (source != null) 'source': source,
       if (type != null) 'type': type,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (imageAuthor != null) 'image_author': imageAuthor,
+      if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -541,6 +682,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<int>? itemsCount,
     Value<String?>? source,
     Value<String?>? type,
+    Value<String?>? imageUrl,
+    Value<String?>? imageAuthor,
+    Value<String?>? imageAuthorUrl,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -554,6 +698,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       itemsCount: itemsCount ?? this.itemsCount,
       source: source ?? this.source,
       type: type ?? this.type,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageAuthor: imageAuthor ?? this.imageAuthor,
+      imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -589,6 +736,15 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (imageAuthor.present) {
+      map['image_author'] = Variable<String>(imageAuthor.value);
+    }
+    if (imageAuthorUrl.present) {
+      map['image_author_url'] = Variable<String>(imageAuthorUrl.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -610,6 +766,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('itemsCount: $itemsCount, ')
           ..write('source: $source, ')
           ..write('type: $type, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAuthor: $imageAuthor, ')
+          ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1062,6 +1221,39 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageAuthorMeta = const VerificationMeta(
+    'imageAuthor',
+  );
+  @override
+  late final GeneratedColumn<String> imageAuthor = GeneratedColumn<String>(
+    'image_author',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta(
+    'imageAuthorUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageAuthorUrl = GeneratedColumn<String>(
+    'image_author_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1082,6 +1274,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     translation,
     example,
     exampleTranslation,
+    imageUrl,
+    imageAuthor,
+    imageAuthorUrl,
     updatedAt,
   ];
   @override
@@ -1146,6 +1341,30 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         ),
       );
     }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    if (data.containsKey('image_author')) {
+      context.handle(
+        _imageAuthorMeta,
+        imageAuthor.isAcceptableOrUnknown(
+          data['image_author']!,
+          _imageAuthorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_author_url')) {
+      context.handle(
+        _imageAuthorUrlMeta,
+        imageAuthorUrl.isAcceptableOrUnknown(
+          data['image_author_url']!,
+          _imageAuthorUrlMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -1191,6 +1410,18 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         DriftSqlType.string,
         data['${effectivePrefix}example_translation'],
       ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+      imageAuthor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_author'],
+      ),
+      imageAuthorUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_author_url'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -1212,6 +1443,9 @@ class Term extends DataClass implements Insertable<Term> {
   final String? translation;
   final String? example;
   final String? exampleTranslation;
+  final String? imageUrl;
+  final String? imageAuthor;
+  final String? imageAuthorUrl;
   final DateTime updatedAt;
   const Term({
     required this.id,
@@ -1221,6 +1455,9 @@ class Term extends DataClass implements Insertable<Term> {
     this.translation,
     this.example,
     this.exampleTranslation,
+    this.imageUrl,
+    this.imageAuthor,
+    this.imageAuthorUrl,
     required this.updatedAt,
   });
   @override
@@ -1242,6 +1479,15 @@ class Term extends DataClass implements Insertable<Term> {
     }
     if (!nullToAbsent || exampleTranslation != null) {
       map['example_translation'] = Variable<String>(exampleTranslation);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || imageAuthor != null) {
+      map['image_author'] = Variable<String>(imageAuthor);
+    }
+    if (!nullToAbsent || imageAuthorUrl != null) {
+      map['image_author_url'] = Variable<String>(imageAuthorUrl);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1266,6 +1512,15 @@ class Term extends DataClass implements Insertable<Term> {
       exampleTranslation: exampleTranslation == null && nullToAbsent
           ? const Value.absent()
           : Value(exampleTranslation),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      imageAuthor: imageAuthor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthor),
+      imageAuthorUrl: imageAuthorUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthorUrl),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1285,6 +1540,9 @@ class Term extends DataClass implements Insertable<Term> {
       exampleTranslation: serializer.fromJson<String?>(
         json['exampleTranslation'],
       ),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
+      imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1299,6 +1557,9 @@ class Term extends DataClass implements Insertable<Term> {
       'translation': serializer.toJson<String?>(translation),
       'example': serializer.toJson<String?>(example),
       'exampleTranslation': serializer.toJson<String?>(exampleTranslation),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'imageAuthor': serializer.toJson<String?>(imageAuthor),
+      'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -1311,6 +1572,9 @@ class Term extends DataClass implements Insertable<Term> {
     Value<String?> translation = const Value.absent(),
     Value<String?> example = const Value.absent(),
     Value<String?> exampleTranslation = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
+    Value<String?> imageAuthor = const Value.absent(),
+    Value<String?> imageAuthorUrl = const Value.absent(),
     DateTime? updatedAt,
   }) => Term(
     id: id ?? this.id,
@@ -1324,6 +1588,11 @@ class Term extends DataClass implements Insertable<Term> {
     exampleTranslation: exampleTranslation.present
         ? exampleTranslation.value
         : this.exampleTranslation,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    imageAuthor: imageAuthor.present ? imageAuthor.value : this.imageAuthor,
+    imageAuthorUrl: imageAuthorUrl.present
+        ? imageAuthorUrl.value
+        : this.imageAuthorUrl,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Term copyWithCompanion(TermsCompanion data) {
@@ -1341,6 +1610,13 @@ class Term extends DataClass implements Insertable<Term> {
       exampleTranslation: data.exampleTranslation.present
           ? data.exampleTranslation.value
           : this.exampleTranslation,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      imageAuthor: data.imageAuthor.present
+          ? data.imageAuthor.value
+          : this.imageAuthor,
+      imageAuthorUrl: data.imageAuthorUrl.present
+          ? data.imageAuthorUrl.value
+          : this.imageAuthorUrl,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1355,6 +1631,9 @@ class Term extends DataClass implements Insertable<Term> {
           ..write('translation: $translation, ')
           ..write('example: $example, ')
           ..write('exampleTranslation: $exampleTranslation, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAuthor: $imageAuthor, ')
+          ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1369,6 +1648,9 @@ class Term extends DataClass implements Insertable<Term> {
     translation,
     example,
     exampleTranslation,
+    imageUrl,
+    imageAuthor,
+    imageAuthorUrl,
     updatedAt,
   );
   @override
@@ -1382,6 +1664,9 @@ class Term extends DataClass implements Insertable<Term> {
           other.translation == this.translation &&
           other.example == this.example &&
           other.exampleTranslation == this.exampleTranslation &&
+          other.imageUrl == this.imageUrl &&
+          other.imageAuthor == this.imageAuthor &&
+          other.imageAuthorUrl == this.imageAuthorUrl &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -1393,6 +1678,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
   final Value<String?> translation;
   final Value<String?> example;
   final Value<String?> exampleTranslation;
+  final Value<String?> imageUrl;
+  final Value<String?> imageAuthor;
+  final Value<String?> imageAuthorUrl;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermsCompanion({
@@ -1403,6 +1691,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.translation = const Value.absent(),
     this.example = const Value.absent(),
     this.exampleTranslation = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAuthor = const Value.absent(),
+    this.imageAuthorUrl = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1414,6 +1705,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.translation = const Value.absent(),
     this.example = const Value.absent(),
     this.exampleTranslation = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAuthor = const Value.absent(),
+    this.imageAuthorUrl = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1426,6 +1720,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Expression<String>? translation,
     Expression<String>? example,
     Expression<String>? exampleTranslation,
+    Expression<String>? imageUrl,
+    Expression<String>? imageAuthor,
+    Expression<String>? imageAuthorUrl,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -1437,6 +1734,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
       if (translation != null) 'translation': translation,
       if (example != null) 'example': example,
       if (exampleTranslation != null) 'example_translation': exampleTranslation,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (imageAuthor != null) 'image_author': imageAuthor,
+      if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1450,6 +1750,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Value<String?>? translation,
     Value<String?>? example,
     Value<String?>? exampleTranslation,
+    Value<String?>? imageUrl,
+    Value<String?>? imageAuthor,
+    Value<String?>? imageAuthorUrl,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -1461,6 +1764,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
       translation: translation ?? this.translation,
       example: example ?? this.example,
       exampleTranslation: exampleTranslation ?? this.exampleTranslation,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageAuthor: imageAuthor ?? this.imageAuthor,
+      imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1490,6 +1796,15 @@ class TermsCompanion extends UpdateCompanion<Term> {
     if (exampleTranslation.present) {
       map['example_translation'] = Variable<String>(exampleTranslation.value);
     }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (imageAuthor.present) {
+      map['image_author'] = Variable<String>(imageAuthor.value);
+    }
+    if (imageAuthorUrl.present) {
+      map['image_author_url'] = Variable<String>(imageAuthorUrl.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -1509,6 +1824,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
           ..write('translation: $translation, ')
           ..write('example: $example, ')
           ..write('exampleTranslation: $exampleTranslation, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAuthor: $imageAuthor, ')
+          ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2605,6 +2923,9 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<int> itemsCount,
       Value<String?> source,
       Value<String?> type,
+      Value<String?> imageUrl,
+      Value<String?> imageAuthor,
+      Value<String?> imageAuthorUrl,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -2619,6 +2940,9 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<int> itemsCount,
       Value<String?> source,
       Value<String?> type,
+      Value<String?> imageUrl,
+      Value<String?> imageAuthor,
+      Value<String?> imageAuthorUrl,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -2674,6 +2998,21 @@ class $$CollectionsTableFilterComposer
 
   ColumnFilters<String> get type => $composableBuilder(
     column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2737,6 +3076,21 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -2787,6 +3141,19 @@ class $$CollectionsTableAnnotationComposer
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -2831,6 +3198,9 @@ class $$CollectionsTableTableManager
                 Value<int> itemsCount = const Value.absent(),
                 Value<String?> source = const Value.absent(),
                 Value<String?> type = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> imageAuthor = const Value.absent(),
+                Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion(
@@ -2843,6 +3213,9 @@ class $$CollectionsTableTableManager
                 itemsCount: itemsCount,
                 source: source,
                 type: type,
+                imageUrl: imageUrl,
+                imageAuthor: imageAuthor,
+                imageAuthorUrl: imageAuthorUrl,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -2857,6 +3230,9 @@ class $$CollectionsTableTableManager
                 Value<int> itemsCount = const Value.absent(),
                 Value<String?> source = const Value.absent(),
                 Value<String?> type = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> imageAuthor = const Value.absent(),
+                Value<String?> imageAuthorUrl = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion.insert(
@@ -2869,6 +3245,9 @@ class $$CollectionsTableTableManager
                 itemsCount: itemsCount,
                 source: source,
                 type: type,
+                imageUrl: imageUrl,
+                imageAuthor: imageAuthor,
+                imageAuthorUrl: imageAuthorUrl,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -3114,6 +3493,9 @@ typedef $$TermsTableCreateCompanionBuilder =
       Value<String?> translation,
       Value<String?> example,
       Value<String?> exampleTranslation,
+      Value<String?> imageUrl,
+      Value<String?> imageAuthor,
+      Value<String?> imageAuthorUrl,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -3126,6 +3508,9 @@ typedef $$TermsTableUpdateCompanionBuilder =
       Value<String?> translation,
       Value<String?> example,
       Value<String?> exampleTranslation,
+      Value<String?> imageUrl,
+      Value<String?> imageAuthor,
+      Value<String?> imageAuthorUrl,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -3170,6 +3555,21 @@ class $$TermsTableFilterComposer extends Composer<_$AppDatabase, $TermsTable> {
 
   ColumnFilters<String> get exampleTranslation => $composableBuilder(
     column: $table.exampleTranslation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3223,6 +3623,21 @@ class $$TermsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -3265,6 +3680,19 @@ class $$TermsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -3304,6 +3732,9 @@ class $$TermsTableTableManager
                 Value<String?> translation = const Value.absent(),
                 Value<String?> example = const Value.absent(),
                 Value<String?> exampleTranslation = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> imageAuthor = const Value.absent(),
+                Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion(
@@ -3314,6 +3745,9 @@ class $$TermsTableTableManager
                 translation: translation,
                 example: example,
                 exampleTranslation: exampleTranslation,
+                imageUrl: imageUrl,
+                imageAuthor: imageAuthor,
+                imageAuthorUrl: imageAuthorUrl,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -3326,6 +3760,9 @@ class $$TermsTableTableManager
                 Value<String?> translation = const Value.absent(),
                 Value<String?> example = const Value.absent(),
                 Value<String?> exampleTranslation = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<String?> imageAuthor = const Value.absent(),
+                Value<String?> imageAuthorUrl = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion.insert(
@@ -3336,6 +3773,9 @@ class $$TermsTableTableManager
                 translation: translation,
                 example: example,
                 exampleTranslation: exampleTranslation,
+                imageUrl: imageUrl,
+                imageAuthor: imageAuthor,
+                imageAuthorUrl: imageAuthorUrl,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
