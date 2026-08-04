@@ -113,6 +113,12 @@ view landed; client reads now come from drift, not the network):
   in `/sync`; the client caches them opportunistically from `/stats` while online, so offline they're
   last-known (never wrong-to-zero, but stale). For accurate offline streak, add `daily_user_stats`
   (today's row) to the delta feed.
+- **Triage deck now builds from the local DB (ODBD-3191), so it opens offline.** One residual: an
+  `unknown` swipe writes no progress row and `term_triages` isn't in the delta feed, so the local
+  `TriagedTerms` marker is the only thing keeping such a term out of the deck. It's wiped on
+  reinstall, so after a reinstall unknown-swiped terms reappear for re-triage (known/unsure survive
+  via their synced progress rows). Acceptable (reinstall re-syncs everything). To fully match the
+  server, add a `triaged` signal (or `term_triages`) to `/sync`.
 - **Orphaned local `terms`/`progress` after a collection delete aren't GC'd on the client.** Harmless
   (reads join through `collection_items`, so orphans don't render; future syncs stop re-sending them),
   but the rows linger. GC on the client if local size ever matters.
