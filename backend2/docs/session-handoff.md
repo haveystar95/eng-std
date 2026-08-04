@@ -18,40 +18,53 @@ order**, one commit per point, gates green, `invariant-reviewer` before `/close-
 ## What's done this session (with commit hashes)
 
 - **A5 — eval set + `generation:eval`** (`135a056`): `tests/Fixtures/generation-prompts.json` (~20
-  prompts: everyday/travel/professional/thematic/abstract/very-short/English/adversarial) + a manual
-  quality command in `Generation/Presentation/Console` (delivered-vs-requested, phrase & idiom+phrasal
-  ratio, dup rate, CEFR spread, image-prompt coverage read reflectively, tokens/cost; `--fake` for a
-  no-spend smoke; fake toggled via `config`, no Infrastructure import → deptrac green). **Real v2
-  baseline saved** at `docs/generation-eval-v2-baseline.json` (20/20 ok, 1 under-delivered, avg phrase
-  56%, idiom/phrasal 0%, no dupes, ~$0.27). Diff v3 against this.
-- **A4 hygiene, part 1** (`1201122`): retry only transient errors — a rejected `InvalidGeneratedDraft`
-  now fails terminally (no 3× re-spend on a deterministic bad draft); `GenerationRequest::recordAttempt()`
-  persists model/tokens/cost the instant the model answers, so a later validation failure keeps its
-  spend; truncated raw response kept on new `generation_requests.raw_response` for diagnosis. 18
-  Generation unit tests + 6 feature tests green.
+  prompts) + a manual quality command in `Generation/Presentation/Console` (delivered-vs-requested,
+  phrase & idiom+phrasal ratio, dup rate, CEFR spread, image-prompt coverage read reflectively,
+  tokens/cost; `--fake` for a no-spend smoke; fake toggled via `config`, no Infrastructure import).
+  **Real v2 baseline** at `docs/generation-eval-v2-baseline.json` (20/20 ok, 1 under-delivered, avg
+  phrase 56%, idiom/phrasal 0%, no dupes, ~$0.27). Diff v3 against this.
+- **A4 — pipeline hygiene, COMPLETE (3 parts):**
+  - part 1 (`1201122`): retry only transient errors (a rejected `InvalidGeneratedDraft` fails
+    terminally — no 3× re-spend); `recordAttempt()` persists tokens/cost the instant the model
+    answers, so a validation failure keeps its spend; truncated raw response on new
+    `generation_requests.raw_response`.
+  - part 3 (`98d9021`): `GET /me` `generation: {limit, used, remaining, resets_at}` (absolute
+    next-UTC-midnight instant, client renders local). New `GetGenerationQuota` query; deptrac edge
+    `Identity/Presentation → Generation/Application`; OpenAPI + tests.
+  - part 2 (`f3ab9ea`): prompt-cache lookup — on a `(normalized_prompt, langs, prompt_version)` hit,
+    reuse the prior collection's **term set** (fresh personal collection, `model='cache'`, no LLM
+    call); prompt_version bump invalidates. New `GetCollectionTermSet` (non-owner-scoped Collections read)
+    + `findCacheableCollection` repo finder.
+- Docs (`4a117cd` + updates): ROADMAP "Generation → full feature" block; **timezone decision made**
+  (absolute-UTC-instant; `profiles.timezone` deferred to the streak, then revisit quota day-boundary).
 
-## What's next (Part-C order)
+**Test state:** 30 Generation/Identity unit + feature tests green; `composer arch/stan/test` clean.
 
-1. **A4 part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
-   prompt_version)` hit, reuse the prior succeeded request's **term set** (fresh personal collection,
-   no LLM call). Needs a Generation repo finder + a non-owner-scoped Collections read of a collection's
-   term ids/title. Decisions to make: reuse cached title (yes), no quota refund on hit, model=`cache`/cost 0.
-2. **A4 part 3 — quota in `GET /me`** (`generation: {limit, used, remaining, resets_at}`).
-   **BLOCKED on an open decision:** no per-user timezone is stored, quota resets on UTC-day boundaries,
-   so `resets_at` "in the user's tz" can't be computed — pick (a) absolute-UTC-instant, client renders
-   local, or (b) add `profiles.timezone`. See ROADMAP Open questions.
-3. **A2** overshoot (size+30%) + one top-up ("avoid these terms") + honest `requested/delivered`.
-4. **A1+A6** type enum `word|phrase|idiom|phrasal_verb` (migration + `TermType` VO + every word/phrase
-   branch treats idiom/phrasal_verb as phrase-like) + prompt **v3** → **eval-compare v2↔v3** before
-   flipping `PROMPT_VERSION` to `v3`.
-5. **A3** Pexels images: `ImageSearchPort` + adapter + fake; async `AttachImagesJob` (throttled, empty=null,
-   no retry, skip terms that already have an image); `image_url` + `image_author`/`image_author_url` on
-   terms and `image_url` on collections; **arrive via `/sync`** (additive) — client re-syncs a few times
-   after generation to pull them promptly.
-6. **B** contract (OpenAPI + `/sync` additive: term `image_url`, collection `image_url`, new type values)
-   → drift **v4** (`Terms.imageUrl`, `Collections.imageUrl`, new `PendingGenerations` table) → create
-   screen (size chips, placeholder rotation, quota-aware button) → generating→ready card → first-contact
-   «Разобрать» → type badges.
+## What's next (Part-C order) — A2 is the next commit
+
+**A2 — fix under-delivery ("asked 15, got 13").** Self-contained backend. Design worked out this
+session (implement fresh):
+- **Overshoot:** ask the model for `ceil(requested * 1.3)` (capped at the 25 hard max), not `requested`.
+- **Decouple validator target from the model ask:** `DraftValidator::validate` should take an explicit
+  target count (the requested size) instead of reading `brief->size`, because the model brief now carries
+  the overshoot count. Add a **"supplemental" mode** (or a flag) that skips the `MIN_ITEMS` floor — a
+  top-up returning 2 items is valid, not a failure.
+- **One top-up, no loop:** if `delivered < requested`, one more `generate` with an **avoid list** of the
+  already-accepted texts. Pass the avoid list via a new `GenerationBrief.excludeTexts` and have the
+  **adapter append it to the user message** (do NOT edit the frozen `generate_collection.v2.md`; v3 gets
+  a proper AVOID block in A6). Merge + dedup + trim to `requested`. Accumulate tokens/cost across both calls.
+- **Honest result:** add `generation_requests.delivered_count` (migration + entity + mapper), surface
+  `requested`/`delivered` on `GET /generations/{id}` (`GenerationRequestView` + `GenerationRequestResource`
+  + OpenAPI). Client shows "13 из 15".
+- Tests: overshoot trims to requested; top-up fills a shortfall; still-short is an honest success (not a
+  failure) with delivered<requested recorded.
+
+Then: **A1+A6** (type enum `word|phrase|idiom|phrasal_verb` — migration + `TermType` VO + every
+word/phrase branch treats idiom/phrasal_verb as phrase-like — + prompt **v3**, then eval-compare v2↔v3
+before flipping `PROMPT_VERSION`); **A3** (Pexels images: `ImageSearchPort`/adapter/fake, async
+`AttachImagesJob` throttled/empty=null/no-retry/skip-existing; `image_url`+`image_author`/`image_author_url`
+on terms, `image_url` on collections; arrive via `/sync`); **B** (contract + drift **v4** with
+`PendingGenerations` table + create screen + generating→ready card + first-contact «Разобрать» + type badges).
 
 ## Decisions that must not be silently revised (this feature)
 
@@ -83,7 +96,9 @@ Delta sync + local drift DB + collection view + triage-from-local: built, device
 device. See git log if detail is needed.
 
 ## Known limitations / deferred (also in ROADMAP)
-- **No per-user timezone stored** → blocks `resets_at`-in-local-tz (A4 part 3). Decide before building it.
+- **No per-user timezone stored** → `resets_at` is an absolute UTC instant (decided). `profiles.timezone`
+  arrives with the **streak** (learning-srs needs local-midnight day boundaries); revisit the quota
+  day-boundary then.
 - Out of scope for this feature (next block): extending an existing collection, «как прошло» loop,
   curated starter content, push instead of polling.
 - (carried) two-device `client_seq` collision; stale reviews upload pipeline (422s); triage-after-reinstall
