@@ -179,7 +179,7 @@ class _WordCard extends StatelessWidget {
                 child: Text(word.term,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
               ),
-              if (word.type == 'phrase')
+              if (word.isPhrase)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(

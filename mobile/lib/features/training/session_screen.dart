@@ -130,7 +130,7 @@ class _WordListRow extends StatelessWidget {
               ],
             ),
           ),
-          if (word.type == 'phrase') ...[
+          if (word.isPhrase) ...[
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -465,7 +465,7 @@ class _Flashcard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (word.type == 'phrase')
+                    if (word.isPhrase)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(

@@ -75,6 +75,11 @@ class Word {
   /// Convenience so existing screens that used `word.id` keep working.
   String get id => termId;
 
+  /// Phrase-like = anything the server didn't explicitly tag `word`. Keeps the client
+  /// forward-compatible: new/unknown types (idiom, phrasal_verb, …) fall back to phrase
+  /// behaviour rather than being mis-treated as single words.
+  bool get isPhrase => type != 'word';
+
   factory Word.fromJson(Map<String, dynamic> j) => Word(
         termId: (j['term_id'] ?? j['id']) as String,
         term: ((j['text'] ?? j['term']) as String?) ?? '',
@@ -245,7 +250,9 @@ class TriageCard {
     this.exampleTranslation,
   });
 
-  bool get isPhrase => type == 'phrase';
+  /// Phrase-like = anything not explicitly `word`, so new/unknown types (idiom,
+  /// phrasal_verb, …) fall back to phrase behaviour instead of being treated as words.
+  bool get isPhrase => type != 'word';
 
   factory TriageCard.fromJson(Map<String, dynamic> j) => TriageCard(
         termId: j['term_id'] as String,
