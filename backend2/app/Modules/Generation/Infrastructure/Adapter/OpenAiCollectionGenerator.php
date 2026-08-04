@@ -78,6 +78,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
             tokensIn: is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null,
             tokensOut: is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null,
             rawResponse: mb_substr($content, 0, 4000), // truncated: enough to diagnose, not the whole payload
+            imageApiPrompt: is_string($decoded['collection_image_prompt'] ?? null) ? $decoded['collection_image_prompt'] : null,
         );
     }
 
@@ -100,6 +101,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
                 cefr: is_string($row['cefr'] ?? null) ? $row['cefr'] : null,
                 transcription: is_string($row['transcription'] ?? null) ? $row['transcription'] : null,
                 exampleTranslation: is_string($row['example_translation'] ?? null) ? $row['example_translation'] : null,
+                imageApiPrompt: is_string($row['image_api_prompt'] ?? null) ? $row['image_api_prompt'] : null,
             );
         }
 
@@ -141,34 +143,64 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
         return self::LANGUAGE_NAMES[$code] ?? $code;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Structured-output schema. The image fields (`image_api_prompt` per item,
+     * `collection_image_prompt` at the top) are ADDED only for v4+ — v2/v3 are frozen and must not
+     * be forced to emit image queries (that would break the isolated v2↔v3 taxonomy eval). Strict
+     * mode requires every declared property, so a field only appears in the schema when its prompt
+     * version actually asks for it.
+     *
+     * @return array<string, mixed>
+     */
     private function schema(): array
     {
+        $images = $this->imageFieldsEnabled();
+
+        $itemProps = [
+            'text' => ['type' => 'string'],
+            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
+            'transcription' => ['type' => 'string'],
+            'translation' => ['type' => 'string'],
+            'example' => ['type' => 'string'],
+            'example_translation' => ['type' => 'string'],
+            'cefr' => ['type' => 'string', 'enum' => ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']],
+        ];
+        $itemRequired = ['text', 'type', 'transcription', 'translation', 'example', 'example_translation', 'cefr'];
+        if ($images) {
+            $itemProps['image_api_prompt'] = ['type' => 'string']; // may be "" when un-illustratable
+            $itemRequired[] = 'image_api_prompt';
+        }
+
+        $topProps = [
+            'title' => ['type' => 'string'],
+            'description' => ['type' => 'string'],
+            'items' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'properties' => $itemProps,
+                    'required' => $itemRequired,
+                ],
+            ],
+        ];
+        $topRequired = ['title', 'description', 'items'];
+        if ($images) {
+            $topProps['collection_image_prompt'] = ['type' => 'string'];
+            $topRequired[] = 'collection_image_prompt';
+        }
+
         return [
             'type' => 'object',
             'additionalProperties' => false,
-            'properties' => [
-                'title' => ['type' => 'string'],
-                'description' => ['type' => 'string'],
-                'items' => [
-                    'type' => 'array',
-                    'items' => [
-                        'type' => 'object',
-                        'additionalProperties' => false,
-                        'properties' => [
-                            'text' => ['type' => 'string'],
-                            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
-                            'transcription' => ['type' => 'string'],
-                            'translation' => ['type' => 'string'],
-                            'example' => ['type' => 'string'],
-                            'example_translation' => ['type' => 'string'],
-                            'cefr' => ['type' => 'string', 'enum' => ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']],
-                        ],
-                        'required' => ['text', 'type', 'transcription', 'translation', 'example', 'example_translation', 'cefr'],
-                    ],
-                ],
-            ],
-            'required' => ['title', 'description', 'items'],
+            'properties' => $topProps,
+            'required' => $topRequired,
         ];
+    }
+
+    /** v4 and later add the image-search fields to the schema; earlier versions are frozen without them. */
+    private function imageFieldsEnabled(): bool
+    {
+        return preg_match('/\d+/', $this->promptVersion, $m) === 1 && (int) $m[0] >= 4;
     }
 }

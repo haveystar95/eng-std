@@ -126,6 +126,7 @@ final readonly class GenerationPipeline
             tokensIn: $primary->tokensIn,
             tokensOut: $primary->tokensOut,
             rawResponse: $primary->rawResponse,
+            imageApiPrompt: $primary->imageApiPrompt, // keep the primary pass's cover query
         );
     }
 

@@ -68,6 +68,7 @@ final class DraftValidator
                 cefr: $cefr,
                 transcription: $this->nullableText($item->transcription),
                 exampleTranslation: $this->nullableText($item->exampleTranslation),
+                imageApiPrompt: $this->nullableText($item->imageApiPrompt), // "" (un-illustratable) → null
             );
         }
 
@@ -94,6 +95,7 @@ final class DraftValidator
             tokensIn: $draft->tokensIn,
             tokensOut: $draft->tokensOut,
             rawResponse: $draft->rawResponse,
+            imageApiPrompt: $this->nullableText($draft->imageApiPrompt),
         );
     }
 
