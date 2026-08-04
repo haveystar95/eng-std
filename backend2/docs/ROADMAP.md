@@ -96,7 +96,26 @@ UI/UX). Plan agreed with the user; working in Part-C order, one commit per point
   answers so a validation failure no longer vanishes from the spend model; truncated raw response
   kept on `generation_requests.raw_response` for diagnosis.
 
-**Next (Part C order):**
+**Done since (committed 2026-08-04):**
+- **A1 + A6 — type taxonomy + prompt v3** (`130089e`, `758bf81`, `237b795`, `62f9dc9`): term type
+  `word|phrase|idiom|phrasal_verb`; prompt v3 (taxonomy + AVOID block); eval-compared v2↔v3, flipped.
+- **A3 — Pexels images** (`196ce20`, `b1d5f9f`, `fd47322`, `cba9661`, `cc86110`, `c3525ab`): nullable
+  image columns on terms + collections; `ImageSearchPort`/Pexels adapter/fake; prompt v4 (per-item
+  `image_api_prompt` + `collection_image_prompt`, gated to v4+); flipped `PROMPT_VERSION='v4'` after a
+  real-LLM eval (no A1 regression, img% 100%, `docs/generation-eval-v4.json`); async best-effort
+  `AttachImagesJob` (never-overwrite, empty=null-no-retry, transient=retry+backoff, adapter throttle);
+  `image_url` + attribution shipped additively in `/sync` + mirrored in the mobile drift schema (v4).
+  Passed `invariant-reviewer` CLEAN. **A3 findings (deferred):** (1) not exercised with a real
+  `PEXELS_API_KEY` — none set, so `IMAGE_DRIVER=pexels` will 401 and leave images null until a key is
+  added; not run on device. (2) cache-path collection covers are re-searched (one extra Pexels call
+  per cache hit) rather than copying the source URL — accepted. Also fixed a latent test-isolation
+  flake (RefreshDatabase on two outbound-calling generation tests whose `api_request_logs` leaked).
+
+**Next — Part B (client UI/UX):** create screen, generating→ready card, image display (drift columns
+ready), per-item type badges, first-contact «Разобрать». First step: add `PEXELS_API_KEY` and verify
+one real generation attaches photos end-to-end.
+
+**Still open from Part C (backend hygiene, optional):**
 - **A4 hygiene, part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
   prompt_version)` hit, reuse the prior succeeded request's **term set** (build a fresh personal
   collection, no LLM call). Needs a Generation repo finder + a non-owner-scoped Collections read for
@@ -106,11 +125,8 @@ UI/UX). Plan agreed with the user; working in Part-C order, one commit per point
   deptrac edge `Identity/Presentation → Generation/Application` (legal, cross-module via Application).
   **OPEN QUESTION (below): no per-user timezone is stored, so `resets_at` in the user's tz can't be
   computed — decide absolute-UTC-instant vs. adding a profile timezone.**
-- Then **A2** (overshoot + one top-up + honest `requested/delivered`), **A1+A6** (type enum
-  `word|phrase|idiom|phrasal_verb` + prompt v3, eval-compare v2↔v3 before flipping `PROMPT_VERSION`),
-  **A3** (Pexels images: `ImageSearchPort`/adapter/fake, async `AttachImagesJob`, `image_url` +
-  attribution on terms/collections, arriving via `/sync`), **B** (contract + drift v4 + the create
-  screen, the generating→ready card, first-contact «Разобрать», type badges).
+- (A2, A1+A6, A3 above are DONE — see "Done since". A4 parts 2–3 are the only remaining backend
+  hygiene items and are optional; the headline path now moves to **Part B**.)
 
 **Decided with the user (do not silently revise):** system decides collection composition (no
 size-slider — client sends маленькая/средняя/большая → 10/15/22); pending-generation card lives in a
