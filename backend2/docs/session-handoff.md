@@ -8,135 +8,108 @@ Branch: `feat/mobile-backend2-cutover` — **not merged to `main`**. Last update
 
 ---
 
-## Current task: Generation → full feature (in progress)
+## Current task: Generation → full feature — **backend + client complete**
 
-Turning the generator into the product's headline feature: backend + contract + UI/UX, **Part-C
-order**, one commit per point, gates green, `invariant-reviewer` before finishing. **A5, A4, A2,
-A1, A6 and now A3 (Pexels images) are DONE and committed.** v4 is live (`PROMPT_VERSION='v4'`).
-The next block is **Part B** (client screens: the create flow, generating→ready card, image
-display + type badges, first-contact «Разобрать»). A3 touched `/sync` + the mobile drift schema
-**additively** (no rename) — safe stopping point; the just-landed changes are **not device-run**.
+The generator is now a full feature end-to-end: backend (A1–A6 + A3 images), contract, and the
+client UX (Part B). **A3 (Pexels images) is done and verified server-side on a real key. Part B (the
+client half) is done and code-verified (`flutter analyze` + 23 tests), but NOT yet run on the
+device.** The one remaining step for the whole feature is a **device end-to-end run** (scenarios
+below). v4 is the live prompt (`PROMPT_VERSION='v4'`).
 
-## What's done this session — A3 Pexels images (with commit hashes)
+## What's done this session (with commit hashes)
 
-- **Schema** (`196ce20`): nullable `image_url`, `image_api_prompt`, `image_author`,
-  `image_author_url` on `terms` **and** `collections`. Additive, no backfill, no constraint.
-- **ImageSearchPort + adapters** (`b1d5f9f`): `ImageSearchPort` (Generation/Application/Port,
-  mirrors `CollectionGeneratorPort`) → `PexelsImageSearch` + `FakePexelsImageSearch`. Failures
-  classified: empty result = `null` (no retry); rate-limit/5xx/network = `TransientImageSearchError`
-  (retryable); bad key (401) fails loudly. Config `services.pexels.*` + `IMAGE_DRIVER=pexels|fake`.
-- **Prompt v4 + eval** (`fd47322`): v4 = v3 + per-item `image_api_prompt` + top-level
-  `collection_image_prompt`; image fields gated into the structured-output schema for **v4+ only**
-  (v2/v3 stay frozen). Eval baseline `docs/generation-eval-v4.json`.
-- **Flip to v4** (`cba9661`): `PROMPT_VERSION='v4'`, isolated commit after the eval.
-- **AttachImagesJob** (`cc86110`): async, best-effort job dispatched (via a
-  `DispatchesImageAttachment` port) after generation succeeds — **fresh and prompt-cache paths**.
-  Reads only terms/collection lacking `image_url` but carrying a query, searches Pexels, writes
-  url + attribution. Never overwrites (a shared term is imaged once); empty = null-no-retry;
-  transient = job retry+backoff (tries=3); throttle lives in the Pexels adapter. `image_api_prompt`
-  rides through `ImportTerm`/`CreateGeneratedCollection`, ensure-style (back-filled on dedup, never
-  overwritten).
-- **/sync + drift** (`c3525ab`): `image_url` + `image_author` + `image_author_url` ship additively
-  in the term and collection sync payloads (`image_api_prompt` stays server-internal, never shipped);
-  OpenAPI `/sync` schema updated. Mobile drift `Terms`/`Collections` gain the same three columns
-  (schema v4 + `addColumn` migration) and populate them in the sync apply. **No client screens.**
-  Same commit fixes a latent test-isolation flake (RefreshDatabase on the two outbound-calling
-  generation tests, whose `api_request_logs` writes were leaking).
+**A3 — Pexels images (backend):**
+- Schema (`196ce20`), `ImageSearchPort`+Pexels adapter+fake (`b1d5f9f`), prompt v4 (`fd47322`),
+  flip to v4 (`cba9661`), `AttachImagesJob` (`cc86110`), `/sync`+drift image fields (`c3525ab`).
+- Verified end-to-end server-side (`27551f9`): a real `generation:make` attached a Pexels cover +
+  8/8 term photos with attribution. invariant-reviewer CLEAN.
 
-**Test state:** 241 backend tests green in Docker (3× consecutive `composer test` to confirm the
-flake fix); `composer arch` 0 violations, `stan` clean. Mobile: `flutter analyze` clean, widget
-tests green, `build_runner` regenerated. The full A3 diff passed **`invariant-reviewer` → CLEAN**.
+**Part B — client generation UX (`42fd584`):**
+- **B1 create screen** (`generate_screen.dart`): situation field + rotating placeholder; size
+  маленькая/средняя/большая → 10/15/22 (no number); levels default from profile; target-language
+  dropdown (source = UI language) — first language choice in the UI, lives on the collection; button
+  greys out on exhausted quota with remaining + resets_at (device-local) from `/me`.
+- **B2 pending card + reconciliation**: client-only `PendingGenerations` drift table (schema v5),
+  survives an app kill; `GenerationController` polls + reconciles on launch/resume (succeeded→sync+drop,
+  failed→error card+retry, pending/running→poll, >24h/404→drop+log). Card faces: generating / failed
+  («Повторить») / ready (cover, title, count, "получилось N из M"), tap → collection with a
+  first-contact «Разобрать» banner.
+- **B3 images + type badges**: collection cover on the tile + ready card; term photo on the word card
+  with a typed placeholder; badges слово/фраза/идиома/фраз. глагол (unknown→phrase); "Фото: Author ·
+  Pexels" credit with a clickable author link (**new dep: `url_launcher`**). Images dock in via the
+  drift stream (no reload).
+- Data: image fields on `WordCollection`/`Word`; `GenerationQuota`/`GenerationStatusView`; `/me`
+  quota parsed but never cached; `jobStatus` carries requested/delivered; fixed the old
+  `status=='done'` bug (backend says `succeeded`).
 
-## v4 vs v3 — the eval that justified the flip (real gpt-4o, 25 prompts)
-
-| metric | v3 | v4 |
-|---|---|---|
-| under-delivered | 0 | 0 |
-| avg phrase-like % | 65 | 64 |
-| avg idiom+phrasal % | 8 | 8 |
-| duplicates | 0 | 0 |
-| **img% (items with a non-empty image query)** | — | **100%** |
-| cost (25 prompts) | $0.43 | $0.49 |
-
-No A1 regression from adding the image field; img% is a clean 100%; cost +15% from the extra
-image-prompt output tokens (expected). The single eval error (`adv_inject` → empty content) is a
-nondeterministic adversarial refusal — the same prompt succeeds 3/3 on retry and never leaks the
-system prompt. Single run, model nondeterministic — re-run `generation:eval` if a v5 needs a fresh
-compare.
+**Also:** removed the synthetic-owner test data from the dev DB (1 collection, 8 terms, 1 request).
 
 ## Verified vs. code-only
 
 | Item | How verified | Status |
 |---|---|---|
-| A3 backend (schema, port, job, /sync) | 241 tests green; arch 0, stan clean; migrations applied on dev DB | ✅ (backend) |
-| Never-overwrite / empty=null / transient=retry | unit (Term aggregate) + feature (all FakePexels modes, Postgres) | ✅ (backend) |
-| v4 no A1 regression + img% 100% | real gpt-4o eval, 25 prompts (table above) | ✅ (real-LLM, single run) |
-| Real Pexels attach on a real generation | key set; live `generation:make "иду открывать счёт в банке"` → cover + 8/8 terms imaged with attribution | ✅ (real Pexels + real gpt-4o) |
-| A2 top-up firing on the real model | not observed (overshoot sufficed); unit-tested only | ⚠️ unobserved (carried) |
-| Mobile drift v4 + sync mapping | `flutter analyze` + widget tests green; `build_runner` ran | ⚠️ code-only |
-| Anything on the **device** | nothing this session touched a running client | ⚠️ device run pending (Part B) |
+| A3 backend (schema, port, job, /sync) | 241 tests; arch 0, stan clean; invariant-reviewer CLEAN | ✅ (backend) |
+| Real Pexels attach on a real generation | live `generation:make` → cover + 8/8 terms imaged w/ attribution | ✅ (real Pexels + gpt-4o) |
+| v4 no A1 regression + img% 100% | real eval, 25 prompts (`docs/generation-eval-v4.json`) | ✅ (real-LLM, single run) |
+| Part B client (create/pending/images/badges) | `flutter analyze` clean; 23 widget/unit tests green | ⚠️ **code-only — NOT on device** |
+| Anything on the **device** | nothing this session ran on a client | ⚠️ **device run pending (the one open step)** |
 
 ## Decisions that must not be silently revised (this feature)
 
-- **`image_api_prompt` is server-internal** — the model's search query, stored on term/collection,
-  used by AttachImagesJob, and **never shipped in `/sync`**. Only `image_url` + `image_author` +
-  `image_author_url` reach the client.
-- **Images cached per term globally, never overwritten** — a term is searched once; the first photo
-  is stable and shared by every collection referencing it (`Term::attachImage` no-ops if imaged;
-  the pending-reader filters `image_url IS NULL`). Same never-overwrite for the collection cover.
-- **Empty search result = null, no retry** (a valid placeholder-on-client state). Only
-  rate-limit/5xx/network is `TransientImageSearchError` → job retries with backoff. A bad key fails
-  loudly (non-transient).
-- **Image schema is gated to v4+** — v2/v3 are frozen and must not be forced to emit image queries,
-  or the isolated v2↔v3 taxonomy eval stops meaning anything. The adapter adds the image fields to
-  the structured-output schema only when the prompt version's number is ≥ 4.
-- **Attach is best-effort and out-of-band** — dispatched AFTER generation succeeds, through a port,
-  and never blocks or fails the generation. A terminal job failure just leaves null images.
-- **Throttle lives in the Pexels adapter** (not the caller) so spacing travels with the vendor and
-  the fake stays instant.
-- **A3 touched `/sync` + drift additively only** — no field renamed; the device-verified sync
-  contract is untouched.
-- (carried) A2 cache stores the FINAL accepted set; spend is SUMMED; overshoot/top-up live only in
-  `GenerationPipeline` (the eval must go through it). Prompt vN is a versioned file + an eval-compare
-  before flipping. Client tolerates unknown term types (phrase-like fallback). System decides
-  composition (маленькая/средняя/большая → 10/15/22). Pending-generation card in a drift table with
-  start-up reconciliation. `resets_at` absolute UTC; quota UTC-day. Sync cursor in `sync_meta` not
-  keychain; `since` inclusive; triage `TriagedTerms` marker; process rules change in `.claude/`.
+- **All client reads come from the local DB** (drift v5; image fields present). The network is used
+  ONLY for `POST /generations` and status polling — nothing else in Part B hits the API on a read.
+- **The pending-generation card lives in a drift table** (`PendingGenerations`), survives an app
+  kill, and is reconciled on launch/resume — never held only in memory.
+- **`image_api_prompt` is server-internal** — never shipped in `/sync`, never on the client.
+- **Images cached per term globally, never overwritten**; empty result = null (no retry); transient
+  = job retry+backoff; image schema gated to v4+.
+- **Language lives on the collection** — the create screen's target-language dropdown is the first
+  UI language choice; no workspaces.
+- **Size is a feel, not a number** — маленькая/средняя/большая → 10/15/22, decided server-side.
+- **`/me` generation quota is fetched fresh, never cached** in the persisted user (staleness); the
+  server is the real gate — an offline/unknown quota still lets the user try.
+- **`resets_at` is an absolute UTC instant**, rendered in device-local time.
+- (carried) A2 cache stores the final accepted set; spend summed; prompt vN = versioned file +
+  eval-compare before flip; client tolerates unknown term types (phrase-like); sync cursor in
+  `sync_meta` not keychain; `since` inclusive; process rules change in `.claude/`.
 
-## What's next — Part B (client UI/UX)
+## What's next — device end-to-end run (the finish line)
 
-First concrete step: **add a `PEXELS_API_KEY` to `backend2/.env`** (dashboard key) and run one real
-generation to confirm photos actually attach and reach the device via `/sync` — this is the one
-unobserved end-to-end link. Then Part B: the create screen, the generating→ready card, image
-display on the collection card + study card (drift columns are already there), per-item type badges
-(where the new idiom/phrasal_verb types get their UI), and the first-contact «Разобрать». Then the
-deferred blocks (extending an existing collection, «как прошло» loop, curated starter wiring, push
-instead of polling).
+Run `flutter run --release -d 00008110-000A7CCC3492801E` and walk these scenarios (each maps to code
+that is currently only test-verified):
 
-## Known limitations / deferred (also in ROADMAP)
+1. **Generation end-to-end with images** — create a collection ("иду в банк"); the pending card
+   shows generating → ready with a real cover; open it; term photos + attribution appear as `/sync`
+   lands them (screen updates from the drift stream, no reload); tap an author link → opens Pexels.
+2. **Under-delivery** — a prompt the model under-fills; ready card shows "получилось N из M".
+3. **Kill during generation** — start a generation, kill the app before it finishes; relaunch → the
+   pending card is still there and reconciliation resumes polling → ready (or error).
+4. **Quota exhausted** — after the daily limit, the create button is grey with remaining +
+   resets_at in local time; submit is blocked client-side.
+5. **Offline view after sync** — with the collection synced, go offline; the collection, its words
+   and images (cached) still open and render from the local DB.
+6. **TTS on a non-standard target language** — generate with a non-en target; the speaker button
+   pronounces in that language (`ttsLocaleFor`).
 
-- **A3 verified end-to-end server-side** — `PEXELS_API_KEY` set; a live `generation:make` attached a
-  real Pexels cover + all 8 term photos with attribution. Remaining gap: **not run on the device** —
-  the `/sync` image fields and drift v4 migration are code-only (the `/sync` serializer is unit-proven
-  but the phone hasn't pulled real image URLs yet). Part B closes this.
-- Cache-path collection covers are re-searched (one extra Pexels call per cache hit) rather than
-  copying the source collection's URL — accepted (terms are already imaged and skipped; Pexels
-  budget is ample). Only the cover query is copied, not the URL/attribution.
-- A2 top-up path unobserved on the real model; +23% token cost from overshoot accepted. v-to-v
-  evals are single-run.
-- No per-user timezone → `resets_at` absolute UTC; revisit the quota day-boundary with the streak.
-- (carried) two-device `client_seq` collision; stale reviews upload pipeline (422s);
-  triage-after-reinstall resurrection; stale offline streak/reviews-today; orphan local
-  terms/progress not GC'd; `/study/progress` field-name mismatch (endpoint unused by the app).
+## Known limitations / deferred
+
+- **Whole Part B is unverified on device** — the above run is the gate.
+- Study/session cards still come from the network (online-only, pre-existing) and don't show term
+  photos — images are on the drift-backed screens (collection tile + word card) by design.
+- New client dep **`url_launcher`** (image attribution links). iOS opens https externally without
+  Info.plist changes.
+- A3 server findings (carried): cache-path collection covers are re-searched (one extra Pexels call
+  per cache hit) rather than copying the source URL — accepted.
+- (carried) A2 top-up unobserved on the real model; two-device `client_seq` collision; stale reviews
+  upload pipeline; triage-after-reinstall resurrection; stale offline streak/reviews-today; orphan
+  local terms/progress not GC'd; `/study/progress` field-name mismatch (endpoint unused by the app).
 
 ## Running / verifying
 - Backend2 in Docker (`wt_app` :8001, `wt_db` :5433). Gates: commit hook runs `composer check`
-  (arch+stan+test). Manual: `docker compose exec app composer arch|stan|test`. **`composer stan`
-  analyzes `app/` only.**
-- `generation:eval [--fake] [--prompt=vN] [--out=path]` — manual quality gauge; the real driver
-  costs money and runs the full A2 overshoot+top-up pipeline. Baselines:
-  `docs/generation-eval-v3.json`, `docs/generation-eval-v4.json`.
-- Image search: `IMAGE_DRIVER=fake` (or bind `FakePexelsImageSearch` in a test) exercises the attach
-  job with no network; modes `found|not_found|rate_limited|transient_error` via `PEXELS_FAKE_MODE`.
-- Mobile: `flutter analyze` clean; drift codegen `dart run build_runner build`; device run
-  `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E`.
+  (arch+stan+test) for backend, `flutter analyze` for mobile. **`composer stan` analyzes `app/` only.**
+- `generation:eval [--fake] [--prompt=vN] [--out=path]` — manual quality gauge (real driver costs
+  money). Baselines: `docs/generation-eval-v3.json`, `docs/generation-eval-v4.json`.
+- Image search: `IMAGE_DRIVER=fake` + `PEXELS_FAKE_MODE=found|not_found|rate_limited|transient_error`
+  exercises the attach job with no network. `PEXELS_API_KEY` is set for real runs.
+- Mobile: `flutter analyze` clean; drift codegen `dart run build_runner build`; `flutter test`
+  (23 tests). Device: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E`.

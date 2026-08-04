@@ -112,8 +112,15 @@ UI/UX). Plan agreed with the user; working in Part-C order, one commit per point
   copying the source URL — accepted. Also fixed a latent test-isolation flake (RefreshDatabase on two
   outbound-calling generation tests whose `api_request_logs` leaked).
 
-**Next — Part B (client UI/UX):** create screen, generating→ready card, image display (drift columns
-ready + real image URLs now flowing server-side), per-item type badges, first-contact «Разобрать».
+**Part B — client generation UX (DONE, `42fd584`):** create screen (situation + rotating placeholder,
+size маленькая/средняя/большая→10/15/22, level from profile, target-language dropdown, quota-greyed
+button with remaining+resets_at); pending card backed by a client-only `PendingGenerations` drift
+table (survives kill) with launch/resume reconciliation; images (collection cover + term photo) and
+type badges from the drift stream; Pexels attribution (clickable, adds `url_launcher`); first-contact
+«Разобрать» banner. All reads from the local DB; network only for POST /generations + polling.
+`flutter analyze` clean, 23 tests. **NOT yet run on device — that end-to-end run is the finish line**
+(scenarios in `session-handoff.md`: e2e w/ images, under-delivery, kill-during-gen, quota exhausted,
+offline view after sync, TTS on a non-standard target language).
 
 **Still open from Part C (backend hygiene, optional):**
 - **A4 hygiene, part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
