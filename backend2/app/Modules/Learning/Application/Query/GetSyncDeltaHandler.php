@@ -73,6 +73,7 @@ final readonly class GetSyncDeltaHandler
                 $pCollections[] = new CollectionChange(
                     $row->id, $row->deleted, $row->updatedAt, $row->title, $row->description,
                     $row->topic, $row->sourceLang, $row->targetLang, $row->itemsCount,
+                    $row->source, $row->type,
                 );
             } elseif ($row instanceof CollectionItemSyncRow) {
                 $pItems[] = new CollectionItemChange(

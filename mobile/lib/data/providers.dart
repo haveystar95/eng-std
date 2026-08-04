@@ -189,23 +189,31 @@ WordCollection _toCollection(Collection r) => WordCollection(
       id: r.id,
       title: r.title ?? '',
       description: r.description,
-      // The sync payload carries no source/type; the "ИИ" badge is a known offline gap (ROADMAP).
-      source: 'user',
-      type: 'custom',
+      source: r.source ?? 'user', // now synced → the ИИ badge and my/store/generated origin work
+      type: r.type ?? 'custom',
       wordsCount: r.itemsCount,
       sourceLang: r.sourceLang ?? 'ru',
       targetLang: r.targetLang ?? 'en',
     );
 
-Word _toWord(CollectionTermRow r) => Word(
-      termId: r.term.id,
-      term: r.term.termText ?? '',
-      translation: r.term.translation ?? '',
-      transcription: r.term.transcription,
-      example: r.term.example,
-      type: r.term.type,
-      status: r.state,
-    );
+Word _toWord(CollectionTermRow r) {
+  final s = r.state;
+  // Progress states map to their badge. A term with no progress state that was still swiped in
+  // triage was a "не знаю" (unknown leaves it new, writes no progress row) — flag it as such so it
+  // reads differently from a never-touched word; everything else untouched stays badge-less.
+  final status = (s == 'known' || s == 'review' || s == 'learning' || s == 'relearning')
+      ? s
+      : (r.triaged ? 'unknown' : null);
+  return Word(
+    termId: r.term.id,
+    term: r.term.termText ?? '',
+    translation: r.term.translation ?? '',
+    transcription: r.term.transcription,
+    example: r.term.example,
+    type: r.term.type,
+    status: status,
+  );
+}
 
 /// Mirror of the server's `Mastery`: a term is mastered once self-marked `known`, or proven by
 /// exercises (`review` state) with an interval of at least this many days. Source of truth is

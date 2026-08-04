@@ -36,6 +36,11 @@ it('returns a full snapshot when since is omitted', function () {
     expect($term['op'])->toBe('upsert')
         ->and($term['text'])->toBe('money')
         ->and($term['translation'])->toBe('деньги');
+
+    // source/type ride along so the client can render the origin badge (ИИ / my / store).
+    $collection = collect($data['changes']['collections'])->firstWhere('id', $col);
+    expect($collection['source'])->toBe('user')
+        ->and($collection['type'])->toBe('custom');
 });
 
 it('returns only changes after since', function () {

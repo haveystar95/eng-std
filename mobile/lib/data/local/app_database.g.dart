@@ -81,6 +81,24 @@ class $CollectionsTable extends Collections
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -101,6 +119,8 @@ class $CollectionsTable extends Collections
     sourceLang,
     targetLang,
     itemsCount,
+    source,
+    type,
     updatedAt,
   ];
   @override
@@ -159,6 +179,18 @@ class $CollectionsTable extends Collections
         itemsCount.isAcceptableOrUnknown(data['items_count']!, _itemsCountMeta),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -204,6 +236,14 @@ class $CollectionsTable extends Collections
         DriftSqlType.int,
         data['${effectivePrefix}items_count'],
       )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -225,6 +265,8 @@ class Collection extends DataClass implements Insertable<Collection> {
   final String? sourceLang;
   final String? targetLang;
   final int itemsCount;
+  final String? source;
+  final String? type;
   final DateTime updatedAt;
   const Collection({
     required this.id,
@@ -234,6 +276,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     this.sourceLang,
     this.targetLang,
     required this.itemsCount,
+    this.source,
+    this.type,
     required this.updatedAt,
   });
   @override
@@ -256,6 +300,12 @@ class Collection extends DataClass implements Insertable<Collection> {
       map['target_lang'] = Variable<String>(targetLang);
     }
     map['items_count'] = Variable<int>(itemsCount);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
+    if (!nullToAbsent || type != null) {
+      map['type'] = Variable<String>(type);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -279,6 +329,10 @@ class Collection extends DataClass implements Insertable<Collection> {
           ? const Value.absent()
           : Value(targetLang),
       itemsCount: Value(itemsCount),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
+      type: type == null && nullToAbsent ? const Value.absent() : Value(type),
       updatedAt: Value(updatedAt),
     );
   }
@@ -296,6 +350,8 @@ class Collection extends DataClass implements Insertable<Collection> {
       sourceLang: serializer.fromJson<String?>(json['sourceLang']),
       targetLang: serializer.fromJson<String?>(json['targetLang']),
       itemsCount: serializer.fromJson<int>(json['itemsCount']),
+      source: serializer.fromJson<String?>(json['source']),
+      type: serializer.fromJson<String?>(json['type']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -310,6 +366,8 @@ class Collection extends DataClass implements Insertable<Collection> {
       'sourceLang': serializer.toJson<String?>(sourceLang),
       'targetLang': serializer.toJson<String?>(targetLang),
       'itemsCount': serializer.toJson<int>(itemsCount),
+      'source': serializer.toJson<String?>(source),
+      'type': serializer.toJson<String?>(type),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -322,6 +380,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     Value<String?> sourceLang = const Value.absent(),
     Value<String?> targetLang = const Value.absent(),
     int? itemsCount,
+    Value<String?> source = const Value.absent(),
+    Value<String?> type = const Value.absent(),
     DateTime? updatedAt,
   }) => Collection(
     id: id ?? this.id,
@@ -331,6 +391,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     sourceLang: sourceLang.present ? sourceLang.value : this.sourceLang,
     targetLang: targetLang.present ? targetLang.value : this.targetLang,
     itemsCount: itemsCount ?? this.itemsCount,
+    source: source.present ? source.value : this.source,
+    type: type.present ? type.value : this.type,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Collection copyWithCompanion(CollectionsCompanion data) {
@@ -350,6 +412,8 @@ class Collection extends DataClass implements Insertable<Collection> {
       itemsCount: data.itemsCount.present
           ? data.itemsCount.value
           : this.itemsCount,
+      source: data.source.present ? data.source.value : this.source,
+      type: data.type.present ? data.type.value : this.type,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -364,6 +428,8 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('sourceLang: $sourceLang, ')
           ..write('targetLang: $targetLang, ')
           ..write('itemsCount: $itemsCount, ')
+          ..write('source: $source, ')
+          ..write('type: $type, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -378,6 +444,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     sourceLang,
     targetLang,
     itemsCount,
+    source,
+    type,
     updatedAt,
   );
   @override
@@ -391,6 +459,8 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.sourceLang == this.sourceLang &&
           other.targetLang == this.targetLang &&
           other.itemsCount == this.itemsCount &&
+          other.source == this.source &&
+          other.type == this.type &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -402,6 +472,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<String?> sourceLang;
   final Value<String?> targetLang;
   final Value<int> itemsCount;
+  final Value<String?> source;
+  final Value<String?> type;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const CollectionsCompanion({
@@ -412,6 +484,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.sourceLang = const Value.absent(),
     this.targetLang = const Value.absent(),
     this.itemsCount = const Value.absent(),
+    this.source = const Value.absent(),
+    this.type = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -423,6 +497,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.sourceLang = const Value.absent(),
     this.targetLang = const Value.absent(),
     this.itemsCount = const Value.absent(),
+    this.source = const Value.absent(),
+    this.type = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -435,6 +511,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<String>? sourceLang,
     Expression<String>? targetLang,
     Expression<int>? itemsCount,
+    Expression<String>? source,
+    Expression<String>? type,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -446,6 +524,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (sourceLang != null) 'source_lang': sourceLang,
       if (targetLang != null) 'target_lang': targetLang,
       if (itemsCount != null) 'items_count': itemsCount,
+      if (source != null) 'source': source,
+      if (type != null) 'type': type,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -459,6 +539,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<String?>? sourceLang,
     Value<String?>? targetLang,
     Value<int>? itemsCount,
+    Value<String?>? source,
+    Value<String?>? type,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -470,6 +552,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       sourceLang: sourceLang ?? this.sourceLang,
       targetLang: targetLang ?? this.targetLang,
       itemsCount: itemsCount ?? this.itemsCount,
+      source: source ?? this.source,
+      type: type ?? this.type,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -499,6 +583,12 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     if (itemsCount.present) {
       map['items_count'] = Variable<int>(itemsCount.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -518,6 +608,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('sourceLang: $sourceLang, ')
           ..write('targetLang: $targetLang, ')
           ..write('itemsCount: $itemsCount, ')
+          ..write('source: $source, ')
+          ..write('type: $type, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2511,6 +2603,8 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<String?> sourceLang,
       Value<String?> targetLang,
       Value<int> itemsCount,
+      Value<String?> source,
+      Value<String?> type,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -2523,6 +2617,8 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<String?> sourceLang,
       Value<String?> targetLang,
       Value<int> itemsCount,
+      Value<String?> source,
+      Value<String?> type,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -2568,6 +2664,16 @@ class $$CollectionsTableFilterComposer
 
   ColumnFilters<int> get itemsCount => $composableBuilder(
     column: $table.itemsCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2621,6 +2727,16 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -2665,6 +2781,12 @@ class $$CollectionsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -2707,6 +2829,8 @@ class $$CollectionsTableTableManager
                 Value<String?> sourceLang = const Value.absent(),
                 Value<String?> targetLang = const Value.absent(),
                 Value<int> itemsCount = const Value.absent(),
+                Value<String?> source = const Value.absent(),
+                Value<String?> type = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion(
@@ -2717,6 +2841,8 @@ class $$CollectionsTableTableManager
                 sourceLang: sourceLang,
                 targetLang: targetLang,
                 itemsCount: itemsCount,
+                source: source,
+                type: type,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -2729,6 +2855,8 @@ class $$CollectionsTableTableManager
                 Value<String?> sourceLang = const Value.absent(),
                 Value<String?> targetLang = const Value.absent(),
                 Value<int> itemsCount = const Value.absent(),
+                Value<String?> source = const Value.absent(),
+                Value<String?> type = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion.insert(
@@ -2739,6 +2867,8 @@ class $$CollectionsTableTableManager
                 sourceLang: sourceLang,
                 targetLang: targetLang,
                 itemsCount: itemsCount,
+                source: source,
+                type: type,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

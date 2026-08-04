@@ -23,5 +23,7 @@ final readonly class CollectionChange
         public ?string $sourceLang,
         public ?string $targetLang,
         public int $itemsCount,
+        public ?string $source,
+        public ?string $type,
     ) {}
 }

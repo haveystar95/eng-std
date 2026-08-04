@@ -28,7 +28,7 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
         }
 
         $rows = $q->orderBy('updated_at')->orderBy('id')
-            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count']);
+            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count', 'source', 'type']);
 
         return array_values($rows->map(fn ($r): CollectionSyncRow => new CollectionSyncRow(
             id: (string) $r->id,
@@ -40,6 +40,8 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
             sourceLang: $r->source_lang !== null ? (string) $r->source_lang : null,
             targetLang: $r->target_lang !== null ? (string) $r->target_lang : null,
             itemsCount: (int) $r->items_count,
+            source: $r->source !== null ? (string) $r->source : null,
+            type: $r->type !== null ? (string) $r->type : null,
         ))->all());
     }
 

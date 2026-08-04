@@ -670,6 +670,8 @@ paths:
                                 source_lang: { type: string, nullable: true }
                                 target_lang: { type: string, nullable: true }
                                 items_count: { type: integer }
+                                source: { type: string, nullable: true, enum: [curated, ai, user], description: 'origin; drives the client badge' }
+                                type: { type: string, nullable: true, enum: [system, shared, custom], description: 'my / store / generated distinction' }
                           collection_items:
                             type: array
                             items:

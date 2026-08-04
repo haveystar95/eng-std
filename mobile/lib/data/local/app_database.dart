@@ -20,6 +20,8 @@ class Collections extends Table {
   TextColumn get sourceLang => text().nullable()();
   TextColumn get targetLang => text().nullable()();
   IntColumn get itemsCount => integer().withDefault(const Constant(0))();
+  TextColumn get source => text().nullable()(); // curated | ai | user — origin badge
+  TextColumn get type => text().nullable()(); // system | shared | custom
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -98,10 +100,11 @@ class TriagedTerms extends Table {
 /// One term as shown on the collection view screen: content joined with its live position and
 /// (optional) learning state, so a single reactive query feeds the whole screen.
 class CollectionTermRow {
-  const CollectionTermRow({required this.term, required this.position, this.state});
+  const CollectionTermRow({required this.term, required this.position, this.state, this.triaged = false});
   final Term term; // generated data class for the Terms table
   final int position;
   final String? state; // null → not started (no progress row)
+  final bool triaged; // swiped in triage — lets the UI distinguish "не знаю" (still new) from untouched
 }
 
 /// (collectionId, term progress snapshot) for deriving per-collection progress locally.
@@ -126,13 +129,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.createTable(triagedTerms); // triage-from-local-DB
+          if (from < 3) {
+            await m.addColumn(collections, collections.source); // origin badge
+            await m.addColumn(collections, collections.type);
+          }
         },
       );
 
@@ -148,6 +155,7 @@ class AppDatabase extends _$AppDatabase {
     final query = select(collectionItems).join([
       innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
       leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
     ])
       ..where(collectionItems.collectionId.equals(collectionId))
       ..orderBy([OrderingTerm(expression: collectionItems.position)]);
@@ -157,6 +165,7 @@ class AppDatabase extends _$AppDatabase {
               term: r.readTable(terms),
               position: r.readTable(collectionItems).position,
               state: r.readTableOrNull(termProgress)?.state,
+              triaged: r.readTableOrNull(triagedTerms) != null,
             ))
         .toList());
   }

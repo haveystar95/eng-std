@@ -73,10 +73,6 @@ class SyncService {
     state.value = SyncState.syncing;
     try {
       final since = await _db.getMeta(_kCursor); // null on a fresh install → full snapshot
-      // [sync-accept] Acceptance-run instrumentation. THE reinstall check: after a reinstall this
-      // MUST print `since=∅` — a date here means the cursor outlived the app delete and the
-      // deviation failed. (Trim with the source/type follow-up once the device run passes.)
-      debugPrint('[sync] start since=${since ?? '∅ (full snapshot)'}');
       String? cursor;
       String? serverTime;
       var hasMore = true;
@@ -95,9 +91,6 @@ class SyncService {
 
       // Advance the cursor only after the whole snapshot/delta is durably applied.
       if (serverTime != null) {
-        // [sync-accept] The "changes" check: this must show the cursor MOVING (old → new), else the
-        // next delta re-fetches from the same point and growth stays invisible while data is small.
-        debugPrint('[sync] cursor ${since ?? '∅'} → $serverTime ($pages page(s))');
         await _db.setMeta(_kCursor, serverTime);
       }
       await _refreshStatsCache();
@@ -141,6 +134,8 @@ class SyncService {
           sourceLang: Value(c['source_lang'] as String?),
           targetLang: Value(c['target_lang'] as String?),
           itemsCount: Value((c['items_count'] as int?) ?? 0),
+          source: Value(c['source'] as String?),
+          type: Value(c['type'] as String?),
         ));
       }
     }
@@ -194,12 +189,6 @@ class SyncService {
         lastReviewedAt: Value(_dtn(p['last_reviewed_at'])),
       ));
     }
-
-    // [sync-accept] The two delete kinds are the `…d` counts — collectionDeletes is a whole
-    // collection tombstone, itemDeletes is the soft-deleted item (the migration we reworked).
-    debugPrint('[sync]   collections=${collectionUpserts.length}+${collectionDeletes.length}d '
-        'items=${itemUpserts.length}+${itemDeletes.length}d '
-        'terms=${termUpserts.length} progress=${progressUpserts.length}');
 
     await _db.applyDelta(
       collectionUpserts: collectionUpserts,

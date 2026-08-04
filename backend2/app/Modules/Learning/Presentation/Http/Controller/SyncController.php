@@ -100,6 +100,8 @@ final class SyncController
             'source_lang' => $r->sourceLang,
             'target_lang' => $r->targetLang,
             'items_count' => $r->itemsCount,
+            'source' => $r->source,
+            'type' => $r->type,
         ];
     }
 

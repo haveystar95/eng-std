@@ -19,5 +19,7 @@ final readonly class CollectionSyncRow
         public ?string $sourceLang,
         public ?string $targetLang,
         public int $itemsCount,
+        public ?string $source, // curated | ai | user — drives the client's badge/origin
+        public ?string $type,   // system | shared | custom — my / store / generated distinction
     ) {}
 }

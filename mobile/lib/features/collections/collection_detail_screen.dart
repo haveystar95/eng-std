@@ -156,6 +156,7 @@ class _AddWordFab extends StatelessWidget {
       'known' => (color: AppColors.accent, label: 'Усвоено'),
       'review' => (color: AppColors.know, label: 'Выучено'),
       'learning' || 'relearning' => (color: AppColors.review, label: 'Учу'),
+      'unknown' => (color: AppColors.textMuted, label: 'Не знаю'), // triaged «не знаю»: still new
       _ => null,
     };
 
