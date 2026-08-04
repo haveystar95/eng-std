@@ -104,3 +104,30 @@ it('back-fills a missing cefr on dedup but never overwrites an existing one', fu
     expect($repo->findById($filled)?->cefr())->toBe('B2')
         ->and($repo->findById($kept)?->cefr())->toBe('A2');
 });
+
+it('back-fills a missing image_api_prompt on dedup but never overwrites an existing one', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    // Created without a query, second supplies one → back-filled.
+    $filled = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('withdraw'), TermType::Word, PartOfSpeech::Verb, TermSource::Ai,
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('withdraw'), TermType::Word, PartOfSpeech::Verb, TermSource::Ai,
+        imageApiPrompt: 'atm cash withdrawal',
+    ));
+
+    // Created with a query, second differs → original kept (a shared term is searched once).
+    $kept = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('deposit'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        imageApiPrompt: 'bank deposit slip',
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('deposit'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        imageApiPrompt: 'something else',
+    ));
+
+    expect($repo->findById($filled)?->imageApiPrompt())->toBe('atm cash withdrawal')
+        ->and($repo->findById($kept)?->imageApiPrompt())->toBe('bank deposit slip');
+});

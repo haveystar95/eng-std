@@ -17,5 +17,6 @@ final readonly class CreateGeneratedCollection
         public LanguageCode $targetLang,
         public ?string $description = null,
         public ?string $topic = null,
+        public ?string $imageApiPrompt = null,   // model's cover-image query, for AttachImagesJob
     ) {}
 }

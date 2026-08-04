@@ -36,6 +36,7 @@ final readonly class FindOrCreateTermHandler
             }
             $existing->ensureIpa($command->ipa);
             $existing->ensureCefr($command->cefr);
+            $existing->ensureImageApiPrompt($command->imageApiPrompt);
             $this->terms->save($existing);
 
             return $existing->id();
@@ -54,6 +55,7 @@ final readonly class FindOrCreateTermHandler
             ipa: $command->ipa,
             examples: $command->examples,
             cefr: $command->cefr,
+            imageApiPrompt: $command->imageApiPrompt,
         );
 
         $this->terms->save($term);

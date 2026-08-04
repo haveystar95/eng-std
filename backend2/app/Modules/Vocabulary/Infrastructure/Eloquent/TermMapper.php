@@ -34,6 +34,10 @@ final class TermMapper
             translations: $translations,
             ipa: $model->ipa !== null ? (string) $model->ipa : null,
             cefr: $model->cefr !== null ? (string) $model->cefr : null,
+            imageUrl: $model->image_url !== null ? (string) $model->image_url : null,
+            imageApiPrompt: $model->image_api_prompt !== null ? (string) $model->image_api_prompt : null,
+            imageAuthor: $model->image_author !== null ? (string) $model->image_author : null,
+            imageAuthorUrl: $model->image_author_url !== null ? (string) $model->image_author_url : null,
         );
     }
 
@@ -48,6 +52,10 @@ final class TermMapper
             'pos' => $term->pos()?->value,
             'ipa' => $term->ipa(),
             'cefr' => $term->cefr(),
+            'image_url' => $term->imageUrl(),
+            'image_api_prompt' => $term->imageApiPrompt(),
+            'image_author' => $term->imageAuthor(),
+            'image_author_url' => $term->imageAuthorUrl(),
             'source' => $term->source()->value,
             'created_at' => $term->createdAt(),
         ];

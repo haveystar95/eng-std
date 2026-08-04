@@ -33,12 +33,14 @@ use Tests\Doubles\ImmediateTransactionManager;
 use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
+use Tests\Doubles\RecordingImageAttachmentDispatcher;
 
 beforeEach(function () {
     $this->clock = new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z'));
     $this->requests = new InMemoryGenerationRequestRepository();
     $this->terms = new InMemoryTermRepository();
     $this->collections = new InMemoryCollectionRepository();
+    $this->attach = new RecordingImageAttachmentDispatcher();
     $this->user = UserId::generate();
 
     $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
@@ -50,6 +52,7 @@ beforeEach(function () {
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
+        attachImages: $this->attach,
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -79,6 +82,7 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         createCollection: new CreateGeneratedCollectionHandler($ctx->collections, $ctx->clock),
         addTerm: new AddTermToCollectionHandler($ctx->collections),
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
+        attachImages: new RecordingImageAttachmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );
@@ -132,7 +136,9 @@ it('materializes a collection with deduplicated terms from a pending request', f
     $collection = $this->collections->findById($request->collectionId());
     expect($collection?->itemsCount())->toBe(12)
         ->and($collection?->ownerId()?->value)->toBe($this->user->value)
-        ->and($request?->deliveredCount())->toBe(12); // asked 12, over-generated, trimmed back to 12
+        ->and($request?->deliveredCount())->toBe(12) // asked 12, over-generated, trimmed back to 12
+        // Image attachment is kicked off once, for the new collection, after success.
+        ->and($this->attach->dispatched)->toBe([$request->collectionId()->value]);
 });
 
 it('tops up a shortfall and sums tokens and cost across both model calls', function () {
@@ -221,6 +227,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
+        attachImages: new RecordingImageAttachmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -262,6 +269,7 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
+        attachImages: new RecordingImageAttachmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );

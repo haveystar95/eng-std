@@ -30,6 +30,14 @@ final class Term
 
     private ?string $cefr;
 
+    private ?string $imageUrl;
+
+    private ?string $imageApiPrompt;
+
+    private ?string $imageAuthor;
+
+    private ?string $imageAuthorUrl;
+
     /**
      * @param list<Translation> $translations
      * @param list<Example> $examples
@@ -47,6 +55,10 @@ final class Term
         ?string $ipa,
         array $examples,
         ?string $cefr,
+        ?string $imageUrl,
+        ?string $imageApiPrompt,
+        ?string $imageAuthor,
+        ?string $imageAuthorUrl,
     ) {
         $this->translations = [];
         foreach ($translations as $translation) {
@@ -54,6 +66,10 @@ final class Term
         }
         $this->ipa = $this->cleanIpa($ipa);
         $this->cefr = $this->cleanCefr($cefr);
+        $this->imageUrl = $this->clean($imageUrl);
+        $this->imageApiPrompt = $this->clean($imageApiPrompt);
+        $this->imageAuthor = $this->clean($imageAuthor);
+        $this->imageAuthorUrl = $this->clean($imageAuthorUrl);
         $this->examples = [];
         foreach ($examples as $example) {
             $this->addExample($example);
@@ -77,8 +93,15 @@ final class Term
         ?string $ipa = null,
         array $examples = [],
         ?string $cefr = null,
+        ?string $imageUrl = null,
+        ?string $imageApiPrompt = null,
+        ?string $imageAuthor = null,
+        ?string $imageAuthorUrl = null,
     ): self {
-        return new self($id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples, $cefr);
+        return new self(
+            $id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples, $cefr,
+            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl,
+        );
     }
 
     /** Add a translation, ignoring exact (lang,text) duplicates. */
@@ -122,12 +145,51 @@ final class Term
         }
     }
 
+    /** Fill in the image-search query only when absent (dedup-merge safe, like ensureIpa). */
+    public function ensureImageApiPrompt(?string $prompt): void
+    {
+        $clean = $this->clean($prompt);
+        if ($this->imageApiPrompt === null && $clean !== null) {
+            $this->imageApiPrompt = $clean;
+        }
+    }
+
+    /**
+     * Attach a found stock photo. NEVER overwrites an existing image — a term is global and
+     * deduplicated, so the first collection to image it wins and every other reuses that photo.
+     * A blank url is ignored. Attribution rides along; a missing credit still keeps the image.
+     */
+    public function attachImage(?string $url, ?string $author, ?string $authorUrl): void
+    {
+        if ($this->imageUrl !== null) {
+            return; // already imaged — do not overwrite
+        }
+        $cleanUrl = $this->clean($url);
+        if ($cleanUrl === null) {
+            return;
+        }
+        $this->imageUrl = $cleanUrl;
+        $this->imageAuthor = $this->clean($author);
+        $this->imageAuthorUrl = $this->clean($authorUrl);
+    }
+
     private function cleanIpa(?string $ipa): ?string
     {
         if ($ipa === null) {
             return null;
         }
         $trimmed = trim($ipa);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /** Trim to null: empty/whitespace-only strings become null so "no value" is one thing. */
+    private function clean(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $trimmed = trim($value);
 
         return $trimmed !== '' ? $trimmed : null;
     }
@@ -204,5 +266,27 @@ final class Term
     public function examples(): array
     {
         return $this->examples;
+    }
+
+    /** The found stock-photo URL, or null when none is attached yet / no match. */
+    public function imageUrl(): ?string
+    {
+        return $this->imageUrl;
+    }
+
+    /** The model's image-search query for this term (server-internal), or null. */
+    public function imageApiPrompt(): ?string
+    {
+        return $this->imageApiPrompt;
+    }
+
+    public function imageAuthor(): ?string
+    {
+        return $this->imageAuthor;
+    }
+
+    public function imageAuthorUrl(): ?string
+    {
+        return $this->imageAuthorUrl;
     }
 }

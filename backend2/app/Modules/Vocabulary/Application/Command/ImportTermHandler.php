@@ -41,6 +41,7 @@ final readonly class ImportTermHandler
             ipa: $command->ipa,
             examples: $examples,
             cefr: $command->cefr,
+            imageApiPrompt: $command->imageApiPrompt,
         ));
     }
 }

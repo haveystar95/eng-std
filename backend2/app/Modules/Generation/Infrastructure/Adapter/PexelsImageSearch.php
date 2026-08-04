@@ -25,6 +25,7 @@ final class PexelsImageSearch implements ImageSearchPort
         private readonly string $apiKey,
         private readonly string $baseUrl = 'https://api.pexels.com/v1',
         private readonly int $timeoutSeconds = 15,
+        private readonly int $throttleMs = 0,
     ) {}
 
     public function search(string $query): ?ImageResult
@@ -32,6 +33,13 @@ final class PexelsImageSearch implements ImageSearchPort
         $q = trim($query);
         if ($q === '') {
             return null; // nothing to search — a valid, no-image outcome
+        }
+
+        // Space out real network calls to stay clear of Pexels' burst limits. Sits in the adapter
+        // (not the caller) so throttling travels with the vendor and the fake stays instant. On a
+        // transient throw we skip the sleep — the queue's backoff already spaces the retry.
+        if ($this->throttleMs > 0) {
+            usleep($this->throttleMs * 1000);
         }
 
         try {

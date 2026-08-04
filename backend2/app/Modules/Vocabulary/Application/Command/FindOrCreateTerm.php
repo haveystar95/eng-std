@@ -28,5 +28,6 @@ final readonly class FindOrCreateTerm
         public ?string $ipa = null,
         public array $examples = [],
         public ?string $cefr = null,
+        public ?string $imageApiPrompt = null,   // model's image-search query, stored for AttachImagesJob
     ) {}
 }

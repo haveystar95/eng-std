@@ -29,5 +29,6 @@ final readonly class ImportTerm
         public ?string $ipa = null,
         public array $examples = [],
         public ?string $cefr = null,   // 'A1'..'C2' or null; validated/normalized downstream
+        public ?string $imageApiPrompt = null,   // model's image-search query, stored for AttachImagesJob
     ) {}
 }

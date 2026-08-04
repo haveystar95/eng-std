@@ -20,6 +20,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $visibility
  * @property string $source
  * @property int $items_count
+ * @property string|null $image_url
+ * @property string|null $image_api_prompt
+ * @property string|null $image_author
+ * @property string|null $image_author_url
  * @property \Illuminate\Support\Carbon $created_at
  */
 final class CollectionModel extends Model

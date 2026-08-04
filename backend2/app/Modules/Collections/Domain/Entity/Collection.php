@@ -21,6 +21,14 @@ final class Collection
     /** @var list<CollectionItem> */
     private array $items;
 
+    private ?string $imageUrl;
+
+    private ?string $imageApiPrompt;
+
+    private ?string $imageAuthor;
+
+    private ?string $imageAuthorUrl;
+
     /** @param list<CollectionItem> $items */
     private function __construct(
         private readonly CollectionId $id,
@@ -35,8 +43,16 @@ final class Collection
         private readonly CollectionSource $source,
         private readonly DateTimeImmutable $createdAt,
         array $items,
+        ?string $imageUrl = null,
+        ?string $imageApiPrompt = null,
+        ?string $imageAuthor = null,
+        ?string $imageAuthorUrl = null,
     ) {
         $this->items = $items;
+        $this->imageUrl = self::clean($imageUrl);
+        $this->imageApiPrompt = self::clean($imageApiPrompt);
+        $this->imageAuthor = self::clean($imageAuthor);
+        $this->imageAuthorUrl = self::clean($imageAuthorUrl);
     }
 
     public static function createCustom(
@@ -65,10 +81,12 @@ final class Collection
         DateTimeImmutable $createdAt,
         ?string $description = null,
         ?string $topic = null,
+        ?string $imageApiPrompt = null,
     ): self {
         return new self(
             $id, $ownerId, CollectionType::Custom, self::cleanTitle($title), $description, $topic,
             $sourceLang, $targetLang, Visibility::Private, CollectionSource::Ai, $createdAt, [],
+            imageApiPrompt: $imageApiPrompt,
         );
     }
 
@@ -90,10 +108,15 @@ final class Collection
         CollectionSource $source,
         DateTimeImmutable $createdAt,
         array $items,
+        ?string $imageUrl = null,
+        ?string $imageApiPrompt = null,
+        ?string $imageAuthor = null,
+        ?string $imageAuthorUrl = null,
     ): self {
         return new self(
             $id, $ownerId, $type, $title, $description, $topic,
             $sourceLang, $targetLang, $visibility, $source, $createdAt, $items,
+            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl,
         );
     }
 
@@ -136,6 +159,24 @@ final class Collection
         if ($description !== null) {
             $this->description = $description === '' ? null : $description;
         }
+    }
+
+    /**
+     * Attach a found cover photo. Never overwrites an existing one (idempotent re-runs of the
+     * attach job); a blank url is ignored. Attribution rides along.
+     */
+    public function attachImage(?string $url, ?string $author, ?string $authorUrl): void
+    {
+        if ($this->imageUrl !== null) {
+            return;
+        }
+        $cleanUrl = self::clean($url);
+        if ($cleanUrl === null) {
+            return;
+        }
+        $this->imageUrl = $cleanUrl;
+        $this->imageAuthor = self::clean($author);
+        $this->imageAuthorUrl = self::clean($authorUrl);
     }
 
     public function id(): CollectionId
@@ -204,6 +245,27 @@ final class Collection
         return count($this->items);
     }
 
+    public function imageUrl(): ?string
+    {
+        return $this->imageUrl;
+    }
+
+    /** The model's cover-image search query (server-internal), or null. */
+    public function imageApiPrompt(): ?string
+    {
+        return $this->imageApiPrompt;
+    }
+
+    public function imageAuthor(): ?string
+    {
+        return $this->imageAuthor;
+    }
+
+    public function imageAuthorUrl(): ?string
+    {
+        return $this->imageAuthorUrl;
+    }
+
     private function nextPosition(): int
     {
         $max = 0;
@@ -222,5 +284,16 @@ final class Collection
         }
 
         return $clean;
+    }
+
+    /** Trim to null: empty/whitespace-only strings become null. */
+    private static function clean(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $trimmed = trim($value);
+
+        return $trimmed !== '' ? $trimmed : null;
     }
 }

@@ -16,5 +16,6 @@ final readonly class CollectionTermSetView
         public string $title,
         public ?string $description,
         public array $termIds,
+        public ?string $imageApiPrompt = null,   // carried so a cache-hit collection can re-derive its cover
     ) {}
 }

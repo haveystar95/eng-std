@@ -15,6 +15,7 @@ use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
 use App\Modules\Generation\Domain\Entity\GenerationRequest;
@@ -54,6 +55,7 @@ final readonly class ProcessGenerationHandler
         private CreateGeneratedCollectionHandler $createCollection,
         private AddTermToCollectionHandler $addTerm,
         private GetCollectionTermSetHandler $cachedTermSet,
+        private DispatchesImageAttachment $attachImages,
         private TransactionManager $tx,
         private Clock $clock,
     ) {
@@ -97,6 +99,10 @@ final readonly class ProcessGenerationHandler
                 );
                 $this->requests->save($request);
 
+                // Reused terms already carry photos (globally shared); only the fresh personal
+                // collection needs its cover searched — the job's readers skip everything else.
+                $this->attachImages->dispatch($collectionId);
+
                 return;
             }
         }
@@ -134,6 +140,9 @@ final readonly class ProcessGenerationHandler
             finishedAt: $this->clock->now(),
         );
         $this->requests->save($request);
+
+        // Fire-and-forget: attach photos to the new terms + cover, off the generation thread.
+        $this->attachImages->dispatch($collectionId);
     }
 
     private function requestedBrief(GenerationRequest $request): GenerationBrief
@@ -156,6 +165,7 @@ final readonly class ProcessGenerationHandler
             targetLang: $request->targetLang(),
             description: $draft->description,
             topic: $request->prompt(),
+            imageApiPrompt: $draft->imageApiPrompt,   // cover-image query for AttachImagesJob
         ));
 
         foreach ($draft->items as $item) {
@@ -171,6 +181,7 @@ final readonly class ProcessGenerationHandler
                     ? [new ExampleInput($item->example, $item->exampleTranslation)]
                     : [],
                 cefr: $item->cefr,
+                imageApiPrompt: $item->imageApiPrompt,   // per-term image query for AttachImagesJob
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));
@@ -188,6 +199,7 @@ final readonly class ProcessGenerationHandler
             targetLang: $request->targetLang(),
             description: $termSet->description,
             topic: $request->prompt(),
+            imageApiPrompt: $termSet->imageApiPrompt,   // copied so the cache-hit collection can search its own cover
         ));
 
         // Terms already exist globally (they were created by the original generation) — just link

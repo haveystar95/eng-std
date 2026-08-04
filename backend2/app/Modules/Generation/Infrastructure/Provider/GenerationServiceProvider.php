@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Infrastructure\Provider;
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
+use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
@@ -15,6 +16,7 @@ use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,7 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(GenerationRequestRepository::class, EloquentGenerationRequestRepository::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
+        $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
 
         $this->app->bind(CollectionGeneratorPort::class, function (): CollectionGeneratorPort {
             if (config('services.generation.driver') === 'fake') {
@@ -48,7 +51,10 @@ final class GenerationServiceProvider extends ServiceProvider
                 return new FakePexelsImageSearch((string) config('services.pexels.fake_mode', 'found'));
             }
 
-            return new PexelsImageSearch(apiKey: (string) config('services.pexels.key'));
+            return new PexelsImageSearch(
+                apiKey: (string) config('services.pexels.key'),
+                throttleMs: (int) config('services.pexels.throttle_ms', 0),
+            );
         });
     }
 
