@@ -22,6 +22,31 @@ const _kCursor = SyncKeys.cursor;
 const _kStreak = SyncKeys.streak;
 const _kReviewsToday = SyncKeys.reviewsToday;
 
+/// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
+/// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
+/// watch-points: the `since` sent (∅ = full snapshot, the reinstall check), the cursor it advanced
+/// to, page count, and per-type change counts including both delete kinds.
+class SyncReport {
+  const SyncReport({
+    required this.since,
+    required this.serverTime,
+    required this.pages,
+    required this.colUpserts,
+    required this.colDeletes,
+    required this.itemUpserts,
+    required this.itemDeletes,
+    required this.termUpserts,
+    required this.progressUpserts,
+    required this.at,
+    this.error,
+  });
+  final String since; // '∅' means a full snapshot was requested (no stored cursor)
+  final String? serverTime;
+  final int pages, colUpserts, colDeletes, itemUpserts, itemDeletes, termUpserts, progressUpserts;
+  final DateTime at;
+  final String? error; // set when the sync was deferred (offline/transient)
+}
+
 /// Pulls the delta feed into the local DB. Read-through screens never call this; it runs in the
 /// background (app start, network return, app resume) and writes to drift, whose reactive queries
 /// push the change to whatever screen is watching. Non-blocking, re-entrancy-guarded, and silent
@@ -33,6 +58,9 @@ class SyncService {
   final AppDatabase _db;
 
   final ValueNotifier<SyncState> state = ValueNotifier<SyncState>(SyncState.idle);
+
+  /// Summary of the last sync attempt, for the on-device diagnostics panel. Null until first run.
+  final ValueNotifier<SyncReport?> lastReport = ValueNotifier<SyncReport?>(null);
 
   bool _running = false;
 
@@ -53,10 +81,12 @@ class SyncService {
       String? serverTime;
       var hasMore = true;
       var pages = 0;
+      var cu = 0, cd = 0, iu = 0, id = 0, tu = 0, pu = 0;
 
       while (hasMore) {
         final page = await _api.syncDelta(since: since, cursor: cursor);
-        await _applyPage(page);
+        final n = await _applyPage(page);
+        cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu;
         serverTime = page['server_time'] as String?;
         cursor = page['next_cursor'] as String?;
         hasMore = (page['has_more'] as bool?) ?? false;
@@ -71,17 +101,27 @@ class SyncService {
         await _db.setMeta(_kCursor, serverTime);
       }
       await _refreshStatsCache();
+      lastReport.value = SyncReport(
+        since: since ?? '∅', serverTime: serverTime, pages: pages,
+        colUpserts: cu, colDeletes: cd, itemUpserts: iu, itemDeletes: id,
+        termUpserts: tu, progressUpserts: pu, at: DateTime.now(),
+      );
       state.value = SyncState.idle;
     } catch (e) {
       // Offline / timeout / 5xx: keep the old cursor, try again on the next trigger. No modal.
       debugPrint('[sync] deferred (offline/transient): $e');
+      lastReport.value = SyncReport(
+        since: (await _db.getMeta(_kCursor)) ?? '∅', serverTime: null, pages: 0,
+        colUpserts: 0, colDeletes: 0, itemUpserts: 0, itemDeletes: 0, termUpserts: 0,
+        progressUpserts: 0, at: DateTime.now(), error: '$e',
+      );
       state.value = SyncState.offline;
     } finally {
       _running = false;
     }
   }
 
-  Future<void> _applyPage(Map<String, dynamic> page) async {
+  Future<({int cu, int cd, int iu, int id, int tu, int pu})> _applyPage(Map<String, dynamic> page) async {
     final changes = (page['changes'] as Map<String, dynamic>?) ?? const {};
 
     final collectionUpserts = <CollectionsCompanion>[];
@@ -168,6 +208,12 @@ class SyncService {
       itemDeletes: itemDeletes,
       termUpserts: termUpserts,
       progressUpserts: progressUpserts,
+    );
+
+    return (
+      cu: collectionUpserts.length, cd: collectionDeletes.length,
+      iu: itemUpserts.length, id: itemDeletes.length,
+      tu: termUpserts.length, pu: progressUpserts.length,
     );
   }
 

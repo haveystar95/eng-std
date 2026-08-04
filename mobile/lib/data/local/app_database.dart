@@ -171,6 +171,23 @@ class AppDatabase extends _$AppDatabase {
     await into(syncMeta).insertOnConflictUpdate(SyncMetaCompanion.insert(key: key, value: Value(value)));
   }
 
+  /// Current row counts + the stored cursor — for the on-device sync diagnostics panel.
+  Future<({int collections, int items, int terms, int progress, String? cursor})> debugCounts() async {
+    Future<int> count(TableInfo<Table, dynamic> t) async {
+      final c = countAll();
+      final row = await (selectOnly(t)..addColumns([c])).getSingle();
+      return row.read(c) ?? 0;
+    }
+
+    return (
+      collections: await count(collections),
+      items: await count(collectionItems),
+      terms: await count(terms),
+      progress: await count(termProgress),
+      cursor: await getMeta('sync_cursor'),
+    );
+  }
+
   // ---- Writes (one sync page, atomically) -----------------------------------
 
   /// Apply one delta page inside a single transaction so a screen never sees a torn state.

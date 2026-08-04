@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design.dart';
 import '../../core/glass.dart';
 import '../../core/languages.dart';
+import '../../data/local/sync_service.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import 'settings_screen.dart';
@@ -51,6 +52,8 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ).animate().fadeIn(delay: 120.ms),
                     const SizedBox(height: AppSpacing.md),
+                    const _SyncDiagnosticsCard().animate().fadeIn(delay: 150.ms),
+                    const SizedBox(height: AppSpacing.md),
                     SpringTap(
                       onTap: () => ref.read(authControllerProvider.notifier).signOut(),
                       child: Container(
@@ -74,6 +77,136 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
         ),
+      ),
+    );
+  }
+}
+
+/// On-device sync diagnostics for the acceptance run — release hides debugPrint, so the watch-points
+/// (last `since` = ∅/date, cursor advance, per-type change counts incl. both delete kinds, and the
+/// current local row counts + stored cursor) are read here on-screen. "Синхронизировать" forces a
+/// pull; the refresh icon re-reads the counts. (Temporary; trim with the source/type follow-up.)
+class _SyncDiagnosticsCard extends ConsumerStatefulWidget {
+  const _SyncDiagnosticsCard();
+
+  @override
+  ConsumerState<_SyncDiagnosticsCard> createState() => _SyncDiagnosticsCardState();
+}
+
+class _SyncDiagnosticsCardState extends ConsumerState<_SyncDiagnosticsCard> {
+  Future<({int collections, int items, int terms, int progress, String? cursor})>? _counts;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  void _refresh() => setState(() => _counts = ref.read(appDatabaseProvider).debugCounts());
+
+  @override
+  Widget build(BuildContext context) {
+    final sync = ref.watch(syncServiceProvider);
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sync_rounded, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('Диагностика синка',
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w800)),
+              ),
+              IconButton(
+                tooltip: 'Синхронизировать',
+                icon: const Icon(Icons.cloud_sync_rounded, color: AppColors.primary, size: 20),
+                onPressed: () async {
+                  await ref.read(syncServiceProvider).sync();
+                  if (mounted) _refresh();
+                },
+              ),
+              IconButton(
+                tooltip: 'Обновить счётчики',
+                icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary, size: 20),
+                onPressed: _refresh,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ValueListenableBuilder<SyncReport?>(
+            valueListenable: sync.lastReport,
+            builder: (_, r, _) {
+              if (r == null) return const _DiagLine('Последний синк', 'ещё не было');
+              if (r.error != null) {
+                return _DiagLine('Последний синк', 'офлайн/сбой · since=${r.since}', warn: true);
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DiagLine('since', r.since, highlight: r.since == '∅'),
+                  _DiagLine('→ курсор', r.serverTime ?? '—'),
+                  _DiagLine('страниц', '${r.pages}'),
+                  _DiagLine('коллекции', '+${r.colUpserts} / −${r.colDeletes}', warn: r.colDeletes > 0),
+                  _DiagLine('элементы', '+${r.itemUpserts} / −${r.itemDeletes}', warn: r.itemDeletes > 0),
+                  _DiagLine('термины', '+${r.termUpserts}'),
+                  _DiagLine('прогресс', '+${r.progressUpserts}'),
+                ],
+              );
+            },
+          ),
+          Divider(height: 20, color: Colors.white.withValues(alpha: 0.10)),
+          const Text('В локальной БД сейчас',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          FutureBuilder<({int collections, int items, int terms, int progress, String? cursor})>(
+            future: _counts,
+            builder: (_, snap) {
+              final c = snap.data;
+              if (c == null) return const _DiagLine('…', '');
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DiagLine('коллекции', '${c.collections}'),
+                  _DiagLine('элементы', '${c.items}'),
+                  _DiagLine('термины', '${c.terms}'),
+                  _DiagLine('прогресс', '${c.progress}'),
+                  _DiagLine('курсор в БД', c.cursor ?? '∅ (пусто)', highlight: c.cursor == null),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DiagLine extends StatelessWidget {
+  const _DiagLine(this.label, this.value, {this.highlight = false, this.warn = false});
+  final String label;
+  final String value;
+  final bool highlight;
+  final bool warn;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = warn ? AppColors.review : (highlight ? AppColors.know : AppColors.textPrimary);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: 'monospace')),
+          ),
+        ],
       ),
     );
   }
