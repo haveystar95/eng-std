@@ -73,6 +73,17 @@ it('returns the authenticated user from /auth/me', function () {
         ->assertJsonPath('data.id', $user->id);
 });
 
+it('reports the generation quota on /auth/me so the client can grey the button', function () {
+    [, $token] = actingUser();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonStructure(['data' => ['generation' => ['limit', 'used', 'remaining', 'resets_at']]])
+        ->assertJsonPath('data.generation.used', 0)
+        ->assertJsonPath('data.generation.remaining', 50);
+});
+
 it('rejects /auth/me without a token', function () {
     $this->getJson('/api/v1/auth/me')->assertUnauthorized();
 });

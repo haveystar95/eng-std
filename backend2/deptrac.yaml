@@ -100,7 +100,9 @@ deptrac:
     ObservabilityInfrastructure: [ObservabilityApplication, ObservabilityDomain, SharedDomain, SharedInfra, Framework]
 
     # Presentation may use the framework, its own Application/Domain — never Infrastructure.
-    IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, Framework]
+    # /me aggregates cross-module facts about the user; the generation quota (to grey the create
+    # button) comes from Generation's Application — a legal cross-module read via Application.
+    IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, GenerationApplication, Framework]
     VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, Framework]
     CollectionsPresentation: [CollectionsApplication, CollectionsDomain, SharedDomain, Framework]
     LearningPresentation: [LearningApplication, LearningDomain, SharedDomain, Framework]

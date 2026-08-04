@@ -790,6 +790,17 @@ components:
           oneOf:
             - { $ref: '#/components/schemas/Profile' }
             - { type: 'null' }
+        generation:
+          description: >
+            The caller's generation allowance, so the client can grey the create button before
+            submit instead of failing on a 429. `resets_at` is an absolute instant (next UTC-day
+            boundary); render it in device-local time.
+          type: object
+          properties:
+            limit: { type: integer }
+            used: { type: integer }
+            remaining: { type: integer }
+            resets_at: { type: string, format: date-time }
 
     GenerationRequest:
       type: object

@@ -188,9 +188,9 @@ view landed; client reads now come from drift, not the network):
 - **SRS algorithm**: ARCHITECTURE.md sketches SM-2 (`ease_factor/interval`); the old MVP used FSRS and it worked well. The `learning-srs` skill is authoritative — reconcile there before building Learning.
 - Data migration from old `../backend` (if any real user data must be carried over — currently just the single user's test data).
 - `generation_request_id` on collections: column exists; a `Shared` `GenerationRequestId` VO will be added when the Generation module is built.
-- **No per-user timezone is stored** (profiles have native/target language + CEFR, no tz). The
-  generation quota resets on **UTC-day** boundaries (`EloquentGenerationQuota`). So the planned
-  `GET /me` `generation.resets_at` "in the user's timezone" can't be computed from stored data.
-  Options: (a) return an **absolute next-UTC-midnight instant** and let the client render it in
-  device-local time — no schema change, quota stays UTC-day; or (b) add a `profiles.timezone`
-  column, have the client send it, reset at **local midnight**. Blocking A4 part 3 until decided.
+- **`profiles.timezone` — needed for the streak** (learning-srs: a lesson at 23:50 local must count
+  as "today" or the streak breaks for anyone not on UTC). Add the column when the streak reaches the
+  client; **at that point also revisit the generation-quota day boundary** (move it from UTC-day to
+  local midnight if wanted). DECIDED for now (2026-08-04): `GET /me` `generation.resets_at` is an
+  **absolute next-UTC-midnight instant** (ISO with `Z`); the client renders it in device-local time,
+  which answers "when can I generate again" without any stored timezone. Quota stays UTC-day.
