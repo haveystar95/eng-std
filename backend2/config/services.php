@@ -49,9 +49,22 @@ return [
         'generate_model' => env('OPENAI_GENERATE_MODEL', 'gpt-4o'),
     ],
 
+    'pexels' => [
+        // Stock-image search for AI-generated collections (A3). Key from the Pexels dashboard.
+        'key' => env('PEXELS_API_KEY'),
+        // Politeness delay between image searches inside AttachImagesJob, ms. Pexels' free tier is
+        // 200 req/hour; a ~15-term collection is well under, but spacing calls keeps us clear of bursts.
+        'throttle_ms' => (int) env('PEXELS_THROTTLE_MS', 250),
+        // Which outcome FakePexelsImageSearch returns when IMAGE_DRIVER=fake: found | not_found |
+        // rate_limited | transient_error. Tests usually bind the fake directly instead.
+        'fake_mode' => env('PEXELS_FAKE_MODE', 'found'),
+    ],
+
     'generation' => [
         // 'openai' (default) or 'fake' (deterministic, no network — for local/dev/tests).
         'driver' => env('GENERATION_DRIVER', 'openai'),
+        // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
+        'image_driver' => env('IMAGE_DRIVER', 'pexels'),
     ],
 
 ];

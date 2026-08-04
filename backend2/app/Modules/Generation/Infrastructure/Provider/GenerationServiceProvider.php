@@ -8,9 +8,12 @@ use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandle
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\GenerationQuota;
+use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
+use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
+use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
@@ -38,6 +41,14 @@ final class GenerationServiceProvider extends ServiceProvider
                 // config to trial a new version (e.g. v3) without flipping production.
                 promptVersion: (string) config('services.generation.prompt_version', RequestCollectionGenerationHandler::PROMPT_VERSION),
             );
+        });
+
+        $this->app->bind(ImageSearchPort::class, function (): ImageSearchPort {
+            if (config('services.generation.image_driver') === 'fake') {
+                return new FakePexelsImageSearch((string) config('services.pexels.fake_mode', 'found'));
+            }
+
+            return new PexelsImageSearch(apiKey: (string) config('services.pexels.key'));
         });
     }
 
