@@ -283,7 +283,7 @@ class _WordCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(word.translation,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     if (word.transcription != null && word.transcription!.isNotEmpty)
                       Text('/${word.transcription}/',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),

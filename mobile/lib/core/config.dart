@@ -1,3 +1,10 @@
+/// Feature flags.
+///
+/// Photo attribution ("Фото: Author · Pexels") is hidden for now — the data (author + author_url)
+/// still syncs and is stored, only the UI is gated. **Flip to true before any public release:
+/// crediting the photographer with a link is a Pexels API requirement.**
+const bool kShowPhotoAttribution = false;
+
 /// App-wide configuration.
 ///
 /// Values default to the current dev setup but can be overridden at run time:

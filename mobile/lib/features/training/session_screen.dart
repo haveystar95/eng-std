@@ -126,7 +126,7 @@ class _WordListRow extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(word.translation, style: const TextStyle(color: AppColors.primary, fontSize: 14)),
+                Text(word.translation, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
               ],
             ),
           ),

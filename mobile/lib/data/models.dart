@@ -315,10 +315,11 @@ class TriageCard {
   final String termId;
   final String text;
   final String translation;
-  final String type; // word | phrase
+  final String type; // word | phrase | idiom | phrasal_verb
   final String? transcription;
   final String? example;
   final String? exampleTranslation;
+  final String? imageUrl; // Pexels photo, shown on the flipped (back) face
 
   TriageCard({
     required this.termId,
@@ -328,6 +329,7 @@ class TriageCard {
     this.transcription,
     this.example,
     this.exampleTranslation,
+    this.imageUrl,
   });
 
   /// Phrase-like = anything not explicitly `word`, so new/unknown types (idiom,
@@ -342,6 +344,7 @@ class TriageCard {
         transcription: j['transcription'] as String?,
         example: j['example'] as String?,
         exampleTranslation: j['example_translation'] as String?,
+        imageUrl: j['image_url'] as String?,
       );
 }
 

@@ -15,6 +15,7 @@ class PendingTriage {
   final String decidedAt; // ISO-8601 UTC, captured at swipe time (reference-only)
   final int clientSeq; // per-user monotonic order key — decides the current verdict
   final int? latencyMs; // measured by the client; null when it couldn't be measured
+  final bool? revealed; // flipped the card before deciding — a risk signal for «known»
 
   const PendingTriage({
     required this.id,
@@ -24,6 +25,7 @@ class PendingTriage {
     required this.clientSeq,
     this.collectionId,
     this.latencyMs,
+    this.revealed,
   });
 
   Map<String, dynamic> toJson() => {
@@ -34,6 +36,7 @@ class PendingTriage {
         'decided_at': decidedAt,
         'client_seq': clientSeq,
         'latency_ms': latencyMs,
+        'revealed': revealed,
       };
 
   /// The exact shape `/triage/batch` expects. latency_ms is sent as null (not
@@ -47,6 +50,7 @@ class PendingTriage {
         'decided_at': decidedAt,
         'client_seq': clientSeq,
         'latency_ms': latencyMs, // null-safe: null stays null
+        if (revealed != null) 'revealed': revealed,
       };
 
   factory PendingTriage.fromJson(Map<String, dynamic> j) => PendingTriage(
@@ -57,6 +61,7 @@ class PendingTriage {
         decidedAt: j['decided_at'] as String,
         clientSeq: (j['client_seq'] as int?) ?? 0, // legacy queued items → 0 (server treats as oldest)
         latencyMs: j['latency_ms'] as int?,
+        revealed: j['revealed'] as bool?,
       );
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config.dart';
 import '../../core/design.dart';
 import '../../core/glass.dart';
 import '../../data/models.dart';
@@ -69,6 +70,8 @@ class PexelsCredit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hidden until public release (Pexels requires it then); the data still syncs regardless.
+    if (!kShowPhotoAttribution) return const SizedBox.shrink();
     if (author == null || author!.isEmpty) return const SizedBox.shrink();
     final url = authorUrl;
     final text = Text(

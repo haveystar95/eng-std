@@ -114,12 +114,19 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
+      // Body resizes for the keyboard (default), and the footer lives INSIDE the body (not
+      // bottomNavigationBar, which sits behind the keyboard) so «Создать» stays reachable and the
+      // scroll keeps the input field visible.
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Новая коллекция')),
       body: AmbientBackground(
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 140),
+          child: Column(
             children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 24),
+                  children: [
               _situationField(),
               const SizedBox(height: AppSpacing.md),
               _section('Размер набора'),
@@ -160,11 +167,14 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
               _section('Язык'),
               const SizedBox(height: 10),
               _languageRow(target, source),
+                  ],
+                ).animate().fadeIn(duration: 160.ms),
+              ),
+              _footer(quota, exhausted),
             ],
-          ).animate().fadeIn(duration: 160.ms),
+          ),
         ),
       ),
-      bottomNavigationBar: _footer(quota, exhausted),
     );
   }
 
@@ -249,8 +259,8 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
 
   Widget _footer(GenerationQuota? quota, bool exhausted) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-          AppSpacing.md, 12, AppSpacing.md, 12 + MediaQuery.of(context).padding.bottom),
+      // Inside SafeArea + the resizing body, so no manual keyboard/safe-area padding needed.
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 12, AppSpacing.md, 12),
       decoration: const BoxDecoration(
         color: AppColors.bg,
         border: Border(top: BorderSide(color: Colors.white10)),

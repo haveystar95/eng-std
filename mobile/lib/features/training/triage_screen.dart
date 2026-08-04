@@ -125,6 +125,14 @@ class _DeckState extends ConsumerState<_Deck>
   /// not at the transition animation. Null if we somehow couldn't measure it.
   DateTime? _shownAt;
 
+  /// When the learner first acted on the card — flip OR swipe/button, whichever came first. Latency
+  /// is measured to this, not to the verdict, so a flip-then-think delay doesn't inflate it.
+  DateTime? _firstEventAt;
+
+  /// Did the learner flip to the back (translation/example) before deciding. A peeked «know» is a
+  /// weaker signal — sent to the server as `revealed`.
+  bool _revealed = false;
+
   late final AnimationController _anim =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
   Offset _drag = Offset.zero;
@@ -187,17 +195,23 @@ class _DeckState extends ConsumerState<_Deck>
     }
   }
 
-  /// Start the latency clock once the new card has actually rendered.
+  /// Reset per-card state and start the latency clock once the new card has rendered.
   void _armLatencyClock() {
     _shownAt = null;
+    _firstEventAt = null;
+    _revealed = false;
     WidgetsBinding.instance.addPostFrameCallback((_) => _shownAt = DateTime.now());
   }
+
+  /// Stamp the first interaction (flip or swipe/button) — the latency endpoint. Idempotent.
+  void _markFirstEvent() => _firstEventAt ??= DateTime.now();
 
   TriageCard get _card => widget.cards[_pos];
 
   int? _latencyMs() {
-    if (_shownAt == null) return null; // couldn't measure → null, never 0
-    final ms = DateTime.now().difference(_shownAt!).inMilliseconds;
+    // Measured from paint to the first event. Missing either → null (never 0), treated neutrally.
+    if (_shownAt == null || _firstEventAt == null) return null;
+    final ms = _firstEventAt!.difference(_shownAt!).inMilliseconds;
     return ms > 0 ? ms : null;
   }
 
@@ -211,6 +225,7 @@ class _DeckState extends ConsumerState<_Deck>
           verdict: verdict,
           collectionId: widget.collectionId,
           latencyMs: latency,
+          revealed: _revealed,
         );
 
     setState(() {
@@ -264,6 +279,7 @@ class _DeckState extends ConsumerState<_Deck>
 
   void _onPanUpdate(DragUpdateDetails d) {
     if (_anim.isAnimating) return;
+    _markFirstEvent(); // a drag counts as the first interaction
     setState(() => _drag += d.delta);
     final v = _verdictFor(_drag);
     if (v != _lastHint) {
@@ -289,6 +305,7 @@ class _DeckState extends ConsumerState<_Deck>
   /// Fire a verdict from a button — animate the card out in that direction.
   void _button(TriageVerdict v) {
     if (_anim.isAnimating) return;
+    _markFirstEvent();
     _from = Offset.zero;
     _pending = v;
     _to = switch (v) {
@@ -326,7 +343,14 @@ class _DeckState extends ConsumerState<_Deck>
                     offset: _drag,
                     child: Transform.rotate(
                       angle: _drag.dx / 1600,
-                      child: _TriageCardView(card: _card),
+                      child: _FlipCard(
+                        key: ValueKey(_card.termId), // fresh flip state per card
+                        card: _card,
+                        onReveal: () {
+                          _markFirstEvent();
+                          setState(() => _revealed = true);
+                        },
+                      ),
                     ),
                   ),
                   if (_drag.distance > 24) _SwipeHint(verdict: hint),
@@ -379,34 +403,126 @@ class _Counter extends StatelessWidget {
   }
 }
 
-class _TriageCardView extends StatelessWidget {
-  const _TriageCardView({required this.card});
+/// The triage card that flips. FRONT shows ONLY the target-language term (recall, not recognition —
+/// a translation on the face would let "know" mean "recognised the hint", the false positives that
+/// later fail verification). Tap flips to the BACK: image (if any) + translation + example. The
+/// first flip calls [onReveal] so the deck can mark the verdict `revealed`.
+class _FlipCard extends StatefulWidget {
+  const _FlipCard({super.key, required this.card, required this.onReveal});
   final TriageCard card;
+  final VoidCallback onReveal;
+
+  @override
+  State<_FlipCard> createState() => _FlipCardState();
+}
+
+class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 340));
+  bool _back = false;
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _flip() {
+    AppFeedback.tap();
+    final goingToBack = !_back;
+    setState(() => _back = goingToBack);
+    goingToBack ? _c.forward() : _c.reverse();
+    if (goingToBack) widget.onReveal();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(card.text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800)),
-          const SizedBox(height: AppSpacing.sm),
-          Text(card.translation,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 18)),
-          if (card.isPhrase && card.example != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Text(card.example!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 15, fontStyle: FontStyle.italic)),
-          ],
-        ],
+    return GestureDetector(
+      onTap: _flip,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) {
+          final t = Curves.easeInOut.transform(_c.value); // 0 = front, 1 = back
+          final angle = t * 3.1415926;
+          final showBack = t > 0.5;
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0012) // perspective
+              ..rotateY(angle),
+            child: showBack
+                // Counter-rotate the back so its content isn't mirrored.
+                ? Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(3.1415926),
+                    child: _backFace(context),
+                  )
+                : _frontFace(context),
+          );
+        },
       ),
     );
   }
+
+  Widget _frontFace(BuildContext context) => GlassCard(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(widget.card.text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800)),
+            if (widget.card.transcription != null && widget.card.transcription!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text('/${widget.card.transcription}/',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 15)),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.touch_app_outlined, color: AppColors.textMuted, size: 15),
+                SizedBox(width: 6),
+                Text('нажми, чтобы перевернуть',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _backFace(BuildContext context) => GlassCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (widget.card.imageUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadii.md),
+                child: Image.network(
+                  widget.card.imageUrl!,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (_, child, p) => p == null ? child : const SizedBox(height: 150),
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            Text(widget.card.translation,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w700)),
+            if (widget.card.example != null && widget.card.example!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text('“${widget.card.example!}”',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, fontStyle: FontStyle.italic)),
+            ],
+          ],
+        ),
+      );
 }
 
 class _SwipeHint extends StatelessWidget {

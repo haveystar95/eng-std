@@ -39,6 +39,7 @@ class TriageSync {
     required TriageVerdict verdict,
     required String? collectionId,
     required int? latencyMs,
+    bool? revealed,
   }) async {
     final list = await _list();
     list.add(PendingTriage(
@@ -49,6 +50,7 @@ class TriageSync {
       decidedAt: DateTime.now().toUtc().toIso8601String(),
       clientSeq: await _seq.next(SeqCounter.triage),
       latencyMs: latencyMs,
+      revealed: revealed,
     ));
     await _queue.save(list);
     // Mark it triaged in the local DB so the deck (built from the DB) excludes it on re-entry and

@@ -85,6 +85,7 @@ TriageCard _toTriageCard(Term t) => TriageCard(
       transcription: t.transcription,
       example: t.example,
       exampleTranslation: t.exampleTranslation,
+      imageUrl: t.imageUrl,
     );
 
 final apiClientProvider = Provider<ApiClient>((ref) {
