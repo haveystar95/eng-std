@@ -1,140 +1,76 @@
 # Session handoff — snapshot
 
 > **Overwrite this file each session. Snapshot of current state, not a growing log.**
-> Read with `CLAUDE.md`, `ARCHITECTURE.md`, `.claude/skills/` (esp. `mobile-sync-contract`,
-> `learning-srs`), `deptrac.yaml`, and `docs/ROADMAP.md`. `triage-contract-findings.md` is frozen.
+> Read with `CLAUDE.md`, `ARCHITECTURE.md`, `.claude/skills/`, `deptrac.yaml`, `docs/ROADMAP.md`.
+> `triage-contract-findings.md` is frozen.
 
-Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 2026-08-03.
-
----
-
-## Current task: offline mode — delta-sync + local DB on the client
-
-**Part 1 (backend `GET /sync`) — DONE (prior session). Part 2 (client local DB + sync) and
-Part 3 (collection view screen) — DONE this session, in code. NOT YET RUN ON THE DEVICE.**
-
-The whole offline read path was built and the gates are green (`flutter analyze` clean, all
-Dart tests pass, backend untouched so its arch/stan/pest stay as Part 1 left them). But per this
-project's hard-won rule — the device has disproved correct-looking code three times — **treat the
-client offline path as UNVERIFIED until the acceptance run below passes.** The `/sync` endpoint
-itself is also still only pest-proven, never device-run; the acceptance run covers it too.
-
-### What landed this session (each a separate commit, in order)
-
-1. **drift local DB** (`mobile/lib/data/local/app_database.dart` + generated `.g.dart`). Tables
-   mirror the `/sync` payload: `collections`, `collection_items`, `terms`, `term_progress`, plus a
-   `sync_meta` key/value. `applyDelta()` writes one page atomically (upsert=LWW by id,
-   tombstone=row delete). **The cursor lives in `sync_meta`, NOT the keychain** (the Part-1
-   deviation — a reinstall wipes it with the data → next sync is a full snapshot).
-2. **SyncService** (`mobile/lib/data/local/sync_service.dart`). Pages `GET /sync?since=&cursor=`
-   until `has_more=false`, applies each page, advances the cursor **only after the whole run**
-   (mid-fail → re-fetch from old `since`, idempotent). Triggers: app start, network return
-   (`connectivity_plus`), app resume — wired in `home_screen.dart`. Non-blocking, silent offline.
-   Caches streak/reviews-today from `/stats` opportunistically (they're not in the delta feed).
-3. **Read-path flip** (`providers.dart`). `collectionsProvider`, `collectionWordsProvider`,
-   `statsProvider`, `collectionsProgressProvider` are now **drift `StreamProvider`s over the local
-   DB** — never the network. No data → empty state, never a spinner/error. total/learned/mastered/
-   due are folded locally from synced progress (mirrors `Learning\Mastery`, interval≥21); streak/
-   reviews from the cache. Mutations now call `syncService.sync()` (pull the change) instead of
-   invalidating a stream over unchanged local state. Dead API read methods removed. `dueCards`
-   stays network (sessions are out of scope; read via `.value`, degrades to null offline).
-4. **Quiet sync indicator** — a 2.5px hairline under the status bar, only while syncing. Offline
-   is silent by design.
-5. **Collection view (Part 3)** — `collection_detail_screen.dart` already read the flipped
-   `collectionWordsProvider` with system TTS; added a per-word status badge (Выучено/Усвоено/Учу;
-   not-started shows nothing) from local progress. This IS the "metro" screen; entry is the
-   collection card. Fully offline.
-6. **Unit tests** (`test/sync_apply_test.dart`) pin the delta application against in-memory SQLite:
-   upsert=LWW, both tombstone kinds, inclusive-boundary no-op, cursor round-trip, clearAll.
-7. **Offline-first session restore (the most important fix).** `restore()` was calling `/auth/me`
-   on every cold start and clearing the token on ANY failure — the first offline launch logged the
-   user out AND destroyed their keychain token, killing the whole feature at the front door. Now
-   the user is cached in the keychain (survives reinstall); restore returns it immediately and
-   refreshes in the background, clearing the token ONLY on a real 401/403. Data loss, not cosmetic.
-8. **Sensible offline for a brand-new user's first sign-in.** No token → login screen shows with no
-   network call (no white screen/hang); sign-in fails fast with a clear "нужна сеть" and the login
-   screen shows a quiet offline hint (`connectivityProvider`).
-
-### Backend verification asked for in the brief — BOTH CLEAN, no code changed
-
-- **Same-second pagination:** safe. The cursor is an offset into a re-materialised, frozen-`upper`
-  stream; every reader orders by `(updated_at, <unique id>)` — a total order identical across
-  page requests. The tiebreaker is real; no boundary loss.
-- **Soft-delete leakage:** none. Only raw `collection_items` readers are the sync reader (must see
-  tombstones) and `EloquentUserCollectionTermsReader` (all 3 methods filter `ci.deleted_at`). Model
-  uses `SoftDeletes`; Learning never touches the table directly. Session assembly + progress both
-  route through that one filtered port.
+Branch: `feat/mobile-backend2-cutover` (not merged to `main`). Last updated: 2026-08-04.
 
 ---
 
-## THE NEXT STEP: device acceptance run (I watch logs + DB; you run the phone)
+## Current task: NONE OPEN — offline mode is done + device-verified; process tooling is done.
 
-Same loop as triage. Run: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release
--d 00008110-000A7CCC3492801E` (SPM is disabled + pods installed — see "Build setup" below;
-`debugPrint` is invisible in `--release`, so lean on the DB + the on-screen behaviour).
+The offline-first client (delta sync + local DB + collection view + triage-from-local) is
+**built, device-verified, and committed**. The process tooling (commit-gate hook, /handoff,
+/audit, /close-task, invariant-reviewer) is **built and committed**. Next up is the **Generation
+module** — start it with `/audit Generation` (see "What's next").
 
-**Run the checks in THIS order — reinstall first.** It exercises the cursor-in-DB deviation; if
-that's wrong, every other check would have to be redone on a clean install anyway, so prove it first.
+## What's done (with commit hashes)
 
-1. **Reinstall (the key deviation check):** with data already synced once, delete the app,
-   reinstall, sign in online. The cursor went with the DB → no stored `since` → first sync is a
-   FULL snapshot → the app fills up completely (not half-empty). Confirm `sync_meta.sync_cursor`
-   is set only after the fill, and the tables are fully populated.
-2. **Cold start in airplane:** (after a completed online sync) turn on airplane mode and
-   cold-start. App opens, **all three tabs work**, collections visible, a collection opens showing
-   terms + translations + examples + per-word status, **TTS speaks**.
-3. **Server change → sync → airplane:** change a collection on the server, foreground the app
-   (sync runs), airplane, confirm the new state shows.
-4. **Deletion:** delete a collection AND a single item on the server → after a sync they disappear
-   locally, no ghost. (Covered in code + unit test; confirm on-device.)
-5. **Triage regression (last):** offline triage still records + uploads on reconnect as before.
+**Offline mode (Parts 2 & 3 + ODBD-3191):**
+- `fef69ef` drift local DB (schema mirrors `/sync`; `applyDelta` atomic; **cursor in `sync_meta`, not keychain**).
+- `a6e387d` SyncService (pages `/sync`, cursor advances only after full run, triggers on start/network/resume).
+- `a800364` read-path flip — `collections/collectionWords/stats/collectionsProgress` are drift StreamProviders; mutations trigger `sync()`.
+- `6057288` quiet sync indicator. `c1f144f` collection view (Part 3) + per-word status. `7ba9d44` delta-application unit tests.
+- `b1a0aeb` **offline-first session restore** (user cached in keychain; token cleared only on real 401/403 — was the front-door blocker).
+- `3fe2013` sensible offline for a brand-new user's first sign-in. `786dad6`/`a19f73b` iOS build via CocoaPods (SPM off).
+- `f4b83ca` **triage deck built from the local DB** (ODBD-3191) + durable `TriagedTerms` marker so an `unknown` swipe doesn't resurrect after sync; `1adeff2` its reinstall limitation noted.
+- `4f48e91` `source`/`type` on `/sync` collections (ИИ badge / origin) + «Не знаю» marker for triaged-unknown words. `baeef47` diagnostics panel behind a flag.
 
-Bonus (not a numbered criterion, but confirm it looks sane): **new user, first launch, no
-network** — no token, no DB, sync impossible. Should land on the login screen with the offline
-hint + a clear "нужна сеть" on tap; never a white screen or endless spinner. (Handled in code.)
+**Process tooling (all in `.claude/`):**
+- `838daa2` commit-gate hook · `b5f7d96` /handoff · `269d5a0` /audit · `c78d22f` /close-task · `aec2eff` invariant-reviewer · `2e31d97` CLAUDE.md doc.
 
-If something fails: the DB is at the app's Documents dir `wordtrainer.sqlite` (pull via Xcode
-device container) — inspect `sync_meta` for the cursor and the tables for what synced.
+## Verified on device vs. code-only
 
-## After the device run passes — one small planned commit
+| Item | How verified | Status |
+|---|---|---|
+| Reinstall → full snapshot (cursor-in-DB deviation) | device, panel `since=∅` + full fill | ✅ device |
+| Cold start in airplane: all tabs, terms, TTS | device | ✅ device |
+| Server change → sync → airplane | device (renamed collection propagated) | ✅ device |
+| Deletions: collection + item, no ghosts | device (2→1 coll, 40→14 items) | ✅ device |
+| Reverse path: un-delete → sync → reappears, no dupes | device (back to 2/40/38) | ✅ device |
+| Triage: offline entry, swipe, BUG-1, upload after reconnect | device + backend `term_triages` (3 verdicts) | ✅ device |
+| Per-word status (Усвоено/Учу/Не знаю) | device | ✅ device |
+| `source`/`type` on `/sync` | backend pest only; NO AI collection exists to show the ИИ badge | ⚠️ code-only visually |
+| Commit-gate hook | ran manually (green allows, red exit 2, SKIP_GATES, scoping) | ✅ verified (not via a real session-loaded hook yet) |
+| invariant-reviewer | ran the checklist via `general-purpose` (named agent not registered until next session) | ⚠️ logic verified, not yet by-name |
+| /handoff, /audit, /close-task | built; `migrate:fresh`-on-test-DB step validated; slash-invocation needs a fresh session | ⚠️ not yet run as commands |
 
-Add `source` + `type` to the `/sync` collections payload (DTOs `CollectionSyncRow`/
-`CollectionChange`, the reader `select`, the serializer, the client `_toCollection`). Restores the
-"ИИ" badge and the my/store/generated distinction on the collection card, which is wanted going
-forward — not just cosmetic. Deferred deliberately: DON'T touch the freshly-validated `/sync`
-until the device run proves the current contract. Separate small commit, its own OpenAPI + test.
+## Decisions that must not be silently revised
 
-## Build setup (done this session — don't redo unless it breaks)
-Flutter's Swift Package Manager integration was pulling drift's CSQLite SPM package and colliding
-with the CocoaPods setup ("Package.swift modified during the build"). Fixed the aligned way:
-`flutter config --no-enable-swift-package-manager`, `flutter clean`, `pub get`, then
-`ios/ $ pod install` (Homebrew pod 1.17). `sqlite3`/`sqlite3_flutter_libs` now come via Pods like
-every other plugin. If SPM re-enables and the error returns, same fix.
+- **Sync cursor lives in the local DB (`sync_meta`), NOT the keychain** — so a reinstall wipes it and the next sync is a full snapshot. Reversing this reintroduces the half-empty-after-reinstall bug.
+- **`since` is inclusive (`>=`)** — second-precision timestamps; the client applies deltas idempotently by id (LWW).
+- **Triage exclusion uses a durable local `TriagedTerms` marker** (mirrors server `term_triages`, which isn't synced) — an `unknown` swipe writes no progress row, so without the marker it resurrects.
+- **`restore()` clears the token only on 401/403, never on a network error** — offline cold start must not log the user out.
+- **Process rules change in the `.claude/` files, never silently in a commit.**
 
----
+## What's next
 
-## On-later decisions (RECORD, do not implement now)
+**Generation module.** First action in the new session (also the tooling registration check):
+1. `/handoff` (refreshes this snapshot; confirms the command registered).
+2. `/audit Generation` (Stage-1 read-only audit of the next module — what's really there, whether the skills' eval set is used, how the prompt cache works — and confirms /audit works).
+3. Call `invariant-reviewer` by name (confirms the subagent registered).
+Then the user provides the Generation-block prompt, informed by the audit.
 
-- **Offline training = prefetch ready-made session packages, NOT client-side session assembly.**
-  Porting `ExerciseSelector`/distractors/dedup to Dart duplicates server-owned rules. Implement
-  with the exercise screens.
-- **Review ordering will use `seq_review`**; the review upload pipeline still needs its
-  `client_seq`/raw-answer rebuild (stale, 422s every flush). Pair with the exercise screens.
+## Known limitations / deferred (also in ROADMAP)
 
-## Deferred findings from this session — all in ROADMAP
-
-See ROADMAP's "Deferred from the offline-mode build" block. Headlines: `/sync` collections omit
-`source`/`type` (AI badge gone — cosmetic); `/study/progress` field names never matched the client
-(bars were dead online, now derived locally, endpoint unused); streak/reviews are cached not
-delta'd (stale offline); local orphan terms/progress after a collection delete aren't GC'd
-(harmless). None corrupt data — hence deferred, not fixed inline.
-
-## Not in scope (unchanged)
-- Exercise/session screens, offline training + package prefetch, language workspaces
-  (`listening`/`cloze`), `seq_review` wiring in the reviews pipeline.
+- Two-device `client_seq` collision (pre-release accepted).
+- Reviews upload pipeline is stale (pre-`client_seq`/raw-answer) → 422s; rebuild with the exercise screens; `seq_review` counter ready.
+- Triage after a **reinstall**: `unknown`-swiped terms reappear (marker wiped, `term_triages` not synced) — acceptable.
+- Streak/reviews-today are cached from `/stats`, stale offline. Orphan local `terms`/`progress` after a collection delete aren't GC'd (harmless).
+- `source`/`type` badge only shows on an AI-generated collection (existing user collections look the same).
+- New commands/subagent + edited `settings.json` register on a **fresh** Claude Code session.
 
 ## Running / verifying
-- Backend2 in Docker; gates `composer arch && composer stan && composer test`; ngrok domain
-  `https://greedily-thermos-finer.ngrok-free.dev` (app default). backend2 still needs its own
-  ngrok/tunnel for on-device use (see `../mobile/CLAUDE.md`). Mobile gates: `flutter analyze` clean,
-  `flutter test` green.
+- Backend2 in Docker; gates `composer check` (arch+stan+test) — now enforced by the commit hook.
+- ngrok domain `https://greedily-thermos-finer.ngrok-free.dev`. Device: `PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E` (release only; `pod install` on first build; `debugPrint` invisible in release — use the diagnostics panel via `--dart-define=SYNC_DIAG=true`).
