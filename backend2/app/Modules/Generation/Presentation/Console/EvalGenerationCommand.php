@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Presentation\Console;
 
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
-use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
+use App\Modules\Generation\Application\Dto\AssembledDraft;
+use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
+use App\Modules\Generation\Application\Service\GenerationPipeline;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use Illuminate\Console\Command;
 use Throwable;
@@ -36,12 +38,6 @@ final class EvalGenerationCommand extends Command
 
     protected $description = 'Run the generation eval set and report quality metrics (manual, may cost money)';
 
-    /** Rough USD per 1K tokens (input, output) — same table as ProcessGeneration, for a ballpark spend. */
-    private const PRICING = [
-        'gpt-4o' => [0.0025, 0.01],
-        'gpt-4o-mini' => [0.00015, 0.0006],
-    ];
-
     public function handle(DraftValidator $validator): int
     {
         $fixtures = $this->loadFixtures();
@@ -54,6 +50,10 @@ final class EvalGenerationCommand extends Command
         }
         /** @var CollectionGeneratorPort $generator */
         $generator = app(CollectionGeneratorPort::class);
+
+        // Run the SAME overshoot + top-up pipeline production uses, so the eval measures real
+        // delivered-vs-requested, not a single raw call. Cost lives on AssembledDraft (summed).
+        $pipeline = new GenerationPipeline($generator, $validator);
 
         $source = new LanguageCode($this->asString($this->option('source')));
         $target = new LanguageCode($this->asString($this->option('target')));
@@ -72,9 +72,9 @@ final class EvalGenerationCommand extends Command
             $brief = new GenerationBrief($p['prompt'], $source, $target, $p['levels'], $p['size']);
 
             try {
-                $raw = $generator->generate($brief);
-                $clean = $validator->validate($raw, $brief);
-                [$row, $report] = $this->measure($p, $brief, $raw, $clean, $imgSupported);
+                // No-op onAttempt: the eval measures, it doesn't persist spend.
+                $assembled = $pipeline->assemble($brief, static fn (AttemptUsage $u): null => null);
+                [$row, $report] = $this->measure($p, $assembled, $imgSupported);
             } catch (Throwable $e) {
                 $row = $this->failRow($p, $e);
                 $report = ['id' => $p['id'], 'status' => 'error', 'error' => $e->getMessage()];
@@ -109,10 +109,11 @@ final class EvalGenerationCommand extends Command
      * @param  PromptFixture  $p
      * @return array{0: list<string>, 1: EvalReport}
      */
-    private function measure(array $p, GenerationBrief $brief, GeneratedCollectionDraft $raw, GeneratedCollectionDraft $clean, bool $imgSupported): array
+    private function measure(array $p, AssembledDraft $a, bool $imgSupported): array
     {
-        $delivered = count($clean->items);
-        $rawCount = count($raw->items);
+        $clean = $a->draft;
+        $delivered = $a->delivered;
+        $rawCount = count($a->primaryRaw->items); // primary (overshoot) call, before trim/top-up
 
         $phraseLike = 0;
         $idiomPhrasal = 0;
@@ -133,14 +134,19 @@ final class EvalGenerationCommand extends Command
             }
         }
 
-        // Duplicates the model produced (removed by the validator): raw minus distinct-by-lowercased-text.
+        // Duplicates the model produced on the primary call (removed by the validator):
+        // raw minus distinct-by-lowercased-text.
         $seen = [];
-        foreach ($raw->items as $item) {
+        foreach ($a->primaryRaw->items as $item) {
             $seen[mb_strtolower(trim($item->text))] = true;
         }
         $dup = $rawCount - count($seen);
 
-        $cost = $this->cost($clean->model, $clean->tokensIn, $clean->tokensOut);
+        // Total spend across the primary call AND any top-up, formatted like the pre-A2 baseline.
+        $cost = $a->costUsd !== null ? number_format((float) $a->costUsd, 4, '.', '') : null;
+        $tokensIn = $a->tokensIn;
+        $tokensOut = $a->tokensOut;
+        $model = $a->model;
         $phrasePct = $delivered > 0 ? (int) round(100 * $phraseLike / $delivered) : 0;
         $idiomPct = $delivered > 0 ? (int) round(100 * $idiomPhrasal / $delivered) : 0;
         $imgPct = $imgSupported ? ($delivered > 0 ? (int) round(100 * $imgCovered / $delivered) : 0) : null;
@@ -156,7 +162,7 @@ final class EvalGenerationCommand extends Command
             (string) $dup,
             $this->cefrLabel($cefr),
             $imgPct === null ? '—' : "{$imgPct}%",
-            "{$clean->tokensIn}/{$clean->tokensOut}",
+            "{$tokensIn}/{$tokensOut}",
             $cost === null ? '—' : '$' . $cost,
         ];
 
@@ -173,10 +179,10 @@ final class EvalGenerationCommand extends Command
             'duplicates_removed' => $dup,
             'cefr' => $cefr,
             'image_prompt_pct' => $imgPct,
-            'tokens_in' => $clean->tokensIn,
-            'tokens_out' => $clean->tokensOut,
+            'tokens_in' => $tokensIn,
+            'tokens_out' => $tokensOut,
             'cost_usd' => $cost,
-            'model' => $clean->model,
+            'model' => $model,
         ];
 
         return [$row, $report];
@@ -282,16 +288,6 @@ final class EvalGenerationCommand extends Command
         }
 
         return implode(' ', $parts);
-    }
-
-    private function cost(string $model, ?int $tokensIn, ?int $tokensOut): ?string
-    {
-        if (! isset(self::PRICING[$model]) || $tokensIn === null || $tokensOut === null) {
-            return null;
-        }
-        [$inRate, $outRate] = self::PRICING[$model];
-
-        return number_format(($tokensIn / 1000) * $inRate + ($tokensOut / 1000) * $outRate, 4, '.', '');
     }
 
     /**
