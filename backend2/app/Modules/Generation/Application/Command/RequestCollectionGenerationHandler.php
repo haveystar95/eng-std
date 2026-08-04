@@ -19,7 +19,7 @@ use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
  */
 final readonly class RequestCollectionGenerationHandler
 {
-    public const PROMPT_VERSION = 'v2';
+    public const PROMPT_VERSION = 'v3';
     public const DAILY_LIMIT = 50;
 
     public function __construct(
