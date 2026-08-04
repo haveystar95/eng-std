@@ -71,7 +71,7 @@ compare.
 | A3 backend (schema, port, job, /sync) | 241 tests green; arch 0, stan clean; migrations applied on dev DB | ✅ (backend) |
 | Never-overwrite / empty=null / transient=retry | unit (Term aggregate) + feature (all FakePexels modes, Postgres) | ✅ (backend) |
 | v4 no A1 regression + img% 100% | real gpt-4o eval, 25 prompts (table above) | ✅ (real-LLM, single run) |
-| Real Pexels attach on a real generation | **NOT run** — no `PEXELS_API_KEY` in `.env` yet | ⚠️ unobserved end-to-end |
+| Real Pexels attach on a real generation | key set; live `generation:make "иду открывать счёт в банке"` → cover + 8/8 terms imaged with attribution | ✅ (real Pexels + real gpt-4o) |
 | A2 top-up firing on the real model | not observed (overshoot sufficed); unit-tested only | ⚠️ unobserved (carried) |
 | Mobile drift v4 + sync mapping | `flutter analyze` + widget tests green; `build_runner` ran | ⚠️ code-only |
 | Anything on the **device** | nothing this session touched a running client | ⚠️ device run pending (Part B) |
@@ -115,10 +115,10 @@ instead of polling).
 
 ## Known limitations / deferred (also in ROADMAP)
 
-- **A3 not exercised end-to-end with a real Pexels key** — no `PEXELS_API_KEY` set; `IMAGE_DRIVER`
-  defaults to `pexels`, so until a key is added the job will 401 and leave images null (job fails
-  gracefully). Add the key, then verify one real generation.
-- **A3 not run on the device** — the `/sync` image fields and drift v4 migration are code-only.
+- **A3 verified end-to-end server-side** — `PEXELS_API_KEY` set; a live `generation:make` attached a
+  real Pexels cover + all 8 term photos with attribution. Remaining gap: **not run on the device** —
+  the `/sync` image fields and drift v4 migration are code-only (the `/sync` serializer is unit-proven
+  but the phone hasn't pulled real image URLs yet). Part B closes this.
 - Cache-path collection covers are re-searched (one extra Pexels call per cache hit) rather than
   copying the source collection's URL — accepted (terms are already imaged and skipped; Pexels
   budget is ample). Only the cover query is copied, not the URL/attribution.

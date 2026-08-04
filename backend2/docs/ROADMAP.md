@@ -105,15 +105,15 @@ UI/UX). Plan agreed with the user; working in Part-C order, one commit per point
   real-LLM eval (no A1 regression, img% 100%, `docs/generation-eval-v4.json`); async best-effort
   `AttachImagesJob` (never-overwrite, empty=null-no-retry, transient=retry+backoff, adapter throttle);
   `image_url` + attribution shipped additively in `/sync` + mirrored in the mobile drift schema (v4).
-  Passed `invariant-reviewer` CLEAN. **A3 findings (deferred):** (1) not exercised with a real
-  `PEXELS_API_KEY` — none set, so `IMAGE_DRIVER=pexels` will 401 and leave images null until a key is
-  added; not run on device. (2) cache-path collection covers are re-searched (one extra Pexels call
-  per cache hit) rather than copying the source URL — accepted. Also fixed a latent test-isolation
-  flake (RefreshDatabase on two outbound-calling generation tests whose `api_request_logs` leaked).
+  Passed `invariant-reviewer` CLEAN. **Verified end-to-end server-side** (`PEXELS_API_KEY` set): a
+  live `generation:make` attached a real Pexels cover + 8/8 term photos with attribution. **A3
+  findings (deferred):** (1) not yet run on the device — `/sync` image fields + drift v4 are code-only.
+  (2) cache-path collection covers are re-searched (one extra Pexels call per cache hit) rather than
+  copying the source URL — accepted. Also fixed a latent test-isolation flake (RefreshDatabase on two
+  outbound-calling generation tests whose `api_request_logs` leaked).
 
 **Next — Part B (client UI/UX):** create screen, generating→ready card, image display (drift columns
-ready), per-item type badges, first-contact «Разобрать». First step: add `PEXELS_API_KEY` and verify
-one real generation attaches photos end-to-end.
+ready + real image URLs now flowing server-side), per-item type badges, first-contact «Разобрать».
 
 **Still open from Part C (backend hygiene, optional):**
 - **A4 hygiene, part 2 — prompt-cache lookup**: on a `(normalized_prompt, source_lang, target_lang,
