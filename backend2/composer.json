@@ -59,6 +59,11 @@
         ],
         "arch": "@php vendor/bin/deptrac analyse --config-file=deptrac.yaml --no-progress",
         "stan": "@php vendor/bin/phpstan analyse --memory-limit=512M",
+        "check": [
+            "@arch",
+            "@stan",
+            "@test"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
