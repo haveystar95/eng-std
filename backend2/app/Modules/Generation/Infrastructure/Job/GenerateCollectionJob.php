@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Command\FailGeneration;
 use App\Modules\Generation\Application\Command\FailGenerationHandler;
 use App\Modules\Generation\Application\Command\ProcessGeneration;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
+use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
 use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -34,7 +35,14 @@ final class GenerateCollectionJob implements ShouldQueue
 
     public function handle(ProcessGenerationHandler $handler): void
     {
-        $handler(new ProcessGeneration(GenerationRequestId::fromString($this->requestId)));
+        try {
+            $handler(new ProcessGeneration(GenerationRequestId::fromString($this->requestId)));
+        } catch (InvalidGeneratedDraft $e) {
+            // A rejected draft is deterministic: the same prompt + model will reject again, so a
+            // retry only burns time and money. Fail terminally now — failed() records the reason.
+            // Transport/5xx errors are NOT caught here, so they still retry with backoff.
+            $this->fail($e);
+        }
     }
 
     public function failed(Throwable $e): void

@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $cost_usd
  * @property string|null $collection_id
  * @property string|null $error
+ * @property string|null $raw_response
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon|null $finished_at
  */

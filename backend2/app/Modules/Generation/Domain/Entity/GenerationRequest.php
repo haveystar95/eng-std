@@ -37,6 +37,7 @@ final class GenerationRequest
         private ?string $costUsd,
         private ?CollectionId $collectionId,
         private ?string $error,
+        private ?string $rawResponse,
         private readonly DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $finishedAt,
     ) {}
@@ -56,7 +57,7 @@ final class GenerationRequest
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
-            $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, $createdAt, null,
+            $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, null, $createdAt, null,
         );
     }
 
@@ -82,13 +83,14 @@ final class GenerationRequest
         ?string $costUsd,
         ?CollectionId $collectionId,
         ?string $error,
+        ?string $rawResponse,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $finishedAt,
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
             $promptVersion, $status, $model, $tokensIn, $tokensOut, $costUsd, $collectionId, $error,
-            $createdAt, $finishedAt,
+            $rawResponse, $createdAt, $finishedAt,
         );
     }
 
@@ -98,6 +100,26 @@ final class GenerationRequest
             throw InvalidGenerationTransition::from($this->status, GenerationStatus::Running);
         }
         $this->status = GenerationStatus::Running;
+    }
+
+    /**
+     * Persist model usage + the raw response the moment the model answers, before validation runs.
+     * Kept separate from the status transitions so a request that later fails validation still
+     * records what the model cost and returned — the spend must not vanish because the draft was
+     * rejected. Only meaningful while running.
+     */
+    public function recordAttempt(
+        string $model,
+        ?int $tokensIn,
+        ?int $tokensOut,
+        ?string $costUsd,
+        ?string $rawResponse,
+    ): void {
+        $this->model = $model;
+        $this->tokensIn = $tokensIn;
+        $this->tokensOut = $tokensOut;
+        $this->costUsd = $costUsd;
+        $this->rawResponse = $rawResponse;
     }
 
     public function markSucceeded(
@@ -210,6 +232,11 @@ final class GenerationRequest
     public function error(): ?string
     {
         return $this->error;
+    }
+
+    public function rawResponse(): ?string
+    {
+        return $this->rawResponse;
     }
 
     public function createdAt(): DateTimeImmutable

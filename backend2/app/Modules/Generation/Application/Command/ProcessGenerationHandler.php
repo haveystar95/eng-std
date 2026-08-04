@@ -70,8 +70,23 @@ final readonly class ProcessGenerationHandler
             size: $request->size(),
         );
 
-        // Slow model call — deliberately outside any transaction.
-        $draft = $this->validator->validate($this->generator->generate($brief), $brief);
+        // Slow model call — deliberately outside any transaction. A transient transport error
+        // bubbles up so the queue can retry; the validation below is deterministic and must not.
+        $raw = $this->generator->generate($brief);
+
+        // Persist the spend + raw output the instant the model answers, before validation can
+        // reject the draft: a rejected draft still cost tokens, and its raw response is what we
+        // need to diagnose the rejection. markSucceeded re-sets the same usage on the happy path.
+        $request->recordAttempt(
+            model: $raw->model,
+            tokensIn: $raw->tokensIn,
+            tokensOut: $raw->tokensOut,
+            costUsd: $this->estimateCost($raw->model, $raw->tokensIn, $raw->tokensOut),
+            rawResponse: $raw->rawResponse,
+        );
+        $this->requests->save($request);
+
+        $draft = $this->validator->validate($raw, $brief);
 
         $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $draft));
 

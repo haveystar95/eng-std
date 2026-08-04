@@ -76,6 +76,7 @@ final class DraftValidator
             model: $draft->model,
             tokensIn: $draft->tokensIn,
             tokensOut: $draft->tokensOut,
+            rawResponse: $draft->rawResponse,
         );
     }
 

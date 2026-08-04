@@ -15,5 +15,6 @@ final readonly class GeneratedCollectionDraft
         public string $model,
         public ?int $tokensIn,
         public ?int $tokensOut,
+        public ?string $rawResponse = null, // truncated model output, kept for failure diagnosis
     ) {}
 }

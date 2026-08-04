@@ -10,8 +10,13 @@ use App\Modules\Generation\Application\Command\ProcessGeneration;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Application\Command\RequestCollectionGeneration;
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
+use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
+use App\Modules\Generation\Application\Dto\GeneratedItem;
+use App\Modules\Generation\Application\Dto\GenerationBrief;
+use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
+use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
 use App\Modules\Generation\Domain\Service\PromptNormalizer;
 use App\Modules\Generation\Domain\ValueObject\GenerationStatus;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
@@ -87,6 +92,52 @@ it('is idempotent — reprocessing a finished request creates nothing new', func
 it('rejects a new request once the daily quota is exhausted', function () {
     expect(fn () => openGeneration($this, RequestCollectionGenerationHandler::DAILY_LIMIT))
         ->toThrow(GenerationQuotaExceeded::class);
+});
+
+it('records tokens, cost and raw response even when the draft fails validation', function () {
+    $id = openGeneration($this);
+
+    // A generator whose draft can't pass validation (one item, well under the minimum), but which
+    // still cost tokens — the spend and the raw output must survive the rejection.
+    $badGenerator = new class implements CollectionGeneratorPort
+    {
+        public function generate(GenerationBrief $brief): GeneratedCollectionDraft
+        {
+            return new GeneratedCollectionDraft(
+                title: 'x',
+                description: null,
+                items: [new GeneratedItem('only one', 'word', 'один', null, 'A2')],
+                model: 'gpt-4o',
+                tokensIn: 700,
+                tokensOut: 1200,
+                rawResponse: '{"truncated":true}',
+            );
+        }
+    };
+
+    $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
+    $process = new ProcessGenerationHandler(
+        requests: $this->requests,
+        generator: $badGenerator,
+        validator: new DraftValidator(),
+        importTerm: new ImportTermHandler($findOrCreate),
+        createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
+        addTerm: new AddTermToCollectionHandler($this->collections),
+        tx: new ImmediateTransactionManager(),
+        clock: $this->clock,
+    );
+
+    expect(fn () => ($process)(new ProcessGeneration($id)))->toThrow(InvalidGeneratedDraft::class);
+
+    // Not succeeded — it's the queue job that turns this into `failed` (no retry). But the usage
+    // is already persisted, so a validation failure no longer vanishes from the spend model.
+    $request = $this->requests->findById($id);
+    expect($request?->status())->toBe(GenerationStatus::Running)
+        ->and($request?->tokensIn())->toBe(700)
+        ->and($request?->tokensOut())->toBe(1200)
+        ->and($request?->costUsd())->toBe('0.013750')
+        ->and($request?->rawResponse())->toBe('{"truncated":true}')
+        ->and($this->collections->count())->toBe(0);
 });
 
 it('records a terminal failure via FailGeneration', function () {
