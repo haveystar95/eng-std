@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
+use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Command\FailGeneration;
 use App\Modules\Generation\Application\Command\FailGenerationHandler;
 use App\Modules\Generation\Application\Command\ProcessGeneration;
@@ -48,6 +49,7 @@ beforeEach(function () {
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
+        cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -123,6 +125,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
+        cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -138,6 +141,46 @@ it('records tokens, cost and raw response even when the draft fails validation',
         ->and($request?->costUsd())->toBe('0.013750')
         ->and($request?->rawResponse())->toBe('{"truncated":true}')
         ->and($this->collections->count())->toBe(0);
+});
+
+it('reuses a cached term set on an identical prompt without calling the model again', function () {
+    // First generation populates the cache: a succeeded request plus its collection of terms.
+    $first = openGeneration($this);
+    ($this->process)(new ProcessGeneration($first));
+    $termsAfterFirst = $this->terms->count();
+
+    // A generator that blows up if the model is called at all — proves the cache path skips it.
+    $throwing = new class implements CollectionGeneratorPort
+    {
+        public function generate(GenerationBrief $brief): GeneratedCollectionDraft
+        {
+            throw new RuntimeException('the model must not be called on a cache hit');
+        }
+    };
+
+    $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
+    $process = new ProcessGenerationHandler(
+        requests: $this->requests,
+        generator: $throwing,
+        validator: new DraftValidator(),
+        importTerm: new ImportTermHandler($findOrCreate),
+        createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
+        addTerm: new AddTermToCollectionHandler($this->collections),
+        cachedTermSet: new GetCollectionTermSetHandler($this->collections),
+        tx: new ImmediateTransactionManager(),
+        clock: $this->clock,
+    );
+
+    // Second identical request (same prompt/langs/version) → cache hit.
+    $second = openGeneration($this);
+    ($process)(new ProcessGeneration($second));
+
+    $request = $this->requests->findById($second);
+    expect($request?->status())->toBe(GenerationStatus::Succeeded)
+        ->and($request?->model())->toBe('cache')
+        ->and($request?->costUsd())->toBe('0.000000')
+        ->and($this->collections->count())->toBe(2)           // a fresh personal collection…
+        ->and($this->terms->count())->toBe($termsAfterFirst); // …but no new terms (reused)
 });
 
 it('records a terminal failure via FailGeneration', function () {

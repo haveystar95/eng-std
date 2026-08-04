@@ -8,6 +8,9 @@ use App\Modules\Collections\Application\Command\AddTermToCollection;
 use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollection;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
+use App\Modules\Collections\Application\Dto\CollectionTermSetView;
+use App\Modules\Collections\Application\Query\GetCollectionTermSet;
+use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
@@ -18,6 +21,7 @@ use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
@@ -46,6 +50,7 @@ final readonly class ProcessGenerationHandler
         private ImportTermHandler $importTerm,
         private CreateGeneratedCollectionHandler $createCollection,
         private AddTermToCollectionHandler $addTerm,
+        private GetCollectionTermSetHandler $cachedTermSet,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -61,6 +66,34 @@ final readonly class ProcessGenerationHandler
 
         $request->markRunning();
         $this->requests->save($request);
+
+        // Prompt cache: an identical prompt (same normalized text, language pair, prompt version)
+        // already produced a term set — reuse it and skip the model entirely. Collections are
+        // personal, terms are shared, so we clone the terms into a fresh collection for this user.
+        // A prompt_version bump misses on purpose, forcing a regeneration.
+        $cachedCollectionId = $this->requests->findCacheableCollection(
+            $request->normalizedPrompt(),
+            $request->sourceLang(),
+            $request->targetLang(),
+            $request->promptVersion(),
+        );
+        if ($cachedCollectionId !== null) {
+            $termSet = ($this->cachedTermSet)(new GetCollectionTermSet($cachedCollectionId));
+            if ($termSet !== null && $termSet->termIds !== []) {
+                $collectionId = $this->tx->run(fn (): CollectionId => $this->materializeFromCache($request, $termSet));
+                $request->markSucceeded(
+                    collectionId: $collectionId,
+                    model: 'cache',
+                    tokensIn: 0,
+                    tokensOut: 0,
+                    costUsd: '0.000000',
+                    finishedAt: $this->clock->now(),
+                );
+                $this->requests->save($request);
+
+                return;
+            }
+        }
 
         $brief = new GenerationBrief(
             prompt: $request->prompt(),
@@ -128,6 +161,26 @@ final readonly class ProcessGenerationHandler
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));
+        }
+
+        return $collectionId;
+    }
+
+    private function materializeFromCache(GenerationRequest $request, CollectionTermSetView $termSet): CollectionId
+    {
+        $collectionId = ($this->createCollection)(new CreateGeneratedCollection(
+            ownerId: $request->userId(),
+            title: $termSet->title,
+            sourceLang: $request->sourceLang(),
+            targetLang: $request->targetLang(),
+            description: $termSet->description,
+            topic: $request->prompt(),
+        ));
+
+        // Terms already exist globally (they were created by the original generation) — just link
+        // them into this user's fresh collection. No ImportTerm, no model call.
+        foreach ($termSet->termIds as $termIdValue) {
+            ($this->addTerm)(new AddTermToCollection($collectionId, TermId::fromString($termIdValue), $request->userId()));
         }
 
         return $collectionId;
