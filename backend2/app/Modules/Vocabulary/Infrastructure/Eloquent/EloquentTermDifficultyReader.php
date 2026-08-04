@@ -7,6 +7,7 @@ namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\TermDifficultyView;
 use App\Modules\Vocabulary\Application\Query\TermDifficultyReader;
+use App\Modules\Vocabulary\Domain\ValueObject\TermType;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentTermDifficultyReader implements TermDifficultyReader
@@ -25,7 +26,7 @@ final class EloquentTermDifficultyReader implements TermDifficultyReader
             $out[$id] = new TermDifficultyView(
                 termId: $id,
                 cefr: $row->cefr !== null ? (string) $row->cefr : null,
-                isPhrase: (string) $row->type === 'phrase',
+                isPhrase: TermType::from((string) $row->type)->isPhraseLike(),
             );
         }
 

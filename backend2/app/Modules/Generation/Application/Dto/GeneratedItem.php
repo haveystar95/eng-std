@@ -9,7 +9,7 @@ final readonly class GeneratedItem
 {
     public function __construct(
         public string $text,          // target language (e.g. English)
-        public string $type,          // 'word' | 'phrase'
+        public string $type,          // 'word' | 'phrase' | 'idiom' | 'phrasal_verb'
         public string $translation,   // source language (e.g. Russian)
         public ?string $example,
         public ?string $cefr,

@@ -136,7 +136,9 @@ final class VerificationStatsCommand extends Command
             CefrLevel::tryFromLabel($term->cefr !== null ? (string) $term->cefr : null),
             $level,
             $latency,
-            (string) $term->type === 'phrase',
+            // Phrase-like: anything that isn't a single word (mirrors Vocabulary's TermType::isPhraseLike;
+            // kept inline rather than importing that Domain VO across the module boundary).
+            (string) $term->type !== 'word',
         )->risky;
     }
 

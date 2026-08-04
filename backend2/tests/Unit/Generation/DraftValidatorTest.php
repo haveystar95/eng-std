@@ -86,6 +86,15 @@ it('keeps under-generation as-is when still above the floor', function () {
     expect($result->items)->toHaveCount(10);
 });
 
+it('preserves idiom and phrasal_verb types', function () {
+    $items = [...manyItems(8), anItem('break the ice', 'B1', 'idiom'), anItem('run into', 'B1', 'phrasal_verb')];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $types = array_map(fn (GeneratedItem $i): string => $i->type, $result->items);
+    expect($types)->toContain('idiom')->toContain('phrasal_verb');
+});
+
 it('infers phrase type from whitespace when omitted', function () {
     $items = [...manyItems(8), new GeneratedItem('open an account', 'unknown', 'открыть счёт', null, 'B1')];
 

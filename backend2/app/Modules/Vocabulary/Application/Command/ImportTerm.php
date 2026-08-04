@@ -22,7 +22,7 @@ final readonly class ImportTerm
     public function __construct(
         public LanguageCode $lang,
         public string $text,
-        public string $type,       // 'word' | 'phrase'
+        public string $type,       // 'word' | 'phrase' | 'idiom' | 'phrasal_verb'
         public ?string $pos,       // PartOfSpeech value, or null
         public string $source,     // 'curated' | 'ai' | 'user'
         public array $translations = [],

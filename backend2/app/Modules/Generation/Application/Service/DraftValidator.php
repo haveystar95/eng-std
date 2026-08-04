@@ -99,7 +99,9 @@ final class DraftValidator
 
     private function type(string $type, string $text): string
     {
-        if ($type === 'word' || $type === 'phrase') {
+        // The known taxonomy (mirrors Vocabulary's TermType; inlined to avoid a cross-module Domain
+        // import). Anything else falls back to the whitespace heuristic — never trust a stray label.
+        if (in_array($type, ['word', 'phrase', 'idiom', 'phrasal_verb'], true)) {
             return $type;
         }
 

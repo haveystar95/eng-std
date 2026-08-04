@@ -93,7 +93,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
             }
             $items[] = new GeneratedItem(
                 text: is_string($row['text'] ?? null) ? $row['text'] : '',
-                type: ($row['type'] ?? null) === 'phrase' ? 'phrase' : 'word',
+                type: in_array($row['type'] ?? null, ['word', 'phrase', 'idiom', 'phrasal_verb'], true) ? $row['type'] : 'word',
                 translation: is_string($row['translation'] ?? null) ? $row['translation'] : '',
                 example: is_string($row['example'] ?? null) ? $row['example'] : null,
                 cefr: is_string($row['cefr'] ?? null) ? $row['cefr'] : null,
@@ -156,7 +156,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
                         'additionalProperties' => false,
                         'properties' => [
                             'text' => ['type' => 'string'],
-                            'type' => ['type' => 'string', 'enum' => ['word', 'phrase']],
+                            'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
                             'transcription' => ['type' => 'string'],
                             'translation' => ['type' => 'string'],
                             'example' => ['type' => 'string'],
