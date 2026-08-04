@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,11 @@ import '../../data/local/sync_service.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import 'settings_screen.dart';
+
+/// The sync diagnostics panel is a debug aid, kept out of normal release builds. Shown in a debug
+/// build, or in a release build explicitly enabled for sync debugging:
+/// `flutter run --release --dart-define=SYNC_DIAG=true`.
+const bool _syncDiagEnabled = kDebugMode || bool.fromEnvironment('SYNC_DIAG');
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -52,8 +58,10 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ).animate().fadeIn(delay: 120.ms),
                     const SizedBox(height: AppSpacing.md),
-                    const _SyncDiagnosticsCard().animate().fadeIn(delay: 150.ms),
-                    const SizedBox(height: AppSpacing.md),
+                    if (_syncDiagEnabled) ...[
+                      const _SyncDiagnosticsCard().animate().fadeIn(delay: 150.ms),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                     SpringTap(
                       onTap: () => ref.read(authControllerProvider.notifier).signOut(),
                       child: Container(
