@@ -1,0 +1,436 @@
+{
+    "prompt_version": "v2",
+    "driver": "openai",
+    "source": "ru",
+    "target": "en",
+    "results": [
+        {
+            "id": "bank",
+            "category": "everyday",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 53,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 8,
+                "B1": 7
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 751,
+            "tokens_out": 1216,
+            "cost_usd": "0.0140",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "restaurant",
+            "category": "everyday",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 73,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 9,
+                "B1": 6
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 751,
+            "tokens_out": 1177,
+            "cost_usd": "0.0136",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "pharmacy",
+            "category": "everyday",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 47,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 8,
+                "B1": 7
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 750,
+            "tokens_out": 1164,
+            "cost_usd": "0.0135",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "doctor",
+            "category": "everyday",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 67,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B1": 10,
+                "B2": 5
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 749,
+            "tokens_out": 1287,
+            "cost_usd": "0.0147",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "airport",
+            "category": "travel",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 67,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 7,
+                "B1": 8
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 751,
+            "tokens_out": 1413,
+            "cost_usd": "0.0160",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "hotel",
+            "category": "travel",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 67,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 10,
+                "B1": 5
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 750,
+            "tokens_out": 1150,
+            "cost_usd": "0.0134",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "car_rental",
+            "category": "travel",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 40,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B1": 8,
+                "B2": 7
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 750,
+            "tokens_out": 1213,
+            "cost_usd": "0.0140",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "interview",
+            "category": "professional",
+            "status": "ok",
+            "requested": 22,
+            "raw": 22,
+            "delivered": 22,
+            "under_delivered": false,
+            "phrase_like_pct": 59,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B2": 16,
+                "B1": 6
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 752,
+            "tokens_out": 1715,
+            "cost_usd": "0.0190",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "email",
+            "category": "professional",
+            "status": "ok",
+            "requested": 22,
+            "raw": 22,
+            "delivered": 22,
+            "under_delivered": false,
+            "phrase_like_pct": 68,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B1": 9,
+                "B2": 13
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 752,
+            "tokens_out": 1739,
+            "cost_usd": "0.0193",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "presentation",
+            "category": "professional",
+            "status": "ok",
+            "requested": 22,
+            "raw": 22,
+            "delivered": 22,
+            "under_delivered": false,
+            "phrase_like_pct": 68,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B2": 22
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 751,
+            "tokens_out": 1527,
+            "cost_usd": "0.0171",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "animals",
+            "category": "thematic",
+            "status": "ok",
+            "requested": 22,
+            "raw": 22,
+            "delivered": 22,
+            "under_delivered": false,
+            "phrase_like_pct": 27,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A1": 18,
+                "A2": 4
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 746,
+            "tokens_out": 1261,
+            "cost_usd": "0.0145",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "colors",
+            "category": "thematic",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 20,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A1": 10,
+                "A2": 5
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 748,
+            "tokens_out": 882,
+            "cost_usd": "0.0107",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "emotions",
+            "category": "abstract",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 47,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B1": 7,
+                "B2": 8
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 748,
+            "tokens_out": 1073,
+            "cost_usd": "0.0126",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "weather",
+            "category": "thematic",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 53,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A1": 8,
+                "A2": 7
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 746,
+            "tokens_out": 900,
+            "cost_usd": "0.0109",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "short_coffee",
+            "category": "very-short",
+            "status": "ok",
+            "requested": 10,
+            "raw": 10,
+            "delivered": 9,
+            "under_delivered": true,
+            "phrase_like_pct": 67,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 8,
+                "A1": 1
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 746,
+            "tokens_out": 765,
+            "cost_usd": "0.0095",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "short_money",
+            "category": "very-short",
+            "status": "ok",
+            "requested": 10,
+            "raw": 10,
+            "delivered": 10,
+            "under_delivered": false,
+            "phrase_like_pct": 60,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 6,
+                "B1": 4
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 746,
+            "tokens_out": 652,
+            "cost_usd": "0.0084",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "short_time",
+            "category": "very-short",
+            "status": "ok",
+            "requested": 10,
+            "raw": 10,
+            "delivered": 10,
+            "under_delivered": false,
+            "phrase_like_pct": 70,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A1": 5,
+                "A2": 5
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 745,
+            "tokens_out": 648,
+            "cost_usd": "0.0083",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "english_src",
+            "category": "english",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 60,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "B1": 3,
+                "B2": 12
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 748,
+            "tokens_out": 1390,
+            "cost_usd": "0.0158",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "adv_inject",
+            "category": "adversarial",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 53,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 3,
+                "B1": 12
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 754,
+            "tokens_out": 1333,
+            "cost_usd": "0.0152",
+            "model": "gpt-4o"
+        },
+        {
+            "id": "adv_sql",
+            "category": "adversarial",
+            "status": "ok",
+            "requested": 15,
+            "raw": 15,
+            "delivered": 15,
+            "under_delivered": false,
+            "phrase_like_pct": 53,
+            "idiom_phrasal_pct": 0,
+            "duplicates_removed": 0,
+            "cefr": {
+                "A2": 7,
+                "B1": 8
+            },
+            "image_prompt_pct": null,
+            "tokens_in": 753,
+            "tokens_out": 1218,
+            "cost_usd": "0.0141",
+            "model": "gpt-4o"
+        }
+    ],
+    "summary": {
+        "total": 20,
+        "ok": 20,
+        "under_delivered": 1,
+        "avg_phrase_pct": 56,
+        "avg_idiom_pct": 0,
+        "total_duplicates": 0,
+        "total_cost": "0.2746"
+    }
+}
