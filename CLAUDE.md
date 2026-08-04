@@ -24,6 +24,22 @@ is the clean rebuild. The app is cut over to `backend2` only in ROADMAP Phase 4.
 4. Old backend + mobile knowledge (gotchas, run commands) is in `mobile/CLAUDE.md` and the
    "Old backend" section below.
 
+## Process tooling (`.claude/`) — what exists and when to use it
+
+Our working rituals are encoded in `.claude/` so they don't depend on a session remembering them.
+
+| Tool | Kind | When |
+|---|---|---|
+| commit gate | PreToolUse hook (`.claude/hooks/pre-commit-gate.sh` + `settings.json`) | **Automatic** on `git commit`: runs `composer check` (arch+stan+test, Docker) for backend2 changes and `flutter analyze` for mobile changes; red **blocks** the commit. Bypass a WIP commit with `SKIP_GATES=1` (it warns). Don't run the gates by hand before committing — the hook owns them. |
+| `/handoff` | command | Rewrite `backend2/docs/session-handoff.md` as a fresh snapshot (done-with-hashes, device-verified-vs-code-only table, non-negotiable decisions, what's next, known limits). |
+| `/audit <area>` | command | Read-only Stage-1 audit of a module: code vs skills vs invariants, ending with questions, then **stops** for confirmation. No edits. |
+| `/close-task` | command | Definition-of-done checklist with ✅/❌ (gates, `migrate:fresh` on the test DB, OpenAPI, findings-doc, handoff, device-unverified, findings→ROADMAP). |
+| `invariant-reviewer` | subagent | **Manual**, run before `/close-task`: checks the diff against the project invariants (Domain purity, progress on (user,term), append-only logs, client_seq order, one «усвоено», cross-module via Application, client reads-from-DB + cursor-in-DB). Reports violations or CLEAN — invariants only, no style. |
+
+New process rules change **here** (a skill/command/hook/agent file), never silently in one commit.
+Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code
+session to register.
+
 ## Old backend (`backend/`) — the live API
 
 - Laravel 13, PHP 8.4, **SQLite**, all in Docker: `engstd_app` (:8000), `engstd_queue`, `engstd_ngrok`.
