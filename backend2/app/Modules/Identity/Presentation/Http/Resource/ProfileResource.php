@@ -19,6 +19,7 @@ final class ProfileResource extends JsonResource
             'target_language' => $this->resource->targetLanguage,
             'cefr_level' => $this->resource->cefrLevel,
             'daily_goal' => $this->resource->dailyGoal,
+            'tier' => $this->resource->tier,
         ];
     }
 }

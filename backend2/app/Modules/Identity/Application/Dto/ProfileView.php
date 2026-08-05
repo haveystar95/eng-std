@@ -11,5 +11,6 @@ final readonly class ProfileView
         public string $targetLanguage,
         public string $cefrLevel,
         public int $dailyGoal,
+        public string $tier = 'free',
     ) {}
 }

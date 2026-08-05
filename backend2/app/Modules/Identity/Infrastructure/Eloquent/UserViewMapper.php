@@ -25,6 +25,7 @@ final class UserViewMapper
                 targetLanguage: $profile->target_language,
                 cefrLevel: $profile->cefr_level,
                 dailyGoal: $profile->daily_goal,
+                tier: $profile->tier,
             ) : null,
         );
     }

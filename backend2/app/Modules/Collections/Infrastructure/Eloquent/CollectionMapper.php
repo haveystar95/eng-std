@@ -40,6 +40,7 @@ final class CollectionMapper
             imageApiPrompt: $model->image_api_prompt,
             imageAuthor: $model->image_author,
             imageAuthorUrl: $model->image_author_url,
+            isPremium: (bool) $model->is_premium,
         );
     }
 
@@ -61,6 +62,7 @@ final class CollectionMapper
             'image_api_prompt' => $collection->imageApiPrompt(),
             'image_author' => $collection->imageAuthor(),
             'image_author_url' => $collection->imageAuthorUrl(),
+            'is_premium' => $collection->isPremium(),
             'created_at' => $collection->createdAt(),
         ];
     }

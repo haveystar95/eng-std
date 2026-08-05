@@ -23,7 +23,7 @@ skills, then continue at the first unchecked item. Build every backend change pe
 ## Phase 3 — HTTP surface (endpoints)  ⬜
 Per `api-endpoint` + `mobile-sync-contract`. Each module's `Presentation/Http` (controller → Command/Query → Resource, FormRequest, Policy, `routes.php` under `/api/v1`).
 - [x] Auth endpoints (Identity, built 2026-07-27): `POST /api/v1/auth/google`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`, `PUT /api/v1/profile`. First live HTTP surface in backend2. RFC7807-lite: `InvalidGoogleToken` → 422 mapped in `bootstrap/app.php`. 9 feature tests (fake Google verifier). **Still to do for this bullet: author `openapi/openapi.yaml` for these routes.**
-- [~] Collections (built 2026-07-27): **CRUD done** — `GET /collections` (cursor-paginated summaries), `POST /collections` (client-id idempotent), `GET/PATCH/DELETE /collections/{id}` (owner-only; soft-delete tombstone). Query side added (`ListUserCollections`+reader, `GetCollection`); commands `UpdateCollection`/`DeleteCollection` + repo `delete`. **Still TODO: items add/remove/reorder, fork/subscribe, term-content hydration on show.**
+- [~] Collections (built 2026-07-27): **CRUD done** — `GET /collections` (cursor-paginated summaries), `POST /collections` (client-id idempotent), `GET/PATCH/DELETE /collections/{id}` (owner-only; soft-delete tombstone). Query side added (`ListUserCollections`+reader, `GetCollection`); commands `UpdateCollection`/`DeleteCollection` + repo `delete`. **Store subscribe done (B5, below).** **Still TODO: items add/remove/reorder, fork (B5 follow-up, below), term-content hydration on show.**
 - [ ] Terms: lookup/search.
 - [x] Study (built 2026-07-27): `POST /api/v1/reviews/batch` (idempotent, `{accepted,duplicates,unknown}`), `GET /api/v1/study/due` (hydrated cards, content from Vocabulary `TermContentReader`), `GET /api/v1/stats` (total/learned/mastered/due-today/reviews-today/streak). Progress is created on first review, so a studied term becomes due later. **`POST /study/sessions` deferred** (reviews carry an optional session id; app can omit).
 - [x] Term-content hydration: Vocabulary `TermContentReader` powers collection detail items + study cards (self-contained session payload). **Terms lookup/search endpoint still TODO** (not needed for the cutover — display is covered by hydration).
@@ -226,3 +226,27 @@ view landed; client reads now come from drift, not the network):
   local midnight if wanted). DECIDED for now (2026-08-04): `GET /me` `generation.resets_at` is an
   **absolute next-UTC-midnight instant** (ISO with `Z`); the client renders it in device-local time,
   which answers "when can I generate again" without any stored timezone. Quota stays UTC-day.
+
+## Backend tails (B-series, 2026-08-06)
+
+Small backend tasks accumulated by the design pass; each is its own commit, gates + invariant-reviewer.
+
+- [x] **B8 — word_bank eligibility + phrasal-verb decoys** (`96b8979`): `ExerciseSelector` gates
+  word_bank to multi-word answers (single word in learning → multiple_choice); `ChipShuffler` mixes
+  1–2 decoy particle chips into a phrasal verb's bank. Tests for both; invariant-reviewer CLEAN.
+- [x] **B5 — store: premium + listing + tier quota** (this session): `collections.is_premium`,
+  `profiles.tier` (free|premium); `GET /store/collections` (public+system by language pair, ordered by
+  topic for client sections, keyset-paginated on `(topic,id)`, marks `is_subscribed`);
+  `POST/DELETE /store/collections/{id}/subscribe` (idempotent add/remove to `user_collections`);
+  premium gate → 403 `subscription_required` for a free tier. Generation daily limit now comes from
+  the tier (**free 3 / premium 20**, `GenerationDailyLimit`) — read via Identity's `UserTierReader`
+  (new deptrac edges `Generation/Collections Application → Identity Application`). `SubscriptionTier`
+  is a Shared VO. StoreKit receipt validation flips `profiles.tier` later — for now it is set
+  out-of-band and defaults to free.
+- [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
+  `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
+  **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.
+  Terms are globally deduplicated and are **never duplicated** — a fork copies references, not terms;
+  progress stays keyed on `(user, term)` and carries across. Same premium gate as subscribe
+  (`subscription_required` for a free user forking a premium deck). This is the invariant the
+  invariant-reviewer guards: any "duplicate the terms" implementation is wrong.

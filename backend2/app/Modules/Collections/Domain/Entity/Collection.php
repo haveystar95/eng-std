@@ -47,6 +47,7 @@ final class Collection
         ?string $imageApiPrompt = null,
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
+        private readonly bool $isPremium = false,
     ) {
         $this->items = $items;
         $this->imageUrl = self::clean($imageUrl);
@@ -112,11 +113,12 @@ final class Collection
         ?string $imageApiPrompt = null,
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
+        bool $isPremium = false,
     ): self {
         return new self(
             $id, $ownerId, $type, $title, $description, $topic,
             $sourceLang, $targetLang, $visibility, $source, $createdAt, $items,
-            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl,
+            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl, $isPremium,
         );
     }
 
@@ -227,6 +229,12 @@ final class Collection
     public function source(): CollectionSource
     {
         return $this->source;
+    }
+
+    /** Store content gated behind a subscription. App-created collections are always false. */
+    public function isPremium(): bool
+    {
+        return $this->isPremium;
     }
 
     public function createdAt(): DateTimeImmutable

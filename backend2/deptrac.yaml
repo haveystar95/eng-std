@@ -80,11 +80,13 @@ deptrac:
     # Application depends on its own Domain, Shared, and other modules' Application only.
     IdentityApplication: [IdentityDomain, SharedDomain]
     VocabularyApplication: [VocabularyDomain, SharedDomain]
-    CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication]
+    # Collections reads the user's tier (Identity) to gate premium store content.
+    CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication, IdentityApplication]
     LearningApplication:
       [LearningDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+    # Generation reads the user's tier (Identity) for the daily quota limit.
     GenerationApplication:
-      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication]
 
     # Infrastructure may use the framework and its own module's inner layers.
     SharedInfra: [SharedDomain, Framework]

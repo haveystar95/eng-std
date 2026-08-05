@@ -31,9 +31,10 @@ it('signs in with a valid Google token, creating the user and profile', function
     $response = $this->postJson('/api/v1/auth/google', ['id_token' => 'valid-token']);
 
     $response->assertOk()
-        ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'avatar', 'profile' => ['native_language', 'target_language', 'cefr_level', 'daily_goal']]])
+        ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'avatar', 'profile' => ['native_language', 'target_language', 'cefr_level', 'daily_goal', 'tier']]])
         ->assertJsonPath('user.email', 'denis@example.com')
-        ->assertJsonPath('user.profile.native_language', 'ru');
+        ->assertJsonPath('user.profile.native_language', 'ru')
+        ->assertJsonPath('user.profile.tier', 'free');
 
     $this->assertDatabaseCount('users', 1);
     $this->assertDatabaseHas('users', ['google_id' => 'google-sub-1', 'name' => 'Denis']);
@@ -81,7 +82,8 @@ it('reports the generation quota on /auth/me so the client can grey the button',
         ->assertOk()
         ->assertJsonStructure(['data' => ['generation' => ['limit', 'used', 'remaining', 'resets_at']]])
         ->assertJsonPath('data.generation.used', 0)
-        ->assertJsonPath('data.generation.remaining', 50);
+        ->assertJsonPath('data.generation.limit', 3)       // free-tier daily allowance
+        ->assertJsonPath('data.generation.remaining', 3);
 });
 
 it('rejects /auth/me without a token', function () {

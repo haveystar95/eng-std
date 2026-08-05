@@ -18,6 +18,7 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
+use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
 use App\Modules\Generation\Domain\Service\PromptNormalizer;
 use App\Modules\Generation\Domain\ValueObject\GenerationStatus;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
@@ -28,6 +29,7 @@ use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Domain\Service\TermNormalizer;
 use Tests\Doubles\FakeGenerationQuota;
+use Tests\Doubles\FakeUserTierReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
 use Tests\Doubles\InMemoryCollectionRepository;
@@ -62,6 +64,7 @@ function openGeneration(object $ctx, int $used = 0): GenerationRequestId
 {
     $handler = new RequestCollectionGenerationHandler(
         $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
+        new FakeUserTierReader(), new GenerationDailyLimit(),
     );
 
     return $handler(new RequestCollectionGeneration(
@@ -193,7 +196,8 @@ it('is idempotent — reprocessing a finished request creates nothing new', func
 });
 
 it('rejects a new request once the daily quota is exhausted', function () {
-    expect(fn () => openGeneration($this, RequestCollectionGenerationHandler::DAILY_LIMIT))
+    // A free-tier user's daily allowance.
+    expect(fn () => openGeneration($this, GenerationDailyLimit::FREE))
         ->toThrow(GenerationQuotaExceeded::class);
 });
 

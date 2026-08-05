@@ -158,6 +158,75 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Not found (or not the owner) }
 
+  /store/collections:
+    get:
+      tags: [Store]
+      summary: Browse the store — public + system collections for a language pair
+      description: >
+        Ordered by `topic` so the client can render sections, keyset-paginated on `(topic, id)`.
+        Each row carries `is_premium` (badge + subscribe gate) and `is_subscribed`.
+      parameters:
+        - { name: source_lang, in: query, required: false, schema: { type: string, default: ru } }
+        - { name: target_lang, in: query, required: false, schema: { type: string, default: en } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreCollection' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /store/collections/{id}/subscribe:
+    post:
+      tags: [Store]
+      summary: Add a store collection to the library (idempotent)
+      description: >
+        Idempotent — a repeat subscribe returns 200 and adds no duplicate. A premium collection
+        requires a premium tier, otherwise 403 `subscription_required`. A private/non-store id 404s.
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      collection_id: { type: string }
+                      subscribed: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Store]
+      summary: Remove a store collection from the library (idempotent)
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: Unsubscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      collection_id: { type: string }
+                      subscribed: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /collections:
     get:
       tags: [Collections]
@@ -794,6 +863,24 @@ components:
         target_language: { type: string }
         cefr_level: { type: string }
         daily_goal: { type: integer }
+        tier: { type: string, enum: [free, premium], description: Subscription tier; drives the generation quota and premium-store access. }
+
+    StoreCollection:
+      type: object
+      description: A subscribable store collection (public or system) for a language pair.
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        topic: { type: string, nullable: true, description: Section key the client groups by. }
+        source_lang: { type: string }
+        target_lang: { type: string }
+        is_premium: { type: boolean, description: Subscribing requires a premium tier; otherwise 403 subscription_required. }
+        is_subscribed: { type: boolean, description: Whether the caller already has it in their library. }
+        items_count: { type: integer }
+        image_url: { type: string, nullable: true }
+        image_author: { type: string, nullable: true }
+        image_author_url: { type: string, nullable: true }
 
     User:
       type: object

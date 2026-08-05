@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $target_language
  * @property string $cefr_level
  * @property int $daily_goal
+ * @property string $tier
  */
 final class Profile extends Model
 {
