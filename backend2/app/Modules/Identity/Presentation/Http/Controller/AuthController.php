@@ -6,6 +6,7 @@ namespace App\Modules\Identity\Presentation\Http\Controller;
 
 use App\Modules\Generation\Application\Query\GetGenerationQuota;
 use App\Modules\Generation\Application\Query\GetGenerationQuotaHandler;
+use App\Modules\Identity\Application\Port\AccountEraser;
 use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\SignOut;
 use App\Modules\Identity\Application\Port\UserReader;
@@ -25,6 +26,7 @@ final class AuthController
         private readonly UserReader $users,
         private readonly SignOut $signOut,
         private readonly GetGenerationQuotaHandler $generationQuota,
+        private readonly AccountEraser $accountEraser,
     ) {}
 
     public function google(GoogleLoginRequest $request): JsonResponse
@@ -61,6 +63,14 @@ final class AuthController
     public function logout(): Response
     {
         $this->signOut->revokeCurrent();
+
+        return response()->noContent();
+    }
+
+    /** Delete the account and every trace of the user across all modules (App Store requirement). */
+    public function deleteAccount(Request $request): Response
+    {
+        $this->accountEraser->eraseFor($this->actorId($request));
 
         return response()->noContent();
     }

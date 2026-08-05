@@ -90,7 +90,12 @@ deptrac:
 
     # Infrastructure may use the framework and its own module's inner layers.
     SharedInfra: [SharedDomain, Framework]
-    IdentityInfrastructure: [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework]
+    # Account deletion fans out to every module's own Application eraser (never a raw cross-table
+    # query). This edge lives in Infrastructure, not Application, so no module-graph cycle forms
+    # with Collections/Generation Application → Identity Application.
+    IdentityInfrastructure:
+      [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework,
+       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication]
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]

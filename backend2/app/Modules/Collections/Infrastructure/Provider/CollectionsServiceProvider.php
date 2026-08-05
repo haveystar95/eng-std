@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Infrastructure\Provider;
 
+use App\Modules\Collections\Application\Port\CollectionsAccountEraser;
 use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
 use App\Modules\Collections\Application\Port\StoreCollectionsReader;
@@ -12,6 +13,7 @@ use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Query\PendingCollectionImageReader;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionRepository;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionsAccountEraser;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSubscriptions;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSyncReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentPendingCollectionImageReader;
@@ -32,6 +34,7 @@ final class CollectionsServiceProvider extends ServiceProvider
         $this->app->bind(PendingCollectionImageReader::class, EloquentPendingCollectionImageReader::class);
         $this->app->bind(StoreCollectionsReader::class, EloquentStoreCollectionsReader::class);
         $this->app->bind(CollectionSubscriptions::class, EloquentCollectionSubscriptions::class);
+        $this->app->bind(CollectionsAccountEraser::class, EloquentCollectionsAccountEraser::class);
     }
 
     public function boot(): void

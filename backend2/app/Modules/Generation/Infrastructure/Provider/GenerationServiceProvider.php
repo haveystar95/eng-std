@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandle
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
@@ -17,6 +18,7 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,7 @@ final class GenerationServiceProvider extends ServiceProvider
     {
         $this->app->bind(GenerationRequestRepository::class, EloquentGenerationRequestRepository::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
+        $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
 

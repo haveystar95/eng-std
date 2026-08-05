@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Infrastructure\Provider;
 
 use App\Modules\Learning\Application\Port\DueTermsReader;
+use App\Modules\Learning\Application\Port\LearningAccountEraser;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
@@ -28,6 +29,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentIntroducedTermsReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentLearningAccountEraser;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressExistenceReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressSnapshotReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressSyncReader;
@@ -64,6 +66,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(IntroducedTermsReader::class, EloquentIntroducedTermsReader::class);
         $this->app->bind(StatsProjector::class, EloquentDailyStatsProjector::class);
         $this->app->bind(StatsReader::class, EloquentStatsReader::class);
+        $this->app->bind(LearningAccountEraser::class, EloquentLearningAccountEraser::class);
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));
 
         $this->app->singleton(EnabledModes::class, static function (): EnabledModes {

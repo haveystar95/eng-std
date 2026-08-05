@@ -243,6 +243,19 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   (new deptrac edges `Generation/Collections Application → Identity Application`). `SubscriptionTier`
   is a Shared VO. StoreKit receipt validation flips `profiles.tier` later — for now it is set
   out-of-band and defaults to free.
+- [x] **B3 — account deletion** (`DELETE /api/v1/auth/me`, this session): erases the user across
+  every module through each module's own Application eraser (never a raw cross-table query) in one
+  transaction — Collections (owned decks + items by cascade + store subscriptions), Learning
+  (progress, reviews, triages, sessions, daily stats), Generation (requests), plus authorship
+  anonymised on global `terms` (`created_by` → null; terms stay) and `api_request_logs.user_id` →
+  null. All Sanctum tokens revoked, the user row (and profile by FK cascade) deleted last.
+  Orchestrated from `Identity\Infrastructure\CrossModuleAccountEraser` behind an Identity
+  `AccountEraser` port — the fan-out lives in **Infrastructure** so no module-graph cycle forms with
+  the B5 `Collections/Generation Application → Identity Application` edges. Feature test covers the
+  full spread + an untouched second user. **Finding (minor, deferred):** the `DELETE /auth/me`
+  request is itself logged by the terminable request-logging middleware *after* the response, so one
+  fresh `api_request_logs` row carries the just-deleted user's id. Harmless (already secret-redacted)
+  and swept by the planned log-retention prune; a stricter fix would skip user_id for this endpoint.
 - [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
   `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
   **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.

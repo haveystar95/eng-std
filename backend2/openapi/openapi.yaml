@@ -67,6 +67,16 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/User' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Auth]
+      summary: Delete the account and all of the user's data (App Store requirement)
+      description: >
+        Irreversible. Cascades across every module (collections, subscriptions, progress, reviews,
+        triages, sessions, stats, generations), revokes all tokens, and nulls the user's authorship
+        on global terms — the terms themselves stay. Runs in one transaction.
+      responses:
+        '204': { description: Account deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /auth/logout:
     post:
