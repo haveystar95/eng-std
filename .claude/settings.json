@@ -12,5 +12,19 @@
         ]
       }
     ]
+  },
+    "permissions": {
+    "allow": [
+      "Read", "Grep", "Glob",
+      "Bash(cat:*)", "Bash(ls:*)", "Bash(head:*)", "Bash(tail:*)",
+      "Bash(grep:*)", "Bash(rg:*)", "Bash(wc:*)", "Bash(find:*)",
+      "Bash(echo:*)", "Bash(command -v:*)",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)",
+      "Bash(git branch:*)", "Bash(git check-ignore:*)",
+      "Bash(git --no-pager diff:*)", "Bash(git --no-pager log:*)", "Bash(git --no-pager show:*)",
+      "Bash(composer check:*)", "Bash(composer arch:*)",
+      "Bash(composer stan:*)", "Bash(composer test:*)",
+      "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter --version)", "Bash(dart:*)"
+    ]
   }
 }

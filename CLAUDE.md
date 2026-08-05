@@ -40,6 +40,9 @@ New process rules change **here** (a skill/command/hook/agent file), never silen
 Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code
 session to register.
 
+Читая файлы из shell, используй `cat путь1 путь2` или Read по списку — не `find -exec` и не
+пайпы с исполнением: exec-формы не покрываются allow-правилами и дёргают подтверждение на каждый вызов.
+
 ## Old backend (`backend/`) — the live API
 
 - Laravel 13, PHP 8.4, **SQLite**, all in Docker: `engstd_app` (:8000), `engstd_queue`, `engstd_ngrok`.

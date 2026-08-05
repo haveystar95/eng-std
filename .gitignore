@@ -8,8 +8,12 @@
 **/.env
 **/.env.*
 !**/.env.example
+**/credentials.plist
 **/vendor/
 **/node_modules/
+
+# Machine/session-local Claude permissions (only shared settings.json is committed)
+**/.claude/settings.local.json
 
 # Tool caches
 **/.deptrac.cache
