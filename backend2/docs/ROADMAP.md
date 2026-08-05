@@ -250,3 +250,12 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   progress stays keyed on `(user, term)` and carries across. Same premium gate as subscribe
   (`subscription_required` for a free user forking a premium deck). This is the invariant the
   invariant-reviewer guards: any "duplicate the terms" implementation is wrong.
+- [ ] **B7 — evening-slot push rule** (spec only, not implemented; recorded here per the design pass):
+  the app sends **one daily reminder in an evening slot**, but it is **suppressed on any day the user
+  already studied** — the streak is the reward, so a day that's already done gets no nudge (never
+  double-notify). **Event-driven pushes** (generation ready, verification due) are *outside* this
+  daily limit and fire regardless. **APNs delivery is a release blocker**: it needs the Apple push
+  cert, a device-token register endpoint (Identity — devices are noted as "not yet done"), and a
+  scheduler for the evening slot; until that lands the client polls. No table/endpoint yet — this
+  paragraph is the contract for whoever builds push. Ties into the deferred `profiles.timezone`
+  (the "evening slot" and the "already studied today" check are both local-day questions).
