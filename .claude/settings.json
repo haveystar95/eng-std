@@ -13,7 +13,11 @@
       }
     ]
   },
-    "permissions": {
+  "env": {
+    "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "LANG": "en_US.UTF-8"
+  },
+  "permissions": {
     "allow": [
       "Read", "Grep", "Glob",
       "Bash(cat:*)", "Bash(ls:*)", "Bash(head:*)", "Bash(tail:*)",
