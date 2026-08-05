@@ -11,7 +11,7 @@ final readonly class TermContentView
         public string $id,
         public string $lang,
         public string $text,
-        public string $type,             // word | phrase
+        public string $type,             // word | phrase | idiom | phrasal_verb
         public ?string $transcription,   // IPA
         public ?string $translation,     // primary translation (source language)
         public ?string $example,

@@ -30,8 +30,14 @@ it('introduces a new term with multiple choice', function () {
     expect($this->selector->select(atState(LearningState::New), $this->phase1))->toBe(ExerciseMode::MultipleChoice);
 });
 
-it('assembles a learning term from a word bank', function () {
-    expect($this->selector->select(atState(LearningState::Learning), $this->phase1))->toBe(ExerciseMode::WordBank);
+it('assembles a multi-word learning term from a word bank', function () {
+    expect($this->selector->select(atState(LearningState::Learning), $this->phase1, answerWordCount: 3))
+        ->toBe(ExerciseMode::WordBank);
+});
+
+it('keeps a single-word learning term on multiple choice — nothing to assemble', function () {
+    expect($this->selector->select(atState(LearningState::Learning), $this->phase1, answerWordCount: 1))
+        ->toBe(ExerciseMode::MultipleChoice);
 });
 
 it('sends a relearning term back to multiple choice', function () {

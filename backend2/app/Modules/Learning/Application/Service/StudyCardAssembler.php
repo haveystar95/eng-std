@@ -26,6 +26,9 @@ final readonly class StudyCardAssembler
 {
     private const OPTION_COUNT = 4;
 
+    /** Vocabulary term-type string (kept as a literal — Learning must not import Vocabulary Domain). */
+    private const PHRASAL_VERB = 'phrasal_verb';
+
     public function __construct(
         private ExerciseSelector $selector,
         private DistractorReader $distractors,
@@ -40,8 +43,8 @@ final readonly class StudyCardAssembler
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
         );
-        $mode = $this->selector->select($progress, $enabled);
         $answer = $content->text;
+        $mode = $this->selector->select($progress, $enabled, $this->chips->wordCount($answer));
 
         $options = null;
         $chips = null;
@@ -51,7 +54,7 @@ final readonly class StudyCardAssembler
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::WordBank) {
-            $chips = $this->chips->chips($answer);
+            $chips = $this->chips->chips($answer, $content->type === self::PHRASAL_VERB);
         }
 
         return new SessionCardView(

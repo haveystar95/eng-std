@@ -32,3 +32,32 @@ it('splits a single word into shuffled letter chips', function () {
 it('leaves a single-letter answer untouched — nothing to shuffle', function () {
     expect($this->shuffler->chips('a'))->toBe(['a']);
 });
+
+it('adds 1–2 particle decoys for a phrasal verb, never the real particle', function () {
+    $particles = ['up', 'on', 'in', 'off', 'out', 'down', 'over', 'away', 'back'];
+
+    $chips = $this->shuffler->chips('give up', phrasalVerb: true);
+
+    // The two real words survive, plus one or two decoy particles from the fixed set.
+    expect($chips)->toContain('give')->toContain('up')
+        ->and(count($chips))->toBeGreaterThanOrEqual(3)->toBeLessThanOrEqual(4);
+
+    $decoys = array_values(array_diff($chips, ['give', 'up']));
+    expect($decoys)->not->toBeEmpty()
+        ->and($decoys)->not->toContain('up'); // the answer's own particle is never a decoy
+    foreach ($decoys as $decoy) {
+        expect($particles)->toContain($decoy);
+    }
+});
+
+it('does not add decoys to a non-phrasal phrase', function () {
+    $chips = $this->shuffler->chips('withdraw cash from account', phrasalVerb: false);
+
+    expect($chips)->toHaveCount(4); // exactly the four real words, no decoys
+});
+
+it('counts whitespace-separated words for word_bank eligibility', function () {
+    expect($this->shuffler->wordCount('bank'))->toBe(1)
+        ->and($this->shuffler->wordCount('give up'))->toBe(2)
+        ->and($this->shuffler->wordCount('  withdraw   cash from account '))->toBe(4);
+});
