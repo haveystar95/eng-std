@@ -18,11 +18,20 @@ final class EloquentGenerationQuota implements GenerationQuota
         $end = $start->modify('+1 day');
 
         // Failed requests don't count — a failure refunds the user's daily allowance.
-        return DB::table('generation_requests')
+        $generations = DB::table('generation_requests')
             ->where('user_id', $userId->value)
             ->where('status', '<>', 'failed')
             ->where('created_at', '>=', $start)
             ->where('created_at', '<', $end)
             ->count();
+
+        // A "New example" regeneration counts as a generation against the same daily allowance.
+        $regenerations = DB::table('example_regenerations')
+            ->where('user_id', $userId->value)
+            ->where('created_at', '>=', $start)
+            ->where('created_at', '<', $end)
+            ->count();
+
+        return $generations + $regenerations;
     }
 }

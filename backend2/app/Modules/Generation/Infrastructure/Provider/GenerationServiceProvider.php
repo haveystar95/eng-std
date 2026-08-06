@@ -8,9 +8,11 @@ use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandle
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
+use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
@@ -18,13 +20,16 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
+use App\Modules\Generation\Infrastructure\Adapter\FakeExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTermEnricher;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedTermEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentExampleRegenerationLog;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentTermEnrichmentLog;
 use App\Modules\Vocabulary\Application\Port\DispatchesTermEnrichment;
@@ -39,6 +44,7 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
         $this->app->bind(RecordsTermEnrichment::class, EloquentTermEnrichmentLog::class);
+        $this->app->bind(RecordsExampleRegeneration::class, EloquentExampleRegenerationLog::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
@@ -50,6 +56,17 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiTermEnricher(
+                apiKey: (string) config('services.openai.api_key'),
+                model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
+            );
+        });
+
+        $this->app->bind(ExampleRegeneratorPort::class, function (): ExampleRegeneratorPort {
+            if (config('services.generation.driver') === 'fake') {
+                return new FakeExampleRegenerator();
+            }
+
+            return new OpenAiExampleRegenerator(
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
+use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
+use App\Modules\Vocabulary\Application\Query\ExampleRegenContextReader;
 use App\Modules\Vocabulary\Application\Query\PendingTermImageReader;
 use App\Modules\Vocabulary\Application\Query\TermAnswerKeyReader;
 use App\Modules\Vocabulary\Application\Query\TermChangeReader;
@@ -17,7 +19,9 @@ use App\Modules\Vocabulary\Domain\Repository\TermRepository;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentAuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichableTermReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentExampleRegenContextReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentPendingTermImageReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExampleWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAnswerKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermChangeReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermContentReader;
@@ -41,6 +45,8 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(PendingTermImageReader::class, EloquentPendingTermImageReader::class);
         $this->app->bind(AuthoredTermAnonymizer::class, EloquentAuthoredTermAnonymizer::class);
         $this->app->bind(EnrichableTermReader::class, EloquentEnrichableTermReader::class);
+        $this->app->bind(ExampleRegenContextReader::class, EloquentExampleRegenContextReader::class);
+        $this->app->bind(TermExampleWriter::class, EloquentTermExampleWriter::class);
     }
 
     public function boot(): void

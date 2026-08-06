@@ -276,6 +276,18 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   `DefaultTargetLangReader` port (Generation Application already reaches Identity Application from B5).
   OpenAPI documents the fallback; feature test covers default-from-profile, explicit-override, and
   no-profile→en.
+- [x] **B6 — regenerate example** (this session): `POST /terms/{id}/regenerate-example` (the "New
+  example" button) — the LLM writes a fresh example (avoids the current one, versioned prompt
+  `regenerate_example.v1.md`, `gpt-4o-mini`) + its translation, which **replace** the term's stored
+  example, and returns them so the client updates in place. Replacement is a focused Vocabulary write
+  (`ReplaceTermExample` → `TermExampleWriter`, delete+insert on `term_examples`) — examples aren't
+  hydrated into the Term aggregate, so an aggregate mutation can't express a replace. **Counts as a
+  generation in the daily quota:** a new `example_regenerations` table (per-user), and
+  `EloquentGenerationQuota::usedOn` now sums `generation_requests` + `example_regenerations` for the
+  day; spend recorded there. Quota gate → 429 when exhausted (tested). **Note (single-user):**
+  `term_examples` are global, so this replaces the shared example — fine here; a multi-user build
+  would need per-user example overrides. Fake regenerator for tests; feature test (replace + spend,
+  429-when-exhausted, 404-unknown, auth).
 - [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
   `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
   **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.
