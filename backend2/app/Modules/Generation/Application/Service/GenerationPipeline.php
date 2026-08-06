@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Domain\Service\ModelCost;
 
 /**
  * The generate → validate → top-up pipeline, in one place so every caller measures the same thing.
@@ -20,16 +21,14 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
  */
 final readonly class GenerationPipeline
 {
-    /** Rough USD per 1K tokens (input, output), for the spend read model. */
-    private const PRICING = [
-        'gpt-4o' => [0.0025, 0.01],
-        'gpt-4o-mini' => [0.00015, 0.0006],
-    ];
+    private ModelCost $cost;
 
     public function __construct(
         private CollectionGeneratorPort $generator,
         private DraftValidator $validator,
-    ) {}
+    ) {
+        $this->cost = new ModelCost();
+    }
 
     /**
      * @param  GenerationBrief  $brief  its `size` is the *requested* count (not the overshoot ask).
@@ -150,13 +149,6 @@ final readonly class GenerationPipeline
 
     public function estimateCost(string $model, ?int $tokensIn, ?int $tokensOut): ?string
     {
-        if (! isset(self::PRICING[$model]) || $tokensIn === null || $tokensOut === null) {
-            return null;
-        }
-
-        [$inRate, $outRate] = self::PRICING[$model];
-        $cost = ($tokensIn / 1000) * $inRate + ($tokensOut / 1000) * $outRate;
-
-        return number_format($cost, 6, '.', '');
+        return $this->cost->estimate($model, $tokensIn, $tokensOut);
     }
 }

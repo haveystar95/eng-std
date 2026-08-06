@@ -234,6 +234,18 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
 - [x] **B8 — word_bank eligibility + phrasal-verb decoys** (`96b8979`): `ExerciseSelector` gates
   word_bank to multi-word answers (single word in learning → multiple_choice); `ChipShuffler` mixes
   1–2 decoy particle chips into a phrasal verb's bank. Tests for both; invariant-reviewer CLEAN.
+- [x] **B1 — enrich bare user terms** (this session): "Add word" now takes an **optional** translation
+  (`AddWordRequest`/`AddWordToCollection`); when omitted the term is created bare and an async
+  `EnrichTermJob` fills in translation + IPA + example (versioned prompt `enrich_term.v1.md`, OpenAI
+  structured outputs, `gpt-4o-mini`) then a Pexels photo via the existing image path. Only
+  `source=user` terms with no translation are enriched — that eligibility check (Vocabulary
+  `EnrichableTermReader`) is the idempotency gate, so a job retry never re-spends on the model. Spend
+  is written to a new `term_enrichments` table (`ModelCost` extracted from `GenerationPipeline`, one
+  pricing table now). Cross-module trigger is clean: Collections' add-word handler calls a new
+  **Vocabulary** port `DispatchesTermEnrichment` (Collections→Vocabulary is legal), which Generation
+  fulfils with the queue job (deptrac edge `GenerationInfrastructure → VocabularyApplication`). Fake
+  enricher + fake image drivers for tests; feature + unit tests (enrich e2e, not-enriched-with-
+  translation, idempotent re-run, ModelCost).
 - [x] **B5 — store: premium + listing + tier quota** (this session): `collections.is_premium`,
   `profiles.tier` (free|premium); `GET /store/collections` (public+system by language pair, ordered by
   topic for client sections, keyset-paginated on `(topic,id)`, marks `is_subscribed`);
@@ -272,3 +284,8 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   scheduler for the evening slot; until that lands the client polls. No table/endpoint yet — this
   paragraph is the contract for whoever builds push. Ties into the deferred `profiles.timezone`
   (the "evening slot" and the "already studied today" check are both local-day questions).
+  **Locale (added A3.0, 2026-08-06):** push copy is user-facing text, so the notification builder
+  must render in the user's UI language. The client now has a locale override (device-local, in
+  drift; §4з copy lives in the app's ARB), but the backend has **no** locale for a user yet — when
+  APNs lands, add a `profiles.locale` (or device-level locale on the token register) and localise the
+  §4з notification strings server-side. Spec only; not implemented.

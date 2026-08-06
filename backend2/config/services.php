@@ -47,6 +47,8 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'generate_model' => env('OPENAI_GENERATE_MODEL', 'gpt-4o'),
+        // Enriching a single bare term is a small task — the cheaper model is plenty.
+        'enrich_model' => env('OPENAI_ENRICH_MODEL', 'gpt-4o-mini'),
     ],
 
     'pexels' => [

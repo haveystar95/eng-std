@@ -359,7 +359,12 @@ paths:
     post:
       tags: [Collections]
       summary: Add a word to a collection (owner only)
-      description: Found-or-creates the term in Vocabulary, then attaches it. Idempotent — adding the same word twice is a no-op. Returns the refreshed collection.
+      description: >
+        Found-or-creates the term in Vocabulary, then attaches it. Idempotent — adding the same word
+        twice is a no-op. Returns the refreshed collection. `translation` is optional: when omitted,
+        the term is created bare and enriched asynchronously (translation, transcription, example and
+        a stock photo are filled in from the LLM + Pexels), so images/translation appear via a later
+        `/sync`.
       parameters:
         - $ref: '#/components/parameters/UlidId'
       requestBody:
@@ -368,10 +373,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [text, translation]
+              required: [text]
               properties:
                 text: { type: string, minLength: 1, maxLength: 200 }
-                translation: { type: string, minLength: 1, maxLength: 500 }
+                translation: { type: string, maxLength: 500, nullable: true, description: Optional; omit to have it auto-enriched. }
                 type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
       responses:
         '201':

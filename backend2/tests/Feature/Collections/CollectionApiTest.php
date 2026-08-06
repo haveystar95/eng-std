@@ -210,5 +210,5 @@ it('validates the word input', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/collections/{$id}/items", [])
         ->assertStatus(422)
-        ->assertJsonValidationErrors(['text', 'translation']);
+        ->assertJsonValidationErrors(['text']);   // translation is optional (enrichment fills it)
 });

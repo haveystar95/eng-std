@@ -18,7 +18,8 @@ final class AddWordRequest extends FormRequest
     {
         return [
             'text' => ['required', 'string', 'min:1', 'max:200'],
-            'translation' => ['required', 'string', 'min:1', 'max:500'],
+            // Optional: when omitted, the term is enriched (translation/transcription/example/photo).
+            'translation' => ['sometimes', 'nullable', 'string', 'max:500'],
             'type' => ['sometimes', 'string', 'in:word,phrase'],
         ];
     }

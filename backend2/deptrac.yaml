@@ -99,7 +99,8 @@ deptrac:
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]
-    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
+    # Generation fulfils Vocabulary's DispatchesTermEnrichment port (the enrich-term dispatcher).
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication]
 
     # Observability: a thin, cross-cutting technical module (no Presentation layer).
     ObservabilityDomain: [SharedDomain]

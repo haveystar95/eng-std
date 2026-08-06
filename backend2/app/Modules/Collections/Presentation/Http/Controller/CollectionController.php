@@ -123,7 +123,7 @@ final class CollectionController
             collectionId: $collectionId,
             actorId: $actor,
             text: (string) $data['text'],
-            translation: (string) $data['translation'],
+            translation: isset($data['translation']) ? (string) $data['translation'] : null,
             type: isset($data['type']) ? (string) $data['type'] : 'word',
         ));
 
