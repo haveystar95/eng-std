@@ -10,9 +10,11 @@ use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
 use App\Modules\Generation\Domain\Service\PromptNormalizer;
+use App\Modules\Identity\Application\Port\DefaultTargetLangReader;
 use App\Modules\Identity\Application\Port\UserTierReader;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 
 /**
  * Enforces the daily quota, records the request as pending, and returns its id. It does NOT
@@ -31,6 +33,7 @@ final readonly class RequestCollectionGenerationHandler
         private Clock $clock,
         private UserTierReader $tiers,
         private GenerationDailyLimit $limits,
+        private DefaultTargetLangReader $defaultTargetLang,
     ) {}
 
     public function __invoke(RequestCollectionGeneration $command): GenerationRequestId
@@ -42,13 +45,18 @@ final readonly class RequestCollectionGenerationHandler
             throw GenerationQuotaExceeded::perDay($limit);
         }
 
+        // No target language on the request → the user's default learning language, then English.
+        $targetLang = $command->targetLang
+            ?? $this->defaultTargetLang->defaultTargetLangFor($command->userId)
+            ?? new LanguageCode('en');
+
         $request = GenerationRequest::open(
             id: GenerationRequestId::generate(),
             userId: $command->userId,
             prompt: $command->prompt,
             normalizedPrompt: $this->normalizer->normalize($command->prompt),
             sourceLang: $command->sourceLang,
-            targetLang: $command->targetLang,
+            targetLang: $targetLang,
             levels: $command->levels,
             size: $command->size,
             promptVersion: self::PROMPT_VERSION,

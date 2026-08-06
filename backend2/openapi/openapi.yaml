@@ -132,7 +132,13 @@ paths:
                   items: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
                 size: { type: integer, minimum: 8, maximum: 25 }
                 source_lang: { type: string, minLength: 2, maxLength: 5 }
-                target_lang: { type: string, minLength: 2, maxLength: 5 }
+                target_lang:
+                  type: string
+                  minLength: 2
+                  maxLength: 5
+                  description: >
+                    Optional. When omitted, the server uses the caller's default learning language
+                    (profiles.target_language, as returned in /auth/me), then English if unset.
       responses:
         '202':
           description: Accepted

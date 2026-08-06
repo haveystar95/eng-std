@@ -28,6 +28,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Domain\Service\TermNormalizer;
+use Tests\Doubles\FakeDefaultTargetLangReader;
 use Tests\Doubles\FakeGenerationQuota;
 use Tests\Doubles\FakeUserTierReader;
 use Tests\Doubles\FixedClock;
@@ -64,7 +65,7 @@ function openGeneration(object $ctx, int $used = 0): GenerationRequestId
 {
     $handler = new RequestCollectionGenerationHandler(
         $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
-        new FakeUserTierReader(), new GenerationDailyLimit(),
+        new FakeUserTierReader(), new GenerationDailyLimit(), new FakeDefaultTargetLangReader(),
     );
 
     return $handler(new RequestCollectionGeneration(

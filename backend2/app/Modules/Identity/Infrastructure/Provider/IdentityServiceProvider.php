@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Infrastructure\Provider;
 
 use App\Modules\Identity\Application\Port\AccountEraser;
+use App\Modules\Identity\Application\Port\DefaultTargetLangReader;
 use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\GoogleTokenVerifier;
 use App\Modules\Identity\Application\Port\ProfileUpdater;
@@ -15,6 +16,7 @@ use App\Modules\Identity\Infrastructure\Adapter\GoogleAuthTokenVerifier;
 use App\Modules\Identity\Infrastructure\Auth\SanctumGoogleSignIn;
 use App\Modules\Identity\Infrastructure\Eloquent\CrossModuleAccountEraser;
 use App\Modules\Identity\Infrastructure\Auth\SanctumSignOut;
+use App\Modules\Identity\Infrastructure\Eloquent\EloquentDefaultTargetLangReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentProfileUpdater;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentUserReader;
 use App\Modules\Identity\Infrastructure\Eloquent\EloquentUserTierReader;
@@ -35,6 +37,7 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(GoogleSignIn::class, SanctumGoogleSignIn::class);
         $this->app->bind(UserReader::class, EloquentUserReader::class);
         $this->app->bind(UserTierReader::class, EloquentUserTierReader::class);
+        $this->app->bind(DefaultTargetLangReader::class, EloquentDefaultTargetLangReader::class);
         $this->app->bind(ProfileUpdater::class, EloquentProfileUpdater::class);
         $this->app->bind(SignOut::class, SanctumSignOut::class);
         $this->app->bind(AccountEraser::class, CrossModuleAccountEraser::class);

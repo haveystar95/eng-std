@@ -44,7 +44,8 @@ final class GenerationController
             userId: $actor,
             prompt: (string) $data['prompt'],
             sourceLang: new LanguageCode(isset($data['source_lang']) ? (string) $data['source_lang'] : 'ru'),
-            targetLang: new LanguageCode(isset($data['target_lang']) ? (string) $data['target_lang'] : 'en'),
+            // Omitted → the handler falls back to the user's default learning language.
+            targetLang: isset($data['target_lang']) ? new LanguageCode((string) $data['target_lang']) : null,
             levels: $this->levels($data),
             size: isset($data['size']) ? (int) $data['size'] : self::DEFAULT_SIZE,
         ));

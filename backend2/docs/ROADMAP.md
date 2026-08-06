@@ -268,6 +268,14 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   request is itself logged by the terminable request-logging middleware *after* the response, so one
   fresh `api_request_logs` row carries the just-deleted user's id. Harmless (already secret-redacted)
   and swept by the planned log-retention prune; a stricter fix would skip user_id for this endpoint.
+- [x] **B4 — default target language** (this session): scope corrected — `profiles.target_language`
+  already IS the default learning language (nullable, default `en`, already in `/auth/me` + `PATCH
+  /profile`), so **no new column** (a `default_target_lang` beside it would be a shadow field with
+  two sources of truth). Generation now falls back to it: `POST /generations` without `target_lang`
+  → the handler resolves `command.targetLang ?? profiles.target_language ?? en` via a new Identity
+  `DefaultTargetLangReader` port (Generation Application already reaches Identity Application from B5).
+  OpenAPI documents the fallback; feature test covers default-from-profile, explicit-override, and
+  no-profile→en.
 - [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
   `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
   **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.
