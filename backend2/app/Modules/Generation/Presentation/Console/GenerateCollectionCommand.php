@@ -49,7 +49,7 @@ final class GenerateCollectionCommand extends Command
             targetLang: new LanguageCode($this->asString($this->option('target'))),
             levels: $levels === [] ? ['A2', 'B1'] : $levels,
             size: (int) $this->asString($this->option('size')),
-        ));
+        ))->id;
 
         $this->info("Generating (request {$id->value})…");
 

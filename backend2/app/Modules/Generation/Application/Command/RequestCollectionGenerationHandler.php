@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Application\Command;
 
+use App\Modules\Generation\Application\Dto\GenerationRequestOutcome;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Domain\Entity\GenerationRequest;
+use App\Modules\Generation\Domain\Exception\GenerationIdConflict;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
@@ -36,8 +38,21 @@ final readonly class RequestCollectionGenerationHandler
         private DefaultTargetLangReader $defaultTargetLang,
     ) {}
 
-    public function __invoke(RequestCollectionGeneration $command): GenerationRequestId
+    public function __invoke(RequestCollectionGeneration $command): GenerationRequestOutcome
     {
+        // Idempotency: a client-supplied id that already exists returns the existing request —
+        // no new row, no second job, no quota spent (an offline retry of the same prompt).
+        if ($command->id !== null) {
+            $existing = $this->requests->findById($command->id);
+            if ($existing !== null) {
+                if (! $existing->userId()->equals($command->userId)) {
+                    throw GenerationIdConflict::make();
+                }
+
+                return new GenerationRequestOutcome($existing->id(), created: false);
+            }
+        }
+
         $now = $this->clock->now();
 
         $limit = $this->limits->forTier($this->tiers->tierOf($command->userId));
@@ -51,7 +66,7 @@ final readonly class RequestCollectionGenerationHandler
             ?? new LanguageCode('en');
 
         $request = GenerationRequest::open(
-            id: GenerationRequestId::generate(),
+            id: $command->id ?? GenerationRequestId::generate(),
             userId: $command->userId,
             prompt: $command->prompt,
             normalizedPrompt: $this->normalizer->normalize($command->prompt),
@@ -65,6 +80,6 @@ final readonly class RequestCollectionGenerationHandler
 
         $this->requests->save($request);
 
-        return $request->id();
+        return new GenerationRequestOutcome($request->id(), created: true);
     }
 }

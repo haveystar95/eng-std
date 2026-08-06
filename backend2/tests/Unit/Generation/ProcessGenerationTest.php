@@ -70,7 +70,7 @@ function openGeneration(object $ctx, int $used = 0): GenerationRequestId
 
     return $handler(new RequestCollectionGeneration(
         $ctx->user, 'иду в банк', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 12,
-    ));
+    ))->id;
 }
 
 /** Build a ProcessGenerationHandler wired to a specific generator (the rest are shared fakes). */

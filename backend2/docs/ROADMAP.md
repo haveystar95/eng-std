@@ -288,6 +288,15 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   `term_examples` are global, so this replaces the shared example — fine here; a multi-user build
   would need per-user example overrides. Fake regenerator for tests; feature test (replace + spend,
   429-when-exhausted, 404-unknown, auth).
+- [x] **B2 — client-ULID idempotency on POST /generations** (this session): the endpoint now accepts
+  an optional client-generated `id` (ULID). Re-sending the same id returns the **existing** request
+  with **200** (no new row, no second job dispatched, no quota spent) instead of **202** — the backend
+  half of the client's durable offline generation queue (client side = session A). The handler
+  short-circuits on a found id before the quota check; a different user re-using an id → **409**
+  `generation_id_conflict` (never resolve or leak another user's request). Handler now returns a
+  `GenerationRequestOutcome{id, created}` so the controller picks 200 vs 202 and dispatches only when
+  created. OpenAPI documents id + 200/409; feature tests (202-then-200 idempotent, no-dup, quota not
+  double-spent, cross-user 409 at the handler, server-generates-when-absent).
 - [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
   `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
   **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.

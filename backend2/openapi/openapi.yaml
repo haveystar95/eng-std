@@ -117,7 +117,10 @@ paths:
     post:
       tags: [Generation]
       summary: Request an AI-generated collection (async)
-      description: Returns 202 with a pending request; poll GET /generations/{id} until succeeded|failed.
+      description: >
+        Returns 202 with a pending request; poll GET /generations/{id} until succeeded|failed.
+        Accepts an optional client-generated `id` (ULID) for offline idempotency: re-sending the same
+        id returns the existing request with 200 (no new job, no quota spent) instead of 202.
       requestBody:
         required: true
         content:
@@ -126,6 +129,7 @@ paths:
               type: object
               required: [prompt]
               properties:
+                id: { type: string, minLength: 26, maxLength: 26, description: Client-generated ULID for idempotent retries. }
                 prompt: { type: string, minLength: 2, maxLength: 500 }
                 levels:
                   type: array
@@ -141,7 +145,15 @@ paths:
                     (profiles.target_language, as returned in /auth/me), then English if unset.
       responses:
         '202':
-          description: Accepted
+          description: Accepted — a new pending request was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GenerationRequest' }
+        '200':
+          description: The request already existed for this client id (idempotent repeat)
           content:
             application/json:
               schema:
@@ -149,6 +161,11 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/GenerationRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: The client id is already in use by another user (code `generation_id_conflict`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429':
           description: Daily generation quota reached (code `generation_quota_exceeded`)

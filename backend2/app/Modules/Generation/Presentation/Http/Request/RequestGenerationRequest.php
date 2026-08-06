@@ -17,6 +17,8 @@ final class RequestGenerationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Optional client-generated ULID for offline idempotency (re-send = existing request).
+            'id' => ['sometimes', 'string', 'size:26'],
             'prompt' => ['required', 'string', 'min:2', 'max:500'],
             'levels' => ['sometimes', 'array', 'min:1'],
             'levels.*' => ['string', 'in:A1,A2,B1,B2,C1,C2'],

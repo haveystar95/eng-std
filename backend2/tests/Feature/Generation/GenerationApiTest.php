@@ -86,7 +86,7 @@ it("hides another user's generation behind 404", function () {
     $owner = User::factory()->create();
     $id = app(RequestCollectionGenerationHandler::class)(new RequestCollectionGeneration(
         UserId::fromString($owner->id), 'секрет', new LanguageCode('ru'), new LanguageCode('en'), ['A2'], 8,
-    ));
+    ))->id;
 
     $this->withHeader('Authorization', 'Bearer ' . bearerToken())
         ->getJson("/api/v1/generations/{$id->value}")

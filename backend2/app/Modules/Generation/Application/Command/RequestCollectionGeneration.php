@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Application\Command;
 
+use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
@@ -14,6 +15,8 @@ final readonly class RequestCollectionGeneration
      * @param  list<string>  $levels
      * @param  LanguageCode|null  $targetLang  null → fall back to the user's default learning
      *         language (profiles.target_language), then to English.
+     * @param  GenerationRequestId|null  $id  a client-generated ULID for offline idempotency —
+     *         re-sending the same id returns the existing request instead of creating a new one.
      */
     public function __construct(
         public UserId $userId,
@@ -22,5 +25,6 @@ final readonly class RequestCollectionGeneration
         public ?LanguageCode $targetLang,
         public array $levels,
         public int $size,
+        public ?GenerationRequestId $id = null,
     ) {}
 }
