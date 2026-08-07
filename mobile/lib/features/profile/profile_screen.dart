@@ -1,222 +1,201 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/cupertino.dart' show CupertinoPicker, CupertinoPickerDefaultSelectionOverlay;
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/design.dart';
-import '../../core/glass.dart';
-import '../../core/languages.dart';
-import '../../data/local/sync_service.dart';
+import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../data/languages.dart' show kLanguages, kCefrLevels, languageByCode;
+import '../../data/app_settings.dart';
+import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
-import 'settings_screen.dart';
 
-/// The sync diagnostics panel is a debug aid, kept out of normal release builds. Shown in a debug
-/// build, or in a release build explicitly enabled for sync debugging:
-/// `flutter run --release --dart-define=SYNC_DIAG=true`.
-const bool _syncDiagEnabled = kDebugMode || bool.fromEnvironment('SYNC_DIAG');
-
+/// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
+/// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final user = ref.watch(authControllerProvider).value;
+    final settings = ref.watch(appSettingsProvider).value ?? AppSettings.defaults;
+    final uiLang = ref.watch(localeControllerProvider).value ?? UiLanguageOption.system;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Профиль'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () {
-              AppFeedback.select();
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-            },
-          ),
-        ],
-      ),
-      body: AmbientBackground(
-        child: SafeArea(
-          child: user == null
-              ? const SizedBox.shrink()
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 120),
-                  children: [
-                    _Header(user: user).animate().fadeIn().slideY(begin: 0.08, end: 0),
-                    const SizedBox(height: AppSpacing.md),
-                    if (user.profile != null)
-                      _PrefsCard(profile: user.profile!).animate().fadeIn(delay: 60.ms).slideY(begin: 0.08, end: 0),
-                    const SizedBox(height: AppSpacing.md),
-                    GlassButton(
-                      label: 'Настройки обучения',
-                      icon: Icons.tune_rounded,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                      ),
-                    ).animate().fadeIn(delay: 120.ms),
-                    const SizedBox(height: AppSpacing.md),
-                    if (_syncDiagEnabled) ...[
-                      const _SyncDiagnosticsCard().animate().fadeIn(delay: 150.ms),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                    SpringTap(
-                      onTap: () => ref.read(authControllerProvider.notifier).signOut(),
-                      child: Container(
-                        height: 54,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(AppRadii.md),
-                          border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.logout_rounded, color: AppColors.danger, size: 20),
-                            SizedBox(width: 10),
-                            Text('Выйти', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700, fontSize: 15)),
-                          ],
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 180.ms),
-                  ],
-                ),
+    if (user == null) return const SizedBox.shrink();
+    final profile = user.profile;
+
+    final bottomInset = AppTabBarMetrics.height +
+        AppTabBarMetrics.bottomInset +
+        MediaQuery.viewPaddingOf(context).bottom +
+        AppSpacing.s8;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, bottomInset),
+          children: [
+            Text(l.profileTitle, style: AppText.screenTitle),
+            const SizedBox(height: 18),
+            _Header(user: user),
+
+            if (profile != null) ...[
+              _SectionLabel(l.profileSectionLearning),
+              _NavRow(label: l.profileRowLevel, value: profile.cefrLevel, onTap: () => _editLevel(context, ref, profile.cefrLevel)),
+              _NavRow(
+                  label: l.profileRowGoal,
+                  value: l.profileGoalValue(profile.dailyGoal),
+                  onTap: () => _editGoal(context, ref, profile.dailyGoal)),
+              _NavRow(
+                  label: l.profileRowTargetLang,
+                  value: languageByCode(profile.targetLanguage).name,
+                  onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
+                  last: true),
+            ],
+
+            _SectionLabel(l.profileSectionApp),
+            _NavRow(
+                label: l.profileRowUiLang,
+                value: _uiLangName(l, uiLang),
+                onTap: () => _editUiLang(context, ref, uiLang)),
+            _SwitchRow(
+              label: l.profileRowReminders,
+              hint: l.profileRemindersHint,
+              value: settings.remindersEnabled,
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setRemindersEnabled(v),
+            ),
+            // «Время» appears only while reminders are on (design 13a — the row slides in/out).
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              child: settings.remindersEnabled
+                  ? _NavRow(
+                      label: l.profileRowReminderTime,
+                      value: settings.reminderTime,
+                      onTap: () => _editReminderTime(context, ref, settings.reminderTime))
+                  : const SizedBox(width: double.infinity),
+            ),
+            _SwitchRow(
+              label: l.profileRowAutoPronounce,
+              hint: l.profileAutoPronounceHint,
+              value: settings.autoPronounce,
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setAutoPronounce(v),
+              last: true,
+            ),
+
+            _SectionLabel(l.profileSectionSubscription),
+            _InfoRow(title: l.profileFreeTier, hint: l.profileFreeTierHint, trailing: l.profileSoon, last: true),
+
+            _SectionLabel(l.profileSectionAccount),
+            _LinkRow(label: l.profileSignOut, onTap: () => ref.read(authControllerProvider.notifier).signOut()),
+            _LinkRow(
+              label: l.profileDeleteAccount,
+              destructive: true,
+              last: true,
+              onTap: () => _confirmDelete(context, ref),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-/// On-device sync diagnostics for the acceptance run — release hides debugPrint, so the watch-points
-/// (last `since` = ∅/date, cursor advance, per-type change counts incl. both delete kinds, and the
-/// current local row counts + stored cursor) are read here on-screen. "Синхронизировать" forces a
-/// pull; the refresh icon re-reads the counts. (Temporary; trim with the source/type follow-up.)
-class _SyncDiagnosticsCard extends ConsumerStatefulWidget {
-  const _SyncDiagnosticsCard();
+  String _uiLangName(AppLocalizations l, UiLanguageOption o) => switch (o) {
+        UiLanguageOption.system => l.uiLangSystem,
+        UiLanguageOption.russian => l.uiLangRussian,
+        UiLanguageOption.english => l.uiLangEnglish,
+      };
 
-  @override
-  ConsumerState<_SyncDiagnosticsCard> createState() => _SyncDiagnosticsCardState();
-}
-
-class _SyncDiagnosticsCardState extends ConsumerState<_SyncDiagnosticsCard> {
-  Future<({int collections, int items, int terms, int progress, String? cursor})>? _counts;
-
-  @override
-  void initState() {
-    super.initState();
-    _refresh();
+  Future<void> _saveProfile(BuildContext context, WidgetRef ref, Map<String, dynamic> changes) async {
+    try {
+      await ref.read(authControllerProvider.notifier).updateProfile(changes);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
   }
 
-  void _refresh() => setState(() => _counts = ref.read(appDatabaseProvider).debugCounts());
-
-  @override
-  Widget build(BuildContext context) {
-    final sync = ref.watch(syncServiceProvider);
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.sync_rounded, color: AppColors.primary, size: 18),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Диагностика синка',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w800)),
-              ),
-              IconButton(
-                tooltip: 'Синхронизировать',
-                icon: const Icon(Icons.cloud_sync_rounded, color: AppColors.primary, size: 20),
-                onPressed: () async {
-                  await ref.read(syncServiceProvider).sync();
-                  if (mounted) _refresh();
-                },
-              ),
-              IconButton(
-                tooltip: 'Обновить счётчики',
-                icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary, size: 20),
-                onPressed: _refresh,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          ValueListenableBuilder<SyncReport?>(
-            valueListenable: sync.lastReport,
-            builder: (_, r, _) {
-              if (r == null) return const _DiagLine('Последний синк', 'ещё не было');
-              if (r.error != null) {
-                return _DiagLine('Последний синк', 'офлайн/сбой · since=${r.since}', warn: true);
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DiagLine('since', r.since, highlight: r.since == '∅'),
-                  _DiagLine('→ курсор', r.serverTime ?? '—'),
-                  _DiagLine('страниц', '${r.pages}'),
-                  _DiagLine('коллекции', '+${r.colUpserts} / −${r.colDeletes}', warn: r.colDeletes > 0),
-                  _DiagLine('элементы', '+${r.itemUpserts} / −${r.itemDeletes}', warn: r.itemDeletes > 0),
-                  _DiagLine('термины', '+${r.termUpserts}'),
-                  _DiagLine('прогресс', '+${r.progressUpserts}'),
-                ],
-              );
-            },
-          ),
-          Divider(height: 20, color: Colors.white.withValues(alpha: 0.10)),
-          const Text('В локальной БД сейчас',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          FutureBuilder<({int collections, int items, int terms, int progress, String? cursor})>(
-            future: _counts,
-            builder: (_, snap) {
-              final c = snap.data;
-              if (c == null) return const _DiagLine('…', '');
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DiagLine('коллекции', '${c.collections}'),
-                  _DiagLine('элементы', '${c.items}'),
-                  _DiagLine('термины', '${c.terms}'),
-                  _DiagLine('прогресс', '${c.progress}'),
-                  _DiagLine('курсор в БД', c.cursor ?? '∅ (пусто)', highlight: c.cursor == null),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
+  Future<void> _editLevel(BuildContext context, WidgetRef ref, String current) async {
+    final l = AppLocalizations.of(context);
+    final chosen = await showAppBottomSheet<String>(
+      context: context,
+      builder: (_) => _GridSheet(title: l.profileLevelSheet, options: kCefrLevels, current: current),
     );
+    if (chosen != null && chosen != current && context.mounted) {
+      await _saveProfile(context, ref, {'cefr_level': chosen});
+    }
   }
-}
 
-class _DiagLine extends StatelessWidget {
-  const _DiagLine(this.label, this.value, {this.highlight = false, this.warn = false});
-  final String label;
-  final String value;
-  final bool highlight;
-  final bool warn;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = warn ? AppColors.review : (highlight ? AppColors.know : AppColors.textPrimary);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          ),
-          Expanded(
-            child: Text(value,
-                style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: 'monospace')),
-          ),
-        ],
-      ),
+  Future<void> _editGoal(BuildContext context, WidgetRef ref, int current) async {
+    final l = AppLocalizations.of(context);
+    final chosen = await showAppBottomSheet<int>(
+      context: context,
+      builder: (_) => _GoalSheet(title: l.profileGoalSheet, current: current),
     );
+    if (chosen != null && chosen != current && context.mounted) {
+      await _saveProfile(context, ref, {'daily_goal': chosen});
+    }
+  }
+
+  Future<void> _editTargetLang(BuildContext context, WidgetRef ref, String current) async {
+    final l = AppLocalizations.of(context);
+    final native = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
+    final chosen = await showAppBottomSheet<String>(
+      context: context,
+      builder: (_) => _LanguageSheet(title: l.profileRowTargetLang, current: current, exclude: native),
+    );
+    if (chosen != null && chosen != current && context.mounted) {
+      await _saveProfile(context, ref, {'target_language': chosen});
+    }
+  }
+
+  Future<void> _editUiLang(BuildContext context, WidgetRef ref, UiLanguageOption current) async {
+    final chosen = await showAppBottomSheet<UiLanguageOption>(
+      context: context,
+      builder: (_) => _UiLangSheet(current: current),
+    );
+    if (chosen != null && chosen != current) {
+      await ref.read(localeControllerProvider.notifier).setOption(chosen);
+    }
+  }
+
+  Future<void> _editReminderTime(BuildContext context, WidgetRef ref, String current) async {
+    final chosen = await showAppBottomSheet<String>(
+      context: context,
+      builder: (_) => _TimeSheet(current: current),
+    );
+    if (chosen != null) {
+      await ref.read(appSettingsProvider.notifier).setReminderTime(chosen);
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final stats = ref.read(statsProvider).value;
+    final words = l.deleteAccountWords(stats?.totalWords ?? 0);
+    final streak = l.deleteAccountStreak(stats?.streakDays ?? 0);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.deleteAccountTitle,
+      message: l.deleteAccountBody(words, streak),
+      confirmLabel: l.deleteAccountConfirm,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok == true) {
+      try {
+        await ref.read(authControllerProvider.notifier).deleteAccount();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        }
+      }
+    }
   }
 }
 
@@ -226,30 +205,34 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    final initials = user.name.trim().isEmpty
+        ? '?'
+        : user.name.trim().split(RegExp(r'\s+')).take(2).map((w) => w.characters.first.toUpperCase()).join();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Container(
-            width: 66,
-            height: 66,
-            decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppGradients.brand),
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
             child: user.avatar != null
-                ? ClipOval(child: Image.network(user.avatar!, fit: BoxFit.cover))
-                : Center(
-                    child: Text(user.name.characters.first.toUpperCase(),
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white)),
-                  ),
+                ? ClipOval(child: Image.network(user.avatar!, width: 52, height: 52, fit: BoxFit.cover))
+                : Text(initials,
+                    style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.paper)),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(user.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                if (user.email != null)
-                  Text(user.email!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                if (user.email != null) ...[
+                  const SizedBox(height: 3),
+                  Text(user.email!, style: AppText.transcription.copyWith(fontSize: 12.5)),
+                ],
               ],
             ),
           ),
@@ -259,36 +242,426 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _PrefsCard extends StatelessWidget {
-  const _PrefsCard({required this.profile});
-  final Profile profile;
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 4),
+        child: Text(text.toUpperCase(), style: AppText.sectionLabel.copyWith(color: AppColors.tertiary)),
+      );
+}
+
+/// A row with a value + chevron that opens an editor.
+class _NavRow extends StatelessWidget {
+  const _NavRow({required this.label, required this.value, required this.onTap, this.last = false});
+  final String label, value;
+  final VoidCallback onTap;
+  final bool last;
 
   @override
   Widget build(BuildContext context) {
-    final native = languageByCode(profile.nativeLanguage);
-    final target = languageByCode(profile.targetLanguage);
-    return GlassCard(
-      child: Column(
+    return _RowShell(
+      last: last,
+      onTap: onTap,
+      child: Row(
         children: [
-          _row('Родной язык', '${native.flag}  ${native.name}'),
-          _divider(),
-          _row('Изучаю', '${target.flag}  ${target.name}'),
-          _divider(),
-          _row('Уровень', profile.cefrLevel),
-          _divider(),
-          _row('Цель в день', '${profile.dailyGoal} слов'),
+          Expanded(child: Text(label, style: _labelStyle)),
+          Text(value, style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary)),
+          const SizedBox(width: 9),
+          const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
         ],
       ),
     );
   }
+}
 
-  Widget _divider() => Divider(height: 24, color: Colors.white.withValues(alpha: 0.10));
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({required this.label, this.hint, required this.value, required this.onChanged, this.last = false});
+  final String label;
+  final String? hint;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool last;
 
-  Widget _row(String label, String value) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  @override
+  Widget build(BuildContext context) {
+    return _RowShell(
+      last: last,
+      child: Row(
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: _labelStyle),
+                if (hint != null) ...[
+                  const SizedBox(height: 3),
+                  Text(hint!, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                ],
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: value,
+            onChanged: (v) {
+              AppHaptics.light();
+              onChanged(v);
+            },
+            activeTrackColor: AppColors.ink,
+            activeThumbColor: AppColors.paper,
+          ),
         ],
-      );
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.title, this.hint, this.trailing, this.last = false});
+  final String title;
+  final String? hint;
+  final String? trailing;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RowShell(
+      last: last,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: _labelStyle),
+                if (hint != null) ...[
+                  const SizedBox(height: 3),
+                  Text(hint!, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                ],
+              ],
+            ),
+          ),
+          if (trailing != null)
+            Text(trailing!, style: AppText.translation.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.tertiary)),
+        ],
+      ),
+    );
+  }
+}
+
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({required this.label, required this.onTap, this.destructive = false, this.last = false});
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive, last;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RowShell(
+      last: last,
+      onTap: onTap,
+      child: Text(label,
+          style: TextStyle(
+              fontFamily: AppFonts.inter,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w600,
+              color: destructive ? AppColors.destructiveText : AppColors.ink)),
+    );
+  }
+}
+
+const _labelStyle = TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, color: AppColors.ink);
+
+/// A settings row: 12px vertical padding + a hairline underline unless it's the section's last.
+class _RowShell extends StatelessWidget {
+  const _RowShell({required this.child, this.onTap, this.last = false});
+  final Widget child;
+  final VoidCallback? onTap;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final row = Container(
+      decoration: last
+          ? null
+          : const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.dividerFaint))),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: child,
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: () {
+        AppHaptics.light();
+        onTap!();
+      },
+      child: row,
+    );
+  }
+}
+
+// ── Editor sheets ──────────────────────────────────────────────────────────
+
+/// A wrap-grid chooser (level).
+class _GridSheet extends StatelessWidget {
+  const _GridSheet({required this.title, required this.options, required this.current});
+  final String title;
+  final List<String> options;
+  final String current;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final o in options)
+              SizedBox(
+                width: 88,
+                child: _PillOption(label: o, selected: o == current, onTap: () => Navigator.of(context).pop(o)),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalSheet extends StatelessWidget {
+  const _GoalSheet({required this.title, required this.current});
+  final String title;
+  final int current;
+
+  static const _options = [10, 20, 30];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
+        const SizedBox(height: 12),
+        for (final g in _options) ...[
+          if (g != _options.first) const SizedBox(height: 10),
+          _PillOption(label: l.profileGoalValue(g), selected: g == current, onTap: () => Navigator.of(context).pop(g)),
+        ],
+      ],
+    );
+  }
+}
+
+class _LanguageSheet extends StatelessWidget {
+  const _LanguageSheet({required this.title, required this.current, required this.exclude});
+  final String title, current, exclude;
+
+  @override
+  Widget build(BuildContext context) {
+    final langs = kLanguages.where((lang) => lang.code != exclude).toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: AppText.sheetButton.copyWith(fontSize: 17)),
+        const SizedBox(height: 8),
+        Flexible(
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: langs.length,
+            itemBuilder: (context, i) {
+              final lang = langs[i];
+              return InkWell(
+                onTap: () => Navigator.of(context).pop(lang.code),
+                borderRadius: BorderRadius.circular(AppRadii.field),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                  child: Row(
+                    children: [
+                      MiniFlag(languageCode: lang.code),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(lang.name, style: _labelStyle)),
+                      if (lang.code == current) const Icon(Icons.check, size: 18, color: AppColors.ink),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UiLangSheet extends StatelessWidget {
+  const _UiLangSheet({required this.current});
+  final UiLanguageOption current;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final options = <(UiLanguageOption, String)>[
+      (UiLanguageOption.system, l.uiLangSystem),
+      (UiLanguageOption.russian, l.uiLangRussian),
+      (UiLanguageOption.english, l.uiLangEnglish),
+    ];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l.profileUiLangSheet, style: AppText.sheetButton.copyWith(fontSize: 17)),
+        const SizedBox(height: 8),
+        for (final (opt, name) in options)
+          InkWell(
+            onTap: () => Navigator.of(context).pop(opt),
+            borderRadius: BorderRadius.circular(AppRadii.field),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
+              child: Row(
+                children: [
+                  Expanded(child: Text(name, style: _labelStyle)),
+                  if (opt == current) const Icon(Icons.check, size: 18, color: AppColors.ink),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Reminder time — two wheels (24h hour, 15-min minute), Сохранить (кадр 13b).
+class _TimeSheet extends StatefulWidget {
+  const _TimeSheet({required this.current});
+  final String current;
+
+  @override
+  State<_TimeSheet> createState() => _TimeSheetState();
+}
+
+class _TimeSheetState extends State<_TimeSheet> {
+  late int _hour;
+  late int _minuteIndex; // 0,15,30,45 → 0..3
+  static const _minutes = [0, 15, 30, 45];
+
+  @override
+  void initState() {
+    super.initState();
+    final parts = widget.current.split(':');
+    _hour = int.tryParse(parts.first)?.clamp(0, 23) ?? 20;
+    final m = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+    _minuteIndex = _minutes.indexOf((m ~/ 15) * 15).clamp(0, 3);
+  }
+
+  String get _value => '${_hour.toString().padLeft(2, '0')}:${_minutes[_minuteIndex].toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l.reminderSheetTitle,
+            style: const TextStyle(fontFamily: AppFonts.literata, fontSize: 23, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        const SizedBox(height: 7),
+        Text(l.reminderSheetSubtitle, style: AppText.translation.copyWith(fontSize: 13, height: 1.45, color: AppColors.secondary)),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 160,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _Wheel(
+                count: 24,
+                initial: _hour,
+                label: (i) => i.toString().padLeft(2, '0'),
+                onChanged: (i) => setState(() => _hour = i),
+              ),
+              const Text(':', style: TextStyle(fontFamily: AppFonts.inter, fontSize: 25, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              _Wheel(
+                count: _minutes.length,
+                initial: _minuteIndex,
+                label: (i) => _minutes[i].toString().padLeft(2, '0'),
+                onChanged: (i) => setState(() => _minuteIndex = i),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        PrimaryButton(label: l.commonSave, minHeight: 52, onPressed: () => Navigator.of(context).pop(_value)),
+      ],
+    );
+  }
+}
+
+class _Wheel extends StatelessWidget {
+  const _Wheel({required this.count, required this.initial, required this.label, required this.onChanged});
+  final int count, initial;
+  final String Function(int) label;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 74,
+      child: CupertinoPicker(
+        scrollController: FixedExtentScrollController(initialItem: initial),
+        itemExtent: 40,
+        squeeze: 1.1,
+        diameterRatio: 1.3,
+        selectionOverlay: const CupertinoPickerDefaultSelectionOverlay(background: AppColors.faintInk),
+        onSelectedItemChanged: onChanged,
+        children: [
+          for (var i = 0; i < count; i++)
+            Center(
+              child: Text(label(i),
+                  style: const TextStyle(
+                      fontFamily: AppFonts.inter, fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PillOption extends StatelessWidget {
+  const _PillOption({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.ink : Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        side: selected ? BorderSide.none : const BorderSide(color: AppColors.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          child: Center(
+            child: Text(label,
+                style: TextStyle(
+                    fontFamily: AppFonts.inter,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppColors.paper : AppColors.ink)),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -3009,6 +3009,33 @@ class $PendingGenerationsTable extends PendingGenerations
     requiredDuringInsert: false,
     defaultValue: const Constant(15),
   );
+  static const VerificationMeta _sentMeta = const VerificationMeta('sent');
+  @override
+  late final GeneratedColumn<bool> sent = GeneratedColumn<bool>(
+    'sent',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sent" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _targetLangExplicitMeta =
+      const VerificationMeta('targetLangExplicit');
+  @override
+  late final GeneratedColumn<bool> targetLangExplicit = GeneratedColumn<bool>(
+    'target_lang_explicit',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("target_lang_explicit" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3044,6 +3071,8 @@ class $PendingGenerationsTable extends PendingGenerations
     targetLang,
     levelsCsv,
     size,
+    sent,
+    targetLangExplicit,
     createdAt,
     updatedAt,
   ];
@@ -3129,6 +3158,21 @@ class $PendingGenerationsTable extends PendingGenerations
         size.isAcceptableOrUnknown(data['size']!, _sizeMeta),
       );
     }
+    if (data.containsKey('sent')) {
+      context.handle(
+        _sentMeta,
+        sent.isAcceptableOrUnknown(data['sent']!, _sentMeta),
+      );
+    }
+    if (data.containsKey('target_lang_explicit')) {
+      context.handle(
+        _targetLangExplicitMeta,
+        targetLangExplicit.isAcceptableOrUnknown(
+          data['target_lang_explicit']!,
+          _targetLangExplicitMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3198,6 +3242,14 @@ class $PendingGenerationsTable extends PendingGenerations
         DriftSqlType.int,
         data['${effectivePrefix}size'],
       )!,
+      sent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sent'],
+      )!,
+      targetLangExplicit: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}target_lang_explicit'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3228,6 +3280,8 @@ class PendingGeneration extends DataClass
   final String targetLang;
   final String levelsCsv;
   final int size;
+  final bool sent;
+  final bool targetLangExplicit;
   final DateTime createdAt;
   final DateTime updatedAt;
   const PendingGeneration({
@@ -3242,6 +3296,8 @@ class PendingGeneration extends DataClass
     required this.targetLang,
     required this.levelsCsv,
     required this.size,
+    required this.sent,
+    required this.targetLangExplicit,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3267,6 +3323,8 @@ class PendingGeneration extends DataClass
     map['target_lang'] = Variable<String>(targetLang);
     map['levels_csv'] = Variable<String>(levelsCsv);
     map['size'] = Variable<int>(size);
+    map['sent'] = Variable<bool>(sent);
+    map['target_lang_explicit'] = Variable<bool>(targetLangExplicit);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -3293,6 +3351,8 @@ class PendingGeneration extends DataClass
       targetLang: Value(targetLang),
       levelsCsv: Value(levelsCsv),
       size: Value(size),
+      sent: Value(sent),
+      targetLangExplicit: Value(targetLangExplicit),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3315,6 +3375,8 @@ class PendingGeneration extends DataClass
       targetLang: serializer.fromJson<String>(json['targetLang']),
       levelsCsv: serializer.fromJson<String>(json['levelsCsv']),
       size: serializer.fromJson<int>(json['size']),
+      sent: serializer.fromJson<bool>(json['sent']),
+      targetLangExplicit: serializer.fromJson<bool>(json['targetLangExplicit']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -3334,6 +3396,8 @@ class PendingGeneration extends DataClass
       'targetLang': serializer.toJson<String>(targetLang),
       'levelsCsv': serializer.toJson<String>(levelsCsv),
       'size': serializer.toJson<int>(size),
+      'sent': serializer.toJson<bool>(sent),
+      'targetLangExplicit': serializer.toJson<bool>(targetLangExplicit),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -3351,6 +3415,8 @@ class PendingGeneration extends DataClass
     String? targetLang,
     String? levelsCsv,
     int? size,
+    bool? sent,
+    bool? targetLangExplicit,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => PendingGeneration(
@@ -3365,6 +3431,8 @@ class PendingGeneration extends DataClass
     targetLang: targetLang ?? this.targetLang,
     levelsCsv: levelsCsv ?? this.levelsCsv,
     size: size ?? this.size,
+    sent: sent ?? this.sent,
+    targetLangExplicit: targetLangExplicit ?? this.targetLangExplicit,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -3387,6 +3455,10 @@ class PendingGeneration extends DataClass
           : this.targetLang,
       levelsCsv: data.levelsCsv.present ? data.levelsCsv.value : this.levelsCsv,
       size: data.size.present ? data.size.value : this.size,
+      sent: data.sent.present ? data.sent.value : this.sent,
+      targetLangExplicit: data.targetLangExplicit.present
+          ? data.targetLangExplicit.value
+          : this.targetLangExplicit,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3406,6 +3478,8 @@ class PendingGeneration extends DataClass
           ..write('targetLang: $targetLang, ')
           ..write('levelsCsv: $levelsCsv, ')
           ..write('size: $size, ')
+          ..write('sent: $sent, ')
+          ..write('targetLangExplicit: $targetLangExplicit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3425,6 +3499,8 @@ class PendingGeneration extends DataClass
     targetLang,
     levelsCsv,
     size,
+    sent,
+    targetLangExplicit,
     createdAt,
     updatedAt,
   );
@@ -3443,6 +3519,8 @@ class PendingGeneration extends DataClass
           other.targetLang == this.targetLang &&
           other.levelsCsv == this.levelsCsv &&
           other.size == this.size &&
+          other.sent == this.sent &&
+          other.targetLangExplicit == this.targetLangExplicit &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3459,6 +3537,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
   final Value<String> targetLang;
   final Value<String> levelsCsv;
   final Value<int> size;
+  final Value<bool> sent;
+  final Value<bool> targetLangExplicit;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -3474,6 +3554,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
     this.targetLang = const Value.absent(),
     this.levelsCsv = const Value.absent(),
     this.size = const Value.absent(),
+    this.sent = const Value.absent(),
+    this.targetLangExplicit = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3490,6 +3572,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
     this.targetLang = const Value.absent(),
     this.levelsCsv = const Value.absent(),
     this.size = const Value.absent(),
+    this.sent = const Value.absent(),
+    this.targetLangExplicit = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -3509,6 +3593,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
     Expression<String>? targetLang,
     Expression<String>? levelsCsv,
     Expression<int>? size,
+    Expression<bool>? sent,
+    Expression<bool>? targetLangExplicit,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -3525,6 +3611,9 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
       if (targetLang != null) 'target_lang': targetLang,
       if (levelsCsv != null) 'levels_csv': levelsCsv,
       if (size != null) 'size': size,
+      if (sent != null) 'sent': sent,
+      if (targetLangExplicit != null)
+        'target_lang_explicit': targetLangExplicit,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3543,6 +3632,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
     Value<String>? targetLang,
     Value<String>? levelsCsv,
     Value<int>? size,
+    Value<bool>? sent,
+    Value<bool>? targetLangExplicit,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -3559,6 +3650,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
       targetLang: targetLang ?? this.targetLang,
       levelsCsv: levelsCsv ?? this.levelsCsv,
       size: size ?? this.size,
+      sent: sent ?? this.sent,
+      targetLangExplicit: targetLangExplicit ?? this.targetLangExplicit,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -3601,6 +3694,12 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
     if (size.present) {
       map['size'] = Variable<int>(size.value);
     }
+    if (sent.present) {
+      map['sent'] = Variable<bool>(sent.value);
+    }
+    if (targetLangExplicit.present) {
+      map['target_lang_explicit'] = Variable<bool>(targetLangExplicit.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3627,8 +3726,219 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
           ..write('targetLang: $targetLang, ')
           ..write('levelsCsv: $levelsCsv, ')
           ..write('size: $size, ')
+          ..write('sent: $sent, ')
+          ..write('targetLangExplicit: $targetLangExplicit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DailyActivityTable extends DailyActivity
+    with TableInfo<$DailyActivityTable, DailyActivityData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyActivityTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<String> day = GeneratedColumn<String>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewsMeta = const VerificationMeta(
+    'reviews',
+  );
+  @override
+  late final GeneratedColumn<int> reviews = GeneratedColumn<int>(
+    'reviews',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [day, reviews];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_activity';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyActivityData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('reviews')) {
+      context.handle(
+        _reviewsMeta,
+        reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {day};
+  @override
+  DailyActivityData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyActivityData(
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}day'],
+      )!,
+      reviews: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reviews'],
+      )!,
+    );
+  }
+
+  @override
+  $DailyActivityTable createAlias(String alias) {
+    return $DailyActivityTable(attachedDatabase, alias);
+  }
+}
+
+class DailyActivityData extends DataClass
+    implements Insertable<DailyActivityData> {
+  final String day;
+  final int reviews;
+  const DailyActivityData({required this.day, required this.reviews});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['day'] = Variable<String>(day);
+    map['reviews'] = Variable<int>(reviews);
+    return map;
+  }
+
+  DailyActivityCompanion toCompanion(bool nullToAbsent) {
+    return DailyActivityCompanion(day: Value(day), reviews: Value(reviews));
+  }
+
+  factory DailyActivityData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyActivityData(
+      day: serializer.fromJson<String>(json['day']),
+      reviews: serializer.fromJson<int>(json['reviews']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'day': serializer.toJson<String>(day),
+      'reviews': serializer.toJson<int>(reviews),
+    };
+  }
+
+  DailyActivityData copyWith({String? day, int? reviews}) =>
+      DailyActivityData(day: day ?? this.day, reviews: reviews ?? this.reviews);
+  DailyActivityData copyWithCompanion(DailyActivityCompanion data) {
+    return DailyActivityData(
+      day: data.day.present ? data.day.value : this.day,
+      reviews: data.reviews.present ? data.reviews.value : this.reviews,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyActivityData(')
+          ..write('day: $day, ')
+          ..write('reviews: $reviews')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(day, reviews);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyActivityData &&
+          other.day == this.day &&
+          other.reviews == this.reviews);
+}
+
+class DailyActivityCompanion extends UpdateCompanion<DailyActivityData> {
+  final Value<String> day;
+  final Value<int> reviews;
+  final Value<int> rowid;
+  const DailyActivityCompanion({
+    this.day = const Value.absent(),
+    this.reviews = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyActivityCompanion.insert({
+    required String day,
+    this.reviews = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : day = Value(day);
+  static Insertable<DailyActivityData> custom({
+    Expression<String>? day,
+    Expression<int>? reviews,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (day != null) 'day': day,
+      if (reviews != null) 'reviews': reviews,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyActivityCompanion copyWith({
+    Value<String>? day,
+    Value<int>? reviews,
+    Value<int>? rowid,
+  }) {
+    return DailyActivityCompanion(
+      day: day ?? this.day,
+      reviews: reviews ?? this.reviews,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (day.present) {
+      map['day'] = Variable<String>(day.value);
+    }
+    if (reviews.present) {
+      map['reviews'] = Variable<int>(reviews.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyActivityCompanion(')
+          ..write('day: $day, ')
+          ..write('reviews: $reviews, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3648,6 +3958,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TriagedTermsTable triagedTerms = $TriagedTermsTable(this);
   late final $PendingGenerationsTable pendingGenerations =
       $PendingGenerationsTable(this);
+  late final $DailyActivityTable dailyActivity = $DailyActivityTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3660,6 +3971,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncMeta,
     triagedTerms,
     pendingGenerations,
+    dailyActivity,
   ];
 }
 
@@ -5150,6 +5462,8 @@ typedef $$PendingGenerationsTableCreateCompanionBuilder =
       Value<String> targetLang,
       Value<String> levelsCsv,
       Value<int> size,
+      Value<bool> sent,
+      Value<bool> targetLangExplicit,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -5167,6 +5481,8 @@ typedef $$PendingGenerationsTableUpdateCompanionBuilder =
       Value<String> targetLang,
       Value<String> levelsCsv,
       Value<int> size,
+      Value<bool> sent,
+      Value<bool> targetLangExplicit,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -5233,6 +5549,16 @@ class $$PendingGenerationsTableFilterComposer
 
   ColumnFilters<int> get size => $composableBuilder(
     column: $table.size,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get targetLangExplicit => $composableBuilder(
+    column: $table.targetLangExplicit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5311,6 +5637,16 @@ class $$PendingGenerationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get targetLangExplicit => $composableBuilder(
+    column: $table.targetLangExplicit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5370,6 +5706,14 @@ class $$PendingGenerationsTableAnnotationComposer
   GeneratedColumn<int> get size =>
       $composableBuilder(column: $table.size, builder: (column) => column);
 
+  GeneratedColumn<bool> get sent =>
+      $composableBuilder(column: $table.sent, builder: (column) => column);
+
+  GeneratedColumn<bool> get targetLangExplicit => $composableBuilder(
+    column: $table.targetLangExplicit,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -5428,6 +5772,8 @@ class $$PendingGenerationsTableTableManager
                 Value<String> targetLang = const Value.absent(),
                 Value<String> levelsCsv = const Value.absent(),
                 Value<int> size = const Value.absent(),
+                Value<bool> sent = const Value.absent(),
+                Value<bool> targetLangExplicit = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5443,6 +5789,8 @@ class $$PendingGenerationsTableTableManager
                 targetLang: targetLang,
                 levelsCsv: levelsCsv,
                 size: size,
+                sent: sent,
+                targetLangExplicit: targetLangExplicit,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -5460,6 +5808,8 @@ class $$PendingGenerationsTableTableManager
                 Value<String> targetLang = const Value.absent(),
                 Value<String> levelsCsv = const Value.absent(),
                 Value<int> size = const Value.absent(),
+                Value<bool> sent = const Value.absent(),
+                Value<bool> targetLangExplicit = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -5475,6 +5825,8 @@ class $$PendingGenerationsTableTableManager
                 targetLang: targetLang,
                 levelsCsv: levelsCsv,
                 size: size,
+                sent: sent,
+                targetLangExplicit: targetLangExplicit,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -5508,6 +5860,153 @@ typedef $$PendingGenerationsTableProcessedTableManager =
       PendingGeneration,
       PrefetchHooks Function()
     >;
+typedef $$DailyActivityTableCreateCompanionBuilder =
+    DailyActivityCompanion Function({
+      required String day,
+      Value<int> reviews,
+      Value<int> rowid,
+    });
+typedef $$DailyActivityTableUpdateCompanionBuilder =
+    DailyActivityCompanion Function({
+      Value<String> day,
+      Value<int> reviews,
+      Value<int> rowid,
+    });
+
+class $$DailyActivityTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
+  $$DailyActivityTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviews => $composableBuilder(
+    column: $table.reviews,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DailyActivityTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
+  $$DailyActivityTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviews => $composableBuilder(
+    column: $table.reviews,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyActivityTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
+  $$DailyActivityTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get reviews =>
+      $composableBuilder(column: $table.reviews, builder: (column) => column);
+}
+
+class $$DailyActivityTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyActivityTable,
+          DailyActivityData,
+          $$DailyActivityTableFilterComposer,
+          $$DailyActivityTableOrderingComposer,
+          $$DailyActivityTableAnnotationComposer,
+          $$DailyActivityTableCreateCompanionBuilder,
+          $$DailyActivityTableUpdateCompanionBuilder,
+          (
+            DailyActivityData,
+            BaseReferences<
+              _$AppDatabase,
+              $DailyActivityTable,
+              DailyActivityData
+            >,
+          ),
+          DailyActivityData,
+          PrefetchHooks Function()
+        > {
+  $$DailyActivityTableTableManager(_$AppDatabase db, $DailyActivityTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyActivityTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyActivityTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyActivityTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> day = const Value.absent(),
+                Value<int> reviews = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyActivityCompanion(
+                day: day,
+                reviews: reviews,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String day,
+                Value<int> reviews = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyActivityCompanion.insert(
+                day: day,
+                reviews: reviews,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DailyActivityTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyActivityTable,
+      DailyActivityData,
+      $$DailyActivityTableFilterComposer,
+      $$DailyActivityTableOrderingComposer,
+      $$DailyActivityTableAnnotationComposer,
+      $$DailyActivityTableCreateCompanionBuilder,
+      $$DailyActivityTableUpdateCompanionBuilder,
+      (
+        DailyActivityData,
+        BaseReferences<_$AppDatabase, $DailyActivityTable, DailyActivityData>,
+      ),
+      DailyActivityData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5526,4 +6025,6 @@ class $AppDatabaseManager {
       $$TriagedTermsTableTableManager(_db, _db.triagedTerms);
   $$PendingGenerationsTableTableManager get pendingGenerations =>
       $$PendingGenerationsTableTableManager(_db, _db.pendingGenerations);
+  $$DailyActivityTableTableManager get dailyActivity =>
+      $$DailyActivityTableTableManager(_db, _db.dailyActivity);
 }

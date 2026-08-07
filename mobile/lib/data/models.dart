@@ -116,24 +116,109 @@ class ReviewCard {
       ReviewCard(word: Word.fromJson(j));
 }
 
+/// How a session card is presented (backend2 `SessionCard.exercise_mode`). The mode decides
+/// which exercise body renders and how the client's INSTANT feedback checks an answer; it never
+/// decides scheduling — the server grades every answer and the client check is never stricter
+/// than the server's (invariant). Unknown values fall back to [typing] so a future server mode
+/// still plays as free recall instead of crashing.
+enum ExerciseMode {
+  multipleChoice('multiple_choice'),
+  wordBank('word_bank'),
+  typing('typing'),
+  listening('listening'),
+  cloze('cloze');
+
+  const ExerciseMode(this.wire);
+  final String wire;
+
+  static ExerciseMode fromWire(String? v) =>
+      ExerciseMode.values.firstWhere((m) => m.wire == v, orElse: () => ExerciseMode.typing);
+
+  /// A production mode reproduces from memory (free recall / assembly), so the answer is TYPED or
+  /// assembled rather than picked. Recognition modes (pick one of four) are handled inline.
+  bool get isTyped => this == typing || this == cloze || this == listening;
+}
+
+/// One self-contained card in a study session (`POST /study/sessions`). Carries the prompt (user's
+/// language), the target answer (for grading feedback), and the mode-specific extras the client
+/// needs to play it offline — shuffled [options] for multiple_choice, shuffled [chips] for
+/// word_bank. The photo is NOT on the wire: the feedback pulls it from the local term mirror.
+class SessionCard {
+  final String termId;
+  final ExerciseMode mode;
+  final String type; // word | phrase | idiom | phrasal_verb
+  final String? prompt; // the cue, in the user's language
+  final String answer; // the correct target-language answer
+  final String? transcription;
+  final String? example;
+  final String? exampleTranslation;
+  final List<String>? options; // multiple_choice — answer + distractors, shuffled
+  final List<String>? chips; // word_bank — the answer's tokens, shuffled
+
+  SessionCard({
+    required this.termId,
+    required this.mode,
+    required this.type,
+    this.prompt,
+    required this.answer,
+    this.transcription,
+    this.example,
+    this.exampleTranslation,
+    this.options,
+    this.chips,
+  });
+
+  bool get isPhrase => type != 'word';
+
+  factory SessionCard.fromJson(Map<String, dynamic> j) => SessionCard(
+        termId: j['term_id'] as String,
+        mode: ExerciseMode.fromWire(j['exercise_mode'] as String?),
+        type: (j['type'] as String?) ?? 'word',
+        prompt: j['prompt'] as String?,
+        answer: (j['answer'] as String?) ?? '',
+        transcription: j['transcription'] as String?,
+        example: j['example'] as String?,
+        exampleTranslation: j['example_translation'] as String?,
+        options: (j['options'] as List?)?.map((e) => e as String).toList(),
+        chips: (j['chips'] as List?)?.map((e) => e as String).toList(),
+      );
+}
+
+/// A ready-to-play session: the server-fixed composition (one card per exercise) under a
+/// client-generated [sessionId] (idempotent). `POST /study/sessions`.
+class StudySession {
+  final String sessionId;
+  final List<SessionCard> cards;
+
+  const StudySession({required this.sessionId, required this.cards});
+}
+
 class Profile {
   final String nativeLanguage;
   final String targetLanguage;
   final String cefrLevel;
   final int dailyGoal;
 
+  /// Subscription tier from `/me` (B5): free | premium. Server-derived, so it is NOT written back
+  /// in [toJson] (staleness-safe, like the generation quota). Gates the practice-dialog entry.
+  final String tier;
+
   Profile({
     required this.nativeLanguage,
     required this.targetLanguage,
     required this.cefrLevel,
     required this.dailyGoal,
+    this.tier = 'free',
   });
+
+  bool get isPremium => tier == 'premium';
 
   factory Profile.fromJson(Map<String, dynamic> j) => Profile(
         nativeLanguage: (j['native_language'] as String?) ?? 'ru',
         targetLanguage: (j['target_language'] as String?) ?? 'en',
         cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
         dailyGoal: (j['daily_goal'] as int?) ?? 20,
+        tier: (j['tier'] as String?) ?? 'free',
       );
 
   Map<String, dynamic> toJson() => {
@@ -141,6 +226,10 @@ class Profile {
         'target_language': targetLanguage,
         'cefr_level': cefrLevel,
         'daily_goal': dailyGoal,
+        // Persist tier so the cached user keeps premium across restart/refresh — otherwise the
+        // restored user defaults to free and the premium-gated dialog button vanishes until a
+        // re-login. The server still enforces the real gate (403), so mild staleness is safe.
+        'tier': tier,
       };
 }
 
@@ -287,16 +376,6 @@ class GenerationStatusView {
   bool get isFailed => status == 'failed';
   bool get isTerminal => isSucceeded || isFailed;
 }
-
-/// Russian badge label for a term type. Unknown values fall back to phrase-like — the same
-/// forward-compat rule as [Word.isPhrase], so a future server type never renders as a bare word.
-String termTypeLabel(String type) => switch (type) {
-      'word' => 'слово',
-      'phrase' => 'фраза',
-      'idiom' => 'идиома',
-      'phrasal_verb' => 'фраз. глагол',
-      _ => 'фраза',
-    };
 
 /// A triage swipe verdict. Three, not two — a binary choice makes people lie
 /// toward "known". The value is exactly what `POST /triage/batch` expects.

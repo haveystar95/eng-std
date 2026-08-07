@@ -1,6 +1,6 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-import '../data/models.dart';
+import 'models.dart';
 import 'languages.dart';
 
 /// Speaks a term out loud.

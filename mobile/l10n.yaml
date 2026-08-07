@@ -1,0 +1,9 @@
+# gen-l10n config (A3.0). Source of truth: app_ru.arb. English (app_en.arb) is
+# filled in as screens migrate; it joins supportedLocales only when complete
+# (see lib/data/locale_controller.dart / session-handoff). Non-synthetic output
+# lands in lib/l10n so the generated code is tracked and analyze stays green.
+arb-dir: lib/l10n
+template-arb-file: app_ru.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

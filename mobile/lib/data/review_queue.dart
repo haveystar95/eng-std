@@ -2,47 +2,75 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// One graded answer waiting to be uploaded. Carries its own client ULID (the
-/// idempotency key backend2 dedupes on) and the moment it was actually answered,
-/// so a replayed offline batch folds into progress exactly like the online path.
+/// One RAW answer waiting to be uploaded. The client sends what the user actually did —
+/// [exerciseMode], the raw [response] text, whether a hint was used, latency — and the SERVER
+/// grades it, so the grading rule lives in one place (invariant: only the server grades). Carries
+/// its own client ULID (the `/reviews/batch` idempotency key) and a per-user monotonic [clientSeq]
+/// (from `seq_review`, surviving queue clears) so the server folds answers into progress in
+/// sequence order, never by the device clock. A replayed offline batch folds identically.
 class PendingReview {
   final String id; // client ULID — the /reviews/batch idempotency key
   final String termId;
-  final String grade; // again | hard | good | easy
-  final String answeredAt; // ISO-8601 UTC, captured at answer time
+  final String exerciseMode; // multiple_choice | word_bank | typing | listening | cloze
+  final String response; // the user's raw answer text
+  final int clientSeq; // per-user monotonic order (seq_review)
+  final String answeredAt; // ISO-8601 UTC, reference-only (device clock)
+  final bool usedHint;
+  final bool isPractice;
   final int? latencyMs;
+  final String? sessionId;
 
   const PendingReview({
     required this.id,
     required this.termId,
-    required this.grade,
+    required this.exerciseMode,
+    required this.response,
+    required this.clientSeq,
     required this.answeredAt,
+    this.usedHint = false,
+    this.isPractice = false,
     this.latencyMs,
+    this.sessionId,
   });
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'term_id': termId,
-        'grade': grade,
+        'exercise_mode': exerciseMode,
+        'response': response,
+        'client_seq': clientSeq,
         'answered_at': answeredAt,
+        'used_hint': usedHint,
+        'is_practice': isPractice,
         'latency_ms': latencyMs,
+        'session_id': sessionId,
       };
 
-  /// The exact shape `/reviews/batch` expects (latency_ms omitted when null).
+  /// The exact shape `/reviews/batch` expects (optional keys omitted when null/default).
   Map<String, dynamic> toBatchJson() => {
         'id': id,
         'term_id': termId,
-        'grade': grade,
+        'exercise_mode': exerciseMode,
+        'response': response,
+        'client_seq': clientSeq,
         'answered_at': answeredAt,
+        if (usedHint) 'used_hint': usedHint,
+        if (isPractice) 'is_practice': isPractice,
         if (latencyMs != null) 'latency_ms': latencyMs,
+        if (sessionId != null) 'session_id': sessionId,
       };
 
   factory PendingReview.fromJson(Map<String, dynamic> j) => PendingReview(
         id: j['id'] as String,
         termId: j['term_id'] as String,
-        grade: j['grade'] as String,
+        exerciseMode: (j['exercise_mode'] as String?) ?? 'typing',
+        response: (j['response'] as String?) ?? '',
+        clientSeq: (j['client_seq'] as int?) ?? 0,
         answeredAt: j['answered_at'] as String,
+        usedHint: (j['used_hint'] as bool?) ?? false,
+        isPractice: (j['is_practice'] as bool?) ?? false,
         latencyMs: j['latency_ms'] as int?,
+        sessionId: j['session_id'] as String?,
       );
 }
 

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 
-import '../core/config.dart';
+import 'config.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'token_store.dart';
@@ -89,6 +89,23 @@ class ApiClient {
     await _dio.post('/auth/logout');
   }
 
+  /// Exchange an Apple identity token for a Sanctum token + user. Mirrors [googleLogin].
+  /// NB: the backend `/auth/apple` endpoint is not built yet (Identity module) — this call will 404
+  /// until it lands. See the A3.7 notes / roadmap.
+  Future<({String token, AppUser user})> appleLogin(String identityToken, {String? name}) async {
+    final r = await _dio.post('/auth/apple', data: {'identity_token': identityToken, 'name': ?name});
+    final body = r.data as Map<String, dynamic>;
+    return (
+      token: body['token'] as String,
+      user: AppUser.fromJson(body['user'] as Map<String, dynamic>),
+    );
+  }
+
+  /// Permanently delete the account (B3): `DELETE /auth/me` cascades every module server-side (204).
+  Future<void> deleteAccount() async {
+    await _dio.delete('/auth/me');
+  }
+
   // ---- Profile --------------------------------------------------------------
 
   Future<AppUser> updateProfile(Map<String, dynamic> changes) async {
@@ -124,14 +141,18 @@ class ApiClient {
   }
 
   /// Add a word by text; backend2 finds-or-creates the term and returns the collection.
+  /// [translation] is **optional** (B1): omit it (or pass null/empty) and the backend enriches
+  /// the term async — translation/transcription/example/photo arrive via a later `/sync`. The
+  /// key is dropped from the body when null so the server sees "not provided", not an empty string.
   Future<void> addWord(
     String collectionId, {
     required String text,
-    required String translation,
+    String? translation,
     String type = 'word',
   }) async {
+    final t = translation?.trim();
     await _dio.post('/collections/$collectionId/items',
-        data: {'text': text, 'translation': translation, 'type': type});
+        data: {'text': text, 'translation': ?(t == null || t.isEmpty ? null : t), 'type': type});
   }
 
   Future<void> removeWord(String collectionId, String termId) async {
@@ -149,6 +170,44 @@ class ApiClient {
     return (_data(r) as List)
         .map((e) => ReviewCard.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Build a self-contained study session (`POST /study/sessions`): due cards then new cards, one
+  /// card per exercise, each carrying its mode + offline extras (options/chips). Composition is
+  /// fixed server-side under [sessionId] (a client ULID, idempotent — re-posting returns the same
+  /// set). [practice] introduces no new terms and never schedules.
+  Future<StudySession> buildSession({
+    required String sessionId,
+    String? collectionId,
+    bool practice = false,
+    int limit = 20,
+  }) async {
+    final r = await _dio.post('/study/sessions', data: {
+      'session_id': sessionId,
+      'collection_id': ?collectionId,
+      'practice': practice,
+      'limit': limit,
+    });
+    final d = _data(r) as Map<String, dynamic>;
+    return StudySession(
+      sessionId: (d['session_id'] as String?) ?? sessionId,
+      cards: (d['cards'] as List? ?? const [])
+          .map((e) => SessionCard.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  /// Regenerate a term's example (B6, «Новый пример»): the LLM produces a fresh example (+its
+  /// translation), replaces the stored one, and returns it so the card updates in place. Counts
+  /// against the daily quota — a 429 surfaces as [DioException] (status 429) for the caller to
+  /// catch and show the exhausted-quota message.
+  Future<({String example, String? exampleTranslation})> regenerateExample(String termId) async {
+    final r = await _dio.post('/terms/$termId/regenerate-example');
+    final d = _data(r) as Map<String, dynamic>;
+    return (
+      example: (d['example'] as String?) ?? '',
+      exampleTranslation: d['example_translation'] as String?,
+    );
   }
 
   Future<Stats> stats() async {
@@ -217,7 +276,13 @@ class ApiClient {
   // ---- AI generation --------------------------------------------------------
 
   /// Kicks off async generation; returns the request id to poll.
+  ///
+  /// [id] is a client-generated ULID (B2): sending it makes the POST idempotent, so the durable
+  /// offline queue can re-send safely — the same id returns the **existing** request (200) with no
+  /// duplicate, no second job, no extra quota spent. Omit [targetLang] to accept the profile
+  /// default server-side (B4). The returned id equals [id] when one was supplied.
   Future<String> generateCollection({
+    String? id,
     required String topic,
     required List<String> levels,
     required int size,
@@ -225,6 +290,7 @@ class ApiClient {
     String? targetLang,
   }) async {
     final r = await _dio.post('/generations', data: {
+      'id': ?id,
       'prompt': topic,
       'levels': levels,
       'size': size,
@@ -246,5 +312,47 @@ class ApiClient {
       requested: data['requested'] as int?,
       delivered: data['delivered'] as int?,
     );
+  }
+
+  // ---- Practice dialog (realtime voice) -------------------------------------
+  //
+  // These are thin passthroughs; `ApiDialogRepository` maps the maps/errors to the domain models.
+  // NB: unlike most endpoints, the practice responses are NOT wrapped in `data` (they return the
+  // object directly — verified against openapi.yaml `StartedPracticeDialog` / the transcripts +
+  // finish 200 shapes). A `DioException` propagates so the repository can read the 403/429 status.
+
+  /// Start a dialog: `POST /practice/dialogs` → 201 StartedPracticeDialog (dialog_id, realtime_token,
+  /// expires_at, model, target_words, duration_seconds). 403 = not premium; 429 = daily limit.
+  Future<Map<String, dynamic>> startDialog({required String collectionId, required String clientId}) async {
+    final r = await _dio.post('/practice/dialogs',
+        data: {'collection_id': collectionId, 'client_id': clientId});
+    return r.data as Map<String, dynamic>;
+  }
+
+  /// Upload a batch of transcript events: `POST /practice/dialogs/{id}/transcripts`. Idempotent by
+  /// (role, ts). Returns the updated `target_words` (with the server's monotonic `used` flags).
+  Future<List<dynamic>> sendDialogTranscripts(String dialogId, List<Map<String, dynamic>> events) async {
+    final r = await _dio.post('/practice/dialogs/$dialogId/transcripts', data: {'events': events});
+    return ((r.data as Map<String, dynamic>)['target_words'] as List?) ?? const [];
+  }
+
+  /// Finish a dialog: `POST /practice/dialogs/{id}/finish` → `{summary, words_used, words_total}`.
+  Future<Map<String, dynamic>> finishDialog(String dialogId) async {
+    final r = await _dio.post('/practice/dialogs/$dialogId/finish');
+    return r.data as Map<String, dynamic>;
+  }
+
+  /// The collection's most recent finished dialog: `GET /practice/collections/{id}/last-dialog` →
+  /// `{finished_at, words_used, words_total}`, or null when the collection has never had one
+  /// (204/404, or an empty body). Not `data`-wrapped, like the other practice endpoints.
+  Future<Map<String, dynamic>?> lastDialog(String collectionId) async {
+    try {
+      final r = await _dio.get('/practice/collections/$collectionId/last-dialog');
+      final data = r.data;
+      return data is Map<String, dynamic> && data.isNotEmpty ? data : null;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null; // no dialog yet
+      rethrow;
+    }
   }
 }

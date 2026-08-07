@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -46,9 +47,15 @@ final seqCounterProvider = Provider<SeqCounter>((ref) => SeqCounter());
 
 final reviewQueueProvider = Provider<ReviewQueue>((ref) => ReviewQueue());
 
-/// Offline-first review upload pipeline (record locally → batch flush).
+/// Offline-first review upload pipeline (record locally → batch flush). Carries the monotonic
+/// `seq_review` counter so each raw answer gets a `client_seq` the server folds by.
 final reviewSyncProvider = Provider<ReviewSync>((ref) {
-  return ReviewSync(ref.watch(apiClientProvider), ref.watch(reviewQueueProvider), ref);
+  return ReviewSync(
+    ref.watch(apiClientProvider),
+    ref.watch(reviewQueueProvider),
+    ref.watch(seqCounterProvider),
+    ref,
+  );
 });
 
 final triageQueueProvider = Provider<TriageQueue>((ref) => TriageQueue());
@@ -104,7 +111,19 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 class AuthController extends AsyncNotifier<AppUser?> {
   @override
   Future<AppUser?> build() async {
-    return ref.read(authRepositoryProvider).restore();
+    final repo = ref.read(authRepositoryProvider);
+    final user = await repo.restore();
+    if (user != null) {
+      // Heal a stale/tier-less cache in-session: refresh from /me and push the fresh user (tier +
+      // quota) into state when online. Best-effort — offline keeps the cached user.
+      unawaited(() async {
+        try {
+          final fresh = await repo.refresh();
+          if (fresh != null) state = AsyncData(fresh);
+        } catch (_) {/* offline / transient — keep the cached user */}
+      }());
+    }
+    return user;
   }
 
   Future<void> signIn() async {
@@ -114,10 +133,25 @@ class AuthController extends AsyncNotifier<AppUser?> {
     );
   }
 
+  Future<void> signInWithApple() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithApple(),
+    );
+  }
+
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
     // Wipe the local mirror + sync cursor so the next account starts from a full snapshot,
     // never a delta against someone else's data.
+    await ref.read(appDatabaseProvider).clearAll();
+    state = const AsyncData(null);
+  }
+
+  /// Permanently delete the account (B3) and drop to the signed-out state. The local mirror is
+  /// wiped just like sign-out so nothing of the deleted account lingers on the device.
+  Future<void> deleteAccount() async {
+    await ref.read(authRepositoryProvider).deleteAccount();
     await ref.read(appDatabaseProvider).clearAll();
     state = const AsyncData(null);
   }
@@ -179,10 +213,65 @@ final collectionsProgressProvider = StreamProvider<Map<String, CollectionProgres
   return ref.watch(appDatabaseProvider).watchItemProgress().map(_deriveCollectionsProgress);
 });
 
+/// Eligible-for-triage term counts per collection (local DB, reactive) — powers the
+/// «Разобрать N» CTA on both the home and the collection screen.
+final untriagedByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
+  return ref.watch(appDatabaseProvider).watchUntriagedByCollection();
+});
+
+/// The three ink-density buckets (§4) for one collection, partitioning its total:
+/// confirmed (mastered) · familiar (in SRS, not yet mastered) · in-progress (new /
+/// untouched). Local + reactive.
+final collectionDensityProvider = StreamProvider.family<CollectionDensity, String>((ref, collectionId) {
+  return ref.watch(appDatabaseProvider).watchItemProgress().map((rows) {
+    var confirmed = 0, familiar = 0, inProgress = 0;
+    for (final r in rows) {
+      if (r.collectionId != collectionId) continue;
+      switch (classifyDensity(r.state, r.intervalDays ?? 0)) {
+        case DensityBucket.confirmed:
+          confirmed++;
+        case DensityBucket.familiar:
+          familiar++;
+        case DensityBucket.inProgress:
+          inProgress++;
+      }
+    }
+    return CollectionDensity(confirmed: confirmed, familiar: familiar, inProgress: inProgress);
+  });
+});
+
+/// Ink-density bucket for a progress state (§4). Partitions every term into exactly
+/// one bucket; verdict colours never participate. Extracted for unit tests.
+enum DensityBucket { confirmed, familiar, inProgress }
+
+DensityBucket classifyDensity(String? state, int intervalDays) {
+  if (_isMastered(state, intervalDays)) return DensityBucket.confirmed; // filled
+  if (state == 'review' || state == 'learning' || state == 'relearning') {
+    return DensityBucket.familiar; // halftone — seen, not yet mastered
+  }
+  return DensityBucket.inProgress; // outline — new / untouched / triaged-unknown
+}
+
+/// The three counts behind a collection's density bar. `confirmed + familiar +
+/// inProgress == collection total`.
+class CollectionDensity {
+  const CollectionDensity({required this.confirmed, required this.familiar, required this.inProgress});
+  final int confirmed, familiar, inProgress;
+  int get total => confirmed + familiar + inProgress;
+}
+
 /// Study cards stay on the network — sessions are online-only (out of the offline scope). Consumers
 /// read this via `.value`, so an offline error degrades to null rather than surfacing.
 final dueCardsProvider = FutureProvider<List<ReviewCard>>((ref) async {
   return ref.watch(apiClientProvider).dueCards();
+});
+
+/// One term's progress, reactive (local mirror). The exercise-session feedback watches it to show
+/// «увидишь снова через N дней» from the REAL server `due_at` once the answer's upload + sync
+/// lands — the client never computes the interval itself.
+final termProgressForProvider =
+    StreamProvider.family<TermProgressData?, String>((ref, termId) {
+  return ref.watch(appDatabaseProvider).watchProgressFor(termId);
 });
 
 // ---- AI generation (client lifecycle) ---------------------------------------
@@ -190,10 +279,11 @@ final dueCardsProvider = FutureProvider<List<ReviewCard>>((ref) async {
 /// Drives generation from the client: POST, a local pending row that survives a kill, polling and
 /// start-up reconciliation. Screens watch [pendingGenerationsProvider], never poll themselves.
 final generationControllerProvider = Provider<GenerationController>((ref) {
+  final sync = ref.watch(syncServiceProvider);
   return GenerationController(
     ref.watch(apiClientProvider),
     ref.watch(appDatabaseProvider),
-    ref.watch(syncServiceProvider),
+    sync.sync,
   );
 });
 
@@ -298,16 +388,23 @@ Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow>
       ));
 }
 
-typedef SessionArgs = ({String? collectionId, bool shuffle});
+/// Identifies one exercise session. [sessionId] is a client ULID minted once when the screen
+/// opens, so `POST /study/sessions` is idempotent (a rebuild reuses the same fixed composition);
+/// [collectionId] scopes to one owned collection; [practice] introduces no new terms and never
+/// schedules (the «Свободная тренировка» / practice banner path).
+typedef SessionArgs = ({String sessionId, String? collectionId, bool practice, int limit});
 
-/// Cards for one training session: a specific collection's words, or the global
-/// due queue when [collectionId] is null.
-final sessionCardsProvider =
-    FutureProvider.family<List<ReviewCard>, SessionArgs>((ref, args) async {
-  final api = ref.watch(apiClientProvider);
-  // Both branches use the SRS study queue (due + new). A collection session is just the
-  // same queue scoped to that collection, so mastered words stop reappearing every time.
-  final cards = await api.dueCards(collectionId: args.collectionId);
-  if (args.shuffle) cards.shuffle();
-  return cards;
+/// The exercise cards for one session (`POST /study/sessions`): due then new, one card per
+/// exercise, each with its mode + offline extras. Online-only (sessions build server-side, which
+/// picks the mode and distractors); consumers read via `.when`. The photo/example shown in the
+/// per-card feedback come from the LOCAL term mirror, so they render even though the session shape
+/// carries no image.
+final studySessionProvider =
+    FutureProvider.family<StudySession, SessionArgs>((ref, args) async {
+  return ref.watch(apiClientProvider).buildSession(
+        sessionId: args.sessionId,
+        collectionId: args.collectionId,
+        practice: args.practice,
+        limit: args.limit,
+      );
 });

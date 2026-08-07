@@ -7,6 +7,7 @@ import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/pending_generation_card.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
 
 PendingGeneration _row({
   required String status,
@@ -14,6 +15,7 @@ PendingGeneration _row({
   int? requested,
   int? delivered,
   String? error,
+  bool sent = true,
 }) =>
     PendingGeneration(
       id: 'g1',
@@ -27,6 +29,8 @@ PendingGeneration _row({
       targetLang: 'en',
       levelsCsv: 'A2,B1',
       size: 15,
+      sent: sent,
+      targetLangExplicit: true,
       createdAt: DateTime(2026, 8, 4),
       updatedAt: DateTime(2026, 8, 4),
     );
@@ -41,27 +45,32 @@ Future<void> _pump(WidgetTester tester, PendingGeneration row, {List<WordCollect
       }),
       collectionsProvider.overrideWith((ref) => Stream.value(collections)),
     ],
-    child: MaterialApp(home: Scaffold(body: PendingGenerationCard(row: row, index: 0))),
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru')],
+      home: Scaffold(body: PendingGenerationCard(row: row)),
+    ),
   ));
-  await tester.pump(); // let the collections stream emit
-  await tester.pump(const Duration(milliseconds: 400)); // settle the entrance animation
+  await tester.pump(); // let the collections stream + localizations resolve
 }
 
 void main() {
-  testWidgets('generating state shows the spinner label and topic', (tester) async {
+  testWidgets('generating state shows the shimmer label and topic', (tester) async {
     await _pump(tester, _row(status: 'pending'));
-    expect(find.text('ИИ генерирует коллекцию…'), findsOneWidget);
+    expect(find.text('Собираем коллекцию…'), findsOneWidget);
     expect(find.textContaining('иду в банк'), findsOneWidget);
   });
 
   testWidgets('failed state shows the reason and a retry action', (tester) async {
-    await _pump(tester, _row(status: 'failed', error: 'boom'));
-    expect(find.textContaining('Не удалось'), findsOneWidget);
-    expect(find.text('boom'), findsOneWidget);
+    await _pump(tester, _row(status: 'failed'));
+    expect(find.text('Не получилось'), findsOneWidget);
+    expect(find.textContaining('Генерация не потрачена'), findsOneWidget);
     expect(find.text('Повторить'), findsOneWidget);
+    expect(find.text('Скрыть'), findsOneWidget);
   });
 
-  testWidgets('ready state shows the collection and an under-delivery line', (tester) async {
+  testWidgets('ready state shows the collection and an under-delivery badge', (tester) async {
     final col = WordCollection(
       id: 'c1', title: 'В банке', source: 'ai', type: 'custom', wordsCount: 12,
       sourceLang: 'ru', targetLang: 'en',
@@ -73,6 +82,6 @@ void main() {
     );
     expect(find.text('Готово'), findsOneWidget);
     expect(find.text('В банке'), findsOneWidget);
-    expect(find.text('получилось 12 из 15'), findsOneWidget);
+    expect(find.text('12 из 15'), findsOneWidget);
   });
 }

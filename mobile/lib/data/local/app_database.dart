@@ -120,11 +120,32 @@ class PendingGenerations extends Table {
   TextColumn get targetLang => text().withDefault(const Constant('en'))();
   TextColumn get levelsCsv => text().withDefault(const Constant('A2,B1'))();
   IntColumn get size => integer().withDefault(const Constant(15))();
+  // Whether the POST has reached the server. false → still in the durable offline prompt queue
+  // (client ULID pre-upload, B2): re-sent when the network returns, NEVER polled (it has no server
+  // row yet) and NEVER dropped as a ghost — a not-yet-sent generation is a promise we still owe.
+  BoolColumn get sent => boolean().withDefault(const Constant(true))();
+  // B4: send `target_lang` on the POST only when the user explicitly chose it; otherwise omit it
+  // and let the server fall back to the profile's target_language.
+  BoolColumn get targetLangExplicit => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()(); // device time — drives the >24h drop rule
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Per-day review count — the source for the Progress screen's activity chart, week calendar and
+/// «за неделю»/«сегодня» counters (кадр 2.6). NOT synced: purely local, incremented only in
+/// [ReviewSync.record] (session + free practice; triage is deliberately excluded — the chart must
+/// converge with the streak dots beside it, and the streak is "days with reviews"). Accumulates
+/// from the current day forward with no backfill (there is no server history endpoint). `day` is a
+/// local calendar day key `YYYY-MM-DD`.
+class DailyActivity extends Table {
+  TextColumn get day => text()();
+  IntColumn get reviews => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {day};
 }
 
 /// One term as shown on the collection view screen: content joined with its live position and
@@ -153,14 +174,22 @@ class ItemProgressRow {
   final DateTime? dueAt;
 }
 
-@DriftDatabase(
-    tables: [Collections, CollectionItems, Terms, TermProgress, SyncMeta, TriagedTerms, PendingGenerations])
+@DriftDatabase(tables: [
+  Collections,
+  CollectionItems,
+  Terms,
+  TermProgress,
+  SyncMeta,
+  TriagedTerms,
+  PendingGenerations,
+  DailyActivity,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -181,6 +210,12 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(terms, terms.imageAuthorUrl);
           }
           if (from < 5) await m.createTable(pendingGenerations); // pending-generation card (Part B)
+          if (from < 6) {
+            // Offline prompt queue (A3.5): a generation may sit un-sent until the network returns.
+            await m.addColumn(pendingGenerations, pendingGenerations.sent);
+            await m.addColumn(pendingGenerations, pendingGenerations.targetLangExplicit);
+          }
+          if (from < 7) await m.createTable(dailyActivity); // Progress-screen activity (A3.6)
         },
       );
 
@@ -213,6 +248,65 @@ class AppDatabase extends _$AppDatabase {
 
   /// Every progress row — the input for the local stats derivation.
   Stream<List<TermProgressData>> watchAllProgress() => select(termProgress).watch();
+
+  /// All synced term content — powers the deterministic client-side «Слово дня».
+  /// Reactive, so the block appears once the first sync lands. No network.
+  Stream<List<Term>> watchAllTerms() => select(terms).watch();
+
+  /// One synced term by id (or null) — used by the exercise-session feedback to pull the photo,
+  /// which the `/study/sessions` shape does not carry. One-shot: the image is already synced.
+  Future<Term?> termById(String id) =>
+      (select(terms)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// One term's progress, reactive — the exercise feedback shows «увидишь снова через N дней»
+  /// from the REAL server `due_at`, which lands here after the answer's upload + sync (never a
+  /// client-computed interval — the server is the only scheduler). Null until progress exists.
+  Stream<TermProgressData?> watchProgressFor(String termId) =>
+      (select(termProgress)..where((p) => p.termId.equals(termId))).watchSingleOrNull();
+
+  /// Every term's (state, intervalDays) — all terms left-joined with their progress, so untouched
+  /// terms (no progress row) surface as null. Feeds the global density bar on the Progress screen
+  /// («Все N слов»): each term folds into exactly one of confirmed/familiar/in-progress. Reactive.
+  Stream<List<({String? state, int? intervalDays})>> watchTermStates() {
+    final query = select(terms)
+        .join([leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id))]);
+    return query.watch().map((rows) => rows.map((r) {
+          final p = r.readTableOrNull(termProgress);
+          return (state: p?.state, intervalDays: p?.intervalDays);
+        }).toList());
+  }
+
+  // ---- Daily activity (client-only, not synced) -----------------------------
+
+  /// Live per-day review counts — feeds the Progress-screen activity chart, week calendar and
+  /// «за неделю»/«сегодня» counters. Newest first isn't needed; the screen indexes by day key.
+  Stream<List<DailyActivityData>> watchDailyActivity() => select(dailyActivity).watch();
+
+  /// Increment today's review tally by one (atomic upsert). Called once per graded answer from
+  /// [ReviewSync.record] — session reviews and free practice, never triage (see [DailyActivity]).
+  Future<void> bumpDailyActivity(String day) => customStatement(
+        'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) '
+        'ON CONFLICT(day) DO UPDATE SET reviews = reviews + 1',
+        [day],
+      );
+
+  /// Triage-eligible (never-studied AND never-triaged) term count per collection —
+  /// powers the home «Разобрать N» CTA. Same rule as [triageEligible], reactive.
+  Stream<Map<String, int>> watchUntriagedByCollection() {
+    final query = select(collectionItems).join([
+      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+    ])
+      ..where(termProgress.termId.isNull() & triagedTerms.termId.isNull());
+    return query.watch().map((rows) {
+      final map = <String, int>{};
+      for (final r in rows) {
+        final cid = r.readTable(collectionItems).collectionId;
+        map[cid] = (map[cid] ?? 0) + 1;
+      }
+      return map;
+    });
+  }
 
   /// The triage-eligible terms of a collection, in study order — mirrors the server's queue rule:
   /// a collection's terms that are never-studied (no progress row) AND never-triaged (not in the
@@ -348,6 +442,45 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Optimistically drop a collection (and its membership rows) locally the moment the server
+  /// delete succeeds — the read streams update immediately instead of waiting for the next sync
+  /// tombstone (which the delta feed doesn't reliably carry for collections). Idempotent.
+  Future<void> deleteCollectionLocal(String id) async {
+    await transaction(() async {
+      await (delete(collections)..where((t) => t.id.equals(id))).go();
+      await (delete(collectionItems)..where((t) => t.collectionId.equals(id))).go();
+    });
+  }
+
+  /// Reconcile against a full snapshot (the authoritative live set): drop every local collection
+  /// whose id is NOT in [keep], plus its membership rows. This clears "ghost" collections that
+  /// were removed server-side while no tombstone reached us (e.g. a dev-DB reset, or a hard delete).
+  /// Only safe from a FULL snapshot, which lists every live collection.
+  ///
+  /// ⚠️ Exclusion (A3.5): a collection referenced by a live `pending_generations` row is NEVER
+  /// reaped, even when absent from the snapshot. A just-generated collection can be locally present
+  /// but momentarily missing from a racing full snapshot (the generation commit vs. the snapshot
+  /// read); its pending card keeps it alive until the user acknowledges it. Offline-queued
+  /// generations have no collection yet — they live only in `pending_generations`, which this reaper
+  /// never touches — so this same rule is what keeps offline-created, not-yet-synced generations
+  /// from being dropped as ghosts.
+  Future<void> reconcileCollections(Set<String> keep) async {
+    await transaction(() async {
+      final referenced = (await select(pendingGenerations).get())
+          .map((r) => r.collectionId)
+          .whereType<String>()
+          .toSet();
+      final all = await select(collections).get();
+      final stale = all
+          .where((c) => !keep.contains(c.id) && !referenced.contains(c.id))
+          .map((c) => c.id)
+          .toList();
+      if (stale.isEmpty) return;
+      await (delete(collections)..where((t) => t.id.isIn(stale))).go();
+      await (delete(collectionItems)..where((t) => t.collectionId.isIn(stale))).go();
+    });
+  }
+
   /// Wipe every synced table and the cursor. Used on sign-out so a different account can't read
   /// the previous one's cache. (A reinstall wipes the file outright.)
   Future<void> clearAll() async {
@@ -358,6 +491,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(termProgress).go();
       await delete(triagedTerms).go();
       await delete(pendingGenerations).go();
+      await delete(dailyActivity).go();
       await delete(syncMeta).go();
     });
   }

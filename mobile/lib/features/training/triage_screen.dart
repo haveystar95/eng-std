@@ -2,16 +2,27 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/design.dart';
-import '../../core/glass.dart';
+import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import 'triage_swipe.dart';
 
 /// The triage vertical slice: swipe a collection's new terms → знаю / не знаю /
 /// не уверен. Its job is to exercise the contract — self-contained queue,
 /// client ULIDs, client-measured latency, on-disk queue, offline flush.
+///
+/// A3.1 reskin: paper/ink «Слова» design (flip on [PaperCard] + tokens, swipe
+/// visuals per §4д, [VerdictButton]s). The behaviour layer is untouched —
+/// `revealed`, first-event latency, the durable queue and `client_seq` all work
+/// exactly as before; only the UI changed. All copy goes through
+/// [AppLocalizations].
 class TriageScreen extends ConsumerStatefulWidget {
   const TriageScreen({super.key, required this.collectionId, required this.title});
 
@@ -37,22 +48,28 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final deck = ref.watch(triageDeckProvider(widget.collectionId));
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text('Разбор · ${widget.title}')),
-      body: AmbientBackground(
-        child: SafeArea(
+    // Dark status-bar glyphs on the paper background (overrides the dark theme default).
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
           child: deck.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Text('Не удалось загрузить: $e',
-                  style: const TextStyle(color: AppColors.textSecondary)),
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+            error: (e, _) => _CenteredState(
+              title: widget.title,
+              heading: l.triageLoadError(e.toString()),
             ),
             data: (deck) => deck.cards.isEmpty
-                ? _AllTriaged(remaining: deck.remaining)
-                : _Deck(cards: deck.cards, remaining: deck.remaining, collectionId: widget.collectionId),
+                ? _AllTriaged(title: widget.title, remaining: deck.remaining)
+                : _Deck(
+                    cards: deck.cards,
+                    remaining: deck.remaining,
+                    collectionId: widget.collectionId,
+                    title: widget.title,
+                  ),
           ),
         ),
       ),
@@ -60,41 +77,71 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
   }
 }
 
-class _AllTriaged extends StatelessWidget {
-  const _AllTriaged({required this.remaining});
-
-  final int remaining;
+/// The 20-px circular back affordance (кадр 2.2 header).
+class _BackChip extends StatelessWidget {
+  const _BackChip();
 
   @override
   Widget build(BuildContext context) {
-    // "Всё разобрано" only when there is genuinely nothing left server-side. If the page came
-    // back empty but the server still has eligible terms (e.g. all of this page is locally
-    // pending), say so honestly rather than claiming the set is done.
-    final done = remaining == 0;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(done ? Icons.done_all_rounded : Icons.cloud_sync_rounded,
-                color: AppColors.know, size: 48),
-            const SizedBox(height: AppSpacing.md),
-            Text(done ? 'Всё разобрано' : 'На сейчас всё',
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              done
-                  ? 'В этом наборе не осталось новых слов для разбора.'
-                  : 'Ещё $remaining после синхронизации — зайдите снова, когда будет сеть.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+    return Semantics(
+      button: true,
+      child: InkResponse(
+        onTap: () => Navigator.of(context).maybePop(),
+        radius: 22,
+        child: Container(
+          width: AppSpacing.minTap,
+          height: AppSpacing.minTap,
+          alignment: Alignment.center,
+          child: Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.hairline),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            GlassSecondaryButton(label: 'Готово', onTap: () => Navigator.of(context).maybePop()),
-          ],
+            child: const Icon(LucideIcons.arrowLeft, size: 14, color: AppColors.ink),
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Header: back chip · collection name (Literata) · «N из M» · session segments.
+class _TriageHeader extends StatelessWidget {
+  const _TriageHeader({required this.title, required this.current, required this.total});
+
+  final String title;
+  final int current;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const _BackChip(),
+            const SizedBox(width: AppSpacing.s8),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.collectionNameCard.copyWith(fontSize: 14.5),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s8),
+            Text(l.triageCounter(current, total), style: AppTextExercise.sessionHeader),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // «Пройдено» = current card position (matches the frame: counter == filled).
+        SessionSegments(done: current, total: total),
+      ],
     );
   }
 }
@@ -106,10 +153,16 @@ class _Swiped {
 }
 
 class _Deck extends ConsumerStatefulWidget {
-  const _Deck({required this.cards, required this.remaining, required this.collectionId});
+  const _Deck({
+    required this.cards,
+    required this.remaining,
+    required this.collectionId,
+    required this.title,
+  });
   final List<TriageCard> cards;
   final int remaining; // eligible terms left server-side beyond this page
   final String collectionId;
+  final String title;
 
   @override
   ConsumerState<_Deck> createState() => _DeckState();
@@ -133,13 +186,18 @@ class _DeckState extends ConsumerState<_Deck>
   /// weaker signal — sent to the server as `revealed`.
   bool _revealed = false;
 
-  late final AnimationController _anim =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  /// Card-motion controller — drives both the commit fly-off and the
+  /// spring-back of an under-threshold swipe. [_leaving] picks which.
+  late final AnimationController _anim = AnimationController(vsync: this);
   Offset _drag = Offset.zero;
   Offset _from = Offset.zero, _to = Offset.zero;
+  Curve _curve = AppMotion.easeIn;
+  bool _leaving = false;
   TriageVerdict? _pending;
-  TriageVerdict? _lastHint;
-  static const _threshold = 90.0;
+  TriageVerdict? _lastDir;
+
+  /// Last laid-out card size — thresholds and fly-off distance derive from it.
+  Size _cardSize = Size.zero;
 
   /// Flush the moment the network returns — the app-lifecycle triggers only fire on
   /// resume/dispose, so a flaky connection recovering while the user sits on this
@@ -158,7 +216,7 @@ class _DeckState extends ConsumerState<_Deck>
     _armLatencyClock();
     _anim
       ..addListener(() {
-        setState(() => _drag = Offset.lerp(_from, _to, Curves.easeOut.transform(_anim.value))!);
+        setState(() => _drag = Offset.lerp(_from, _to, _curve.transform(_anim.value))!);
       })
       ..addStatusListener((s) {
         if (s == AnimationStatus.completed) {
@@ -167,8 +225,10 @@ class _DeckState extends ConsumerState<_Deck>
           _from = Offset.zero;
           _to = Offset.zero;
           _drag = Offset.zero;
+          final wasLeaving = _leaving;
+          _leaving = false;
           _anim.reset();
-          if (v != null) {
+          if (wasLeaving && v != null) {
             _commit(v);
           } else {
             setState(() {});
@@ -233,16 +293,16 @@ class _DeckState extends ConsumerState<_Deck>
       switch (verdict) {
         case TriageVerdict.known:
           _known++;
-          AppFeedback.success();
+          AppHaptics.success();
         case TriageVerdict.unknown:
           _unknown++;
-          AppFeedback.warn();
+          AppHaptics.warning();
         case TriageVerdict.unsure:
           _unsure++;
-          AppFeedback.select();
+          AppHaptics.light();
       }
       _drag = Offset.zero;
-      _lastHint = null;
+      _lastDir = null;
       _pos++;
     });
     _armLatencyClock();
@@ -252,7 +312,7 @@ class _DeckState extends ConsumerState<_Deck>
   /// override a sent one), roll the tally back, and re-show the card.
   void _undo() {
     if (_history.isEmpty) return;
-    AppFeedback.select();
+    AppHaptics.light();
     final last = _history.removeLast();
     ref.read(triageSyncProvider).removePending(last.card.termId);
     setState(() {
@@ -270,135 +330,204 @@ class _DeckState extends ConsumerState<_Deck>
     _armLatencyClock();
   }
 
-  TriageVerdict? _verdictFor(Offset d) {
-    if (d.dy < -_threshold && d.dy.abs() > d.dx.abs()) return TriageVerdict.unsure; // up
-    if (d.dx > _threshold) return TriageVerdict.known; // right
-    if (d.dx < -_threshold) return TriageVerdict.unknown; // left
-    return null;
-  }
+  double get _threshold => _cardSize.width * AppMotion.swipeThresholdFraction;
 
   void _onPanUpdate(DragUpdateDetails d) {
     if (_anim.isAnimating) return;
     _markFirstEvent(); // a drag counts as the first interaction
     setState(() => _drag += d.delta);
-    final v = _verdictFor(_drag);
-    if (v != _lastHint) {
-      _lastHint = v;
-      if (v != null) AppFeedback.select();
+    final dir = TriageSwipe.direction(_drag);
+    if (dir != _lastDir) {
+      _lastDir = dir;
+      if (dir != null) AppHaptics.light();
     }
   }
 
-  void _onPanEnd(DragEndDetails _) {
-    final v = _verdictFor(_drag);
-    _from = _drag;
-    _pending = v;
-    _to = switch (v) {
-      TriageVerdict.known => Offset(1400, _drag.dy),
-      TriageVerdict.unknown => Offset(-1400, _drag.dy),
-      TriageVerdict.unsure => Offset(_drag.dx, -1400),
-      null => Offset.zero,
-    };
-    if (v == null) _lastHint = null;
-    _anim.forward(from: 0);
+  void _onPanEnd(DragEndDetails d) {
+    if (_anim.isAnimating) return;
+    final commit = TriageSwipe.shouldCommit(
+      drag: _drag,
+      threshold: _threshold,
+      velocity: d.velocity,
+    );
+    final dir = TriageSwipe.direction(_drag);
+    if (commit && dir != null) {
+      _flyOff(dir, from: _drag);
+    } else {
+      _springBack();
+    }
   }
 
   /// Fire a verdict from a button — animate the card out in that direction.
   void _button(TriageVerdict v) {
     if (_anim.isAnimating) return;
     _markFirstEvent();
-    _from = Offset.zero;
+    _flyOff(v, from: Offset.zero);
+  }
+
+  /// Commit fly-off: card leaves toward the verdict side and fades (§4д).
+  void _flyOff(TriageVerdict v, {required Offset from}) {
+    final w = _cardSize.width == 0 ? 400.0 : _cardSize.width;
+    final h = _cardSize.height == 0 ? 500.0 : _cardSize.height;
+    _from = from;
     _pending = v;
+    _leaving = true;
+    _curve = AppMotion.easeIn;
     _to = switch (v) {
-      TriageVerdict.known => const Offset(1400, 0),
-      TriageVerdict.unknown => const Offset(-1400, 0),
-      TriageVerdict.unsure => const Offset(0, -1400),
+      TriageVerdict.known => Offset(w * 1.4, from.dy),
+      TriageVerdict.unknown => Offset(-w * 1.4, from.dy),
+      TriageVerdict.unsure => Offset(from.dx, -h * 1.2),
     };
+    _anim.duration = AppMotion.verdictLeave;
+    _anim.forward(from: 0);
+  }
+
+  /// Under-threshold swipe: spring back to centre (§4д, spring(.55)).
+  void _springBack() {
+    _from = _drag;
+    _to = Offset.zero;
+    _pending = null;
+    _leaving = false;
+    _lastDir = null;
+    // easeOutBack overshoots slightly then settles — reads as a soft spring.
+    _curve = Curves.easeOutBack;
+    _anim.duration = AppMotion.swipeReturn;
     _anim.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (_pos >= widget.cards.length) {
       return _TriageSummary(
-          known: _known, unsure: _unsure, unknown: _unknown, remaining: widget.remaining);
+        title: widget.title,
+        known: _known,
+        unsure: _unsure,
+        unknown: _unknown,
+        remaining: widget.remaining,
+      );
     }
 
     final total = widget.cards.length;
-    final hint = _verdictFor(_drag);
+    final dir = TriageSwipe.direction(_drag);
+    final progress = TriageSwipe.progress(_drag, _threshold);
+    final leaveOpacity = _leaving ? (1 - _anim.value).clamp(0.0, 1.0) : 1.0;
+    final showHint = _pos < 3; // teaching hint on the first cards
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, AppSpacing.s16),
       child: Column(
         children: [
-          _Counter(position: _pos, total: total),
-          const SizedBox(height: AppSpacing.md),
+          _TriageHeader(title: widget.title, current: (_pos + 1).clamp(1, total), total: total),
+          const SizedBox(height: AppSpacing.s22),
           Expanded(
-            child: GestureDetector(
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Transform.translate(
+            child: LayoutBuilder(
+              builder: (context, c) {
+                _cardSize = Size(c.maxWidth, c.maxHeight);
+                final tilt = reduceMotion ? 0.0 : TriageSwipe.tiltRadians(_drag, _threshold);
+                return GestureDetector(
+                  onPanUpdate: _onPanUpdate,
+                  onPanEnd: _onPanEnd,
+                  child: Transform.translate(
                     offset: _drag,
                     child: Transform.rotate(
-                      angle: _drag.dx / 1600,
-                      child: _FlipCard(
-                        key: ValueKey(_card.termId), // fresh flip state per card
-                        card: _card,
-                        onReveal: () {
-                          _markFirstEvent();
-                          setState(() => _revealed = true);
-                        },
+                      angle: tilt,
+                      child: Opacity(
+                        opacity: leaveOpacity,
+                        child: IgnorePointer(
+                          ignoring: _anim.isAnimating,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: _FlipCard(
+                                  key: ValueKey(_card.termId), // fresh flip state per card
+                                  card: _card,
+                                  showHint: showHint,
+                                  onReveal: () {
+                                    _markFirstEvent();
+                                    setState(() => _revealed = true);
+                                  },
+                                ),
+                              ),
+                              if (dir != null)
+                                Positioned.fill(
+                                  child: _SwipeOverlay(verdict: dir, progress: progress),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  if (_drag.distance > 24) _SwipeHint(verdict: hint),
-                ],
-              ),
+                );
+              },
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          _Buttons(onVerdict: _button),
-          const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: _history.isEmpty ? null : _undo,
-            icon: const Icon(Icons.undo_rounded, size: 18),
-            label: const Text('Отменить последний'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.s16),
+          Row(
+            children: [
+              Expanded(
+                child: VerdictButton(
+                  kind: VerdictKind.unknown,
+                  label: l.triageVerdictUnknown,
+                  minHeight: 56,
+                  onPressed: () => _button(TriageVerdict.unknown),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              Expanded(
+                child: VerdictButton(
+                  kind: VerdictKind.unsure,
+                  label: l.triageVerdictUnsure,
+                  minHeight: 56,
+                  onPressed: () => _button(TriageVerdict.unsure),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s8),
+              Expanded(
+                child: VerdictButton(
+                  kind: VerdictKind.known,
+                  label: l.triageVerdictKnown,
+                  minHeight: 56,
+                  onPressed: () => _button(TriageVerdict.known),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: AppSpacing.s16),
+          _UndoButton(onTap: _history.isEmpty ? null : _undo, label: l.triageUndo),
         ],
       ),
     );
   }
 }
 
-class _Counter extends StatelessWidget {
-  const _Counter({required this.position, required this.total});
-  final int position, total;
+/// «Отменить последний» — tertiary text, no fill, disabled when empty (кадр 2.2).
+class _UndoButton extends StatelessWidget {
+  const _UndoButton({required this.onTap, required this.label});
+  final VoidCallback? onTap;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    // `position` is how many are already swiped, so the card on screen is position + 1.
-    final current = (position + 1).clamp(1, total);
-    return Column(
-      children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text('$current из $total',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: total == 0 ? 0 : position / total,
-            minHeight: 6,
-            backgroundColor: AppColors.surface,
-            valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+    final color = onTap == null ? AppColors.track : AppColors.tertiary;
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        child: Container(
+          height: AppSpacing.minTap,
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: AppText.transcription.copyWith(color: color, fontSize: 12.5),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -408,17 +537,17 @@ class _Counter extends StatelessWidget {
 /// later fail verification). Tap flips to the BACK: image (if any) + translation + example. The
 /// first flip calls [onReveal] so the deck can mark the verdict `revealed`.
 class _FlipCard extends StatefulWidget {
-  const _FlipCard({super.key, required this.card, required this.onReveal});
+  const _FlipCard({super.key, required this.card, required this.onReveal, required this.showHint});
   final TriageCard card;
   final VoidCallback onReveal;
+  final bool showHint;
 
   @override
   State<_FlipCard> createState() => _FlipCardState();
 }
 
 class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 340));
+  late final AnimationController _c = AnimationController(vsync: this, duration: AppMotion.flip);
   bool _back = false;
 
   @override
@@ -428,10 +557,14 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
   }
 
   void _flip() {
-    AppFeedback.tap();
+    AppHaptics.light();
     final goingToBack = !_back;
     setState(() => _back = goingToBack);
-    goingToBack ? _c.forward() : _c.reverse();
+    if (MediaQuery.of(context).disableAnimations) {
+      _c.value = goingToBack ? 1 : 0; // reduced motion: no rotateY, just swap
+    } else {
+      goingToBack ? _c.forward() : _c.reverse();
+    }
     if (goingToBack) widget.onReveal();
   }
 
@@ -442,114 +575,227 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
       child: AnimatedBuilder(
         animation: _c,
         builder: (context, _) {
-          final t = Curves.easeInOut.transform(_c.value); // 0 = front, 1 = back
-          final angle = t * 3.1415926;
+          final t = AppMotion.easeOut.transform(_c.value); // 0 = front, 1 = back
           final showBack = t > 0.5;
+          // Midpoint darkening (§4д «на середине притемнение»): peaks at t=0.5.
+          final darken = (1 - (2 * t - 1).abs()) * 0.22;
+          final angle = t * 3.1415926;
+          final face = showBack
+              // Counter-rotate the back so its content isn't mirrored.
+              ? Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..rotateY(3.1415926),
+                  child: _backFace(context, darken),
+                )
+              : _frontFace(context, darken);
           return Transform(
             alignment: Alignment.center,
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.0012) // perspective
               ..rotateY(angle),
-            child: showBack
-                // Counter-rotate the back so its content isn't mirrored.
-                ? Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..rotateY(3.1415926),
-                    child: _backFace(context),
-                  )
-                : _frontFace(context),
+            child: face,
           );
         },
       ),
     );
   }
 
-  Widget _frontFace(BuildContext context) => GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(widget.card.text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800)),
-            if (widget.card.transcription != null && widget.card.transcription!.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text('/${widget.card.transcription}/',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 15)),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.touch_app_outlined, color: AppColors.textMuted, size: 15),
-                SizedBox(width: 6),
-                Text('нажми, чтобы перевернуть',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              ],
+  /// Wraps a face in the flip-card [PaperCard] with the midpoint darkening overlay.
+  Widget _paper({required Widget child, required double darken, EdgeInsets? padding}) {
+    return PaperCard(
+      radius: AppRadii.card,
+      clipContent: true,
+      padding: padding ?? const EdgeInsets.all(AppSpacing.s26),
+      child: Stack(
+        children: [
+          Positioned.fill(child: child),
+          if (darken > 0)
+            Positioned.fill(
+              child: IgnorePointer(child: ColoredBox(color: AppColors.ink.withValues(alpha: darken))),
             ),
-          ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 
-  Widget _backFace(BuildContext context) => GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _frontFace(BuildContext context, double darken) {
+    final l = AppLocalizations.of(context);
+    return _paper(
+      darken: darken,
+      child: Stack(
+        children: [
+          Center(
+            child: Text(widget.card.text, textAlign: TextAlign.center, style: AppText.termFlip),
+          ),
+          if (widget.showHint)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20,
+              child: Text(
+                l.triageSwipeHint,
+                textAlign: TextAlign.center,
+                style: AppText.transcription.copyWith(color: AppColors.tertiary, fontSize: 11.5),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _backFace(BuildContext context, double darken) {
+    final card = widget.card;
+    final hasImage = card.imageUrl != null && card.imageUrl!.isNotEmpty;
+    return _paper(
+      darken: darken,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (hasImage)
+            Image.network(
+              card.imageUrl!,
+              height: 212,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (_, child, p) => p == null ? child : const SizedBox(height: 212),
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(card.text, style: AppTextExercise.feedbackTerm),
+                  const SizedBox(height: 7),
+                  Row(
+                    children: [
+                      if (card.transcription != null && card.transcription!.isNotEmpty) ...[
+                        Text('/${card.transcription}/', style: AppText.transcription),
+                        const SizedBox(width: 9),
+                      ],
+                      _TypeBadge(type: card.type),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    card.translation,
+                    style: AppText.translation.copyWith(fontSize: 16),
+                  ),
+                  if (card.example != null && card.example!.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    const Divider(color: AppColors.hairline, height: 1, thickness: 1),
+                    const SizedBox(height: 12),
+                    Text(card.example!, style: AppText.usageExample.copyWith(fontSize: 15.5)),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Type badge (§2 «Бейдж типа»): caps, hairline outline, copy from ARB.
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.type});
+  final String type;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    // Forward-compat: unknown types fall back to phrase-like (as in Word.isPhrase).
+    final label = switch (type) {
+      'word' => l.triageTermTypeWord,
+      'phrase' => l.triageTermTypePhrase,
+      'idiom' => l.triageTermTypeIdiom,
+      'phrasal_verb' => l.triageTermTypePhrasalVerb,
+      _ => l.triageTermTypePhrase,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.thumb),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Text(label.toUpperCase(), style: AppText.badge),
+    );
+  }
+}
+
+/// Swipe visual (§4д): a verdict tint from the staying side (≤16 %) plus a sign
+/// ring whose opacity ∝ displacement. Lives inside the card's rounded clip.
+class _SwipeOverlay extends StatelessWidget {
+  const _SwipeOverlay({required this.verdict, required this.progress});
+  final TriageVerdict verdict;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (verdict) {
+      TriageVerdict.known => AppColors.verdictKnown,
+      TriageVerdict.unknown => AppColors.verdictUnknown,
+      TriageVerdict.unsure => AppColors.verdictUnsure,
+    };
+    final sign = switch (verdict) {
+      TriageVerdict.known => LucideIcons.check,
+      TriageVerdict.unknown => LucideIcons.x,
+      TriageVerdict.unsure => LucideIcons.minus,
+    };
+    final side = TriageSwipe.signSide(verdict);
+
+    final (begin, end) = switch (side) {
+      VerdictSignSide.left => (Alignment.centerLeft, Alignment.centerRight),
+      VerdictSignSide.right => (Alignment.centerRight, Alignment.centerLeft),
+      VerdictSignSide.bottom => (Alignment.bottomCenter, Alignment.topCenter),
+    };
+    final align = switch (side) {
+      VerdictSignSide.left => const Alignment(-0.82, -0.82),
+      VerdictSignSide.right => const Alignment(0.82, -0.82),
+      VerdictSignSide.bottom => const Alignment(0, 0.82),
+    };
+
+    return IgnorePointer(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        child: Stack(
           children: [
-            if (widget.card.imageUrl != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadii.md),
-                child: Image.network(
-                  widget.card.imageUrl!,
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (_, child, p) => p == null ? child : const SizedBox(height: 150),
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: begin,
+                    end: end,
+                    colors: [
+                      color.withValues(alpha: progress * AppMotion.swipeBgTintMax),
+                      color.withValues(alpha: 0),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            Text(widget.card.translation,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w700)),
-            if (widget.card.example != null && widget.card.example!.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text('“${widget.card.example!}”',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, fontStyle: FontStyle.italic)),
-            ],
-          ],
-        ),
-      );
-}
-
-class _SwipeHint extends StatelessWidget {
-  const _SwipeHint({required this.verdict});
-  final TriageVerdict? verdict;
-
-  @override
-  Widget build(BuildContext context) {
-    if (verdict == null) return const SizedBox.shrink();
-    final (label, color, icon) = switch (verdict!) {
-      TriageVerdict.known => ('Знаю', AppColors.know, Icons.check_rounded),
-      TriageVerdict.unknown => ('Не знаю', AppColors.dontKnow, Icons.close_rounded),
-      TriageVerdict.unsure => ('Не уверен', AppColors.review, Icons.help_outline_rounded),
-    };
-    return IgnorePointer(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 6),
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+            Align(
+              alignment: align,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.s22),
+                child: Opacity(
+                  opacity: progress.clamp(0.0, 1.0),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color.withValues(alpha: 0.55), width: 2.5),
+                    ),
+                    child: Icon(sign, size: 34, color: color),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -557,106 +803,108 @@ class _SwipeHint extends StatelessWidget {
   }
 }
 
-class _Buttons extends StatelessWidget {
-  const _Buttons({required this.onVerdict});
-  final void Function(TriageVerdict) onVerdict;
+/// Empty state: nothing (or nothing yet) to triage.
+class _AllTriaged extends StatelessWidget {
+  const _AllTriaged({required this.title, required this.remaining});
+  final String title;
+  final int remaining;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _VerdictButton(
-                label: 'Не знаю', color: AppColors.dontKnow, icon: Icons.close_rounded,
-                onTap: () => onVerdict(TriageVerdict.unknown),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: _VerdictButton(
-                label: 'Знаю', color: AppColors.know, icon: Icons.check_rounded,
-                onTap: () => onVerdict(TriageVerdict.known),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _VerdictButton(
-          label: 'Не уверен', color: AppColors.review, icon: Icons.help_outline_rounded,
-          onTap: () => onVerdict(TriageVerdict.unsure),
-        ),
-      ],
+    final l = AppLocalizations.of(context);
+    // "Всё разобрано" only when there is genuinely nothing left server-side. If the page came
+    // back empty but the server still has eligible terms (e.g. all of this page is locally
+    // pending), say so honestly rather than claiming the set is done.
+    final done = remaining == 0;
+    return _CenteredState(
+      title: title,
+      heading: done ? l.triageAllDoneTitle : l.triageMoreLaterTitle,
+      body: done ? l.triageAllDoneBody : l.triageMoreLaterBody(remaining),
     );
   }
 }
 
-class _VerdictButton extends StatelessWidget {
-  const _VerdictButton({required this.label, required this.color, required this.icon, required this.onTap});
-  final String label;
-  final Color color;
-  final IconData icon;
-  final VoidCallback onTap;
+/// Shared centred layout for the loading-error / empty / summary states: a back
+/// chip pinned top-left, the message centred, a «Готово» primary button.
+class _CenteredState extends StatelessWidget {
+  const _CenteredState({required this.title, required this.heading, this.body, this.extra});
+  final String title;
+  final String heading;
+  final String? body;
+  final Widget? extra;
 
   @override
   Widget build(BuildContext context) {
-    return SpringTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 15)),
-          ],
-        ),
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, AppSpacing.s16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: Alignment.centerLeft, child: const _BackChip()),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(heading, textAlign: TextAlign.center, style: AppText.stepTitle),
+                  if (body != null) ...[
+                    const SizedBox(height: AppSpacing.s12),
+                    Text(body!,
+                        textAlign: TextAlign.center,
+                        style: AppText.translation.copyWith(color: AppColors.secondary)),
+                  ],
+                  if (extra != null) ...[
+                    const SizedBox(height: AppSpacing.s22),
+                    extra!,
+                  ],
+                  const SizedBox(height: AppSpacing.s26),
+                  PrimaryButton(
+                    label: l.triageDone,
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TriageSummary extends ConsumerWidget {
-  const _TriageSummary(
-      {required this.known, required this.unsure, required this.unknown, required this.remaining});
+/// End-of-batch summary (§2б «Итог сессии»): monochrome — Inter numbers on ink,
+/// tertiary caps labels, hairline separators. Verdict colours don't appear here.
+class _TriageSummary extends StatelessWidget {
+  const _TriageSummary({
+    required this.title,
+    required this.known,
+    required this.unsure,
+    required this.unknown,
+    required this.remaining,
+  });
+  final String title;
   final int known, unsure, unknown;
   final int remaining; // eligible terms still on the server beyond the page just finished
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _CenteredState(
+      title: title,
+      heading: remaining > 0 ? l.triageSummaryBatchTitle : l.triageSummaryDoneTitle,
+      body: remaining > 0 ? l.triageRemainingAfterSync(remaining) : null,
+      extra: IntrinsicHeight(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(remaining > 0 ? 'Пачка разобрана' : 'Разбор завершён',
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _Tally(label: 'Знакомо', value: known, color: AppColors.know),
-                _Tally(label: 'Учим', value: unknown, color: AppColors.dontKnow),
-                _Tally(label: 'Не уверены', value: unsure, color: AppColors.review),
-              ],
-            ),
-            // Honest remainder: only claim the set is done when the server has nothing left.
-            if (remaining > 0) ...[
-              const SizedBox(height: AppSpacing.lg),
-              Text('Ещё $remaining после синхронизации',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-            ],
-            const SizedBox(height: AppSpacing.xl),
-            GlassSecondaryButton(label: 'Готово', onTap: () => Navigator.of(context).maybePop()),
+            _Tally(label: l.triageTallyKnown, value: known),
+            const _TallyDivider(),
+            _Tally(label: l.triageTallyLearning, value: unknown),
+            const _TallyDivider(),
+            _Tally(label: l.triageTallyUnsure, value: unsure),
           ],
         ),
       ),
@@ -664,21 +912,27 @@ class _TriageSummary extends ConsumerWidget {
   }
 }
 
+class _TallyDivider extends StatelessWidget {
+  const _TallyDivider();
+  @override
+  Widget build(BuildContext context) =>
+      const VerticalDivider(color: AppColors.hairline, width: 1, thickness: 1, indent: 4, endIndent: 4);
+}
+
 class _Tally extends StatelessWidget {
-  const _Tally({required this.label, required this.value, required this.color});
+  const _Tally({required this.label, required this.value});
   final String label;
   final int value;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
       child: Column(
         children: [
-          Text('$value', style: TextStyle(color: color, fontSize: 30, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Text('$value', style: AppTextExercise.summaryNumber),
+          const SizedBox(height: AppSpacing.s4),
+          Text(label.toUpperCase(), style: AppTextExercise.summaryLabel),
         ],
       ),
     );

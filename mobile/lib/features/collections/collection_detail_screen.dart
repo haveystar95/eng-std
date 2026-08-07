@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/design.dart';
-import '../../core/glass.dart';
-import '../../core/pronouncer.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../data/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../home/home_cta.dart';
+import '../practice_dialog/dialog_entry_button.dart';
+import '../training/session_screen.dart';
 import '../training/triage_screen.dart';
+import 'collection_cta.dart';
+import 'collection_edit_dialog.dart';
 import 'word_edit_dialog.dart';
-import 'word_media.dart';
 
+/// Collection screen (кадр 2.3): cover photo, three ink-density segments, a
+/// state-dependent primary action (triage → review → practice), and the word
+/// list (Literata term, type badge, secondary translation, slashed transcription,
+/// right-axis speaker). Swipe a row or long-press it for Изменить / Удалить
+/// (no «Озвучить» — the speaker is on the row, rule 18). All reads are local.
 class CollectionDetailScreen extends ConsumerStatefulWidget {
   const CollectionDetailScreen({
     super.key,
@@ -21,8 +34,7 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
   final String collectionId;
   final String title;
 
-  /// First-contact nudge: when arriving from a freshly generated collection, offer «Разобрать»
-  /// (triage) at the top so the user's first move is to sort what they already know.
+  /// First-contact nudge on a freshly generated collection: offer «Разобрать» first.
   final bool offerTriage;
 
   @override
@@ -34,14 +46,21 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
   late bool _showTriagePrompt = widget.offerTriage;
 
   void _openTriage() {
-    AppFeedback.tap();
+    AppHaptics.light();
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
     ));
   }
 
+  void _openSession(bool practice) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) =>
+          SessionScreen(title: widget.title, collectionId: widget.collectionId, practice: practice),
+    ));
+  }
+
   Future<void> _speak(Word word) async {
-    AppFeedback.tap();
+    AppHaptics.light();
     final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
     await _pronouncer.speak(word, targetLang: target);
   }
@@ -52,167 +71,618 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     ref.read(syncServiceProvider).sync();
   }
 
+  Future<void> _confirmDelete(Word word) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionDeleteWordTitle(word.term),
+      message: l.collectionDeleteWordMessage,
+      confirmLabel: l.actionDelete,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok == true) {
+      AppHaptics.warning();
+      await _delete(word);
+    }
+  }
+
+  void _edit(Word word) => showWordEditor(
+        context,
+        ref,
+        collectionId: widget.collectionId,
+        existing: word,
+        onRequestDelete: () => _confirmDelete(word),
+      );
+
+  void _add() => showWordEditor(context, ref, collectionId: widget.collectionId);
+
+  /// Collection ⋯ menu (кадр 5e). Own collections only for now: Переименовать +
+  /// Удалить коллекцию. (Shared-collection variant «Создать копию / Убрать из
+  /// моих» + «Сменить обложку» need the store→detail flow + fork/unsubscribe API
+  /// — deferred to A3.5; this screen is only reached for own collections.)
+  Future<void> _openCollectionMenu(BuildContext anchor) async {
+    final l = AppLocalizations.of(context);
+    await showFloatingContextMenu(
+      context: context,
+      anchorContext: anchor,
+      barrierLabel: l.commonCloseMenu,
+      actions: [
+        ContextMenuAction(
+          icon: LucideIcons.pencil,
+          label: l.collectionMenuRename,
+          onSelected: () => showCollectionEditor(context, ref, existing: _collection),
+        ),
+        ContextMenuAction(
+          icon: LucideIcons.trash2,
+          label: l.collectionMenuDelete,
+          destructive: true,
+          onSelected: _confirmDeleteCollection,
+        ),
+      ],
+    );
+  }
+
+  WordCollection? _collection;
+
+  Future<void> _confirmDeleteCollection() async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionDeleteTitle(widget.title),
+      message: l.collectionDeleteMessage,
+      confirmLabel: l.actionDelete,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok == true) {
+      AppHaptics.warning();
+      try {
+        await ref.read(apiClientProvider).deleteCollection(widget.collectionId);
+        // Drop it locally right away — don't wait for a sync tombstone the delta feed
+        // doesn't reliably carry for collections (this was the "backend deleted, front didn't" bug).
+        await ref.read(appDatabaseProvider).deleteCollectionLocal(widget.collectionId);
+        ref.read(syncServiceProvider).sync();
+        if (mounted) Navigator.of(context).maybePop();
+      } catch (_) {
+        // Network/5xx: keep the collection and the screen; the user can retry.
+        AppHaptics.warning();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final words = ref.watch(collectionWordsProvider(widget.collectionId));
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            tooltip: 'Разобрать (триаж)',
-            icon: const Icon(Icons.style_outlined),
-            onPressed: _openTriage,
-          ),
-        ],
-      ),
-      floatingActionButton: _AddWordFab(
-        onTap: () => showWordEditor(context, ref, collectionId: widget.collectionId),
-      ),
-      body: AmbientBackground(
-        child: SafeArea(
-          child: words.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
-            data: (items) => items.isEmpty
-                ? _empty(context)
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 110),
-                    // A leading slot for the «Разобрать» banner, only when it's showing.
-                    itemCount: items.length + (_showTriagePrompt ? 1 : 0),
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, rawIndex) {
-                      if (_showTriagePrompt && rawIndex == 0) {
-                        return _TriageBanner(
-                          onStart: _openTriage,
-                          onDismiss: () => setState(() => _showTriagePrompt = false),
-                        ).animate().fadeIn().slideY(begin: -0.1, end: 0);
-                      }
-                      final i = rawIndex - (_showTriagePrompt ? 1 : 0);
-                      final w = items[i];
-                      return Dismissible(
-                        key: ValueKey(w.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 24),
-                          decoration: BoxDecoration(
-                            color: AppColors.danger.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                        ),
-                        confirmDismiss: (_) async {
-                          AppFeedback.warn();
-                          await _delete(w);
-                          return true;
-                        },
-                        child: _WordCard(
-                          word: w,
-                          onSpeak: () => _speak(w),
-                          onEdit: () => showWordEditor(context, ref, collectionId: widget.collectionId, existing: w),
-                        ),
-                      ).animate().fadeIn(delay: (30 * i).ms).slideY(begin: 0.06, end: 0);
-                    },
-                  ),
+    final collection = ref
+        .watch(collectionsProvider)
+        .value
+        ?.where((c) => c.id == widget.collectionId)
+        .firstOrNull;
+    _collection = collection;
+    final density = ref.watch(collectionDensityProvider(widget.collectionId)).value ??
+        const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
+    final cprog = ref.watch(collectionsProgressProvider).value?[widget.collectionId];
+    final untriaged = ref.watch(untriagedByCollectionProvider).value?[widget.collectionId] ?? 0;
+    final due = cprog?.due ?? 0;
+    final total = cprog?.total ?? collection?.wordsCount ?? 0;
+    final cta = computeCollectionCta(untriaged: untriaged, due: due, total: total);
+
+    // Light status-bar glyphs over the dark cover photo (overrides the app-wide
+    // dark default set in main()).
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+      backgroundColor: AppColors.paper,
+      body: words.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+        error: (e, _) => _CoverScaffold(
+          imageUrl: collection?.imageUrl,
+          child: Center(
+            child: Text(l.triageLoadError(e.toString()),
+                textAlign: TextAlign.center, style: AppText.translation),
           ),
         ),
+        data: (items) => ListView(
+          padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26),
+          children: [
+            _Cover(
+              imageUrl: collection?.imageUrl,
+              onBack: () => Navigator.of(context).maybePop(),
+              onMenu: _openCollectionMenu,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.title, style: AppText.collectionNameScreen),
+                  const SizedBox(height: 6),
+                  Text(
+                    _subtitle(l, total, due),
+                    style: AppText.translation.copyWith(fontSize: 13),
+                  ),
+                  const SizedBox(height: AppSpacing.s16),
+                  InkSegments.fromCounts(
+                    confirmed: density.confirmed,
+                    familiar: density.familiar,
+                    inProgress: density.inProgress,
+                  ),
+                  const SizedBox(height: 11),
+                  _DensityLegend(density: density),
+                  const SizedBox(height: 18),
+                  _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
+                  // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
+                  DialogEntryButton(collectionId: widget.collectionId, title: widget.title),
+                  if (_showTriagePrompt) ...[
+                    const SizedBox(height: AppSpacing.s12),
+                    _TriageBanner(
+                      onStart: _openTriage,
+                      onDismiss: () => setState(() => _showTriagePrompt = false),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  Text(l.collectionWordsLabel, style: AppText.sectionLabel),
+                  const SizedBox(height: 6),
+                ],
+              ),
+            ),
+            if (items.isEmpty)
+              _Empty(l: l)
+            else
+              for (var i = 0; i < items.length; i++)
+                _WordRow(
+                  word: items[i],
+                  showDivider: i < items.length - 1,
+                  onSpeak: () => _speak(items[i]),
+                  onEdit: () => _edit(items[i]),
+                  onDelete: () => _confirmDelete(items[i]),
+                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 16, AppSpacing.screenH, 0),
+              child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
+            ),
+          ],
+        ),
+      ),
       ),
     );
   }
 
-  Widget _empty(BuildContext context) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.14), shape: BoxShape.circle),
-              child: const Icon(Icons.translate_rounded, color: AppColors.primary, size: 40),
+  String _subtitle(AppLocalizations l, int total, int due) {
+    final words = l.collectionWordsCount(total);
+    return due > 0 ? '$words · ${l.collectionDueSuffix(due)}' : words;
+  }
+}
+
+/// Cover photo header with a top scrim + back chip. Monochrome placeholder when
+/// the collection has no cover.
+class _Cover extends StatelessWidget {
+  const _Cover({required this.imageUrl, required this.onBack, this.onMenu});
+  final String? imageUrl;
+  final VoidCallback onBack;
+
+  /// Opens the collection ⋯ menu, anchored at the button's own context.
+  final void Function(BuildContext anchor)? onMenu;
+
+  static const _height = 226.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
+    return SizedBox(
+      height: _height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const _CoverPlaceholder())
+          else
+            const _CoverPlaceholder(),
+          // Top scrim so the white status bar + back chip read over any photo.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.ink.withValues(alpha: 0.55), AppColors.ink.withValues(alpha: 0)],
+                stops: const [0, 0.53],
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text('Слов пока нет', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            const Text('Нажми «+ Слово», чтобы добавить', style: TextStyle(color: AppColors.textSecondary)),
-          ],
-        ),
+          ),
+          Positioned(
+            top: MediaQuery.viewPaddingOf(context).top + AppSpacing.s8,
+            left: 20,
+            child: _RoundIcon(icon: LucideIcons.arrowLeft, onTap: onBack),
+          ),
+          if (onMenu != null)
+            Positioned(
+              top: MediaQuery.viewPaddingOf(context).top + AppSpacing.s8,
+              right: 20,
+              child: Builder(
+                builder: (anchor) =>
+                    _RoundIcon(icon: LucideIcons.ellipsis, onTap: () => onMenu!(anchor)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoverPlaceholder extends StatelessWidget {
+  const _CoverPlaceholder();
+  @override
+  Widget build(BuildContext context) => const ColoredBox(
+        color: AppColors.track,
+        child: Center(child: Icon(LucideIcons.image, size: 34, color: AppColors.tertiary)),
       );
 }
 
-/// First-contact nudge on a freshly generated collection: sort what you already know before study.
-class _TriageBanner extends StatelessWidget {
-  const _TriageBanner({required this.onStart, required this.onDismiss});
-  final VoidCallback onStart;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      tint: AppColors.accent,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          const Icon(Icons.style_rounded, color: AppColors.accent, size: 24),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Разбери коллекцию',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 15)),
-                SizedBox(height: 2),
-                Text('Отметь, что уже знаешь — остальное пойдёт в тренировку',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          SpringTap(
-            onTap: onStart,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(gradient: AppGradients.brand, borderRadius: BorderRadius.circular(AppRadii.pill)),
-              child: const Text('Начать', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
-            ),
-          ),
-          SpringTap(
-            feedback: false,
-            onTap: onDismiss,
-            child: const Padding(
-              padding: EdgeInsets.only(left: 4),
-              child: Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddWordFab extends StatelessWidget {
-  const _AddWordFab({required this.onTap});
+/// Translucent dark round button over the cover (white glyph on the photo).
+class _RoundIcon extends StatelessWidget {
+  const _RoundIcon({required this.icon, required this.onTap});
+  final IconData icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SpringTap(
+    return Semantics(
+      button: true,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 24,
+        child: Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.ink.withValues(alpha: 0.38),
+          ),
+          child: Icon(icon, size: 17, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+/// Three-swatch density legend (§4). Wraps so it never clips (rule 16).
+class _DensityLegend extends StatelessWidget {
+  const _DensityLegend({required this.density});
+  final CollectionDensity density;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Wrap(
+      spacing: 14,
+      runSpacing: 6,
+      children: [
+        _item(InkDensity.filled, l.collectionDensityConfirmed(density.confirmed)),
+        _item(InkDensity.halftone, l.collectionDensityFamiliar(density.familiar)),
+        _item(InkDensity.outline, l.collectionDensityInProgress(density.inProgress)),
+      ],
+    );
+  }
+
+  Widget _item(InkDensity d, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 9,
+          height: 9,
+          child: d == InkDensity.outline
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppInkDensity.outlineColor, width: AppInkDensity.outlineWidth),
+                  ),
+                )
+              : ColoredBox(color: AppInkDensity.solid(d)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: AppText.transcription.copyWith(fontSize: 11.5)),
+      ],
+    );
+  }
+}
+
+/// State-dependent primary action. Triage/review are ink-filled; practice is a
+/// quiet outline (кадр 2.3 — «долг закрыт: кнопка становится тихой, контурной»).
+class _CtaButton extends StatelessWidget {
+  const _CtaButton({required this.cta, required this.onTriage, required this.onSession});
+  final HomeCta cta;
+  final VoidCallback onTriage;
+  final void Function(bool practice) onSession;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (cta.kind == HomeCtaKind.none) return const SizedBox.shrink();
+
+    final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
+      HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
+      HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
+      HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
+      HomeCtaKind.none => ('', '', () => onSession(false), false),
+    };
+
+    final fg = filled ? AppColors.paper : AppColors.ink;
+    final subColor = filled ? AppColors.paper.withValues(alpha: 0.66) : AppColors.secondary;
+
+    return Material(
+      color: filled ? AppColors.ink : Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        side: filled ? BorderSide.none : const BorderSide(color: AppInkDensity.outlineColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          AppHaptics.light();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 13, 18, 13),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: AppText.primaryButton.copyWith(color: fg, fontSize: 17)),
+                    const SizedBox(height: 3),
+                    Text(subtitle, style: AppText.primaryButtonSub.copyWith(color: subColor)),
+                  ],
+                ),
+              ),
+              if (filled) ...[
+                const SizedBox(width: AppSpacing.s12),
+                Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.paper.withValues(alpha: 0.16),
+                  ),
+                  child: const Icon(LucideIcons.arrowRight, size: 16, color: AppColors.paper),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// First-contact nudge (reskinned from the old glass banner).
+class _TriageBanner extends StatelessWidget {
+  const _TriageBanner({required this.onStart, required this.onDismiss});
+  final VoidCallback onStart, onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PaperCard(
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.collectionTriageBannerTitle, style: AppText.sheetButton),
+                const SizedBox(height: 3),
+                Text(l.collectionTriageBannerBody, style: AppText.translation.copyWith(fontSize: 12.5)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          QuietButton(label: l.collectionTriageBannerStart, onPressed: onStart),
+          InkResponse(
+            onTap: onDismiss,
+            radius: 20,
+            child: const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(LucideIcons.x, size: 18, color: AppColors.tertiary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddWordButton extends StatelessWidget {
+  const _AddWordButton({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        side: const BorderSide(color: AppInkDensity.outlineColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.plus, size: 17, color: AppColors.ink),
+              const SizedBox(width: 9),
+              Text(label, style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Empty extends StatelessWidget {
+  const _Empty({required this.l});
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 24, AppSpacing.screenH, 24),
+      child: Column(
+        children: [
+          const Icon(LucideIcons.bookOpen, size: 40, color: AppColors.tertiary),
+          const SizedBox(height: AppSpacing.s12),
+          Text(l.collectionEmptyTitle, style: AppText.stepTitle.copyWith(fontSize: 20)),
+          const SizedBox(height: 6),
+          Text(l.collectionEmptyBody,
+              textAlign: TextAlign.center, style: AppText.translation.copyWith(color: AppColors.secondary)),
+        ],
+      ),
+    );
+  }
+}
+
+/// A word row with a two-action swipe reveal (Изменить / Удалить) and a
+/// long-press [FloatingContextMenu] (same two, no «Озвучить» — rule 18). The
+/// speaker lives on the row's right axis (rule 19).
+class _WordRow extends StatefulWidget {
+  const _WordRow({
+    required this.word,
+    required this.showDivider,
+    required this.onSpeak,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Word word;
+  final bool showDivider;
+  final VoidCallback onSpeak, onEdit, onDelete;
+
+  @override
+  State<_WordRow> createState() => _WordRowState();
+}
+
+class _WordRowState extends State<_WordRow> {
+  static const _actionW = 76.0;
+  static const _actionsW = _actionW * 2;
+
+  double _offset = 0; // 0 (closed) .. -_actionsW (open)
+
+  void _onDragUpdate(DragUpdateDetails d) =>
+      setState(() => _offset = (_offset + d.delta.dx).clamp(-_actionsW, 0.0));
+  void _onDragEnd(DragEndDetails d) {
+    final v = d.velocity.pixelsPerSecond.dx;
+    final open = v < -300 || (v <= 300 && _offset < -_actionsW / 2);
+    setState(() => _offset = open ? -_actionsW : 0);
+  }
+
+  void _close() => setState(() => _offset = 0);
+
+  Future<void> _menu() async {
+    AppHaptics.light();
+    final l = AppLocalizations.of(context);
+    await showFloatingContextMenu(
+      context: context,
+      anchorContext: context,
+      barrierLabel: l.commonCloseMenu,
+      actions: [
+        ContextMenuAction(icon: LucideIcons.pencil, label: l.actionEdit, onSelected: widget.onEdit),
+        ContextMenuAction(
+          icon: LucideIcons.trash2,
+          label: l.actionDelete,
+          destructive: true,
+          onSelected: widget.onDelete,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return ClipRect(
+      child: Stack(
+        children: [
+          // Revealed actions behind the row.
+          Positioned.fill(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _SwipeAction(
+                  icon: LucideIcons.pencil,
+                  label: l.actionEdit,
+                  color: AppColors.paper,
+                  background: AppColors.ink,
+                  onTap: () {
+                    _close();
+                    widget.onEdit();
+                  },
+                ),
+                _SwipeAction(
+                  icon: LucideIcons.trash2,
+                  label: l.actionDelete,
+                  color: AppColors.destructiveText,
+                  background: AppColors.faintInk,
+                  onTap: () {
+                    _close();
+                    widget.onDelete();
+                  },
+                ),
+              ],
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(_offset, 0),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragUpdate: _onDragUpdate,
+              onHorizontalDragEnd: _onDragEnd,
+              onLongPress: _menu,
+              onTap: _offset != 0 ? _close : null,
+              child: _RowBody(word: widget.word, showDivider: widget.showDivider, onSpeak: widget.onSpeak),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwipeAction extends StatelessWidget {
+  const _SwipeAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.background,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color color, background;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        decoration: BoxDecoration(
-          gradient: AppGradients.brand,
-          borderRadius: BorderRadius.circular(AppRadii.pill),
-          boxShadow: AppShadows.glow(AppColors.primary),
-        ),
-        child: const Row(
+        width: 76,
+        color: background,
+        alignment: Alignment.center,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text('Слово', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+            Icon(icon, size: 17, color: color),
+            const SizedBox(height: 5),
+            Text(label, style: AppText.transcription.copyWith(fontSize: 12.5, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),
@@ -220,101 +690,153 @@ class _AddWordFab extends StatelessWidget {
   }
 }
 
-/// The per-word learning status shown on the collection view, mapped from the local progress
-/// state. A not-started word (no progress row, or `new`) shows no badge — the absence is the
-/// status. `review`/`known` mirror the "Выучено"/"Усвоено" wording used on the stats card.
-({Color color, String label})? _statusOf(String? status) => switch (status) {
-      'known' => (color: AppColors.accent, label: 'Усвоено'),
-      'review' => (color: AppColors.know, label: 'Выучено'),
-      'learning' || 'relearning' => (color: AppColors.review, label: 'Учу'),
-      'unknown' => (color: AppColors.textMuted, label: 'Не знаю'), // triaged «не знаю»: still new
-      _ => null,
-    };
-
-class _WordCard extends StatelessWidget {
-  const _WordCard({required this.word, required this.onSpeak, required this.onEdit});
+class _RowBody extends StatelessWidget {
+  const _RowBody({required this.word, required this.showDivider, required this.onSpeak});
   final Word word;
-  final VoidCallback onSpeak, onEdit;
+  final bool showDivider;
+  final VoidCallback onSpeak;
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: onEdit,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TermThumb(word: word),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(word.term,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                        ),
-                        const SizedBox(width: 6),
-                        TypeBadge(type: word.type),
-                        const SizedBox(width: 4),
-                        SpringTap(
-                          feedback: false,
-                          scale: 0.85,
-                          onTap: onSpeak,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.06),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-                            ),
-                            child: const Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 19),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(word.translation,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                    if (word.transcription != null && word.transcription!.isNotEmpty)
-                      Text('/${word.transcription}/',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (_statusOf(word.status) case final st?) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: st.color, shape: BoxShape.circle)),
-                const SizedBox(width: 6),
-                Text(st.label,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: st.color, fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ],
-          if (word.example != null && word.example!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text('“${word.example}”',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.textSecondary)),
-          ],
-          if (word.imageAuthor != null) ...[
-            const SizedBox(height: 8),
-            PexelsCredit(author: word.imageAuthor, authorUrl: word.imageAuthorUrl),
-          ],
-        ],
+    return DecoratedBox(
+      // Opaque so the revealed actions don't show through the closed row.
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: AppColors.dividerFaint))
+            : null,
       ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.wordRowPadV, AppSpacing.screenH, AppSpacing.wordRowPadV),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _Thumb(word: word),
+            const SizedBox(width: AppSpacing.wordRowGap),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(word.term,
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.termInList),
+                      ),
+                      const SizedBox(width: 7),
+                      _TypeBadge(type: word.type),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(word.translation,
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.translation.copyWith(fontSize: 13)),
+                  if (word.transcription != null && word.transcription!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text('/${word.transcription}/',
+                        style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s8),
+            _SpeakerButton(onTap: onSpeak),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.word});
+  final Word word;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(4);
+    final placeholder = DecoratedBox(
+      decoration: BoxDecoration(color: AppColors.track, borderRadius: radius),
+      child: Icon(word.isPhrase ? LucideIcons.quote : LucideIcons.type, size: 18, color: AppColors.tertiary),
+    );
+    final url = word.imageUrl;
+    return SizedBox(
+      width: AppSpacing.wordThumb,
+      height: AppSpacing.wordThumb,
+      child: (url == null || url.isEmpty)
+          ? placeholder
+          : ClipRRect(
+              borderRadius: radius,
+              child: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, _, _) => placeholder),
+            ),
+    );
+  }
+}
+
+class _SpeakerButton extends StatelessWidget {
+  const _SpeakerButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 24,
+        child: Container(
+          width: 32,
+          height: 32,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.hairline),
+          ),
+          child: const Icon(LucideIcons.volume2, size: 16, color: AppColors.ink),
+        ),
+      ),
+    );
+  }
+}
+
+/// Type badge (§2) — copy reused from the triage keys.
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.type});
+  final String type;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final label = switch (type) {
+      'word' => l.triageTermTypeWord,
+      'phrase' => l.triageTermTypePhrase,
+      'idiom' => l.triageTermTypeIdiom,
+      'phrasal_verb' => l.triageTermTypePhrasalVerb,
+      _ => l.triageTermTypePhrase,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Text(label.toUpperCase(), style: AppText.badge.copyWith(fontSize: 9.5)),
+    );
+  }
+}
+
+/// Cover + centred child, used for the error state.
+class _CoverScaffold extends StatelessWidget {
+  const _CoverScaffold({required this.imageUrl, required this.child});
+  final String? imageUrl;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _Cover(imageUrl: imageUrl, onBack: () => Navigator.of(context).maybePop()),
+        Expanded(child: child),
+      ],
     );
   }
 }

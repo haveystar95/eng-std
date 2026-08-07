@@ -24,19 +24,6 @@ void main() {
     });
   });
 
-  group('termTypeLabel', () {
-    test('maps the four known types', () {
-      expect(termTypeLabel('word'), 'слово');
-      expect(termTypeLabel('phrase'), 'фраза');
-      expect(termTypeLabel('idiom'), 'идиома');
-      expect(termTypeLabel('phrasal_verb'), 'фраз. глагол');
-    });
-
-    test('an unknown type falls back to phrase-like', () {
-      expect(termTypeLabel('something_new'), 'фраза');
-    });
-  });
-
   group('GenerationStatusView', () {
     test('recognises terminal states', () {
       expect(const GenerationStatusView(status: 'succeeded').isSucceeded, isTrue);

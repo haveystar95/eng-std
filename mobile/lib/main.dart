@@ -1,25 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/theme.dart';
+import 'theme/theme.dart';
+import 'data/locale_controller.dart';
 import 'data/providers.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'l10n/app_localizations.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Paper is a light background, so the status-bar content is dark (rule: the
+  // reskinned screens have no AppBar to set this). Dark screens with an AppBar
+  // (old tabs) reassert their own light overlay; the collection cover overrides
+  // to light via an AnnotatedRegion over its photo.
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark, // Android
+      statusBarBrightness: Brightness.light, // iOS: light bg → dark glyphs
+    ),
+  );
   runApp(const ProviderScope(child: EngStdApp()));
 }
 
-class EngStdApp extends StatelessWidget {
+class EngStdApp extends ConsumerWidget {
   const EngStdApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Locale resolution (A3.0): stored override → device → ru fallback. The
+    // override is applied here; device→fallback lives in [resolveLocale].
+    final option = ref.watch(localeControllerProvider).asData?.value ?? UiLanguageOption.system;
     return MaterialApp(
       title: 'Eng Std',
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
+      theme: buildAppTheme(),
+      locale: LocaleController.overrideLocale(option),
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localeResolutionCallback: (device, supported) => resolveLocale(device, supported),
       home: const _AuthGate(),
     );
   }

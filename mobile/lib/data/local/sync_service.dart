@@ -16,11 +16,13 @@ abstract final class SyncKeys {
   static const cursor = 'sync_cursor'; // last server_time; the next `since`
   static const streak = 'streak'; // cached — not in the delta feed
   static const reviewsToday = 'reviews_today'; // cached — not in the delta feed
+  static const bestStreak = 'best_streak'; // running max of observed streak (Progress screen)
 }
 
 const _kCursor = SyncKeys.cursor;
 const _kStreak = SyncKeys.streak;
 const _kReviewsToday = SyncKeys.reviewsToday;
+const _kBestStreak = SyncKeys.bestStreak;
 
 /// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
 /// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
@@ -64,6 +66,14 @@ class SyncService {
 
   bool _running = false;
 
+  /// Force a full reconcile: clear the cursor so the next [sync] pulls a full snapshot, which is
+  /// authoritative — [sync] then reaps local collections absent from it (ghost cleanup). Wired to
+  /// pull-to-refresh. Overlapping calls collapse to one via the same guard.
+  Future<void> resync() async {
+    await _db.setMeta(_kCursor, null);
+    await sync();
+  }
+
   /// Run one full sync: page from the stored cursor until `has_more` is false, applying each page
   /// atomically, then persist the new cursor. First run (no stored cursor) omits `since` → the
   /// server returns a full snapshot. Safe to call anytime; overlapping calls collapse to one.
@@ -73,6 +83,8 @@ class SyncService {
     state.value = SyncState.syncing;
     try {
       final since = await _db.getMeta(_kCursor); // null on a fresh install → full snapshot
+      final isSnapshot = since == null;
+      final seenCollectionIds = <String>{};
       String? cursor;
       String? serverTime;
       var hasMore = true;
@@ -83,10 +95,17 @@ class SyncService {
         final page = await _api.syncDelta(since: since, cursor: cursor);
         final n = await _applyPage(page);
         cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu;
+        if (isSnapshot) seenCollectionIds.addAll(n.colIds);
         serverTime = page['server_time'] as String?;
         cursor = page['next_cursor'] as String?;
         hasMore = (page['has_more'] as bool?) ?? false;
         pages++;
+      }
+
+      // A full snapshot is the authoritative live set — reap any local collection not in it
+      // (ghosts left by a server-side removal that sent no tombstone).
+      if (isSnapshot) {
+        await _db.reconcileCollections(seenCollectionIds);
       }
 
       // Advance the cursor only after the whole snapshot/delta is durably applied.
@@ -114,7 +133,7 @@ class SyncService {
     }
   }
 
-  Future<({int cu, int cd, int iu, int id, int tu, int pu})> _applyPage(Map<String, dynamic> page) async {
+  Future<({int cu, int cd, int iu, int id, int tu, int pu, List<String> colIds})> _applyPage(Map<String, dynamic> page) async {
     final changes = (page['changes'] as Map<String, dynamic>?) ?? const {};
 
     final collectionUpserts = <CollectionsCompanion>[];
@@ -209,6 +228,7 @@ class SyncService {
       cu: collectionUpserts.length, cd: collectionDeletes.length,
       iu: itemUpserts.length, id: itemDeletes.length,
       tu: termUpserts.length, pu: progressUpserts.length,
+      colIds: [for (final c in collectionUpserts) c.id.value],
     );
   }
 
@@ -220,6 +240,10 @@ class SyncService {
       final s = await _api.stats();
       await _db.setMeta(_kStreak, '${s.streakDays}');
       await _db.setMeta(_kReviewsToday, '${s.reviewsTotal}');
+      // «Лучший результат» (Progress screen): there is no server best-streak field, so keep a local
+      // running maximum of the streak we've observed. Accumulates from now, like the activity chart.
+      final best = int.tryParse(await _db.getMeta(_kBestStreak) ?? '') ?? 0;
+      if (s.streakDays > best) await _db.setMeta(_kBestStreak, '${s.streakDays}');
     } catch (_) {
       // leave the last-known values in place
     }

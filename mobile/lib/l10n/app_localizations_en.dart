@@ -1,0 +1,1142 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String triageCounter(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get triageSwipeHint => 'Swipe or tap the buttons · tap to flip';
+
+  @override
+  String get triageVerdictUnknown => 'Don\'t know';
+
+  @override
+  String get triageVerdictUnsure => 'Not sure';
+
+  @override
+  String get triageVerdictKnown => 'Know';
+
+  @override
+  String get triageUndo => 'Undo last';
+
+  @override
+  String get triageTermTypeWord => 'word';
+
+  @override
+  String get triageTermTypePhrase => 'phrase';
+
+  @override
+  String get triageTermTypeIdiom => 'idiom';
+
+  @override
+  String get triageTermTypePhrasalVerb => 'phrasal verb';
+
+  @override
+  String get triageAllDoneTitle => 'All triaged';
+
+  @override
+  String get triageAllDoneBody => 'No new words left to triage in this set.';
+
+  @override
+  String get triageMoreLaterTitle => 'That\'s all for now';
+
+  @override
+  String triageMoreLaterBody(int count) {
+    return '$count more after syncing — come back when you\'re online.';
+  }
+
+  @override
+  String get triageDone => 'Done';
+
+  @override
+  String get triageSummaryBatchTitle => 'Batch triaged';
+
+  @override
+  String get triageSummaryDoneTitle => 'Triage complete';
+
+  @override
+  String get triageTallyKnown => 'Known';
+
+  @override
+  String get triageTallyLearning => 'Learning';
+
+  @override
+  String get triageTallyUnsure => 'Unsure';
+
+  @override
+  String triageRemainingAfterSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more after syncing',
+      one: '$count more after syncing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String triageLoadError(String error) {
+    return 'Couldn\'t load: $error';
+  }
+
+  @override
+  String get homeDailyGoal => 'Daily goal';
+
+  @override
+  String homeGoalCount(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$done / $total words',
+      one: '$done / $total word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeStreakActive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Streak — $count days',
+      one: 'Streak — $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeStreakStartToday => 'Your streak starts today';
+
+  @override
+  String homeReviewButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Review $count words',
+      one: 'Review $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeTriageButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Triage $count words',
+      one: 'Triage $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homePracticeButton => 'Practice';
+
+  @override
+  String get homePracticeSubtitle => 'Free practice';
+
+  @override
+  String get homeGenerateTitle => 'Describe a topic — we\'ll build a set';
+
+  @override
+  String get homeGenerateSubtitle =>
+      'AI picks the words and phrases you\'ll actually need';
+
+  @override
+  String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
+
+  @override
+  String get homeGenerateChipDoctor => 'At the doctor';
+
+  @override
+  String get homeGenerateChipRent => 'Renting';
+
+  @override
+  String get homeGenerateChipInterview => 'Job interview';
+
+  @override
+  String get homeGenerateFreeTier => '3 generations a day on the free plan';
+
+  @override
+  String get homeWordOfDay => 'Word of the day';
+
+  @override
+  String get homeMyCollections => 'My collections';
+
+  @override
+  String get homeSeeAll => 'All';
+
+  @override
+  String homeCollectionProgress(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$done of $total words',
+      one: '$done of $total word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tabHome => 'Home';
+
+  @override
+  String get tabCollections => 'Collections';
+
+  @override
+  String get tabProfile => 'Profile';
+
+  @override
+  String get homeSessionTitle => 'Session';
+
+  @override
+  String collectionWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String collectionDueSuffix(int count) {
+    return '$count due today';
+  }
+
+  @override
+  String collectionDensityConfirmed(int count) {
+    return 'Confirmed $count';
+  }
+
+  @override
+  String collectionDensityFamiliar(int count) {
+    return 'Familiar $count';
+  }
+
+  @override
+  String collectionDensityInProgress(int count) {
+    return 'In progress $count';
+  }
+
+  @override
+  String collectionTriageButton(int count) {
+    return 'Triage $count';
+  }
+
+  @override
+  String get collectionTriageSubtitle => 'New words in this set';
+
+  @override
+  String collectionReviewButton(int count) {
+    return 'Review $count';
+  }
+
+  @override
+  String get collectionReviewSubtitle => 'Due for review';
+
+  @override
+  String get collectionPracticeButton => 'Free practice';
+
+  @override
+  String get collectionPracticeSubtitle => 'Nothing urgent — just practice';
+
+  @override
+  String get collectionWordsLabel => 'Words';
+
+  @override
+  String get collectionAddWord => 'Add a word';
+
+  @override
+  String get collectionEmptyTitle => 'No words yet';
+
+  @override
+  String get collectionEmptyBody => 'Tap “Add a word” to start';
+
+  @override
+  String get collectionTriageBannerTitle => 'Triage the set';
+
+  @override
+  String get collectionTriageBannerBody =>
+      'Mark what you already know — the rest goes to practice';
+
+  @override
+  String get collectionTriageBannerStart => 'Start';
+
+  @override
+  String get actionEdit => 'Edit';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String collectionDeleteWordTitle(String term) {
+    return 'Delete “$term”?';
+  }
+
+  @override
+  String get collectionDeleteWordMessage =>
+      'The word stays in other sets; your progress is kept.';
+
+  @override
+  String get wordSheetAddTitle => 'Add a word';
+
+  @override
+  String get wordSheetEditTitle => 'Edit word';
+
+  @override
+  String get wordFieldTerm => 'Term';
+
+  @override
+  String get wordFieldTranslation => 'Translation';
+
+  @override
+  String get wordTermHint => 'word or phrase';
+
+  @override
+  String get wordTranslationHintOptional => 'optional — we\'ll fill it in';
+
+  @override
+  String get wordSheetAddHelper =>
+      'Transcription, example and photo are added automatically.';
+
+  @override
+  String get wordSheetEditHelper =>
+      'Example and photo stay unless you change the term.';
+
+  @override
+  String get wordSheetAddButton => 'Add to set';
+
+  @override
+  String get wordSheetSaveButton => 'Save';
+
+  @override
+  String get wordSheetDeleteLink => 'Remove from set';
+
+  @override
+  String get collectionMenuRename => 'Rename';
+
+  @override
+  String get collectionMenuDelete => 'Delete set';
+
+  @override
+  String collectionDeleteTitle(String title) {
+    return 'Delete “$title”?';
+  }
+
+  @override
+  String get collectionDeleteMessage =>
+      'The set is deleted. Your word progress is kept.';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonCloseMenu => 'Close menu';
+
+  @override
+  String approxWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '≈$count words',
+      one: '≈$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get collectionsTitle => 'Collections';
+
+  @override
+  String get collectionsEmptyTitle => 'No collections yet';
+
+  @override
+  String get collectionsEmptyBody =>
+      'Describe a situation — AI will build your first set.';
+
+  @override
+  String get collectionsNewCollection => 'New collection';
+
+  @override
+  String collectionsTileMastered(int count, int mastered) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0 · $mastered mastered';
+  }
+
+  @override
+  String get generationGeneratingTitle => 'Building the collection…';
+
+  @override
+  String generationGeneratingMeta(String topic, String levels, String size) {
+    return '$topic · $levels · $size';
+  }
+
+  @override
+  String get generationGeneratingNote =>
+      'Picking words and photos · usually 20–30 seconds';
+
+  @override
+  String get generationQueuedNote => 'We\'ll send it as soon as you\'re online';
+
+  @override
+  String get generationFailedTitle => 'Didn\'t work out';
+
+  @override
+  String generationFailedBody(String topic) {
+    return 'The service didn\'t answer “$topic”. No generation was spent.';
+  }
+
+  @override
+  String get generationRetry => 'Retry';
+
+  @override
+  String get generationHide => 'Hide';
+
+  @override
+  String get generationReadyLabel => 'Ready';
+
+  @override
+  String generationReadyLoading(String topic) {
+    return 'Ready — loading “$topic”…';
+  }
+
+  @override
+  String generationUnderBadge(int delivered, int requested) {
+    return '$delivered of $requested';
+  }
+
+  @override
+  String get generationReadyUnder => 'Ready · fewer than asked';
+
+  @override
+  String get generateScreenTitle => 'New collection';
+
+  @override
+  String get generateSituationLabel => 'Describe the situation';
+
+  @override
+  String get generateSituationHelper =>
+      'The more specific the situation, the sharper the set. E.g. “first doctor\'s visit — symptoms and lab tests”.';
+
+  @override
+  String get generatePlaceholder0 => 'Renting a flat — talking to the agent';
+
+  @override
+  String get generatePlaceholder1 =>
+      'First doctor\'s visit — symptoms and tests';
+
+  @override
+  String get generatePlaceholder2 => 'IT interview — talking through projects';
+
+  @override
+  String get generatePlaceholder3 => 'Opening a bank account';
+
+  @override
+  String get generatePlaceholder4 => 'Ordering food at a café';
+
+  @override
+  String get generateSizeLabel => 'Size';
+
+  @override
+  String get generateSizeSmall => 'Small';
+
+  @override
+  String get generateSizeMedium => 'Medium';
+
+  @override
+  String get generateSizeLarge => 'Large';
+
+  @override
+  String get generateLevelLabel => 'Level';
+
+  @override
+  String get generateLevelMulti => 'several allowed';
+
+  @override
+  String get generateLanguageLabel => 'Language to learn';
+
+  @override
+  String get generateLanguageDefault => 'default';
+
+  @override
+  String generateQuotaRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count generations left today',
+      one: '$count generation left today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String generateQuotaExhausted(String time) {
+    return 'Out of generations for today · resets at $time';
+  }
+
+  @override
+  String get generateSubmit => 'Generate';
+
+  @override
+  String get generatePremiumUpsell => 'Need more? Premium — up to 20 a day';
+
+  @override
+  String get generateManual => 'Build a collection manually';
+
+  @override
+  String generateVoiceListening(String time) {
+    return 'Listening · $time';
+  }
+
+  @override
+  String get generateVoiceStop => 'Stop';
+
+  @override
+  String get generateVoiceHelper =>
+      'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
+
+  @override
+  String get generateVoiceRecordingNote =>
+      'Speak — the keyboard returns when you stop';
+
+  @override
+  String get generateVoicePermissionDenied =>
+      'Microphone and speech recognition access is needed — enable it in Settings';
+
+  @override
+  String get collectionSheetCreateTitle => 'New collection';
+
+  @override
+  String get collectionSheetEditTitle => 'Rename collection';
+
+  @override
+  String get collectionNameLabel => 'Name';
+
+  @override
+  String get collectionNameHint => 'e.g. Travel';
+
+  @override
+  String get collectionSheetCreateButton => 'Create';
+
+  @override
+  String get tabProgress => 'Progress';
+
+  @override
+  String get progressTitle => 'Progress';
+
+  @override
+  String progressStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak',
+      one: '$count-day streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progressBestResult(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Best result — $count days',
+      one: 'Best result — $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressDayMon => 'Mon';
+
+  @override
+  String get progressDayTue => 'Tue';
+
+  @override
+  String get progressDayWed => 'Wed';
+
+  @override
+  String get progressDayThu => 'Thu';
+
+  @override
+  String get progressDayFri => 'Fri';
+
+  @override
+  String get progressDaySat => 'Sat';
+
+  @override
+  String get progressDaySun => 'Sun';
+
+  @override
+  String get progressLearnedTotal => 'Learned total';
+
+  @override
+  String get progressThisWeek => 'This week';
+
+  @override
+  String get progressToday => 'Reviews today';
+
+  @override
+  String get progressActivityMonth => 'Activity this month';
+
+  @override
+  String progressMonth(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      '1': 'January',
+      '2': 'February',
+      '3': 'March',
+      '4': 'April',
+      '5': 'May',
+      '6': 'June',
+      '7': 'July',
+      '8': 'August',
+      '9': 'September',
+      '10': 'October',
+      '11': 'November',
+      '12': 'December',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String progressAllWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count words',
+      one: 'All $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeAllDoneTitle => 'All done for today';
+
+  @override
+  String homeAllDoneSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews done, no new words queued.',
+      one: '$count review done, no new words queued.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeAllDonePractice => 'Free practice';
+
+  @override
+  String get homeAllDoneGenerate => 'Build a new collection';
+
+  @override
+  String get homeOfflineBanner =>
+      'No connection. Reviews work as usual — we\'ll sync when you\'re back online.';
+
+  @override
+  String get homeGenerateOfflineNote =>
+      'Generation needs a connection. Your topic is saved and will run once you\'re back online.';
+
+  @override
+  String get appWordmark => 'Слова';
+
+  @override
+  String get authTagline =>
+      'Words for real situations — from the bank to a job interview.';
+
+  @override
+  String get authContinueGoogle => 'Continue with Google';
+
+  @override
+  String get authTerms => 'Terms';
+
+  @override
+  String get authPrivacy => 'Privacy';
+
+  @override
+  String get authOfflineHint =>
+      'No connection. The first sign-in needs the network.';
+
+  @override
+  String get authAppleUnavailable => 'Sign in with Apple isn\'t available yet.';
+
+  @override
+  String get onbLangTitle => 'Which language are you learning?';
+
+  @override
+  String get onbLangSubtitle => 'You can change it in your profile anytime.';
+
+  @override
+  String get onbLevelTitle => 'How confidently do you read?';
+
+  @override
+  String get onbLevelSubtitle =>
+      'Roughly — we\'ll refine it from your triage answers.';
+
+  @override
+  String onbLevelExample(String level) {
+    return 'At $level, collections include words like “wire transfer” and “make ends meet”.';
+  }
+
+  @override
+  String get onbGoalTitle => 'How many words a day?';
+
+  @override
+  String get onbGoalSubtitle => 'The goal only affects reminders and progress.';
+
+  @override
+  String onbGoalMinutes(int count) {
+    return '≈ $count min a day';
+  }
+
+  @override
+  String get onbGoalRecommended => 'recommended';
+
+  @override
+  String get onbFooterNote =>
+      'All of this lives in your profile — level, goal and language aren\'t locked behind onboarding.';
+
+  @override
+  String get onbNext => 'Next';
+
+  @override
+  String get onbStart => 'Start';
+
+  @override
+  String get cefrHintA1 => 'beginner';
+
+  @override
+  String get cefrHintA2 => 'elementary';
+
+  @override
+  String get cefrHintB1 => 'intermediate';
+
+  @override
+  String get cefrHintB2 => 'upper';
+
+  @override
+  String get cefrHintC1 => 'advanced';
+
+  @override
+  String get cefrHintC2 => 'near-native';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get profileSectionLearning => 'Learning';
+
+  @override
+  String get profileSectionApp => 'App';
+
+  @override
+  String get profileSectionSubscription => 'Subscription';
+
+  @override
+  String get profileSectionAccount => 'Account';
+
+  @override
+  String get profileRowLevel => 'Level';
+
+  @override
+  String get profileRowGoal => 'Daily goal';
+
+  @override
+  String get profileRowTargetLang => 'Learning language';
+
+  @override
+  String get profileRowUiLang => 'Interface language';
+
+  @override
+  String get profileRowAutoPronounce => 'Auto-pronounce';
+
+  @override
+  String get profileAutoPronounceHint => 'Speak the word when the card appears';
+
+  @override
+  String get profileRowReminders => 'Reminders';
+
+  @override
+  String get profileRemindersHint =>
+      'One a day, when there\'s something to review';
+
+  @override
+  String get profileRowReminderTime => 'Time';
+
+  @override
+  String get profileFreeTier => 'Free tier';
+
+  @override
+  String get profileFreeTierHint => '3 generations a day';
+
+  @override
+  String get profileSoon => 'Soon';
+
+  @override
+  String get profileSignOut => 'Sign out';
+
+  @override
+  String get profileDeleteAccount => 'Delete account';
+
+  @override
+  String profileGoalValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uiLangSystem => 'System';
+
+  @override
+  String get uiLangRussian => 'Русский';
+
+  @override
+  String get uiLangEnglish => 'English';
+
+  @override
+  String get profileUiLangSheet => 'Interface language';
+
+  @override
+  String get profileLevelSheet => 'Level';
+
+  @override
+  String get profileGoalSheet => 'Daily goal';
+
+  @override
+  String get reminderSheetTitle => 'When to remind you';
+
+  @override
+  String get reminderSheetSubtitle =>
+      'It works best at a time when you usually have five free minutes.';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get deleteAccountTitle => 'Delete account?';
+
+  @override
+  String deleteAccountBody(String words, String streak) {
+    return 'All data and progress will be erased permanently: $words, $streak and all collections.';
+  }
+
+  @override
+  String deleteAccountWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deleteAccountStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day streak',
+      one: '$count-day streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountConfirm => 'Delete';
+
+  @override
+  String get sessionPhaseIntro => 'Getting to know';
+
+  @override
+  String get sessionPhaseAssemble => 'Assemble';
+
+  @override
+  String get sessionPhaseReview => 'Review';
+
+  @override
+  String get sessionPhasePractice => 'Free practice';
+
+  @override
+  String get sessionInstrChoose => 'choose the English equivalent';
+
+  @override
+  String get sessionInstrAssemble => 'assemble it from the words';
+
+  @override
+  String get sessionInstrType => 'write it in English';
+
+  @override
+  String get sessionInstrListenChoose =>
+      'listen and choose the translation · replay any time';
+
+  @override
+  String get sessionInstrListenType => 'listen and write it in English';
+
+  @override
+  String get sessionClozeInsert => 'Insert the word';
+
+  @override
+  String get sessionChipReturnHint => 'Tap a word in the line to send it back';
+
+  @override
+  String get sessionHintFirstLetter => 'Hint: first letter';
+
+  @override
+  String get sessionDontRemember => 'Don\'t remember';
+
+  @override
+  String get sessionNext => 'Next';
+
+  @override
+  String get sessionDone => 'Done';
+
+  @override
+  String get sessionFeedbackCorrect => 'Correct';
+
+  @override
+  String get sessionFeedbackAlmost => 'Almost:';
+
+  @override
+  String get sessionFeedbackWrong => 'Not quite — the correct form is below';
+
+  @override
+  String get sessionDueToday => 'today';
+
+  @override
+  String get sessionDueTomorrow => 'tomorrow';
+
+  @override
+  String sessionDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'in $days day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sessionSeeAgain(String when) {
+    return 'See it again $when';
+  }
+
+  @override
+  String get sessionSummaryTitle => 'Session complete';
+
+  @override
+  String get sessionStatReviewed => 'Reviewed';
+
+  @override
+  String get sessionStatNew => 'New';
+
+  @override
+  String get sessionStatErrors => 'Mistakes';
+
+  @override
+  String get sessionDailyGoal => 'Daily goal';
+
+  @override
+  String get sessionGoalClosed => 'Daily goal reached';
+
+  @override
+  String sessionStreak(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Streak — $days days',
+      one: 'Streak — $days day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sessionSessionWords => 'This session\'s words';
+
+  @override
+  String sessionStrugglingTitle(String term) {
+    return 'Struggling: $term';
+  }
+
+  @override
+  String get sessionStrugglingBody =>
+      'This one\'s tricky. Try a different example — sometimes it\'s the context, not the word.';
+
+  @override
+  String get sessionNewExample => 'New example';
+
+  @override
+  String get sessionNewExampleExhausted => 'You\'ve used today\'s examples';
+
+  @override
+  String get sessionPracticeBanner => 'Practice — progress doesn\'t change';
+
+  @override
+  String get sessionExitTitle => 'End the session?';
+
+  @override
+  String get sessionExitBody =>
+      'Answered words are saved — you can come back any time.';
+
+  @override
+  String get sessionExitConfirm => 'Exit';
+
+  @override
+  String get sessionExitCancel => 'Continue';
+
+  @override
+  String get sessionClose => 'Close';
+
+  @override
+  String get sessionListenReplay => 'Replay audio';
+
+  @override
+  String get sessionEmpty => 'Nothing to review here yet';
+
+  @override
+  String sessionLoadError(String error) {
+    return 'Couldn\'t load the session: $error';
+  }
+
+  @override
+  String get authErrorOffline =>
+      'No internet connection. Signing in needs a network.';
+
+  @override
+  String get authErrorGoogleUnsupported =>
+      'Google sign-in isn\'t supported on this platform.';
+
+  @override
+  String get authErrorCancelled => 'Sign-in cancelled.';
+
+  @override
+  String get authErrorGoogle => 'Google sign-in failed. Please try again.';
+
+  @override
+  String get authErrorGoogleToken => 'Couldn\'t get a Google token.';
+
+  @override
+  String get authErrorLoginFailed => 'Couldn\'t sign in. Please try again.';
+
+  @override
+  String get authErrorApple => 'Sign in with Apple isn\'t available yet.';
+
+  @override
+  String get authErrorAppleToken => 'Couldn\'t get an Apple token.';
+
+  @override
+  String get practiceDialogEntry => 'Conversation · 3 min';
+
+  @override
+  String get practiceDialogEntrySubtitle => 'Voice practice with AI';
+
+  @override
+  String get practiceDialogOfflineHint => 'Needs internet';
+
+  @override
+  String get practiceDialogPrestartTitle => 'Talk with the AI';
+
+  @override
+  String practiceDialogPrestartBody(String lang) {
+    return 'The AI will speak with you in the collection\'s language — $lang. Answer out loud and try to use these words.';
+  }
+
+  @override
+  String get practiceDialogPrestartWordsLabel => 'Words to use';
+
+  @override
+  String get practiceDialogStart => 'Start the conversation';
+
+  @override
+  String get practiceDialogStateConnecting => 'connecting…';
+
+  @override
+  String get practiceDialogStateSpeaking => 'speaking';
+
+  @override
+  String get practiceDialogStateListening => 'listening to you';
+
+  @override
+  String practiceDialogCoverageLabel(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get practiceDialogExitTitle => 'End the conversation?';
+
+  @override
+  String get practiceDialogExitMessage =>
+      'The conversation will end and you\'ll see a recap.';
+
+  @override
+  String get practiceDialogExitConfirm => 'End';
+
+  @override
+  String get practiceDialogExitCancel => 'Keep going';
+
+  @override
+  String get practiceDialogFinaleTitle => 'Conversation over';
+
+  @override
+  String practiceDialogFinaleWords(int used, int total) {
+    return 'Words used: $used of $total';
+  }
+
+  @override
+  String get practiceDialogFinaleDone => 'Done';
+
+  @override
+  String get practiceDialogErrorSubscription =>
+      'Conversations are a Premium feature.';
+
+  @override
+  String practiceDialogErrorRateLimited(String time) {
+    return 'No conversations left today. More after $time.';
+  }
+
+  @override
+  String get practiceDialogErrorRateLimitedNoTime =>
+      'No conversations left today. Try again tomorrow.';
+
+  @override
+  String get practiceDialogErrorOffline =>
+      'You\'re offline. A conversation needs internet.';
+
+  @override
+  String get practiceDialogErrorGeneric =>
+      'Couldn\'t start the conversation. Please try again.';
+
+  @override
+  String get practiceDialogClose => 'Close';
+
+  @override
+  String get practiceDialogRepeat => 'Practice again';
+
+  @override
+  String practiceDialogResultWords(int used, int total) {
+    return 'words: $used of $total';
+  }
+}

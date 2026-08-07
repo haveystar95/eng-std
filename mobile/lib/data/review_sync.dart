@@ -6,23 +6,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
-import 'models.dart';
+import 'local/day_key.dart';
 import 'providers.dart';
 import 'review_queue.dart';
+import 'seq_counter.dart';
 
 /// Offline-first review pipeline. Every answer is recorded locally first (so it
 /// survives no-network and app kills), then flushed to `/reviews/batch` as a
 /// batch. Uploads are idempotent by the client ULID, so retries are free and a
 /// 2xx lets us drop the sent ids — including `unknown`/`duplicate` ones, which
 /// would never be accepted on a retry anyway.
+///
+/// The client sends the RAW answer (mode, response text, hint, latency) with a per-user monotonic
+/// [PendingReview.clientSeq] from `seq_review`; the server grades and folds in sequence order.
 class ReviewSync {
-  ReviewSync(this._api, this._queue, this._ref);
+  ReviewSync(this._api, this._queue, this._seq, this._ref);
 
   /// Server caps a batch at 200; 100 leaves headroom for an offline backlog.
   static const int _chunkSize = 100;
 
   final ApiClient _api;
   final ReviewQueue _queue;
+  final SeqCounter _seq;
   final Ref _ref;
 
   List<PendingReview>? _mem; // in-memory mirror of the persisted queue
@@ -32,28 +37,43 @@ class ReviewSync {
 
   Future<int> pendingCount() async => (await _list()).length;
 
-  /// Persist one graded answer, then opportunistically flush.
-  Future<void> record(Rating grade, String termId, {int? latencyMs}) async {
+  /// Persist one raw answer (server grades it), then opportunistically flush. [clientSeq] is
+  /// assigned here from the monotonic `seq_review` counter so ordering survives a queue clear.
+  Future<void> record({
+    required String termId,
+    required String exerciseMode,
+    required String response,
+    bool usedHint = false,
+    bool isPractice = false,
+    int? latencyMs,
+    String? sessionId,
+  }) async {
     final list = await _list();
     list.add(PendingReview(
       id: ApiClient.ulid(),
       termId: termId,
-      grade: grade.grade,
+      exerciseMode: exerciseMode,
+      response: response,
+      clientSeq: await _seq.next(SeqCounter.review),
       answeredAt: DateTime.now().toUtc().toIso8601String(),
+      usedHint: usedHint,
+      isPractice: isPractice,
       latencyMs: latencyMs,
+      sessionId: sessionId,
     ));
     await _queue.save(list);
+    // Count this review toward today's local activity tally (Progress screen). This is the ONE
+    // increment point — it covers session reviews and free practice alike, and deliberately not
+    // triage, so the activity chart converges with the streak dots beside it (streak = days with
+    // reviews). Local, not synced; independent of upload success.
+    await _ref.read(appDatabaseProvider).bumpDailyActivity(localDayKey(DateTime.now()));
     unawaited(flush());
   }
 
   /// Upload the pending queue in chunks (see TriageSync.flush for the full rationale).
   /// Success drops the chunk; a permanent reject (422/413) drops it with a log without blocking
   /// the rest; a transient failure stops and keeps the remainder for next time. Order rides on
-  /// client_seq once the review pipeline supplies it; chunks are still sent in order.
-  ///
-  /// NOTE: the review pipeline is still stale (pre-`client_seq`, pre-raw-answer), so every flush
-  /// currently 422s and the records are dropped here rather than piling up. Full wiring lands
-  /// with the exercise/session screens.
+  /// each answer's `client_seq`; chunks are still sent in order.
   Future<void> flush() async {
     if (_flushing) return;
     final list = await _list();

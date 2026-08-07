@@ -4,18 +4,32 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import '../core/config.dart';
+import 'config.dart';
 import 'api_client.dart';
 import 'models.dart';
 import 'seq_counter.dart';
 import 'token_store.dart';
 
+/// Why a sign-in failed — a code, not a message, so the copy lives in `AppLocalizations` (the
+/// data layer has no `BuildContext`). The login screen maps each to a localized string.
+enum AuthError {
+  offline,
+  googleUnsupported,
+  cancelled,
+  googleFailed,
+  googleNoToken,
+  loginFailed,
+  appleUnavailable,
+  appleNoToken,
+}
+
 class AuthException implements Exception {
-  final String message;
-  AuthException(this.message);
+  final AuthError code;
+  AuthException(this.code);
   @override
-  String toString() => message;
+  String toString() => 'AuthException(${code.name})';
 }
 
 /// Owns the sign-in flow: native Google Sign-In → backend token exchange →
@@ -48,17 +62,20 @@ class AuthRepository {
 
     final cached = await _tokens.loadUser();
     if (cached != null) {
-      unawaited(_refresh()); // best-effort; updates the cache + seq counters when online
+      // Offline-first: return the cached user now. The auth controller refreshes from /me in the
+      // background and pushes the fresh user (with tier + quota) into state — so a stale/tier-less
+      // cache heals within the session, no restart or re-login needed.
       return AppUser.fromJson(jsonDecode(cached) as Map<String, dynamic>);
     }
     // No cache (e.g. an upgrade from before caching existed): fetch once, but still only drop the
     // token on a real 401/403.
-    return _refresh();
+    return refresh();
   }
 
-  /// Re-fetch the user from the server and update the cache. Returns null (keeping the token) on
-  /// any network trouble; only a 401/403 clears the token.
-  Future<AppUser?> _refresh() async {
+  /// Re-fetch the user from the server and update the cache + seq counters. Returns null (keeping
+  /// the token) on any network trouble; only a 401/403 clears the token. Public so the auth
+  /// controller can refresh into state after an offline-first restore.
+  Future<AppUser?> refresh() async {
     try {
       final user = await _api.me();
       await _tokens.saveUser(jsonEncode(user.toJson()));
@@ -93,13 +110,13 @@ class AuthRepository {
     // the flow — this is the honest "offline doesn't work here" case for a brand-new user.
     final conn = await Connectivity().checkConnectivity();
     if (conn.every((r) => r == ConnectivityResult.none)) {
-      throw AuthException('Нет подключения к интернету. Для входа нужна сеть.');
+      throw AuthException(AuthError.offline);
     }
 
     await _ensureGoogle();
 
     if (!GoogleSignIn.instance.supportsAuthenticate()) {
-      throw AuthException('Вход через Google не поддерживается на этой платформе.');
+      throw AuthException(AuthError.googleUnsupported);
     }
 
     final GoogleSignInAccount account;
@@ -107,14 +124,14 @@ class AuthRepository {
       account = await GoogleSignIn.instance.authenticate();
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        throw AuthException('Вход отменён.');
+        throw AuthException(AuthError.cancelled);
       }
-      throw AuthException('Ошибка Google: ${e.description ?? e.code.name}');
+      throw AuthException(AuthError.googleFailed);
     }
 
     final idToken = account.authentication.idToken;
     if (idToken == null) {
-      throw AuthException('Не удалось получить ID-токен Google.');
+      throw AuthException(AuthError.googleNoToken);
     }
 
     final ({String token, AppUser user}) result;
@@ -123,14 +140,64 @@ class AuthRepository {
     } on DioException catch (e) {
       // No response = the request never reached the backend (offline / DNS / timeout).
       if (e.response == null) {
-        throw AuthException('Нет подключения к интернету. Для входа нужна сеть.');
+        throw AuthException(AuthError.offline);
       }
-      throw AuthException('Не удалось войти (${e.response?.statusCode}). Попробуй ещё раз.');
+      throw AuthException(AuthError.loginFailed);
     }
     await _tokens.save(result.token);
     await _tokens.saveUser(jsonEncode(result.user.toJson())); // enable offline restore next launch
     await _seedSeqCounters();
     return result.user;
+  }
+
+  /// Sign in with Apple (кадр 10a). Obtains an Apple ID credential natively, then exchanges its
+  /// identity token at `/auth/apple`. Two external prerequisites that are NOT in place yet: the
+  /// backend `/auth/apple` endpoint, and the "Sign in with Apple" capability (a paid Apple team —
+  /// the current free personal team can't enable it). Until both land this surfaces a clear error
+  /// rather than crashing.
+  Future<AppUser> signInWithApple() async {
+    final conn = await Connectivity().checkConnectivity();
+    if (conn.every((r) => r == ConnectivityResult.none)) {
+      throw AuthException(AuthError.offline);
+    }
+
+    final AuthorizationCredentialAppleID cred;
+    try {
+      cred = await SignInWithApple.getAppleIDCredential(
+        scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) throw AuthException(AuthError.cancelled);
+      throw AuthException(AuthError.appleUnavailable);
+    } catch (_) {
+      throw AuthException(AuthError.appleUnavailable);
+    }
+
+    final idToken = cred.identityToken;
+    if (idToken == null) throw AuthException(AuthError.appleNoToken);
+
+    final name = [cred.givenName, cred.familyName].whereType<String>().join(' ').trim();
+    final ({String token, AppUser user}) result;
+    try {
+      result = await _api.appleLogin(idToken, name: name.isEmpty ? null : name);
+    } on DioException catch (e) {
+      if (e.response == null) throw AuthException(AuthError.offline);
+      throw AuthException(AuthError.appleUnavailable);
+    }
+    await _tokens.save(result.token);
+    await _tokens.saveUser(jsonEncode(result.user.toJson()));
+    await _seedSeqCounters();
+    return result.user;
+  }
+
+  /// Permanently delete the account (B3) and clear the local session. The server cascade (204)
+  /// removes all remote data; the caller wipes the local mirror.
+  Future<void> deleteAccount() async {
+    await _api.deleteAccount();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {/* best effort */}
+    await _tokens.clear();
   }
 
   Future<void> signOut() async {

@@ -8,15 +8,18 @@ contract. Auto-loads for sessions in `mobile/`. See root `../CLAUDE.md` for the 
 
 Flutter 3.44 / Dart 3.12. Packages: `flutter_riverpod` (state), `dio` (HTTP),
 `flutter_tts` (pronunciation), `google_sign_in` **v7** (new API: `GoogleSignIn.instance`,
-`initialize()`, `authenticate()`), `flutter_secure_storage` (token in Keychain),
-`google_fonts` (Inter), `flutter_animate`.
+`initialize()`, `authenticate()`), `sign_in_with_apple`, `flutter_secure_storage` (token in
+Keychain), `flutter_animate`. Fonts (Literata + Inter) are **bundled** in `assets/fonts/`
+(offline-first) — `google_fonts` was removed at the A3 close. `lib/core/` is **gone** (the old dark
+theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `lib/ui/` (components).
 
 ## Structure (`lib/`)
 
-- `core/` — `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`, with dev defaults), `design.dart` (dark tokens + gradients), `theme.dart`.
-- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token + `ngrok-skip-browser-warning`), `auth_repository.dart` (Google → backend token exchange), `token_store.dart`, `providers.dart` (Riverpod: auth, stats, collections, sessionCards).
-- `features/` — `auth/` (Google login), `home/` (bottom nav: Тренировка/Коллекции/Профиль), `training/` (`training_home_screen.dart` dashboard + progress monitor + "Перемешать всё"; `session_screen.dart` = swipe deck), `collections/` (emoji tiles, CRUD, `generate_dialog.dart`, `collection_edit_dialog.dart`, `word_edit_dialog.dart`), `profile/`.
-- `preview.dart` — design preview harness with mock data: `flutter run -d chrome --target lib/preview.dart` (no backend/login needed).
+- `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
+- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
+- `features/` — `auth/`, `home/`, `training/` (`training_home_screen.dart` dashboard, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/`, `progress/`, `onboarding/`, `profile/`.
+- `l10n/` — `app_ru.arb` (source of truth) + `app_en.arb` (complete); both `ru` and `en` are in `kSupportedLocales`. All UI copy routes through `AppLocalizations` (guarded by `test/l10n/no_cyrillic_outside_l10n_test.dart`, allowlist now **empty**).
+- `tool/preview.dart` — design preview harness with mock data: `flutter run -d chrome --target tool/preview.dart` (no backend/login needed). Lives outside `lib/` so its sample Russian data is exempt from the cyrillic guard.
 
 ## Design
 
@@ -59,6 +62,6 @@ on the training home (now shows word counts), and AI open-answer check.
 
 ## Verify without the phone
 
-`flutter analyze` must be clean. `flutter test` runs the widget test. For visual checks use
-the web preview harness (`lib/preview.dart`) instead of a simulator (no iOS simulator runtime
+`flutter analyze` must be clean. `flutter test` runs the widget + unit tests. For visual checks use
+the web preview harness (`tool/preview.dart`) instead of a simulator (no iOS simulator runtime
 is installed; device is the target).
