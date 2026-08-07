@@ -65,6 +65,22 @@ class DialogStart {
   final List<TargetWord> targetWords;
   final int durationSeconds;
 
+  /// Which realtime transport the server minted this dialog for: `openai` (WebRTC, default) or
+  /// `gemini` (Gemini Live WebSocket). Absent → `openai`, so existing dialogs are unaffected.
+  final String provider;
+
+  /// The WS/connection endpoint the client connects to (Gemini bare-token path). Null for providers
+  /// that embed the endpoint elsewhere (OpenAI uses its own `/v1/realtime/calls`).
+  final String? endpoint;
+
+  /// A ready `BidiGenerateContentSetup` the client sends verbatim as its first WS message (Gemini
+  /// bare-token path). Null when the session is baked into the token (OpenAI / constrained Gemini).
+  final Map<String, dynamic>? sessionSetup;
+
+  /// Provider-specific connection extras (additive, opaque to the shared pipeline). Legacy/forward-
+  /// compat; the Gemini fields above are the current backend contract.
+  final Map<String, dynamic>? connection;
+
   const DialogStart({
     required this.dialogId,
     required this.realtimeToken,
@@ -72,6 +88,10 @@ class DialogStart {
     required this.model,
     required this.targetWords,
     required this.durationSeconds,
+    this.provider = 'openai',
+    this.endpoint,
+    this.sessionSetup,
+    this.connection,
   });
 
   factory DialogStart.fromJson(Map<String, dynamic> j) => DialogStart(
@@ -84,6 +104,10 @@ class DialogStart {
             .map((e) => TargetWord.fromJson(e as Map<String, dynamic>))
             .toList(),
         durationSeconds: (j['duration_seconds'] as int?) ?? 200,
+        provider: (j['provider'] as String?) ?? 'openai',
+        endpoint: j['endpoint'] as String?,
+        sessionSetup: j['session_setup'] as Map<String, dynamic>?,
+        connection: j['connection'] as Map<String, dynamic>?,
       );
 }
 

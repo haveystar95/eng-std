@@ -63,6 +63,8 @@ dependencies:
   # maintained successor with the same `LucideIcons.*` API and the current set.
   lucide_icons_flutter: ^3.1.15
   flutter_webrtc: ^1.6.0
+  record: ^7.1.1
+  flutter_pcm_sound: ^3.3.3
 
 dev_dependencies:
   flutter_test:
