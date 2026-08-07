@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Collections\Application\Dto\CollectionItemSyncRow;
 use App\Modules\Collections\Application\Dto\CollectionSyncRow;
+use App\Modules\Collections\Application\Dto\SubscribedTermRef;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
 use App\Modules\Learning\Application\Dto\CollectionChange;
 use App\Modules\Learning\Application\Dto\CollectionItemChange;
@@ -47,7 +48,12 @@ final readonly class GetSyncDeltaHandler
 
         $collections = $this->collectionSync->changedCollections($query->userId, $since, $upper);
         $items = $this->collectionSync->changedItems($query->userId, $since, $upper);
-        $termRefs = $this->termChanges->changedTermIds($this->collectionSync->liveTermIds($query->userId), $since, $upper);
+        // Terms that changed globally, plus terms pulled in by a fresh subscription this window
+        // (their own updated_at is old, so a subscribed collection would otherwise arrive contentless).
+        $termRefs = $this->mergeTermRefs(
+            $this->termChanges->changedTermIds($this->collectionSync->liveTermIds($query->userId), $since, $upper),
+            $this->collectionSync->newlySubscribedTermRefs($query->userId, $since, $upper),
+        );
         $progress = $this->progressSync->changedProgress($query->userId, $since, $upper);
 
         // Fixed order → deterministic offset paging across a heterogeneous stream.
@@ -97,5 +103,32 @@ final readonly class GetSyncDeltaHandler
         );
 
         return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress);
+    }
+
+    /**
+     * Union changed terms with newly-subscribed terms, deduped by id (keeping the later timestamp),
+     * ordered by (updatedAt, id) so the concatenated stream pages deterministically.
+     *
+     * @param  list<TermChangeRef>  $changed
+     * @param  list<SubscribedTermRef>  $subscribed
+     * @return list<TermChangeRef>
+     */
+    private function mergeTermRefs(array $changed, array $subscribed): array
+    {
+        $byId = [];
+        foreach ($changed as $ref) {
+            $byId[$ref->id] = $ref;
+        }
+        foreach ($subscribed as $ref) {
+            $existing = $byId[$ref->id] ?? null;
+            if ($existing === null || $ref->updatedAt > $existing->updatedAt) {
+                $byId[$ref->id] = new TermChangeRef($ref->id, $ref->updatedAt);
+            }
+        }
+
+        $merged = array_values($byId);
+        usort($merged, static fn (TermChangeRef $a, TermChangeRef $b): int => [$a->updatedAt, $a->id] <=> [$b->updatedAt, $b->id]);
+
+        return $merged;
     }
 }

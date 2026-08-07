@@ -6,14 +6,18 @@ namespace App\Modules\Collections\Application\Port;
 
 use App\Modules\Collections\Application\Dto\CollectionItemSyncRow;
 use App\Modules\Collections\Application\Dto\CollectionSyncRow;
+use App\Modules\Collections\Application\Dto\SubscribedTermRef;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 
 /**
- * Delta-sync reads over the user's OWNED collections (subscriptions aren't wired into any read
- * path yet). Each method returns changes with an effective timestamp in (since, upper]; `since`
- * null is a full snapshot (upserts only — a fresh client has nothing to delete). Ordered by
- * (timestamp, id) so an offset cursor pages deterministically.
+ * Delta-sync reads over the user's collections — those they OWN plus store collections they are
+ * actively SUBSCRIBED to (user_collections). Each method returns changes with an effective
+ * timestamp in (since, upper]; for a subscribed collection that timestamp is GREATEST(collection
+ * updated_at, subscription added_at), so a fresh subscription pulls the whole collection in, and
+ * an unsubscribe emits a per-user tombstone. `since` null is a full snapshot (upserts only — a
+ * fresh client has nothing to delete). Ordered by (timestamp, id) so an offset cursor pages
+ * deterministically.
  */
 interface CollectionSyncReader
 {
@@ -24,9 +28,20 @@ interface CollectionSyncReader
     public function changedItems(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array;
 
     /**
-     * Term ids currently in the user's owned collections (live items) — the scope for term sync.
+     * Term ids currently in the user's owned + actively-subscribed collections (live items) — the
+     * scope for term sync.
      *
      * @return list<string>
      */
     public function liveTermIds(UserId $userId): array;
+
+    /**
+     * Terms that must ship in a DELTA because a collection was (re)subscribed in (since, upper] —
+     * their own `updated_at` is old (the store term didn't change), so `changedTermIds` alone would
+     * miss them and the client would get a collection with no term content. Empty for a full
+     * snapshot (which already ships every live term). Deduped by term id.
+     *
+     * @return list<SubscribedTermRef>
+     */
+    public function newlySubscribedTermRefs(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array;
 }

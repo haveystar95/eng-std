@@ -174,7 +174,10 @@ it('unsubscribes and is idempotent when not subscribed', function () {
         ->assertOk()
         ->assertJsonPath('data.subscribed', false);
 
-    expect(DB::table('user_collections')->where('collection_id', $id)->count())->toBe(0);
+    // Soft-unsubscribe: the row stays as a per-user tombstone (for the delta sync), but is no
+    // longer an active subscription.
+    expect(DB::table('user_collections')->where('collection_id', $id)->whereNull('unsubscribed_at')->count())->toBe(0)
+        ->and(DB::table('user_collections')->where('collection_id', $id)->whereNotNull('unsubscribed_at')->count())->toBe(1);
 
     // A second unsubscribe is a harmless no-op.
     $this->withHeader('Authorization', "Bearer {$token}")

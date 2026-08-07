@@ -130,6 +130,7 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
         $rows = DB::table('user_collections')
             ->where('user_id', $viewer->value)
             ->whereIn('collection_id', $collectionIds)
+            ->whereNull('unsubscribed_at') // an unsubscribed row is a tombstone, not a subscription
             ->pluck('collection_id');
 
         $set = [];
