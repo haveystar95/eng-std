@@ -69,6 +69,8 @@ it('starts a dialog for a premium user with a token, target words and TTL', func
         ->assertCreated()
         ->assertJsonPath('dialog_id', $clientId)
         ->assertJsonPath('model', 'gpt-realtime-2.1-mini')
+        ->assertJsonPath('provider', 'openai')
+        ->assertJsonPath('endpoint', 'https://fake.realtime.local')
         ->assertJsonPath('duration_seconds', 200)
         // TTL reached the mint: expiry = fixed now + 200s.
         ->assertJsonPath('expires_at', '2026-08-07T10:03:20+00:00');
@@ -82,6 +84,22 @@ it('starts a dialog for a premium user with a token, target words and TTL', func
     $this->assertDatabaseHas('practice_dialogs', [
         'id' => $clientId, 'user_id' => $user->id, 'status' => 'active', 'cost_usd' => null,
     ]);
+});
+
+it('reports the gemini provider + endpoint when the gemini driver is bound', function () {
+    // Second minter on a fake: the Gemini driver path returns provider/endpoint for that vendor.
+    $this->app->instance(
+        RealtimeTokenPort::class,
+        new FakeRealtimeTokenMinter($this->app->make(Clock::class), 'gemini', 'wss://gemini.fake/live'),
+    );
+    [$user, $token] = premiumLearner();
+    $collectionId = seedPracticeCollection($user);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/practice/dialogs', ['collection_id' => $collectionId, 'client_id' => Ulid::generate()])
+        ->assertCreated()
+        ->assertJsonPath('provider', 'gemini')
+        ->assertJsonPath('endpoint', 'wss://gemini.fake/live');
 });
 
 it('refuses a non-premium user with 403 subscription_required', function () {

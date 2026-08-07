@@ -19,5 +19,7 @@ final readonly class RealtimeSessionSpec
         public int $ttlSeconds,
         public RealtimeVad $vad,
         public array $lesson,
+        // Output-audio playback speed (1.0 = normal; < 1 slower, used for A1/A2). Provider-dependent.
+        public float $speed = 1.0,
     ) {}
 }

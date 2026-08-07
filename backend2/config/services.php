@@ -53,6 +53,11 @@ return [
         'summary_model' => env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
     ],
 
+    'gemini' => [
+        // Google Gemini API key — server-side only; the client never sees it (only ephemeral tokens).
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
     'pexels' => [
         // Stock-image search for AI-generated collections (A3). Key from the Pexels dashboard.
         'key' => env('PEXELS_API_KEY'),
@@ -72,19 +77,27 @@ return [
     ],
 
     'practice' => [
-        // Realtime conversation practice (premium). 'openai' (default) mints real ephemeral tokens
-        // and summarises via OpenAI; 'fake' is deterministic and offline (tests / local dev).
+        // Realtime conversation practice (premium). Realtime-token driver:
+        //   'openai' (default) — OpenAI Realtime;  'gemini' — Gemini Live;  'fake' — offline (tests).
+        // The recap/summariser is always the OpenAI text model, independent of this driver.
         'driver' => env('PRACTICE_DRIVER', 'openai'),
-        // Realtime engine + voice. Default is the cheaper "mini" realtime model (gpt-realtime-mini
-        // is deprecated → 2.1-mini). Confirm the exact model name against the current OpenAI docs
-        // before flipping production.
+        // OpenAI realtime engine. Default is the cheaper "mini" model (gpt-realtime-mini is
+        // deprecated → 2.1-mini). Confirm the exact name against the current OpenAI docs before prod.
         'realtime_model' => env('PRACTICE_REALTIME_MODEL', 'gpt-realtime-2.1-mini'),
+        // Gemini Live model (used when driver=gemini). Confirm against current Gemini Live docs.
+        'gemini_model' => env('PRACTICE_GEMINI_MODEL', 'gemini-3.1-flash-live-preview'),
+        // Bake the lesson into the Gemini token via liveConnectConstraints. Off by default: the live
+        // v1beta endpoint currently rejects that field (docs are ahead of deployment), so a bare
+        // token is minted and the client sets the lesson in its setup message. Flip on when it lands.
+        'gemini_constrained' => (bool) env('PRACTICE_GEMINI_CONSTRAINED', false),
         // Input-audio transcription model — REQUIRED for the learner's speech to come back as
         // transcript events (input_audio_transcription.completed); without it coverage never lights up.
         'transcribe_model' => env('PRACTICE_REALTIME_TRANSCRIBE_MODEL', 'gpt-4o-mini-transcribe'),
         'voice' => env('PRACTICE_REALTIME_VOICE', 'alloy'),
         // Which versioned lesson prompt to render (Infrastructure/Prompt/practice_dialog.{v}.md).
-        'prompt_version' => env('PRACTICE_PROMPT_VERSION', 'v2'),
+        'prompt_version' => env('PRACTICE_PROMPT_VERSION', 'v3'),
+        // Output-audio playback speed for A1/A2 lessons (mechanical; the prompt also instructs pace).
+        'slow_speed' => (float) env('PRACTICE_SLOW_SPEED', 0.9),
         // Server-VAD turn detection — tuned so the model doesn't cut the learner off mid-sentence.
         'vad_silence_ms' => (int) env('PRACTICE_VAD_SILENCE_MS', 900),
         'vad_threshold' => (float) env('PRACTICE_VAD_THRESHOLD', 0.5),

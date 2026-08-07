@@ -17,5 +17,7 @@ final readonly class StartedDialogView
         public string $model,
         public array $targetWords,
         public int $durationSeconds,
+        public string $provider,
+        public string $endpoint,
     ) {}
 }

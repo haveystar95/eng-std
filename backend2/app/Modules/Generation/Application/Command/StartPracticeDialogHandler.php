@@ -176,6 +176,10 @@ final readonly class StartPracticeDialogHandler
     /** @param array<string, mixed> $lesson */
     private function mint(array $lesson): RealtimeToken
     {
+        // A1/A2 lessons get a slower playback speed (the prompt also instructs a slow pace).
+        $level = strtoupper(is_string($lesson['level'] ?? null) ? $lesson['level'] : '');
+        $speed = ($level === 'A1' || $level === 'A2') ? $this->config->slowSpeed : 1.0;
+
         return $this->realtime->mint(new RealtimeSessionSpec(
             model: $this->config->realtimeModel,
             transcribeModel: $this->config->transcribeModel,
@@ -183,6 +187,7 @@ final readonly class StartPracticeDialogHandler
             ttlSeconds: $this->config->ttlSeconds,
             vad: $this->config->vad,
             lesson: $lesson,
+            speed: $speed,
         ));
     }
 
@@ -205,6 +210,8 @@ final readonly class StartPracticeDialogHandler
             model: $token->model,
             targetWords: $targetWords,
             durationSeconds: $this->config->ttlSeconds,
+            provider: $token->provider,
+            endpoint: $token->endpoint,
         );
     }
 

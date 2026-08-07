@@ -45,6 +45,23 @@ it('splits multi-word phrases (agent says) from single words (learner produces)'
         ->and($words)->toContain('- account')->not->toContain('- withdraw cash');
 });
 
+it('injects hard, level-specific speech rules', function () {
+    $render = fn (string $level): string => (new PracticeDialogInstructions())->render('{{level_rules}}', [
+        'topic' => 'x', 'target' => 'en', 'native' => 'ru', 'target_words' => [], 'level' => $level,
+    ]);
+
+    expect($render('A2'))
+        ->toContain('~8 words')
+        ->toContain('Do NOT use contractions')
+        ->toContain('SLOWLY');
+
+    expect($render('C1'))
+        ->toContain('full range')
+        ->not->toContain('~8 words');
+
+    expect($render('B1'))->toContain('natural but unhurried');
+});
+
 it('renders a placeholder when there are no target words', function () {
     $rendered = (new PracticeDialogInstructions())->render('{{target_words}}', [
         'topic' => 'x', 'level' => 'A1', 'target' => 'en', 'native' => 'ru', 'target_words' => [],

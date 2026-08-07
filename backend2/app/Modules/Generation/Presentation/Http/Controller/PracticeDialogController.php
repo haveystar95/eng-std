@@ -111,6 +111,8 @@ final class PracticeDialogController
     {
         return [
             'dialog_id' => $view->dialogId,
+            'provider' => $view->provider,
+            'endpoint' => $view->endpoint,
             'realtime_token' => $view->realtimeToken,
             'expires_at' => $view->expiresAt->format(DateTimeInterface::ATOM),
             'model' => $view->model,

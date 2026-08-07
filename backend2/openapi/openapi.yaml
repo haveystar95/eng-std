@@ -1064,17 +1064,19 @@ components:
 
     StartedPracticeDialog:
       type: object
-      description: The started dialog — the ephemeral token, its expiry, the model, and target words.
+      description: The started dialog — the provider, ephemeral token, endpoint, model, and target words.
       properties:
         dialog_id: { type: string }
-        realtime_token: { type: string, description: Ephemeral OpenAI client secret for the WebRTC session. Short-lived. }
+        provider: { type: string, enum: [openai, gemini], description: Which realtime provider to connect to. }
+        endpoint: { type: string, description: "Connection endpoint for the provider (OpenAI: realtime base URL; Gemini: Live WebSocket URL)." }
+        realtime_token: { type: string, description: "Ephemeral credential for the session (OpenAI client secret / Gemini auth token). Short-lived." }
         expires_at: { type: string, format: date-time, description: Absolute instant the token expires. }
         model: { type: string, description: Realtime model the session is bound to. }
         target_words:
           type: array
           items: { $ref: '#/components/schemas/PracticeTargetWord' }
         duration_seconds: { type: integer, description: Session length — the token TTL. }
-      required: [dialog_id, realtime_token, expires_at, model, target_words, duration_seconds]
+      required: [dialog_id, provider, endpoint, realtime_token, expires_at, model, target_words, duration_seconds]
 
     Profile:
       type: object

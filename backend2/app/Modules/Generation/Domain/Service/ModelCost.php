@@ -18,33 +18,29 @@ final class ModelCost
     ];
 
     /**
-     * Realtime (voice) pricing, per model: [audio-in USD/1M tokens, audio-out USD/1M tokens,
-     * text-in USD/1K, text-out USD/1K]. Audio dominates; the text side is the tiny transcript we
-     * relay. A realtime session's true cost is only known from a usage event we don't see
-     * server-side, so {@see estimateRealtime} converts billed seconds to audio tokens at OpenAI's
-     * documented rates and is deliberately an ESTIMATE.
+     * Realtime (voice) pricing, per model:
+     *   [audio-in USD/1M tokens, audio-out USD/1M tokens, audio-in tokens/sec, audio-out tokens/sec,
+     *    text-in USD/1K, text-out USD/1K].
+     * Audio dominates; the text side is the tiny transcript we relay. The tokens/sec figures are how
+     * each vendor tokenises audio — OpenAI: 1 token/100ms input, 1 token/50ms output (10/20 per sec);
+     * Gemini: 25 tokens/sec each way. A realtime session's true cost is only known from a usage event
+     * we don't see server-side, so {@see estimateRealtime} is deliberately an ESTIMATE.
      *
-     * @var array<string, array{0: float, 1: float, 2: float, 3: float}>
+     * Sources: OpenAI realtime audio-token rates; Gemini Live pricing ($3/$12 per 1M, 25 tok/sec).
+     *
+     * @var array<string, array{0: float, 1: float, 2: int, 3: int, 4: float, 5: float}>
      */
     private const REALTIME_PRICING = [
-        // 2.1-mini: $10 / $20 per 1M audio in/out tokens.
-        'gpt-realtime-2.1-mini' => [10.0, 20.0, 0.0006, 0.0024],
+        // OpenAI 2.1-mini: $10 / $20 per 1M audio in/out tokens.
+        'gpt-realtime-2.1-mini' => [10.0, 20.0, 10, 20, 0.0006, 0.0024],
         // gpt-realtime-mini is deprecated but may appear on older stored dialogs — same rates.
-        'gpt-realtime-mini' => [10.0, 20.0, 0.0006, 0.0024],
-        // Full 2.1: $32 / $64 per 1M audio in/out tokens.
-        'gpt-realtime-2.1' => [32.0, 64.0, 0.004, 0.016],
-        'gpt-realtime' => [32.0, 64.0, 0.004, 0.016],
+        'gpt-realtime-mini' => [10.0, 20.0, 10, 20, 0.0006, 0.0024],
+        // OpenAI full 2.1: $32 / $64 per 1M audio in/out tokens.
+        'gpt-realtime-2.1' => [32.0, 64.0, 10, 20, 0.004, 0.016],
+        'gpt-realtime' => [32.0, 64.0, 10, 20, 0.004, 0.016],
+        // Gemini Live (flash): $3 / $12 per 1M audio in/out tokens, 25 audio tokens/sec each way.
+        'gemini-3.1-flash-live-preview' => [3.0, 12.0, 25, 25, 0.0003, 0.0025],
     ];
-
-    /**
-     * OpenAI tokenises realtime audio at 1 token / 100 ms of user (input) audio and 1 token / 50 ms
-     * of assistant (output) audio — i.e. 10 input and 20 output audio tokens per second. The caller
-     * passes how many seconds each stream was active: input runs the whole session (the mic streams
-     * continuously), output only while the agent actually spoke — measuring output against the full
-     * session overcounts, since the agent is silent for the learner's turns.
-     */
-    private const AUDIO_INPUT_TOKENS_PER_SEC = 10;
-    private const AUDIO_OUTPUT_TOKENS_PER_SEC = 20;
 
     public function estimate(string $model, ?int $tokensIn, ?int $tokensOut): ?string
     {
@@ -75,10 +71,10 @@ final class ModelCost
             return null;
         }
 
-        [$audioInPer1M, $audioOutPer1M, $textInRate, $textOutRate] = self::REALTIME_PRICING[$model];
+        [$audioInPer1M, $audioOutPer1M, $inTokPerSec, $outTokPerSec, $textInRate, $textOutRate] = self::REALTIME_PRICING[$model];
 
-        $audioInTokens = max(0, $inputAudioSeconds) * self::AUDIO_INPUT_TOKENS_PER_SEC;
-        $audioOutTokens = max(0, $outputAudioSeconds) * self::AUDIO_OUTPUT_TOKENS_PER_SEC;
+        $audioInTokens = max(0, $inputAudioSeconds) * $inTokPerSec;
+        $audioOutTokens = max(0, $outputAudioSeconds) * $outTokPerSec;
 
         $cost = ($audioInTokens / 1_000_000) * $audioInPer1M
             + ($audioOutTokens / 1_000_000) * $audioOutPer1M

@@ -18,5 +18,7 @@ final readonly class PracticeDialogConfig
         public int $ttlSeconds,
         public int $maxTargetWords,
         public RealtimeVad $vad,
+        // Output-audio playback speed applied to A1/A2 lessons (1.0 = normal).
+        public float $slowSpeed = 0.9,
     ) {}
 }

@@ -37,6 +37,7 @@ use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatche
 use App\Modules\Generation\Infrastructure\Adapter\QueuedTermEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\FakeDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\FakeRealtimeTokenMinter;
+use App\Modules\Generation\Infrastructure\Adapter\GeminiLiveTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiRealtimeTokenMinter;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
@@ -124,28 +125,49 @@ final class GenerationServiceProvider extends ServiceProvider
             (int) config('services.practice.dialogs_per_day', PracticeDailyLimit::DEFAULT_PER_DAY),
         ));
 
-        $this->app->singleton(PracticeDialogConfig::class, fn (): PracticeDialogConfig => new PracticeDialogConfig(
-            realtimeModel: (string) config('services.practice.realtime_model', 'gpt-realtime-2.1-mini'),
-            transcribeModel: (string) config('services.practice.transcribe_model', 'gpt-4o-mini-transcribe'),
-            voice: (string) config('services.practice.voice', 'alloy'),
-            ttlSeconds: (int) config('services.practice.dialog_ttl_seconds', 200),
-            maxTargetWords: (int) config('services.practice.max_target_words', 8),
-            vad: new RealtimeVad(
-                silenceMs: (int) config('services.practice.vad_silence_ms', 900),
-                threshold: (float) config('services.practice.vad_threshold', 0.5),
-                prefixPaddingMs: (int) config('services.practice.vad_prefix_padding_ms', 300),
-            ),
-        ));
+        $this->app->singleton(PracticeDialogConfig::class, function (): PracticeDialogConfig {
+            // The active realtime model depends on the driver — resolved once, here, so the
+            // Application layer stays provider-agnostic (the lesson just carries "the model").
+            $model = config('services.practice.driver') === 'gemini'
+                ? (string) config('services.practice.gemini_model', 'gemini-3.1-flash-live-preview')
+                : (string) config('services.practice.realtime_model', 'gpt-realtime-2.1-mini');
+
+            return new PracticeDialogConfig(
+                realtimeModel: $model,
+                transcribeModel: (string) config('services.practice.transcribe_model', 'gpt-4o-mini-transcribe'),
+                voice: (string) config('services.practice.voice', 'alloy'),
+                ttlSeconds: (int) config('services.practice.dialog_ttl_seconds', 200),
+                maxTargetWords: (int) config('services.practice.max_target_words', 8),
+                vad: new RealtimeVad(
+                    silenceMs: (int) config('services.practice.vad_silence_ms', 900),
+                    threshold: (float) config('services.practice.vad_threshold', 0.5),
+                    prefixPaddingMs: (int) config('services.practice.vad_prefix_padding_ms', 300),
+                ),
+                slowSpeed: (float) config('services.practice.slow_speed', 0.9),
+            );
+        });
 
         $this->app->bind(RealtimeTokenPort::class, function (): RealtimeTokenPort {
-            if (config('services.practice.driver') === 'fake') {
+            $driver = config('services.practice.driver');
+
+            if ($driver === 'fake') {
                 return new FakeRealtimeTokenMinter($this->app->make(Clock::class));
+            }
+
+            if ($driver === 'gemini') {
+                return new GeminiLiveTokenMinter(
+                    apiKey: (string) config('services.gemini.api_key'),
+                    instructions: $this->app->make(PracticeDialogInstructions::class),
+                    clock: $this->app->make(Clock::class),
+                    promptVersion: (string) config('services.practice.prompt_version', 'v3'),
+                    constrained: (bool) config('services.practice.gemini_constrained', false),
+                );
             }
 
             return new OpenAiRealtimeTokenMinter(
                 apiKey: (string) config('services.openai.api_key'),
                 instructions: $this->app->make(PracticeDialogInstructions::class),
-                promptVersion: (string) config('services.practice.prompt_version', 'v2'),
+                promptVersion: (string) config('services.practice.prompt_version', 'v3'),
             );
         });
 

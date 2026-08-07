@@ -18,7 +18,11 @@ final class FakeRealtimeTokenMinter implements RealtimeTokenPort
 {
     public ?RealtimeSessionSpec $lastSpec = null;
 
-    public function __construct(private readonly Clock $clock) {}
+    public function __construct(
+        private readonly Clock $clock,
+        private readonly string $provider = 'openai',
+        private readonly string $endpoint = 'https://fake.realtime.local',
+    ) {}
 
     public function mint(RealtimeSessionSpec $spec): RealtimeToken
     {
@@ -28,6 +32,8 @@ final class FakeRealtimeTokenMinter implements RealtimeTokenPort
             value: 'fake-ephemeral-' . substr(md5($spec->model . '|' . $spec->ttlSeconds), 0, 12),
             expiresAt: $this->clock->now()->modify("+{$spec->ttlSeconds} seconds"),
             model: $spec->model,
+            provider: $this->provider,
+            endpoint: $this->endpoint,
         );
     }
 }

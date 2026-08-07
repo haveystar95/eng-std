@@ -58,7 +58,8 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
                                 'silence_duration_ms' => $spec->vad->silenceMs,
                             ],
                         ],
-                        'output' => ['voice' => $spec->voice],
+                        // speed < 1 slows playback for A1/A2 (mechanical; the prompt also sets pace).
+                        'output' => ['voice' => $spec->voice, 'speed' => $spec->speed],
                     ],
                 ],
             ]);
@@ -82,6 +83,8 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
             value: $value,
             expiresAt: (new DateTimeImmutable())->setTimestamp($expiresAt),
             model: $spec->model,
+            provider: 'openai',
+            endpoint: rtrim($this->baseUrl, '/') . '/realtime',
         );
     }
 }

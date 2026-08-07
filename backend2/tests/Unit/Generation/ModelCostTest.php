@@ -24,6 +24,12 @@ it('estimates a realtime session from separate in/out audio seconds plus transcr
     expect((new ModelCost())->estimateRealtime('gpt-realtime-2.1-mini', 120, 60, 1000, 2000))->toBe('0.041400');
 });
 
+it('prices a Gemini Live session at its own audio-token rates (25 tok/sec, $3/$12 per 1M)', function () {
+    // input 120s → 3000 tok = $0.009; output 60s → 1500 tok = $0.018;
+    // text 1000 in = $0.0003, 2000 out = $0.005 → $0.032300.
+    expect((new ModelCost())->estimateRealtime('gemini-3.1-flash-live-preview', 120, 60, 1000, 2000))->toBe('0.032300');
+});
+
 it('returns null for an unknown realtime model', function () {
     expect((new ModelCost())->estimateRealtime('fake', 200, 100, 100, 100))->toBeNull();
 });

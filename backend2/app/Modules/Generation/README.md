@@ -58,9 +58,10 @@ Generation never touches other modules' tables or Domain. It calls, through Appl
 ## Realtime practice dialogs (premium)
 
 A premium user practises a collection out loud with an AI tutor for one short session. **Audio never
-transits this server** — we hand the client an ephemeral OpenAI Realtime token and it streams over
-WebRTC directly to OpenAI; the server only issues the lesson + token, ingests transcripts, scores
-coverage, and estimates cost.
+transits this server** — we hand the client an ephemeral realtime token and it streams directly to
+the provider; the server only issues the lesson + token, ingests transcripts, scores coverage, and
+estimates cost. Two providers behind one port, chosen by `PRACTICE_DRIVER=openai|gemini|fake`; the
+start response carries `provider` + `endpoint` so the client knows where to connect.
 
 ```
 POST /practice/dialogs           → premium gate (403) · daily limit (429 + resets_at) ·
@@ -75,17 +76,21 @@ GET  /practice/collections/{id}/last-dialog → the collection's last finished|e
                                     result {finished_at, words_used, words_total, summary} | 404
 ```
 
-- **Prompt v2** (`practice_dialog.v2.md`, flipped via `PRACTICE_PROMPT_VERSION`): the agent opens the
-  conversation itself; multi-word target phrases/questions the agent voices, single target words the
-  learner must produce. Coverage matches that split — **multi-word terms count from ANY speaker,
-  single words only from the learner**.
-- **Session config** (minted): input-audio transcription model (required, or the learner's speech
-  never returns as transcript events) + server-VAD turn detection tuned via `PRACTICE_VAD_*` so it
-  doesn't cut the learner off.
+- **Prompt v3** (`practice_dialog.v3.md`, flipped via `PRACTICE_PROMPT_VERSION`): the agent opens the
+  conversation itself; multi-word phrases/questions the agent voices, single words the learner must
+  produce (coverage matches that split — **multi-word counts from ANY speaker, single words only from
+  the learner**). v3 adds **hard per-CEFR speech rules** injected by level (A1/A2 short simple
+  sentences, no contractions, slow; B1/B2 natural; C1+ unrestricted) — the model drifts up a level
+  without them. A1/A2 also get a slower playback `speed` (OpenAI session param; prompt sets pace too).
+- **Session config** (minted): input-audio transcription (required, or the learner's speech never
+  returns as transcript events) + server-VAD turn detection tuned via `PRACTICE_VAD_*`.
 
-- **Ports:** `RealtimeTokenPort` (mint ephemeral secret; `OpenAiRealtimeTokenMinter` + fake) and
-  `DialogSummarizerPort` (recap; `OpenAiDialogSummarizer` + fake), gated by `PRACTICE_DRIVER`.
-  Instructions come from the versioned `Infrastructure/Prompt/practice_dialog.v1.md`.
+- **Ports:** `RealtimeTokenPort` (mint ephemeral token) with three adapters — `OpenAiRealtimeTokenMinter`,
+  `GeminiLiveTokenMinter`, and the parameterised `FakeRealtimeTokenMinter` — chosen by `PRACTICE_DRIVER`;
+  and `DialogSummarizerPort` (recap; always OpenAI text, driver-independent). Instructions render from the
+  versioned prompt file. **Gemini caveat:** the live `auth_tokens` endpoint currently rejects
+  `liveConnectConstraints`, so a bare token is minted (real key still server-side) and the lesson is set
+  client-side; `PRACTICE_GEMINI_CONSTRAINED=true` bakes it into the token once the field deploys.
 - **Coverage** reuses the Learning grader's normalisation via the shared
   `Shared\Domain\Service\LexicalNormalizer` — one definition of "the same words", never a copy.
 - **Cross-module (Application only):** Identity (tier + CEFR), Collections (collection + language
@@ -93,15 +98,17 @@ GET  /practice/collections/{id}/last-dialog → the collection's last finished|e
 - **This is PRACTICE:** it never writes a review or `(user, term)` progress. Its only spend record is
   the *estimated* realtime `cost_usd`, written when the dialog leaves `active` (finish or expiry).
 - **Cost** is an estimate (`PracticeCostEstimator` + `ModelCost::estimateRealtime`): audio seconds →
-  tokens at OpenAI's documented rates (10 in / 20 out tokens/sec), priced per 1M ($10/$20 for 2.1-mini),
-  plus the tiny text transcript. INPUT audio runs the full session (mic streams continuously); OUTPUT
-  audio is billed only for the agent's speaking time, approximated from its transcript length (~150
-  wpm; timestamps are unreliable for this). No usage event reaches us — a proxy, tuned against real
-  dashboard spend (a full ~200s session ≈ $0.06).
-- **Config:** `PRACTICE_REALTIME_MODEL` (default `gpt-realtime-2.1-mini`), `PRACTICE_REALTIME_TRANSCRIBE_MODEL`
-  (`gpt-4o-mini-transcribe`), `PRACTICE_REALTIME_VOICE`, `PRACTICE_PROMPT_VERSION` (`v2`), `PRACTICE_VAD_*`
-  (silence 900ms / threshold 0.5 / prefix 300ms), `PRACTICE_DIALOG_TTL_SECONDS` (200),
-  `PRACTICE_DIALOGS_PER_DAY` (5), `PRACTICE_MAX_TARGET_WORDS` (8).
+  tokens at each vendor's documented rates (OpenAI 10 in / 20 out tokens/sec; Gemini 25/25), priced per
+  1M (OpenAI 2.1-mini $10/$20; Gemini Live $3/$12), plus the tiny text transcript. INPUT audio runs the
+  full session; OUTPUT audio is billed only for the agent's speaking time, approximated from its
+  transcript length (~150 wpm; timestamps are unreliable). No usage event reaches us — a proxy, tuned
+  against real dashboard spend (OpenAI full ~200s ≈ $0.06).
+- **Config:** `PRACTICE_DRIVER` (openai|gemini|fake), `PRACTICE_REALTIME_MODEL` (`gpt-realtime-2.1-mini`),
+  `PRACTICE_GEMINI_MODEL` (`gemini-3.1-flash-live-preview`), `PRACTICE_GEMINI_CONSTRAINED` (false),
+  `PRACTICE_REALTIME_TRANSCRIBE_MODEL` (`gpt-4o-mini-transcribe`), `PRACTICE_REALTIME_VOICE`,
+  `PRACTICE_PROMPT_VERSION` (`v3`), `PRACTICE_SLOW_SPEED` (0.9), `PRACTICE_VAD_*` (900 / 0.5 / 300),
+  `PRACTICE_DIALOG_TTL_SECONDS` (200), `PRACTICE_DIALOGS_PER_DAY` (5), `PRACTICE_MAX_TARGET_WORDS` (8).
+  Keys: `OPENAI_API_KEY`, `GEMINI_API_KEY` (both server-side only).
 - **Dev commands:** `php artisan practice:grant-premium {email}` (self-test premium) and
   `php artisan practice:smoke` (mint a real token on the live key, no audio, print a cost line).
 

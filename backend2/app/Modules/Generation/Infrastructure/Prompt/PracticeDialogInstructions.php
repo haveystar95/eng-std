@@ -34,7 +34,37 @@ final class PracticeDialogInstructions
             '{{target_words}}' => $this->bullets($texts),   // v1 kept the words in one list
             '{{agent_phrases}}' => $this->bullets($phrases),
             '{{elicit_words}}' => $this->bullets($words),
+            '{{level_rules}}' => $this->levelRules($this->str($lesson, 'level')),
         ]);
+    }
+
+    /**
+     * Hard, per-CEFR-level speech constraints — the model systematically drifts up a level or two
+     * without them (sounds like B1/B2 to an A1/A2 learner). Injected as a block so only the rules
+     * for THIS lesson's level reach the model, not a menu it has to self-select from.
+     */
+    private function levelRules(string $level): string
+    {
+        $level = strtoupper(trim($level));
+
+        if ($level === 'A1' || $level === 'A2') {
+            return "- Use short, simple sentences — at most ~8 words each.\n"
+                . "- Use only basic, high-frequency vocabulary.\n"
+                . "- Do NOT use idioms or phrasal verbs unless they are in the target words above.\n"
+                . "- Do NOT use contractions — say \"I am\", \"do not\", \"it is\", not \"I'm\", \"don't\", \"it's\".\n"
+                . "- Speak SLOWLY and clearly, one short idea at a time.\n"
+                . "- Ask exactly one simple question per turn.\n"
+                . "- If the learner does not understand, rephrase the SAME thing more simply — do not add new ideas.";
+        }
+
+        if ($level === 'B1' || $level === 'B2') {
+            return "- Speak at a natural but unhurried pace.\n"
+                . "- Use moderate everyday vocabulary; keep sentences reasonably short.\n"
+                . "- A few common idioms or phrasal verbs are fine when they fit naturally.";
+        }
+
+        // C1/C2 (and anything unrecognised) — speak naturally, no simplification.
+        return "- Speak naturally, at a normal pace, with the full range of vocabulary and expressions.";
     }
 
     /**
