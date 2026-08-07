@@ -97,12 +97,13 @@ GET  /practice/collections/{id}/last-dialog → the collection's last finished|e
   pair), Learning (due/started state → target-word priority), Vocabulary (accepted forms).
 - **This is PRACTICE:** it never writes a review or `(user, term)` progress. Its only spend record is
   the *estimated* realtime `cost_usd`, written when the dialog leaves `active` (finish or expiry).
-- **Cost** is an estimate (`PracticeCostEstimator` + `ModelCost::estimateRealtime`): audio seconds →
-  tokens at each vendor's documented rates (OpenAI 10 in / 20 out tokens/sec; Gemini 25/25), priced per
-  1M (OpenAI 2.1-mini $10/$20; Gemini Live $3/$12), plus the tiny text transcript. INPUT audio runs the
-  full session; OUTPUT audio is billed only for the agent's speaking time, approximated from its
-  transcript length (~150 wpm; timestamps are unreliable). No usage event reaches us — a proxy, tuned
-  against real dashboard spend (OpenAI full ~200s ≈ $0.06).
+- **Cost** is an estimate (`PracticeCostEstimator` + `ModelCost::estimateRealtime`), calibrated to the
+  vendors' **documented token formulas** — not to Google/OpenAI balance deltas (those lag and batch;
+  verify against a day's total, not a single call). audio seconds → tokens at the documented rates
+  (OpenAI 10 in / 20 out tokens/sec; Gemini 25/25), priced per 1M (OpenAI 2.1-mini $10/$20; Gemini Live
+  $3/$12), plus the tiny text transcript. Audio seconds are bounded by the **real transcript span** (so
+  an expired / long-TTL dialog is billed for the actual call, not the whole TTL); OUTPUT audio is
+  further capped to the agent's speaking time (~150 wpm from its transcript). No usage event reaches us.
 - **Config:** `PRACTICE_DRIVER` (openai|gemini|fake), `PRACTICE_REALTIME_MODEL` (`gpt-realtime-2.1-mini`),
   `PRACTICE_GEMINI_MODEL` (`gemini-3.1-flash-live-preview`), `PRACTICE_GEMINI_CONSTRAINED` (false),
   `PRACTICE_REALTIME_TRANSCRIBE_MODEL` (`gpt-4o-mini-transcribe`), `PRACTICE_REALTIME_VOICE`,

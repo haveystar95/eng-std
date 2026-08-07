@@ -51,15 +51,36 @@ final readonly class PracticeCostEstimator
         $tokensIn = intdiv($userChars, self::CHARS_PER_TOKEN);
         $tokensOut = intdiv($assistantChars, self::CHARS_PER_TOKEN);
 
-        // Input audio = the whole session; output audio = the agent's approximate speaking time,
-        // derived from how much it said, never more than the session lasted.
-        $inputAudioSeconds = max(0, $durationSeconds);
-        $agentSpeakingSeconds = min($inputAudioSeconds, intdiv($assistantChars, self::SPOKEN_CHARS_PER_SEC));
+        // The real session length. `billableSeconds` caps at the token TTL, so for a dialog that
+        // EXPIRED (or was finished after the TTL) it equals the whole TTL — billing input audio for
+        // that would balloon linearly with the TTL even though the call was short. The transcript's
+        // client timestamps bound how long audio actually flowed; use the smaller of the two. Fall
+        // back to billed seconds only when the timestamps are unusable (0–1 lines, or zero span).
+        $span = $this->transcriptSpanSeconds($lines);
+        $sessionSeconds = $span > 0 ? min(max(0, $durationSeconds), $span) : max(0, $durationSeconds);
+
+        // Input audio = the whole (real) session; output audio = the agent's approximate speaking
+        // time, derived from how much it said, never more than the session lasted.
+        $inputAudioSeconds = $sessionSeconds;
+        $agentSpeakingSeconds = min($sessionSeconds, intdiv($assistantChars, self::SPOKEN_CHARS_PER_SEC));
 
         return new CostEstimate(
             costUsd: $this->cost->estimateRealtime($model, $inputAudioSeconds, $agentSpeakingSeconds, $tokensIn, $tokensOut),
             tokensIn: $tokensIn,
             tokensOut: $tokensOut,
         );
+    }
+
+    /**
+     * Seconds spanned by the transcript's client timestamps (ms). 0 when it can't be told (fewer
+     * than two lines, or all timestamps equal) — the caller then falls back to the billed seconds.
+     *
+     * @param  list<TranscriptLine>  $lines
+     */
+    private function transcriptSpanSeconds(array $lines): int
+    {
+        $timestamps = array_map(static fn (TranscriptLine $line): int => $line->ts, $lines);
+
+        return count($timestamps) >= 2 ? intdiv(max($timestamps) - min($timestamps), 1000) : 0;
     }
 }

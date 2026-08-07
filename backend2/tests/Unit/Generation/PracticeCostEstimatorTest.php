@@ -51,6 +51,23 @@ it('bills only input audio when the agent never spoke', function () {
     expect(estimator()->estimate($lesson, $lines, 200)->costUsd)->toBe('0.020045');
 });
 
+it('caps audio to the real transcript span — a long TTL / expired dialog does not balloon', function () {
+    $lesson = ['model' => 'gemini-3.1-flash-live-preview'];
+    // A ~60s conversation (timestamps 60s apart) but billableSeconds is a huge TTL (expired dialog).
+    $lines = [
+        new TranscriptLine(TranscriptRole::User, str_repeat('a', 300), 1_000_000_000_000),
+        new TranscriptLine(TranscriptRole::Assistant, str_repeat('a', 900), 1_000_000_060_000),
+    ];
+
+    $huge = estimator()->estimate($lesson, $lines, 40_000)->costUsd; // TTL far beyond the real call
+    $span = estimator()->estimate($lesson, $lines, 60)->costUsd;     // TTL == the real span
+
+    // The TTL past the transcript span makes no difference, and the cost stays in cents — without
+    // the cap, 40000s of input audio at 25 tok/s × $3/1M would bill ~$3.
+    expect($huge)->toBe($span)
+        ->and((float) $huge)->toBeLessThan(0.05);
+});
+
 it('has no cost for an unknown model', function () {
     expect(estimator()->estimate(['model' => 'fake'], [costLine(TranscriptRole::Assistant, 100)], 60)->costUsd)
         ->toBeNull();
