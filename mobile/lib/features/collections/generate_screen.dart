@@ -11,8 +11,10 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/l10n/language_endonyms.dart';
 
+import '../../data/feature_flags.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../paywall/paywall_screen.dart';
 import 'collection_edit_dialog.dart';
 
 /// Size presets — the user picks a feel, the system picks the count (decided: no number slider).
@@ -300,6 +302,11 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                 submitting: _submitting,
                 onSubmit: _submit,
                 onManual: () => showCollectionEditor(context, ref),
+                // Premium upsell tap (кадр 15c) — only wired when the paywall flag is on; otherwise
+                // the row stays inert exactly as before A3.9.
+                onPremium: ref.watch(featureFlagsProvider).paywallEnabled
+                    ? () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.quota))
+                    : null,
               ),
             ],
           ),
@@ -597,6 +604,7 @@ class _Footer extends StatelessWidget {
     required this.submitting,
     required this.onSubmit,
     required this.onManual,
+    this.onPremium,
   });
 
   final GenerationQuota? quota;
@@ -604,6 +612,10 @@ class _Footer extends StatelessWidget {
   final bool submitting;
   final VoidCallback onSubmit;
   final VoidCallback onManual;
+
+  /// Tap handler for the «Нужно больше? Premium» upsell row (opens the paywall). Null when the
+  /// paywall flag is off — the row then renders inert, as it did before A3.9.
+  final VoidCallback? onPremium;
 
   @override
   Widget build(BuildContext context) {
@@ -645,19 +657,31 @@ class _Footer extends StatelessWidget {
           ),
           if (exhausted) ...[
             const SizedBox(height: 12),
-            // Premium upsell — leads to the paywall, gated behind a feature flag (off → no-op for now).
+            // Premium upsell (кадр 15c). With the paywall flag on it's tappable → paywall; with it
+            // off [onPremium] is null and the row renders exactly as before A3.9 (inert, no padding).
             Center(
               child: Opacity(
                 opacity: 0.9,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l.generatePremiumUpsell,
-                        style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
-                    const SizedBox(width: 5),
-                    const Icon(LucideIcons.chevronRight, size: 15, color: AppColors.ink),
-                  ],
-                ),
+                child: () {
+                  final row = Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l.generatePremiumUpsell,
+                          style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                      const SizedBox(width: 5),
+                      const Icon(LucideIcons.chevronRight, size: 15, color: AppColors.ink),
+                    ],
+                  );
+                  if (onPremium == null) return row;
+                  return InkWell(
+                    onTap: () {
+                      AppHaptics.light();
+                      onPremium!();
+                    },
+                    borderRadius: BorderRadius.circular(AppRadii.small),
+                    child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), child: row),
+                  );
+                }(),
               ),
             ),
             const SizedBox(height: 10),

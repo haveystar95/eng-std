@@ -233,6 +233,70 @@ class Profile {
       };
 }
 
+/// One subscribable store collection (`GET /store/collections`, B5). Public/system sets for a
+/// language pair, grouped client-side by [topic] into sections. [isPremium] draws the lock badge
+/// and gates the subscribe (free tier → paywall); [isSubscribed] swaps the CTA to «В моих». The
+/// contract carries no term list — only [itemsCount] — so the preview shows the count, not the words.
+class StoreCollection {
+  final String id;
+  final String title;
+  final String? description;
+  final String? topic;
+  final String sourceLang;
+  final String targetLang;
+  final bool isPremium;
+  final bool isSubscribed;
+  final int itemsCount;
+  final String? imageUrl;
+  final String? imageAuthor;
+  final String? imageAuthorUrl;
+
+  const StoreCollection({
+    required this.id,
+    required this.title,
+    this.description,
+    this.topic,
+    required this.sourceLang,
+    required this.targetLang,
+    required this.isPremium,
+    required this.isSubscribed,
+    required this.itemsCount,
+    this.imageUrl,
+    this.imageAuthor,
+    this.imageAuthorUrl,
+  });
+
+  StoreCollection copyWith({bool? isSubscribed}) => StoreCollection(
+        id: id,
+        title: title,
+        description: description,
+        topic: topic,
+        sourceLang: sourceLang,
+        targetLang: targetLang,
+        isPremium: isPremium,
+        isSubscribed: isSubscribed ?? this.isSubscribed,
+        itemsCount: itemsCount,
+        imageUrl: imageUrl,
+        imageAuthor: imageAuthor,
+        imageAuthorUrl: imageAuthorUrl,
+      );
+
+  factory StoreCollection.fromJson(Map<String, dynamic> j) => StoreCollection(
+        id: j['id'] as String,
+        title: (j['title'] as String?) ?? '',
+        description: j['description'] as String?,
+        topic: j['topic'] as String?,
+        sourceLang: (j['source_lang'] as String?) ?? 'ru',
+        targetLang: (j['target_lang'] as String?) ?? 'en',
+        isPremium: (j['is_premium'] as bool?) ?? false,
+        isSubscribed: (j['is_subscribed'] as bool?) ?? false,
+        itemsCount: (j['items_count'] as int?) ?? 0,
+        imageUrl: j['image_url'] as String?,
+        imageAuthor: j['image_author'] as String?,
+        imageAuthorUrl: j['image_author_url'] as String?,
+      );
+}
+
 class Stats {
   final int totalWords;
   final int learned;

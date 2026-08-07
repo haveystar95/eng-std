@@ -159,6 +159,42 @@ class ApiClient {
     await _dio.delete('/collections/$collectionId/items/$termId');
   }
 
+  // ---- Store (B5) -----------------------------------------------------------
+
+  /// Browse the store: public + system collections for a language pair, ordered by `topic` so the
+  /// client can render sections. Keyset-paginated on `(topic, id)` via [cursor]. Returns the page of
+  /// [StoreCollection]s plus the next cursor (null when there are no more).
+  Future<({List<StoreCollection> items, String? nextCursor})> storeCollections({
+    String? sourceLang,
+    String? targetLang,
+    String? cursor,
+    int limit = 30,
+  }) async {
+    final r = await _dio.get('/store/collections', queryParameters: {
+      'source_lang': ?sourceLang,
+      'target_lang': ?targetLang,
+      'cursor': ?cursor,
+      'limit': limit,
+    });
+    final body = r.data as Map<String, dynamic>;
+    final items = ((body['data'] as List?) ?? const [])
+        .map((e) => StoreCollection.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final meta = body['meta'] as Map<String, dynamic>?;
+    return (items: items, nextCursor: meta?['next_cursor'] as String?);
+  }
+
+  /// Subscribe (add to library) — idempotent. A premium collection on a free tier throws a
+  /// [DioException] with status 403 (`subscription_required`); a private/non-store id → 404.
+  Future<void> subscribeStore(String id) async {
+    await _dio.post('/store/collections/$id/subscribe');
+  }
+
+  /// Unsubscribe (remove from library) — idempotent.
+  Future<void> unsubscribeStore(String id) async {
+    await _dio.delete('/store/collections/$id/subscribe');
+  }
+
   // ---- Training -------------------------------------------------------------
 
   /// Study cards now (due + new). Scoped to one collection when [collectionId] is set.

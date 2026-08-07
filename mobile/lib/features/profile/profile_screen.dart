@@ -9,9 +9,12 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/languages.dart' show kLanguages, kCefrLevels, languageByCode;
 import '../../data/app_settings.dart';
+import '../../data/config.dart';
+import '../../data/feature_flags.dart';
 import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../paywall/paywall_screen.dart';
 
 /// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
 /// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
@@ -89,7 +92,12 @@ class ProfileScreen extends ConsumerWidget {
             ),
 
             _SectionLabel(l.profileSectionSubscription),
-            _InfoRow(title: l.profileFreeTier, hint: l.profileFreeTierHint, trailing: l.profileSoon, last: true),
+            _SubscriptionSection(user: user),
+
+            if (AppConfig.devMenuEnabled) ...[
+              _SectionLabel(l.profileSectionDev),
+              _DevFlags(),
+            ],
 
             _SectionLabel(l.profileSectionAccount),
             _LinkRow(label: l.profileSignOut, onTap: () => ref.read(authControllerProvider.notifier).signOut()),
@@ -397,6 +405,126 @@ class _RowShell extends StatelessWidget {
         onTap!();
       },
       child: row,
+    );
+  }
+}
+
+/// The «Подписка» section (кадры 15a/15b). Behind the paywall flag: off → the pre-A3.9 «Бесплатный
+/// тариф · Скоро» info row (existing screen untouched); on → the free rows with a «Попробовать
+/// Premium» entry, or the premium rows (active badge + manage/restore) when premium (server tier or
+/// the dev fake). No renewal date is shown — the contract carries none (reported).
+class _SubscriptionSection extends ConsumerWidget {
+  const _SubscriptionSection({required this.user});
+  final AppUser user;
+
+  static String _hhmm(DateTime t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final paywallOn = ref.watch(featureFlagsProvider).paywallEnabled;
+    if (!paywallOn) {
+      return _InfoRow(title: l.profileFreeTier, hint: l.profileFreeTierHint, trailing: l.profileSoon, last: true);
+    }
+    final premium = ref.watch(premiumProvider);
+    if (premium) {
+      return Column(
+        children: [
+          _PremiumRow(title: l.profilePremiumActive, badge: l.profilePremiumBadge, hint: l.profilePremiumHint),
+          _ChevronRow(label: l.profileManageSubscription, external: true),
+          _ChevronRow(label: l.profileRestorePurchases, last: true),
+        ],
+      );
+    }
+    final resetsAt = user.quota?.resetsAt;
+    final freeHint = resetsAt != null ? l.profileFreeTierReset(_hhmm(resetsAt)) : l.profileFreeTierHint;
+    return Column(
+      children: [
+        _InfoRow(title: l.profileFreeTier, hint: freeHint),
+        _ChevronRow(
+          label: l.profileTryPremium,
+          bold: true,
+          last: true,
+          onTap: () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.profile)),
+        ),
+      ],
+    );
+  }
+}
+
+/// The dev flag toggles (Profile → «Разработка»), shown only when DEV_MENU is set. Lets Den flip the
+/// store/paywall surfaces and the fake premium on device without a rebuild.
+class _DevFlags extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final flags = ref.watch(featureFlagsProvider);
+    final notifier = ref.read(featureFlagsProvider.notifier);
+    return Column(
+      children: [
+        _SwitchRow(label: l.devFlagStore, value: flags.storeEnabled, onChanged: notifier.setStoreEnabled),
+        _SwitchRow(label: l.devFlagPaywall, value: flags.paywallEnabled, onChanged: notifier.setPaywallEnabled),
+        _SwitchRow(label: l.devFlagPremium, value: flags.devPremium, onChanged: notifier.setDevPremium, last: true),
+      ],
+    );
+  }
+}
+
+/// The active-Premium row (кадр 15b): «Premium» + «активна» badge + hint.
+class _PremiumRow extends StatelessWidget {
+  const _PremiumRow({required this.title, required this.badge, required this.hint});
+  final String title, badge, hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RowShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(title, style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(6)),
+                child: Text(badge.toUpperCase(),
+                    style: const TextStyle(
+                        fontFamily: AppFonts.inter, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.paper)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(hint, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+        ],
+      ),
+    );
+  }
+}
+
+/// A label + chevron (or external-link icon) row — used by the subscription entries.
+class _ChevronRow extends StatelessWidget {
+  const _ChevronRow({required this.label, this.onTap, this.bold = false, this.external = false, this.last = false});
+  final String label;
+  final VoidCallback? onTap;
+  final bool bold, external, last;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RowShell(
+      last: last,
+      onTap: onTap,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: TextStyle(
+                    fontFamily: AppFonts.inter, fontSize: 15.5, fontWeight: bold ? FontWeight.w600 : FontWeight.w400, color: AppColors.ink)),
+          ),
+          Icon(external ? Icons.open_in_new : Icons.chevron_right, size: external ? 16 : 18, color: AppColors.tertiary),
+        ],
+      ),
     );
   }
 }

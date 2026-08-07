@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/feature_flags.dart';
 import '../../data/providers.dart';
 import 'dialog_models.dart';
 import 'dialog_providers.dart';
@@ -27,7 +28,10 @@ class DialogEntryButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final profile = ref.watch(authControllerProvider).value?.profile;
-    if (profile == null || !profile.isPremium) return const SizedBox.shrink();
+    // Premium-only, and by design (rule 22 — no subscription mentions inside practice) it simply
+    // collapses to nothing for free users: there is NO paywall entrance from the dialog gate. Reads
+    // the effective premium (server tier OR the dev fake) so a dev "purchase" reveals it too.
+    if (profile == null || !ref.watch(premiumProvider)) return const SizedBox.shrink();
 
     final online = ref.watch(connectivityProvider).value ?? true;
     final targetLang = profile.targetLanguage;

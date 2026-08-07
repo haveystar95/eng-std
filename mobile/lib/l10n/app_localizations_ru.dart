@@ -1205,4 +1205,181 @@ class AppLocalizationsRu extends AppLocalizations {
   String practiceDialogResultWords(int used, int total) {
     return 'слов: $used из $total';
   }
+
+  @override
+  String get storeSegmentMine => 'Мои';
+
+  @override
+  String get storeSegmentReady => 'Готовые';
+
+  @override
+  String get storeSectionOther => 'Разное';
+
+  @override
+  String storeWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storeInLibrary => 'В моих';
+
+  @override
+  String get storeAddToMine => 'Добавить в мои';
+
+  @override
+  String get storeAvailableWithPremium => 'Доступно с Premium';
+
+  @override
+  String storeAllSetsUnlock(int count) {
+    return 'Открываются все $count наборов сразу';
+  }
+
+  @override
+  String get storeLangPairSheetTitle => 'Языковая пара';
+
+  @override
+  String get storeEmptyTitle => 'Скоро здесь появятся наборы';
+
+  @override
+  String get storeEmptyBody =>
+      'Готовые коллекции по ситуациям добавим в ближайшее время.';
+
+  @override
+  String get storePreviewAdded => 'Набор добавлен в «Мои»';
+
+  @override
+  String get storeSubscribeError =>
+      'Не удалось добавить набор. Попробуйте ещё раз.';
+
+  @override
+  String get paywallClose => 'Закрыть';
+
+  @override
+  String get paywallTitleQuota => 'Больше коллекций за один вечер';
+
+  @override
+  String get paywallTitleGeneric => 'Premium без ограничений';
+
+  @override
+  String paywallTitleStore(String title, int count) {
+    return '$title и ещё $count наборов';
+  }
+
+  @override
+  String get paywallSubtitleQuota =>
+      'Premium поднимает дневной лимит до двадцати генераций.';
+
+  @override
+  String get paywallSubtitleStore =>
+      'Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.';
+
+  @override
+  String get paywallSubtitleGeneric =>
+      'Один тариф открывает всё, что делает изучение быстрее.';
+
+  @override
+  String get paywallBenefitGenerations => 'До 20 генераций в день';
+
+  @override
+  String get paywallBenefitStore => 'Все премиум-коллекции в сторе';
+
+  @override
+  String get paywallBenefitModes => 'Будущие режимы тренировок';
+
+  @override
+  String get paywallFreeForever =>
+      'Повторения, разбор и офлайн — бесплатно всегда.';
+
+  @override
+  String get paywallPeriodYear => 'Год';
+
+  @override
+  String get paywallPeriodMonth => 'Месяц';
+
+  @override
+  String get paywallPriceYear => '\$29.99';
+
+  @override
+  String get paywallPriceMonth => '\$4.99';
+
+  @override
+  String get paywallYearPerMonth => '\$2.50 в месяц';
+
+  @override
+  String get paywallPerMonth => 'в месяц';
+
+  @override
+  String get paywallDiscountBadge => '−50%';
+
+  @override
+  String get paywallContinue => 'Продолжить';
+
+  @override
+  String paywallLegalYear(String price) {
+    return 'Подписка продлевается автоматически. $price за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.';
+  }
+
+  @override
+  String paywallLegalMonth(String price) {
+    return 'Подписка продлевается автоматически. $price в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.';
+  }
+
+  @override
+  String get paywallRestore => 'Восстановить покупки';
+
+  @override
+  String get paywallTerms => 'Условия';
+
+  @override
+  String get paywallPrivacy => 'Конфиденциальность';
+
+  @override
+  String get paywallDevPurchased => 'Premium активирован (dev-режим)';
+
+  @override
+  String get paywallNeedsRealPremium =>
+      'Нужен настоящий Premium (StoreKit — отдельный блок)';
+
+  @override
+  String get profileTryPremium => 'Попробовать Premium';
+
+  @override
+  String profileFreeTierReset(String time) {
+    return '3 генерации в день · сбрасываются в $time';
+  }
+
+  @override
+  String get profilePremiumActive => 'Premium';
+
+  @override
+  String get profilePremiumBadge => 'активна';
+
+  @override
+  String get profilePremiumHint => 'Подписка активна';
+
+  @override
+  String get profileManageSubscription => 'Управлять подпиской';
+
+  @override
+  String get profileRestorePurchases => 'Восстановить покупки';
+
+  @override
+  String get profileSectionDev => 'Разработка';
+
+  @override
+  String get devFlagStore => 'Стор коллекций';
+
+  @override
+  String get devFlagPaywall => 'Пейволл';
+
+  @override
+  String get devFlagPremium => 'Premium (dev)';
 }

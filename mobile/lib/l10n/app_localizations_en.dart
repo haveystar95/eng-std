@@ -1164,4 +1164,178 @@ class AppLocalizationsEn extends AppLocalizations {
   String practiceDialogResultWords(int used, int total) {
     return 'words: $used of $total';
   }
+
+  @override
+  String get storeSegmentMine => 'Mine';
+
+  @override
+  String get storeSegmentReady => 'Ready-made';
+
+  @override
+  String get storeSectionOther => 'Other';
+
+  @override
+  String storeWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storeInLibrary => 'In library';
+
+  @override
+  String get storeAddToMine => 'Add to mine';
+
+  @override
+  String get storeAvailableWithPremium => 'Available with Premium';
+
+  @override
+  String storeAllSetsUnlock(int count) {
+    return 'Unlocks all $count sets at once';
+  }
+
+  @override
+  String get storeLangPairSheetTitle => 'Language pair';
+
+  @override
+  String get storeEmptyTitle => 'Sets are coming soon';
+
+  @override
+  String get storeEmptyBody =>
+      'Ready-made collections by situation will appear here shortly.';
+
+  @override
+  String get storePreviewAdded => 'Set added to Mine';
+
+  @override
+  String get storeSubscribeError => 'Couldn\'t add the set. Please try again.';
+
+  @override
+  String get paywallClose => 'Close';
+
+  @override
+  String get paywallTitleQuota => 'More collections in one evening';
+
+  @override
+  String get paywallTitleGeneric => 'Premium, no limits';
+
+  @override
+  String paywallTitleStore(String title, int count) {
+    return '$title and $count more sets';
+  }
+
+  @override
+  String get paywallSubtitleQuota =>
+      'Premium raises the daily limit to twenty generations.';
+
+  @override
+  String get paywallSubtitleStore =>
+      'Premium collections are curated and all unlock at once — we don\'t sell them one by one.';
+
+  @override
+  String get paywallSubtitleGeneric =>
+      'One plan unlocks everything that makes learning faster.';
+
+  @override
+  String get paywallBenefitGenerations => 'Up to 20 generations a day';
+
+  @override
+  String get paywallBenefitStore => 'Every premium collection in the store';
+
+  @override
+  String get paywallBenefitModes => 'Future training modes';
+
+  @override
+  String get paywallFreeForever =>
+      'Reviews, breakdown and offline — always free.';
+
+  @override
+  String get paywallPeriodYear => 'Year';
+
+  @override
+  String get paywallPeriodMonth => 'Month';
+
+  @override
+  String get paywallPriceYear => '\$29.99';
+
+  @override
+  String get paywallPriceMonth => '\$4.99';
+
+  @override
+  String get paywallYearPerMonth => '\$2.50 / month';
+
+  @override
+  String get paywallPerMonth => 'per month';
+
+  @override
+  String get paywallDiscountBadge => '−50%';
+
+  @override
+  String get paywallContinue => 'Continue';
+
+  @override
+  String paywallLegalYear(String price) {
+    return 'Subscription renews automatically. $price per year is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
+  }
+
+  @override
+  String paywallLegalMonth(String price) {
+    return 'Subscription renews automatically. $price per month is charged to your Apple ID; cancel in App Store settings at least 24 hours before the period ends.';
+  }
+
+  @override
+  String get paywallRestore => 'Restore purchases';
+
+  @override
+  String get paywallTerms => 'Terms';
+
+  @override
+  String get paywallPrivacy => 'Privacy';
+
+  @override
+  String get paywallDevPurchased => 'Premium activated (dev mode)';
+
+  @override
+  String get paywallNeedsRealPremium =>
+      'Needs real Premium (StoreKit is a separate block)';
+
+  @override
+  String get profileTryPremium => 'Try Premium';
+
+  @override
+  String profileFreeTierReset(String time) {
+    return '3 generations a day · resets at $time';
+  }
+
+  @override
+  String get profilePremiumActive => 'Premium';
+
+  @override
+  String get profilePremiumBadge => 'active';
+
+  @override
+  String get profilePremiumHint => 'Subscription active';
+
+  @override
+  String get profileManageSubscription => 'Manage subscription';
+
+  @override
+  String get profileRestorePurchases => 'Restore purchases';
+
+  @override
+  String get profileSectionDev => 'Development';
+
+  @override
+  String get devFlagStore => 'Collections store';
+
+  @override
+  String get devFlagPaywall => 'Paywall';
+
+  @override
+  String get devFlagPremium => 'Premium (dev)';
 }

@@ -7,9 +7,11 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/feature_flags.dart';
 import '../../data/local/app_database.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
 import 'collection_cover.dart';
 import 'collection_cta.dart';
@@ -17,27 +19,35 @@ import 'collection_detail_screen.dart';
 import 'collection_edit_dialog.dart';
 import 'generate_screen.dart';
 import 'pending_generation_card.dart';
+import 'store_view.dart';
 
 /// The Collections tab (кадр 2.5): a paper screen with a title + «+» that opens the create flow, the
 /// in-flight generation states (shimmer / error / undelivered) at the top of the list, then the
 /// collection rows — 96px cover, Literata title, «N слов · освоено M», three ink-density segments,
 /// and a state-dependent action hint. Everything reads the local DB (renders offline). Pull-to-
 /// refresh does a full resync (ghost cleanup).
-class CollectionsScreen extends ConsumerWidget {
+///
+/// When the store flag is on (A3.9), a «Мои»/«Готовые» segment (кадр 2.8) pins under the header and
+/// switches the body to the store. With the flag off the screen is exactly as before — no segment.
+class CollectionsScreen extends ConsumerStatefulWidget {
   const CollectionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
-    final pending = ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[];
+  ConsumerState<CollectionsScreen> createState() => _CollectionsScreenState();
+}
 
-    final bottomInset = AppTabBarMetrics.height +
-        AppTabBarMetrics.bottomInset +
-        MediaQuery.viewPaddingOf(context).bottom +
-        AppSpacing.s8;
+class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
+  int _segment = 0; // 0 = Мои, 1 = Готовые (store)
 
-    final empty = collections.isEmpty && pending.isEmpty;
+  double get _bottomInset =>
+      AppTabBarMetrics.height +
+      AppTabBarMetrics.bottomInset +
+      MediaQuery.viewPaddingOf(context).bottom +
+      AppSpacing.s8;
+
+  @override
+  Widget build(BuildContext context) {
+    final storeOn = ref.watch(featureFlagsProvider).storeEnabled;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -45,42 +55,153 @@ class CollectionsScreen extends ConsumerWidget {
         backgroundColor: AppColors.paper,
         body: SafeArea(
           bottom: false,
-          child: RefreshIndicator(
-            color: AppColors.ink,
-            backgroundColor: AppColors.surfaceRaised,
-            onRefresh: () => ref.read(syncServiceProvider).resync(),
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(bottom: bottomInset),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s16),
-                  child: _Header(),
-                ),
-                if (empty)
-                  _Empty(l: l)
-                else ...[
-                  for (var i = 0; i < pending.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-                      child: PendingGenerationCard(
-                        row: pending[i],
-                        showDivider: i < pending.length - 1 || collections.isNotEmpty,
-                      ),
-                    ),
-                  for (var i = 0; i < collections.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-                      child: _CollectionRow(
-                        collection: collections[i],
-                        showDivider: i < collections.length - 1,
-                      ),
-                    ),
-                ],
-              ],
-            ),
+          child: storeOn ? _withStore() : _mineList(withHeader: true),
+        ),
+      ),
+    );
+  }
+
+  /// Store on: pinned header + segment, then the selected body fills the rest.
+  Widget _withStore() {
+    final l = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s12),
+          child: _Header(),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.s12),
+          child: _Segmented(
+            labels: [l.storeSegmentMine, l.storeSegmentReady],
+            index: _segment,
+            onChanged: (i) {
+              AppHaptics.light();
+              setState(() => _segment = i);
+            },
           ),
         ),
+        Expanded(
+          child: _segment == 0
+              ? _mineList(withHeader: false)
+              : RefreshIndicator(
+                  color: AppColors.ink,
+                  backgroundColor: AppColors.surfaceRaised,
+                  onRefresh: () async {
+                    final pair = ref.read(storeLangPairProvider);
+                    if (pair != null) ref.invalidate(storeCollectionsProvider(pair));
+                  },
+                  child: StoreView(bottomInset: _bottomInset),
+                ),
+        ),
+      ],
+    );
+  }
+
+  /// «Мои» — the collection list. [withHeader] includes the scrolling title (store off); when the
+  /// store segment is shown the header is pinned above, so it's omitted here.
+  Widget _mineList({required bool withHeader}) {
+    final l = AppLocalizations.of(context);
+    final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
+    final pending = ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[];
+    final empty = collections.isEmpty && pending.isEmpty;
+
+    return RefreshIndicator(
+      color: AppColors.ink,
+      backgroundColor: AppColors.surfaceRaised,
+      onRefresh: () => ref.read(syncServiceProvider).resync(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(bottom: _bottomInset),
+        children: [
+          if (withHeader)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s16),
+              child: _Header(),
+            ),
+          if (empty)
+            _Empty(l: l)
+          else ...[
+            for (var i = 0; i < pending.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+                child: PendingGenerationCard(
+                  row: pending[i],
+                  showDivider: i < pending.length - 1 || collections.isNotEmpty,
+                ),
+              ),
+            for (var i = 0; i < collections.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+                child: _CollectionRow(
+                  collection: collections[i],
+                  showDivider: i < collections.length - 1,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// «Мои»/«Готовые» pill segment (кадр 2.8): a faint ink track with a raised paper thumb on the
+/// selected side.
+class _Segmented extends StatelessWidget {
+  const _Segmented({required this.labels, required this.index, required this.onChanged});
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.ink.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == index,
+                label: labels[i],
+                child: GestureDetector(
+                  onTap: i == index ? null : () => onChanged(i),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: i == index
+                        ? BoxDecoration(
+                            color: AppColors.surfaceRaised,
+                            borderRadius: BorderRadius.circular(11),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: AppColors.ink.withValues(alpha: 0.10),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1)),
+                            ],
+                          )
+                        : null,
+                    child: Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 13.5,
+                        fontWeight: i == index ? FontWeight.w700 : FontWeight.w600,
+                        color: i == index ? AppColors.ink : AppColors.secondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

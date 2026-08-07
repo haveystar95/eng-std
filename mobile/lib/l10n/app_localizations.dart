@@ -1879,6 +1879,306 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'слов: {used} из {total}'**
   String practiceDialogResultWords(int used, int total);
+
+  /// Сегмент таба «Коллекции»: свои коллекции (кадр 2.8).
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои'**
+  String get storeSegmentMine;
+
+  /// Сегмент таба «Коллекции»: стор готовых наборов (кадр 2.8).
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовые'**
+  String get storeSegmentReady;
+
+  /// Заголовок секции стора для наборов без темы.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разное'**
+  String get storeSectionOther;
+
+  /// Размер набора в сторе, «16 слов».
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String storeWordsCount(int count);
+
+  /// Бейдж на карточке стора: набор уже добавлен (кадр 2.8).
+  ///
+  /// In ru, this message translates to:
+  /// **'В моих'**
+  String get storeInLibrary;
+
+  /// Кнопка добавления бесплатного набора из стора (кадр 8c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить в мои'**
+  String get storeAddToMine;
+
+  /// Кнопка премиум-набора в сторе — ведёт на пейволл (кадр 15d).
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступно с Premium'**
+  String get storeAvailableWithPremium;
+
+  /// Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).
+  ///
+  /// In ru, this message translates to:
+  /// **'Открываются все {count} наборов сразу'**
+  String storeAllSetsUnlock(int count);
+
+  /// Заголовок шита выбора языковой пары стора (кадр 2.8).
+  ///
+  /// In ru, this message translates to:
+  /// **'Языковая пара'**
+  String get storeLangPairSheetTitle;
+
+  /// Пустой стор — контент ещё не опубликован.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скоро здесь появятся наборы'**
+  String get storeEmptyTitle;
+
+  /// Подпись пустого стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовые коллекции по ситуациям добавим в ближайшее время.'**
+  String get storeEmptyBody;
+
+  /// Тост после добавления бесплатного набора из стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Набор добавлен в «Мои»'**
+  String get storePreviewAdded;
+
+  /// Ошибка подписки на набор стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось добавить набор. Попробуйте ещё раз.'**
+  String get storeSubscribeError;
+
+  /// Кнопка-крестик закрытия пейволла (кадр 2.13).
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть'**
+  String get paywallClose;
+
+  /// Заголовок пейволла при входе из исчерпанной квоты (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Больше коллекций за один вечер'**
+  String get paywallTitleQuota;
+
+  /// Заголовок пейволла при входе из профиля.
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium без ограничений'**
+  String get paywallTitleGeneric;
+
+  /// Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).
+  ///
+  /// In ru, this message translates to:
+  /// **'{title} и ещё {count} наборов'**
+  String paywallTitleStore(String title, int count);
+
+  /// Строка ценности пейволла для входа из квоты (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium поднимает дневной лимит до двадцати генераций.'**
+  String get paywallSubtitleQuota;
+
+  /// Строка ценности пейволла для входа из стора (кадр 14b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.'**
+  String get paywallSubtitleStore;
+
+  /// Строка ценности пейволла для входа из профиля.
+  ///
+  /// In ru, this message translates to:
+  /// **'Один тариф открывает всё, что делает изучение быстрее.'**
+  String get paywallSubtitleGeneric;
+
+  /// Пункт Premium: лимит генераций (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'До 20 генераций в день'**
+  String get paywallBenefitGenerations;
+
+  /// Пункт Premium: премиум-наборы стора (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Все премиум-коллекции в сторе'**
+  String get paywallBenefitStore;
+
+  /// Пункт Premium: будущие режимы (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Будущие режимы тренировок'**
+  String get paywallBenefitModes;
+
+  /// Строка «бесплатно всегда» на пейволле (кадр 14a, правило 22).
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторения, разбор и офлайн — бесплатно всегда.'**
+  String get paywallFreeForever;
+
+  /// Ценовая карточка: годовой период (кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'Год'**
+  String get paywallPeriodYear;
+
+  /// Ценовая карточка: месячный период (кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'Месяц'**
+  String get paywallPeriodMonth;
+
+  /// Плейсхолдер годовой цены (реальная приходит из StoreKit, кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'\$29.99'**
+  String get paywallPriceYear;
+
+  /// Плейсхолдер месячной цены (реальная приходит из StoreKit, кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'\$4.99'**
+  String get paywallPriceMonth;
+
+  /// Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'\$2.50 в месяц'**
+  String get paywallYearPerMonth;
+
+  /// Подстрока месячной карточки (кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'в месяц'**
+  String get paywallPerMonth;
+
+  /// Бейдж скидки на годовой карточке (кадр 4ж).
+  ///
+  /// In ru, this message translates to:
+  /// **'−50%'**
+  String get paywallDiscountBadge;
+
+  /// Главная кнопка пейволла (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get paywallContinue;
+
+  /// Юридическая строка авто-продления для годового периода (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  String paywallLegalYear(String price);
+
+  /// Юридическая строка авто-продления для месячного периода (кадр 14b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.'**
+  String paywallLegalMonth(String price);
+
+  /// Ссылка восстановления покупок на пейволле (кадр 14a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить покупки'**
+  String get paywallRestore;
+
+  /// Ссылка на условия на пейволле.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условия'**
+  String get paywallTerms;
+
+  /// Ссылка на политику конфиденциальности на пейволле.
+  ///
+  /// In ru, this message translates to:
+  /// **'Конфиденциальность'**
+  String get paywallPrivacy;
+
+  /// Тост после фейковой покупки в dev-режиме (StoreKit — отдельный блок).
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium активирован (dev-режим)'**
+  String get paywallDevPurchased;
+
+  /// Сообщение, когда сервер отклоняет подписку без реального premium.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нужен настоящий Premium (StoreKit — отдельный блок)'**
+  String get paywallNeedsRealPremium;
+
+  /// Строка профиля (free): переход на пейволл (кадр 15a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробовать Premium'**
+  String get profileTryPremium;
+
+  /// Подпись бесплатного тарифа с временем сброса (кадр 15a).
+  ///
+  /// In ru, this message translates to:
+  /// **'3 генерации в день · сбрасываются в {time}'**
+  String profileFreeTierReset(String time);
+
+  /// Строка профиля (premium): название тарифа (кадр 15b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium'**
+  String get profilePremiumActive;
+
+  /// Бейдж «активна» у строки Premium (кадр 15b).
+  ///
+  /// In ru, this message translates to:
+  /// **'активна'**
+  String get profilePremiumBadge;
+
+  /// Подпись активной подписки Premium (кадр 15b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписка активна'**
+  String get profilePremiumHint;
+
+  /// Строка профиля (premium): управление в App Store (кадр 15b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Управлять подпиской'**
+  String get profileManageSubscription;
+
+  /// Строка профиля (premium): восстановление покупок (кадр 15b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить покупки'**
+  String get profileRestorePurchases;
+
+  /// Dev-секция профиля (только при DEV_MENU).
+  ///
+  /// In ru, this message translates to:
+  /// **'Разработка'**
+  String get profileSectionDev;
+
+  /// Dev-переключатель: витрина стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стор коллекций'**
+  String get devFlagStore;
+
+  /// Dev-переключатель: пейволл и его входы.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пейволл'**
+  String get devFlagPaywall;
+
+  /// Dev-переключатель: фейковый premium.
+  ///
+  /// In ru, this message translates to:
+  /// **'Premium (dev)'**
+  String get devFlagPremium;
 }
 
 class _AppLocalizationsDelegate
