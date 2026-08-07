@@ -26,6 +26,10 @@ class TokenStore {
     _cached = null;
     await _storage.delete(key: _key);
     await _storage.delete(key: _userKey);
+    // Onboarding is per-account: forget it on sign-out so a different account
+    // (or a re-login) runs first-run onboarding again instead of inheriting the
+    // previous account's keychain flag. (device-batch F1)
+    await _storage.delete(key: _onboardedKey);
   }
 
   /// The last-known signed-in user, as a JSON string, cached in the keychain alongside the token

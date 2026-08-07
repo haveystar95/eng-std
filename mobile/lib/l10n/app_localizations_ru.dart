@@ -137,6 +137,22 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String homeLearnButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Учить $count слова',
+      many: 'Учить $count слов',
+      few: 'Учить $count слова',
+      one: 'Учить $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeLearnSubtitle => 'Новые слова — первый разбор';
+
+  @override
   String homeTriageButton(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -251,6 +267,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionTriageSubtitle => 'Новые слова этой коллекции';
+
+  @override
+  String collectionLearnButton(int count) {
+    return 'Учить $count';
+  }
+
+  @override
+  String get collectionLearnSubtitle => 'Новые слова — выучить';
 
   @override
   String collectionReviewButton(int count) {
@@ -941,6 +965,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionDontRemember => 'Не помню';
+
+  @override
+  String get sessionCheck => 'Проверить';
 
   @override
   String get sessionNext => 'Дальше';

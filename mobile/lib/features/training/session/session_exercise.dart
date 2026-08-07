@@ -36,18 +36,15 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.card,
     required this.autoPronounce,
     required this.onAnswered,
-    required this.onNext,
     required this.onSpeak,
   });
 
   final SessionCard card;
   final bool autoPronounce;
 
-  /// Called exactly once, when the user commits their answer.
+  /// Called exactly once, when the user commits their answer. The shell then reveals the pinned
+  /// «Дальше» bar (advancing lives on the shell, not in the card — device-batch F9).
   final ValueChanged<SessionAnswer> onAnswered;
-
-  /// Advance to the next card (or the summary).
-  final VoidCallback onNext;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak).
@@ -197,7 +194,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ],
         if (!_answered && _mode == ExerciseMode.wordBank && _placed.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s12),
-          PrimaryButton(label: l.sessionNext, trailingIcon: LucideIcons.arrowRight, onPressed: _submitAssembled),
+          // «Проверить», not «Дальше»: this submits the assembled phrase (grades it) — the
+          // feedback block then shows the real «Дальше» that advances. Two distinct steps, two
+          // distinct labels, so the first tap doesn't read as a no-op (device-batch F12).
+          PrimaryButton(label: l.sessionCheck, onPressed: _submitAssembled),
         ],
         if (_answered) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -205,7 +205,6 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             card: _card,
             verdict: _verdict!,
             onSpeak: widget.onSpeak,
-            onNext: widget.onNext,
           ),
         ],
       ],
@@ -710,13 +709,11 @@ class _FeedbackBlock extends ConsumerWidget {
     required this.card,
     required this.verdict,
     required this.onSpeak,
-    required this.onNext,
   });
 
   final SessionCard card;
   final LocalCheck verdict;
   final Future<void> Function(String) onSpeak;
-  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -752,15 +749,8 @@ class _FeedbackBlock extends ConsumerWidget {
       duration: AppMotion.feedbackReveal,
       curve: AppMotion.easeOut,
       alignment: Alignment.topCenter,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PaperCard(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: content),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          PrimaryButton(label: l.sessionNext, trailingIcon: LucideIcons.arrowRight, onPressed: onNext),
-        ],
+      child: PaperCard(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: content),
       ),
     );
   }

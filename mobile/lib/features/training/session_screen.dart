@@ -31,12 +31,17 @@ class SessionScreen extends ConsumerStatefulWidget {
     this.collectionId,
     this.practice = false,
     this.limit = 20,
+    this.targetLang,
   });
 
   final String title;
   final String? collectionId;
   final bool practice;
   final int limit;
+
+  /// The language to pronounce answers in — the scoped collection's language (F16). Null for a
+  /// cross-collection session, which falls back to the profile's target language.
+  final String? targetLang;
 
   @override
   ConsumerState<SessionScreen> createState() => _SessionScreenState();
@@ -68,7 +73,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             error: (e, _) => _CenteredMessage(text: l.sessionLoadError(e.toString())),
             data: (s) => s.cards.isEmpty
                 ? _CenteredMessage(text: l.sessionEmpty, icon: LucideIcons.check)
-                : _SessionShell(session: s, practice: widget.practice),
+                : _SessionShell(session: s, practice: widget.practice, targetLang: widget.targetLang),
           ),
         ),
       ),
@@ -77,10 +82,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 }
 
 class _SessionShell extends ConsumerStatefulWidget {
-  const _SessionShell({required this.session, required this.practice});
+  const _SessionShell({required this.session, required this.practice, this.targetLang});
 
   final StudySession session;
   final bool practice;
+  final String? targetLang;
 
   @override
   ConsumerState<_SessionShell> createState() => _SessionShellState();
@@ -88,8 +94,10 @@ class _SessionShell extends ConsumerStatefulWidget {
 
 class _SessionShellState extends ConsumerState<_SessionShell> {
   final _pronouncer = Pronouncer();
+  final _scroll = ScrollController();
   int _pos = 0;
   bool _finished = false;
+  bool _answered = false; // current card answered → the pinned «Дальше» bar shows
   bool _bannerDismissed = false;
   final List<({SessionCard card, LocalCheck verdict})> _results = [];
 
@@ -99,11 +107,14 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   @override
   void dispose() {
     _pronouncer.stop();
+    _scroll.dispose();
     super.dispose();
   }
 
   Future<void> _speak(String text) async {
-    final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+    // The scoped collection's language wins (F16); a cross-collection session has none and falls
+    // back to the profile's target language.
+    final target = widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
     // Reuse the Pronouncer, which speaks a Word — wrap the raw target text.
     await _pronouncer.speak(
       Word(termId: '', term: text, translation: '', type: 'word'),
@@ -122,13 +133,22 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           latencyMs: a.latencyMs,
           sessionId: widget.session.sessionId,
         );
+    // Reveal the pinned «Дальше» bar. It lives OUTSIDE the scroll view, so it stays reachable no
+    // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
+    // button below the fold — device-batch F9).
+    setState(() => _answered = true);
   }
 
   void _next() {
     if (_pos + 1 >= _cards.length) {
       setState(() => _finished = true);
     } else {
-      setState(() => _pos++);
+      setState(() {
+        _pos++;
+        _answered = false;
+      });
+      // New card starts at the top (the previous one may have been scrolled to its feedback).
+      if (_scroll.hasClients) _scroll.jumpTo(0);
     }
   }
 
@@ -168,7 +188,6 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       card: _card,
       autoPronounce: autoPronounce,
       onAnswered: _onAnswered,
-      onNext: _next,
       onSpeak: _speak,
     );
 
@@ -195,12 +214,42 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           ),
           Expanded(
             child: SingleChildScrollView(
+              controller: _scroll,
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, AppSpacing.s26),
               child: _SlideSwitcher(index: _pos, child: card),
             ),
           ),
+          // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
+          // off-screen (device-batch F9). Appears only once the card is answered.
+          if (_answered) _NextBar(onNext: _next),
         ],
       ),
+    );
+  }
+}
+
+/// The pinned bottom action bar — the session's «Дальше», always reachable regardless of how far
+/// the feedback content scrolls. Carries the bottom safe-area inset itself (the shell's SafeArea
+/// has `bottom: false`).
+class _NextBar extends StatelessWidget {
+  const _NextBar({required this.onNext});
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.paper,
+        border: Border(top: BorderSide(color: AppColors.hairline)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        12,
+        AppSpacing.screenH,
+        12 + MediaQuery.of(context).viewPadding.bottom,
+      ),
+      child: PrimaryButton(label: l.sessionNext, trailingIcon: LucideIcons.arrowRight, onPressed: onNext),
     );
   }
 }
@@ -368,15 +417,21 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
         children: [
           Text(l.sessionSummaryTitle, style: AppTextExercise.summaryTitle),
           const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Stat(value: _total, label: l.sessionStatReviewed),
-              const _StatDivider(),
-              _Stat(value: _new, label: l.sessionStatNew),
-              const _StatDivider(),
-              _Stat(value: _errors, label: l.sessionStatErrors),
-            ],
+          // IntrinsicHeight bounds the row's height so the vertical dividers can stretch to it.
+          // Without it, `CrossAxisAlignment.stretch` under the scroll view's unbounded height blew
+          // the row up in RELEASE (asserts off), pushing the goal card, word list and Done button
+          // off-screen — the whole summary looked like just three counters (device-batch F11).
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Stat(value: _total, label: l.sessionStatReviewed),
+                const _StatDivider(),
+                _Stat(value: _new, label: l.sessionStatNew),
+                const _StatDivider(),
+                _Stat(value: _errors, label: l.sessionStatErrors),
+              ],
+            ),
           ),
           if (!widget.practice) ...[
             const SizedBox(height: 18),

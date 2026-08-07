@@ -29,6 +29,8 @@
   "homeStreakActive": "{count, plural, one{Streak — {count} day} other{Streak — {count} days}}",
   "homeStreakStartToday": "Your streak starts today",
   "homeReviewButton": "{count, plural, one{Review {count} word} other{Review {count} words}}",
+  "homeLearnButton": "{count, plural, one{Learn {count} word} other{Learn {count} words}}",
+  "homeLearnSubtitle": "New words — first study",
   "homeTriageButton": "{count, plural, one{Triage {count} word} other{Triage {count} words}}",
   "homePracticeButton": "Practice",
   "homePracticeSubtitle": "Free practice",
@@ -55,6 +57,8 @@
   "collectionDensityInProgress": "In progress {count}",
   "collectionTriageButton": "Triage {count}",
   "collectionTriageSubtitle": "New words in this set",
+  "collectionLearnButton": "Learn {count}",
+  "collectionLearnSubtitle": "New words — learn them",
   "collectionReviewButton": "Review {count}",
   "collectionReviewSubtitle": "Due for review",
   "collectionPracticeButton": "Free practice",
@@ -243,6 +247,7 @@
 
   "sessionHintFirstLetter": "Hint: first letter",
   "sessionDontRemember": "Don't remember",
+  "sessionCheck": "Check",
   "sessionNext": "Next",
   "sessionDone": "Done",
 

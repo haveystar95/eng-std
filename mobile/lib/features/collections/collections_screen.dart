@@ -174,9 +174,11 @@ class _CollectionRow extends ConsumerWidget {
     final density = ref.watch(collectionDensityProvider(collection.id)).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[collection.id] ?? 0;
+    final learnable = ref.watch(learnableByCollectionProvider).value?[collection.id] ?? 0;
     final total = prog?.total ?? collection.wordsCount;
     final mastered = prog?.mastered ?? 0;
-    final cta = computeCollectionCta(untriaged: untriaged, due: prog?.due ?? 0, total: total);
+    final cta = computeCollectionCta(
+        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0, total: total);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -228,6 +230,7 @@ class _CollectionRow extends ConsumerWidget {
 
   String? _hint(AppLocalizations l, HomeCta cta) => switch (cta.kind) {
         HomeCtaKind.triage => l.collectionTriageButton(cta.count),
+        HomeCtaKind.learn => l.collectionLearnButton(cta.count),
         HomeCtaKind.review => l.collectionReviewButton(cta.count),
         _ => null,
       };

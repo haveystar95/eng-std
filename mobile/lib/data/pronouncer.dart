@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'models.dart';
@@ -15,6 +16,7 @@ class Pronouncer {
   Pronouncer([FlutterTts? tts]) : _tts = tts ?? FlutterTts();
 
   final FlutterTts _tts;
+  bool _audioSessionReady = false;
 
   /// audio_url != null → play the file; audio_url == null → system TTS.
   Future<void> speak(Word word, {required String targetLang}) async {
@@ -23,9 +25,24 @@ class Pronouncer {
       // is added. No term carries audio_url yet (server audio is deferred), so
       // this falls through to system TTS and every term stays audible.
     }
+    await _configureIosAudioSession();
     await _tts.setLanguage(ttsLocaleFor(targetLang));
     await _tts.setSpeechRate(0.45);
     await _tts.speak(word.ttsHint ?? word.term);
+  }
+
+  /// Pronunciation is intentional media, not a notification, so it must play through the iOS
+  /// hardware silent switch. The default audio-session category respects the mute switch (silent
+  /// → no sound); `.playback` overrides it, the way media/player apps do (device-batch F10). Set
+  /// once, iOS-only (`defaultTargetPlatform` avoids importing dart:io so web/preview still builds).
+  Future<void> _configureIosAudioSession() async {
+    if (_audioSessionReady || defaultTargetPlatform != TargetPlatform.iOS) return;
+    _audioSessionReady = true;
+    await _tts.setIosAudioCategory(
+      IosTextToSpeechAudioCategory.playback,
+      [IosTextToSpeechAudioCategoryOptions.duckOthers],
+      IosTextToSpeechAudioMode.defaultMode,
+    );
   }
 
   Future<void> stop() => _tts.stop();

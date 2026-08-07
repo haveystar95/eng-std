@@ -219,6 +219,13 @@ final untriagedByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
   return ref.watch(appDatabaseProvider).watchUntriagedByCollection();
 });
 
+/// Learnable (triaged-«не знаю», never-studied) term counts per collection (local DB, reactive) —
+/// powers the «Учить N» CTA that introduces new words after triage (device-batch F8). Without it
+/// these words are neither due nor untriaged and no CTA reaches them.
+final learnableByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
+  return ref.watch(appDatabaseProvider).watchLearnableByCollection();
+});
+
 /// The three ink-density buckets (§4) for one collection, partitioning its total:
 /// confirmed (mastered) · familiar (in SRS, not yet mastered) · in-progress (new /
 /// untouched). Local + reactive.

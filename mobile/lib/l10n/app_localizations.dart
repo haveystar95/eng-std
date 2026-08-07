@@ -260,6 +260,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{Повторить {count} слово} few{Повторить {count} слова} many{Повторить {count} слов} other{Повторить {count} слова}}'**
   String homeReviewButton(int count);
 
+  /// Главная кнопка: есть отриаженные «не знаю» новые слова к изучению (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Учить {count} слово} few{Учить {count} слова} many{Учить {count} слов} other{Учить {count} слова}}'**
+  String homeLearnButton(int count);
+
+  /// Подстрока кнопки «Учить N».
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые слова — первый разбор'**
+  String get homeLearnSubtitle;
+
   /// Главная кнопка: есть новые неразобранные термины (ICU plural).
   ///
   /// In ru, this message translates to:
@@ -409,6 +421,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Новые слова этой коллекции'**
   String get collectionTriageSubtitle;
+
+  /// Кнопка коллекции: выучить новые отриаженные «не знаю» слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'Учить {count}'**
+  String collectionLearnButton(int count);
+
+  /// Подстрока кнопки «Учить».
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые слова — выучить'**
+  String get collectionLearnSubtitle;
 
   /// Главная кнопка коллекции: подошёл срок повторения.
   ///
@@ -1465,6 +1489,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Не помню'**
   String get sessionDontRemember;
+
+  /// Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить'**
+  String get sessionCheck;
 
   /// Кнопка перехода к следующему заданию (кадры 12c, 12d).
   ///

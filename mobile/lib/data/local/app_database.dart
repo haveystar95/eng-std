@@ -308,6 +308,28 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Learnable term count per collection — a collection's terms that are never-studied (no progress
+  /// row) but ALREADY triaged (a local triage marker exists). These are the «не знаю» words that
+  /// have left the triage deck yet were never introduced in a session — they have no progress row,
+  /// so they are neither «due» nor «untriaged» and would otherwise be unreachable (device-batch F8).
+  /// Powers the «Учить N» CTA (a non-practice session introduces them under the daily new-quota).
+  /// (known/unsure verdicts get a server progress row that syncs down, so only «unknown» stays here.)
+  Stream<Map<String, int>> watchLearnableByCollection() {
+    final query = select(collectionItems).join([
+      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+    ])
+      ..where(termProgress.termId.isNull() & triagedTerms.termId.isNotNull());
+    return query.watch().map((rows) {
+      final map = <String, int>{};
+      for (final r in rows) {
+        final cid = r.readTable(collectionItems).collectionId;
+        map[cid] = (map[cid] ?? 0) + 1;
+      }
+      return map;
+    });
+  }
+
   /// The triage-eligible terms of a collection, in study order — mirrors the server's queue rule:
   /// a collection's terms that are never-studied (no progress row) AND never-triaged (not in the
   /// local marker), capped at [cap]. Returned in full (not sliced to the page) so the caller can

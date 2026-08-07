@@ -54,14 +54,22 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 
   void _openSession(bool practice) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) =>
-          SessionScreen(title: widget.title, collectionId: widget.collectionId, practice: practice),
+      builder: (_) => SessionScreen(
+        title: widget.title,
+        collectionId: widget.collectionId,
+        practice: practice,
+        targetLang: _collection?.targetLang, // speak this collection's language (F16)
+      ),
     ));
   }
 
   Future<void> _speak(Word word) async {
     AppHaptics.light();
-    final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+    // Pronounce in the COLLECTION's language, not the profile's — a ru→de set must speak German
+    // even when the profile targets English (language lives on the collection; device-batch F16).
+    final target = _collection?.targetLang ??
+        ref.read(authControllerProvider).value?.profile?.targetLanguage ??
+        'en';
     await _pronouncer.speak(word, targetLang: target);
   }
 
@@ -163,9 +171,10 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
     final cprog = ref.watch(collectionsProgressProvider).value?[widget.collectionId];
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[widget.collectionId] ?? 0;
+    final learnable = ref.watch(learnableByCollectionProvider).value?[widget.collectionId] ?? 0;
     final due = cprog?.due ?? 0;
     final total = cprog?.total ?? collection?.wordsCount ?? 0;
-    final cta = computeCollectionCta(untriaged: untriaged, due: due, total: total);
+    final cta = computeCollectionCta(untriaged: untriaged, learnable: learnable, due: due, total: total);
 
     // Light status-bar glyphs over the dark cover photo (overrides the app-wide
     // dark default set in main()).
@@ -402,6 +411,7 @@ class _CtaButton extends StatelessWidget {
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
       HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
+      HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false), true),
       HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
       HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
       HomeCtaKind.none => ('', '', () => onSession(false), false),

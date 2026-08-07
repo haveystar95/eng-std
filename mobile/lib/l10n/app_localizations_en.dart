@@ -128,6 +128,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String homeLearnButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Learn $count words',
+      one: 'Learn $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeLearnSubtitle => 'New words — first study';
+
+  @override
   String homeTriageButton(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -236,6 +250,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionTriageSubtitle => 'New words in this set';
+
+  @override
+  String collectionLearnButton(int count) {
+    return 'Learn $count';
+  }
+
+  @override
+  String get collectionLearnSubtitle => 'New words — learn them';
 
   @override
   String collectionReviewButton(int count) {
@@ -906,6 +928,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionDontRemember => 'Don\'t remember';
+
+  @override
+  String get sessionCheck => 'Check';
 
   @override
   String get sessionNext => 'Next';

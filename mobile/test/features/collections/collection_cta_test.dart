@@ -4,26 +4,38 @@ import 'package:eng_std/features/home/home_cta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('computeCollectionCta — triage is priority #1 (кадр 2.3)', () {
-    test('untriaged wins over due', () {
-      final cta = computeCollectionCta(untriaged: 18, due: 12, total: 24);
-      expect(cta.kind, HomeCtaKind.triage);
-      expect(cta.count, 18);
-    });
-
-    test('no untriaged → review', () {
-      final cta = computeCollectionCta(untriaged: 0, due: 12, total: 24);
+  group('computeCollectionCta — priority due → learn → triage → practice → none (F8)', () {
+    test('due wins over everything', () {
+      final cta = computeCollectionCta(untriaged: 18, learnable: 5, due: 12, total: 24);
       expect(cta.kind, HomeCtaKind.review);
       expect(cta.count, 12);
     });
 
-    test('debt cleared but words exist → practice (quiet)', () {
-      final cta = computeCollectionCta(untriaged: 0, due: 0, total: 24);
+    test('no due but learnable → learn (above triage) — the F8 fix', () {
+      final cta = computeCollectionCta(untriaged: 6, learnable: 18, due: 0, total: 24);
+      expect(cta.kind, HomeCtaKind.learn);
+      expect(cta.count, 18);
+    });
+
+    test('all triaged-unknown, none studied → learn (was the empty-practice dead-end)', () {
+      final cta = computeCollectionCta(untriaged: 0, learnable: 18, due: 0, total: 18);
+      expect(cta.kind, HomeCtaKind.learn);
+      expect(cta.count, 18);
+    });
+
+    test('no due, no learnable but untriaged → triage', () {
+      final cta = computeCollectionCta(untriaged: 18, learnable: 0, due: 0, total: 24);
+      expect(cta.kind, HomeCtaKind.triage);
+      expect(cta.count, 18);
+    });
+
+    test('everything in SRS, nothing due/learnable/untriaged → practice (quiet)', () {
+      final cta = computeCollectionCta(untriaged: 0, learnable: 0, due: 0, total: 24);
       expect(cta.kind, HomeCtaKind.practice);
     });
 
     test('empty collection → none', () {
-      final cta = computeCollectionCta(untriaged: 0, due: 0, total: 0);
+      final cta = computeCollectionCta(untriaged: 0, learnable: 0, due: 0, total: 0);
       expect(cta.kind, HomeCtaKind.none);
     });
   });

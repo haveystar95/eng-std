@@ -108,6 +108,15 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
+  "homeLearnButton": "{count, plural, one{Учить {count} слово} few{Учить {count} слова} many{Учить {count} слов} other{Учить {count} слова}}",
+  "@homeLearnButton": {
+    "description": "Главная кнопка: есть отриаженные «не знаю» новые слова к изучению (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeLearnSubtitle": "Новые слова — первый разбор",
+  "@homeLearnSubtitle": { "description": "Подстрока кнопки «Учить N»." },
+
   "homeTriageButton": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
   "@homeTriageButton": {
     "description": "Главная кнопка: есть новые неразобранные термины (ICU plural).",
@@ -206,6 +215,15 @@
 
   "collectionTriageSubtitle": "Новые слова этой коллекции",
   "@collectionTriageSubtitle": { "description": "Подстрока кнопки «Разобрать»." },
+
+  "collectionLearnButton": "Учить {count}",
+  "@collectionLearnButton": {
+    "description": "Кнопка коллекции: выучить новые отриаженные «не знаю» слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionLearnSubtitle": "Новые слова — выучить",
+  "@collectionLearnSubtitle": { "description": "Подстрока кнопки «Учить»." },
 
   "collectionReviewButton": "Повторить {count}",
   "@collectionReviewButton": {
@@ -739,6 +757,8 @@
   "@sessionHintFirstLetter": { "description": "Кнопка подсказки первой буквы в ввод/аудирование/пропуск (кадры 12c, 12h, 12i)." },
   "sessionDontRemember": "Не помню",
   "@sessionDontRemember": { "description": "Кнопка честного провала — показывает ответ, слово вернётся (кадры 12c, 12h, 12i)." },
+  "sessionCheck": "Проверить",
+  "@sessionCheck": { "description": "Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека." },
   "sessionNext": "Дальше",
   "@sessionNext": { "description": "Кнопка перехода к следующему заданию (кадры 12c, 12d)." },
   "sessionDone": "Готово",

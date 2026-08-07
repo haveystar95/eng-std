@@ -244,6 +244,10 @@ class _CtaButton extends StatelessWidget {
         ].take(3).toList();
         subtitle = dueTitles.isEmpty ? null : dueTitles.join(', ');
         onTap = onReview;
+      case HomeCtaKind.learn:
+        label = l.homeLearnButton(cta.count);
+        subtitle = l.homeLearnSubtitle;
+        onTap = onReview; // a non-practice session introduces the new words (F8)
       case HomeCtaKind.triage:
         label = l.homeTriageButton(cta.count);
         final target = collections.where((c) => c.id == cta.collectionId).firstOrNull;
