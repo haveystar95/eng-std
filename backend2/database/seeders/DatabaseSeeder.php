@@ -21,5 +21,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Curated store catalogue (system/public collections + their vocab & imagery).
+        $this->call(StoreContentSeeder::class);
     }
 }
