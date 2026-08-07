@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,
         VerificationStatsCommand::class,
+        StorePublishCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         //

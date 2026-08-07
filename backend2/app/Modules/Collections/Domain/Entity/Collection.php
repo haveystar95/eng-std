@@ -32,22 +32,22 @@ final class Collection
     /** @param list<CollectionItem> $items */
     private function __construct(
         private readonly CollectionId $id,
-        private readonly ?UserId $ownerId,
-        private readonly CollectionType $type,
+        private ?UserId $ownerId,
+        private CollectionType $type,
         private string $title,
         private ?string $description,
         private ?string $topic,
         private readonly LanguageCode $sourceLang,
         private readonly LanguageCode $targetLang,
-        private readonly Visibility $visibility,
-        private readonly CollectionSource $source,
+        private Visibility $visibility,
+        private CollectionSource $source,
         private readonly DateTimeImmutable $createdAt,
         array $items,
         ?string $imageUrl = null,
         ?string $imageApiPrompt = null,
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
-        private readonly bool $isPremium = false,
+        private bool $isPremium = false,
     ) {
         $this->items = $items;
         $this->imageUrl = self::clean($imageUrl);
@@ -179,6 +179,21 @@ final class Collection
         $this->imageUrl = $cleanUrl;
         $this->imageAuthor = self::clean($author);
         $this->imageAuthorUrl = self::clean($authorUrl);
+    }
+
+    /**
+     * Promote this collection to curated store content: ownerless, system-typed, public, with a
+     * curated source. `$isPremium` puts it behind the subscription gate. Idempotent — re-publishing
+     * an already-published collection only re-affirms the store fields / flips the premium flag.
+     * Items, title, topic, language pair and cover image are preserved. Used by `store:publish`.
+     */
+    public function publishToStore(bool $isPremium): void
+    {
+        $this->ownerId = null;
+        $this->type = CollectionType::System;
+        $this->visibility = Visibility::Public;
+        $this->source = CollectionSource::Curated;
+        $this->isPremium = $isPremium;
     }
 
     public function id(): CollectionId

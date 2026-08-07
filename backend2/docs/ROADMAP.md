@@ -313,6 +313,18 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   `GenerationRequestOutcome{id, created}` so the controller picks 200 vs 202 and dispatches only when
   created. OpenAPI documents id + 200/409; feature tests (202-then-200 idempotent, no-dup, quota not
   double-spent, cross-user 409 at the handler, server-generates-when-absent).
+- [ ] **Global-term dedup can't hold context-specific translations** (design finding, 2026-08-07;
+  surfaced while publishing starter store content). Terms are globally deduplicated on
+  `(lang, normalized_text, pos)`, and translations hang off the **term**, not the (collection, term)
+  pair. So one surface form with two senses in two collections shares a single translation set: the
+  banking sense of "set up" («подключить/оформить услугу») and the general phrasal-verb sense
+  («настроить/организовать») collide on the same row — editing one changes the other. Worked around
+  once by minting a distinct, less-ambiguous term ("set up an account") for the store deck rather than
+  overwriting the shared "set up". The real fix is a **collection-level translation override** (a
+  per-`(collection_item)` translation that shadows the term's default) — **backlog candidate, not
+  being built now.** Until then, curators must pick disambiguated surface forms when a word's sense is
+  collection-specific. (Progress stays keyed on `(user, term)` regardless — this is only about display
+  text, never scheduling.)
 - [ ] **B5 follow-up — fork a store collection into a custom one** (deferred, decided semantics):
   `POST /store/collections/{id}/fork` creates a new **custom** collection owned by the user and
   **copies the `collection_items` rows** (each referencing the **same global `term_id`**) into it.

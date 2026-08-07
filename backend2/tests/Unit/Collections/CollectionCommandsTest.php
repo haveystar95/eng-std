@@ -6,8 +6,12 @@ use App\Modules\Collections\Application\Command\AddTermToCollection;
 use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
+use App\Modules\Collections\Application\Command\PublishCollectionToStore;
+use App\Modules\Collections\Application\Command\PublishCollectionToStoreHandler;
 use App\Modules\Collections\Domain\Exception\CollectionNotFound;
 use App\Modules\Collections\Domain\Exception\NotCollectionOwner;
+use App\Modules\Collections\Domain\ValueObject\CollectionType;
+use App\Modules\Collections\Domain\ValueObject\Visibility;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -59,5 +63,25 @@ it('rejects adding a term by a non-owner', function () {
 it('fails when the collection does not exist', function () {
     expect(fn () => (new AddTermToCollectionHandler($this->repo))(
         new AddTermToCollection(CollectionId::generate(), TermId::generate(), $this->owner),
+    ))->toThrow(CollectionNotFound::class);
+});
+
+it('publishes an existing collection to the store and persists it', function () {
+    $id = createCollection($this);
+
+    (new PublishCollectionToStoreHandler($this->repo))(
+        new PublishCollectionToStore($id, isPremium: true),
+    );
+
+    $published = $this->repo->findById($id);
+    expect($published?->ownerId())->toBeNull()
+        ->and($published?->type())->toBe(CollectionType::System)
+        ->and($published?->visibility())->toBe(Visibility::Public)
+        ->and($published?->isPremium())->toBeTrue();
+});
+
+it('fails to publish a collection that does not exist', function () {
+    expect(fn () => (new PublishCollectionToStoreHandler($this->repo))(
+        new PublishCollectionToStore(CollectionId::generate()),
     ))->toThrow(CollectionNotFound::class);
 });
