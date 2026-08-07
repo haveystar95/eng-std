@@ -198,6 +198,22 @@ view landed; client reads now come from drift, not the network):
 - **Orphaned local `terms`/`progress` after a collection delete aren't GC'd on the client.** Harmless
   (reads join through `collection_items`, so orphans don't render; future syncs stop re-sending them),
   but the rows linger. GC on the client if local size ever matters.
+- **Sign in with Apple is wired on the client but blocked on two externals (A3.7).** The login
+  screen renders the official `SignInWithAppleButton` and `AuthRepository.signInWithApple()` obtains
+  the Apple credential and POSTs it to `/auth/apple` (`ApiClient.appleLogin`). Neither prerequisite
+  exists yet: (1) the backend `/auth/apple` exchange (Identity module — only `/auth/google` is built),
+  and (2) the "Sign in with Apple" capability, which the current **free** personal Apple team can't
+  enable (needs a paid membership). Until both land the button surfaces a clear message; Google works.
+- **Reminders are a stored preference only, not scheduled (A3.7).** The profile toggle + time
+  (кадр 13a/13b) persist to local settings (`AppSettings`, drift `sync_meta`); actually firing an OS
+  notification (the 2.12 pre-permission flow 13c/13d + a local-notifications plugin + the iOS
+  permission) is deferred. Same for «Автопроизношение» — stored now, consumed by the A3.8 session.
+- **Progress-screen activity accrues locally from now, no backfill (A3.6).** The activity chart, week
+  calendar and «за неделю»/«сегодня» read a client-only `daily_activity` table bumped once per review
+  in `ReviewSync.record` (session + practice, not triage — so it converges with the streak dots). It
+  starts empty on any install and has no history: **backfill activity from the server reviews log — if
+  needed** (there's no history endpoint today; an alternative is a `daily_user_stats` history read).
+  «Лучший результат» is likewise a local running max of the observed streak, not a server field.
 - **Two Part-1 review items — both VERIFIED clean, no action.** (1) Same-second pagination is safe:
   the cursor is an offset into a frozen, totally-ordered stream (`ORDER BY updated_at, <unique id>` in
   every reader), not a bare timestamp — no boundary loss. (2) No soft-deleted `collection_items` leak
@@ -318,3 +334,23 @@ Small backend tasks accumulated by the design pass; each is its own commit, gate
   drift; §4з copy lives in the app's ARB), but the backend has **no** locale for a user yet — when
   APNs lands, add a `profiles.locale` (or device-level locale on the token register) and localise the
   §4з notification strings server-side. Spec only; not implemented.
+
+## Realtime-практики (фаза 2 — не в работу)
+
+Голосовой разговор с ИИ по коллекции работает: OpenAI Realtime (WebRTC) как основной транспорт и
+второй транспорт **Gemini Live API (WebSocket)** — выбор по `provider` из `POST /practice/dialogs`.
+Идеи развития зафиксированы, но НЕ в работе:
+
+- **Вариативность диалогов** — подмешивать в урок summary прошлого диалога (`GET …/last-dialog` уже
+  есть): не повторять сценарий, смещать фокус на **непокрытые** (не прозвучавшие) целевые слова.
+- **Промпт-роль «учитель»** — подталкивать к нужной лексике, сужать контекст вопросов, перепроверять
+  употребление целевых слов (усилить `systemInstruction`/`session_setup`).
+- **Стриминг текста реплики агента** — показывать растущий текст в одном пузыре. Сейчас реплика
+  агента эмитится и уходит в `/transcripts` **по `turnComplete`** (фрагменты `outputTranscription`
+  агрегируются в одну строку с восстановлением пробелов, чтобы не ломать серверный coverage фраз).
+- **Тариф / размещение фичи** — решение Дена (пейволл-точка «Разговоры», дневной лимит).
+- **Gemini как дефолт при масштабировании** — примерно ~2× дешевле OpenAI Realtime; пересмотреть,
+  когда Gemini Live выйдет из preview / появится кеширование.
+- **Gemini `liveConnectConstraints`** — сейчас живой `auth_tokens` отвергает это поле (доки впереди
+  деплоя), поэтому урок уходит клиенту в `session_setup` (bare-токен). Когда Google выкатит поле —
+  включить `PRACTICE_GEMINI_CONSTRAINED=true`: урок запечётся в токен, `session_setup` станет не нужен.
