@@ -125,6 +125,7 @@ final class GenerationServiceProvider extends ServiceProvider
 
         $this->app->singleton(PracticeDialogConfig::class, fn (): PracticeDialogConfig => new PracticeDialogConfig(
             realtimeModel: (string) config('services.practice.realtime_model', 'gpt-realtime-mini'),
+            transcribeModel: (string) config('services.practice.transcribe_model', 'gpt-4o-mini-transcribe'),
             voice: (string) config('services.practice.voice', 'alloy'),
             ttlSeconds: (int) config('services.practice.dialog_ttl_seconds', 200),
             maxTargetWords: (int) config('services.practice.max_target_words', 8),

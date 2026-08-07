@@ -13,6 +13,7 @@ final readonly class PracticeDialogConfig
 {
     public function __construct(
         public string $realtimeModel,
+        public string $transcribeModel,
         public string $voice,
         public int $ttlSeconds,
         public int $maxTargetWords,

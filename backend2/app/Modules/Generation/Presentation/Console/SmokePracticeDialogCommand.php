@@ -49,7 +49,13 @@ final class SmokePracticeDialogCommand extends Command
         $this->info("Minting a realtime token (model={$model}, voice={$voice}, ttl={$config->ttlSeconds}s)…");
 
         try {
-            $token = $realtime->mint(new RealtimeSessionSpec($model, $voice, $config->ttlSeconds, $lesson));
+            $token = $realtime->mint(new RealtimeSessionSpec(
+                model: $model,
+                transcribeModel: $config->transcribeModel,
+                voice: $voice,
+                ttlSeconds: $config->ttlSeconds,
+                lesson: $lesson,
+            ));
         } catch (Throwable $e) {
             $this->error('Mint failed: ' . $e->getMessage());
 

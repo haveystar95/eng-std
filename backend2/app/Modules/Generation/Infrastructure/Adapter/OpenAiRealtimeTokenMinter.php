@@ -42,7 +42,17 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
                     'type' => 'realtime',
                     'model' => $spec->model,
                     'instructions' => $instructions,
-                    'audio' => ['output' => ['voice' => $spec->voice]],
+                    'audio' => [
+                        // Without an input transcription model OpenAI never emits
+                        // conversation.item.input_audio_transcription.completed, so the learner's
+                        // speech never reaches our /transcripts feed and coverage can't light up
+                        // (the model still hears the audio directly and replies).
+                        'input' => [
+                            'transcription' => ['model' => $spec->transcribeModel],
+                            'turn_detection' => ['type' => 'server_vad'],
+                        ],
+                        'output' => ['voice' => $spec->voice],
+                    ],
                 ],
             ]);
 

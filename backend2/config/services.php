@@ -78,6 +78,9 @@ return [
         // Realtime engine + voice. Default is the cheaper "mini" realtime model; confirm the exact
         // model name against the current OpenAI docs before flipping production.
         'realtime_model' => env('PRACTICE_REALTIME_MODEL', 'gpt-realtime-mini'),
+        // Input-audio transcription model — REQUIRED for the learner's speech to come back as
+        // transcript events (input_audio_transcription.completed); without it coverage never lights up.
+        'transcribe_model' => env('PRACTICE_REALTIME_TRANSCRIBE_MODEL', 'gpt-4o-mini-transcribe'),
         'voice' => env('PRACTICE_REALTIME_VOICE', 'alloy'),
         // The session duration guard: the ephemeral token expires after this many seconds.
         'dialog_ttl_seconds' => (int) env('PRACTICE_DIALOG_TTL_SECONDS', 200),

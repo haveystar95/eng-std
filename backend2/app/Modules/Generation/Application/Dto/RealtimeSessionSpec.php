@@ -14,6 +14,7 @@ final readonly class RealtimeSessionSpec
     /** @param array<string, mixed> $lesson */
     public function __construct(
         public string $model,
+        public string $transcribeModel,
         public string $voice,
         public int $ttlSeconds,
         public array $lesson,

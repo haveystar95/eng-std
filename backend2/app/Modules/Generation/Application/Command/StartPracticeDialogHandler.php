@@ -178,6 +178,7 @@ final readonly class StartPracticeDialogHandler
     {
         return $this->realtime->mint(new RealtimeSessionSpec(
             model: $this->config->realtimeModel,
+            transcribeModel: $this->config->transcribeModel,
             voice: $this->config->voice,
             ttlSeconds: $this->config->ttlSeconds,
             lesson: $lesson,
