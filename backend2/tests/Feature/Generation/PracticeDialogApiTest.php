@@ -29,6 +29,9 @@ uses(RefreshDatabase::class);
 const PRACTICE_NOW = '2026-08-07T10:00:00+00:00';
 
 beforeEach(function () {
+    // Pin the driver so the baseline doesn't depend on the operator's .env (which may be switched
+    // to gemini for device testing); the gemini-specific tests override it themselves.
+    config(['services.practice.driver' => 'openai']);
     // Deterministic time so the token TTL (and the day window) are exact and assertable.
     $this->app->instance(Clock::class, new FixedClock(new DateTimeImmutable(PRACTICE_NOW)));
     $this->app->bind(RealtimeTokenPort::class, fn ($app) => new FakeRealtimeTokenMinter($app->make(Clock::class)));
@@ -131,6 +134,11 @@ it('returns a pre-rendered gemini session_setup carrying the lesson CEFR rules',
     expect($systemText)
         ->toContain('~8 words')
         ->toContain('Do NOT use contractions');
+
+    // Ephemeral tokens are only accepted on the v1alpha ...Constrained WS service.
+    expect($response->json('endpoint'))
+        ->toContain('v1alpha')
+        ->toContain('BidiGenerateContentConstrained');
 });
 
 it('refuses a non-premium user with 403 subscription_required', function () {

@@ -28,8 +28,16 @@ use RuntimeException;
  */
 final class GeminiLiveTokenMinter implements RealtimeTokenPort
 {
-    /** Raw Live API WebSocket endpoint the client connects to with the ephemeral token. */
-    private const WS_ENDPOINT = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+    /**
+     * WebSocket endpoint the client connects to with the ephemeral token. Ephemeral tokens are only
+     * accepted on the **v1alpha BidiGenerateContentConstrained** service, passed as the
+     * `?access_token=<token>` query parameter — the standard v1beta BidiGenerateContent service takes
+     * only API keys/OAuth and rejects an ephemeral token with a 1008 close. (The client appends
+     * `?access_token=` using the `realtime_token` from the start response.)
+     * Verified against the Google AI forum thread on unregistered WebSocket callers + the ephemeral
+     * tokens docs.
+     */
+    private const WS_ENDPOINT = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained';
 
     public function __construct(
         private readonly string $apiKey,
