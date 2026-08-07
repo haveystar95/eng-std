@@ -21,7 +21,8 @@ void main() {
         profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
       );
 
-  StoreCollection col(String id, String title, String topic, int n, bool premium) => StoreCollection(
+  StoreCollection col(String id, String title, String topic, int n, String cefr, bool premium) =>
+      StoreCollection(
         id: id,
         title: title,
         topic: topic,
@@ -30,20 +31,33 @@ void main() {
         isPremium: premium,
         isSubscribed: false,
         itemsCount: n,
+        cefr: cefr,
       );
 
   final sections = [
-    StoreSection(topic: 'Everyday', items: [col('cafe', 'Cafe', 'Everyday', 16, false)]),
-    StoreSection(topic: 'Work', items: [col('interview', 'Job interview', 'Work', 22, true)]),
+    StoreSection(topic: 'Everyday', items: [col('cafe', 'Cafe', 'Everyday', 16, 'A2', false)]),
+    StoreSection(topic: 'Work', items: [col('interview', 'Job interview', 'Work', 22, 'B1–B2', true)]),
   ];
 
-  Future<void> pump(WidgetTester tester, {bool paywall = true}) {
+  StorePreview preview(int total) => StorePreview(
+        items: const [
+          StorePreviewItem(term: 'appointment', translation: 'приём у врача'),
+          StorePreviewItem(term: 'symptom', translation: 'симптом'),
+          StorePreviewItem(term: 'prescription', translation: 'рецепт'),
+        ],
+        total: total,
+      );
+
+  Future<void> pump(WidgetTester tester, {bool paywall = true, bool previewOffline = false}) {
     return tester.pumpWidget(ProviderScope(
       overrides: [
         authControllerProvider.overrideWith(() => _FakeAuth(user())),
         featureFlagsProvider.overrideWith(
             () => _FakeFlags(FeatureFlags(storeEnabled: true, paywallEnabled: paywall, devPremium: false))),
         storeCollectionsProvider(pair).overrideWith((ref) async => sections),
+        storePreviewProvider('cafe').overrideWith(
+            (ref) async => previewOffline ? throw Exception('offline') : preview(16)),
+        storePreviewProvider('interview').overrideWith((ref) async => preview(22)),
       ],
       child: const MaterialApp(
         locale: Locale('ru'),
@@ -62,8 +76,9 @@ void main() {
     expect(find.text('WORK'), findsOneWidget);
     expect(find.text('Cafe'), findsOneWidget);
     expect(find.text('Job interview'), findsOneWidget);
-    expect(find.text('16 слов'), findsOneWidget);
-    expect(find.text('22 слова'), findsOneWidget);
+    // «N слов · CEFR» line (кадр 2.8).
+    expect(find.text('16 слов · A2'), findsOneWidget);
+    expect(find.text('22 слова · B1–B2'), findsOneWidget);
   });
 
   testWidgets('premium set shows the lock badge; free set does not', (tester) async {
@@ -78,6 +93,8 @@ void main() {
     await pump(tester);
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Job interview'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Job interview'));
     await tester.pumpAndSettle();
 
@@ -96,11 +113,47 @@ void main() {
     await pump(tester);
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Cafe'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Cafe'));
     await tester.pumpAndSettle();
 
     expect(find.text('Добавить в мои'), findsOneWidget);
     expect(find.text('Доступно с Premium'), findsNothing);
+    // «Что внутри» teaser: term — translation rows + «и ещё N слов» (16 total − 3 shown = 13).
+    expect(find.text('appointment'), findsOneWidget);
+    expect(find.text('приём у врача'), findsOneWidget);
+    expect(find.textContaining('ещё 13'), findsOneWidget);
+  });
+
+  testWidgets('premium set preview shows the term list too (value showcase); gate only on the CTA',
+      (tester) async {
+    await pump(tester);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Job interview'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Job interview'));
+    await tester.pumpAndSettle();
+
+    // Terms are visible even for the locked premium set…
+    expect(find.text('appointment'), findsOneWidget);
+    expect(find.textContaining('ещё 19'), findsOneWidget); // 22 − 3
+    // …and the lock is only on adding.
+    expect(find.text('Доступно с Premium'), findsOneWidget);
+  });
+
+  testWidgets('offline: preview sheet shows no list, CTA still there', (tester) async {
+    await pump(tester, previewOffline: true);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Cafe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cafe'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('appointment'), findsNothing);
+    expect(find.text('Добавить в мои'), findsOneWidget);
   });
 }
 

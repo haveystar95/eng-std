@@ -184,6 +184,14 @@ class ApiClient {
     return (items: items, nextCursor: meta?['next_cursor'] as String?);
   }
 
+  /// Preview a store collection before subscribing: the first few terms + the full count
+  /// (`GET /store/collections/{id}/preview`, B). Shown for premium sets too — the lock is on adding,
+  /// not on seeing what's inside (кадры 8c/8d).
+  Future<StorePreview> storePreview(String id) async {
+    final r = await _dio.get('/store/collections/$id/preview');
+    return StorePreview.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
   /// Subscribe (add to library) — idempotent. A premium collection on a free tier throws a
   /// [DioException] with status 403 (`subscription_required`); a private/non-store id → 404.
   Future<void> subscribeStore(String id) async {

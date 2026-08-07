@@ -314,6 +314,15 @@
 
   "collectionMenuDelete": "Удалить коллекцию",
   "@collectionMenuDelete": { "description": "Пункт меню коллекции: удалить (деструктив)." },
+  "collectionMenuRemoveFromMine": "Убрать из моих",
+  "@collectionMenuRemoveFromMine": { "description": "Пункт меню подписанного набора: отписаться (деструктив)." },
+  "collectionUnsubscribeTitle": "Убрать «{title}» из моих?",
+  "@collectionUnsubscribeTitle": {
+    "description": "Заголовок подтверждения отписки от набора стора.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "collectionUnsubscribeMessage": "Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.",
+  "@collectionUnsubscribeMessage": { "description": "Текст подтверждения отписки от набора стора." },
 
   "collectionDeleteTitle": "Удалить «{title}»?",
   "@collectionDeleteTitle": {
@@ -952,6 +961,13 @@
   "storeAllSetsUnlock": "Открываются все {count} наборов сразу",
   "@storeAllSetsUnlock": {
     "description": "Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "storeInsideLabel": "Что внутри",
+  "@storeInsideLabel": { "description": "Заголовок списка терминов в превью-шите набора (кадр 8c)." },
+  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@storeMoreWords": {
+    "description": "Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).",
     "placeholders": { "count": { "type": "int" } }
   },
   "storeLangPairSheetTitle": "Языковая пара",

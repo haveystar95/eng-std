@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
 import '../practice_dialog/dialog_entry_button.dart';
 import '../training/session_screen.dart';
@@ -110,24 +111,53 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
   /// — deferred to A3.5; this screen is only reached for own collections.)
   Future<void> _openCollectionMenu(BuildContext anchor) async {
     final l = AppLocalizations.of(context);
+    // Read-only store set (кадр 5e shared variant): the only action is «Убрать из моих» (unsubscribe);
+    // no rename. Own collections keep rename + delete.
+    final readOnly = _collection?.readOnly ?? false;
     await showFloatingContextMenu(
       context: context,
       anchorContext: anchor,
       barrierLabel: l.commonCloseMenu,
-      actions: [
-        ContextMenuAction(
-          icon: LucideIcons.pencil,
-          label: l.collectionMenuRename,
-          onSelected: () => showCollectionEditor(context, ref, existing: _collection),
-        ),
-        ContextMenuAction(
-          icon: LucideIcons.trash2,
-          label: l.collectionMenuDelete,
-          destructive: true,
-          onSelected: _confirmDeleteCollection,
-        ),
-      ],
+      actions: readOnly
+          ? [
+              ContextMenuAction(
+                icon: LucideIcons.circleMinus,
+                label: l.collectionMenuRemoveFromMine,
+                destructive: true,
+                onSelected: _confirmUnsubscribe,
+              ),
+            ]
+          : [
+              ContextMenuAction(
+                icon: LucideIcons.pencil,
+                label: l.collectionMenuRename,
+                onSelected: () => showCollectionEditor(context, ref, existing: _collection),
+              ),
+              ContextMenuAction(
+                icon: LucideIcons.trash2,
+                label: l.collectionMenuDelete,
+                destructive: true,
+                onSelected: _confirmDeleteCollection,
+              ),
+            ],
     );
+  }
+
+  /// Remove a subscribed store set from «Мои» — unsubscribe (not delete). Words + progress are kept
+  /// globally; the set reappears in the store as addable.
+  Future<void> _confirmUnsubscribe() async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionUnsubscribeTitle(widget.title),
+      message: l.collectionUnsubscribeMessage,
+      confirmLabel: l.collectionMenuRemoveFromMine,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok != true) return;
+    AppHaptics.warning();
+    final done = await unsubscribeCollectionById(ref, widget.collectionId);
+    if (done && mounted) Navigator.of(context).maybePop();
   }
 
   WordCollection? _collection;
@@ -167,6 +197,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         ?.where((c) => c.id == widget.collectionId)
         .firstOrNull;
     _collection = collection;
+    final readOnly = collection?.readOnly ?? false;
     final density = ref.watch(collectionDensityProvider(widget.collectionId)).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
     final cprog = ref.watch(collectionsProgressProvider).value?[widget.collectionId];
@@ -243,13 +274,16 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   word: items[i],
                   showDivider: i < items.length - 1,
                   onSpeak: () => _speak(items[i]),
-                  onEdit: () => _edit(items[i]),
-                  onDelete: () => _confirmDelete(items[i]),
+                  // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
+                  onEdit: readOnly ? null : () => _edit(items[i]),
+                  onDelete: readOnly ? null : () => _confirmDelete(items[i]),
                 ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 16, AppSpacing.screenH, 0),
-              child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
-            ),
+            // «Добавить слово» — own collections only.
+            if (!readOnly)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 16, AppSpacing.screenH, 0),
+                child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
+              ),
           ],
         ),
       ),
@@ -574,7 +608,11 @@ class _WordRow extends StatefulWidget {
 
   final Word word;
   final bool showDivider;
-  final VoidCallback onSpeak, onEdit, onDelete;
+  final VoidCallback onSpeak;
+
+  /// Null on a read-only (store-subscribed) collection — the row then has no swipe actions and no
+  /// long-press menu, only tap-to-speak.
+  final VoidCallback? onEdit, onDelete;
 
   @override
   State<_WordRow> createState() => _WordRowState();
@@ -604,12 +642,12 @@ class _WordRowState extends State<_WordRow> {
       anchorContext: context,
       barrierLabel: l.commonCloseMenu,
       actions: [
-        ContextMenuAction(icon: LucideIcons.pencil, label: l.actionEdit, onSelected: widget.onEdit),
+        ContextMenuAction(icon: LucideIcons.pencil, label: l.actionEdit, onSelected: () => widget.onEdit?.call()),
         ContextMenuAction(
           icon: LucideIcons.trash2,
           label: l.actionDelete,
           destructive: true,
-          onSelected: widget.onDelete,
+          onSelected: () => widget.onDelete?.call(),
         ),
       ],
     );
@@ -618,6 +656,10 @@ class _WordRowState extends State<_WordRow> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Read-only store set: plain row, no swipe actions, no long-press menu.
+    if (widget.onEdit == null && widget.onDelete == null) {
+      return _RowBody(word: widget.word, showDivider: widget.showDivider, onSpeak: widget.onSpeak);
+    }
     return ClipRect(
       child: Stack(
         children: [
@@ -633,7 +675,7 @@ class _WordRowState extends State<_WordRow> {
                   background: AppColors.ink,
                   onTap: () {
                     _close();
-                    widget.onEdit();
+                    widget.onEdit?.call();
                   },
                 ),
                 _SwipeAction(
@@ -643,7 +685,7 @@ class _WordRowState extends State<_WordRow> {
                   background: AppColors.faintInk,
                   onTap: () {
                     _close();
-                    widget.onDelete();
+                    widget.onDelete?.call();
                   },
                 ),
               ],

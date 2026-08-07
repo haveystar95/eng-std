@@ -30,14 +30,18 @@ import 'store_view.dart';
 /// When the store flag is on (A3.9), a «Мои»/«Готовые» segment (кадр 2.8) pins under the header and
 /// switches the body to the store. With the flag off the screen is exactly as before — no segment.
 class CollectionsScreen extends ConsumerStatefulWidget {
-  const CollectionsScreen({super.key});
+  const CollectionsScreen({super.key, this.initialSegment = 0});
+
+  /// Which segment opens first — 0 = «Мои», 1 = «Готовые». Defaults to «Мои» (production); the store
+  /// preview harness passes 1 to land straight on the showcase. Ignored when the store flag is off.
+  final int initialSegment;
 
   @override
   ConsumerState<CollectionsScreen> createState() => _CollectionsScreenState();
 }
 
 class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
-  int _segment = 0; // 0 = Мои, 1 = Готовые (store)
+  late int _segment = widget.initialSegment; // 0 = Мои, 1 = Готовые (store)
 
   double get _bottomInset =>
       AppTabBarMetrics.height +
@@ -265,26 +269,50 @@ class _CollectionRow extends ConsumerWidget {
     }
   }
 
+  Future<void> _confirmUnsubscribe(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionUnsubscribeTitle(collection.title),
+      message: l.collectionUnsubscribeMessage,
+      confirmLabel: l.collectionMenuRemoveFromMine,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok != true) return;
+    AppHaptics.warning();
+    await unsubscribeCollectionById(ref, collection.id);
+  }
+
   Future<void> _menu(BuildContext anchor, WidgetRef ref) async {
     AppHaptics.light();
     final l = AppLocalizations.of(anchor);
+    // Read-only store set: «Убрать из моих» (unsubscribe) only; own collections keep rename + delete.
     await showFloatingContextMenu(
       context: anchor,
       anchorContext: anchor,
       barrierLabel: l.commonCloseMenu,
-      actions: [
-        ContextMenuAction(
-          icon: LucideIcons.pencil,
-          label: l.collectionMenuRename,
-          onSelected: () => showCollectionEditor(anchor, ref, existing: collection),
-        ),
-        ContextMenuAction(
-          icon: LucideIcons.trash2,
-          label: l.collectionMenuDelete,
-          destructive: true,
-          onSelected: () => _confirmDelete(anchor, ref),
-        ),
-      ],
+      actions: collection.readOnly
+          ? [
+              ContextMenuAction(
+                icon: LucideIcons.circleMinus,
+                label: l.collectionMenuRemoveFromMine,
+                destructive: true,
+                onSelected: () => _confirmUnsubscribe(anchor, ref),
+              ),
+            ]
+          : [
+              ContextMenuAction(
+                icon: LucideIcons.pencil,
+                label: l.collectionMenuRename,
+                onSelected: () => showCollectionEditor(anchor, ref, existing: collection),
+              ),
+              ContextMenuAction(
+                icon: LucideIcons.trash2,
+                label: l.collectionMenuDelete,
+                destructive: true,
+                onSelected: () => _confirmDelete(anchor, ref),
+              ),
+            ],
     );
   }
 

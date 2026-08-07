@@ -23,6 +23,12 @@ class WordCollection {
   final String? imageAuthor;
   final String? imageAuthorUrl;
 
+  /// True when the collection is one the user subscribed to from the store (not their own). Parsed
+  /// additively from the `/sync` feed's `is_subscribed` flag when present; otherwise derived from
+  /// [type] (system/shared are store sets), which the feed already carries — so no drift migration is
+  /// needed. Drives [readOnly].
+  final bool isSubscribed;
+
   WordCollection({
     required this.id,
     required this.title,
@@ -36,9 +42,17 @@ class WordCollection {
     this.imageUrl,
     this.imageAuthor,
     this.imageAuthorUrl,
+    this.isSubscribed = false,
   });
 
   bool get isAi => source == 'ai';
+
+  /// The user's own, fully-editable collection (created or generated). Store sets are `system`/`shared`.
+  bool get isOwned => type == 'custom';
+
+  /// A store set in «Мои»: full learning cycle (triage/session/progress) but no editing — no
+  /// rename, no add/edit/delete words; removing it means unsubscribe, not delete.
+  bool get readOnly => isSubscribed || !isOwned;
 
   factory WordCollection.fromJson(Map<String, dynamic> j) => WordCollection(
         id: j['id'] as String,
@@ -53,6 +67,7 @@ class WordCollection {
         imageUrl: j['image_url'] as String?,
         imageAuthor: j['image_author'] as String?,
         imageAuthorUrl: j['image_author_url'] as String?,
+        isSubscribed: (j['is_subscribed'] as bool?) ?? false,
       );
 }
 
@@ -247,6 +262,11 @@ class StoreCollection {
   final bool isPremium;
   final bool isSubscribed;
   final int itemsCount;
+
+  /// CEFR level (or range, e.g. "A2–B1") for the card's «N слов · A2–B1» line. Nullable — shown only
+  /// when present. Read from `cefr`, falling back to `level`, so it renders whichever key the store
+  /// feed ships (the field was added after the frozen contract; openapi not yet updated).
+  final String? cefr;
   final String? imageUrl;
   final String? imageAuthor;
   final String? imageAuthorUrl;
@@ -261,6 +281,7 @@ class StoreCollection {
     required this.isPremium,
     required this.isSubscribed,
     required this.itemsCount,
+    this.cefr,
     this.imageUrl,
     this.imageAuthor,
     this.imageAuthorUrl,
@@ -276,6 +297,7 @@ class StoreCollection {
         isPremium: isPremium,
         isSubscribed: isSubscribed ?? this.isSubscribed,
         itemsCount: itemsCount,
+        cefr: cefr,
         imageUrl: imageUrl,
         imageAuthor: imageAuthor,
         imageAuthorUrl: imageAuthorUrl,
@@ -291,10 +313,45 @@ class StoreCollection {
         isPremium: (j['is_premium'] as bool?) ?? false,
         isSubscribed: (j['is_subscribed'] as bool?) ?? false,
         itemsCount: (j['items_count'] as int?) ?? 0,
+        cefr: (j['cefr'] ?? j['level']) as String?,
         imageUrl: j['image_url'] as String?,
         imageAuthor: j['image_author'] as String?,
         imageAuthorUrl: j['image_author_url'] as String?,
       );
+}
+
+/// One preview row in the store sheet (кадры 8c/8d): «term — translation».
+class StorePreviewItem {
+  final String term;
+  final String translation;
+  const StorePreviewItem({required this.term, required this.translation});
+
+  factory StorePreviewItem.fromJson(Map<String, dynamic> j) => StorePreviewItem(
+        term: ((j['text'] ?? j['term']) as String?) ?? '',
+        translation: (j['translation'] as String?) ?? '',
+      );
+}
+
+/// The store preview (`GET /store/collections/{id}/preview`): the first few terms + the full count,
+/// so the sheet can show «что внутри» + «и ещё N слов» before subscribing. Keys parsed defensively
+/// (`items`/`preview`/`terms`; `total`/`items_count`) — the endpoint landed after the frozen contract
+/// and isn't in openapi yet.
+class StorePreview {
+  final List<StorePreviewItem> items;
+  final int total;
+  const StorePreview({required this.items, required this.total});
+
+  /// Words beyond the shown preview rows (the «и ещё N слов» line); 0 hides it.
+  int get more => (total - items.length).clamp(0, total);
+
+  factory StorePreview.fromJson(Map<String, dynamic> j) {
+    final raw = (j['items'] ?? j['preview'] ?? j['terms']) as List? ?? const [];
+    final items = raw.map((e) => StorePreviewItem.fromJson(e as Map<String, dynamic>)).toList();
+    return StorePreview(
+      items: items,
+      total: (j['total'] ?? j['items_count'] ?? items.length) as int,
+    );
+  }
 }
 
 class Stats {

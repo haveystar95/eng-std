@@ -67,6 +67,12 @@ List<StoreSection> groupByTopic(List<StoreCollection> items) {
   return [for (final t in order) StoreSection(topic: t, items: byTopic[t]!)];
 }
 
+/// The preview (first terms + total) for one store collection's sheet (кадры 8c/8d). Network-backed;
+/// consumers read via `.when` so an offline error degrades to «no list» rather than surfacing.
+final storePreviewProvider = FutureProvider.family<StorePreview, String>((ref, id) async {
+  return ref.watch(apiClientProvider).storePreview(id);
+});
+
 /// Subscribe/unsubscribe outcome, so the caller can react (refresh, paywall, error).
 enum StoreSubscribeResult { subscribed, unsubscribed, subscriptionRequired, error }
 
@@ -80,22 +86,46 @@ Future<StoreSubscribeResult> subscribeToStore(WidgetRef ref, StoreCollection c) 
 Future<StoreSubscribeResult> unsubscribeFromStore(WidgetRef ref, StoreCollection c) =>
     _mutate(ref, c, subscribe: false);
 
+/// Unsubscribe a store set from «Мои» by collection id (the collection screen / list menu). Drops
+/// the local row optimistically (the delta feed's collection tombstone is unreliable — same reason
+/// as delete), then resync to reconcile. Returns false if the server call failed (keep the row).
+Future<bool> unsubscribeCollectionById(WidgetRef ref, String id) async {
+  try {
+    await ref.read(apiClientProvider).unsubscribeStore(id);
+  } catch (_) {
+    return false;
+  }
+  await ref.read(appDatabaseProvider).deleteCollectionLocal(id);
+  try {
+    await ref.read(syncServiceProvider).resync();
+  } catch (_) {/* offline/transient — next sync reconciles */}
+  ref.invalidate(storeCollectionsProvider);
+  return true;
+}
+
 Future<StoreSubscribeResult> _mutate(WidgetRef ref, StoreCollection c, {required bool subscribe}) async {
   final api = ref.read(apiClientProvider);
+  // 1) The subscribe/unsubscribe itself — its success is what the result reports. A failure of the
+  //    follow-up sync must NOT read back as "add failed".
   try {
     if (subscribe) {
       await api.subscribeStore(c.id);
     } else {
       await api.unsubscribeStore(c.id);
     }
-    // Pull the new library membership into the local mirror, then refresh the store cards.
-    await ref.read(syncServiceProvider).sync();
-    ref.invalidate(storeCollectionsProvider);
-    return subscribe ? StoreSubscribeResult.subscribed : StoreSubscribeResult.unsubscribed;
   } catch (e) {
     if (_isSubscriptionRequired(e)) return StoreSubscribeResult.subscriptionRequired;
     return StoreSubscribeResult.error;
   }
+  // 2) Pull the new library membership into the local mirror. A newly-subscribed store collection is
+  //    NOT owned and its `updated_at` predates the sync cursor, so the incremental delta (`since`)
+  //    can't carry it — force a FULL snapshot via resync(). (Requires the backend sync feed to
+  //    include subscribed collections; today it filters to owner_id only — see the tracked chip.)
+  try {
+    await ref.read(syncServiceProvider).resync();
+  } catch (_) {/* offline/transient — the next background sync reconciles */}
+  ref.invalidate(storeCollectionsProvider);
+  return subscribe ? StoreSubscribeResult.subscribed : StoreSubscribeResult.unsubscribed;
 }
 
 bool _isSubscriptionRequired(Object e) {
@@ -112,24 +142,26 @@ bool _isSubscriptionRequired(Object e) {
 /// cyrillic-guard forbids Russian literals in `lib/`; real content is Russian and comes from the
 /// server). Deterministic ids so re-fetches are stable.
 List<StoreCollection> _mockStore(StoreLangPair pair) {
-  StoreCollection mk(String id, String title, String topic, int n, bool premium,
+  StoreCollection mk(String id, String title, String topic, int n, String cefr, bool premium,
           {bool subscribed = false}) =>
       StoreCollection(
         id: 'mock_$id',
         title: title,
+        description: 'Sample store set for UI checks',
         topic: topic,
         sourceLang: pair.source,
         targetLang: pair.target,
         isPremium: premium,
         isSubscribed: subscribed,
         itemsCount: n,
+        cefr: cefr,
       );
   return [
-    mk('cafe', 'Cafe', 'Everyday', 16, false),
-    mk('market', 'Market', 'Everyday', 20, false),
-    mk('rent', 'Renting', 'Everyday', 18, false, subscribed: true),
-    mk('interview', 'Job interview', 'Work', 22, true),
-    mk('office', 'Office calls', 'Work', 19, true),
-    mk('firstday', 'First day', 'Work', 14, false),
+    mk('cafe', 'Cafe', 'Everyday', 16, 'A2', false),
+    mk('market', 'Market', 'Everyday', 20, 'A2–B1', false),
+    mk('rent', 'Renting', 'Everyday', 18, 'B1', false, subscribed: true),
+    mk('interview', 'Job interview', 'Work', 22, 'B1–B2', true),
+    mk('office', 'Office calls', 'Work', 19, 'B1', true),
+    mk('firstday', 'First day', 'Work', 14, 'A2', false),
   ];
 }

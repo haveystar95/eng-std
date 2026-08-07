@@ -602,6 +602,24 @@ abstract class AppLocalizations {
   /// **'Удалить коллекцию'**
   String get collectionMenuDelete;
 
+  /// Пункт меню подписанного набора: отписаться (деструктив).
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать из моих'**
+  String get collectionMenuRemoveFromMine;
+
+  /// Заголовок подтверждения отписки от набора стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать «{title}» из моих?'**
+  String collectionUnsubscribeTitle(String title);
+
+  /// Текст подтверждения отписки от набора стора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.'**
+  String get collectionUnsubscribeMessage;
+
   /// Заголовок подтверждения удаления коллекции.
   ///
   /// In ru, this message translates to:
@@ -1927,6 +1945,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Открываются все {count} наборов сразу'**
   String storeAllSetsUnlock(int count);
+
+  /// Заголовок списка терминов в превью-шите набора (кадр 8c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что внутри'**
+  String get storeInsideLabel;
+
+  /// Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).
+  ///
+  /// In ru, this message translates to:
+  /// **'и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String storeMoreWords(int count);
 
   /// Заголовок шита выбора языковой пары стора (кадр 2.8).
   ///

@@ -352,6 +352,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionMenuDelete => 'Delete set';
 
   @override
+  String get collectionMenuRemoveFromMine => 'Remove from mine';
+
+  @override
+  String collectionUnsubscribeTitle(String title) {
+    return 'Remove “$title” from yours?';
+  }
+
+  @override
+  String get collectionUnsubscribeMessage =>
+      'The set leaves «Mine». Its words and your progress are kept — you can add it again from the store.';
+
+  @override
   String collectionDeleteTitle(String title) {
     return 'Delete “$title”?';
   }
@@ -1197,6 +1209,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String storeAllSetsUnlock(int count) {
     return 'Unlocks all $count sets at once';
+  }
+
+  @override
+  String get storeInsideLabel => 'What\'s inside';
+
+  @override
+  String storeMoreWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more words',
+      one: '$count more word',
+    );
+    return 'and $_temp0';
   }
 
   @override

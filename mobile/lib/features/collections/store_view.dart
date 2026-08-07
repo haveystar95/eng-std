@@ -42,7 +42,19 @@ class StoreView extends ConsumerWidget {
           error: (_, _) => _Empty(l: l),
           data: (sections) {
             if (sections.isEmpty) return _Empty(l: l);
+            // Section headers only when there are ≥2 meaningfully-named topics; otherwise (a single
+            // group, or collections with no topic yet) render one flat vertical grid, no «OTHER»
+            // header. Headers return by themselves once collections carry real topics.
+            final titled = sections.where((s) => s.topic != null && s.topic!.trim().isNotEmpty).toList();
+            if (titled.length < 2) {
+              final all = [for (final s in sections) ...s.items];
+              return Padding(
+                padding: const EdgeInsets.only(top: 20, bottom: 8),
+                child: _Grid(items: all),
+              );
+            }
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final s in sections) _Section(section: s),
                 const SizedBox(height: 8),
@@ -102,79 +114,111 @@ class _LangPairRow extends ConsumerWidget {
       TextStyle(fontFamily: AppFonts.inter, fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink);
 }
 
+/// A topic section: header + a 2-column grid of its cards. A section with no meaningful topic (the
+/// null bucket alongside titled ones) renders header-less.
 class _Section extends StatelessWidget {
   const _Section({required this.section});
   final StoreSection section;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final label = (section.topic == null || section.topic!.isEmpty) ? l.storeSectionOther : section.topic!;
+    final titled = section.topic != null && section.topic!.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-            child: Text(label.toUpperCase(), style: AppText.sectionLabel.copyWith(color: AppColors.secondary)),
-          ),
-          const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-            child: Row(
-              children: [
-                for (var i = 0; i < section.items.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 12),
-                  _StoreCard(collection: section.items[i]),
-                ],
-              ],
+          if (titled) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+              child: Text(section.topic!.toUpperCase(),
+                  style: AppText.sectionLabel.copyWith(color: AppColors.secondary)),
             ),
-          ),
+            const SizedBox(height: 12),
+          ],
+          _Grid(items: section.items),
         ],
       ),
     );
   }
 }
 
+/// The vertical showcase (кадр 2.8): a 2-column grid of full-width cards, so premium sets and their
+/// lock badges are all visible on the first screen with no horizontal scroll.
+class _Grid extends StatelessWidget {
+  const _Grid({required this.items});
+  final List<StoreCollection> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          const gap = 12.0;
+          final w = (c.maxWidth - gap) / 2;
+          return Wrap(
+            spacing: gap,
+            runSpacing: 20,
+            children: [
+              for (final item in items) SizedBox(width: w, child: _StoreCard(collection: item, width: w)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _StoreCard extends ConsumerWidget {
-  const _StoreCard({required this.collection});
+  const _StoreCard({required this.collection, required this.width});
   final StoreCollection collection;
+  final double width;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    final desc = collection.description;
     return GestureDetector(
       onTap: () {
         AppHaptics.light();
         showStorePreview(context, ref, collection);
       },
-      child: SizedBox(
-        width: 152,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _StoreCover(
-              imageUrl: collection.imageUrl,
-              width: 152,
-              height: 104,
-              premium: collection.isPremium,
-              subscribed: collection.isSubscribed,
-            ),
-            const SizedBox(height: 8),
-            Text(collection.title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _StoreCover(
+            imageUrl: collection.imageUrl,
+            width: width,
+            height: width * 0.66,
+            premium: collection.isPremium,
+            subscribed: collection.isSubscribed,
+            radius: 16,
+          ),
+          const SizedBox(height: 9),
+          Text(collection.title,
+              maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.collectionNameCard.copyWith(fontSize: 16)),
+          if (desc != null && desc.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(desc,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppText.collectionNameCard.copyWith(fontSize: 15)),
-            const SizedBox(height: 3),
-            Text(l.storeWordsCount(collection.itemsCount),
-                style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.secondary)),
+                style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary)),
           ],
-        ),
+          const SizedBox(height: 3),
+          Text(_meta(l, collection),
+              style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+        ],
       ),
     );
   }
+}
+
+/// «16 слов» or «16 слов · A2–B1» (кадр 2.8) — the level suffix only when the feed carries it.
+String _meta(AppLocalizations l, StoreCollection c) {
+  final words = l.storeWordsCount(c.itemsCount);
+  final level = c.cefr?.trim();
+  return (level == null || level.isEmpty) ? words : '$words · $level';
 }
 
 /// Store cover with the premium lock / «В моих» overlay. Photo once synced, monochrome placeholder
@@ -248,11 +292,11 @@ class _StoreCover extends StatelessWidget {
               top: 8,
               right: 8,
               child: Container(
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: AppColors.ink.withValues(alpha: 0.55), shape: BoxShape.circle),
-                child: const Icon(LucideIcons.lock, size: 13, color: AppColors.field),
+                child: const Icon(LucideIcons.lock, size: 15, color: AppColors.field),
               ),
             ),
         ],
@@ -375,8 +419,11 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
               style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary, height: 1.45)),
         ],
         const SizedBox(height: 10),
-        Text(l.storeWordsCount(c.itemsCount),
+        Text(_meta(l, c),
             style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+        // «Что внутри» — the term teaser (кадры 8c/8d). Shown for premium sets too: the lock is on
+        // adding, not on seeing the value. Loader while fetching; offline → no list (as before).
+        _PreviewList(collectionId: c.id),
         const SizedBox(height: 18),
         if (c.isSubscribed)
           _InLibraryButton(label: l.storeInLibrary)
@@ -395,6 +442,108 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
             onPressed: _busy ? null : _add,
           ),
         const SizedBox(height: 6),
+      ],
+    );
+  }
+}
+
+/// The «Что внутри» teaser: the first terms + «и ещё N слов» (кадры 8c/8d). A skeleton fills the same
+/// space while the request is in flight; offline (error) collapses to nothing so the sheet reads as
+/// it did before the preview endpoint existed.
+class _PreviewList extends ConsumerWidget {
+  const _PreviewList({required this.collectionId});
+  final String collectionId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return ref.watch(storePreviewProvider(collectionId)).when(
+          loading: () => const _PreviewSkeleton(),
+          error: (_, _) => const SizedBox.shrink(),
+          data: (p) {
+            if (p.items.isEmpty) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 18),
+                Text(l.storeInsideLabel.toUpperCase(),
+                    style: AppText.sectionLabel.copyWith(fontSize: 11.5, color: AppColors.secondary)),
+                const SizedBox(height: 8),
+                for (var i = 0; i < p.items.length; i++)
+                  _PreviewRow(item: p.items[i], last: i == p.items.length - 1 && p.more == 0),
+                if (p.more > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 9),
+                    child: Text(l.storeMoreWords(p.more),
+                        style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                  ),
+              ],
+            );
+          },
+        );
+  }
+}
+
+class _PreviewRow extends StatelessWidget {
+  const _PreviewRow({required this.item, required this.last});
+  final StorePreviewItem item;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      decoration: last
+          ? null
+          : BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.ink.withValues(alpha: 0.09)))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(item.term,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.termInList.copyWith(fontSize: 16)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(item.translation,
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.translation.copyWith(fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Five placeholder rows while the preview loads.
+class _PreviewSkeleton extends StatelessWidget {
+  const _PreviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bar(double w) => Container(
+          width: w,
+          height: 12,
+          decoration: BoxDecoration(color: AppColors.track, borderRadius: BorderRadius.circular(4)),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 18),
+        bar(96),
+        const SizedBox(height: 12),
+        for (var i = 0; i < 5; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              children: [bar(110), const Spacer(), bar(70)],
+            ),
+          ),
       ],
     );
   }
