@@ -38,20 +38,15 @@ final class DraftValidator
         [$min, $max] = $this->levelRange($brief->levels);
 
         $seen = [];
-        $clean = [];
+        /** @var list<GeneratedItem> $all every valid, de-duplicated item */
+        $all = [];
+        /** @var list<GeneratedItem> $inLevel the subset within the requested CEFR band */
+        $inLevel = [];
         foreach ($draft->items as $item) {
             $text = trim($item->text);
             $translation = trim($item->translation);
             if ($text === '' || $translation === '') {
                 continue;
-            }
-
-            $cefr = $this->cefr($item->cefr);
-            if ($min !== null && $max !== null && $cefr !== null && isset(self::CEFR_ORDER[$cefr])) {
-                $rank = self::CEFR_ORDER[$cefr];
-                if ($rank < $min || $rank > $max) {
-                    continue;
-                }
             }
 
             $key = mb_strtolower($text);
@@ -60,7 +55,8 @@ final class DraftValidator
             }
             $seen[$key] = true;
 
-            $clean[] = new GeneratedItem(
+            $cefr = $this->cefr($item->cefr);
+            $usable = new GeneratedItem(
                 text: $text,
                 type: $this->type($item->type, $text),
                 translation: $translation,
@@ -70,7 +66,18 @@ final class DraftValidator
                 exampleTranslation: $this->nullableText($item->exampleTranslation),
                 imageApiPrompt: $this->nullableText($item->imageApiPrompt), // "" (un-illustratable) → null
             );
+            $all[] = $usable;
+            if ($this->withinLevel($cefr, $min, $max)) {
+                $inLevel[] = $usable;
+            }
         }
+
+        // The CEFR band is a PREFERENCE, not a hard gate. Keep in-level items when there are enough
+        // of them; but if the topic simply doesn't yield MIN_ITEMS at the requested level — a basic
+        // topic like "ordering at a restaurant" under a single high level (B2) — fall back to all
+        // valid items rather than reject the whole draft (device-batch F14). A genuinely short or
+        // truncated response (too few valid items even unfiltered) still fails below.
+        $clean = count($inLevel) >= self::MIN_ITEMS ? $inLevel : $all;
 
         if (! $supplemental && count($clean) < self::MIN_ITEMS) {
             throw InvalidGeneratedDraft::because('only ' . count($clean) . ' usable items after validation');
@@ -97,6 +104,17 @@ final class DraftValidator
             rawResponse: $draft->rawResponse,
             imageApiPrompt: $this->nullableText($draft->imageApiPrompt),
         );
+    }
+
+    /** Whether an item sits inside the requested CEFR band. No band, or no/unknown item level, is neutral (in). */
+    private function withinLevel(?string $cefr, ?int $min, ?int $max): bool
+    {
+        if ($min === null || $max === null || $cefr === null || ! isset(self::CEFR_ORDER[$cefr])) {
+            return true;
+        }
+        $rank = self::CEFR_ORDER[$cefr];
+
+        return $rank >= $min && $rank <= $max;
     }
 
     private function type(string $type, string $text): string
