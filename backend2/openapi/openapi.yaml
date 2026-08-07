@@ -1107,6 +1107,7 @@ components:
         target_lang: { type: string }
         is_premium: { type: boolean, description: Subscribing requires a premium tier; otherwise 403 subscription_required. }
         is_subscribed: { type: boolean, description: Whether the caller already has it in their library. }
+        level: { type: string, nullable: true, description: 'CEFR range for the card, e.g. "A2–B1" or "B2" (min–max of the terms'' levels); null when none carry a level.' }
         items_count: { type: integer }
         image_url: { type: string, nullable: true }
         image_author: { type: string, nullable: true }

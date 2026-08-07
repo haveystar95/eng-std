@@ -41,13 +41,19 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
         $hasMore = $rows->count() > $limit;
         $page = $rows->take($limit);
 
-        $subscribed = $this->subscribedIds($viewer, array_values(array_map(
+        $ids = array_values(array_map(
             static fn (CollectionModel $m): string => $m->id,
             $page->all(),
-        )));
+        ));
+        $subscribed = $this->subscribedIds($viewer, $ids);
+        $levels = $this->levelsFor($ids);
 
         $items = array_values($page->map(
-            fn (CollectionModel $m): StoreCollectionView => $this->toView($m, isset($subscribed[$m->id])),
+            fn (CollectionModel $m): StoreCollectionView => $this->toView(
+                $m,
+                isset($subscribed[$m->id]),
+                $levels[$m->id] ?? null,
+            ),
         )->all());
 
         $last = $page->last();
@@ -58,7 +64,7 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
         return new StoreCollectionPage($items, $nextCursor, $hasMore);
     }
 
-    private function toView(CollectionModel $model, bool $isSubscribed): StoreCollectionView
+    private function toView(CollectionModel $model, bool $isSubscribed, ?string $level): StoreCollectionView
     {
         return new StoreCollectionView(
             id: $model->id,
@@ -73,7 +79,42 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
             imageUrl: $model->image_url,
             imageAuthor: $model->image_author,
             imageAuthorUrl: $model->image_author_url,
+            level: $level,
         );
+    }
+
+    /**
+     * CEFR range per collection, derived from its terms' `cefr` (read projection over the
+     * Vocabulary tables — the generator never linked the requested levels back to the collection).
+     * 'A1'..'C2' order lexicographically, so string MIN/MAX give the true CEFR bounds. Collapses to
+     * a single level when min == max; skips terms with no level; absent when none carry one.
+     *
+     * @param  list<string>  $collectionIds
+     * @return array<string, string>
+     */
+    private function levelsFor(array $collectionIds): array
+    {
+        if ($collectionIds === []) {
+            return [];
+        }
+
+        $rows = DB::table('collection_items as ci')
+            ->join('terms as t', 't.id', '=', 'ci.term_id')
+            ->whereIn('ci.collection_id', $collectionIds)
+            ->whereNull('ci.deleted_at')
+            ->whereNotNull('t.cefr')
+            ->groupBy('ci.collection_id')
+            ->selectRaw('ci.collection_id as cid, min(t.cefr) as lo, max(t.cefr) as hi')
+            ->get();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $lo = (string) $row->lo;
+            $hi = (string) $row->hi;
+            $map[(string) $row->cid] = $lo === $hi ? $lo : $lo . '–' . $hi;
+        }
+
+        return $map;
     }
 
     /**

@@ -41,6 +41,21 @@ function seedStoreCollection(array $attrs = []): string
     return $id;
 }
 
+/** Attach a term (with an optional CEFR) to a store collection, for level-range assertions. */
+function seedStoreTerm(string $collectionId, ?string $cefr, int $position = 0): void
+{
+    $termId = Ulid::generate();
+    DB::table('terms')->insert([
+        'id' => $termId, 'lang' => 'en', 'text' => 'w' . $termId, 'normalized_text' => 'w' . $termId,
+        'type' => 'word', 'source' => 'curated', 'cefr' => $cefr,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('collection_items')->insert([
+        'id' => Ulid::generate(), 'collection_id' => $collectionId, 'term_id' => $termId,
+        'position' => $position, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+}
+
 function setTier(User $user, string $tier): void
 {
     DB::table('profiles')->updateOrInsert(
@@ -68,6 +83,28 @@ it('lists public/system collections for the language pair, ordered by topic, wit
         ->and($body[0]['is_premium'])->toBeTrue()
         ->and($body[0]['is_subscribed'])->toBeFalse()
         ->and($body[1]['is_premium'])->toBeFalse();
+});
+
+it('reports the CEFR level range derived from the collection terms', function () {
+    [, $token] = storeUser();
+    $mixed = seedStoreCollection(['title' => 'Mixed', 'topic' => 'aaa']);
+    seedStoreTerm($mixed, 'A2', 0);
+    seedStoreTerm($mixed, 'B1', 1);
+    seedStoreTerm($mixed, 'A2', 2);
+    $single = seedStoreCollection(['title' => 'Single', 'topic' => 'bbb']);
+    seedStoreTerm($single, 'B2', 0);
+    seedStoreTerm($single, null, 1); // no level → ignored
+    $none = seedStoreCollection(['title' => 'None', 'topic' => 'ccc']);
+
+    $data = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/store/collections?source_lang=ru&target_lang=en')
+        ->assertOk()
+        ->json('data');
+
+    $byTitle = collect($data)->keyBy('title');
+    expect($byTitle['Mixed']['level'])->toBe('A2–B1')   // min–max across terms
+        ->and($byTitle['Single']['level'])->toBe('B2')  // collapses when min == max
+        ->and($byTitle['None']['level'])->toBeNull();   // no terms with a level
 });
 
 it('subscribes a free collection and is idempotent on repeat', function () {

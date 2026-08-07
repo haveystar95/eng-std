@@ -23,6 +23,7 @@ final class StoreCollectionResource extends JsonResource
             'target_lang' => $this->resource->targetLang,
             'is_premium' => $this->resource->isPremium,
             'is_subscribed' => $this->resource->isSubscribed,
+            'level' => $this->resource->level,
             'items_count' => $this->resource->itemsCount,
             'image_url' => $this->resource->imageUrl,
             'image_author' => $this->resource->imageAuthor,
