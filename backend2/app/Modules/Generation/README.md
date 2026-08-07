@@ -92,10 +92,12 @@ GET  /practice/collections/{id}/last-dialog → the collection's last finished|e
   pair), Learning (due/started state → target-word priority), Vocabulary (accepted forms).
 - **This is PRACTICE:** it never writes a review or `(user, term)` progress. Its only spend record is
   the *estimated* realtime `cost_usd`, written when the dialog leaves `active` (finish or expiry).
-- **Cost** is an estimate (`ModelCost::estimateRealtime`): billed seconds → audio tokens at OpenAI's
-  documented rates (10 in / 20 out tokens per second), priced per 1M ($10/$20 for 2.1-mini), plus the
-  tiny text transcript. No usage event reaches us, so it's a proxy — tune the per-second assumption or
-  rates as real spend shows.
+- **Cost** is an estimate (`PracticeCostEstimator` + `ModelCost::estimateRealtime`): audio seconds →
+  tokens at OpenAI's documented rates (10 in / 20 out tokens/sec), priced per 1M ($10/$20 for 2.1-mini),
+  plus the tiny text transcript. INPUT audio runs the full session (mic streams continuously); OUTPUT
+  audio is billed only for the agent's speaking time, approximated from its transcript length (~150
+  wpm; timestamps are unreliable for this). No usage event reaches us — a proxy, tuned against real
+  dashboard spend (a full ~200s session ≈ $0.06).
 - **Config:** `PRACTICE_REALTIME_MODEL` (default `gpt-realtime-2.1-mini`), `PRACTICE_REALTIME_TRANSCRIBE_MODEL`
   (`gpt-4o-mini-transcribe`), `PRACTICE_REALTIME_VOICE`, `PRACTICE_PROMPT_VERSION` (`v2`), `PRACTICE_VAD_*`
   (silence 900ms / threshold 0.5 / prefix 300ms), `PRACTICE_DIALOG_TTL_SECONDS` (200),

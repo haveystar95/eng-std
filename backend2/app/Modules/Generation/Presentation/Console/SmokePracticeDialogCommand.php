@@ -68,9 +68,9 @@ final class SmokePracticeDialogCommand extends Command
         $this->line('  expires_at: ' . $token->expiresAt->format(DATE_ATOM));
         $this->line('  model:      ' . $token->model);
 
-        // A representative full-TTL session with a small transcript on each side.
-        $estimate = $cost->estimateRealtime($token->model, $config->ttlSeconds, 200, 200);
-        $this->line('  est. cost:  ' . ($estimate ?? 'unknown (no rate for this model)') . ' USD (estimated, full-TTL session)');
+        // A representative full-TTL session: input audio the whole time, agent speaking ~half.
+        $estimate = $cost->estimateRealtime($token->model, $config->ttlSeconds, intdiv($config->ttlSeconds, 2), 200, 200);
+        $this->line('  est. cost:  ' . ($estimate ?? 'unknown (no rate for this model)') . ' USD (estimated, full-TTL, agent ~50% talk)');
 
         return self::SUCCESS;
     }

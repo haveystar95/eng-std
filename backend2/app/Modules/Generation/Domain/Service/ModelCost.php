@@ -38,9 +38,10 @@ final class ModelCost
 
     /**
      * OpenAI tokenises realtime audio at 1 token / 100 ms of user (input) audio and 1 token / 50 ms
-     * of assistant (output) audio — i.e. 10 input and 20 output audio tokens per second. We bill
-     * both streams across the session's billed seconds (a conversation keeps both roughly active),
-     * which is the estimate's main assumption; tune it if usage data says otherwise.
+     * of assistant (output) audio — i.e. 10 input and 20 output audio tokens per second. The caller
+     * passes how many seconds each stream was active: input runs the whole session (the mic streams
+     * continuously), output only while the agent actually spoke — measuring output against the full
+     * session overcounts, since the agent is silent for the learner's turns.
      */
     private const AUDIO_INPUT_TOKENS_PER_SEC = 10;
     private const AUDIO_OUTPUT_TOKENS_PER_SEC = 20;
@@ -58,13 +59,15 @@ final class ModelCost
     }
 
     /**
-     * Estimate a realtime session's spend: billed seconds → audio tokens at OpenAI's documented
-     * per-second rates, priced per 1M; plus the small text transcript we relayed. Unknown model →
-     * null (no fabricated cost). The result is an estimate by construction.
+     * Estimate a realtime session's spend: active audio seconds → audio tokens at OpenAI's
+     * documented per-second rates, priced per 1M; plus the small text transcript we relayed. Input
+     * and output audio seconds are supplied separately (input = full session, output = the agent's
+     * actual speaking time). Unknown model → null. The result is an estimate by construction.
      */
     public function estimateRealtime(
         string $model,
-        int $durationSeconds,
+        int $inputAudioSeconds,
+        int $outputAudioSeconds,
         int $promptTextTokens,
         int $completionTextTokens,
     ): ?string {
@@ -73,10 +76,9 @@ final class ModelCost
         }
 
         [$audioInPer1M, $audioOutPer1M, $textInRate, $textOutRate] = self::REALTIME_PRICING[$model];
-        $seconds = max(0, $durationSeconds);
 
-        $audioInTokens = $seconds * self::AUDIO_INPUT_TOKENS_PER_SEC;
-        $audioOutTokens = $seconds * self::AUDIO_OUTPUT_TOKENS_PER_SEC;
+        $audioInTokens = max(0, $inputAudioSeconds) * self::AUDIO_INPUT_TOKENS_PER_SEC;
+        $audioOutTokens = max(0, $outputAudioSeconds) * self::AUDIO_OUTPUT_TOKENS_PER_SEC;
 
         $cost = ($audioInTokens / 1_000_000) * $audioInPer1M
             + ($audioOutTokens / 1_000_000) * $audioOutPer1M
