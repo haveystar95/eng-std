@@ -71,7 +71,17 @@ POST /practice/dialogs/{id}/transcripts → append-only (idempotent by (role, ts
                                     coverage (normalised occurrence of a term's forms in USER lines)
 POST /practice/dialogs/{id}/finish → estimated realtime cost recorded · native-language recap
                                     (one cheap text call) → {summary, words_used, words_total}
+GET  /practice/collections/{id}/last-dialog → the collection's last finished|expired dialog's
+                                    result {finished_at, words_used, words_total, summary} | 404
 ```
+
+- **Prompt v2** (`practice_dialog.v2.md`, flipped via `PRACTICE_PROMPT_VERSION`): the agent opens the
+  conversation itself; multi-word target phrases/questions the agent voices, single target words the
+  learner must produce. Coverage matches that split — **multi-word terms count from ANY speaker,
+  single words only from the learner**.
+- **Session config** (minted): input-audio transcription model (required, or the learner's speech
+  never returns as transcript events) + server-VAD turn detection tuned via `PRACTICE_VAD_*` so it
+  doesn't cut the learner off.
 
 - **Ports:** `RealtimeTokenPort` (mint ephemeral secret; `OpenAiRealtimeTokenMinter` + fake) and
   `DialogSummarizerPort` (recap; `OpenAiDialogSummarizer` + fake), gated by `PRACTICE_DRIVER`.
@@ -82,8 +92,14 @@ POST /practice/dialogs/{id}/finish → estimated realtime cost recorded · nativ
   pair), Learning (due/started state → target-word priority), Vocabulary (accepted forms).
 - **This is PRACTICE:** it never writes a review or `(user, term)` progress. Its only spend record is
   the *estimated* realtime `cost_usd`, written when the dialog leaves `active` (finish or expiry).
-- **Config:** `PRACTICE_REALTIME_MODEL` (default `gpt-realtime-mini`), `PRACTICE_REALTIME_VOICE`,
-  `PRACTICE_DIALOG_TTL_SECONDS` (200), `PRACTICE_DIALOGS_PER_DAY` (5), `PRACTICE_MAX_TARGET_WORDS` (8).
+- **Cost** is an estimate (`ModelCost::estimateRealtime`): billed seconds → audio tokens at OpenAI's
+  documented rates (10 in / 20 out tokens per second), priced per 1M ($10/$20 for 2.1-mini), plus the
+  tiny text transcript. No usage event reaches us, so it's a proxy — tune the per-second assumption or
+  rates as real spend shows.
+- **Config:** `PRACTICE_REALTIME_MODEL` (default `gpt-realtime-2.1-mini`), `PRACTICE_REALTIME_TRANSCRIBE_MODEL`
+  (`gpt-4o-mini-transcribe`), `PRACTICE_REALTIME_VOICE`, `PRACTICE_PROMPT_VERSION` (`v2`), `PRACTICE_VAD_*`
+  (silence 900ms / threshold 0.5 / prefix 300ms), `PRACTICE_DIALOG_TTL_SECONDS` (200),
+  `PRACTICE_DIALOGS_PER_DAY` (5), `PRACTICE_MAX_TARGET_WORDS` (8).
 - **Dev commands:** `php artisan practice:grant-premium {email}` (self-test premium) and
   `php artisan practice:smoke` (mint a real token on the live key, no audio, print a cost line).
 

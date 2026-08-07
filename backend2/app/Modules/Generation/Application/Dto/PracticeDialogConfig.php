@@ -17,5 +17,6 @@ final readonly class PracticeDialogConfig
         public string $voice,
         public int $ttlSeconds,
         public int $maxTargetWords,
+        public RealtimeVad $vad,
     ) {}
 }

@@ -19,6 +19,7 @@ use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
 use App\Modules\Generation\Application\Dto\PracticeDialogConfig;
+use App\Modules\Generation\Application\Dto\RealtimeVad;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogMessageRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
@@ -124,11 +125,16 @@ final class GenerationServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(PracticeDialogConfig::class, fn (): PracticeDialogConfig => new PracticeDialogConfig(
-            realtimeModel: (string) config('services.practice.realtime_model', 'gpt-realtime-mini'),
+            realtimeModel: (string) config('services.practice.realtime_model', 'gpt-realtime-2.1-mini'),
             transcribeModel: (string) config('services.practice.transcribe_model', 'gpt-4o-mini-transcribe'),
             voice: (string) config('services.practice.voice', 'alloy'),
             ttlSeconds: (int) config('services.practice.dialog_ttl_seconds', 200),
             maxTargetWords: (int) config('services.practice.max_target_words', 8),
+            vad: new RealtimeVad(
+                silenceMs: (int) config('services.practice.vad_silence_ms', 900),
+                threshold: (float) config('services.practice.vad_threshold', 0.5),
+                prefixPaddingMs: (int) config('services.practice.vad_prefix_padding_ms', 300),
+            ),
         ));
 
         $this->app->bind(RealtimeTokenPort::class, function (): RealtimeTokenPort {
@@ -139,6 +145,7 @@ final class GenerationServiceProvider extends ServiceProvider
             return new OpenAiRealtimeTokenMinter(
                 apiKey: (string) config('services.openai.api_key'),
                 instructions: $this->app->make(PracticeDialogInstructions::class),
+                promptVersion: (string) config('services.practice.prompt_version', 'v2'),
             );
         });
 

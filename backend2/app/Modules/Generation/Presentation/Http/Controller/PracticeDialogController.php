@@ -10,6 +10,8 @@ use App\Modules\Generation\Application\Command\FinishPracticeDialog;
 use App\Modules\Generation\Application\Command\FinishPracticeDialogHandler;
 use App\Modules\Generation\Application\Command\StartPracticeDialog;
 use App\Modules\Generation\Application\Command\StartPracticeDialogHandler;
+use App\Modules\Generation\Application\Query\GetLastCollectionDialog;
+use App\Modules\Generation\Application\Query\GetLastCollectionDialogHandler;
 use App\Modules\Generation\Application\Dto\DialogTranscriptEvent;
 use App\Modules\Generation\Application\Dto\StartedDialogView;
 use App\Modules\Generation\Application\Dto\TargetWordView;
@@ -36,6 +38,7 @@ final class PracticeDialogController
         private readonly StartPracticeDialogHandler $start,
         private readonly AppendDialogTranscriptsHandler $append,
         private readonly FinishPracticeDialogHandler $finish,
+        private readonly GetLastCollectionDialogHandler $lastForCollection,
     ) {}
 
     public function store(StartPracticeDialogRequest $request): JsonResponse
@@ -77,6 +80,29 @@ final class PracticeDialogController
             'summary' => $view->summary,
             'words_used' => $view->wordsUsed,
             'words_total' => $view->wordsTotal,
+        ]);
+    }
+
+    public function lastForCollection(Request $request, string $collectionId): JsonResponse
+    {
+        if (! Ulid::isValid($collectionId)) {
+            throw new NotFoundHttpException();
+        }
+
+        $view = ($this->lastForCollection)(new GetLastCollectionDialog(
+            userId: $this->actorId($request),
+            collectionId: CollectionId::fromString($collectionId),
+        ));
+
+        if ($view === null) {
+            throw new NotFoundHttpException(); // no concluded dialog for this collection yet
+        }
+
+        return new JsonResponse([
+            'finished_at' => $view->finishedAt?->format(DateTimeInterface::ATOM),
+            'words_used' => $view->wordsUsed,
+            'words_total' => $view->wordsTotal,
+            'summary' => $view->summary,
         ]);
     }
 

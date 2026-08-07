@@ -17,6 +17,7 @@ final readonly class RealtimeSessionSpec
         public string $transcribeModel,
         public string $voice,
         public int $ttlSeconds,
+        public RealtimeVad $vad,
         public array $lesson,
     ) {}
 }

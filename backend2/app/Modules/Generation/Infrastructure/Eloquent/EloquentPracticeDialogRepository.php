@@ -6,7 +6,9 @@ namespace App\Modules\Generation\Infrastructure\Eloquent;
 
 use App\Modules\Generation\Domain\Entity\PracticeDialog;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
+use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\PracticeDialogId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 
 final class EloquentPracticeDialogRepository implements PracticeDialogRepository
@@ -26,6 +28,18 @@ final class EloquentPracticeDialogRepository implements PracticeDialogRepository
             ['id' => $dialog->id()->value],
             $this->mapper->toAttributes($dialog),
         );
+    }
+
+    public function lastConcludedForCollection(UserId $userId, CollectionId $collectionId): ?PracticeDialog
+    {
+        $model = PracticeDialogModel::query()
+            ->where('user_id', $userId->value)
+            ->where('collection_id', $collectionId->value)
+            ->whereIn('status', ['finished', 'expired'])
+            ->orderByDesc('created_at')
+            ->first();
+
+        return $model !== null ? $this->mapper->toEntity($model) : null;
     }
 
     public function staleActive(DateTimeImmutable $now, int $limit): array

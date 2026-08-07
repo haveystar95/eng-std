@@ -28,6 +28,23 @@ it('substitutes the lesson into the prompt template', function () {
         ->toContain('- account balance');
 });
 
+it('splits multi-word phrases (agent says) from single words (learner produces)', function () {
+    $template = "PHRASES:\n{{agent_phrases}}\n---\nWORDS:\n{{elicit_words}}";
+
+    $rendered = (new PracticeDialogInstructions())->render($template, [
+        'topic' => 'At the bank', 'level' => 'B1', 'target' => 'en', 'native' => 'ru',
+        'target_words' => [
+            ['term_id' => 't1', 'text' => 'withdraw cash', 'forms' => ['withdraw cash']],
+            ['term_id' => 't2', 'text' => 'account', 'forms' => ['account']],
+            ['term_id' => 't3', 'text' => 'how would you like it', 'forms' => ['how would you like it']],
+        ],
+    ]);
+
+    [$phrases, $words] = explode('---', $rendered);
+    expect($phrases)->toContain('- withdraw cash')->toContain('- how would you like it')->not->toContain('- account')
+        ->and($words)->toContain('- account')->not->toContain('- withdraw cash');
+});
+
 it('renders a placeholder when there are no target words', function () {
     $rendered = (new PracticeDialogInstructions())->render('{{target_words}}', [
         'topic' => 'x', 'level' => 'A1', 'target' => 'en', 'native' => 'ru', 'target_words' => [],

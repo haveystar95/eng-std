@@ -9,11 +9,13 @@ use App\Modules\Generation\Domain\ValueObject\TranscriptLine;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 
 /**
- * Decides which target words the learner actually used, by looking for a normalised occurrence of
- * any of a term's forms inside the USER's transcript lines (the assistant saying the word doesn't
- * count). Normalisation is the SAME kernel service the answer grader uses, so "the same words"
- * means one thing across the app. Coverage is monotonic: it is recomputed over all lines so far,
- * and a form once matched stays matched as more lines arrive.
+ * Decides which target words are "covered". Two rules, by term shape:
+ *   - MULTI-WORD terms (phrases/questions the agent poses) count when ANY speaker said them —
+ *     the agent voicing the phrase is the point, the learner only has to understand it;
+ *   - SINGLE-WORD terms count only when the LEARNER (user) produced them in their own reply.
+ * Normalisation is the SAME kernel service the answer grader uses, so "the same words" means one
+ * thing across the app. Coverage is monotonic: recomputed over all lines so far, and a form once
+ * matched stays matched as more lines arrive.
  */
 final readonly class DialogCoverage
 {
@@ -26,17 +28,23 @@ final readonly class DialogCoverage
      */
     public function evaluate(array $targetWords, array $lines): array
     {
-        // One normalised, space-padded haystack per user line — padding makes the substring test
-        // word-boundary aware, so "cash" does not match inside "cashier".
-        $haystacks = [];
+        // One normalised, space-padded haystack per line — padding makes the substring test
+        // word-boundary aware, so "cash" does not match inside "cashier". Kept split by role so a
+        // single-word target can be restricted to the learner's own lines.
+        $userHaystacks = [];
+        $allHaystacks = [];
         foreach ($lines as $line) {
+            $haystack = ' ' . $this->normalizer->normalize($line->text) . ' ';
+            $allHaystacks[] = $haystack;
             if ($line->role->isUser()) {
-                $haystacks[] = ' ' . $this->normalizer->normalize($line->text) . ' ';
+                $userHaystacks[] = $haystack;
             }
         }
 
         $out = [];
         foreach ($targetWords as $tw) {
+            // Multi-word → any speaker counts; single word → the learner must produce it.
+            $haystacks = $this->isMultiWord($tw['text']) ? $allHaystacks : $userHaystacks;
             $out[] = new TargetWordView(
                 termId: $tw['term_id'],
                 text: $tw['text'],
@@ -45,6 +53,11 @@ final readonly class DialogCoverage
         }
 
         return $out;
+    }
+
+    private function isMultiWord(string $text): bool
+    {
+        return str_contains(trim($this->normalizer->normalize($text)), ' ');
     }
 
     /**

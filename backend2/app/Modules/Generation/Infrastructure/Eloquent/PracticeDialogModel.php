@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $tokens_out
  * @property string|null $cost_usd
  * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon|null $finished_at
+ * @property string|null $summary
  */
 final class PracticeDialogModel extends Model
 {
@@ -36,5 +38,6 @@ final class PracticeDialogModel extends Model
         'tokens_out' => 'int',
         'expires_at' => 'datetime',
         'created_at' => 'datetime',
+        'finished_at' => 'datetime',
     ];
 }

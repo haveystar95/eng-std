@@ -17,26 +17,30 @@ function coverage(): DialogCoverage
     return new DialogCoverage(new LexicalNormalizer());
 }
 
-it('marks a target word used when a form appears in a user line, case-insensitively', function () {
-    $target = [['term_id' => 't1', 'text' => 'withdraw cash', 'forms' => ['withdraw cash']]];
-    $lines = [
-        coverageLine('assistant', 'How can I help you today?'),
-        coverageLine('user', 'I would like to Withdraw Cash, please.'),
-    ];
+it('counts a single-word target only when the LEARNER produced it', function () {
+    $target = [['term_id' => 't1', 'text' => 'account', 'forms' => ['account']]];
 
-    $result = coverage()->evaluate($target, $lines);
+    // Learner said it → covered.
+    expect(coverage()->evaluate($target, [
+        coverageLine('assistant', 'What would you like to do?'),
+        coverageLine('user', 'I want to open an account.'),
+    ])[0]->used)->toBeTrue();
 
-    expect($result[0]->used)->toBeTrue();
+    // Only the assistant said it → NOT covered (the learner must produce single words).
+    expect(coverage()->evaluate($target, [
+        coverageLine('assistant', 'Would you like to open an account?'),
+        coverageLine('user', 'Yes please.'),
+    ])[0]->used)->toBeFalse();
 });
 
-it('does not count the word when only the assistant said it', function () {
-    $target = [['term_id' => 't1', 'text' => 'withdraw cash', 'forms' => ['withdraw cash']]];
-    $lines = [
-        coverageLine('assistant', 'Would you like to withdraw cash?'),
-        coverageLine('user', 'No thank you.'),
-    ];
+it('counts a multi-word phrase when ANY speaker said it', function () {
+    $target = [['term_id' => 't1', 'text' => 'how would you like it', 'forms' => ['how would you like it']]];
 
-    expect(coverage()->evaluate($target, $lines)[0]->used)->toBeFalse();
+    // The agent poses the phrase → covered (the learner only has to understand it).
+    expect(coverage()->evaluate($target, [
+        coverageLine('assistant', 'How would you like it, in tens or twenties?'),
+        coverageLine('user', 'In twenties, please.'),
+    ])[0]->used)->toBeTrue();
 });
 
 it('is word-boundary aware — "cash" does not match inside "cashier"', function () {
@@ -46,7 +50,7 @@ it('is word-boundary aware — "cash" does not match inside "cashier"', function
     expect(coverage()->evaluate($target, $lines)[0]->used)->toBeFalse();
 });
 
-it('matches through the shared normaliser (contraction expansion)', function () {
+it('matches a multi-word target through the shared normaliser (contraction expansion)', function () {
     $target = [['term_id' => 't1', 'text' => 'I would like', 'forms' => ['I would like']]];
     $lines = [coverageLine('user', "I'd like to open an account.")];
 

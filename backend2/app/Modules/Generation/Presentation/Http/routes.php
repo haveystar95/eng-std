@@ -17,4 +17,5 @@ Route::middleware(['throttle:60,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/practice/dialogs', [PracticeDialogController::class, 'store']);
     Route::post('/practice/dialogs/{id}/transcripts', [PracticeDialogController::class, 'transcripts']);
     Route::post('/practice/dialogs/{id}/finish', [PracticeDialogController::class, 'finish']);
+    Route::get('/practice/collections/{collectionId}/last-dialog', [PracticeDialogController::class, 'lastForCollection']);
 });

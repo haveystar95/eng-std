@@ -181,6 +181,7 @@ final readonly class StartPracticeDialogHandler
             transcribeModel: $this->config->transcribeModel,
             voice: $this->config->voice,
             ttlSeconds: $this->config->ttlSeconds,
+            vad: $this->config->vad,
             lesson: $lesson,
         ));
     }

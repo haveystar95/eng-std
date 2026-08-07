@@ -35,7 +35,7 @@ final readonly class ExpirePracticeDialog
             $dialog->billableSeconds($dialog->expiresAt()),
         );
 
-        $dialog->expire($cost->tokensIn, $cost->tokensOut, $cost->costUsd);
+        $dialog->expire($cost->tokensIn, $cost->tokensOut, $cost->costUsd, $now);
         $this->dialogs->save($dialog);
     }
 }

@@ -37,13 +37,9 @@ final readonly class FinishPracticeDialogHandler
             throw PracticeDialogNotFound::make();
         }
 
+        $now = $this->clock->now();
         $lesson = $dialog->lesson();
         $lines = $this->messages->forDialog($command->dialogId);
-
-        // Close it (idempotent) with the estimated spend for the audio time actually used.
-        $cost = $this->estimator->estimate($lesson, $lines, $dialog->billableSeconds($this->clock->now()));
-        $dialog->finish($cost->tokensIn, $cost->tokensOut, $cost->costUsd);
-        $this->dialogs->save($dialog);
 
         $targetWords = $this->targetWords($lesson);
         $used = 0;
@@ -59,6 +55,12 @@ final readonly class FinishPracticeDialogHandler
             topic: is_string($lesson['topic'] ?? null) ? $lesson['topic'] : '',
             lines: $lines,
         ))->summary;
+
+        // Close it (idempotent) with the estimated spend and the recorded result. A repeat finish
+        // no-ops and keeps the first recap; the fresh one is still returned for this response.
+        $cost = $this->estimator->estimate($lesson, $lines, $dialog->billableSeconds($now));
+        $dialog->finish($cost->tokensIn, $cost->tokensOut, $cost->costUsd, $now, $summary);
+        $this->dialogs->save($dialog);
 
         return new DialogFinishView(
             summary: $summary,

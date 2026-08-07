@@ -33,6 +33,8 @@ final class PracticeDialog
         private ?int $tokensOut,
         private ?string $costUsd,
         private readonly DateTimeImmutable $createdAt,
+        private ?DateTimeImmutable $finishedAt,
+        private ?string $summary,
     ) {}
 
     /** @param array<string, mixed> $lesson */
@@ -46,7 +48,7 @@ final class PracticeDialog
     ): self {
         return new self(
             $id, $userId, $collectionId, PracticeDialogStatus::Active, $lesson, $expiresAt,
-            null, null, null, $createdAt,
+            null, null, null, $createdAt, null, null,
         );
     }
 
@@ -62,10 +64,12 @@ final class PracticeDialog
         ?int $tokensOut,
         ?string $costUsd,
         DateTimeImmutable $createdAt,
+        ?DateTimeImmutable $finishedAt,
+        ?string $summary,
     ): self {
         return new self(
             $id, $userId, $collectionId, $status, $lesson, $expiresAt,
-            $tokensIn, $tokensOut, $costUsd, $createdAt,
+            $tokensIn, $tokensOut, $costUsd, $createdAt, $finishedAt, $summary,
         );
     }
 
@@ -94,25 +98,29 @@ final class PracticeDialog
 
     /**
      * Close the dialog with a summary. Reachable from active or expired (the client can ask for a
-     * summary after the audio TTL lapsed); a second finish is a no-op that keeps the recorded spend.
+     * summary after the audio TTL lapsed); a second finish is a no-op that keeps the recorded spend
+     * and result.
      */
-    public function finish(?int $tokensIn, ?int $tokensOut, ?string $costUsd): void
+    public function finish(?int $tokensIn, ?int $tokensOut, ?string $costUsd, DateTimeImmutable $at, ?string $summary): void
     {
         if ($this->status === PracticeDialogStatus::Finished) {
             return;
         }
         $this->status = PracticeDialogStatus::Finished;
         $this->recordUsage($tokensIn, $tokensOut, $costUsd);
+        $this->finishedAt = $at;
+        $this->summary = $summary;
     }
 
-    /** Retire an active dialog whose token TTL lapsed without an explicit finish. */
-    public function expire(?int $tokensIn, ?int $tokensOut, ?string $costUsd): void
+    /** Retire an active dialog whose token TTL lapsed without an explicit finish (no summary). */
+    public function expire(?int $tokensIn, ?int $tokensOut, ?string $costUsd, DateTimeImmutable $at): void
     {
         if ($this->status !== PracticeDialogStatus::Active) {
             throw InvalidPracticeDialogTransition::from($this->status, PracticeDialogStatus::Expired);
         }
         $this->status = PracticeDialogStatus::Expired;
         $this->recordUsage($tokensIn, $tokensOut, $costUsd);
+        $this->finishedAt = $at;
     }
 
     private function recordUsage(?int $tokensIn, ?int $tokensOut, ?string $costUsd): void
@@ -171,5 +179,15 @@ final class PracticeDialog
     public function createdAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function finishedAt(): ?DateTimeImmutable
+    {
+        return $this->finishedAt;
+    }
+
+    public function summary(): ?string
+    {
+        return $this->summary;
     }
 }

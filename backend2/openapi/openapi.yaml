@@ -325,6 +325,31 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Dialog not found (or not the owner) }
 
+  /practice/collections/{collectionId}/last-dialog:
+    get:
+      tags: [Practice]
+      summary: The result of the collection's most recent concluded practice dialog
+      description: >
+        Returns the last finished OR expired dialog for the collection (an early exit is still a
+        result). 404 when the user has never had one. Owner-scoped. `summary` is null for a dialog
+        that only expired (no recap was generated); `finished_at` is null only for legacy rows.
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string, minLength: 26, maxLength: 26 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  finished_at: { type: string, format: date-time, nullable: true }
+                  words_used: { type: integer }
+                  words_total: { type: integer }
+                  summary: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No concluded dialog for this collection (or not the owner) }
+
   /store/collections:
     get:
       tags: [Store]

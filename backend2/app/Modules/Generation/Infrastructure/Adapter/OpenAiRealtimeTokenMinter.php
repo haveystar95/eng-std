@@ -49,7 +49,14 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
                         // (the model still hears the audio directly and replies).
                         'input' => [
                             'transcription' => ['model' => $spec->transcribeModel],
-                            'turn_detection' => ['type' => 'server_vad'],
+                            // Longer silence before the model takes its turn → it stops cutting the
+                            // learner off mid-sentence. All three knobs are config-driven.
+                            'turn_detection' => [
+                                'type' => 'server_vad',
+                                'threshold' => $spec->vad->threshold,
+                                'prefix_padding_ms' => $spec->vad->prefixPaddingMs,
+                                'silence_duration_ms' => $spec->vad->silenceMs,
+                            ],
                         ],
                         'output' => ['voice' => $spec->voice],
                     ],

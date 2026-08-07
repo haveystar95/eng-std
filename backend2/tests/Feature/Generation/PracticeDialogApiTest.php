@@ -68,7 +68,7 @@ it('starts a dialog for a premium user with a token, target words and TTL', func
         ->postJson('/api/v1/practice/dialogs', ['collection_id' => $collectionId, 'client_id' => $clientId])
         ->assertCreated()
         ->assertJsonPath('dialog_id', $clientId)
-        ->assertJsonPath('model', 'gpt-realtime-mini')
+        ->assertJsonPath('model', 'gpt-realtime-2.1-mini')
         ->assertJsonPath('duration_seconds', 200)
         // TTL reached the mint: expiry = fixed now + 200s.
         ->assertJsonPath('expires_at', '2026-08-07T10:03:20+00:00');
@@ -207,6 +207,37 @@ it('expires a stale dialog via the background sweep, recording its estimated cos
     $row = DB::table('practice_dialogs')->where('id', $clientId)->first();
     expect($row->status)->toBe('expired')
         ->and($row->cost_usd)->not->toBeNull();
+});
+
+it('serves the last concluded dialog result for a collection', function () {
+    [$user, $token] = premiumLearner();
+    $collectionId = seedPracticeCollection($user);
+    $clientId = Ulid::generate();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/practice/dialogs', ['collection_id' => $collectionId, 'client_id' => $clientId])
+        ->assertCreated();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/practice/dialogs/{$clientId}/transcripts", ['events' => [
+            ['role' => 'user', 'text' => 'I want to withdraw cash and check my account balance.', 'ts' => 1],
+        ]])->assertOk();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/practice/dialogs/{$clientId}/finish")->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/practice/collections/{$collectionId}/last-dialog")
+        ->assertOk()
+        ->assertJsonPath('words_total', 3)
+        ->assertJsonPath('words_used', 2)
+        ->assertJsonStructure(['finished_at', 'words_used', 'words_total', 'summary']);
+});
+
+it('404s on last-dialog when the collection never had one', function () {
+    [, $token] = premiumLearner();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/practice/collections/' . Ulid::generate() . '/last-dialog')
+        ->assertStatus(404);
 });
 
 it('404s on finish for an unknown dialog', function () {

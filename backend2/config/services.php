@@ -75,13 +75,20 @@ return [
         // Realtime conversation practice (premium). 'openai' (default) mints real ephemeral tokens
         // and summarises via OpenAI; 'fake' is deterministic and offline (tests / local dev).
         'driver' => env('PRACTICE_DRIVER', 'openai'),
-        // Realtime engine + voice. Default is the cheaper "mini" realtime model; confirm the exact
-        // model name against the current OpenAI docs before flipping production.
-        'realtime_model' => env('PRACTICE_REALTIME_MODEL', 'gpt-realtime-mini'),
+        // Realtime engine + voice. Default is the cheaper "mini" realtime model (gpt-realtime-mini
+        // is deprecated → 2.1-mini). Confirm the exact model name against the current OpenAI docs
+        // before flipping production.
+        'realtime_model' => env('PRACTICE_REALTIME_MODEL', 'gpt-realtime-2.1-mini'),
         // Input-audio transcription model — REQUIRED for the learner's speech to come back as
         // transcript events (input_audio_transcription.completed); without it coverage never lights up.
         'transcribe_model' => env('PRACTICE_REALTIME_TRANSCRIBE_MODEL', 'gpt-4o-mini-transcribe'),
         'voice' => env('PRACTICE_REALTIME_VOICE', 'alloy'),
+        // Which versioned lesson prompt to render (Infrastructure/Prompt/practice_dialog.{v}.md).
+        'prompt_version' => env('PRACTICE_PROMPT_VERSION', 'v2'),
+        // Server-VAD turn detection — tuned so the model doesn't cut the learner off mid-sentence.
+        'vad_silence_ms' => (int) env('PRACTICE_VAD_SILENCE_MS', 900),
+        'vad_threshold' => (float) env('PRACTICE_VAD_THRESHOLD', 0.5),
+        'vad_prefix_padding_ms' => (int) env('PRACTICE_VAD_PREFIX_PADDING_MS', 300),
         // The session duration guard: the ephemeral token expires after this many seconds.
         'dialog_ttl_seconds' => (int) env('PRACTICE_DIALOG_TTL_SECONDS', 200),
         // Per-user daily cap (premium-only feature; a flat cost guard, not a plan differentiator).

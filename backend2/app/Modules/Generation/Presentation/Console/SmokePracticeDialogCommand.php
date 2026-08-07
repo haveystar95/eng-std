@@ -54,6 +54,7 @@ final class SmokePracticeDialogCommand extends Command
                 transcribeModel: $config->transcribeModel,
                 voice: $voice,
                 ttlSeconds: $config->ttlSeconds,
+                vad: $config->vad,
                 lesson: $lesson,
             ));
         } catch (Throwable $e) {

@@ -25,6 +25,8 @@ final class PracticeDialogMapper
             tokensOut: $model->tokens_out,
             costUsd: $model->cost_usd,
             createdAt: $model->created_at->toDateTimeImmutable(),
+            finishedAt: $model->finished_at?->toDateTimeImmutable(),
+            summary: $model->summary,
         );
     }
 
@@ -41,6 +43,8 @@ final class PracticeDialogMapper
             'tokens_out' => $dialog->tokensOut(),
             'cost_usd' => $dialog->costUsd(),
             'created_at' => $dialog->createdAt(),
+            'finished_at' => $dialog->finishedAt(),
+            'summary' => $dialog->summary(),
         ];
     }
 }
