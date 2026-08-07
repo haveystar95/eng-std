@@ -40,8 +40,10 @@ New process rules change **here** (a skill/command/hook/agent file), never silen
 Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code
 session to register.
 
-Читая файлы из shell, используй `cat путь1 путь2` или Read по списку — не `find -exec` и не
-пайпы с исполнением: exec-формы не покрываются allow-правилами и дёргают подтверждение на каждый вызов.
+Читая файлы из shell, используй `cat путь1 путь2 путь3` литерально (или Read по списку) — только
+буквальные пути, без echo-заголовков. НИКАКИХ подстановок: не `find -exec`, не циклы `for` с
+переменными (`$f`), не `$(...)`, не `${VAR}`, не пайпы с исполнением — подстановочные формы не
+покрываются allow-правилами и дёргают подтверждение на каждый вызов.
 
 ## Old backend (`backend/`) — the live API
 
