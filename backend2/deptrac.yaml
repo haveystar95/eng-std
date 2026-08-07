@@ -84,9 +84,12 @@ deptrac:
     CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication, IdentityApplication]
     LearningApplication:
       [LearningDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
-    # Generation reads the user's tier (Identity) for the daily quota limit.
+    # Generation reads the user's tier (Identity) for the daily quota limit, and — for the
+    # practice-dialog lesson — the learner's due/started state (Learning) to prioritise which
+    # collection terms become the dialog's target words. Learning does not depend back on
+    # Generation, so this edge adds no cycle.
     GenerationApplication:
-      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication]
+      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication, LearningApplication]
 
     # Infrastructure may use the framework and its own module's inner layers.
     SharedInfra: [SharedDomain, Framework]

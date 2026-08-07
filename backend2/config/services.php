@@ -49,6 +49,8 @@ return [
         'generate_model' => env('OPENAI_GENERATE_MODEL', 'gpt-4o'),
         // Enriching a single bare term is a small task — the cheaper model is plenty.
         'enrich_model' => env('OPENAI_ENRICH_MODEL', 'gpt-4o-mini'),
+        // Recapping a finished practice dialog is a tiny task — the cheap text model is plenty.
+        'summary_model' => env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
     ],
 
     'pexels' => [
@@ -67,6 +69,22 @@ return [
         'driver' => env('GENERATION_DRIVER', 'openai'),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
+    ],
+
+    'practice' => [
+        // Realtime conversation practice (premium). 'openai' (default) mints real ephemeral tokens
+        // and summarises via OpenAI; 'fake' is deterministic and offline (tests / local dev).
+        'driver' => env('PRACTICE_DRIVER', 'openai'),
+        // Realtime engine + voice. Default is the cheaper "mini" realtime model; confirm the exact
+        // model name against the current OpenAI docs before flipping production.
+        'realtime_model' => env('PRACTICE_REALTIME_MODEL', 'gpt-realtime-mini'),
+        'voice' => env('PRACTICE_REALTIME_VOICE', 'alloy'),
+        // The session duration guard: the ephemeral token expires after this many seconds.
+        'dialog_ttl_seconds' => (int) env('PRACTICE_DIALOG_TTL_SECONDS', 200),
+        // Per-user daily cap (premium-only feature; a flat cost guard, not a plan differentiator).
+        'dialogs_per_day' => (int) env('PRACTICE_DIALOGS_PER_DAY', 5),
+        // Upper bound on how many collection terms a lesson briefs as target words.
+        'max_target_words' => (int) env('PRACTICE_MAX_TARGET_WORDS', 8),
     ],
 
 ];

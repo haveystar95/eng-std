@@ -1,7 +1,10 @@
 <?php
 
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
+use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
+use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
+use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Foundation\Application;
@@ -20,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         GenerateCollectionCommand::class,
         EvalGenerationCommand::class,
+        SmokePracticeDialogCommand::class,
+        ExpireStaleDialogsCommand::class,
+        GrantPremiumCommand::class,
         VerificationStatsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {

@@ -218,6 +218,113 @@ paths:
         '404': { description: Unknown term }
         '429': { $ref: '#/components/responses/Problem' }
 
+  /practice/dialogs:
+    post:
+      tags: [Practice]
+      summary: Start a realtime conversation-practice dialog (premium)
+      description: >
+        Premium-only. Assembles a lesson from the collection (topic, CEFR level, the collection's
+        source/target languages, up to 8 prioritised target words) and mints an ephemeral OpenAI
+        realtime token. The app then streams audio directly to OpenAI over WebRTC — audio never
+        transits this server. The session duration equals the token TTL (default 200s). This is
+        practice: it never writes reviews or progress. Send a client-generated ULID (`client_id`)
+        so a retry of a still-live dialog is idempotent (re-mints a token, no extra quota).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [collection_id, client_id]
+              properties:
+                collection_id: { type: string, minLength: 26, maxLength: 26 }
+                client_id: { type: string, minLength: 26, maxLength: 26, description: Client-generated ULID — the dialog id. }
+      responses:
+        '201':
+          description: Dialog started
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StartedPracticeDialog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Premium subscription required (code `subscription_required`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404': { description: Collection not found (or not the owner) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: >
+            Daily practice-dialog limit reached (code `practice_dialogs_quota_exceeded`);
+            `meta.resets_at` is the absolute reset instant, `meta.limit` the daily cap.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /practice/dialogs/{id}/transcripts:
+    post:
+      tags: [Practice]
+      summary: Append transcript events and get target-word coverage
+      description: >
+        Append-only and idempotent by (role, ts): re-uploading a batch stores only new lines. Returns
+        the up-to-date coverage of the dialog's target words (`used` is monotonic).
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [role, text, ts]
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      text: { type: string, maxLength: 4000 }
+                      ts: { type: integer, minimum: 0, description: Client line timestamp (ms). }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  target_words:
+                    type: array
+                    items: { $ref: '#/components/schemas/PracticeTargetWord' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Dialog not found (or not the owner) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /practice/dialogs/{id}/finish:
+    post:
+      tags: [Practice]
+      summary: Finish a dialog and get a native-language recap
+      description: >
+        Records the estimated realtime spend and returns a short recap written in the collection's
+        source (native) language, plus how many target words were used. Idempotent.
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+                  words_used: { type: integer }
+                  words_total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Dialog not found (or not the owner) }
+
   /store/collections:
     get:
       tags: [Store]
@@ -779,7 +886,7 @@ paths:
           required: false
           schema: { type: string, format: date-time }
           description: A prior response's server_time. Inclusive. Omit for a full snapshot.
-        - { name: cursor, in: query, required: false, schema: { type: string }, description: Opaque, from a previous page's next_cursor. }
+        - { name: cursor, in: query, required: false, schema: { type: string }, description: "Opaque, from a previous page's next_cursor." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
       responses:
         '200':
@@ -921,6 +1028,29 @@ components:
         has_more: { type: boolean }
       required: [has_more]
 
+    PracticeTargetWord:
+      type: object
+      description: A word the learner should use during the dialog, and whether they have yet.
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        used: { type: boolean, description: "Monotonic — once used, stays used." }
+      required: [term_id, text, used]
+
+    StartedPracticeDialog:
+      type: object
+      description: The started dialog — the ephemeral token, its expiry, the model, and target words.
+      properties:
+        dialog_id: { type: string }
+        realtime_token: { type: string, description: Ephemeral OpenAI client secret for the WebRTC session. Short-lived. }
+        expires_at: { type: string, format: date-time, description: Absolute instant the token expires. }
+        model: { type: string, description: Realtime model the session is bound to. }
+        target_words:
+          type: array
+          items: { $ref: '#/components/schemas/PracticeTargetWord' }
+        duration_seconds: { type: integer, description: Session length — the token TTL. }
+      required: [dialog_id, realtime_token, expires_at, model, target_words, duration_seconds]
+
     Profile:
       type: object
       properties:
@@ -1032,10 +1162,10 @@ components:
       properties:
         collection_id: { type: string }
         terms_total: { type: integer }
-        new_count: { type: integer, description: Not started (no progress, or returned to new) }
+        new_count: { type: integer, description: "Not started (no progress, or returned to new)" }
         due_count: { type: integer }
         mastered_count: { type: integer, description: confirmed + familiar }
-        confirmed_count: { type: integer, description: Proven by exercises (review, interval >= 21) }
+        confirmed_count: { type: integer, description: "Proven by exercises (review, interval >= 21)" }
         familiar_count: { type: integer, description: Marked known (self-assessed) }
         in_progress_count: { type: integer, description: Started but not yet mastered }
 
@@ -1045,7 +1175,7 @@ components:
         term_id: { type: string }
         exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
-        prompt: { type: string, nullable: true, description: The cue, in the user's language }
+        prompt: { type: string, nullable: true, description: "The cue, in the user's language" }
         answer: { type: string, description: The correct target-language answer }
         transcription: { type: string, nullable: true }
         example: { type: string, nullable: true }
