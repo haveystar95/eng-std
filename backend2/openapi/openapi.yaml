@@ -1076,6 +1076,14 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PracticeTargetWord' }
         duration_seconds: { type: integer, description: Session length — the token TTL. }
+        session_setup:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: >
+            Gemini bare-token path: the pre-rendered BidiGenerateContentSetup (system instruction,
+            model, transcription, VAD) the client applies verbatim as its first WebSocket message —
+            it renders nothing itself. Null when the session is baked into the token (OpenAI).
       required: [dialog_id, provider, endpoint, realtime_token, expires_at, model, target_words, duration_seconds]
 
     Profile:

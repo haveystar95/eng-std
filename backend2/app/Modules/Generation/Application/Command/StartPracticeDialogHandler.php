@@ -212,6 +212,7 @@ final readonly class StartPracticeDialogHandler
             durationSeconds: $this->config->ttlSeconds,
             provider: $token->provider,
             endpoint: $token->endpoint,
+            sessionSetup: $token->sessionSetup,
         );
     }
 

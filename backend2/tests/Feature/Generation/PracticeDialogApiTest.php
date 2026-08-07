@@ -11,6 +11,9 @@ use App\Modules\Generation\Application\Port\RealtimeTokenPort;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Infrastructure\Adapter\FakeDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\FakeRealtimeTokenMinter;
+use App\Modules\Generation\Infrastructure\Adapter\GeminiLiveTokenMinter;
+use App\Modules\Generation\Infrastructure\Prompt\PracticeDialogInstructions;
+use Illuminate\Support\Facades\Http;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -33,12 +36,12 @@ beforeEach(function () {
 });
 
 /** @return array{0: User, 1: string} A premium user + a device token. */
-function premiumLearner(): array
+function premiumLearner(string $cefr = 'B1'): array
 {
     $user = User::factory()->create();
     Profile::create([
         'user_id' => $user->id, 'native_language' => 'ru', 'target_language' => 'en',
-        'cefr_level' => 'B1', 'daily_goal' => 20,
+        'cefr_level' => $cefr, 'daily_goal' => 20,
     ]);
     DB::table('profiles')->where('user_id', $user->id)->update(['tier' => 'premium']);
 
@@ -100,6 +103,34 @@ it('reports the gemini provider + endpoint when the gemini driver is bound', fun
         ->assertCreated()
         ->assertJsonPath('provider', 'gemini')
         ->assertJsonPath('endpoint', 'wss://gemini.fake/live');
+});
+
+it('returns a pre-rendered gemini session_setup carrying the lesson CEFR rules', function () {
+    // Real Gemini minter, HTTP faked: it renders the setup itself; only the network call is stubbed.
+    Http::fake(['*generativelanguage.googleapis.com*' => Http::response(['name' => 'auth_tokens/fake-abc'])]);
+    config(['services.practice.driver' => 'gemini']); // → the lesson carries the Gemini model
+    $this->app->bind(RealtimeTokenPort::class, fn ($app) => new GeminiLiveTokenMinter(
+        apiKey: 'test-key',
+        instructions: $app->make(PracticeDialogInstructions::class),
+        clock: $app->make(Clock::class),
+        promptVersion: 'v3',
+        constrained: false,
+    ));
+
+    [$user, $token] = premiumLearner('A2'); // A2 → strict speech rules in the system instruction
+    $collectionId = seedPracticeCollection($user);
+
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/practice/dialogs', ['collection_id' => $collectionId, 'client_id' => Ulid::generate()])
+        ->assertCreated()
+        ->assertJsonPath('provider', 'gemini')
+        ->assertJsonPath('session_setup.model', 'models/gemini-3.1-flash-live-preview');
+
+    // The client renders nothing: the system instruction is pre-rendered with THIS lesson's A2 rules.
+    $systemText = $response->json('session_setup.systemInstruction.parts.0.text');
+    expect($systemText)
+        ->toContain('~8 words')
+        ->toContain('Do NOT use contractions');
 });
 
 it('refuses a non-premium user with 403 subscription_required', function () {

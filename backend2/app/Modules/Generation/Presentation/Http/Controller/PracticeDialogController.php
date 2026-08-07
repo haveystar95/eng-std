@@ -118,6 +118,9 @@ final class PracticeDialogController
             'model' => $view->model,
             'target_words' => $this->targetWords($view->targetWords),
             'duration_seconds' => $view->durationSeconds,
+            // Gemini bare-token path: the setup the client applies verbatim on connect. Null for
+            // providers that bake the session into the token (OpenAI).
+            'session_setup' => $view->sessionSetup,
         ];
     }
 

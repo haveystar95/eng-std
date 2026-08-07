@@ -21,9 +21,10 @@ use RuntimeException;
  * NOTE (verified live 2026-08): the constrained form — baking the lesson into
  * `liveConnectConstraints.config` (as OpenAI bakes instructions into its minted session) — is
  * rejected by the current deployment with `Unknown name "liveConnectConstraints"`, though the docs
- * show it. So we default to a BARE token; the lesson's system instruction is then set by the client
- * in its BidiGenerateContentSetup. When the field deploys, flip PRACTICE_GEMINI_CONSTRAINED=true and
- * the rendered lesson is attached to the token instead.
+ * show it. So we default to a BARE token and return a pre-rendered `BidiGenerateContentSetup` (system
+ * instruction v3 + model + transcription + VAD) as the token's `sessionSetup`; the client applies it
+ * verbatim as its first WebSocket message, rendering nothing itself. When the constraints field
+ * deploys, flip PRACTICE_GEMINI_CONSTRAINED=true and the lesson is baked into the token instead.
  */
 final class GeminiLiveTokenMinter implements RealtimeTokenPort
 {
@@ -76,7 +77,41 @@ final class GeminiLiveTokenMinter implements RealtimeTokenPort
             model: $spec->model,
             provider: 'gemini',
             endpoint: self::WS_ENDPOINT,
+            // With a bare token the client must send the setup itself — hand it the rendered one so
+            // it applies it verbatim. With a constrained token it's already baked in, so: null.
+            sessionSetup: $this->constrained ? null : $this->sessionSetup($spec),
         );
+    }
+
+    /**
+     * The `BidiGenerateContentSetup` the client sends as its first WebSocket message: the versioned
+     * system instruction (with this lesson's CEFR rules), the model, response modality, both-sides
+     * transcription, and VAD. The client applies it as-is.
+     *
+     * @return array<string, mixed>
+     */
+    private function sessionSetup(RealtimeSessionSpec $spec): array
+    {
+        return [
+            'model' => 'models/' . $spec->model,
+            'generationConfig' => ['responseModalities' => ['AUDIO']],
+            'systemInstruction' => ['parts' => [['text' => $this->renderInstructions($spec)]]],
+            'inputAudioTranscription' => (object) [],
+            'outputAudioTranscription' => (object) [],
+            'realtimeInputConfig' => [
+                'automaticActivityDetection' => [
+                    'prefixPaddingMs' => $spec->vad->prefixPaddingMs,
+                    'silenceDurationMs' => $spec->vad->silenceMs,
+                ],
+            ],
+        ];
+    }
+
+    private function renderInstructions(RealtimeSessionSpec $spec): string
+    {
+        $template = (string) file_get_contents(__DIR__ . "/../Prompt/practice_dialog.{$this->promptVersion}.md");
+
+        return $this->instructions->render($template, $spec->lesson);
     }
 
     /**
@@ -87,14 +122,11 @@ final class GeminiLiveTokenMinter implements RealtimeTokenPort
      */
     private function constraints(RealtimeSessionSpec $spec): array
     {
-        $template = (string) file_get_contents(__DIR__ . "/../Prompt/practice_dialog.{$this->promptVersion}.md");
-        $instructions = $this->instructions->render($template, $spec->lesson);
-
         return [
             'model' => 'models/' . $spec->model,
             'config' => [
                 'responseModalities' => ['AUDIO'],
-                'systemInstruction' => ['parts' => [['text' => $instructions]]],
+                'systemInstruction' => ['parts' => [['text' => $this->renderInstructions($spec)]]],
                 'inputAudioTranscription' => (object) [],
                 'outputAudioTranscription' => (object) [],
                 'realtimeInputConfig' => [
