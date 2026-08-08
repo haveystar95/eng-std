@@ -25,6 +25,7 @@ final class ProfileController
                 targetLanguage: isset($data['target_language']) ? (string) $data['target_language'] : null,
                 cefrLevel: isset($data['cefr_level']) ? (string) $data['cefr_level'] : null,
                 dailyGoal: isset($data['daily_goal']) ? (int) $data['daily_goal'] : null,
+                onboarded: isset($data['onboarded']) ? (bool) $data['onboarded'] : null,
             ),
         );
 

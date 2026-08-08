@@ -12,5 +12,8 @@ final readonly class ProfileInput
         public ?string $targetLanguage = null,
         public ?string $cefrLevel = null,
         public ?int $dailyGoal = null,
+        // The onboarding-finish call sends this true; the updater then stamps `onboarded_at` once
+        // (never overwrites). Regular profile edits leave it null. (device-batch F1)
+        public ?bool $onboarded = null,
     ) {}
 }

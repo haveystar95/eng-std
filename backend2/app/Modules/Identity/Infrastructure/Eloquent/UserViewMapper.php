@@ -26,6 +26,7 @@ final class UserViewMapper
                 cefrLevel: $profile->cefr_level,
                 dailyGoal: $profile->daily_goal,
                 tier: $profile->tier,
+                onboardedAt: $profile->onboarded_at?->toISOString(),
             ) : null,
         );
     }
