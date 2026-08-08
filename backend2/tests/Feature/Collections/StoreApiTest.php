@@ -185,6 +185,67 @@ it('unsubscribes and is idempotent when not subscribed', function () {
         ->assertOk();
 });
 
+/** Attach a term with a known text + ru translation to a store collection, at $position. */
+function seedPreviewTerm(string $collectionId, string $text, string $translation, int $position): void
+{
+    $tid = Ulid::generate();
+    DB::table('terms')->insert([
+        'id' => $tid, 'lang' => 'en', 'text' => $text, 'normalized_text' => $text, 'type' => 'word',
+        'source' => 'curated', 'cefr' => 'A2', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('term_translations')->insert([
+        'id' => Ulid::generate(), 'term_id' => $tid, 'lang' => 'ru', 'text' => $translation,
+        'is_primary' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('collection_items')->insert([
+        'id' => Ulid::generate(), 'collection_id' => $collectionId, 'term_id' => $tid, 'position' => $position,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+}
+
+it('previews a store collection: first five terms plus the total', function () {
+    [, $token] = storeUser();
+    $id = seedStoreCollection(['title' => 'Preview me']);
+    for ($i = 0; $i < 7; $i++) {
+        seedPreviewTerm($id, "term{$i}", "пер{$i}", $i);
+    }
+
+    $data = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/store/collections/{$id}/preview")
+        ->assertOk()
+        ->json('data');
+
+    expect($data['collection_id'])->toBe($id)
+        ->and($data['total'])->toBe(7)               // full count …
+        ->and($data['terms'])->toHaveCount(5)        // … but only the first 5 terms
+        ->and($data['terms'][0]['text'])->toBe('term0')
+        ->and($data['terms'][0]['translation'])->toBe('пер0')
+        ->and($data['terms'][0]['type'])->toBe('word')
+        ->and($data['terms'][0]['cefr'])->toBe('A2');
+});
+
+it('previews a premium collection for a free user — no tier gate on looking', function () {
+    [$user, $token] = storeUser();
+    setTier($user, 'free');
+    $id = seedStoreCollection(['is_premium' => true]);
+    seedPreviewTerm($id, 'scalability', 'масштабируемость', 0);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/store/collections/{$id}/preview")
+        ->assertOk()
+        ->assertJsonPath('data.total', 1)
+        ->assertJsonPath('data.terms.0.translation', 'масштабируемость');
+});
+
+it('404s previewing a private/custom collection', function () {
+    [, $token] = storeUser();
+    $id = seedStoreCollection(['visibility' => 'private', 'type' => 'custom', 'owner_id' => Ulid::generate()]);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/store/collections/{$id}/preview")
+        ->assertNotFound();
+});
+
 it('hides a private collection behind 404 on subscribe', function () {
     [, $token] = storeUser();
     $id = seedStoreCollection(['visibility' => 'private', 'type' => 'custom', 'owner_id' => Ulid::generate()]);

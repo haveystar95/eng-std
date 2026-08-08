@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,15 +49,17 @@ void main() {
         total: total,
       );
 
-  Future<void> pump(WidgetTester tester, {bool paywall = true, bool previewOffline = false}) {
+  Future<void> pump(WidgetTester tester, {bool paywall = true, Object? previewError}) {
     return tester.pumpWidget(ProviderScope(
       overrides: [
         authControllerProvider.overrideWith(() => _FakeAuth(user())),
         featureFlagsProvider.overrideWith(
             () => _FakeFlags(FeatureFlags(storeEnabled: true, paywallEnabled: paywall, devPremium: false))),
         storeCollectionsProvider(pair).overrideWith((ref) async => sections),
-        storePreviewProvider('cafe').overrideWith(
-            (ref) async => previewOffline ? throw Exception('offline') : preview(16)),
+        storePreviewProvider('cafe').overrideWith((ref) async {
+          if (previewError != null) throw previewError;
+          return preview(16);
+        }),
         storePreviewProvider('interview').overrideWith((ref) async => preview(22)),
       ],
       child: const MaterialApp(
@@ -144,7 +147,7 @@ void main() {
   });
 
   testWidgets('offline: preview sheet shows no list, CTA still there', (tester) async {
-    await pump(tester, previewOffline: true);
+    await pump(tester, previewError: Exception('offline'));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Cafe'));
@@ -153,6 +156,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('appointment'), findsNothing);
+    expect(find.text('Добавить в мои'), findsOneWidget);
+  });
+
+  testWidgets('preview 404 (endpoint missing): skeleton collapses to no list', (tester) async {
+    final notFound = DioException(
+      requestOptions: RequestOptions(path: '/store/collections/cafe/preview'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/store/collections/cafe/preview'),
+        statusCode: 404,
+      ),
+      type: DioExceptionType.badResponse,
+    );
+    await pump(tester, previewError: notFound);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Cafe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cafe'));
+    await tester.pumpAndSettle();
+
+    // No skeleton bars left hanging, no list — just the sheet + its CTA.
+    expect(find.text('appointment'), findsNothing);
+    expect(find.text('Что внутри'.toUpperCase()), findsNothing);
     expect(find.text('Добавить в мои'), findsOneWidget);
   });
 }

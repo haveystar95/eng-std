@@ -8,8 +8,11 @@ use App\Modules\Collections\Application\Command\SubscribeToCollection;
 use App\Modules\Collections\Application\Command\SubscribeToCollectionHandler;
 use App\Modules\Collections\Application\Command\UnsubscribeFromCollection;
 use App\Modules\Collections\Application\Command\UnsubscribeFromCollectionHandler;
+use App\Modules\Collections\Application\Query\GetStoreCollectionPreview;
+use App\Modules\Collections\Application\Query\GetStoreCollectionPreviewHandler;
 use App\Modules\Collections\Application\Query\GetStoreCollections;
 use App\Modules\Collections\Application\Query\GetStoreCollectionsHandler;
+use App\Modules\Collections\Presentation\Http\Resource\StoreCollectionPreviewResource;
 use App\Modules\Collections\Presentation\Http\Resource\StoreCollectionResource;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -25,6 +28,7 @@ final class StoreController
 {
     public function __construct(
         private readonly GetStoreCollectionsHandler $list,
+        private readonly GetStoreCollectionPreviewHandler $previewHandler,
         private readonly SubscribeToCollectionHandler $subscribe,
         private readonly UnsubscribeFromCollectionHandler $unsubscribe,
     ) {}
@@ -43,6 +47,18 @@ final class StoreController
 
         return StoreCollectionResource::collection($page->items)
             ->additional(['meta' => ['next_cursor' => $page->nextCursor, 'has_more' => $page->hasMore]]);
+    }
+
+    /** A free taster: the first few terms + total. No tier gate — previewing a premium deck is fine. */
+    public function preview(Request $request, string $id): JsonResponse
+    {
+        $preview = ($this->previewHandler)(new GetStoreCollectionPreview($this->collectionId($id)));
+
+        if ($preview === null) {
+            throw new NotFoundHttpException();
+        }
+
+        return StoreCollectionPreviewResource::make($preview)->response();
     }
 
     public function subscribe(Request $request, string $id): JsonResponse

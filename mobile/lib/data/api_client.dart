@@ -188,7 +188,15 @@ class ApiClient {
   /// (`GET /store/collections/{id}/preview`, B). Shown for premium sets too — the lock is on adding,
   /// not on seeing what's inside (кадры 8c/8d).
   Future<StorePreview> storePreview(String id) async {
-    final r = await _dio.get('/store/collections/$id/preview');
+    // A short receive/send timeout so a missing endpoint or a stalled tunnel fails fast (the sheet
+    // then shows no list); the provider also caps the whole call at 8s.
+    final r = await _dio.get(
+      '/store/collections/$id/preview',
+      options: Options(
+        receiveTimeout: const Duration(seconds: 8),
+        sendTimeout: const Duration(seconds: 8),
+      ),
+    );
     return StorePreview.fromJson(_data(r) as Map<String, dynamic>);
   }
 

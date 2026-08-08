@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 // Prefixed with /api/v1 by CollectionsServiceProvider.
 Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/store/collections', [StoreController::class, 'index']);
+    Route::get('/store/collections/{id}/preview', [StoreController::class, 'preview']);
     Route::post('/store/collections/{id}/subscribe', [StoreController::class, 'subscribe']);
     Route::delete('/store/collections/{id}/subscribe', [StoreController::class, 'unsubscribe']);
 

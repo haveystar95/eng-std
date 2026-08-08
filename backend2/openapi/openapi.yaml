@@ -101,6 +101,7 @@ paths:
                 target_language: { type: string, minLength: 2, maxLength: 5 }
                 cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
                 daily_goal: { type: integer, minimum: 0, maximum: 100 }
+                onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
       responses:
         '200':
           description: OK
@@ -375,6 +376,29 @@ paths:
                     items: { $ref: '#/components/schemas/StoreCollection' }
                   meta: { $ref: '#/components/schemas/PageMeta' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /store/collections/{id}/preview:
+    get:
+      tags: [Store]
+      summary: Preview a store collection — first few terms + total
+      description: >
+        A free taster shown before subscribing: up to 5 terms (learned form + native translation)
+        and the collection's total item count. Available to everyone, including free users looking at
+        a premium collection — the premium gate is only on adding. A private/non-store id 404s.
+      parameters:
+        - { $ref: '#/components/parameters/UlidId' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StoreCollectionPreview' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not a store collection (private/custom or unknown) }
 
   /store/collections/{id}/subscribe:
     post:
@@ -1110,6 +1134,7 @@ components:
         cefr_level: { type: string }
         daily_goal: { type: integer }
         tier: { type: string, enum: [free, premium], description: Subscription tier; drives the generation quota and premium-store access. }
+        onboarded_at: { type: string, format: date-time, nullable: true, description: "Instant first-run onboarding finished, or null if never. The client's onboarding gate keys on this (server truth, survives reinstall)." }
 
     StoreCollection:
       type: object
@@ -1128,6 +1153,23 @@ components:
         image_url: { type: string, nullable: true }
         image_author: { type: string, nullable: true }
         image_author_url: { type: string, nullable: true }
+
+    StoreCollectionPreview:
+      type: object
+      description: A free taster of a store collection — its first terms and the total item count.
+      properties:
+        collection_id: { type: string }
+        total: { type: integer, description: Total number of terms in the collection. }
+        terms:
+          type: array
+          description: Up to `limit` terms (default 5), in collection order.
+          items:
+            type: object
+            properties:
+              text: { type: string, description: The learned-language term. }
+              translation: { type: string, nullable: true, description: Native-language translation (collection source_lang). }
+              type: { type: string, description: word | phrase | idiom | phrasal_verb }
+              cefr: { type: string, nullable: true, description: CEFR level, e.g. A2. }
 
     User:
       type: object

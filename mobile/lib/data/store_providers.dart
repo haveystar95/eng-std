@@ -68,9 +68,11 @@ List<StoreSection> groupByTopic(List<StoreCollection> items) {
 }
 
 /// The preview (first terms + total) for one store collection's sheet (кадры 8c/8d). Network-backed;
-/// consumers read via `.when` so an offline error degrades to «no list» rather than surfacing.
+/// consumers read via `.when` so ANY non-success degrades to «no list» rather than surfacing.
+/// Capped at ~8s so a missing endpoint (404), a hang, or a slow tunnel fails fast and collapses the
+/// skeleton instead of lingering until the default receive timeout.
 final storePreviewProvider = FutureProvider.family<StorePreview, String>((ref, id) async {
-  return ref.watch(apiClientProvider).storePreview(id);
+  return ref.watch(apiClientProvider).storePreview(id).timeout(const Duration(seconds: 8));
 });
 
 /// Subscribe/unsubscribe outcome, so the caller can react (refresh, paywall, error).

@@ -8,6 +8,7 @@ use App\Modules\Collections\Application\Port\CollectionsAccountEraser;
 use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
 use App\Modules\Collections\Application\Port\StoreCollectionsReader;
+use App\Modules\Collections\Application\Port\StorePreviewReader;
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Query\PendingCollectionImageReader;
@@ -18,6 +19,7 @@ use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSubscripti
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSyncReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentPendingCollectionImageReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentStoreCollectionsReader;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentStorePreviewReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionsReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionTermsReader;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +35,7 @@ final class CollectionsServiceProvider extends ServiceProvider
         $this->app->bind(CollectionSyncReader::class, EloquentCollectionSyncReader::class);
         $this->app->bind(PendingCollectionImageReader::class, EloquentPendingCollectionImageReader::class);
         $this->app->bind(StoreCollectionsReader::class, EloquentStoreCollectionsReader::class);
+        $this->app->bind(StorePreviewReader::class, EloquentStorePreviewReader::class);
         $this->app->bind(CollectionSubscriptions::class, EloquentCollectionSubscriptions::class);
         $this->app->bind(CollectionsAccountEraser::class, EloquentCollectionsAccountEraser::class);
     }
