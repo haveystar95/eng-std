@@ -218,15 +218,25 @@ class Profile {
   /// in [toJson] (staleness-safe, like the generation quota). Gates the practice-dialog entry.
   final String tier;
 
+  /// ISO-8601 instant the user finished first-run onboarding, or null if never — the server-side
+  /// onboarding gate (device-batch F1). Replaces the old per-device keychain flag: it's tied to the
+  /// account, so a relogin never re-onboards and a new account always does. Persisted in [toJson]
+  /// so the offline-restored user still gates correctly on a cold start.
+  final String? onboardedAt;
+
   Profile({
     required this.nativeLanguage,
     required this.targetLanguage,
     required this.cefrLevel,
     required this.dailyGoal,
     this.tier = 'free',
+    this.onboardedAt,
   });
 
   bool get isPremium => tier == 'premium';
+
+  /// True once the account has completed onboarding (server truth).
+  bool get isOnboarded => onboardedAt != null;
 
   factory Profile.fromJson(Map<String, dynamic> j) => Profile(
         nativeLanguage: (j['native_language'] as String?) ?? 'ru',
@@ -234,6 +244,7 @@ class Profile {
         cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
         dailyGoal: (j['daily_goal'] as int?) ?? 20,
         tier: (j['tier'] as String?) ?? 'free',
+        onboardedAt: j['onboarded_at'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -245,6 +256,7 @@ class Profile {
         // restored user defaults to free and the premium-gated dialog button vanishes until a
         // re-login. The server still enforces the real gate (403), so mild staleness is safe.
         'tier': tier,
+        'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
       };
 }
 

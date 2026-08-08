@@ -167,12 +167,14 @@ class AuthController extends AsyncNotifier<AppUser?> {
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AppUser?>(AuthController.new);
 
-/// Whether first-run onboarding has been completed (per device). Re-evaluated
-/// whenever the signed-in user changes so a fresh login re-checks the flag.
+/// Whether first-run onboarding is done — server truth via `profile.onboarded_at` (device-batch
+/// F1). Tied to the account, not the device: a relogin never re-onboards, a new account always
+/// does, and it survives keychain wipe / reinstall / a new device. Re-evaluated whenever the
+/// signed-in user changes (updateProfile refreshes the user with the stamped onboarded_at).
 final onboardedProvider = FutureProvider<bool>((ref) async {
   final user = ref.watch(authControllerProvider).value;
   if (user == null) return true; // not applicable when signed out
-  return ref.read(tokenStoreProvider).isOnboarded();
+  return user.profile?.onboardedAt != null;
 });
 
 // ---- Data providers (read-through: local DB is the source of truth) ----------

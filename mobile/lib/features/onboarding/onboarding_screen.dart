@@ -42,13 +42,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     setState(() => _saving = true);
     try {
+      // `onboarded: true` stamps profile.onboarded_at server-side (F1); the refreshed user then
+      // carries it, so the gate routes on to the home. No device-local flag anymore.
       await ref.read(authControllerProvider.notifier).updateProfile({
         'native_language': _native,
         'target_language': _target,
         'cefr_level': _level,
         'daily_goal': _goal,
+        'onboarded': true,
       });
-      await ref.read(tokenStoreProvider).setOnboarded();
       AppHaptics.success();
       ref.invalidate(onboardedProvider); // routes on to the home screen
     } catch (e) {
