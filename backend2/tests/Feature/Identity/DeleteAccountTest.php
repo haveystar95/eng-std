@@ -57,6 +57,20 @@ function seedUserData(User $user, string $termId): string
         'source_lang' => 'ru', 'target_lang' => 'en', 'levels' => json_encode(['A2']), 'size' => 8,
         'prompt_version' => 'v4', 'status' => 'succeeded', 'created_at' => now(),
     ]);
+
+    // A finished realtime practice dialog + its transcript (PII) and an example regeneration — all
+    // must be erased with the account (device-batch F23: they survived deletion).
+    $dialogId = Ulid::generate();
+    DB::table('practice_dialogs')->insert([
+        'id' => $dialogId, 'user_id' => $uid, 'collection_id' => $collectionId, 'status' => 'finished',
+        'lesson_json' => json_encode(['words' => []]), 'expires_at' => now()->addHour(), 'created_at' => now(),
+    ]);
+    DB::table('practice_dialog_messages')->insert([
+        'id' => Ulid::generate(), 'dialog_id' => $dialogId, 'role' => 'user', 'text' => 'hi', 'ts' => 1, 'created_at' => now(),
+    ]);
+    DB::table('example_regenerations')->insert([
+        'id' => Ulid::generate(), 'user_id' => $uid, 'term_id' => $termId, 'model' => 'gpt-4o', 'created_at' => now(),
+    ]);
     return $storeId;
 }
 
@@ -95,6 +109,9 @@ it('deletes the account and every trace of the user across all modules', functio
         ->and(DB::table('daily_user_stats')->where('user_id', $user->id)->count())->toBe(0)
         ->and(DB::table('study_sessions')->where('user_id', $user->id)->count())->toBe(0)
         ->and(DB::table('generation_requests')->where('user_id', $user->id)->count())->toBe(0)
+        ->and(DB::table('practice_dialogs')->where('user_id', $user->id)->count())->toBe(0)
+        ->and(DB::table('practice_dialog_messages')->count())->toBe(0) // transcript PII gone (F23)
+        ->and(DB::table('example_regenerations')->where('user_id', $user->id)->count())->toBe(0)
         ->and(DB::table('personal_access_tokens')->where('tokenable_id', $user->id)->count())->toBe(0);
 
     // Global terms stay; only the authorship link is dropped.
