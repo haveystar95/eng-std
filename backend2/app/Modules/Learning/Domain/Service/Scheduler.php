@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Domain\Service;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use DateTimeImmutable;
+use DateTimeZone;
 
 /**
  * Turns "the user graded this term X at time T" into the term's next progress state.
@@ -19,5 +20,10 @@ use DateTimeImmutable;
  */
 interface Scheduler
 {
-    public function schedule(TermProgress $progress, Grade $grade, DateTimeImmutable $now): TermProgress;
+    /**
+     * @param  DateTimeZone|null  $userZone  the user's calendar zone; a day-scale next-due date is
+     *                                       floored to the start of the user's day in it (F19).
+     *                                       Null = UTC (the documented fallback for an unknown zone).
+     */
+    public function schedule(TermProgress $progress, Grade $grade, DateTimeImmutable $now, ?DateTimeZone $userZone = null): TermProgress;
 }

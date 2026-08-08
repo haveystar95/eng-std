@@ -51,3 +51,37 @@ it('leaves onboarded_at null for a plain profile edit (new account still onboard
 
     expect(DB::table('profiles')->where('user_id', $user->id)->value('onboarded_at'))->toBeNull();
 });
+
+// ── timezone (device-batch F19) ──────────────────────────────────────────────
+
+it('stores the client-sent IANA timezone and returns it in the profile', function () {
+    $user = User::factory()->create();
+
+    $this->withHeaders(bearer($user))
+        ->putJson('/api/v1/profile', ['timezone' => 'Europe/Kyiv'])
+        ->assertOk()
+        ->assertJsonPath('data.profile.timezone', 'Europe/Kyiv');
+
+    expect(DB::table('profiles')->where('user_id', $user->id)->value('timezone'))->toBe('Europe/Kyiv');
+});
+
+it('defaults the profile timezone to UTC until the client sends one', function () {
+    $user = User::factory()->create();
+
+    $this->withHeaders(bearer($user))
+        ->putJson('/api/v1/profile', ['daily_goal' => 20])
+        ->assertOk()
+        ->assertJsonPath('data.profile.timezone', 'UTC');
+
+    // Stored value stays null (no client zone yet); the view fills the UTC fallback.
+    expect(DB::table('profiles')->where('user_id', $user->id)->value('timezone'))->toBeNull();
+});
+
+it('rejects an invalid timezone', function () {
+    $user = User::factory()->create();
+
+    $this->withHeaders(bearer($user))
+        ->putJson('/api/v1/profile', ['timezone' => 'Mars/Olympus'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('timezone');
+});

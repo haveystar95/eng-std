@@ -15,6 +15,7 @@ use App\Modules\Learning\Domain\ValueObject\ReviewId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Tests\Doubles\FakeLatencyMedianReader;
+use Tests\Doubles\FakeLearnerProfileReader;
 use Tests\Doubles\FakeSessionCompositionReader;
 use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
@@ -57,6 +58,7 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         sessionComposition: new FakeSessionCompositionReader(),
         snapshots: $ctx->progress, // the in-memory repo doubles as the snapshot reader
         stats: $ctx->stats,
+        profile: new FakeLearnerProfileReader(),
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
     );

@@ -327,6 +327,90 @@ it('does not double the daily new-term quota across two scoped sessions', functi
         ->assertJsonPath('data.cards', []);
 });
 
+// ── free practice (device-batch F17): drill the whole scope on demand ────────────
+
+it('offers every scope term as a practice card, ignoring due_at and the daily quota', function () {
+    [$user, $token] = learner();
+    // daily_goal 0 → a normal session introduces nothing; practice must ignore the quota entirely.
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 0]);
+    [$colA] = seedCollectionWith($user, 'apple', 'яблоко');
+    app(AddWordToCollectionHandler::class)(new AddWordToCollection(
+        \App\Modules\Shared\Domain\ValueObject\CollectionId::fromString($colA),
+        UserId::fromString($user->id),
+        'bank',
+        'банк',
+    ));
+
+    // A normal scoped session is empty (quota 0, nothing due)…
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->assertJsonPath('data.cards', []);
+
+    // …but practice drills both never-studied terms, and a new (reps 0) card is multiple_choice.
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
+        ->assertOk()
+        ->json('data.cards');
+
+    expect($cards)->toHaveCount(2);
+    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
+    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice');
+});
+
+it('includes a studied-but-not-due term in practice (which the normal session withholds)', function () {
+    [$user, $token] = learner();
+    [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+
+    // Study it now → learning, due in the future. A normal session no longer offers it today…
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple',
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])
+        ->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->assertJsonPath('data.cards', []); // not due, already studied → nothing
+
+    // …but practice drills it regardless of due_at, and it is produced (reps ≥ 1 → typing, one word).
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
+        ->assertOk()
+        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonPath('data.cards.0.term_id', $apple)
+        ->assertJsonPath('data.cards.0.exercise_mode', 'typing');
+});
+
+it('does not spend the daily new-term quota during practice', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 5]);
+    [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+
+    // Answer the practice card…
+    $sessionId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
+        ->assertOk()
+        ->json('data.session_id');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple',
+            'answered_at' => now()->toIso8601String(), 'session_id' => $sessionId, 'is_practice' => true, 'client_seq' => 1,
+        ]]])
+        ->assertOk();
+
+    // …the term is still new (no progress written), so a normal session still offers it as new.
+    $this->assertDatabaseMissing('user_term_progress', ['user_id' => $user->id, 'term_id' => $apple]);
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
+});
+
 it('requires authentication for stats', function () {
     $this->getJson('/api/v1/stats')->assertUnauthorized();
 });

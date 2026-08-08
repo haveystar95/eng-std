@@ -41,6 +41,24 @@ it('signs in with a valid Google token, creating the user and profile', function
     $this->assertDatabaseCount('profiles', 1);
 });
 
+it('seeds the profile timezone from the device zone sent at login (F19)', function () {
+    fakeGoogle();
+
+    $this->postJson('/api/v1/auth/google', ['id_token' => 'valid-token', 'timezone' => 'Europe/Kyiv'])
+        ->assertOk()
+        ->assertJsonPath('user.profile.timezone', 'Europe/Kyiv');
+
+    $this->assertDatabaseHas('profiles', ['timezone' => 'Europe/Kyiv']);
+});
+
+it('rejects an invalid timezone at login', function () {
+    fakeGoogle();
+
+    $this->postJson('/api/v1/auth/google', ['id_token' => 'valid-token', 'timezone' => 'Nowhere/Land'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('timezone');
+});
+
 it('maps the same Google account to the same user on repeat sign-in', function () {
     fakeGoogle();
 

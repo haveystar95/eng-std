@@ -26,6 +26,7 @@ final class UserViewMapper
                 cefrLevel: $profile->cefr_level,
                 dailyGoal: $profile->daily_goal,
                 tier: $profile->tier,
+                timezone: $profile->timezone ?? 'UTC',
                 onboardedAt: $profile->onboarded_at?->toISOString(),
             ) : null,
         );

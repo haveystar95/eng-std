@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Port;
 
 use App\Modules\Learning\Domain\ValueObject\CefrLevel;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeZone;
 
 /**
  * The slice of the user's Identity profile that Learning needs — narrow on purpose, so Learning
@@ -21,4 +22,10 @@ interface LearnerProfileReader
      * whole dictionary.
      */
     public function newTermsPerDay(UserId $user): int;
+
+    /**
+     * The user's calendar timezone — the scheduler rounds day-scale due dates down to the start of
+     * the user's day in it (device-batch F19). Falls back to UTC when unknown or unparseable.
+     */
+    public function timezoneFor(UserId $user): DateTimeZone;
 }

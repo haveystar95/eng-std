@@ -61,6 +61,55 @@ it('sets due_at from the interval, and due-now for a 0-day interval', function (
     expect($lapsed->dueAt())->toEqual($this->now);
 });
 
+// ── F19: day-scale due lands at the START of the user's calendar day ─────────────
+
+it('floors a day-scale due to the start of the user\'s day, not the moment of answering', function () {
+    // Answered at 19:00 UTC with a 1-day step (new + good → learning, +1 day). Without rounding the
+    // card would return at 19:00 tomorrow; F19 wants 00:00 tomorrow so it's available all day.
+    $evening = new DateTimeImmutable('2026-07-27T19:00:00Z');
+
+    $result = $this->scheduler->schedule(progressAt(LearningState::New), Grade::Good, $evening, new DateTimeZone('UTC'));
+
+    expect($result->dueAt())->toEqual(new DateTimeImmutable('2026-07-28T00:00:00Z'));
+});
+
+it('floors to the start of the day in the USER\'s timezone, not UTC', function () {
+    // Answered late on 2026-07-27 in Kyiv (UTC+3). now + 1 day = 07-28 23:00 Kyiv; floored to the
+    // start of THAT day = 07-28 00:00 Kyiv (21:00Z on the 27th) — the user's calendar day, not UTC's.
+    $kyiv = new DateTimeZone('Europe/Kyiv');
+    $answered = new DateTimeImmutable('2026-07-27T23:00:00', $kyiv); // 20:00Z
+
+    $result = $this->scheduler->schedule(progressAt(LearningState::New), Grade::Good, $answered, $kyiv);
+
+    $due = $result->dueAt();
+    expect($due?->setTimezone($kyiv)->format('Y-m-d H:i:s'))->toBe('2026-07-28 00:00:00')
+        ->and($due?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'))->toBe('2026-07-27 21:00:00');
+});
+
+it('keeps an intra-day (0-day) step at the exact moment, never floored', function () {
+    $evening = new DateTimeImmutable('2026-07-27T19:00:00Z');
+
+    // new + again → learning, 0-day: "again this session", must stay exact (not next morning).
+    $result = $this->scheduler->schedule(progressAt(LearningState::New), Grade::Again, $evening, new DateTimeZone('Europe/Kyiv'));
+
+    expect($result->dueAt())->toEqual($evening);
+});
+
+it('does not break an already-scheduled card when the user changes timezone', function () {
+    // A card scheduled while on UTC, then re-graded after moving to Kyiv: the new due is simply the
+    // start of the user's (new-zone) day — no crash, no drift into an invalid instant.
+    $answered = new DateTimeImmutable('2026-07-27T08:00:00Z');
+
+    $result = $this->scheduler->schedule(
+        progressAt(LearningState::Learning, interval: 1), Grade::Good, $answered, new DateTimeZone('Europe/Kyiv'),
+    );
+
+    $due = $result->dueAt();
+    // +4 days from 2026-07-27 → 07-31; floored to Kyiv-midnight = 2026-07-30T21:00:00Z.
+    expect($due?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'))->toBe('2026-07-30 21:00:00')
+        ->and($due?->setTimezone(new DateTimeZone('Europe/Kyiv'))->format('Y-m-d H:i:s'))->toBe('2026-07-31 00:00:00');
+});
+
 it('counts a lapse and drops ease when a review card is forgotten', function () {
     $result = $this->scheduler->schedule(progressAt(LearningState::Review, ease: 2.50, interval: 40, lapses: 1), Grade::Again, $this->now);
 

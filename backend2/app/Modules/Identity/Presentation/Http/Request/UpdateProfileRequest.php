@@ -22,6 +22,7 @@ final class UpdateProfileRequest extends FormRequest
             'target_language' => ['sometimes', 'string', 'min:2', 'max:5'],
             'cefr_level' => ['sometimes', 'string', 'in:A1,A2,B1,B2,C1,C2'],
             'daily_goal' => ['sometimes', 'integer', 'min:0', 'max:100'], // 0 = introduce no new terms
+            'timezone' => ['sometimes', 'timezone'], // IANA zone for calendar-day due rounding (F19)
             'onboarded' => ['sometimes', 'boolean'], // onboarding-finish flag → server stamps onboarded_at (F1)
         ];
     }

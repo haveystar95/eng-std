@@ -26,22 +26,33 @@ function atState(LearningState $state, int $reps = 0): TermProgress
     );
 }
 
-it('introduces a new term with multiple choice', function () {
+it('introduces a new term (reps 0) with multiple choice', function () {
     expect($this->selector->select(atState(LearningState::New), $this->phase1))->toBe(ExerciseMode::MultipleChoice);
 });
 
-it('assembles a multi-word learning term from a word bank', function () {
-    expect($this->selector->select(atState(LearningState::Learning), $this->phase1, answerWordCount: 3))
-        ->toBe(ExerciseMode::WordBank);
-});
-
-it('keeps a single-word learning term on multiple choice — nothing to assemble', function () {
-    expect($this->selector->select(atState(LearningState::Learning), $this->phase1, answerWordCount: 1))
+it('recognises any reps-0 card first, whatever the answer shape', function () {
+    // The first meeting is recognition regardless of word count — a multi-word reps-0 card is still MC.
+    expect($this->selector->select(atState(LearningState::Learning, 0), $this->phase1, answerWordCount: 3))
         ->toBe(ExerciseMode::MultipleChoice);
 });
 
-it('sends a relearning term back to multiple choice', function () {
-    expect($this->selector->select(atState(LearningState::Relearning), $this->phase1))->toBe(ExerciseMode::MultipleChoice);
+it('produces a multi-word term (reps ≥ 1) from a word bank', function () {
+    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, answerWordCount: 3))
+        ->toBe(ExerciseMode::WordBank);
+});
+
+it('produces a single-word term (reps ≥ 1) by typing — variety from the second meeting', function () {
+    // Was multiple_choice under the old state-only ladder; now a produced single word is typed.
+    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, answerWordCount: 1))
+        ->toBe(ExerciseMode::Typing);
+});
+
+it('produces a relearning term (reps ≥ 1) rather than recognising it again', function () {
+    // A lapsed term has always been produced before (reps ≥ 1) → production, not recognition.
+    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, answerWordCount: 1))
+        ->toBe(ExerciseMode::Typing);
+    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, answerWordCount: 2))
+        ->toBe(ExerciseMode::WordBank);
 });
 
 it('always checks a due known term in typing', function () {
@@ -61,8 +72,9 @@ it('degrades review to the only enabled review mode in phase 1', function () {
 });
 
 it('falls back to an enabled mode when the preferred one is switched off', function () {
-    $onlyTyping = new EnabledModes([ExerciseMode::Typing]);
+    $onlyMc = new EnabledModes([ExerciseMode::MultipleChoice]);
 
-    // Learning prefers word_bank, which is off → fall back to the one enabled mode.
-    expect($this->selector->select(atState(LearningState::Learning), $onlyTyping))->toBe(ExerciseMode::Typing);
+    // A produced single word prefers typing, which is off → fall back to the one enabled mode.
+    expect($this->selector->select(atState(LearningState::Learning, 1), $onlyMc, answerWordCount: 1))
+        ->toBe(ExerciseMode::MultipleChoice);
 });

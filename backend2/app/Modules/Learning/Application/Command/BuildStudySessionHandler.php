@@ -11,6 +11,8 @@ use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Query\GetDueTerms;
 use App\Modules\Learning\Application\Query\GetDueTermsHandler;
+use App\Modules\Learning\Application\Query\GetPracticeTerms;
+use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
 use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
@@ -28,6 +30,11 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  * turn each into a playable card via the assembler, and persist the session with its fixed
  * composition so answers outside it can be rejected. Known terms with a due verification ride the
  * normal due selection and the assembler forces them to typing.
+ *
+ * A practice session takes a different pool entirely: every term in scope (ignoring `due_at`,
+ * state and the daily quota), shuffled — free training on demand (device-batch F17). It still
+ * writes reviews (flagged `is_practice`) but never schedules, so it drills whatever is there
+ * without moving progress.
  */
 final readonly class BuildStudySessionHandler
 {
@@ -36,6 +43,7 @@ final readonly class BuildStudySessionHandler
 
     public function __construct(
         private GetDueTermsHandler $dueTerms,
+        private GetPracticeTermsHandler $practiceTerms,
         private LearnerProfileReader $profile,
         private IntroducedTermsReader $introduced,
         private TermContentReader $content,
@@ -52,18 +60,21 @@ final readonly class BuildStudySessionHandler
         $now = $this->clock->now();
         $size = max(1, min(self::MAX_SESSION_SIZE, $command->sessionSize));
 
-        // Practice never introduces new terms or spends the daily quota.
-        $newRemaining = $command->isPractice
-            ? 0
-            : min($size, max(0, $this->profile->newTermsPerDay($command->actorId) - $this->introduced->countForDay($command->actorId, $now)));
-
-        $due = $this->dedupeByTerm(($this->dueTerms)(new GetDueTerms(
-            userId: $command->actorId,
-            now: $now,
-            sessionSize: $size,
-            newTermsRemaining: $newRemaining,
-            collectionId: $command->collectionId,
-        )));
+        // Practice draws the whole scope (all terms, any state, ignoring due_at) and never spends
+        // the daily quota; a normal session takes due-then-new under the remaining new-term quota.
+        $due = $this->dedupeByTerm($command->isPractice
+            ? ($this->practiceTerms)(new GetPracticeTerms(
+                userId: $command->actorId,
+                sessionSize: $size,
+                collectionId: $command->collectionId,
+            ))
+            : ($this->dueTerms)(new GetDueTerms(
+                userId: $command->actorId,
+                now: $now,
+                sessionSize: $size,
+                newTermsRemaining: min($size, max(0, $this->profile->newTermsPerDay($command->actorId) - $this->introduced->countForDay($command->actorId, $now))),
+                collectionId: $command->collectionId,
+            )));
 
         $termIds = array_map(static fn (DueTermView $v): TermId => $v->termId, $due);
         $content = $this->content->byIds($termIds);

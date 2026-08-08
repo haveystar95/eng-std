@@ -20,6 +20,7 @@ final class ProfileResource extends JsonResource
             'cefr_level' => $this->resource->cefrLevel,
             'daily_goal' => $this->resource->dailyGoal,
             'tier' => $this->resource->tier,
+            'timezone' => $this->resource->timezone,
             'onboarded_at' => $this->resource->onboardedAt,
         ];
     }

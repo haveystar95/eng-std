@@ -23,4 +23,15 @@ interface DueTermsReader
      * @return list<DueTermView>
      */
     public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array;
+
+    /**
+     * Every progress row the user has among a set of term ids — ANY state, ignoring `due_at`.
+     * Backs free practice, which drills whatever is in the scope on demand, so it deliberately
+     * skips the due/state filters (a studied-but-not-due term is exactly what practice is for).
+     * Terms with no row are absent from the result — the caller fills them in as new (reps 0).
+     *
+     * @param  list<string>  $termIds
+     * @return list<DueTermView>
+     */
+    public function allAmong(UserId $userId, array $termIds, int $limit): array;
 }

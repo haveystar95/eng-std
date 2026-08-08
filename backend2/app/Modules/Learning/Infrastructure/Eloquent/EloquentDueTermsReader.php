@@ -38,6 +38,23 @@ final class EloquentDueTermsReader implements DueTermsReader
         return array_values($rows->map($this->toView(...))->all());
     }
 
+    public function allAmong(UserId $userId, array $termIds, int $limit): array
+    {
+        if ($termIds === []) {
+            return [];
+        }
+
+        // No state/due filter: practice drills whatever is in scope. Ordering is irrelevant (the
+        // caller shuffles), so we just cap the read.
+        $rows = DB::table(self::TABLE)
+            ->where('user_id', $userId->value)
+            ->whereIn('term_id', $termIds)
+            ->limit($limit)
+            ->get(self::COLUMNS);
+
+        return array_values($rows->map($this->toView(...))->all());
+    }
+
     private function toView(stdClass $row): DueTermView
     {
         return new DueTermView(

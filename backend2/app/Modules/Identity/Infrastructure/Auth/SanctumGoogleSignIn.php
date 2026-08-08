@@ -23,7 +23,7 @@ final readonly class SanctumGoogleSignIn implements GoogleSignIn
         private UserViewMapper $mapper,
     ) {}
 
-    public function authenticate(string $idToken, string $deviceName): AuthResult
+    public function authenticate(string $idToken, string $deviceName, ?string $timezone = null): AuthResult
     {
         $identity = $this->verifier->verify($idToken);
         if ($identity === null) {
@@ -37,8 +37,14 @@ final readonly class SanctumGoogleSignIn implements GoogleSignIn
             'avatar' => $identity->picture,
         ])->save();
 
-        // Every user has exactly one profile; create it with defaults on first sign-in.
-        $user->profile()->firstOrCreate([]);
+        // Every user has exactly one profile; create it with defaults on first sign-in. Seed the
+        // timezone so calendar-day due rounding (F19) works from the very first review; refresh it
+        // on later logins too (the device may have moved), but never blank a stored zone.
+        $profile = $user->profile()->firstOrCreate([]);
+        if ($timezone !== null && $timezone !== '' && $profile->timezone !== $timezone) {
+            $profile->timezone = $timezone;
+            $profile->save();
+        }
 
         $token = $user->createToken($deviceName)->plainTextToken;
 

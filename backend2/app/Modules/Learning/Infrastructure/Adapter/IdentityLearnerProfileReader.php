@@ -8,6 +8,8 @@ use App\Modules\Identity\Application\Port\UserReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\ValueObject\CefrLevel;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeZone;
+use Throwable;
 
 /**
  * Reads the learner's CEFR level from the Identity module through its Application layer — never
@@ -38,5 +40,21 @@ final readonly class IdentityLearnerProfileReader implements LearnerProfileReade
 
         // 0 (new disabled) is honoured; anything above the cap is clamped down.
         return max(0, min(self::MAX_NEW_PER_DAY, $profile->dailyGoal));
+    }
+
+    public function timezoneFor(UserId $user): DateTimeZone
+    {
+        $tz = $this->users->byId($user)?->profile?->timezone;
+        if ($tz === null || $tz === '') {
+            return new DateTimeZone('UTC');
+        }
+
+        // A stored zone is validated on write (the `timezone` rule), but be defensive: an unparseable
+        // value must fall back, never throw inside review folding.
+        try {
+            return new DateTimeZone($tz);
+        } catch (Throwable) {
+            return new DateTimeZone('UTC');
+        }
     }
 }

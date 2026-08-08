@@ -40,6 +40,7 @@ paths:
               properties:
                 id_token: { type: string }
                 device_name: { type: string, maxLength: 100 }
+                timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv). On first sign-in it seeds profiles.timezone so calendar-day due rounding (F19) works before the first PUT /profile. Refreshed on later logins; validated as an IANA zone." }
       responses:
         '200':
           description: Signed in
@@ -101,6 +102,7 @@ paths:
                 target_language: { type: string, minLength: 2, maxLength: 5 }
                 cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
                 daily_goal: { type: integer, minimum: 0, maximum: 100 }
+                timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv); the scheduler floors day-scale due dates to the start of the user's day in it (F19). Send it at login and whenever the device zone changes. Validated as an IANA zone." }
                 onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
       responses:
         '200':
@@ -622,11 +624,16 @@ paths:
       description: >-
         Assembles a ready-to-play session: due cards first (state <> new, by due date), then new
         cards up to the day's remaining new-term quota (one global quota — a scoped session does
-        not multiply it). Each card carries its exercise mode (chosen from the term's state), the
-        prompt (user's language), the answer (target language) and mode-specific extras — shuffled
+        not multiply it). Each card carries its exercise mode (chosen from the term's reps: reps 0 →
+        multiple_choice, reps ≥ 1 → word_bank for multi-word / typing for single-word; review rotates,
+        known → typing), the prompt (user's language), the answer (target language) and mode-specific extras — shuffled
         options for multiple_choice, shuffled chips for word_bank — so the client runs it offline.
-        The session's composition is fixed server-side under the returned session_id; a practice
-        session introduces no new terms and never schedules.
+        The session's composition is fixed server-side under the returned session_id. A practice
+        session (practice=true) instead draws EVERY term in scope — a collection, or all the user's
+        collections — ignoring due_at, state and the daily quota (device-batch F17): free training on
+        demand. It introduces nothing and never schedules; its answers are recorded with is_practice
+        but do not move progress. The exercise mode still follows the reps ladder (never-studied →
+        multiple_choice, produced-before → word_bank/typing).
       requestBody:
         required: false
         content:
@@ -1134,6 +1141,7 @@ components:
         cefr_level: { type: string }
         daily_goal: { type: integer }
         tier: { type: string, enum: [free, premium], description: Subscription tier; drives the generation quota and premium-store access. }
+        timezone: { type: string, description: "The user's IANA timezone; UTC until the client sends one. Drives calendar-day due rounding (F19)." }
         onboarded_at: { type: string, format: date-time, nullable: true, description: "Instant first-run onboarding finished, or null if never. The client's onboarding gate keys on this (server truth, survives reinstall)." }
 
     StoreCollection:

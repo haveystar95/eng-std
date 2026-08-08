@@ -32,10 +32,12 @@ final class AuthController
     public function google(GoogleLoginRequest $request): JsonResponse
     {
         $deviceName = $request->string('device_name')->toString();
+        $timezone = $request->string('timezone')->toString();
 
         $result = $this->signIn->authenticate(
             $request->string('id_token')->toString(),
             $deviceName !== '' ? $deviceName : 'mobile',
+            $timezone !== '' ? $timezone : null,
         );
 
         return response()->json([

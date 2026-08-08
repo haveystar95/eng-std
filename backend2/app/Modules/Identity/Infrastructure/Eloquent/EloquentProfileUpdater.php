@@ -22,6 +22,7 @@ final class EloquentProfileUpdater implements ProfileUpdater
             'target_language' => $input->targetLanguage,
             'cefr_level' => $input->cefrLevel,
             'daily_goal' => $input->dailyGoal,
+            'timezone' => $input->timezone,
         ], static fn (mixed $value): bool => $value !== null);
 
         $profile = $user->profile()->firstOrCreate([]);

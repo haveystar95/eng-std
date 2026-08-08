@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Dto\ReviewBatchResult;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
+use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
 use App\Modules\Learning\Application\Port\SessionCompositionReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
@@ -51,6 +52,7 @@ final readonly class SubmitReviewsHandler
         private SessionCompositionReader $sessionComposition,
         private ProgressSnapshotReader $snapshots,
         private StatsProjector $stats,
+        private LearnerProfileReader $profile,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -168,6 +170,10 @@ final readonly class SubmitReviewsHandler
         $scheduled = array_values(array_filter($accepted, static fn (Review $r): bool => ! $r->isPractice));
         usort($scheduled, static fn (Review $a, Review $b): int => $a->clientSeq <=> $b->clientSeq);
 
+        // The user's calendar zone, read once per batch — the scheduler floors day-scale due dates
+        // to the start of the user's day in it (F19).
+        $zone = $this->profile->timezoneFor($command->actorId);
+
         /** @var array<string, list<Review>> $byTerm */
         $byTerm = [];
         foreach ($scheduled as $review) {
@@ -189,7 +195,7 @@ final readonly class SubmitReviewsHandler
                 // scheduler refuses `known`, so resolve pass/fail explicitly here.
                 $termProgress = $termProgress->state() === LearningState::Known
                     ? $this->resolveVerification($termProgress, $review->grade, $review->answeredAt)
-                    : $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt);
+                    : $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt, $zone);
             }
 
             $this->progress->save($termProgress);
