@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\BatchAgeProgressCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         GrantPremiumCommand::class,
         VerificationStatsCommand::class,
         StorePublishCommand::class,
+        BatchAgeProgressCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         //
