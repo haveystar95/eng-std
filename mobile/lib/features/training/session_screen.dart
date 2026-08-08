@@ -30,6 +30,7 @@ class SessionScreen extends ConsumerStatefulWidget {
     required this.title,
     this.collectionId,
     this.practice = false,
+    this.learn = false,
     this.limit = 20,
     this.targetLang,
   });
@@ -37,6 +38,13 @@ class SessionScreen extends ConsumerStatefulWidget {
   final String title;
   final String? collectionId;
   final bool practice;
+
+  /// Opened from the «Учить N» CTA (device-batch F8): the caller knew there were learnable words
+  /// (triaged-«не знаю», no progress row). If the built session is still empty, the only cause is
+  /// the daily new-words quota being spent — so the empty state says «come back tomorrow», not the
+  /// misleading «nothing here yet». (The CTA itself is not gated on the quota — that's F13/F17.)
+  final bool learn;
+
   final int limit;
 
   /// The language to pronounce answers in — the scoped collection's language (F16). Null for a
@@ -72,7 +80,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
             error: (e, _) => _CenteredMessage(text: l.sessionLoadError(e.toString())),
             data: (s) => s.cards.isEmpty
-                ? _CenteredMessage(text: l.sessionEmpty, icon: LucideIcons.check)
+                ? _CenteredMessage(
+                    text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
+                    icon: widget.learn ? LucideIcons.clock : LucideIcons.check,
+                  )
                 : _SessionShell(session: s, practice: widget.practice, targetLang: widget.targetLang),
           ),
         ),

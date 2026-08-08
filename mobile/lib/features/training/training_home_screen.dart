@@ -95,6 +95,7 @@ class TrainingHomeScreen extends ConsumerWidget {
                   collections: collections,
                   progress: progress,
                   onReview: () => _openSession(context, l.homeSessionTitle),
+                  onLearn: () => _openSession(context, l.homeSessionTitle, learn: true),
                   onPractice: () => _openSession(context, l.homeSessionTitle, practice: true),
                   onTriage: (id, title) => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => TriageScreen(collectionId: id, title: title),
@@ -127,9 +128,9 @@ class TrainingHomeScreen extends ConsumerWidget {
   static Widget _pad(Widget child) =>
       Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH), child: child);
 
-  void _openSession(BuildContext context, String title, {bool practice = false}) {
+  void _openSession(BuildContext context, String title, {bool practice = false, bool learn = false}) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => SessionScreen(title: title, practice: practice),
+      builder: (_) => SessionScreen(title: title, practice: practice, learn: learn),
     ));
   }
 }
@@ -216,6 +217,7 @@ class _CtaButton extends StatelessWidget {
     required this.collections,
     required this.progress,
     required this.onReview,
+    required this.onLearn,
     required this.onPractice,
     required this.onTriage,
   });
@@ -224,6 +226,7 @@ class _CtaButton extends StatelessWidget {
   final List<WordCollection> collections;
   final Map<String, CollectionProgress> progress;
   final VoidCallback onReview;
+  final VoidCallback onLearn;
   final VoidCallback onPractice;
   final void Function(String collectionId, String title) onTriage;
 
@@ -247,7 +250,7 @@ class _CtaButton extends StatelessWidget {
       case HomeCtaKind.learn:
         label = l.homeLearnButton(cta.count);
         subtitle = l.homeLearnSubtitle;
-        onTap = onReview; // a non-practice session introduces the new words (F8)
+        onTap = onLearn; // a non-practice session introduces the new words (F8); empty ⇒ quota spent
       case HomeCtaKind.triage:
         label = l.homeTriageButton(cta.count);
         final target = collections.where((c) => c.id == cta.collectionId).firstOrNull;

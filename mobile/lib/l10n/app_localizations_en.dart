@@ -1054,6 +1054,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionEmpty => 'Nothing to review here yet';
 
   @override
+  String get sessionDailyNewLimit =>
+      'You\'ve reached today\'s new-word limit. Come back tomorrow';
+
+  @override
   String sessionLoadError(String error) {
     return 'Couldn\'t load the session: $error';
   }

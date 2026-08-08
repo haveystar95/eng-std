@@ -1095,6 +1095,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionEmpty => 'Здесь пока нечего повторять';
 
   @override
+  String get sessionDailyNewLimit =>
+      'Дневной лимит новых слов достигнут. Возвращайся завтра';
+
+  @override
   String sessionLoadError(String error) {
     return 'Не удалось загрузить сессию: $error';
   }

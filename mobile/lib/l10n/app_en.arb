@@ -286,6 +286,7 @@
   "sessionListenReplay": "Replay audio",
 
   "sessionEmpty": "Nothing to review here yet",
+  "sessionDailyNewLimit": "You've reached today's new-word limit. Come back tomorrow",
   "sessionLoadError": "Couldn't load the session: {error}",
 
   "authErrorOffline": "No internet connection. Signing in needs a network.",

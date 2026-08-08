@@ -53,12 +53,13 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     ));
   }
 
-  void _openSession(bool practice) {
+  void _openSession(bool practice, {bool learn = false}) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => SessionScreen(
         title: widget.title,
         collectionId: widget.collectionId,
         practice: practice,
+        learn: learn, // «Учить N»: distinguish an empty session (quota spent) from «nothing here»
         targetLang: _collection?.targetLang, // speak this collection's language (F16)
       ),
     ));
@@ -436,7 +437,7 @@ class _CtaButton extends StatelessWidget {
   const _CtaButton({required this.cta, required this.onTriage, required this.onSession});
   final HomeCta cta;
   final VoidCallback onTriage;
-  final void Function(bool practice) onSession;
+  final void Function(bool practice, {bool learn}) onSession;
 
   @override
   Widget build(BuildContext context) {
@@ -445,7 +446,7 @@ class _CtaButton extends StatelessWidget {
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
       HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
-      HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false), true),
+      HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false, learn: true), true),
       HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
       HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
       HomeCtaKind.none => ('', '', () => onSession(false), false),

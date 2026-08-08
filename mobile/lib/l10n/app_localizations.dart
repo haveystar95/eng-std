@@ -1688,6 +1688,12 @@ abstract class AppLocalizations {
   /// **'Здесь пока нечего повторять'**
   String get sessionEmpty;
 
+  /// Пустая сессия «Учить N»: новые слова есть, но дневная квота новых исчерпана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дневной лимит новых слов достигнут. Возвращайся завтра'**
+  String get sessionDailyNewLimit;
+
   /// Ошибка загрузки сессии (сессии строятся на сервере, офлайн недоступны).
   ///
   /// In ru, this message translates to:
