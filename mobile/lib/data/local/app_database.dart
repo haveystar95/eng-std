@@ -437,6 +437,7 @@ class AppDatabase extends _$AppDatabase {
     List<(String collectionId, String termId)> itemDeletes = const [],
     List<TermsCompanion> termUpserts = const [],
     List<TermProgressCompanion> progressUpserts = const [],
+    List<TriagedTermsCompanion> triageUpserts = const [],
   }) async {
     await transaction(() async {
       if (collectionUpserts.isNotEmpty) {
@@ -460,6 +461,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (progressUpserts.isNotEmpty) {
         await batch((b) => b.insertAllOnConflictUpdate(termProgress, progressUpserts));
+      }
+      // Triage markers restored from the delta feed: an `unknown` swipe leaves no progress row, so
+      // without this a sign-out wipe would let it resurrect in the deck after re-login. Upsert (not
+      // replace) — a locally-marked swipe not yet synced back keeps its row; the server echo matches.
+      if (triageUpserts.isNotEmpty) {
+        await batch((b) => b.insertAllOnConflictUpdate(triagedTerms, triageUpserts));
       }
     });
   }

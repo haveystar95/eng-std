@@ -39,12 +39,13 @@ class SyncReport {
     required this.itemDeletes,
     required this.termUpserts,
     required this.progressUpserts,
+    required this.triageUpserts,
     required this.at,
     this.error,
   });
   final String since; // '∅' means a full snapshot was requested (no stored cursor)
   final String? serverTime;
-  final int pages, colUpserts, colDeletes, itemUpserts, itemDeletes, termUpserts, progressUpserts;
+  final int pages, colUpserts, colDeletes, itemUpserts, itemDeletes, termUpserts, progressUpserts, triageUpserts;
   final DateTime at;
   final String? error; // set when the sync was deferred (offline/transient)
 }
@@ -89,12 +90,12 @@ class SyncService {
       String? serverTime;
       var hasMore = true;
       var pages = 0;
-      var cu = 0, cd = 0, iu = 0, id = 0, tu = 0, pu = 0;
+      var cu = 0, cd = 0, iu = 0, id = 0, tu = 0, pu = 0, tr = 0;
 
       while (hasMore) {
         final page = await _api.syncDelta(since: since, cursor: cursor);
         final n = await _applyPage(page);
-        cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu;
+        cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu; tr += n.tr;
         if (isSnapshot) seenCollectionIds.addAll(n.colIds);
         serverTime = page['server_time'] as String?;
         cursor = page['next_cursor'] as String?;
@@ -116,7 +117,7 @@ class SyncService {
       lastReport.value = SyncReport(
         since: since ?? '∅', serverTime: serverTime, pages: pages,
         colUpserts: cu, colDeletes: cd, itemUpserts: iu, itemDeletes: id,
-        termUpserts: tu, progressUpserts: pu, at: DateTime.now(),
+        termUpserts: tu, progressUpserts: pu, triageUpserts: tr, at: DateTime.now(),
       );
       state.value = SyncState.idle;
     } catch (e) {
@@ -125,7 +126,7 @@ class SyncService {
       lastReport.value = SyncReport(
         since: (await _db.getMeta(_kCursor)) ?? '∅', serverTime: null, pages: 0,
         colUpserts: 0, colDeletes: 0, itemUpserts: 0, itemDeletes: 0, termUpserts: 0,
-        progressUpserts: 0, at: DateTime.now(), error: '$e',
+        progressUpserts: 0, triageUpserts: 0, at: DateTime.now(), error: '$e',
       );
       state.value = SyncState.offline;
     } finally {
@@ -133,7 +134,7 @@ class SyncService {
     }
   }
 
-  Future<({int cu, int cd, int iu, int id, int tu, int pu, List<String> colIds})> _applyPage(Map<String, dynamic> page) async {
+  Future<({int cu, int cd, int iu, int id, int tu, int pu, int tr, List<String> colIds})> _applyPage(Map<String, dynamic> page) async {
     final changes = (page['changes'] as Map<String, dynamic>?) ?? const {};
 
     final collectionUpserts = <CollectionsCompanion>[];
@@ -215,6 +216,19 @@ class SyncService {
       ));
     }
 
+    // Triage markers: restore the local deck-exclusion the server keeps in term_triages. An
+    // `unknown` swipe writes no progress row, so this is the ONLY thing that stops it resurrecting
+    // in the deck after a sign-out wipe + re-login (the marker is what triageEligible excludes on).
+    final triageUpserts = <TriagedTermsCompanion>[];
+    for (final raw in (changes['triages'] as List?) ?? const []) {
+      final t = raw as Map<String, dynamic>;
+      triageUpserts.add(TriagedTermsCompanion.insert(
+        termId: t['term_id'] as String,
+        collectionId: Value(t['collection_id'] as String?),
+        decidedAt: _dt(t['updated_at']),
+      ));
+    }
+
     await _db.applyDelta(
       collectionUpserts: collectionUpserts,
       collectionDeletes: collectionDeletes,
@@ -222,12 +236,14 @@ class SyncService {
       itemDeletes: itemDeletes,
       termUpserts: termUpserts,
       progressUpserts: progressUpserts,
+      triageUpserts: triageUpserts,
     );
 
     return (
       cu: collectionUpserts.length, cd: collectionDeletes.length,
       iu: itemUpserts.length, id: itemDeletes.length,
       tu: termUpserts.length, pu: progressUpserts.length,
+      tr: triageUpserts.length,
       colIds: [for (final c in collectionUpserts) c.id.value],
     );
   }

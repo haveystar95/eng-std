@@ -114,7 +114,8 @@ it('returns an empty delta when the client is caught up', function () {
         ->and($data['changes']['collections'])->toBe([])
         ->and($data['changes']['collection_items'])->toBe([])
         ->and($data['changes']['terms'])->toBe([])
-        ->and($data['changes']['progress'])->toBe([]);
+        ->and($data['changes']['progress'])->toBe([])
+        ->and($data['changes']['triages'])->toBe([]);
 });
 
 it('ships a tombstone when a collection is deleted', function () {
@@ -157,6 +158,74 @@ it('includes progress rows in the delta', function () {
     $data = sync($this, $token);
     $p = collect($data['changes']['progress'])->firstWhere('term_id', $money);
     expect($p)->not->toBeNull()->and($p['op'])->toBe('upsert')->and($p['state'])->toBe('learning');
+});
+
+it('carries triage verdicts so a re-login cannot resurrect an unknown swipe', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    // `unknown` writes NO progress row — only a term_triages log entry. The delta feed must still
+    // carry it, or the client (which wiped its local marker on sign-out) re-offers it in the deck.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown',
+            'collection_id' => $col,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])->assertOk();
+
+    $data = sync($this, $token);
+
+    expect(collect($data['changes']['progress'])->firstWhere('term_id', $money))->toBeNull();
+    $t = collect($data['changes']['triages'])->firstWhere('term_id', $money);
+    expect($t)->not->toBeNull()
+        ->and($t['op'])->toBe('upsert')
+        ->and($t['verdict'])->toBe('unknown')
+        ->and($t['client_seq'])->toBe(1)
+        ->and($t['collection_id'])->toBe($col);
+});
+
+it('ships only the governing (greatest client_seq) triage verdict per term', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $swipe = fn (string $verdict, int $seq) => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => $verdict,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => $seq,
+        ]]])->assertOk();
+
+    $swipe('unknown', 1);
+    $swipe('unsure', 2);   // later swipe governs
+
+    $rows = collect(sync($this, $token)['changes']['triages'])->where('term_id', $money)->values();
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['verdict'])->toBe('unsure')
+        ->and($rows[0]['client_seq'])->toBe(2);
+});
+
+it('windows triages by since — a past swipe is skipped, a re-triage after the cursor reappears', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $swipe = fn (string $verdict, int $seq) => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => $verdict,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => $seq,
+        ]]])->assertOk();
+
+    $swipe('unknown', 1);
+    // Push the governing row clearly before the cursor (a caught-up client already has it).
+    DB::table('term_triages')->where('term_id', $money)->update(['created_at' => now()->subDay()]);
+
+    $t1 = sync($this, $token)['server_time'];
+
+    // Caught up → nothing at/after t1.
+    expect(sync($this, $token, 'since=' . urlencode($t1))['changes']['triages'])->toBe([]);
+
+    // Re-triage now → the governing row's receipt time is after t1, so it reappears with the new verdict.
+    $swipe('known', 2);
+    $t = collect(sync($this, $token, 'since=' . urlencode($t1))['changes']['triages'])->firstWhere('term_id', $money);
+    expect($t)->not->toBeNull()->and($t['verdict'])->toBe('known')->and($t['client_seq'])->toBe(2);
 });
 
 it('paginates with next_cursor until has_more is false', function () {

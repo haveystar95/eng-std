@@ -995,6 +995,22 @@ paths:
                                 reps: { type: integer }
                                 lapses: { type: integer }
                                 last_reviewed_at: { type: string, format: date-time, nullable: true }
+                          triages:
+                            type: array
+                            description: >-
+                              Governing triage verdict per term (greatest client_seq). Append-only,
+                              so always op=upsert (no tombstone). The client upserts these into its
+                              local triage marker so a sign-out wipe + re-login can't resurrect an
+                              `unknown` swipe (which writes no progress row) in the deck.
+                            items:
+                              type: object
+                              properties:
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time, description: 'server receipt time of the governing swipe' }
+                                verdict: { type: string, enum: [known, unknown, unsure] }
+                                client_seq: { type: integer }
+                                collection_id: { type: string, nullable: true, description: 'where the swipe came from (informational)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 

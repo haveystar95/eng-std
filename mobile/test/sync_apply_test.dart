@@ -80,6 +80,16 @@ void main() {
     expect(await db.getMeta('sync_cursor'), '2026-08-04T00:00:00Z');
   });
 
+  test('a triage upsert lands the local deck-exclusion marker', () async {
+    await upsertOne();
+    // The delta carries the governing triage verdict; applyDelta mirrors it into the marker so an
+    // unknown swipe (no progress row) stays out of the deck after a sign-out wipe + re-login.
+    await db.applyDelta(triageUpserts: [
+      TriagedTermsCompanion.insert(termId: 't1', collectionId: const Value('c1'), decidedAt: t0),
+    ]);
+    expect(await db.triageEligible('c1'), isEmpty); // t1 marked → nothing eligible
+  });
+
   test('clearAll wipes every table and the cursor (sign-out / reinstall symmetry)', () async {
     await upsertOne();
     await db.setMeta('sync_cursor', 'x');

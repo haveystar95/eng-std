@@ -10,6 +10,7 @@ use App\Modules\Learning\Application\Dto\ProgressSyncRow;
 use App\Modules\Learning\Application\Dto\SyncCursor;
 use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
+use App\Modules\Learning\Application\Dto\TriageSyncRow;
 use App\Modules\Learning\Application\Port\SyncCursorReader;
 use App\Modules\Learning\Application\Query\GetSyncDelta;
 use App\Modules\Learning\Application\Query\GetSyncDeltaHandler;
@@ -79,6 +80,7 @@ final class SyncController
                 'collection_items' => array_map($this->item(...), $view->collectionItems),
                 'terms' => array_map($this->term(...), $view->terms),
                 'progress' => array_map($this->progressRow(...), $view->progress),
+                'triages' => array_map($this->triageRow(...), $view->triages),
             ],
         ];
     }
@@ -156,6 +158,24 @@ final class SyncController
             'reps' => $r->reps,
             'lapses' => $r->lapses,
             'last_reviewed_at' => $r->lastReviewedAt?->format(DATE_ATOM),
+        ];
+    }
+
+    /**
+     * Governing triage verdict for a term. Append-only server-side, so it is always an upsert —
+     * the client upserts it into its local triage marker so a re-login can't resurrect the swipe.
+     *
+     * @return array<string, mixed>
+     */
+    private function triageRow(TriageSyncRow $r): array
+    {
+        return [
+            'term_id' => $r->termId,
+            'op' => 'upsert',
+            'updated_at' => $r->updatedAt->format(DATE_ATOM),
+            'verdict' => $r->verdict,
+            'client_seq' => $r->clientSeq,
+            'collection_id' => $r->collectionId,
         ];
     }
 }

@@ -66,11 +66,30 @@ void main() {
     expect((await db.triageEligible('c1')).map((t) => t.id), ['t3']);
   });
 
-  test('clearAll wipes triage marks (sign-out / reinstall)', () async {
+  test('clearAll wipes local triage marks (the marker is restored by the next sync — see below)', () async {
     await seed();
     await db.markTriaged('t1', 'c1', t0);
     await db.clearAll();
-    await seed();
+    await seed(); // a resync WITHOUT triage rows (e.g. pre-fix / offline) → the mark is gone
     expect((await db.triageEligible('c1')).map((t) => t.id), contains('t1'));
+  });
+
+  test('re-login: an unknown swipe restored by the sync delta does NOT resurrect in the deck', () async {
+    // 1. Swipe t1 «не знаю»: local marker, NO progress row (server leaves the term new).
+    await seed();
+    await db.markTriaged('t1', 'c1', t0);
+    // 2. Sign out → the whole local DB (incl. the marker) is wiped.
+    await db.clearAll();
+    // 3. Sign back in → full resync. The delta now carries the triage verdict (backend fix), which
+    //    applyDelta upserts into the marker — alongside collections/terms/items, but no progress row
+    //    for t1 (unknown never made one).
+    await seed();
+    await db.applyDelta(triageUpserts: [
+      TriagedTermsCompanion.insert(termId: 't1', collectionId: const Value('c1'), decidedAt: t0),
+    ]);
+    // 4. The deck excludes t1 again — it did not come back to be re-triaged. t2/t3 are still eligible.
+    expect((await db.triageEligible('c1')).map((t) => t.id), ['t2', 't3']);
+    // And it counts as learnable (marked, no progress) so «Учить N» can introduce it.
+    expect((await db.watchLearnableByCollection().first)['c1'], 1);
   });
 }

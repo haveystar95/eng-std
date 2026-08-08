@@ -18,6 +18,7 @@ final readonly class SyncDeltaView
      * @param  list<CollectionItemChange>  $collectionItems
      * @param  list<TermSyncView>  $terms
      * @param  list<ProgressSyncRow>  $progress
+     * @param  list<TriageSyncRow>  $triages
      */
     public function __construct(
         public DateTimeImmutable $serverTime,
@@ -27,5 +28,6 @@ final readonly class SyncDeltaView
         public array $collectionItems,
         public array $terms,
         public array $progress,
+        public array $triages,
     ) {}
 }

@@ -14,7 +14,9 @@ use App\Modules\Learning\Application\Dto\ProgressSyncRow;
 use App\Modules\Learning\Application\Dto\SyncCursor;
 use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
+use App\Modules\Learning\Application\Dto\TriageSyncRow;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
+use App\Modules\Learning\Application\Port\TriageSyncReader;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\TermChangeRef;
@@ -38,6 +40,7 @@ final readonly class GetSyncDeltaHandler
         private TermChangeReader $termChanges,
         private TermContentReader $termContent,
         private ProgressSyncReader $progressSync,
+        private TriageSyncReader $triageSync,
         private Clock $clock,
     ) {}
 
@@ -55,9 +58,13 @@ final readonly class GetSyncDeltaHandler
             $this->collectionSync->newlySubscribedTermRefs($query->userId, $since, $upper),
         );
         $progress = $this->progressSync->changedProgress($query->userId, $since, $upper);
+        // Triage verdicts the delta feed carries so a signed-out client (which wiped its local
+        // triage marker) restores it on the next sync — otherwise `unknown` swipes, which leave no
+        // progress row, resurrect in the deck after every re-login.
+        $triages = $this->triageSync->changedTriages($query->userId, $since, $upper);
 
         // Fixed order → deterministic offset paging across a heterogeneous stream.
-        $all = [...$collections, ...$items, ...$termRefs, ...$progress];
+        $all = [...$collections, ...$items, ...$termRefs, ...$progress, ...$triages];
         $offset = $query->cursor !== null ? $query->cursor->offset : 0;
         $limit = max(1, $query->limit);
         $page = array_slice($all, $offset, $limit);
@@ -74,6 +81,8 @@ final readonly class GetSyncDeltaHandler
         $pTermRefs = [];
         /** @var list<ProgressSyncRow> $pProgress */
         $pProgress = [];
+        /** @var list<TriageSyncRow> $pTriages */
+        $pTriages = [];
         foreach ($page as $row) {
             if ($row instanceof CollectionSyncRow) {
                 $pCollections[] = new CollectionChange(
@@ -90,6 +99,8 @@ final readonly class GetSyncDeltaHandler
                 $pTermRefs[] = $row;
             } elseif ($row instanceof ProgressSyncRow) {
                 $pProgress[] = $row;
+            } elseif ($row instanceof TriageSyncRow) {
+                $pTriages[] = $row;
             }
         }
 
@@ -102,7 +113,7 @@ final readonly class GetSyncDeltaHandler
             $pTermRefs,
         );
 
-        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress);
+        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress, $pTriages);
     }
 
     /**

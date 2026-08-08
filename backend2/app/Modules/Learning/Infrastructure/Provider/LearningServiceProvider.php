@@ -17,6 +17,7 @@ use App\Modules\Learning\Application\Port\StatsReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Learning\Application\Port\SyncCursorReader;
 use App\Modules\Learning\Application\Port\TriagedTermsReader;
+use App\Modules\Learning\Application\Port\TriageSyncReader;
 use App\Modules\Learning\Domain\Repository\ReviewRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Repository\TermProgressRepository;
@@ -43,6 +44,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\CachedLatencyMedianReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTermProgressRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTriagedTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentTriageRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentTriageSyncReader;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -54,6 +56,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(ReviewRepository::class, EloquentReviewRepository::class);
         $this->app->bind(TriageRepository::class, EloquentTriageRepository::class);
         $this->app->bind(TriagedTermsReader::class, EloquentTriagedTermsReader::class);
+        $this->app->bind(TriageSyncReader::class, EloquentTriageSyncReader::class);
         $this->app->bind(SyncCursorReader::class, EloquentSyncCursorReader::class);
         $this->app->bind(ProgressSyncReader::class, EloquentProgressSyncReader::class);
         $this->app->bind(LearnerProfileReader::class, IdentityLearnerProfileReader::class);
