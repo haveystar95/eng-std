@@ -34,4 +34,25 @@ void main() {
     final restored = AppUser.fromJson(user.toJson());
     expect(restored.profile?.isPremium, isTrue);
   });
+
+  test('Profile parses and round-trips the F19 timezone, defaulting to UTC', () {
+    final parsed = Profile.fromJson({
+      'native_language': 'ru',
+      'target_language': 'en',
+      'cefr_level': 'B1',
+      'daily_goal': 20,
+      'timezone': 'Europe/Kyiv',
+    });
+    expect(parsed.timezone, 'Europe/Kyiv');
+    expect(Profile.fromJson(parsed.toJson()).timezone, 'Europe/Kyiv');
+
+    // Absent in the payload → UTC fallback (the server applies the same default).
+    final noTz = Profile.fromJson({
+      'native_language': 'ru',
+      'target_language': 'en',
+      'cefr_level': 'B1',
+      'daily_goal': 20,
+    });
+    expect(noTz.timezone, 'UTC');
+  });
 }

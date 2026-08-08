@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'auth_repository.dart';
+import 'device_timezone.dart';
 import 'generation_controller.dart';
 import 'local/app_database.dart';
 import 'local/sync_service.dart';
@@ -156,9 +157,13 @@ class AuthController extends AsyncNotifier<AppUser?> {
     state = const AsyncData(null);
   }
 
-  /// Persist profile changes and refresh the in-memory user (and the offline cache).
+  /// Persist profile changes and refresh the in-memory user (and the offline cache). Every profile
+  /// write also refreshes the device timezone (F19: «в PUT /profile при смене») — cheap, keeps the
+  /// server's due-rounding zone current if the user has travelled, and covers the onboarding-finish
+  /// call. A caller-supplied `timezone` wins.
   Future<void> updateProfile(Map<String, dynamic> changes) async {
-    final user = await ref.read(apiClientProvider).updateProfile(changes);
+    final withTz = {'timezone': await deviceTimezone(), ...changes};
+    final user = await ref.read(apiClientProvider).updateProfile(withTz);
     await ref.read(tokenStoreProvider).saveUser(jsonEncode(user.toJson()));
     state = AsyncData(user);
   }

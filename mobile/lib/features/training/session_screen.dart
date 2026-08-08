@@ -59,6 +59,22 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   // Minted once so `POST /study/sessions` is idempotent — a rebuild reuses the fixed composition.
   final String _sessionId = ApiClient.ulid();
 
+  /// «Ещё раз» on a practice summary: start a brand-new practice session immediately (a fresh
+  /// SessionScreen mints a new id → the server reshuffles the whole-collection pool). Replaces the
+  /// route so the back stack doesn't fill up with finished sessions.
+  void _again() {
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => SessionScreen(
+        title: widget.title,
+        collectionId: widget.collectionId,
+        practice: widget.practice,
+        learn: widget.learn,
+        limit: widget.limit,
+        targetLang: widget.targetLang,
+      ),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -84,7 +100,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                     text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
                     icon: widget.learn ? LucideIcons.clock : LucideIcons.check,
                   )
-                : _SessionShell(session: s, practice: widget.practice, targetLang: widget.targetLang),
+                : _SessionShell(
+                    session: s,
+                    practice: widget.practice,
+                    targetLang: widget.targetLang,
+                    onAgain: _again,
+                  ),
           ),
         ),
       ),
@@ -93,11 +114,19 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 }
 
 class _SessionShell extends ConsumerStatefulWidget {
-  const _SessionShell({required this.session, required this.practice, this.targetLang});
+  const _SessionShell({
+    required this.session,
+    required this.practice,
+    required this.onAgain,
+    this.targetLang,
+  });
 
   final StudySession session;
   final bool practice;
   final String? targetLang;
+
+  /// Start another practice session (used by the practice summary's «Ещё раз»).
+  final VoidCallback onAgain;
 
   @override
   ConsumerState<_SessionShell> createState() => _SessionShellState();
@@ -180,7 +209,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final l = AppLocalizations.of(context);
 
     if (_finished) {
-      return _SessionSummary(results: _results, practice: widget.practice);
+      return _SessionSummary(results: _results, practice: widget.practice, onAgain: widget.onAgain);
     }
 
     final total = _cards.length;
@@ -391,10 +420,13 @@ class _SlideSwitcher extends StatelessWidget {
 // ── summary (кадр 12e) ────────────────────────────────────────────────────────
 
 class _SessionSummary extends ConsumerStatefulWidget {
-  const _SessionSummary({required this.results, required this.practice});
+  const _SessionSummary({required this.results, required this.practice, required this.onAgain});
 
   final List<({SessionCard card, LocalCheck verdict})> results;
   final bool practice;
+
+  /// «Ещё раз» (practice only): start a fresh practice session right away.
+  final VoidCallback onAgain;
 
   @override
   ConsumerState<_SessionSummary> createState() => _SessionSummaryState();
@@ -420,6 +452,7 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final struggling = widget.results.where((r) => r.verdict == LocalCheck.wrong).toList();
+    final practice = widget.practice;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, AppSpacing.s26),
@@ -432,35 +465,63 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
           // Without it, `CrossAxisAlignment.stretch` under the scroll view's unbounded height blew
           // the row up in RELEASE (asserts off), pushing the goal card, word list and Done button
           // off-screen — the whole summary looked like just three counters (device-batch F11).
+          //
+          // Practice gets a COMPACT two-stat tally («прошёл N, ошибки M») — there's no «New» (it
+          // introduces nothing) and no daily-goal block (it moves nothing), per Training Loop v2/F17.
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _Stat(value: _total, label: l.sessionStatReviewed),
-                const _StatDivider(),
-                _Stat(value: _new, label: l.sessionStatNew),
-                const _StatDivider(),
-                _Stat(value: _errors, label: l.sessionStatErrors),
-              ],
+              children: practice
+                  ? [
+                      _Stat(value: _total, label: l.sessionPracticeStatDone),
+                      const _StatDivider(),
+                      _Stat(value: _errors, label: l.sessionStatErrors),
+                    ]
+                  : [
+                      _Stat(value: _total, label: l.sessionStatReviewed),
+                      const _StatDivider(),
+                      _Stat(value: _new, label: l.sessionStatNew),
+                      const _StatDivider(),
+                      _Stat(value: _errors, label: l.sessionStatErrors),
+                    ],
             ),
           ),
-          if (!widget.practice) ...[
+          if (!practice) ...[
             const SizedBox(height: 18),
             const _GoalCard(),
           ],
           const SizedBox(height: 20),
           Text(l.sessionSessionWords.toUpperCase(), style: AppText.sectionLabel),
           const SizedBox(height: 6),
-          for (final r in widget.results) _SummaryWordRow(card: r.card, verdict: r.verdict),
-          if (struggling.isNotEmpty) ...[
+          // Practice never schedules, so a «увидишь через N дней» line would be a lie — hide it.
+          for (final r in widget.results)
+            _SummaryWordRow(card: r.card, verdict: r.verdict, showDue: !practice),
+          // «Проседает → Новый пример» regenerates content, which is about progress-bearing study —
+          // omit it in practice (compact итог).
+          if (!practice && struggling.isNotEmpty) ...[
             const SizedBox(height: 16),
             _StrugglingCard(termId: struggling.first.card.termId, term: struggling.first.card.answer),
           ],
           const SizedBox(height: 20),
-          PrimaryButton(
-            label: l.sessionDone,
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
+          if (practice) ...[
+            // «Ещё раз» → a fresh practice session immediately; «Готово» exits.
+            PrimaryButton(
+              label: l.sessionPracticeAgain,
+              trailingIcon: LucideIcons.rotateCw,
+              onPressed: widget.onAgain,
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: QuietButton(
+                label: l.sessionDone,
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+          ] else
+            PrimaryButton(
+              label: l.sessionDone,
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
         ],
       ),
     );
@@ -541,15 +602,18 @@ class _GoalCard extends ConsumerWidget {
 }
 
 class _SummaryWordRow extends ConsumerWidget {
-  const _SummaryWordRow({required this.card, required this.verdict});
+  const _SummaryWordRow({required this.card, required this.verdict, this.showDue = true});
   final SessionCard card;
   final LocalCheck verdict;
+
+  /// Practice sessions move no schedule → hide the «увидишь через N дней» line (it would be a lie).
+  final bool showDue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final prog = ref.watch(termProgressForProvider(card.termId));
-    final due = prog.value?.dueAt;
+    final prog = showDue ? ref.watch(termProgressForProvider(card.termId)) : null;
+    final due = prog?.value?.dueAt;
     final relative = due == null
         ? null
         : () {

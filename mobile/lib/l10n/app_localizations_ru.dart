@@ -1033,6 +1033,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionStatErrors => 'Ошибки';
 
   @override
+  String get sessionPracticeStatDone => 'Пройдено';
+
+  @override
+  String get sessionPracticeAgain => 'Ещё раз';
+
+  @override
   String get sessionDailyGoal => 'Дневная цель';
 
   @override

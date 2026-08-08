@@ -62,11 +62,13 @@ class ReviewSync {
       sessionId: sessionId,
     ));
     await _queue.save(list);
-    // Count this review toward today's local activity tally (Progress screen). This is the ONE
-    // increment point — it covers session reviews and free practice alike, and deliberately not
-    // triage, so the activity chart converges with the streak dots beside it (streak = days with
-    // reviews). Local, not synced; independent of upload success.
-    await _ref.read(appDatabaseProvider).bumpDailyActivity(localDayKey(DateTime.now()));
+    // Count this review toward today's local activity tally (Progress screen / session-summary goal
+    // card). Real session reviews only — free practice is excluded (Training Loop v2 / F17: practice
+    // has zero influence on the daily goal and activity), as is triage. Local, not synced;
+    // independent of upload success.
+    if (!isPractice) {
+      await _ref.read(appDatabaseProvider).bumpDailyActivity(localDayKey(DateTime.now()));
+    }
     unawaited(flush());
   }
 

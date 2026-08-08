@@ -327,7 +327,7 @@ class _CollectionRow extends ConsumerWidget {
     final total = prog?.total ?? collection.wordsCount;
     final mastered = prog?.mastered ?? 0;
     final cta = computeCollectionCta(
-        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0, total: total);
+        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0);
 
     return DecoratedBox(
       decoration: BoxDecoration(

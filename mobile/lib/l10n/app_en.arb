@@ -267,6 +267,8 @@
   "sessionStatReviewed": "Reviewed",
   "sessionStatNew": "New",
   "sessionStatErrors": "Mistakes",
+  "sessionPracticeStatDone": "Practiced",
+  "sessionPracticeAgain": "Again",
   "sessionDailyGoal": "Daily goal",
   "sessionGoalClosed": "Daily goal reached",
   "sessionStreak": "{days, plural, one{Streak — {days} day} other{Streak — {days} days}}",

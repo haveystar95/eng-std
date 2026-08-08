@@ -71,8 +71,10 @@ class ApiClient {
   // ---- Auth -----------------------------------------------------------------
 
   /// Exchange a Google ID token for a Sanctum token + user. (Not wrapped in `data`.)
-  Future<({String token, AppUser user})> googleLogin(String idToken) async {
-    final r = await _dio.post('/auth/google', data: {'id_token': idToken});
+  /// [timezone] is the device IANA zone — the backend seeds it on the profile for calendar-day due
+  /// rounding (F19); omitted from the body when null so the server keeps its UTC fallback.
+  Future<({String token, AppUser user})> googleLogin(String idToken, {String? timezone}) async {
+    final r = await _dio.post('/auth/google', data: {'id_token': idToken, 'timezone': ?timezone});
     final body = r.data as Map<String, dynamic>;
     return (
       token: body['token'] as String,

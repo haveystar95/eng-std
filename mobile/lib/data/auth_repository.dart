@@ -8,6 +8,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'config.dart';
 import 'api_client.dart';
+import 'device_timezone.dart';
 import 'models.dart';
 import 'seq_counter.dart';
 import 'token_store.dart';
@@ -136,7 +137,9 @@ class AuthRepository {
 
     final ({String token, AppUser user}) result;
     try {
-      result = await _api.googleLogin(idToken);
+      // Seed the profile's timezone from the device at login so calendar-day due rounding (F19)
+      // works from the first review, before any profile edit.
+      result = await _api.googleLogin(idToken, timezone: await deviceTimezone());
     } on DioException catch (e) {
       // No response = the request never reached the backend (offline / DNS / timeout).
       if (e.response == null) {

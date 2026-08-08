@@ -994,6 +994,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionStatErrors => 'Mistakes';
 
   @override
+  String get sessionPracticeStatDone => 'Practiced';
+
+  @override
+  String get sessionPracticeAgain => 'Again';
+
+  @override
   String get sessionDailyGoal => 'Daily goal';
 
   @override

@@ -65,6 +65,7 @@ dependencies:
   flutter_webrtc: ^1.6.0
   record: ^7.1.1
   flutter_pcm_sound: ^3.3.3
+  flutter_timezone: ^5.1.0 # device IANA zone → sent at login + PUT /profile for calendar-day due rounding (F19)
 
 dev_dependencies:
   flutter_test:

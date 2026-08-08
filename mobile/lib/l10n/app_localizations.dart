@@ -1592,6 +1592,18 @@ abstract class AppLocalizations {
   /// **'Ошибки'**
   String get sessionStatErrors;
 
+  /// Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пройдено'**
+  String get sessionPracticeStatDone;
+
+  /// Кнопка на итоге свободной тренировки — начать новую тренировочную сессию сразу (F17).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё раз'**
+  String get sessionPracticeAgain;
+
   /// Лейбл блока дневной цели в итоге, когда цель ещё не закрыта.
   ///
   /// In ru, this message translates to:

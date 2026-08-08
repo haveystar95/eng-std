@@ -206,7 +206,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final learnable = ref.watch(learnableByCollectionProvider).value?[widget.collectionId] ?? 0;
     final due = cprog?.due ?? 0;
     final total = cprog?.total ?? collection?.wordsCount ?? 0;
-    final cta = computeCollectionCta(untriaged: untriaged, learnable: learnable, due: due, total: total);
+    final cta = computeCollectionCta(untriaged: untriaged, learnable: learnable, due: due);
 
     // Light status-bar glyphs over the dark cover photo (overrides the app-wide
     // dark default set in main()).
@@ -252,6 +252,13 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   _DensityLegend(density: density),
                   const SizedBox(height: 18),
                   _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
+                  // «Тренировка» — always available under the primary CTA (Training Loop v2 / F17):
+                  // drills every word in the collection at any moment, ignoring due/status, and moves
+                  // no progress. Hidden only on an empty collection (nothing to drill).
+                  if (total > 0) ...[
+                    SizedBox(height: cta.kind == HomeCtaKind.none ? 0 : AppSpacing.s12),
+                    _PracticeButton(onTap: () => _openSession(true)),
+                  ],
                   // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
                   DialogEntryButton(collectionId: widget.collectionId, title: widget.title),
                   if (_showTriagePrompt) ...[
@@ -494,6 +501,46 @@ class _CtaButton extends StatelessWidget {
                   child: const Icon(LucideIcons.arrowRight, size: 16, color: AppColors.paper),
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Secondary «Тренировка» button — always under the primary CTA (Training Loop v2 / F17). Quiet
+/// outline (never ink-filled: it's a low-priority, repeatable action that moves no progress).
+/// Opens a free-practice session over the whole collection.
+class _PracticeButton extends StatelessWidget {
+  const _PracticeButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        side: const BorderSide(color: AppInkDensity.outlineColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          AppHaptics.light();
+          onTap();
+        },
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.dumbbell, size: 17, color: AppColors.ink),
+              const SizedBox(width: 9),
+              Text(l.collectionPracticeButton,
+                  style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
         ),

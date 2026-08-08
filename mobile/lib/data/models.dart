@@ -224,6 +224,11 @@ class Profile {
   /// so the offline-restored user still gates correctly on a cold start.
   final String? onboardedAt;
 
+  /// The user's IANA timezone as the server knows it (F19). UTC until the client has sent a real
+  /// zone. Informational on the client (the client sends the *device* zone; the server does the due
+  /// rounding), kept for round-tripping the cached user.
+  final String timezone;
+
   Profile({
     required this.nativeLanguage,
     required this.targetLanguage,
@@ -231,6 +236,7 @@ class Profile {
     required this.dailyGoal,
     this.tier = 'free',
     this.onboardedAt,
+    this.timezone = 'UTC',
   });
 
   bool get isPremium => tier == 'premium';
@@ -245,6 +251,7 @@ class Profile {
         dailyGoal: (j['daily_goal'] as int?) ?? 20,
         tier: (j['tier'] as String?) ?? 'free',
         onboardedAt: j['onboarded_at'] as String?,
+        timezone: (j['timezone'] as String?) ?? 'UTC',
       );
 
   Map<String, dynamic> toJson() => {
@@ -252,6 +259,7 @@ class Profile {
         'target_language': targetLanguage,
         'cefr_level': cefrLevel,
         'daily_goal': dailyGoal,
+        'timezone': timezone,
         // Persist tier so the cached user keeps premium across restart/refresh — otherwise the
         // restored user defaults to free and the premium-gated dialog button vanishes until a
         // re-login. The server still enforces the real gate (403), so mild staleness is safe.
