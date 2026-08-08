@@ -81,6 +81,35 @@ The app is **usable end-to-end today**. "Done" for this single-user product mean
 Nice-to-haves, not blockers: undo-last-swipe + end-of-session flush, `Terms lookup/search`,
 push notifications, `POST /study/sessions`, per-item CEFR badge, AI open-answer check.
 
+## Device-batch run1 — CLOSED (2026-08-08)
+Полный приёмочный прогон на iPhone с чистого аккаунта: блоки 0–9 + день-2 SRS-петля + удаление
+аккаунта. Полный лог: `docs/device-batch-run1.md`. Аккаунт прогона стёрт.
+
+**Fixed in run (13, все с зелёными гейтами, закоммичено на `feat/mobile-backend2-cutover`):**
+F1 онбординг per-account → серверный `profiles.onboarded_at` (гейт+бэкфилл); F8 CTA-ветка «Учить N»
+(due→learn→triage→practice); F9 закреплённая «Дальше»; F10 TTS в mute (`.playback`); F11 итог
+сессии (IntrinsicHeight, release-only blowup); F12 «Проверить»→«Дальше» в word_bank; F14
+`DraftValidator` CEFR-полоса = предпочтение (генерация не падает при одиночном уровне+базовой теме);
+F16 TTS берёт язык коллекции, не профиля; F21 null-ответ «Не помню» не терялся (`response` nullable);
+F23 удаление аккаунта чистит practice-диалоги/**транскрипты (PII)**/example_regenerations.
+
+**Follow-up задачи из прогона (8 чипов) — Training Loop v2 + прочее:**
+- [ ] **Free practice дрилит выученные-не-due слова** (F17) — сейчас practice отдаёт только due → пусто, когда ничего не due. Пул studied-терминов игнорируя due_at. → Training Loop v2.
+- [ ] **F19 — SRS due по КАЛЕНДАРНОМУ дню**, а не точному таймстампу (`Sm2Scheduler:143` `now->add(P{N}D)`). **Первым фиксом после батча.** → Training Loop v2.
+- [ ] **Backfill активности с сервера** (F18) — Reviews-today/за неделю/график читают локальный `daily_activity`, стирается при релогине (Home-goal и streak с сервера ок; итог-сессии и график — нет). Server per-day activity + backfill. (см. также строку про A3.6 activity ниже.)
+- [ ] **Robustness очереди reviews** (F21) — клиент дропает весь чанк на 422 (batch отдаёт только агрегат) → server-side skip теряется; flush early-return под `_flushing` не дренирует; `resync` (DOWN) не пушит up-очередь. + найти клиентский `''→null` источник.
+- [ ] **Слово дня как фича** — отдельный эндпоинт + курируемая таблица интересных слов по CEFR, исключая слова из коллекций юзера (сейчас: детерминированный выбор из локальных терминов).
+- [ ] **Все painted-флаги** для target-языков (сейчас только en/de/es/fr/pt; + фикс English-флага F3).
+- [ ] **Параллельная загрузка Pexels** (Guzzle Pool) — `AttachCollectionImagesHandler` тянет последовательно (~19 вызовов на 18 слов) → фото долго доезжают, проигрывают гонку первому /sync. + идея авто-ре-sync после succeeded.
+- [ ] **Значки языковой пары** (ru→de/ru→en) на карточке коллекции + **политика смешанных языков** в одной тренировке (per-card `target_language` на бэке ИЛИ скоуп сессии по языку).
+- [ ] **Офлайн-кеш картинок** (F22) — `Image.network` без кеша → в авиарежиме пусто; `cached_network_image`.
+
+**Прочие findings (в логе, не в чипах):** F13 («Учить N» пустая при исчерпанной квоте — уже адресовано `877a23f` honest empty state), F15 (клиентская квота генераций залипает после фейла — рефетч `/me`/инвалидация на failed), F20 (микро-подвисания анимаций сессии — нужен профайл).
+
+**Хвост контракта:** стор-preview (`GET /store/collections/{id}/preview`) закоммичен в `49d51d7`, но
+`openapi/openapi.yaml` в дереве СМЕШАН (мой `onboarded_at` уехал со стор-коммитом) — **стор-сессии
+закоммитить свой openapi-хунк (preview), чтобы дерево контракта стало чистым.**
+
 ## Generation → full feature (in progress, started 2026-08-04)
 Turning the built-on-the-fly generator into the product's headline feature (backend + contract +
 UI/UX). Plan agreed with the user; working in Part-C order, one commit per point, gates green.
