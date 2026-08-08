@@ -72,6 +72,21 @@ it('submits reviews, creating progress and daily stats', function () {
         ->assertJsonPath('data.reviews_today', 1);
 });
 
+it('accepts a null response (a «не помню» / blank answer) instead of 422-losing it (F21)', function () {
+    [$user, $token] = learner();
+    $termId = seedWordFor($user);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => null,
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])
+        ->assertOk() // was 422 before the fix — the client then dropped it and the review was lost
+        ->assertJsonPath('data.accepted', 1);
+
+    $this->assertDatabaseHas('user_term_progress', ['user_id' => $user->id, 'term_id' => $termId]);
+});
+
 it('ignores a re-uploaded review batch', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user);

@@ -21,7 +21,10 @@ final class SubmitReviewsRequest extends FormRequest
             'reviews.*.id' => ['required', 'string', 'size:26'],       // client-generated ULID
             'reviews.*.term_id' => ['required', 'string', 'size:26'],
             'reviews.*.exercise_mode' => ['required', 'string', 'in:multiple_choice,word_bank,typing,listening,cloze'],
-            'reviews.*.response' => ['present', 'string'],             // raw answer; the server grades it
+            // Raw answer; the server grades it. NULLABLE: a «не помню» / blank answer legitimately
+            // has no text and the client may send null — the controller coalesces it to '' (an empty
+            // answer grades as a miss). Rejecting null 422'd and silently lost the review (F21).
+            'reviews.*.response' => ['present', 'nullable', 'string'],
             'reviews.*.answered_at' => ['required', 'date'],           // reference-only (device clock)
             'reviews.*.client_seq' => ['required', 'integer', 'min:0'], // per-user monotonic; orders the fold
             'reviews.*.used_hint' => ['sometimes', 'boolean'],
