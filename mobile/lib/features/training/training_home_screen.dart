@@ -43,10 +43,11 @@ class TrainingHomeScreen extends ConsumerWidget {
     final done = stats?.reviewsTotal ?? 0;
     final streak = stats?.streakDays ?? 0;
 
-    // 9b «всё повторено»: the daily goal is met and there's nothing due or to triage (the CTA has
-    // fallen through to free practice). We swap the plain practice button for the «На сегодня всё»
-    // card, which carries its own practice + «собрать коллекцию» actions.
-    final allDone = cta.kind == HomeCtaKind.practice && goal > 0 && done >= goal;
+    // 9b «всё повторено»: the daily goal is met and there's nothing due / learnable / to triage
+    // (cta == none) while words already exist. Free practice is NOT offered here — it lives only on
+    // the collection screen — so the card just affirms the goal and points at a new collection.
+    final allDone =
+        cta.kind == HomeCtaKind.none && collections.isNotEmpty && goal > 0 && done >= goal;
 
     final bottomInset = AppTabBarMetrics.height +
         AppTabBarMetrics.bottomInset +
@@ -82,7 +83,6 @@ class TrainingHomeScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sectionAiry),
               _pad(_AllDoneCard(
                 done: done,
-                onPractice: () => _openSession(context, l.homeSessionTitle, practice: true),
                 onGenerate: () => Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => const GenerateScreen(),
                     )),
@@ -96,7 +96,6 @@ class TrainingHomeScreen extends ConsumerWidget {
                   progress: progress,
                   onReview: () => _openSession(context, l.homeSessionTitle),
                   onLearn: () => _openSession(context, l.homeSessionTitle, learn: true),
-                  onPractice: () => _openSession(context, l.homeSessionTitle, practice: true),
                   onTriage: (id, title) => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => TriageScreen(collectionId: id, title: title),
                       )),
@@ -218,7 +217,6 @@ class _CtaButton extends StatelessWidget {
     required this.progress,
     required this.onReview,
     required this.onLearn,
-    required this.onPractice,
     required this.onTriage,
   });
 
@@ -227,7 +225,6 @@ class _CtaButton extends StatelessWidget {
   final Map<String, CollectionProgress> progress;
   final VoidCallback onReview;
   final VoidCallback onLearn;
-  final VoidCallback onPractice;
   final void Function(String collectionId, String title) onTriage;
 
   @override
@@ -256,10 +253,7 @@ class _CtaButton extends StatelessWidget {
         final target = collections.where((c) => c.id == cta.collectionId).firstOrNull;
         subtitle = target?.title;
         onTap = () => target == null ? onReview() : onTriage(target.id, target.title);
-      case HomeCtaKind.practice:
-        label = l.homePracticeButton;
-        subtitle = l.homePracticeSubtitle;
-        onTap = onPractice;
+      case HomeCtaKind.practice: // practice is never a home CTA — render nothing if it ever appears
       case HomeCtaKind.none:
         return const SizedBox.shrink();
     }
@@ -513,12 +507,13 @@ class _OfflineBanner extends StatelessWidget {
   }
 }
 
-/// «На сегодня всё» (кадр 9b): shown when the daily goal is met and nothing is due or to triage.
-/// A centred paper card with a free-practice button and a quiet «собрать коллекцию» link.
+/// «На сегодня всё» (кадр 9b): shown when the daily goal is met and nothing is due / learnable / to
+/// triage. Free practice is not offered here (it lives on the collection screen) — the card affirms
+/// the goal and points at a new collection.
 class _AllDoneCard extends StatelessWidget {
-  const _AllDoneCard({required this.done, required this.onPractice, required this.onGenerate});
+  const _AllDoneCard({required this.done, required this.onGenerate});
   final int done;
-  final VoidCallback onPractice, onGenerate;
+  final VoidCallback onGenerate;
 
   @override
   Widget build(BuildContext context) {
@@ -537,25 +532,10 @@ class _AllDoneCard extends StatelessWidget {
             style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45, color: AppColors.secondary),
           ),
           const SizedBox(height: 18),
-          PrimaryButton(label: l.homeAllDonePractice, minHeight: 52, onPressed: () {
+          PrimaryButton(label: l.homeAllDoneGenerate, minHeight: 52, onPressed: () {
             AppHaptics.light();
-            onPractice();
+            onGenerate();
           }),
-          const SizedBox(height: 14),
-          Center(
-            child: InkWell(
-              onTap: () {
-                AppHaptics.light();
-                onGenerate();
-              },
-              borderRadius: BorderRadius.circular(AppRadii.small),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: Text(l.homeAllDoneGenerate,
-                    style: AppText.translation.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
-              ),
-            ),
-          ),
         ],
       ),
     );

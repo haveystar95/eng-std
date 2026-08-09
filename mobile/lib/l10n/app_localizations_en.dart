@@ -1057,6 +1057,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionListenReplay => 'Replay audio';
 
   @override
+  String get sessionListenReplaySlow => 'Slower';
+
+  @override
   String get sessionEmpty => 'Nothing to review here yet';
 
   @override

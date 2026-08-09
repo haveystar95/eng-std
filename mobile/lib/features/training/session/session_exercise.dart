@@ -47,8 +47,8 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   final ValueChanged<SessionAnswer> onAnswered;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
-  /// at call sites; here it's an explicit speak).
-  final Future<void> Function(String text) onSpeak;
+  /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
+  final Future<void> Function(String text, {bool slow}) onSpeak;
 
   @override
   ConsumerState<SessionExerciseCard> createState() => _SessionExerciseCardState();
@@ -84,10 +84,20 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isListening) {
       WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSpeak(_card.answer));
     }
+    // Cloze types straight INTO the blank (кадр 12j): the hidden field captures the keyboard, and
+    // the sentence's blank shows the letters as they're typed. Rebuild the sentence on each change.
+    if (_isCloze) {
+      _input.addListener(_onClozeInput);
+    }
+  }
+
+  void _onClozeInput() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    if (_isCloze) _input.removeListener(_onClozeInput);
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -306,29 +316,41 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _ClozeSentence(
             example: _card.example ?? _card.answer,
             answer: _card.answer,
-            filled: _answered ? _card.answer : null,
+            // Answered → the correct word fills the blank (verdict-coloured). While typing → the live
+            // input fills it (plain), so the user sees what they write right in the sentence (12j).
+            filled: _answered ? _card.answer : (_input.text.trim().isEmpty ? null : _input.text),
+            answered: _answered,
             correct: _verdict?.isAccepted ?? false,
           ),
           if (_card.exampleTranslation != null) ...[
             const SizedBox(height: AppSpacing.s12),
             Text(_card.exampleTranslation!, style: AppText.translation.copyWith(height: 1.4)),
           ],
-          if (!_answered) ...[
-            const SizedBox(height: AppSpacing.s12),
-            _inputField(hideText: true), // the visible answer is the blank; keep input off-screen-ish
-          ],
+          if (!_answered)
+            // The visible answer is the blank in the sentence above; this field is invisible and
+            // only captures the keyboard (transparent text, no underline).
+            _inputField(hideText: true, borderless: true),
         ],
       ),
     );
   }
 
-  // listening — a big play circle; typed answer below when production (12h), options handled outside.
+  // listening — a big play circle (tap = replay) + a «замедленно» slow-replay control; typed answer
+  // below when production (12h), options handled outside. The term text is never shown — only heard.
   Widget _listeningPrompt(AppLocalizations l, {required bool typed}) {
     return PaperCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(child: _PlayCircle(onTap: () => widget.onSpeak(_card.answer), label: l.sessionListenReplay)),
+          const SizedBox(height: AppSpacing.s12),
+          Center(
+            child: QuietButton(
+              label: l.sessionListenReplaySlow,
+              icon: LucideIcons.gauge,
+              onPressed: () => widget.onSpeak(_card.answer, slow: true),
+            ),
+          ),
           const SizedBox(height: AppSpacing.s16),
           Text(_instructionFor(l), textAlign: TextAlign.center, style: AppTextExercise.taskInstruction),
           if (typed && !_answered) ...[
@@ -340,8 +362,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     );
   }
 
-  Widget _inputField({bool hideText = false}) {
+  Widget _inputField({bool hideText = false, bool borderless = false}) {
     // The answer renders in antiqua as it's typed — the word becomes dictionary-like (12c note).
+    // [borderless] + [hideText] together make an invisible keyboard-capture field (cloze types into
+    // the sentence blank, so the field itself must not show a stray underline).
+    const noBorder = UnderlineInputBorder(borderSide: BorderSide(color: Colors.transparent));
     return TextField(
       controller: _input,
       focusNode: _focus,
@@ -349,7 +374,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       style: hideText
           ? const TextStyle(color: Colors.transparent, height: 0.01)
           : AppTextExercise.typingInput,
-      cursorColor: AppColors.ink,
+      cursorColor: borderless ? Colors.transparent : AppColors.ink,
       textInputAction: TextInputAction.done,
       autocorrect: false,
       enableSuggestions: false,
@@ -358,8 +383,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       decoration: InputDecoration(
         isDense: true,
         contentPadding: const EdgeInsets.only(bottom: AppSpacing.s8),
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.track, width: 1.5)),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 1.5)),
+        enabledBorder: borderless ? noBorder : const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.track, width: 1.5)),
+        focusedBorder: borderless ? noBorder : const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 1.5)),
       ),
     );
   }
@@ -572,12 +597,17 @@ class _ClozeSentence extends StatelessWidget {
     required this.example,
     required this.answer,
     required this.filled,
+    required this.answered,
     required this.correct,
   });
 
   final String example;
   final String answer;
-  final String? filled; // the resolved word, once answered
+
+  /// The word to show in the blank: the live typed text while answering, or the correct word once
+  /// answered; null when the blank is still empty.
+  final String? filled;
+  final bool answered;
   final bool correct;
 
   @override
@@ -588,29 +618,38 @@ class _ClozeSentence extends StatelessWidget {
     final before = idx >= 0 ? example.substring(0, idx) : '$example ';
     final after = idx >= 0 ? example.substring(idx + answer.length) : '';
 
-    final blank = filled == null
-        ? WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: Container(
-              width: 100,
-              height: 20,
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.tertiary, width: 1.5)),
-              ),
-            ),
-          )
-        : TextSpan(
-            text: filled,
-            style: AppTextExercise.clozeExample.copyWith(
-              fontStyle: FontStyle.normal,
-              fontWeight: FontWeight.w500,
-              color: AppColors.ink,
-              decoration: TextDecoration.underline,
-              decorationColor: correct ? AppColors.verdictKnown : AppColors.destructiveText,
-              decorationThickness: 2,
-            ),
-          );
+    final InlineSpan blank;
+    if (filled == null) {
+      // Empty blank ≈ the word's width, with a caret so it reads as "type here" (12i).
+      blank = WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: Container(
+          width: 100,
+          height: 22,
+          alignment: Alignment.centerLeft,
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.tertiary, width: 1.5)),
+          ),
+          child: const SizedBox(width: 1.5, height: 20, child: ColoredBox(color: AppColors.ink)),
+        ),
+      );
+    } else {
+      // Answered → verdict-coloured underline; while typing → a plain ink underline (no verdict yet).
+      blank = TextSpan(
+        text: filled,
+        style: AppTextExercise.clozeExample.copyWith(
+          fontStyle: FontStyle.normal,
+          fontWeight: FontWeight.w500,
+          color: AppColors.ink,
+          decoration: TextDecoration.underline,
+          decorationColor: answered
+              ? (correct ? AppColors.verdictKnown : AppColors.destructiveText)
+              : AppColors.tertiary,
+          decorationThickness: answered ? 2 : 1.5,
+        ),
+      );
+    }
 
     return Text.rich(
       TextSpan(

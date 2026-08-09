@@ -2,13 +2,12 @@ import 'package:eng_std/features/home/home_cta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('computeHomeCta — priority due → learn → triage → practice → none', () {
+  group('computeHomeCta — priority due → learn → triage → none (no practice on Home)', () {
     test('due terms win, whatever else exists', () {
       final cta = computeHomeCta(
         due: 12,
         learnableByCollection: {'a': 4},
         untriagedByCollection: {'a': 5},
-        totalWords: 40,
       );
       expect(cta.kind, HomeCtaKind.review);
       expect(cta.count, 12);
@@ -19,7 +18,6 @@ void main() {
         due: 0,
         learnableByCollection: {'a': 8, 'b': 10},
         untriagedByCollection: {'c': 5},
-        totalWords: 40,
       );
       expect(cta.kind, HomeCtaKind.learn);
       expect(cta.count, 18);
@@ -30,7 +28,6 @@ void main() {
         due: 0,
         learnableByCollection: {'a': 0, 'b': 0},
         untriagedByCollection: {'b': 7},
-        totalWords: 40,
       );
       expect(cta.kind, HomeCtaKind.triage);
       expect(cta.count, 7);
@@ -41,7 +38,6 @@ void main() {
         due: 0,
         learnableByCollection: const {},
         untriagedByCollection: {'a': 3, 'b': 7, 'c': 2},
-        totalWords: 40,
       );
       expect(cta.kind, HomeCtaKind.triage);
       expect(cta.count, 12);
@@ -53,30 +49,27 @@ void main() {
         due: 0,
         learnableByCollection: const {},
         untriagedByCollection: {'z': 4, 'a': 4},
-        totalWords: 8,
       );
       expect(cta.kind, HomeCtaKind.triage);
       expect(cta.collectionId, 'a');
     });
 
-    test('zero-count triage entries are ignored', () {
+    test('nothing eligible → none (practice is a collection-screen action, never a home CTA)', () {
       final cta = computeHomeCta(
         due: 0,
         learnableByCollection: const {},
         untriagedByCollection: {'a': 0, 'b': 0},
-        totalWords: 5,
       );
-      expect(cta.kind, HomeCtaKind.practice); // nothing eligible → practice
+      expect(cta.kind, HomeCtaKind.none);
     });
 
-    test('no due, no learnable, no untriaged, but words exist → practice', () {
+    test('no due, no learnable, no untriaged, but words exist → none (was practice)', () {
       final cta = computeHomeCta(
         due: 0,
         learnableByCollection: const {},
         untriagedByCollection: const {},
-        totalWords: 30,
       );
-      expect(cta.kind, HomeCtaKind.practice);
+      expect(cta.kind, HomeCtaKind.none);
     });
 
     test('empty everything → none (new user)', () {
@@ -84,7 +77,6 @@ void main() {
         due: 0,
         learnableByCollection: const {},
         untriagedByCollection: const {},
-        totalWords: 0,
       );
       expect(cta.kind, HomeCtaKind.none);
     });

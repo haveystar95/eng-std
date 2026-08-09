@@ -11,7 +11,9 @@ enum HomeCtaKind {
   /// Due нет, новых-к-изучению нет, но есть неразобранные термины → «Разобрать N».
   triage,
 
-  /// Всё изучено и повторять нечего, но слова есть → свободная тренировка.
+  /// Свободная тренировка. **Только для экрана коллекции** (кнопка «Тренировка») — на Home
+  /// практики больше нет: вход в неё только из коллекции. `computeHomeCta` этот кейс не возвращает;
+  /// значение живёт для `computeCollectionCta`/экрана коллекции.
   practice,
 
   /// Слов нет вовсе (новый пользователь) → кнопки нет, генерация — первый блок.
@@ -28,18 +30,16 @@ class HomeCta {
   final String? collectionId;
 }
 
-/// Decide the CTA from local counts. Priority: due → learn → triage → practice → none
+/// Decide the home CTA from local counts. Priority: **due → learn → triage → none**
 /// (device-batch F8: «Учить N» sits above triage so triaged-«не знаю» words get introduced).
-/// [totalLearnable] words are new-and-triaged (introduced by a non-practice session);
-/// for [HomeCtaKind.triage] the target is the collection with the most untriaged terms
-/// (ties broken by collection id, for a stable choice). Practice is only reached once
-/// nothing is due, learnable, or untriaged — i.e. every word is already in the SRS —
-/// so the empty «Free practice» button never shows on a fresh, all-new set.
+/// Practice is deliberately NOT a home CTA — free training is entered only from the collection
+/// screen — so when nothing is due, learnable or untriaged this returns [HomeCtaKind.none].
+/// For [HomeCtaKind.triage] the target is the collection with the most untriaged terms
+/// (ties broken by collection id, for a stable choice).
 HomeCta computeHomeCta({
   required int due,
   required Map<String, int> learnableByCollection,
   required Map<String, int> untriagedByCollection,
-  required int totalWords,
 }) {
   if (due > 0) return HomeCta(HomeCtaKind.review, count: due);
 
@@ -57,6 +57,5 @@ HomeCta computeHomeCta({
     return HomeCta(HomeCtaKind.triage, count: total, collectionId: eligible.first.key);
   }
 
-  if (totalWords > 0) return const HomeCta(HomeCtaKind.practice);
   return const HomeCta(HomeCtaKind.none);
 }

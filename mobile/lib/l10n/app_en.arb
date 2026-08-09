@@ -286,6 +286,7 @@
   "sessionExitCancel": "Continue",
   "sessionClose": "Close",
   "sessionListenReplay": "Replay audio",
+  "sessionListenReplaySlow": "Slower",
 
   "sessionEmpty": "Nothing to review here yet",
   "sessionDailyNewLimit": "You've reached today's new-word limit. Come back tomorrow",

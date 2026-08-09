@@ -845,6 +845,8 @@
   "@sessionClose": { "description": "Метка доступности крестика выхода из сессии." },
   "sessionListenReplay": "Повторить озвучку",
   "@sessionListenReplay": { "description": "Метка доступности кнопки повтора аудио (кадры 12g–12h)." },
+  "sessionListenReplaySlow": "Замедленно",
+  "@sessionListenReplaySlow": { "description": "Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h)." },
 
   "sessionEmpty": "Здесь пока нечего повторять",
   "@sessionEmpty": { "description": "Пустое состояние сессии — нет карточек." },

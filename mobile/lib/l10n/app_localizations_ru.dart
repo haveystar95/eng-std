@@ -1098,6 +1098,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionListenReplay => 'Повторить озвучку';
 
   @override
+  String get sessionListenReplaySlow => 'Замедленно';
+
+  @override
   String get sessionEmpty => 'Здесь пока нечего повторять';
 
   @override

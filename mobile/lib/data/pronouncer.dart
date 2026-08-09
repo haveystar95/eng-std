@@ -18,8 +18,14 @@ class Pronouncer {
   final FlutterTts _tts;
   bool _audioSessionReady = false;
 
-  /// audio_url != null → play the file; audio_url == null → system TTS.
-  Future<void> speak(Word word, {required String targetLang}) async {
+  /// Normal and slowed speech rates. Slow (a touch under normal) is the listening card's
+  /// «замедленно» replay — a beat slower so a learner can catch each sound (кадр 12g/12h).
+  static const double _rateNormal = 0.45;
+  static const double _rateSlow = 0.30;
+
+  /// audio_url != null → play the file; audio_url == null → system TTS. [slow] drops the rate for a
+  /// deliberate, easier-to-parse replay (listening exercise).
+  Future<void> speak(Word word, {required String targetLang, bool slow = false}) async {
     if (word.audioUrl != null) {
       // TODO(audio-override): play the remote file once an audio player package
       // is added. No term carries audio_url yet (server audio is deferred), so
@@ -27,7 +33,7 @@ class Pronouncer {
     }
     await _configureIosAudioSession();
     await _tts.setLanguage(ttsLocaleFor(targetLang));
-    await _tts.setSpeechRate(0.45);
+    await _tts.setSpeechRate(slow ? _rateSlow : _rateNormal);
     await _tts.speak(word.ttsHint ?? word.term);
   }
 

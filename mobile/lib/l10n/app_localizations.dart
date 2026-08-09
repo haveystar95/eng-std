@@ -1694,6 +1694,12 @@ abstract class AppLocalizations {
   /// **'Повторить озвучку'**
   String get sessionListenReplay;
 
+  /// Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h).
+  ///
+  /// In ru, this message translates to:
+  /// **'Замедленно'**
+  String get sessionListenReplaySlow;
+
   /// Пустое состояние сессии — нет карточек.
   ///
   /// In ru, this message translates to:

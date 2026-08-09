@@ -151,14 +151,16 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     super.dispose();
   }
 
-  Future<void> _speak(String text) async {
+  Future<void> _speak(String text, {bool slow = false}) async {
     // The scoped collection's language wins (F16); a cross-collection session has none and falls
     // back to the profile's target language.
     final target = widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-    // Reuse the Pronouncer, which speaks a Word — wrap the raw target text.
+    // Reuse the Pronouncer, which speaks a Word — wrap the raw target text. [slow] backs the
+    // listening card's «замедленно» replay.
     await _pronouncer.speak(
       Word(termId: '', term: text, translation: '', type: 'word'),
       targetLang: target,
+      slow: slow,
     );
   }
 
