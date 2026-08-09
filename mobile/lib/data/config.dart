@@ -12,30 +12,34 @@ const bool kShowPhotoAttribution = false;
 class AppConfig {
   // ── Feature flags (A3.9 — «Стор коллекций» + пейволл) ──────────────────────
   //
-  // The whole store + paywall block ships behind two flags, **off by default in
-  // a release build**. Each is the compile-time DEFAULT for the runtime
-  // [FeatureFlags]; a stored dev-menu override (SyncMeta) wins over it. With both
-  // off (the release default), none of the surfaces exist — the Collections tab,
-  // create screen and profile look exactly as they did before A3.9.
+  // The store + paywall block sits behind these flags. Each is the compile-time
+  // DEFAULT for the runtime [FeatureFlags]; a stored dev-menu override (SyncMeta)
+  // wins over it.
   //
-  // Turn them on for testing without a rebuild via the dev section in Profile
-  // (revealed by DEV_MENU=true), or pin them at launch:
-  //   flutter run --dart-define=STORE_ENABLED=true --dart-define=PAYWALL_ENABLED=true
+  // **DEV DEFAULT: ON.** The store is in scope and only we install builds, so a
+  // plain `flutter run` (no --dart-define) must not silently drop these surfaces —
+  // that's exactly how the store "disappeared" from a rebuild. They default true
+  // so every dev build is identical without extra flags.
+  //
+  // TODO(release): decide the release defaults for STORE_ENABLED / PAYWALL_ENABLED /
+  // DEV_MENU (DEV_MENU almost certainly false; store/paywall per launch scope). Owned
+  // by the release block — see ROADMAP «релиз: решить дефолты флагов». Override at
+  // launch when needed, e.g. --dart-define=STORE_ENABLED=false.
 
   /// The store surface (the «Готовые» segment in the Collections tab, кадр 2.8).
   static const bool storeEnabled =
-      bool.fromEnvironment('STORE_ENABLED', defaultValue: false);
+      bool.fromEnvironment('STORE_ENABLED', defaultValue: true); // TODO(release): default
 
   /// The paywall (кадры 2.13–2.14) and its entry points (store premium lock,
   /// exhausted-quota upsell, the profile «Попробовать Premium» row).
   static const bool paywallEnabled =
-      bool.fromEnvironment('PAYWALL_ENABLED', defaultValue: false);
+      bool.fromEnvironment('PAYWALL_ENABLED', defaultValue: true); // TODO(release): default
 
   /// Reveals the Profile → «Разработка» dev section (feature-flag + fake-premium
-  /// toggles). Off by default so a release build stays clean; pass it to test on
-  /// device without a rebuild (`--dart-define=DEV_MENU=true`).
+  /// toggles). On by default in dev builds so the flags are reachable on device
+  /// without a rebuild; a release build should pin it off.
   static const bool devMenuEnabled =
-      bool.fromEnvironment('DEV_MENU', defaultValue: false);
+      bool.fromEnvironment('DEV_MENU', defaultValue: true); // TODO(release): default false
 
   /// Serve a small built-in mock store catalogue when `GET /store/collections`
   /// returns nothing (Session B hasn't published content yet), so the store UI is

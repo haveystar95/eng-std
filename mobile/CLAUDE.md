@@ -31,12 +31,23 @@ Training session: tap card to reveal; **swipe right = Знаю, left = Не зн
 
 Device: **iPhone (Denis)**, id `00008110-000A7CCC3492801E`, iOS 27 beta.
 
+**Canonical build command — use this verbatim, every session.** No `--dart-define` needed: every
+compile-time default in `lib/data/config.dart` is already correct for a dev build — `API_BASE_URL`
+→ the stable backend2 ngrok, the Google client id is set, and the store/paywall/dev-menu flags
+default **true**. Do NOT drop the flags with a bare rebuild — that is exactly how the store once
+"disappeared" from a build.
+
 ```bash
-cd mobile && flutter run --release -d 00008110-000A7CCC3492801E
+cd mobile && PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E
 ```
+
+Override a single setting only when you must, e.g. `--dart-define=STORE_ENABLED=false` or
+`--dart-define=API_BASE_URL=https://…`. (Release defaults for the flags are a `TODO(release)` — see
+ROADMAP «релиз: решить дефолты флагов».)
 
 **Use `--release`.** In debug the app shows a white screen / "Dart VM Service not discovered"
 because the debug VM service needs the phone's Local Network permission; release sidesteps it.
+The `PATH`/`LANG` prefix is required (Homebrew pod/toolchain first, UTF-8 locale) — see the pod gotcha below.
 
 Hard-won gotchas (all already resolved once — needed again on a fresh machine/checkout):
 - **Xcode 27 beta required** — host is macOS 27 beta; App Store Xcode 26.x won't launch (error -10664). Xcode 27 beta 3 is installed.
