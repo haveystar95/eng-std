@@ -347,7 +347,8 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 
-    // …but practice drills both never-studied terms, and a new (reps 0) card is multiple_choice.
+    // …but practice drills both never-studied terms. Practice fans across every applicable mode
+    // (not the reps ladder): single words with no example → multiple_choice / typing / listening.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
@@ -355,7 +356,9 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
 
     expect($cards)->toHaveCount(2);
     expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
-    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice');
+    // No word_bank (single word) and no cloze (no example); the rest of the enabled set is fair game.
+    expect(array_column($cards, 'exercise_mode'))
+        ->each->toBeIn(['multiple_choice', 'typing', 'listening']);
 });
 
 it('includes a studied-but-not-due term in practice (which the normal session withholds)', function () {
@@ -375,13 +378,16 @@ it('includes a studied-but-not-due term in practice (which the normal session wi
         ->assertOk()
         ->assertJsonPath('data.cards', []); // not due, already studied → nothing
 
-    // …but practice drills it regardless of due_at, and it is produced (reps ≥ 1 → typing, one word).
-    $this->withHeader('Authorization', "Bearer {$token}")
+    // …but practice drills it regardless of due_at. The mode is fanned (not the ladder); for a
+    // single word with no example that's one of multiple_choice / typing / listening.
+    $card = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
         ->assertJsonCount(1, 'data.cards')
         ->assertJsonPath('data.cards.0.term_id', $apple)
-        ->assertJsonPath('data.cards.0.exercise_mode', 'typing');
+        ->json('data.cards.0');
+
+    expect($card['exercise_mode'])->toBeIn(['multiple_choice', 'typing', 'listening']);
 });
 
 it('does not spend the daily new-term quota during practice', function () {

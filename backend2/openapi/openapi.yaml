@@ -624,10 +624,14 @@ paths:
       description: >-
         Assembles a ready-to-play session: due cards first (state <> new, by due date), then new
         cards up to the day's remaining new-term quota (one global quota — a scoped session does
-        not multiply it). Each card carries its exercise mode (chosen from the term's reps: reps 0 →
-        multiple_choice, reps ≥ 1 → word_bank for multi-word / typing for single-word; review rotates,
-        known → typing), the prompt (user's language), the answer (target language) and mode-specific extras — shuffled
-        options for multiple_choice, shuffled chips for word_bank — so the client runs it offline.
+        not multiply it). Each card carries its exercise mode, chosen from the term's reps and answer
+        shape: reps 0 → multiple_choice; reps ≥ 1 → a production rotation that leads with the base
+        (word_bank for multi-word / typing for single-word) then fans out to listening (hear it, type
+        it) and cloze (fill the blank in the term's own example); review rotates typing/listening/cloze;
+        known → typing. cloze is only offered when the example contains the answer (the client blanks
+        that span from `example`). The card also carries the prompt (user's language), the answer
+        (target language) and mode-specific extras — shuffled options for multiple_choice, shuffled
+        chips for word_bank — so the client runs it offline.
         The session's composition is fixed server-side under the returned session_id. A practice
         session (practice=true) instead draws EVERY term in scope — a collection, or all the user's
         collections — ignoring due_at, state and the daily quota (device-batch F17): free training on

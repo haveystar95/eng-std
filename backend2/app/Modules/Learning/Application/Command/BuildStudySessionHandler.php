@@ -87,13 +87,18 @@ final readonly class BuildStudySessionHandler
         $cards = [];
         /** @var list<TermId> $composition */
         $composition = [];
+        $cardIndex = 0;
         foreach ($due as $view) {
             $termContent = $content[$view->termId->value] ?? null;
             if ($termContent === null) {
                 continue; // nothing to render without content
             }
-            $cards[] = $this->assembler->assemble($command->actorId, $view, $termContent, $poolIds, $this->enabled);
+            $cards[] = $this->assembler->assemble(
+                $command->actorId, $view, $termContent, $poolIds, $this->enabled,
+                isPractice: $command->isPractice, cardIndex: $cardIndex,
+            );
             $composition[] = $view->termId;
+            $cardIndex++;
         }
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();

@@ -59,11 +59,41 @@ it('always checks a due known term in typing', function () {
     expect($this->selector->select(atState(LearningState::Known), $this->phase1))->toBe(ExerciseMode::Typing);
 });
 
-it('rotates review modes deterministically by the review counter', function () {
-    expect($this->selector->select(atState(LearningState::Review, 0), $this->all))->toBe(ExerciseMode::Typing)
-        ->and($this->selector->select(atState(LearningState::Review, 1), $this->all))->toBe(ExerciseMode::Listening)
-        ->and($this->selector->select(atState(LearningState::Review, 2), $this->all))->toBe(ExerciseMode::Cloze)
-        ->and($this->selector->select(atState(LearningState::Review, 3), $this->all))->toBe(ExerciseMode::Typing);
+it('rotates review modes deterministically by the review counter (example-backed)', function () {
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, clozeable: true);
+    expect($rev(0))->toBe(ExerciseMode::Typing)
+        ->and($rev(1))->toBe(ExerciseMode::Listening)
+        ->and($rev(2))->toBe(ExerciseMode::Cloze)
+        ->and($rev(3))->toBe(ExerciseMode::Typing);
+});
+
+it('leads the reps ≥ 1 production rotation with the base mode, then fans out (offset (reps-1))', function () {
+    // Single word: base is typing. Second meeting (reps 1) is typing (TLv2), then listening, then cloze.
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 1, clozeable: true);
+    expect($single(1))->toBe(ExerciseMode::Typing)
+        ->and($single(2))->toBe(ExerciseMode::Listening)
+        ->and($single(3))->toBe(ExerciseMode::Cloze)
+        ->and($single(4))->toBe(ExerciseMode::Typing);
+
+    // Multi-word: base is word_bank; the rotation leads with it.
+    $multi = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 3, clozeable: true);
+    expect($multi(1))->toBe(ExerciseMode::WordBank)
+        ->and($multi(2))->toBe(ExerciseMode::Listening)
+        ->and($multi(3))->toBe(ExerciseMode::Cloze);
+});
+
+it('never offers cloze when the term has no usable example (falls through to the typed ladder)', function () {
+    // clozeable defaults false → cloze is dropped from every rotation.
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 1);
+    expect($single(1))->toBe(ExerciseMode::Typing)
+        ->and($single(2))->toBe(ExerciseMode::Listening)
+        ->and($single(3))->toBe(ExerciseMode::Typing); // wraps typing/listening — cloze never appears
+
+    // Review with no example: typing/listening only.
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all);
+    expect($rev(0))->toBe(ExerciseMode::Typing)
+        ->and($rev(1))->toBe(ExerciseMode::Listening)
+        ->and($rev(2))->toBe(ExerciseMode::Typing);
 });
 
 it('degrades review to the only enabled review mode in phase 1', function () {
@@ -77,4 +107,58 @@ it('falls back to an enabled mode when the preferred one is switched off', funct
     // A produced single word prefers typing, which is off → fall back to the one enabled mode.
     expect($this->selector->select(atState(LearningState::Learning, 1), $onlyMc, answerWordCount: 1))
         ->toBe(ExerciseMode::MultipleChoice);
+});
+
+// ── free practice: fan across ALL applicable modes (not the reps ladder) ─────────
+
+/** @return list<ExerciseMode> */
+function practiceRun(ExerciseSelector $sel, EnabledModes $enabled, int $wordCount, bool $clozeable, int $rounds = 10): array
+{
+    // rotation is card-index + a per-term offset in production; here we sweep indices to see the fan.
+    $out = [];
+    for ($i = 0; $i < $rounds; $i++) {
+        $out[] = $sel->selectForPractice($enabled, $i, $wordCount, $clozeable);
+    }
+
+    return $out;
+}
+
+it('practice fans a clozeable multi-word term across every enabled mode', function () {
+    $modes = practiceRun($this->selector, $this->all, wordCount: 3, clozeable: true);
+
+    expect(array_unique(array_map(fn (ExerciseMode $m): string => $m->value, $modes)))
+        ->toEqualCanonicalizing(['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze']);
+});
+
+it('practice never assembles a single word (no word_bank) but still fans the rest', function () {
+    $modes = practiceRun($this->selector, $this->all, wordCount: 1, clozeable: true);
+    $seen = array_map(fn (ExerciseMode $m): string => $m->value, $modes);
+
+    expect($seen)->not->toContain('word_bank')
+        ->and(array_unique($seen))->toEqualCanonicalizing(['multiple_choice', 'typing', 'listening', 'cloze']);
+});
+
+it('practice never offers cloze without a usable example', function () {
+    $modes = practiceRun($this->selector, $this->all, wordCount: 3, clozeable: false);
+    $seen = array_map(fn (ExerciseMode $m): string => $m->value, $modes);
+
+    expect($seen)->not->toContain('cloze')
+        ->and(array_unique($seen))->toEqualCanonicalizing(['multiple_choice', 'word_bank', 'typing', 'listening']);
+});
+
+it('practice round-robins deterministically by the rotation seed', function () {
+    // Same seed → same mode (reproducible); consecutive seeds walk the applicable set in order.
+    $a = $this->selector->selectForPractice($this->all, 0, 3, true);
+    $b = $this->selector->selectForPractice($this->all, 0, 3, true);
+    expect($a)->toBe($b);
+
+    // A negative seed (a large per-term offset can push it) still maps into range.
+    expect($this->selector->selectForPractice($this->all, -1, 3, true))->toBeInstanceOf(ExerciseMode::class);
+});
+
+it('practice honours the enabled set — a phase-1 config never yields listening or cloze', function () {
+    $modes = practiceRun($this->selector, $this->phase1, wordCount: 3, clozeable: true);
+    $seen = array_unique(array_map(fn (ExerciseMode $m): string => $m->value, $modes));
+
+    expect($seen)->toEqualCanonicalizing(['multiple_choice', 'word_bank', 'typing']);
 });

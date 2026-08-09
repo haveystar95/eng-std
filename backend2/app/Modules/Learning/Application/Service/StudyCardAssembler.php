@@ -37,14 +37,32 @@ final readonly class StudyCardAssembler
     ) {}
 
     /** @param list<string> $poolTermIds */
-    public function assemble(UserId $user, DueTermView $view, TermContentView $content, array $poolTermIds, EnabledModes $enabled): SessionCardView
-    {
+    public function assemble(
+        UserId $user,
+        DueTermView $view,
+        TermContentView $content,
+        array $poolTermIds,
+        EnabledModes $enabled,
+        bool $isPractice = false,
+        int $cardIndex = 0,
+    ): SessionCardView {
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
         );
         $answer = $content->text;
-        $mode = $this->selector->select($progress, $enabled, $this->chips->wordCount($answer));
+        // Cloze needs an example that actually contains the answer (the client blanks that span from
+        // the same `example`); without one the selector must not pick cloze. Case-insensitive
+        // substring, matching the client's blanking.
+        $clozeable = $content->example !== null
+            && $content->example !== ''
+            && mb_stripos($content->example, $answer) !== false;
+        $wordCount = $this->chips->wordCount($answer);
+        // Practice fans across every applicable mode (round-robin by card + a per-term offset), so a
+        // session shows them all and repeats re-deal; SRS keeps the reps ladder.
+        $mode = $isPractice
+            ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $wordCount, $clozeable)
+            : $this->selector->select($progress, $enabled, $wordCount, $clozeable);
 
         $options = null;
         $chips = null;
@@ -69,5 +87,14 @@ final readonly class StudyCardAssembler
             options: $options,
             chips: $chips,
         );
+    }
+
+    /**
+     * A stable, well-spread offset per term so the practice round-robin doesn't hand the same mode
+     * to every card at a given index — deterministic (crc32), so it's testable and reproducible.
+     */
+    private function termOffset(string $termId): int
+    {
+        return (int) crc32($termId);
     }
 }
