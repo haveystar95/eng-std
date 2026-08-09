@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -27,6 +29,26 @@ class SessionAnswer {
   final int? latencyMs;
 }
 
+/// The pixel width the prompt photo is decoded to — the on-screen banner width (F20). Shared by the
+/// live [Image.network] `cacheWidth` and the shell's precache so both hit the SAME image-cache entry.
+int promptPhotoCacheWidth(BuildContext context) {
+  final mq = MediaQuery.of(context);
+  return (mq.size.width * mq.devicePixelRatio).round();
+}
+
+/// Warm-decode a term's prompt photo at the display width so an upcoming card transition meets an
+/// already-decoded image instead of a cold ~4000px decode + GPU upload mid-slide (F20). Fire-and-
+/// forget; a null/empty url or a decode error is ignored.
+Future<void> precacheSessionImage(BuildContext context, String? url) async {
+  if (url == null || url.isEmpty) return;
+  final provider = ResizeImage(NetworkImage(url), width: promptPhotoCacheWidth(context));
+  try {
+    await precacheImage(provider, context);
+  } catch (_) {
+    // a broken image must never take down the session
+  }
+}
+
 /// The sliding content of one session card: the prompt, the mode-specific interaction, and — once
 /// answered — the feedback that expands in the bottom of the same card (§4е). Owns its own
 /// answering→feedback state; the shell owns the header, progression and recording.
@@ -37,10 +59,18 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.autoPronounce,
     required this.onAnswered,
     required this.onSpeak,
+    this.isCurrent = _alwaysCurrent,
   });
+
+  static bool _alwaysCurrent() => true;
 
   final SessionCard card;
   final bool autoPronounce;
+
+  /// True while this card is still the on-screen one. Deferred side-effects (autopronounce, listening
+  /// autoplay, keyboard focus) check it so a fast «Дальше-Дальше» that leaves the card before the
+  /// post-transition callback fires cancels the effect instead of firing it on the next card (F20).
+  final bool Function() isCurrent;
 
   /// Called exactly once, when the user commits their answer. The shell then reveals the pinned
   /// «Дальше» bar (advancing lives on the shell, not in the card — device-batch F9).
@@ -77,12 +107,21 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// forward-compatible if options ever arrive.
   bool get _isRecognitionListening => _isListening && (_card.options?.isNotEmpty ?? false);
 
+  Timer? _deferTimer;
+  Timer? _speakTimer;
+
   @override
   void initState() {
     super.initState();
-    // Listening plays on appearance — the term is never shown, only heard.
+    // F20: side-effects that used to fire DURING the card's slide-in (and stalled it) now run AFTER
+    // the transition settles, and are cancelled if the card is no longer current (fast «Дальше»).
     if (_isListening) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSpeak(_card.answer));
+      // Listening plays on appearance — the term is never shown, only heard.
+      _afterTransition(() => widget.onSpeak(_card.answer));
+    } else if (_mode == ExerciseMode.typing || _isCloze) {
+      // Raise the keyboard after the slide, not during it (the keyboard-attach channel call was a
+      // per-transition stall). Field autofocus is off; we request focus here instead.
+      _afterTransition(() => _focus.requestFocus());
     }
     // Cloze types straight INTO the blank (кадр 12j): the hidden field captures the keyboard, and
     // the sentence's blank shows the letters as they're typed. Rebuild the sentence on each change.
@@ -91,12 +130,22 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     }
   }
 
+  /// Run [fn] once the slide-in animation has settled, unless the card was left in the meantime.
+  void _afterTransition(VoidCallback fn) {
+    _deferTimer?.cancel();
+    _deferTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
+      if (mounted && widget.isCurrent()) fn();
+    });
+  }
+
   void _onClozeInput() {
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _deferTimer?.cancel();
+    _speakTimer?.cancel();
     if (_isCloze) _input.removeListener(_onClozeInput);
     _input.dispose();
     _focus.dispose();
@@ -124,8 +173,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _usedHint = usedHint;
     });
     _focus.unfocus();
-    // Auto-pronounce the correct form when the answer resolves (§4е «слово пишется само»).
-    if (widget.autoPronounce) widget.onSpeak(_card.answer);
+    // Auto-pronounce the correct form (§4е). The TTS platform-channel call stalls the main thread
+    // ~40 ms, so fire it only AFTER the feedback has settled — on a static screen that stall is
+    // invisible, and a fast «Дальше» cancels it (isCurrent) so it never lands on the slide (F20).
+    if (widget.autoPronounce) {
+      _speakTimer?.cancel();
+      _speakTimer = Timer(const Duration(milliseconds: 420), () {
+        if (mounted && widget.isCurrent()) widget.onSpeak(_card.answer);
+      });
+    }
     widget.onAnswered(SessionAnswer(
       response: response,
       verdict: verdict,
@@ -259,7 +315,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PromptPhoto(termId: _card.termId),
+          _PromptPhoto(termId: _card.termId), // photo shown immediately; precache keeps it warm (F20)
           Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
           _instructionLine(l),
@@ -370,7 +426,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     return TextField(
       controller: _input,
       focusNode: _focus,
-      autofocus: !_isListening, // listening: let the user hear first
+      // Focus is requested AFTER the slide (see initState) so the keyboard-raise doesn't stall the
+      // transition (F20); listening never auto-focuses (let the user hear first).
+      autofocus: false,
       style: hideText
           ? const TextStyle(color: Colors.transparent, height: 0.01)
           : AppTextExercise.typingInput,
@@ -712,27 +770,56 @@ class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderState
 
 // ── prompt photo (from the local term mirror) ─────────────────────────────────
 
-class _PromptPhoto extends ConsumerWidget {
+class _PromptPhoto extends ConsumerStatefulWidget {
   const _PromptPhoto({required this.termId});
   final String termId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PromptPhoto> createState() => _PromptPhotoState();
+}
+
+class _PromptPhotoState extends ConsumerState<_PromptPhoto> {
+  // Query once (not on every rebuild). The image is shown as soon as it's ready; precache keeps it
+  // warm so a photo card meets a decoded image rather than a cold network load (F20).
+  late final Future<Term?> _term = ref.read(appDatabaseProvider).termById(widget.termId);
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<Term?>(
-      future: ref.read(appDatabaseProvider).termById(termId),
+      future: _term,
       builder: (context, snap) {
+        final resolved = snap.connectionState == ConnectionState.done;
         final url = snap.data?.imageUrl;
-        if (url == null || url.isEmpty) return const SizedBox.shrink();
+        // A resolved term with no photo collapses; while the (fast, local) lookup is in flight we
+        // reserve the banner height so resolving it doesn't jump the layout mid-slide.
+        if (resolved && (url == null || url.isEmpty)) return const SizedBox.shrink();
+
+        final showImage = url != null && url.isNotEmpty;
         return Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadii.field),
-            child: Image.network(
-              url,
+            child: SizedBox(
               height: 150,
               width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              child: showImage
+                  ? Image.network(
+                      url,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      // Decode to the on-screen width, not the source's native ~4000px; matches
+                      // `precacheSessionImage` so the precache warms this exact cache entry (F20).
+                      cacheWidth: promptPhotoCacheWidth(context),
+                      // Soft fade-in as the (precached) image lands, so it appears smoothly (F20).
+                      frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
+                        opacity: frame == null ? 0 : 1,
+                        duration: const Duration(milliseconds: 180),
+                        child: child,
+                      ),
+                      errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.track),
+                    )
+                  : const ColoredBox(color: AppColors.track), // placeholder during the slide / load
             ),
           ),
         );

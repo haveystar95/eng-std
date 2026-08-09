@@ -59,6 +59,30 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   // Minted once so `POST /study/sessions` is idempotent — a rebuild reuses the fixed composition.
   final String _sessionId = ApiClient.ulid();
 
+  // F20: pre-warm the iOS keyboard while the session is still loading (behind the spinner), so the
+  // ~600 ms first-keyboard-init doesn't freeze the first typing/cloze card. We briefly focus a hidden
+  // field to spin the keyboard process up, then unfocus before any card needs it.
+  final FocusNode _kbWarm = FocusNode(skipTraversal: true, canRequestFocus: true);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _kbWarm.requestFocus();
+      // Drop focus next frame — the keyboard engine stays warm after this, but nothing is shown.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _kbWarm.unfocus();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _kbWarm.dispose();
+    super.dispose();
+  }
+
   /// «Ещё раз» on a practice summary: start a brand-new practice session immediately (a fresh
   /// SessionScreen mints a new id → the server reshuffles the whole-collection pool). Replaces the
   /// route so the back stack doesn't fill up with finished sessions.
@@ -92,20 +116,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
         backgroundColor: AppColors.paper,
         body: SafeArea(
           bottom: false,
-          child: session.when(
-            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
-            error: (e, _) => _CenteredMessage(text: l.sessionLoadError(e.toString())),
-            data: (s) => s.cards.isEmpty
-                ? _CenteredMessage(
-                    text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
-                    icon: widget.learn ? LucideIcons.clock : LucideIcons.check,
-                  )
-                : _SessionShell(
-                    session: s,
-                    practice: widget.practice,
-                    targetLang: widget.targetLang,
-                    onAgain: _again,
+          child: Stack(
+            children: [
+              session.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+                error: (e, _) => _CenteredMessage(text: l.sessionLoadError(e.toString())),
+                data: (s) => s.cards.isEmpty
+                    ? _CenteredMessage(
+                        text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
+                        icon: widget.learn ? LucideIcons.clock : LucideIcons.check,
+                      )
+                    : _SessionShell(
+                        session: s,
+                        practice: widget.practice,
+                        targetLang: widget.targetLang,
+                        onAgain: _again,
+                      ),
+              ),
+              // Invisible keyboard-warmup field (F20). 1×1, transparent, non-interactive.
+              Positioned(
+                left: 0,
+                top: 0,
+                width: 1,
+                height: 1,
+                child: Opacity(
+                  opacity: 0,
+                  child: IgnorePointer(
+                    child: TextField(focusNode: _kbWarm, autofocus: false),
                   ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -145,6 +186,27 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   SessionCard get _card => _cards[_pos];
 
   @override
+  void initState() {
+    super.initState();
+    // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
+    // loads (the lag the user saw was photo cards fetching + decoding late).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _precacheCard(0);
+      _precacheCard(1);
+      _precacheCard(2);
+    });
+  }
+
+  /// Warm the photo of the card at [index] (no-op for an out-of-range index or a term with no image).
+  void _precacheCard(int index) {
+    if (index < 0 || index >= _cards.length || !mounted) return;
+    final termId = _cards[index].termId;
+    ref.read(appDatabaseProvider).termById(termId).then((term) {
+      if (mounted) precacheSessionImage(context, term?.imageUrl);
+    });
+  }
+
+  @override
   void dispose() {
     _pronouncer.stop();
     _scroll.dispose();
@@ -165,6 +227,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   }
 
   void _onAnswered(SessionAnswer a) {
+    // F20: while the user reads the feedback, warm the next TWO cards' photos so an upcoming photo
+    // card meets a ready image instead of a cold network load (precache is the main image fix).
+    _precacheCard(_pos + 1);
+    _precacheCard(_pos + 2);
     _results.add((card: _card, verdict: a.verdict));
     ref.read(reviewSyncProvider).record(
           termId: _card.termId,
@@ -225,12 +291,16 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
     final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;
 
+    final builtAt = _pos; // the index this card is built for — used to cancel its deferred effects
     final card = SessionExerciseCard(
       key: ValueKey(_pos),
       card: _card,
       autoPronounce: autoPronounce,
       onAnswered: _onAnswered,
       onSpeak: _speak,
+      // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's deferred
+      // speak/focus is cancelled instead of firing on the next card.
+      isCurrent: () => mounted && _pos == builtAt,
     );
 
     return PopScope(

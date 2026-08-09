@@ -17,6 +17,11 @@ class Pronouncer {
 
   final FlutterTts _tts;
   bool _audioSessionReady = false;
+  // Cache what we've already pushed to the engine so a repeat speak() is ONE platform-channel call
+  // (speak) instead of three (setLanguage + setSpeechRate + speak). The redundant round-trips were a
+  // per-answer stall that landed on the card-transition animation (F20).
+  String? _lastLocale;
+  double? _lastRate;
 
   /// Normal and slowed speech rates. Slow (a touch under normal) is the listening card's
   /// «замедленно» replay — a beat slower so a learner can catch each sound (кадр 12g/12h).
@@ -32,8 +37,21 @@ class Pronouncer {
       // this falls through to system TTS and every term stays audible.
     }
     await _configureIosAudioSession();
-    await _tts.setLanguage(ttsLocaleFor(targetLang));
-    await _tts.setSpeechRate(slow ? _rateSlow : _rateNormal);
+    // Interrupt any still-playing utterance instead of queueing behind it — a growing TTS queue was
+    // a per-card platform-thread load that got worse through a session (F20).
+    await _tts.stop();
+    final locale = ttsLocaleFor(targetLang);
+    final rate = slow ? _rateSlow : _rateNormal;
+    // Only touch the engine when a setting actually changes — otherwise speak() is one channel call,
+    // not three, so it stops stalling the card transition (F20).
+    if (_lastLocale != locale) {
+      _lastLocale = locale;
+      await _tts.setLanguage(locale);
+    }
+    if (_lastRate != rate) {
+      _lastRate = rate;
+      await _tts.setSpeechRate(rate);
+    }
     await _tts.speak(word.ttsHint ?? word.term);
   }
 

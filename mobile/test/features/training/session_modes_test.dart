@@ -63,7 +63,10 @@ void main() {
     expect(find.text('прослушай и напиши по-английски'), findsOneWidget);
     expect(find.text('Замедленно'), findsOneWidget);
 
-    // Autoplay fired once at normal speed on appearance.
+    // Autoplay is deferred until the slide-in settles (F20), so it hasn't fired yet…
+    expect(spoken, isEmpty);
+    await tester.pump(const Duration(milliseconds: 500));
+    // …then it fires once, at normal speed.
     expect(spoken, [(text: 'withdraw cash', slow: false)]);
 
     // Tapping «Замедленно» replays slowly.
