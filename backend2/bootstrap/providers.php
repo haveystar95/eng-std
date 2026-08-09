@@ -1,6 +1,7 @@
 <?php
 
 return [
+    App\Modules\Admin\Infrastructure\Provider\AdminServiceProvider::class,
     App\Modules\Collections\Infrastructure\Provider\CollectionsServiceProvider::class,
     App\Modules\Generation\Infrastructure\Provider\GenerationServiceProvider::class,
     App\Modules\Identity\Infrastructure\Provider\IdentityServiceProvider::class,

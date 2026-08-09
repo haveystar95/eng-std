@@ -21,4 +21,12 @@ final class EloquentUserTierWriter implements UserTierWriter
 
         return $affected > 0;
     }
+
+    public function setTierById(string $userId, SubscriptionTier $tier): bool
+    {
+        // tier lives on the profile row; a user without a profile has nowhere to store it yet.
+        $affected = Profile::query()->where('user_id', $userId)->update(['tier' => $tier->value]);
+
+        return $affected > 0;
+    }
 }

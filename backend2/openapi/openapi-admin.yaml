@@ -1,0 +1,728 @@
+openapi: 3.1.0
+info:
+  title: WordTrainer Admin API
+  version: 0.1.0
+  description: >
+    Back-office admin API. Base path `/admin/api`, Sanctum bearer tokens minted against the
+    `admins` table (a guard separate from the app's users — an app-user token never authenticates
+    here). JSON, snake_case. This file is the SEPARATE admin contract; the app contract is
+    `openapi.yaml` and is not touched here. The admin panel (Vue) is generated from this file, so an
+    endpoint not described here effectively does not exist. Errors are RFC 7807
+    `application/problem+json` with a stable machine `code`, except input validation which uses
+    Laravel's 422 `{message, errors}` shape. Read endpoints are paginated with `page` / `per_page`
+    (default 25, max 100) and wrap results as `{ data: [...], meta: { total, page, per_page } }`.
+
+servers:
+  - url: http://localhost:8001/admin/api
+    description: Local (docker)
+
+security:
+  - adminBearer: []
+
+tags:
+  - name: Auth
+  - name: Dashboard
+  - name: Users
+  - name: Collections
+  - name: Terms
+  - name: Logs
+  - name: Practice
+  - name: Generation
+
+paths:
+  /login:
+    post:
+      tags: [Auth]
+      summary: Sign in as an admin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                device_name: { type: string, maxLength: 100 }
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, admin]
+                properties:
+                  token: { type: string }
+                  admin: { $ref: '#/components/schemas/Admin' }
+        '401':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /me:
+    get:
+      tags: [Auth]
+      summary: The current admin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Admin' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current admin token
+      responses:
+        '204': { description: Signed out }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Fleet totals and AI-spend windows
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dashboard' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      parameters:
+        - { name: search, in: query, schema: { type: string }, description: substring match on email }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/UserRow' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: User detail
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}/plan:
+    get:
+      tags: [Users]
+      summary: Day-plan simulator (dry run — writes nothing)
+      description: >
+        Simulates the user's study day on `date` (their timezone; default today). Reuses the real
+        scheduler (GetDueTerms) and ExerciseSelector with no persistence: which terms are due, how
+        many new ones the quota would introduce, and which trainer each arrives as.
+      parameters:
+        - { $ref: '#/components/parameters/UserId' }
+        - { name: date, in: query, schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }, description: 'target calendar date (YYYY-MM-DD)' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DayPlan' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{id}/collections:
+    get:
+      tags: [Users]
+      summary: A user's collections with per-collection progress
+      description: >
+        The user's library (owned + added collections) with progress counters per collection
+        (Mastery-defined «усвоено», from the Learning module). Not paginated — returned as `{data:[…]}`.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/UserCollectionWithProgress' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}/reviews:
+    get:
+      tags: [Users]
+      summary: A user's review feed
+      parameters:
+        - { $ref: '#/components/parameters/UserId' }
+        - { name: from, in: query, schema: { type: string }, description: 'ISO lower bound on answered_at' }
+        - { name: to, in: query, schema: { type: string }, description: 'ISO upper bound on answered_at' }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Review' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}/tier:
+    post:
+      tags: [Users]
+      summary: Set a user's subscription tier (audited)
+      description: The one v1 admin mutation. Reuses Identity's tier writer and appends an admin_audit_log row.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tier]
+              properties:
+                tier: { type: string, enum: [free, premium] }
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  tier: { type: string, enum: [free, premium] }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /collections:
+    get:
+      tags: [Collections]
+      summary: List collections
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [system, shared, custom] } }
+        - { name: search, in: query, schema: { type: string }, description: substring match on title }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/CollectionRow' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /collections/{id}:
+    get:
+      tags: [Collections]
+      summary: Collection detail with terms
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /terms:
+    get:
+      tags: [Terms]
+      summary: List terms
+      parameters:
+        - { name: search, in: query, schema: { type: string }, description: substring match on text / normalized_text }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/TermRow' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /terms/{id}:
+    get:
+      tags: [Terms]
+      summary: Term detail (translations, examples, collections, progress footprint)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TermDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /request-logs:
+    get:
+      tags: [Logs]
+      summary: API request/response log
+      parameters:
+        - { name: user_id, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: integer } }
+        - { name: path, in: query, schema: { type: string }, description: substring match on path }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/RequestLog' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /practice-dialogs:
+    get:
+      tags: [Practice]
+      summary: List realtime practice dialogs
+      parameters:
+        - { name: user_id, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/DialogRow' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /practice-dialogs/{id}:
+    get:
+      tags: [Practice]
+      summary: Dialog detail with transcript and cost
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DialogDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /generations:
+    get:
+      tags: [Generation]
+      summary: List AI collection-generation requests
+      parameters:
+        - { name: user_id, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, running, succeeded, failed] } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Generation' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    adminBearer:
+      type: http
+      scheme: bearer
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Problem:
+      description: RFC 7807 problem
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: Laravel 422 validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors: { type: object, additionalProperties: { type: array, items: { type: string } } }
+
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+
+    Page:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { type: array, items: {} }
+        meta:
+          type: object
+          properties:
+            total: { type: integer }
+            page: { type: integer }
+            per_page: { type: integer }
+
+    Admin:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string }
+
+    CostBreakdown:
+      type: object
+      description: USD spent by category over a window.
+      properties:
+        generation: { type: number }
+        practice: { type: number }
+        enrichment: { type: number }
+        example_regen: { type: number }
+        total: { type: number }
+
+    CostCategory:
+      type: object
+      properties:
+        tokens_in: { type: integer }
+        tokens_out: { type: integer }
+        cost_usd: { type: number }
+        count: { type: integer }
+
+    Dashboard:
+      type: object
+      properties:
+        totals:
+          type: object
+          properties:
+            users: { type: integer }
+            collections: { type: integer }
+            terms: { type: integer }
+            reviews_today: { type: integer }
+            reviews_7d: { type: integer }
+        costs:
+          type: object
+          properties:
+            today: { $ref: '#/components/schemas/CostBreakdown' }
+            last_7d: { $ref: '#/components/schemas/CostBreakdown' }
+            all_time: { $ref: '#/components/schemas/CostBreakdown' }
+
+    UserRow:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: [string, 'null'] }
+        tier: { type: string, enum: [free, premium] }
+        cefr: { type: [string, 'null'] }
+        created_at: { type: [string, 'null'], format: date-time }
+        collections_count: { type: integer }
+        progress_count: { type: integer }
+
+    UserDetail:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: [string, 'null'] }
+        avatar: { type: [string, 'null'] }
+        tier: { type: string, enum: [free, premium] }
+        cefr: { type: [string, 'null'] }
+        daily_goal: { type: integer }
+        timezone: { type: string }
+        onboarded_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: [string, 'null'], format: date-time }
+        progress:
+          type: object
+          description: >
+            Raw state tallies (total/learning/review/relearning/known) plus the Mastery-defined
+            counts from the Learning module (learned = review state, mastered = усвоено, due_today).
+          properties:
+            total: { type: integer }
+            learning: { type: integer }
+            review: { type: integer }
+            relearning: { type: integer }
+            known: { type: integer }
+            learned: { type: integer }
+            mastered: { type: integer }
+            due_today: { type: integer }
+        reviews_total: { type: integer }
+        reviews_today: { type: integer }
+        streak_days: { type: integer }
+        costs:
+          type: object
+          properties:
+            generation: { $ref: '#/components/schemas/CostCategory' }
+            practice: { $ref: '#/components/schemas/CostCategory' }
+            example_regen: { $ref: '#/components/schemas/CostCategory' }
+            total_usd: { type: number }
+        collections:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string }
+              items_count: { type: integer }
+              added_at: { type: [string, 'null'], format: date-time }
+
+    DayPlan:
+      type: object
+      properties:
+        date: { type: string, description: 'YYYY-MM-DD in the user timezone' }
+        timezone: { type: string }
+        due_count: { type: integer }
+        new_introduced: { type: integer }
+        new_terms_per_day: { type: integer }
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              term_id: { type: string }
+              text: { type: string }
+              translation: { type: [string, 'null'] }
+              type: { type: string }
+              state: { type: string, enum: [new, learning, review, relearning, known] }
+              reps: { type: integer }
+              interval_days: { type: integer }
+              due_at: { type: [string, 'null'], format: date-time }
+              exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
+              clozeable: { type: boolean }
+              is_new: { type: boolean }
+
+    CollectionProgress:
+      type: object
+      description: Per-collection progress. new + in_progress + mastered = total; confirmed + familiar = mastered.
+      properties:
+        total: { type: integer }
+        new: { type: integer }
+        in_progress: { type: integer }
+        mastered: { type: integer }
+        confirmed: { type: integer, description: 'proven by exercises (review & interval >= 21)' }
+        familiar: { type: integer, description: 'self-marked known (awaiting proof)' }
+        due: { type: integer }
+
+    UserCollectionWithProgress:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [system, shared, custom] }
+        items_count: { type: integer }
+        added_at: { type: [string, 'null'], format: date-time }
+        progress: { $ref: '#/components/schemas/CollectionProgress' }
+
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        term_id: { type: string }
+        term_text: { type: [string, 'null'] }
+        exercise_mode: { type: [string, 'null'] }
+        grade: { type: string, enum: [again, hard, good, easy] }
+        is_correct: { type: [boolean, 'null'] }
+        is_practice: { type: boolean }
+        client_seq: { type: integer }
+        answered_at: { type: [string, 'null'], format: date-time }
+
+    CollectionRow:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [system, shared, custom] }
+        title: { type: string }
+        owner_id: { type: [string, 'null'] }
+        source: { type: string, enum: [curated, ai, user] }
+        items_count: { type: integer }
+        created_at: { type: [string, 'null'], format: date-time }
+
+    CollectionDetail:
+      allOf:
+        - $ref: '#/components/schemas/CollectionRow'
+        - type: object
+          properties:
+            description: { type: [string, 'null'] }
+            topic: { type: [string, 'null'] }
+            source_lang: { type: string }
+            target_lang: { type: string }
+            terms:
+              type: array
+              items:
+                type: object
+                properties:
+                  term_id: { type: string }
+                  text: { type: string }
+                  translation: { type: [string, 'null'] }
+                  position: { type: integer }
+
+    TermRow:
+      type: object
+      properties:
+        id: { type: string }
+        lang: { type: string }
+        text: { type: string }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
+        translation: { type: [string, 'null'] }
+        created_at: { type: [string, 'null'], format: date-time }
+
+    TermDetail:
+      type: object
+      properties:
+        id: { type: string }
+        lang: { type: string }
+        text: { type: string }
+        normalized_text: { type: string }
+        type: { type: string }
+        pos: { type: [string, 'null'] }
+        ipa: { type: [string, 'null'] }
+        audio_url: { type: [string, 'null'] }
+        source: { type: string }
+        created_at: { type: [string, 'null'], format: date-time }
+        translations:
+          type: array
+          items:
+            type: object
+            properties:
+              lang: { type: string }
+              text: { type: string }
+              is_primary: { type: boolean }
+        examples:
+          type: array
+          items:
+            type: object
+            properties:
+              sentence: { type: string }
+              translation: { type: [string, 'null'] }
+        collections:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string }
+        progress_count: { type: integer }
+
+    RequestLog:
+      type: object
+      properties:
+        id: { type: string }
+        direction: { type: string, enum: [inbound, outbound] }
+        method: { type: string }
+        host: { type: [string, 'null'] }
+        path: { type: string }
+        service: { type: [string, 'null'] }
+        status: { type: [integer, 'null'] }
+        duration_ms: { type: [integer, 'null'] }
+        user_id: { type: [string, 'null'] }
+        occurred_at: { type: [string, 'null'], format: date-time }
+
+    DialogRow:
+      type: object
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        collection_id: { type: string }
+        status: { type: string, enum: [active, finished, expired] }
+        tokens_in: { type: [integer, 'null'] }
+        tokens_out: { type: [integer, 'null'] }
+        cost_usd: { type: [number, 'null'] }
+        created_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+
+    DialogDetail:
+      allOf:
+        - $ref: '#/components/schemas/DialogRow'
+        - type: object
+          properties:
+            summary: { type: [string, 'null'] }
+            transcript:
+              type: array
+              items:
+                type: object
+                properties:
+                  role: { type: string, enum: [user, assistant] }
+                  text: { type: string }
+                  ts: { type: integer }
+
+    Generation:
+      type: object
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        prompt: { type: string }
+        status: { type: string, enum: [pending, running, succeeded, failed] }
+        model: { type: [string, 'null'] }
+        tokens_in: { type: [integer, 'null'] }
+        tokens_out: { type: [integer, 'null'] }
+        cost_usd: { type: [number, 'null'] }
+        collection_id: { type: [string, 'null'] }
+        error: { type: [string, 'null'] }
+        created_at: { type: [string, 'null'], format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }

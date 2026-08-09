@@ -15,4 +15,7 @@ interface UserTierWriter
 {
     /** Set the tier for the user with this email. False when no such user (with a profile) exists. */
     public function setTierByEmail(string $email, SubscriptionTier $tier): bool;
+
+    /** Set the tier for the user with this id. False when no such user (with a profile) exists. */
+    public function setTierById(string $userId, SubscriptionTier $tier): bool;
 }

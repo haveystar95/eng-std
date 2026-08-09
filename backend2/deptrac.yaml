@@ -61,6 +61,15 @@ deptrac:
     - name: ObservabilityInfrastructure
       collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Infrastructure\\.*' }]
 
+    - name: AdminDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Domain\\.*' }]
+    - name: AdminApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Application\\.*' }]
+    - name: AdminInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Infrastructure\\.*' }]
+    - name: AdminPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Presentation\\.*' }]
+
     - name: Framework
       collectors:
         - { type: classLike, value: 'Illuminate\\.*' }
@@ -109,6 +118,16 @@ deptrac:
     ObservabilityDomain: [SharedDomain]
     ObservabilityApplication: [ObservabilityDomain, SharedDomain]
     ObservabilityInfrastructure: [ObservabilityApplication, ObservabilityDomain, SharedDomain, SharedInfra, Framework]
+
+    # Admin: a back-office read/report surface. Thin domain. Its Application reaches Learning (the
+    # day-plan simulator reuses GetDueTerms + ExerciseSelector via GetDayPlan, and mastered/stats via
+    # GetUserStats) and Identity (the tier mutation goes through UserTierWriter — the tier's owner).
+    # Its Infrastructure reads other modules' read tables directly as reporting projections (like
+    # Observability, it imports no other module's classes).
+    AdminDomain: [SharedDomain]
+    AdminApplication: [AdminDomain, SharedDomain, IdentityApplication, LearningApplication]
+    AdminInfrastructure: [AdminApplication, AdminDomain, SharedDomain, SharedInfra, Framework]
+    AdminPresentation: [AdminApplication, AdminDomain, SharedDomain, Framework]
 
     # Presentation may use the framework, its own Application/Domain — never Infrastructure.
     # /me aggregates cross-module facts about the user; the generation quota (to grey the create

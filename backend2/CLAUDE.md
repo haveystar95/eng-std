@@ -30,6 +30,7 @@ Then, depending on the task:
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |
 | `Generation` | AI collection generation: requests, prompts, quotas, cost |
 | `Observability` | API request/response log — inbound requests + outbound (external) calls, with secret redaction |
+| `Admin` | back-office panel API (`/admin/api/*`): separate admin auth, read-only projections across all data, the day-plan simulator, and the tier mutation with an audit log. Reads other modules as reporting projections; owns only `admins` + `admin_audit_log` |
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.
 
