@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -188,6 +190,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   @override
   void initState() {
     super.initState();
+    // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
+    // never on the first listening card, whose whole content is the sound (F20-r).
+    unawaited(_pronouncer.warmUp(targetLang: _targetLang));
     // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
     // loads (the lag the user saw was photo cards fetching + decoding late).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -208,20 +213,24 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   @override
   void dispose() {
-    _pronouncer.stop();
+    // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
+    // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
+    unawaited(_pronouncer.release());
     _scroll.dispose();
     super.dispose();
   }
 
+  /// The scoped collection's language wins (F16); a cross-collection session has none and falls
+  /// back to the profile's target language.
+  String get _targetLang =>
+      widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+
   Future<void> _speak(String text, {bool slow = false}) async {
-    // The scoped collection's language wins (F16); a cross-collection session has none and falls
-    // back to the profile's target language.
-    final target = widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
     // Reuse the Pronouncer, which speaks a Word — wrap the raw target text. [slow] backs the
     // listening card's «замедленно» replay.
     await _pronouncer.speak(
       Word(termId: '', term: text, translation: '', type: 'word'),
-      targetLang: target,
+      targetLang: _targetLang,
       slow: slow,
     );
   }
