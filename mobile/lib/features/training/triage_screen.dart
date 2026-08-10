@@ -11,6 +11,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/models.dart';
+import '../../data/perf_log.dart';
 import '../../data/providers.dart';
 import 'triage_swipe.dart';
 
@@ -44,6 +45,16 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
     // invalidating here — before the first build watches it — makes the re-read deterministic.
     // The read is now local (no network), so this works identically offline; nothing is fetched.
     ref.invalidate(triageDeckProvider(widget.collectionId));
+    // Stall monitor: which screen a hitch belongs to. This screen is the reference point — it has
+    // no TTS and no keyboard, so "smooth here, janky in the trainer" localises a regression fast
+    // (that comparison is what found F20-r).
+    PerfLog.instance.screen = 'triage';
+  }
+
+  @override
+  void dispose() {
+    PerfLog.instance.screen = 'app';
+    super.dispose();
   }
 
   @override

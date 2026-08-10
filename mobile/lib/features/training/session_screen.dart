@@ -14,6 +14,7 @@ import '../../data/pronouncer.dart';
 import '../../data/api_client.dart';
 import '../../data/app_settings.dart';
 import '../../data/models.dart';
+import '../../data/perf_log.dart';
 import '../../data/providers.dart';
 import '../progress/activity.dart';
 import '../progress/progress_providers.dart';
@@ -190,29 +191,58 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   @override
   void initState() {
     super.initState();
+    PerfLog.instance.screen = 'session'; // stall monitor: which screen a hitch belongs to
     // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
     // never on the first listening card, whose whole content is the sound (F20-r).
     unawaited(_pronouncer.warmUp(targetLang: _targetLang));
     // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
     // loads (the lag the user saw was photo cards fetching + decoding late).
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _precacheCard(0);
-      _precacheCard(1);
-      _precacheCard(2);
+      _prepareCard(0);
+      _prepareCard(1);
+      _prepareCard(2);
     });
   }
 
-  /// Warm the photo of the card at [index] (no-op for an out-of-range index or a term with no image).
-  void _precacheCard(int index) {
+  /// The resolved photo url per card index. A present KEY means the lookup finished, which is what
+  /// lets the card size its banner on the first frame instead of reserving 150 px and collapsing a
+  /// moment later — that collapse was a 164 px jump right after the slide (F20-r).
+  final Map<int, String?> _photoUrl = {};
+
+  /// Indices already prepared. Each card used to be prepared TWICE (once as `+1`, once as `+2`),
+  /// so a 20-card session paid 40 lookups and 40 decodes.
+  final Set<int> _prepared = {};
+
+  /// Only `multiple_choice` renders the banner in its prompt, so only those are worth decoding up
+  /// front. Everything else pays a ~2.7 MB decode for a picture it never shows.
+  bool _showsPhoto(int index) =>
+      _photoUrl[index] != null && _cards[index].mode == ExerciseMode.multipleChoice;
+
+  /// Resolve the card's photo (always — the layout needs to know) and warm it (only when the card
+  /// actually shows one). No-op for an out-of-range or already-prepared index.
+  void _prepareCard(int index) {
     if (index < 0 || index >= _cards.length || !mounted) return;
-    final termId = _cards[index].termId;
-    ref.read(appDatabaseProvider).termById(termId).then((term) {
-      if (mounted) precacheSessionImage(context, term?.imageUrl);
+    if (!_prepared.add(index)) return;
+    final card = _cards[index];
+    ref.read(appDatabaseProvider).termById(card.termId).then((term) async {
+      if (!mounted) return;
+      final raw = term?.imageUrl ?? '';
+      final url = raw.isEmpty ? null : raw;
+      // Only the on-screen card needs a rebuild; a card resolved ahead of time is simply recorded.
+      if (index <= _pos) {
+        setState(() => _photoUrl[index] = url);
+      } else {
+        _photoUrl[index] = url;
+      }
+      if (url != null && card.mode == ExerciseMode.multipleChoice) {
+        await precacheSessionImage(context, url);
+      }
     });
   }
 
   @override
   void dispose() {
+    PerfLog.instance.screen = 'app';
     // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
     // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
     unawaited(_pronouncer.release());
@@ -238,8 +268,14 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   void _onAnswered(SessionAnswer a) {
     // F20: while the user reads the feedback, warm the next TWO cards' photos so an upcoming photo
     // card meets a ready image instead of a cold network load (precache is the main image fix).
-    _precacheCard(_pos + 1);
-    _precacheCard(_pos + 2);
+    _prepareCard(_pos + 1);
+    _prepareCard(_pos + 2);
+    // A wrong answer shows the photo in the feedback whatever the mode, and only `multiple_choice`
+    // was warmed up front — so warm this one now. It lands on a static screen, never on a slide.
+    if (a.verdict == LocalCheck.wrong && !_showsPhoto(_pos)) {
+      final url = _photoUrl[_pos];
+      if (url != null) precacheSessionImage(context, url);
+    }
     _results.add((card: _card, verdict: a.verdict));
     ref.read(reviewSyncProvider).record(
           termId: _card.termId,
@@ -257,6 +293,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   }
 
   void _next() {
+    PerfLog.instance.tapHandled('next');
     if (_pos + 1 >= _cards.length) {
       setState(() => _finished = true);
     } else {
@@ -264,6 +301,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         _pos++;
         _answered = false;
       });
+      // Release the photo of a card three back: it is off-screen, out of the outgoing animation,
+      // and nothing can navigate to it again. Keeps the session's decoded-image footprint flat
+      // instead of climbing pass after pass within one app launch (F20-r).
+      unawaited(evictSessionImage(context, _photoUrl[_pos - 3]));
       // New card starts at the top (the previous one may have been scrolled to its feedback).
       if (_scroll.hasClients) _scroll.jumpTo(0);
     }
@@ -307,6 +348,8 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       autoPronounce: autoPronounce,
       onAnswered: _onAnswered,
       onSpeak: _speak,
+      photoUrl: _photoUrl[_pos],
+      photoResolved: _photoUrl.containsKey(_pos),
       // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's deferred
       // speak/focus is cancelled instead of firing on the next card.
       isCurrent: () => mounted && _pos == builtAt,
@@ -318,7 +361,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         if (didPop) return;
         if (await _confirmExit() && context.mounted) Navigator.of(context).pop();
       },
-      child: Column(
+      // Stamps every touch so a handler can report how long the tap waited (see [PerfLog]).
+      child: Listener(
+        onPointerDown: (_) => PerfLog.instance.pointerDown(),
+        child: Column(
         children: [
           if (widget.practice && !_bannerDismissed)
             _PracticeBanner(onClose: () => setState(() => _bannerDismissed = true)),
@@ -344,6 +390,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           // off-screen (device-batch F9). Appears only once the card is answered.
           if (_answered) _NextBar(onNext: _next),
         ],
+        ),
       ),
     );
   }

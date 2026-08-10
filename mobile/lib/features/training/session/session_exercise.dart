@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../../data/local/app_database.dart';
 import '../../../data/models.dart';
+import '../../../data/perf_log.dart';
 import '../../../data/providers.dart';
 import 'session_grading.dart';
 
@@ -27,6 +28,16 @@ class SessionAnswer {
   final LocalCheck verdict;
   final bool usedHint;
   final int? latencyMs;
+}
+
+/// Drop a term's decoded photo once its card is well behind, so a session's photos don't pile up.
+/// A GLOBAL cache cap is the wrong tool here — it evicts by LRU, which is free to throw away the
+/// card we just warmed up, and a second practice pass in the same app launch runs straight into the
+/// ceiling (measured: ~84 MB by the end of one pass, 100 MB limit). Evicting explicitly from behind
+/// bounds the footprint to the cards actually in play and can never touch the look-ahead (F20-r).
+Future<void> evictSessionImage(BuildContext context, String? url) async {
+  if (url == null || url.isEmpty) return;
+  await ResizeImage(NetworkImage(url), width: promptPhotoCacheWidth(context)).evict();
 }
 
 /// The pixel width the prompt photo is decoded to — the on-screen banner width (F20). Shared by the
@@ -60,12 +71,21 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.onAnswered,
     required this.onSpeak,
     this.isCurrent = _alwaysCurrent,
+    this.photoUrl,
+    this.photoResolved = false,
   });
 
   static bool _alwaysCurrent() => true;
 
   final SessionCard card;
   final bool autoPronounce;
+
+  /// The term's photo, already looked up by the shell (which needs it for the warm-up anyway).
+  /// [photoResolved] true means the lookup FINISHED — the banner then knows its own height from
+  /// the first frame instead of reserving 150 px and collapsing a moment later (F20-r: that
+  /// collapse was a 164 px layout jump right after the slide, which read as a stutter).
+  final String? photoUrl;
+  final bool photoResolved;
 
   /// True while this card is still the on-screen one. Deferred side-effects (autopronounce, listening
   /// autoplay, keyboard focus) check it so a fast «Дальше-Дальше» that leaves the card before the
@@ -109,15 +129,33 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   Timer? _deferTimer;
   Timer? _speakTimer;
+  Timer? _settleTimer;
+
+  /// True once the slide-in has finished. A photo that is NOT already decoded waits for this before
+  /// fading in: a picture that materialises mid-transition is exactly what reads as a lag, even
+  /// though every frame is delivered on time (F20-r — the janky-looking cards had zero late frames).
+  /// A cached photo ignores this and shows instantly, which is the original F20 win.
+  bool _settled = false;
 
   @override
   void initState() {
     super.initState();
+    _settleTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
+      if (mounted) setState(() => _settled = true);
+    });
     // F20: side-effects that used to fire DURING the card's slide-in (and stalled it) now run AFTER
     // the transition settles, and are cancelled if the card is no longer current (fast «Дальше»).
     if (_isListening) {
-      // Listening plays on appearance — the term is never shown, only heard.
-      _afterTransition(() => widget.onSpeak(_card.answer));
+      // Listening plays on appearance — the term is never shown, only heard. The audio IS the
+      // card's content, so it must NOT wait out the whole slide: a full 250 ms of silence on a
+      // listen-and-type card reads as the app hanging (F20-r — the user called it a lag on a
+      // transition where every frame was on time). The shell pre-warms the audio session, so
+      // speak() is now a single channel call and one frame of headroom is enough to keep it off
+      // the transition's first, heaviest frame.
+      _afterTransition(
+        () => widget.onSpeak(_card.answer),
+        delay: const Duration(milliseconds: 100),
+      );
     } else if (_mode == ExerciseMode.typing || _isCloze) {
       // Raise the keyboard after the slide, not during it (the keyboard-attach channel call was a
       // per-transition stall). Field autofocus is off; we request focus here instead.
@@ -131,9 +169,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 
   /// Run [fn] once the slide-in animation has settled, unless the card was left in the meantime.
-  void _afterTransition(VoidCallback fn) {
+  /// [delay] overrides the wait for effects that must not sit out the whole transition (listening
+  /// audio); raising the keyboard keeps the full wait, because that one really does stall the slide.
+  void _afterTransition(VoidCallback fn, {Duration? delay}) {
     _deferTimer?.cancel();
-    _deferTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
+    _deferTimer = Timer(delay ?? AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
       if (mounted && widget.isCurrent()) fn();
     });
   }
@@ -146,6 +186,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   void dispose() {
     _deferTimer?.cancel();
     _speakTimer?.cancel();
+    _settleTimer?.cancel();
     if (_isCloze) _input.removeListener(_onClozeInput);
     _input.dispose();
     _focus.dispose();
@@ -193,12 +234,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   // ── interactions ──────────────────────────────────────────────────────────
 
   void _pick(String option) {
+    PerfLog.instance.tapHandled('option');
     if (_answered) return;
     setState(() => _picked = option);
     _commit(option);
   }
 
   void _placeChip(int i) {
+    PerfLog.instance.tapHandled('chip');
     if (_answered || _placed.contains(i)) return;
     AppHaptics.light();
     setState(() => _placed.add(i));
@@ -271,6 +314,8 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             card: _card,
             verdict: _verdict!,
             onSpeak: widget.onSpeak,
+            photoUrl: widget.photoUrl,
+            photoResolved: widget.photoResolved,
           ),
         ],
       ],
@@ -315,7 +360,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PromptPhoto(termId: _card.termId), // photo shown immediately; precache keeps it warm (F20)
+          // Height known from the shell's lookup; a cold photo waits for [_settled] so it can't
+          // materialise mid-slide (F20-r).
+          _PromptPhoto(
+            termId: _card.termId,
+            url: widget.photoUrl,
+            resolved: widget.photoResolved,
+            reveal: _settled,
+          ),
           Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
           _instructionLine(l),
@@ -771,59 +823,95 @@ class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderState
 // ── prompt photo (from the local term mirror) ─────────────────────────────────
 
 class _PromptPhoto extends ConsumerStatefulWidget {
-  const _PromptPhoto({required this.termId});
+  const _PromptPhoto({
+    required this.termId,
+    this.url,
+    this.resolved = false,
+    this.reveal = true,
+  });
+
   final String termId;
+
+  /// The photo url the shell already resolved, and whether that lookup has FINISHED. When resolved,
+  /// no query runs here at all and the banner takes its final height on the very first frame.
+  final String? url;
+  final bool resolved;
+
+  /// May an image that is not already decoded appear now? False during the slide-in.
+  final bool reveal;
 
   @override
   ConsumerState<_PromptPhoto> createState() => _PromptPhotoState();
 }
 
 class _PromptPhotoState extends ConsumerState<_PromptPhoto> {
-  // Query once (not on every rebuild). The image is shown as soon as it's ready; precache keeps it
-  // warm so a photo card meets a decoded image rather than a cold network load (F20).
+  // Fallback only — used when the shell hasn't resolved this term (e.g. the feedback photo of a
+  // card whose warm-up hasn't run). `late final` means it never executes if never read.
   late final Future<Term?> _term = ref.read(appDatabaseProvider).termById(widget.termId);
 
   @override
   Widget build(BuildContext context) {
+    if (widget.resolved) return _banner(context, widget.url);
     return FutureBuilder<Term?>(
       future: _term,
       builder: (context, snap) {
-        final resolved = snap.connectionState == ConnectionState.done;
-        final url = snap.data?.imageUrl;
-        // A resolved term with no photo collapses; while the (fast, local) lookup is in flight we
-        // reserve the banner height so resolving it doesn't jump the layout mid-slide.
-        if (resolved && (url == null || url.isEmpty)) return const SizedBox.shrink();
-
-        final showImage = url != null && url.isNotEmpty;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadii.field),
-            child: SizedBox(
-              height: 150,
-              width: double.infinity,
-              child: showImage
-                  ? Image.network(
-                      url,
-                      height: 150,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      // Decode to the on-screen width, not the source's native ~4000px; matches
-                      // `precacheSessionImage` so the precache warms this exact cache entry (F20).
-                      cacheWidth: promptPhotoCacheWidth(context),
-                      // Soft fade-in as the (precached) image lands, so it appears smoothly (F20).
-                      frameBuilder: (context, child, frame, wasSync) => AnimatedOpacity(
-                        opacity: frame == null ? 0 : 1,
-                        duration: const Duration(milliseconds: 180),
-                        child: child,
-                      ),
-                      errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.track),
-                    )
-                  : const ColoredBox(color: AppColors.track), // placeholder during the slide / load
-            ),
-          ),
-        );
+        if (snap.connectionState != ConnectionState.done) {
+          // Height unknown yet: reserve the banner so resolving it doesn't jump the layout.
+          return _plate();
+        }
+        return _banner(context, snap.data?.imageUrl);
       },
+    );
+  }
+
+  /// The empty banner slot — a grey plate at the final height.
+  Widget _plate() => const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: SizedBox(
+          height: 150,
+          width: double.infinity,
+          child: ColoredBox(color: AppColors.track),
+        ),
+      );
+
+  Widget _banner(BuildContext context, String? url) {
+    if (url == null || url.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        child: SizedBox(
+          height: 150,
+          width: double.infinity,
+          // The plate sits UNDER the image, so a not-yet-decoded photo shows grey rather than a
+          // hole of paper colour. Before, the slot went grey → blank → picture, which is three
+          // visible steps for one card (F20-r).
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: AppColors.track),
+              Image.network(
+                url,
+                fit: BoxFit.cover,
+                // Decode to the on-screen width, not the source's native size; matches
+                // `precacheSessionImage` so the warm-up hits this exact cache entry (F20).
+                cacheWidth: promptPhotoCacheWidth(context),
+                frameBuilder: (context, child, frame, wasSync) {
+                  // Already decoded (warm cache) → straight in, no fade. That is F20's win and it
+                  // must survive. Otherwise hold the plate until the slide settles, then fade.
+                  if (wasSync) return child;
+                  return AnimatedOpacity(
+                    opacity: frame != null && widget.reveal ? 1 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: child,
+                  );
+                },
+                errorBuilder: (_, _, _) => const SizedBox.shrink(), // the plate stays
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -835,11 +923,17 @@ class _FeedbackBlock extends ConsumerWidget {
     required this.card,
     required this.verdict,
     required this.onSpeak,
+    this.photoUrl,
+    this.photoResolved = false,
   });
 
   final SessionCard card;
   final LocalCheck verdict;
   final Future<void> Function(String) onSpeak;
+
+  /// Same resolved photo the prompt uses — the feedback of a wrong answer shows it too.
+  final String? photoUrl;
+  final bool photoResolved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -851,7 +945,8 @@ class _FeedbackBlock extends ConsumerWidget {
       verdictRow,
       if (wrong) ...[
         const SizedBox(height: AppSpacing.s16),
-        _PromptPhoto(termId: card.termId),
+        // The feedback lands on a STATIC screen, so revealing straight away is fine here.
+        _PromptPhoto(termId: card.termId, url: photoUrl, resolved: photoResolved),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

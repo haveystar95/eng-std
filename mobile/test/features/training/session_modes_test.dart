@@ -54,7 +54,7 @@ void main() {
       prompt: 'снять наличные',
       answer: 'withdraw cash',
     )));
-    await tester.pumpAndSettle();
+    await tester.pump(); // build the card WITHOUT letting the autoplay deferral elapse
 
     expect(tester.takeException(), isNull);
     // The term is heard, never shown.
@@ -63,9 +63,11 @@ void main() {
     expect(find.text('прослушай и напиши по-английски'), findsOneWidget);
     expect(find.text('Замедленно'), findsOneWidget);
 
-    // Autoplay is deferred until the slide-in settles (F20), so it hasn't fired yet…
+    // Autoplay is kept off the transition's first frame (F20), so it hasn't fired yet…
     expect(spoken, isEmpty);
-    await tester.pump(const Duration(milliseconds: 500));
+    // …but only briefly: the audio IS this card's content, so it must not wait out the whole
+    // slide — a full 250 ms of silence read as the app hanging (F20-r).
+    await tester.pump(const Duration(milliseconds: 150));
     // …then it fires once, at normal speed.
     expect(spoken, [(text: 'withdraw cash', slow: false)]);
 

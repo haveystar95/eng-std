@@ -15,6 +15,7 @@ import '../../data/locale_controller.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
+import 'perf_log_screen.dart';
 
 /// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
 /// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
@@ -465,7 +466,15 @@ class _DevFlags extends ConsumerWidget {
       children: [
         _SwitchRow(label: l.devFlagStore, value: flags.storeEnabled, onChanged: notifier.setStoreEnabled),
         _SwitchRow(label: l.devFlagPaywall, value: flags.paywallEnabled, onChanged: notifier.setPaywallEnabled),
-        _SwitchRow(label: l.devFlagPremium, value: flags.devPremium, onChanged: notifier.setDevPremium, last: true),
+        _SwitchRow(label: l.devFlagPremium, value: flags.devPremium, onChanged: notifier.setDevPremium),
+        // On-device stall monitor, off by default — the release build has no console to read.
+        _ChevronRow(
+          label: 'Perf monitor',
+          last: true,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PerfLogScreen()),
+          ),
+        ),
       ],
     );
   }
