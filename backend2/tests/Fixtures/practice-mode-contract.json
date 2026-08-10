@@ -1,0 +1,261 @@
+{
+    "enabled_modes": [
+        "multiple_choice",
+        "word_bank",
+        "typing",
+        "listening",
+        "cloze"
+    ],
+    "cases": [
+        {
+            "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
+            "card_index": 0,
+            "answer": "reservation",
+            "example": "I have a reservation for tonight.",
+            "word_count": 1,
+            "clozeable": true,
+            "rotation": 2586771104,
+            "expected_mode": "multiple_choice"
+        },
+        {
+            "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
+            "card_index": 1,
+            "answer": "reservation",
+            "example": "I have a reservation for tonight.",
+            "word_count": 1,
+            "clozeable": true,
+            "rotation": 2586771105,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
+            "card_index": 2,
+            "answer": "reservation",
+            "example": "I have a reservation for tonight.",
+            "word_count": 1,
+            "clozeable": true,
+            "rotation": 2586771106,
+            "expected_mode": "listening"
+        },
+        {
+            "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
+            "card_index": 3,
+            "answer": "reservation",
+            "example": "I have a reservation for tonight.",
+            "word_count": 1,
+            "clozeable": true,
+            "rotation": 2586771107,
+            "expected_mode": "cloze"
+        },
+        {
+            "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
+            "card_index": 7,
+            "answer": "reservation",
+            "example": "I have a reservation for tonight.",
+            "word_count": 1,
+            "clozeable": true,
+            "rotation": 2586771111,
+            "expected_mode": "cloze"
+        },
+        {
+            "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
+            "card_index": 0,
+            "answer": "give up",
+            "example": "I won't give up until I've achieved my goals.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 4078547774,
+            "expected_mode": "cloze"
+        },
+        {
+            "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
+            "card_index": 1,
+            "answer": "give up",
+            "example": "I won't give up until I've achieved my goals.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 4078547775,
+            "expected_mode": "multiple_choice"
+        },
+        {
+            "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
+            "card_index": 2,
+            "answer": "give up",
+            "example": "I won't give up until I've achieved my goals.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 4078547776,
+            "expected_mode": "word_bank"
+        },
+        {
+            "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
+            "card_index": 3,
+            "answer": "give up",
+            "example": "I won't give up until I've achieved my goals.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 4078547777,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
+            "card_index": 7,
+            "answer": "give up",
+            "example": "I won't give up until I've achieved my goals.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 4078547781,
+            "expected_mode": "word_bank"
+        },
+        {
+            "term_id": "01KZETAAC103WZ24WQ7H087ZJ3",
+            "card_index": 0,
+            "answer": "front desk",
+            "example": null,
+            "word_count": 2,
+            "clozeable": false,
+            "rotation": 1566025639,
+            "expected_mode": "listening"
+        },
+        {
+            "term_id": "01KZETAAC103WZ24WQ7H087ZJ3",
+            "card_index": 1,
+            "answer": "front desk",
+            "example": null,
+            "word_count": 2,
+            "clozeable": false,
+            "rotation": 1566025640,
+            "expected_mode": "multiple_choice"
+        },
+        {
+            "term_id": "01KZETAAC103WZ24WQ7H087ZJ3",
+            "card_index": 2,
+            "answer": "front desk",
+            "example": null,
+            "word_count": 2,
+            "clozeable": false,
+            "rotation": 1566025641,
+            "expected_mode": "word_bank"
+        },
+        {
+            "term_id": "01KZETAAC103WZ24WQ7H087ZJ3",
+            "card_index": 3,
+            "answer": "front desk",
+            "example": null,
+            "word_count": 2,
+            "clozeable": false,
+            "rotation": 1566025642,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAC103WZ24WQ7H087ZJ3",
+            "card_index": 7,
+            "answer": "front desk",
+            "example": null,
+            "word_count": 2,
+            "clozeable": false,
+            "rotation": 1566025646,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
+            "card_index": 0,
+            "answer": "towel",
+            "example": "Could I have extra sheets, please?",
+            "word_count": 1,
+            "clozeable": false,
+            "rotation": 2512098382,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
+            "card_index": 1,
+            "answer": "towel",
+            "example": "Could I have extra sheets, please?",
+            "word_count": 1,
+            "clozeable": false,
+            "rotation": 2512098383,
+            "expected_mode": "listening"
+        },
+        {
+            "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
+            "card_index": 2,
+            "answer": "towel",
+            "example": "Could I have extra sheets, please?",
+            "word_count": 1,
+            "clozeable": false,
+            "rotation": 2512098384,
+            "expected_mode": "multiple_choice"
+        },
+        {
+            "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
+            "card_index": 3,
+            "answer": "towel",
+            "example": "Could I have extra sheets, please?",
+            "word_count": 1,
+            "clozeable": false,
+            "rotation": 2512098385,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
+            "card_index": 7,
+            "answer": "towel",
+            "example": "Could I have extra sheets, please?",
+            "word_count": 1,
+            "clozeable": false,
+            "rotation": 2512098389,
+            "expected_mode": "listening"
+        },
+        {
+            "term_id": "01KZETAAE63W6K93C55NCYXKVA",
+            "card_index": 0,
+            "answer": "check in",
+            "example": "CHECK IN starts at 3 pm.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 3017789990,
+            "expected_mode": "multiple_choice"
+        },
+        {
+            "term_id": "01KZETAAE63W6K93C55NCYXKVA",
+            "card_index": 1,
+            "answer": "check in",
+            "example": "CHECK IN starts at 3 pm.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 3017789991,
+            "expected_mode": "word_bank"
+        },
+        {
+            "term_id": "01KZETAAE63W6K93C55NCYXKVA",
+            "card_index": 2,
+            "answer": "check in",
+            "example": "CHECK IN starts at 3 pm.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 3017789992,
+            "expected_mode": "typing"
+        },
+        {
+            "term_id": "01KZETAAE63W6K93C55NCYXKVA",
+            "card_index": 3,
+            "answer": "check in",
+            "example": "CHECK IN starts at 3 pm.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 3017789993,
+            "expected_mode": "listening"
+        },
+        {
+            "term_id": "01KZETAAE63W6K93C55NCYXKVA",
+            "card_index": 7,
+            "answer": "check in",
+            "example": "CHECK IN starts at 3 pm.",
+            "word_count": 2,
+            "clozeable": true,
+            "rotation": 3017789997,
+            "expected_mode": "typing"
+        }
+    ]
+}
