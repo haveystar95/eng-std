@@ -205,7 +205,16 @@ class StudySession {
   final String sessionId;
   final List<SessionCard> cards;
 
-  const StudySession({required this.sessionId, required this.cards});
+  /// Built on the device rather than by `POST /study/sessions` — free practice, which must work
+  /// offline end to end. The server has never seen this [sessionId] and adopts it when the answers
+  /// arrive; nothing else about the session behaves differently.
+  final bool builtLocally;
+
+  const StudySession({
+    required this.sessionId,
+    required this.cards,
+    this.builtLocally = false,
+  });
 }
 
 class Profile {

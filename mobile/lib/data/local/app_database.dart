@@ -287,6 +287,18 @@ class AppDatabase extends _$AppDatabase {
   /// Reactive, so the block appears once the first sync lands. No network.
   Stream<List<Term>> watchAllTerms() => select(terms).watch();
 
+  /// Every synced term of one collection, in study order. One-shot: free practice builds its whole
+  /// session from this snapshot on the device, so it must not depend on a live stream.
+  Future<List<Term>> collectionTerms(String collectionId) {
+    final query = select(collectionItems).join([
+      innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
+    ])
+      ..where(collectionItems.collectionId.equals(collectionId))
+      ..orderBy([OrderingTerm(expression: collectionItems.position)]);
+
+    return query.map((row) => row.readTable(terms)).get();
+  }
+
   /// One synced term by id (or null) — used by the exercise-session feedback to pull the photo,
   /// which the `/study/sessions` shape does not carry. One-shot: the image is already synced.
   Future<Term?> termById(String id) =>

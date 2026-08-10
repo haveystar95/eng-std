@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'device_timezone.dart';
 import 'generation_controller.dart';
 import 'local/app_database.dart';
 import 'local/sync_service.dart';
+import 'practice/local_session_builder.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
@@ -418,6 +420,29 @@ typedef SessionArgs = ({String sessionId, String? collectionId, bool practice, i
 /// carries no image.
 final studySessionProvider =
     FutureProvider.family<StudySession, SessionArgs>((ref, args) async {
+  // Free practice is built HERE, always — not "when offline". It has to work in airplane mode from
+  // start to summary, and one code path is the only way both halves of that stay honest: a second,
+  // online-only branch would be the one nobody exercises until it breaks. Everything it needs is
+  // already mirrored locally, its pool rule is simply "the whole collection, shuffled", and it
+  // schedules nothing. The session id is a client ULID the server adopts when the answers arrive.
+  //
+  // A scheduling session stays server-built: it spends the daily new-word quota and its
+  // composition is what stops an abandoned session spending it on unseen terms.
+  if (args.practice) {
+    final collectionId = args.collectionId;
+    if (collectionId == null) {
+      // Practice is always entered from a collection; a global practice pool has no rule yet.
+      throw StateError('practice needs a collection');
+    }
+    final terms = await ref.watch(appDatabaseProvider).collectionTerms(collectionId);
+    return LocalPracticeSessionBuilder.build(
+      terms: terms,
+      limit: args.limit,
+      random: Random(),
+      sessionId: args.sessionId,
+    );
+  }
+
   return ref.watch(apiClientProvider).buildSession(
         sessionId: args.sessionId,
         collectionId: args.collectionId,
