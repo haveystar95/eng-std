@@ -1076,5 +1076,7 @@
   "devFlagPaywall": "Пейволл",
   "@devFlagPaywall": { "description": "Dev-переключатель: пейволл и его входы." },
   "devFlagPremium": "Premium (dev)",
-  "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." }
+  "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." },
+  "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
+  "@syncStuckBanner": { "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)." }
 }

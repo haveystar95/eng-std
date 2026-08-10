@@ -1,6 +1,10 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'local/app_database.dart';
 
 /// One RAW answer waiting to be uploaded. The client sends what the user actually did —
 /// [exerciseMode], the raw [response] text, whether a hint was used, latency — and the SERVER
@@ -74,30 +78,107 @@ class PendingReview {
       );
 }
 
-/// Durable FIFO of un-uploaded reviews, persisted as one JSON blob in the
-/// keychain. Small by design — a session is ~20 answers, each a few dozen bytes.
+/// Durable FIFO of un-uploaded reviews, held in the local drift DB.
+///
+/// It used to be one JSON blob in the Keychain, which meant every answer re-serialised and rewrote
+/// the WHOLE queue on the UI isolate. That was fine while the queue never exceeded one entry, but
+/// two changes made it bite: practice now batches a whole session before uploading, and a server
+/// 500 (transient by definition) can hold answers for a day. Measured: one `record()` at 650 ms.
+/// drift runs in a background isolate, so an append costs the UI isolate nothing (F20-r2).
+///
+/// The queue is application data, not a secret — the Keychain was simply the wrong store. The
+/// per-user monotonic [SeqCounter] deliberately STAYS in the Keychain: it exists to survive this
+/// queue being cleared, so the two must not share a lifetime.
 class ReviewQueue {
-  static const _key = 'pending_reviews';
-  final _storage = const FlutterSecureStorage();
+  ReviewQueue(this._db, [FlutterSecureStorage? storage])
+      : _storage = storage ?? const FlutterSecureStorage();
+
+  /// The Keychain key the queue used to live under. Read once, then retired.
+  static const legacyKey = 'pending_reviews';
+
+  /// Set in sync_meta once the legacy blob has been imported, so a failed delete can't cause a
+  /// re-import loop. (The import is idempotent anyway — same client ULIDs — but the marker makes
+  /// the intent explicit and skips the Keychain read entirely on later launches.)
+  static const migratedMetaKey = 'review_queue_migrated';
+
+  final AppDatabase _db;
+  final FlutterSecureStorage _storage;
 
   Future<List<PendingReview>> load() async {
-    final raw = await _storage.read(key: _key);
-    if (raw == null || raw.isEmpty) return [];
+    final rows = await _db.reviewQueue();
+    return [for (final r in rows) _fromRow(r)];
+  }
+
+  /// Append one answer. Single insert — no whole-queue rewrite.
+  Future<void> add(PendingReview review) => _db.enqueueReview(_toRow(review));
+
+  Future<void> removeIds(Iterable<String> ids) => _db.dequeueReviews(ids);
+
+  Future<int> length() => _db.reviewQueueLength();
+
+  Future<List<String>> oldestPracticeIds(int limit) => _db.oldestPracticeReviewIds(limit);
+
+  /// One-time import of the legacy Keychain blob. Order of operations is deliberate: rows are
+  /// written to drift FIRST, the marker is set only after that write returns, and the blob is
+  /// deleted last. A crash anywhere leaves the blob in place and the import simply repeats — and
+  /// repeating is safe because the client ULID is the primary key.
+  ///
+  /// A corrupt blob is dropped rather than left to wedge the queue forever, exactly as before.
+  Future<void> migrateFromKeychain() async {
+    if (await _db.getMeta(migratedMetaKey) != null) return;
+
+    String? raw;
     try {
-      final list = jsonDecode(raw) as List;
-      return list.map((e) => PendingReview.fromJson(e as Map<String, dynamic>)).toList();
-    } catch (_) {
-      // Corrupt payload — drop it rather than wedge the queue forever.
-      await _storage.delete(key: _key);
-      return [];
+      raw = await _storage.read(key: legacyKey);
+    } catch (e) {
+      debugPrint('ReviewQueue: legacy read failed, leaving the blob for the next launch: $e');
+      return; // no marker → we try again next start
+    }
+
+    if (raw != null && raw.isNotEmpty) {
+      List<PendingReview> legacy;
+      try {
+        legacy = (jsonDecode(raw) as List)
+            .map((e) => PendingReview.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } catch (_) {
+        legacy = const []; // corrupt → drop it, same as the old behaviour
+      }
+      await _db.importReviewQueue([for (final r in legacy) _toRow(r)]);
+    }
+
+    await _db.setMeta(migratedMetaKey, '1');
+    try {
+      await _storage.delete(key: legacyKey);
+    } catch (e) {
+      // The marker is already set, so the blob is inert — it just lingers.
+      debugPrint('ReviewQueue: legacy blob delete failed (harmless, already imported): $e');
     }
   }
 
-  Future<void> save(List<PendingReview> reviews) async {
-    if (reviews.isEmpty) {
-      await _storage.delete(key: _key);
-      return;
-    }
-    await _storage.write(key: _key, value: jsonEncode(reviews.map((e) => e.toJson()).toList()));
-  }
+  static ReviewQueueRowsCompanion _toRow(PendingReview r) => ReviewQueueRowsCompanion.insert(
+        id: r.id,
+        termId: r.termId,
+        exerciseMode: r.exerciseMode,
+        response: r.response,
+        clientSeq: r.clientSeq,
+        answeredAt: r.answeredAt,
+        usedHint: Value(r.usedHint),
+        isPractice: Value(r.isPractice),
+        latencyMs: Value(r.latencyMs),
+        sessionId: Value(r.sessionId),
+      );
+
+  static PendingReview _fromRow(ReviewQueueRow r) => PendingReview(
+        id: r.id,
+        termId: r.termId,
+        exerciseMode: r.exerciseMode,
+        response: r.response,
+        clientSeq: r.clientSeq,
+        answeredAt: r.answeredAt,
+        usedHint: r.usedHint,
+        isPractice: r.isPractice,
+        latencyMs: r.latencyMs,
+        sessionId: r.sessionId,
+      );
 }

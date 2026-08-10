@@ -382,5 +382,6 @@
   "profileSectionDev": "Development",
   "devFlagStore": "Collections store",
   "devFlagPaywall": "Paywall",
-  "devFlagPremium": "Premium (dev)"
+  "devFlagPremium": "Premium (dev)",
+  "syncStuckBanner": "Answers aren't reaching the server — check your connection"
 }

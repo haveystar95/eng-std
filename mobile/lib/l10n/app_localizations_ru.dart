@@ -1423,4 +1423,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devFlagPremium => 'Premium (dev)';
+
+  @override
+  String get syncStuckBanner =>
+      'Ответы не уходят на сервер — проверь соединение';
 }

@@ -46,7 +46,10 @@ final connectivityProvider = StreamProvider<bool>((ref) async* {
 /// separately from the durable queues so they survive a queue clear.
 final seqCounterProvider = Provider<SeqCounter>((ref) => SeqCounter());
 
-final reviewQueueProvider = Provider<ReviewQueue>((ref) => ReviewQueue());
+/// The durable review queue lives in the local DB, not the Keychain (F20-r2) — an append is one
+/// insert on the background isolate instead of a whole-blob rewrite on the UI isolate.
+final reviewQueueProvider =
+    Provider<ReviewQueue>((ref) => ReviewQueue(ref.watch(appDatabaseProvider)));
 
 /// Offline-first review upload pipeline (record locally → batch flush). Carries the monotonic
 /// `seq_review` counter so each raw answer gets a `client_seq` the server folds by.

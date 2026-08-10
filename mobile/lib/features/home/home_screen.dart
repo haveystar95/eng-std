@@ -35,7 +35,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       // Pull the delta feed into the local DB, and drain any answers left over from a
       // previous (possibly offline) session. Both are background; neither blocks the UI.
       ref.read(syncServiceProvider).sync();
-      ref.read(reviewSyncProvider).flush();
+      // Import the legacy Keychain queue once (F20-r2), THEN drain — otherwise the first flush of a
+      // freshly-updated install would miss answers still sitting in the old store.
+      ref.read(reviewSyncProvider).migrate().then((_) => ref.read(reviewSyncProvider).flush());
       // Reconcile generations that were in flight when the app was last killed (poll / drop / retry).
       ref.read(generationControllerProvider).reconcile();
     });
@@ -119,15 +121,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 
 /// A hairline progress bar just under the status bar, shown only while a background sync is in
 /// flight. Offline is deliberately silent — being offline is normal, not a fault to flag.
+///
+/// The one loud case is [ReviewSync.stuck]: the queue is at its cap and still holds answers that
+/// carry progress. Those are never dropped to make room, so the honest thing is to say so rather
+/// than lose them quietly (F20-r2).
 class _SyncIndicator extends ConsumerWidget {
   const _SyncIndicator();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncState = ref.watch(syncServiceProvider).state;
+    final stuck = ref.watch(reviewSyncProvider).stuck;
     return SafeArea(
       bottom: false,
-      child: ValueListenableBuilder<SyncState>(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: stuck,
+        builder: (context, isStuck, child) => isStuck ? _StuckBanner() : child!,
+        child: ValueListenableBuilder<SyncState>(
         valueListenable: syncState,
         builder: (_, s, _) => AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
@@ -142,6 +152,25 @@ class _SyncIndicator extends ConsumerWidget {
                 )
               : const SizedBox(height: 2, width: double.infinity),
         ),
+        ),
+      ),
+    );
+  }
+}
+
+/// «Ответы не уходят на сервер» — the queue is full of answers that move progress and cannot be
+/// dropped. Quiet paper/ink strip, not a modal: nothing is lost yet, it just isn't leaving.
+class _StuckBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.faintInk,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH, vertical: 8),
+      child: Text(
+        AppLocalizations.of(context).syncStuckBanner,
+        textAlign: TextAlign.center,
+        style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
       ),
     );
   }

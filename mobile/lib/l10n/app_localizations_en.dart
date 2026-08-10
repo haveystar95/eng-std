@@ -1377,4 +1377,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devFlagPremium => 'Premium (dev)';
+
+  @override
+  String get syncStuckBanner =>
+      'Answers aren\'t reaching the server — check your connection';
 }

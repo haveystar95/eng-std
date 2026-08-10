@@ -2233,6 +2233,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Premium (dev)'**
   String get devFlagPremium;
+
+  /// Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ответы не уходят на сервер — проверь соединение'**
+  String get syncStuckBanner;
 }
 
 class _AppLocalizationsDelegate

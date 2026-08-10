@@ -3945,6 +3945,625 @@ class DailyActivityCompanion extends UpdateCompanion<DailyActivityData> {
   }
 }
 
+class $ReviewQueueRowsTable extends ReviewQueueRows
+    with TableInfo<$ReviewQueueRowsTable, ReviewQueueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReviewQueueRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+    'term_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _exerciseModeMeta = const VerificationMeta(
+    'exerciseMode',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseMode = GeneratedColumn<String>(
+    'exercise_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _responseMeta = const VerificationMeta(
+    'response',
+  );
+  @override
+  late final GeneratedColumn<String> response = GeneratedColumn<String>(
+    'response',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _clientSeqMeta = const VerificationMeta(
+    'clientSeq',
+  );
+  @override
+  late final GeneratedColumn<int> clientSeq = GeneratedColumn<int>(
+    'client_seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _answeredAtMeta = const VerificationMeta(
+    'answeredAt',
+  );
+  @override
+  late final GeneratedColumn<String> answeredAt = GeneratedColumn<String>(
+    'answered_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usedHintMeta = const VerificationMeta(
+    'usedHint',
+  );
+  @override
+  late final GeneratedColumn<bool> usedHint = GeneratedColumn<bool>(
+    'used_hint',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("used_hint" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isPracticeMeta = const VerificationMeta(
+    'isPractice',
+  );
+  @override
+  late final GeneratedColumn<bool> isPractice = GeneratedColumn<bool>(
+    'is_practice',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_practice" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _latencyMsMeta = const VerificationMeta(
+    'latencyMs',
+  );
+  @override
+  late final GeneratedColumn<int> latencyMs = GeneratedColumn<int>(
+    'latency_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    termId,
+    exerciseMode,
+    response,
+    clientSeq,
+    answeredAt,
+    usedHint,
+    isPractice,
+    latencyMs,
+    sessionId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'review_queue_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReviewQueueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('term_id')) {
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('exercise_mode')) {
+      context.handle(
+        _exerciseModeMeta,
+        exerciseMode.isAcceptableOrUnknown(
+          data['exercise_mode']!,
+          _exerciseModeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseModeMeta);
+    }
+    if (data.containsKey('response')) {
+      context.handle(
+        _responseMeta,
+        response.isAcceptableOrUnknown(data['response']!, _responseMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_responseMeta);
+    }
+    if (data.containsKey('client_seq')) {
+      context.handle(
+        _clientSeqMeta,
+        clientSeq.isAcceptableOrUnknown(data['client_seq']!, _clientSeqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clientSeqMeta);
+    }
+    if (data.containsKey('answered_at')) {
+      context.handle(
+        _answeredAtMeta,
+        answeredAt.isAcceptableOrUnknown(data['answered_at']!, _answeredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_answeredAtMeta);
+    }
+    if (data.containsKey('used_hint')) {
+      context.handle(
+        _usedHintMeta,
+        usedHint.isAcceptableOrUnknown(data['used_hint']!, _usedHintMeta),
+      );
+    }
+    if (data.containsKey('is_practice')) {
+      context.handle(
+        _isPracticeMeta,
+        isPractice.isAcceptableOrUnknown(data['is_practice']!, _isPracticeMeta),
+      );
+    }
+    if (data.containsKey('latency_ms')) {
+      context.handle(
+        _latencyMsMeta,
+        latencyMs.isAcceptableOrUnknown(data['latency_ms']!, _latencyMsMeta),
+      );
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReviewQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReviewQueueRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      termId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}term_id'],
+      )!,
+      exerciseMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exercise_mode'],
+      )!,
+      response: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}response'],
+      )!,
+      clientSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}client_seq'],
+      )!,
+      answeredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}answered_at'],
+      )!,
+      usedHint: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}used_hint'],
+      )!,
+      isPractice: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_practice'],
+      )!,
+      latencyMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}latency_ms'],
+      ),
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      ),
+    );
+  }
+
+  @override
+  $ReviewQueueRowsTable createAlias(String alias) {
+    return $ReviewQueueRowsTable(attachedDatabase, alias);
+  }
+}
+
+class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
+  final String id;
+  final String termId;
+  final String exerciseMode;
+  final String response;
+  final int clientSeq;
+  final String answeredAt;
+  final bool usedHint;
+  final bool isPractice;
+  final int? latencyMs;
+  final String? sessionId;
+  const ReviewQueueRow({
+    required this.id,
+    required this.termId,
+    required this.exerciseMode,
+    required this.response,
+    required this.clientSeq,
+    required this.answeredAt,
+    required this.usedHint,
+    required this.isPractice,
+    this.latencyMs,
+    this.sessionId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['term_id'] = Variable<String>(termId);
+    map['exercise_mode'] = Variable<String>(exerciseMode);
+    map['response'] = Variable<String>(response);
+    map['client_seq'] = Variable<int>(clientSeq);
+    map['answered_at'] = Variable<String>(answeredAt);
+    map['used_hint'] = Variable<bool>(usedHint);
+    map['is_practice'] = Variable<bool>(isPractice);
+    if (!nullToAbsent || latencyMs != null) {
+      map['latency_ms'] = Variable<int>(latencyMs);
+    }
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
+    return map;
+  }
+
+  ReviewQueueRowsCompanion toCompanion(bool nullToAbsent) {
+    return ReviewQueueRowsCompanion(
+      id: Value(id),
+      termId: Value(termId),
+      exerciseMode: Value(exerciseMode),
+      response: Value(response),
+      clientSeq: Value(clientSeq),
+      answeredAt: Value(answeredAt),
+      usedHint: Value(usedHint),
+      isPractice: Value(isPractice),
+      latencyMs: latencyMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latencyMs),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+    );
+  }
+
+  factory ReviewQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReviewQueueRow(
+      id: serializer.fromJson<String>(json['id']),
+      termId: serializer.fromJson<String>(json['termId']),
+      exerciseMode: serializer.fromJson<String>(json['exerciseMode']),
+      response: serializer.fromJson<String>(json['response']),
+      clientSeq: serializer.fromJson<int>(json['clientSeq']),
+      answeredAt: serializer.fromJson<String>(json['answeredAt']),
+      usedHint: serializer.fromJson<bool>(json['usedHint']),
+      isPractice: serializer.fromJson<bool>(json['isPractice']),
+      latencyMs: serializer.fromJson<int?>(json['latencyMs']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'termId': serializer.toJson<String>(termId),
+      'exerciseMode': serializer.toJson<String>(exerciseMode),
+      'response': serializer.toJson<String>(response),
+      'clientSeq': serializer.toJson<int>(clientSeq),
+      'answeredAt': serializer.toJson<String>(answeredAt),
+      'usedHint': serializer.toJson<bool>(usedHint),
+      'isPractice': serializer.toJson<bool>(isPractice),
+      'latencyMs': serializer.toJson<int?>(latencyMs),
+      'sessionId': serializer.toJson<String?>(sessionId),
+    };
+  }
+
+  ReviewQueueRow copyWith({
+    String? id,
+    String? termId,
+    String? exerciseMode,
+    String? response,
+    int? clientSeq,
+    String? answeredAt,
+    bool? usedHint,
+    bool? isPractice,
+    Value<int?> latencyMs = const Value.absent(),
+    Value<String?> sessionId = const Value.absent(),
+  }) => ReviewQueueRow(
+    id: id ?? this.id,
+    termId: termId ?? this.termId,
+    exerciseMode: exerciseMode ?? this.exerciseMode,
+    response: response ?? this.response,
+    clientSeq: clientSeq ?? this.clientSeq,
+    answeredAt: answeredAt ?? this.answeredAt,
+    usedHint: usedHint ?? this.usedHint,
+    isPractice: isPractice ?? this.isPractice,
+    latencyMs: latencyMs.present ? latencyMs.value : this.latencyMs,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
+  );
+  ReviewQueueRow copyWithCompanion(ReviewQueueRowsCompanion data) {
+    return ReviewQueueRow(
+      id: data.id.present ? data.id.value : this.id,
+      termId: data.termId.present ? data.termId.value : this.termId,
+      exerciseMode: data.exerciseMode.present
+          ? data.exerciseMode.value
+          : this.exerciseMode,
+      response: data.response.present ? data.response.value : this.response,
+      clientSeq: data.clientSeq.present ? data.clientSeq.value : this.clientSeq,
+      answeredAt: data.answeredAt.present
+          ? data.answeredAt.value
+          : this.answeredAt,
+      usedHint: data.usedHint.present ? data.usedHint.value : this.usedHint,
+      isPractice: data.isPractice.present
+          ? data.isPractice.value
+          : this.isPractice,
+      latencyMs: data.latencyMs.present ? data.latencyMs.value : this.latencyMs,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReviewQueueRow(')
+          ..write('id: $id, ')
+          ..write('termId: $termId, ')
+          ..write('exerciseMode: $exerciseMode, ')
+          ..write('response: $response, ')
+          ..write('clientSeq: $clientSeq, ')
+          ..write('answeredAt: $answeredAt, ')
+          ..write('usedHint: $usedHint, ')
+          ..write('isPractice: $isPractice, ')
+          ..write('latencyMs: $latencyMs, ')
+          ..write('sessionId: $sessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    termId,
+    exerciseMode,
+    response,
+    clientSeq,
+    answeredAt,
+    usedHint,
+    isPractice,
+    latencyMs,
+    sessionId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReviewQueueRow &&
+          other.id == this.id &&
+          other.termId == this.termId &&
+          other.exerciseMode == this.exerciseMode &&
+          other.response == this.response &&
+          other.clientSeq == this.clientSeq &&
+          other.answeredAt == this.answeredAt &&
+          other.usedHint == this.usedHint &&
+          other.isPractice == this.isPractice &&
+          other.latencyMs == this.latencyMs &&
+          other.sessionId == this.sessionId);
+}
+
+class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
+  final Value<String> id;
+  final Value<String> termId;
+  final Value<String> exerciseMode;
+  final Value<String> response;
+  final Value<int> clientSeq;
+  final Value<String> answeredAt;
+  final Value<bool> usedHint;
+  final Value<bool> isPractice;
+  final Value<int?> latencyMs;
+  final Value<String?> sessionId;
+  final Value<int> rowid;
+  const ReviewQueueRowsCompanion({
+    this.id = const Value.absent(),
+    this.termId = const Value.absent(),
+    this.exerciseMode = const Value.absent(),
+    this.response = const Value.absent(),
+    this.clientSeq = const Value.absent(),
+    this.answeredAt = const Value.absent(),
+    this.usedHint = const Value.absent(),
+    this.isPractice = const Value.absent(),
+    this.latencyMs = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReviewQueueRowsCompanion.insert({
+    required String id,
+    required String termId,
+    required String exerciseMode,
+    required String response,
+    required int clientSeq,
+    required String answeredAt,
+    this.usedHint = const Value.absent(),
+    this.isPractice = const Value.absent(),
+    this.latencyMs = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       termId = Value(termId),
+       exerciseMode = Value(exerciseMode),
+       response = Value(response),
+       clientSeq = Value(clientSeq),
+       answeredAt = Value(answeredAt);
+  static Insertable<ReviewQueueRow> custom({
+    Expression<String>? id,
+    Expression<String>? termId,
+    Expression<String>? exerciseMode,
+    Expression<String>? response,
+    Expression<int>? clientSeq,
+    Expression<String>? answeredAt,
+    Expression<bool>? usedHint,
+    Expression<bool>? isPractice,
+    Expression<int>? latencyMs,
+    Expression<String>? sessionId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (termId != null) 'term_id': termId,
+      if (exerciseMode != null) 'exercise_mode': exerciseMode,
+      if (response != null) 'response': response,
+      if (clientSeq != null) 'client_seq': clientSeq,
+      if (answeredAt != null) 'answered_at': answeredAt,
+      if (usedHint != null) 'used_hint': usedHint,
+      if (isPractice != null) 'is_practice': isPractice,
+      if (latencyMs != null) 'latency_ms': latencyMs,
+      if (sessionId != null) 'session_id': sessionId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReviewQueueRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? termId,
+    Value<String>? exerciseMode,
+    Value<String>? response,
+    Value<int>? clientSeq,
+    Value<String>? answeredAt,
+    Value<bool>? usedHint,
+    Value<bool>? isPractice,
+    Value<int?>? latencyMs,
+    Value<String?>? sessionId,
+    Value<int>? rowid,
+  }) {
+    return ReviewQueueRowsCompanion(
+      id: id ?? this.id,
+      termId: termId ?? this.termId,
+      exerciseMode: exerciseMode ?? this.exerciseMode,
+      response: response ?? this.response,
+      clientSeq: clientSeq ?? this.clientSeq,
+      answeredAt: answeredAt ?? this.answeredAt,
+      usedHint: usedHint ?? this.usedHint,
+      isPractice: isPractice ?? this.isPractice,
+      latencyMs: latencyMs ?? this.latencyMs,
+      sessionId: sessionId ?? this.sessionId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (exerciseMode.present) {
+      map['exercise_mode'] = Variable<String>(exerciseMode.value);
+    }
+    if (response.present) {
+      map['response'] = Variable<String>(response.value);
+    }
+    if (clientSeq.present) {
+      map['client_seq'] = Variable<int>(clientSeq.value);
+    }
+    if (answeredAt.present) {
+      map['answered_at'] = Variable<String>(answeredAt.value);
+    }
+    if (usedHint.present) {
+      map['used_hint'] = Variable<bool>(usedHint.value);
+    }
+    if (isPractice.present) {
+      map['is_practice'] = Variable<bool>(isPractice.value);
+    }
+    if (latencyMs.present) {
+      map['latency_ms'] = Variable<int>(latencyMs.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReviewQueueRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('termId: $termId, ')
+          ..write('exerciseMode: $exerciseMode, ')
+          ..write('response: $response, ')
+          ..write('clientSeq: $clientSeq, ')
+          ..write('answeredAt: $answeredAt, ')
+          ..write('usedHint: $usedHint, ')
+          ..write('isPractice: $isPractice, ')
+          ..write('latencyMs: $latencyMs, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3959,6 +4578,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PendingGenerationsTable pendingGenerations =
       $PendingGenerationsTable(this);
   late final $DailyActivityTable dailyActivity = $DailyActivityTable(this);
+  late final $ReviewQueueRowsTable reviewQueueRows = $ReviewQueueRowsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3972,6 +4594,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     triagedTerms,
     pendingGenerations,
     dailyActivity,
+    reviewQueueRows,
   ];
 }
 
@@ -6007,6 +6630,313 @@ typedef $$DailyActivityTableProcessedTableManager =
       DailyActivityData,
       PrefetchHooks Function()
     >;
+typedef $$ReviewQueueRowsTableCreateCompanionBuilder =
+    ReviewQueueRowsCompanion Function({
+      required String id,
+      required String termId,
+      required String exerciseMode,
+      required String response,
+      required int clientSeq,
+      required String answeredAt,
+      Value<bool> usedHint,
+      Value<bool> isPractice,
+      Value<int?> latencyMs,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+typedef $$ReviewQueueRowsTableUpdateCompanionBuilder =
+    ReviewQueueRowsCompanion Function({
+      Value<String> id,
+      Value<String> termId,
+      Value<String> exerciseMode,
+      Value<String> response,
+      Value<int> clientSeq,
+      Value<String> answeredAt,
+      Value<bool> usedHint,
+      Value<bool> isPractice,
+      Value<int?> latencyMs,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+
+class $$ReviewQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReviewQueueRowsTable> {
+  $$ReviewQueueRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get clientSeq => $composableBuilder(
+    column: $table.clientSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get usedHint => $composableBuilder(
+    column: $table.usedHint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get latencyMs => $composableBuilder(
+    column: $table.latencyMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReviewQueueRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReviewQueueRowsTable> {
+  $$ReviewQueueRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get clientSeq => $composableBuilder(
+    column: $table.clientSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get usedHint => $composableBuilder(
+    column: $table.usedHint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get latencyMs => $composableBuilder(
+    column: $table.latencyMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReviewQueueRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReviewQueueRowsTable> {
+  $$ReviewQueueRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get response =>
+      $composableBuilder(column: $table.response, builder: (column) => column);
+
+  GeneratedColumn<int> get clientSeq =>
+      $composableBuilder(column: $table.clientSeq, builder: (column) => column);
+
+  GeneratedColumn<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get usedHint =>
+      $composableBuilder(column: $table.usedHint, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get latencyMs =>
+      $composableBuilder(column: $table.latencyMs, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+}
+
+class $$ReviewQueueRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReviewQueueRowsTable,
+          ReviewQueueRow,
+          $$ReviewQueueRowsTableFilterComposer,
+          $$ReviewQueueRowsTableOrderingComposer,
+          $$ReviewQueueRowsTableAnnotationComposer,
+          $$ReviewQueueRowsTableCreateCompanionBuilder,
+          $$ReviewQueueRowsTableUpdateCompanionBuilder,
+          (
+            ReviewQueueRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ReviewQueueRowsTable,
+              ReviewQueueRow
+            >,
+          ),
+          ReviewQueueRow,
+          PrefetchHooks Function()
+        > {
+  $$ReviewQueueRowsTableTableManager(
+    _$AppDatabase db,
+    $ReviewQueueRowsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReviewQueueRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReviewQueueRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReviewQueueRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> termId = const Value.absent(),
+                Value<String> exerciseMode = const Value.absent(),
+                Value<String> response = const Value.absent(),
+                Value<int> clientSeq = const Value.absent(),
+                Value<String> answeredAt = const Value.absent(),
+                Value<bool> usedHint = const Value.absent(),
+                Value<bool> isPractice = const Value.absent(),
+                Value<int?> latencyMs = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReviewQueueRowsCompanion(
+                id: id,
+                termId: termId,
+                exerciseMode: exerciseMode,
+                response: response,
+                clientSeq: clientSeq,
+                answeredAt: answeredAt,
+                usedHint: usedHint,
+                isPractice: isPractice,
+                latencyMs: latencyMs,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String termId,
+                required String exerciseMode,
+                required String response,
+                required int clientSeq,
+                required String answeredAt,
+                Value<bool> usedHint = const Value.absent(),
+                Value<bool> isPractice = const Value.absent(),
+                Value<int?> latencyMs = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReviewQueueRowsCompanion.insert(
+                id: id,
+                termId: termId,
+                exerciseMode: exerciseMode,
+                response: response,
+                clientSeq: clientSeq,
+                answeredAt: answeredAt,
+                usedHint: usedHint,
+                isPractice: isPractice,
+                latencyMs: latencyMs,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReviewQueueRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReviewQueueRowsTable,
+      ReviewQueueRow,
+      $$ReviewQueueRowsTableFilterComposer,
+      $$ReviewQueueRowsTableOrderingComposer,
+      $$ReviewQueueRowsTableAnnotationComposer,
+      $$ReviewQueueRowsTableCreateCompanionBuilder,
+      $$ReviewQueueRowsTableUpdateCompanionBuilder,
+      (
+        ReviewQueueRow,
+        BaseReferences<_$AppDatabase, $ReviewQueueRowsTable, ReviewQueueRow>,
+      ),
+      ReviewQueueRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6027,4 +6957,6 @@ class $AppDatabaseManager {
       $$PendingGenerationsTableTableManager(_db, _db.pendingGenerations);
   $$DailyActivityTableTableManager get dailyActivity =>
       $$DailyActivityTableTableManager(_db, _db.dailyActivity);
+  $$ReviewQueueRowsTableTableManager get reviewQueueRows =>
+      $$ReviewQueueRowsTableTableManager(_db, _db.reviewQueueRows);
 }

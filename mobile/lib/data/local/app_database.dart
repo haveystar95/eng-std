@@ -134,6 +134,35 @@ class PendingGenerations extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// The durable queue of un-uploaded answers. Lives here, NOT in the Keychain, for two reasons that
+/// only showed up under measurement (F20-r2):
+///
+///  * the Keychain store held the queue as ONE JSON blob, so every answer re-serialised and rewrote
+///    the whole thing on the UI isolate — a cost that grows with the queue, and one `record()` was
+///    caught taking 650 ms once the queue stopped draining;
+///  * drift runs in a background isolate, so an insert costs the UI isolate nothing.
+///
+/// It is not a secret either — it is application data, and the Keychain was simply the wrong store.
+/// The per-user monotonic `SeqCounter` deliberately STAYS in the Keychain: it must survive this
+/// queue being cleared, which is the whole reason it was put under its own key.
+///
+/// Ordering rides on [clientSeq], never on row order or device time.
+class ReviewQueueRows extends Table {
+  TextColumn get id => text()(); // client ULID — the /reviews/batch idempotency key
+  TextColumn get termId => text()();
+  TextColumn get exerciseMode => text()();
+  TextColumn get response => text()();
+  IntColumn get clientSeq => integer()();
+  TextColumn get answeredAt => text()(); // ISO-8601 UTC, reference-only
+  BoolColumn get usedHint => boolean().withDefault(const Constant(false))();
+  BoolColumn get isPractice => boolean().withDefault(const Constant(false))();
+  IntColumn get latencyMs => integer().nullable()();
+  TextColumn get sessionId => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Per-day review count — the source for the Progress screen's activity chart, week calendar and
 /// «за неделю»/«сегодня» counters (кадр 2.6). NOT synced: purely local, incremented only in
 /// [ReviewSync.record] (session + free practice; triage is deliberately excluded — the chart must
@@ -183,13 +212,14 @@ class ItemProgressRow {
   TriagedTerms,
   PendingGenerations,
   DailyActivity,
+  ReviewQueueRows,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -216,6 +246,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(pendingGenerations, pendingGenerations.targetLangExplicit);
           }
           if (from < 7) await m.createTable(dailyActivity); // Progress-screen activity (A3.6)
+          // Durable review queue moved out of the Keychain (F20-r2). The existing blob is imported
+          // once at start-up by ReviewQueue.migrateFromKeychain — not here, because the migration
+          // needs the Keychain, which the DB layer must not know about.
+          if (from < 8) await m.createTable(reviewQueueRows);
         },
       );
 
@@ -289,6 +323,48 @@ class AppDatabase extends _$AppDatabase {
         'ON CONFLICT(day) DO UPDATE SET reviews = reviews + 1',
         [day],
       );
+
+  // ---- Durable review queue (client-only, not synced) -----------------------
+
+  /// The queue in upload order. `client_seq` is the ONLY ordering — never row order, never a
+  /// device timestamp.
+  Future<List<ReviewQueueRow>> reviewQueue() =>
+      (select(reviewQueueRows)..orderBy([(t) => OrderingTerm(expression: t.clientSeq)])).get();
+
+  /// Append ONE answer. A single insert, on the background isolate — this is the whole point of
+  /// moving the queue here: the Keychain store rewrote the entire blob on every answer.
+  Future<void> enqueueReview(ReviewQueueRowsCompanion row) =>
+      into(reviewQueueRows).insertOnConflictUpdate(row);
+
+  /// Drop uploaded (or permanently rejected) answers by client ULID.
+  Future<void> dequeueReviews(Iterable<String> ids) =>
+      (delete(reviewQueueRows)..where((t) => t.id.isIn(ids.toList()))).go();
+
+  Future<int> reviewQueueLength() async {
+    final row = await customSelect(
+      'SELECT COUNT(*) AS c FROM review_queue_rows',
+      readsFrom: {reviewQueueRows},
+    ).getSingle();
+    return row.read<int>('c');
+  }
+
+  /// The oldest PRACTICE answers, for the queue cap. Scheduling answers are never offered here —
+  /// they carry progress the server has not seen and must never be dropped to make room.
+  Future<List<String>> oldestPracticeReviewIds(int limit) async {
+    final rows = await (select(reviewQueueRows)
+          ..where((t) => t.isPractice.equals(true))
+          ..orderBy([(t) => OrderingTerm(expression: t.clientSeq)])
+          ..limit(limit))
+        .get();
+    return [for (final r in rows) r.id];
+  }
+
+  /// Idempotent bulk insert used by the one-time Keychain import: re-running it can only re-insert
+  /// the same client ULIDs, so a half-finished migration heals on the next launch.
+  Future<void> importReviewQueue(List<ReviewQueueRowsCompanion> rows) async {
+    if (rows.isEmpty) return;
+    await batch((b) => b.insertAll(reviewQueueRows, rows, mode: InsertMode.insertOrIgnore));
+  }
 
   /// Triage-eligible (never-studied AND never-triaged) term count per collection —
   /// powers the home «Разобрать N» CTA. Same rule as [triageEligible], reactive.
