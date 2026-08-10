@@ -69,7 +69,14 @@ class ReviewSync {
     if (!isPractice) {
       await _ref.read(appDatabaseProvider).bumpDailyActivity(localDayKey(DateTime.now()));
     }
-    unawaited(flush());
+    // Nobody is waiting on a practice answer: it moves no schedule, so there is no «увидишь снова
+    // через N дней» to fill in and nothing to pull back. It rides the durable queue and goes up as
+    // ONE batch when the session ends (the summary flushes) instead of one HTTP round trip per
+    // word — which is what the batch endpoint was for in the first place. Offline safety is
+    // unchanged: the queue is persisted before this returns, and app start, network return, app
+    // resume and the summary all flush it. A scheduling answer still uploads immediately, because
+    // the feedback line genuinely waits on the server's schedule.
+    if (!isPractice) unawaited(flush());
   }
 
   /// Upload the pending queue in chunks (see TriageSync.flush for the full rationale).
@@ -85,11 +92,18 @@ class ReviewSync {
     try {
       final snapshot = List<PendingReview>.from(list);
       final drop = <String>{};
+      // Did anything we managed to upload actually move server-side progress? Practice answers
+      // never do — SubmitReviewsHandler filters them out before folding — so a sync after a pure
+      // practice batch is a guaranteed-empty round trip. Measured on device: the delta brought
+      // back zero rows after every practice session, not once. Skipping it takes two network calls
+      // per answer out of the hot path and changes nothing on screen.
+      var scheduledAny = false;
       for (var i = 0; i < snapshot.length; i += _chunkSize) {
         final chunk = snapshot.sublist(i, min(i + _chunkSize, snapshot.length));
         try {
           await _api.submitReviews(chunk);
           drop.addAll(chunk.map((e) => e.id)); // success → drop
+          scheduledAny = scheduledAny || chunk.any((e) => !e.isPractice);
         } on DioException catch (e) {
           if (!isPermanentReject(e)) break; // transient → keep this + remaining chunks
           drop.addAll(chunk.map((e) => e.id)); // 422/413 → drop with a log, don't block the rest
@@ -102,10 +116,13 @@ class ReviewSync {
       if (drop.isNotEmpty) {
         list.removeWhere((e) => drop.contains(e.id));
         await _queue.save(list);
-        // Uploaded answers changed server-side progress; pull it back into the local mirror
-        // (stats + per-collection progress read from there). Study cards stay on the network.
-        _ref.read(syncServiceProvider).sync();
-        _ref.invalidate(dueCardsProvider);
+        // Only a scheduling answer changed anything server-side; pull that back into the local
+        // mirror (stats + per-collection progress read from there). Study cards stay on the
+        // network. A pure practice batch skips this — see [scheduledAny].
+        if (scheduledAny) {
+          _ref.read(syncServiceProvider).sync();
+          _ref.invalidate(dueCardsProvider);
+        }
       }
     } finally {
       _flushing = false;
