@@ -1379,6 +1379,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devFlagPremium => 'Premium (dev)';
 
   @override
+  String get sessionOffline => 'No connection';
+
+  @override
+  String get sessionLoadFailed => 'Couldn\'t load the session';
+
+  @override
   String get syncStuckBanner =>
       'Answers aren\'t reaching the server — check your connection';
 }

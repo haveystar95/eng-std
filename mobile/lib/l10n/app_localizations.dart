@@ -2234,6 +2234,18 @@ abstract class AppLocalizations {
   /// **'Premium (dev)'**
   String get devFlagPremium;
 
+  /// Сессия не построилась из-за отсутствия сети. Сессии строятся на сервере (пока — см. офлайн-практику).
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет соединения'**
+  String get sessionOffline;
+
+  /// Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить сессию'**
+  String get sessionLoadFailed;
+
   /// Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2).
   ///
   /// In ru, this message translates to:

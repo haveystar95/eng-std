@@ -1425,6 +1425,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devFlagPremium => 'Premium (dev)';
 
   @override
+  String get sessionOffline => 'Нет соединения';
+
+  @override
+  String get sessionLoadFailed => 'Не удалось загрузить сессию';
+
+  @override
   String get syncStuckBanner =>
       'Ответы не уходят на сервер — проверь соединение';
 }

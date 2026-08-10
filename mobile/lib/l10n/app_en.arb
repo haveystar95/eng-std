@@ -383,5 +383,7 @@
   "devFlagStore": "Collections store",
   "devFlagPaywall": "Paywall",
   "devFlagPremium": "Premium (dev)",
+  "sessionOffline": "No connection",
+  "sessionLoadFailed": "Couldn't load the session",
   "syncStuckBanner": "Answers aren't reaching the server — check your connection"
 }

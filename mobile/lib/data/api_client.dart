@@ -1,3 +1,4 @@
+import 'dart:io' show SocketException;
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -14,6 +15,23 @@ import 'triage_queue.dart';
 bool isPermanentReject(DioException e) {
   final status = e.response?.statusCode;
   return status == 422 || status == 413;
+}
+
+/// The request never reached the server: no network, a dead tunnel, a timeout. Worth telling the
+/// user plainly («нет соединения») instead of showing them a stack of Dio internals — and worth
+/// distinguishing from a server that answered but answered badly.
+bool isOffline(Object? error) {
+  if (error is! DioException) return false;
+  return switch (error.type) {
+    DioExceptionType.connectionError ||
+    DioExceptionType.connectionTimeout ||
+    DioExceptionType.sendTimeout ||
+    DioExceptionType.receiveTimeout =>
+      true,
+    // `unknown` wraps whatever the socket threw; a SocketException is still just "no network".
+    DioExceptionType.unknown => error.error is SocketException,
+    _ => false,
+  };
 }
 
 /// HTTP client for the backend2 API (`/api/v1`, Sanctum bearer, snake_case,

@@ -123,7 +123,19 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             children: [
               session.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
-                error: (e, _) => _CenteredMessage(text: l.sessionLoadError(e.toString())),
+                // Sessions are still built server-side, so no network means no session. Say that
+                // in words instead of printing a DioException at the user; the detail goes to the
+                // log. Retry re-runs the provider — the session id is minted once, and the build
+                // is idempotent under it, so a retry returns the same composition.
+                error: (e, st) {
+                  debugPrint('[session] build failed: $e\n$st');
+                  return _CenteredMessage(
+                    text: isOffline(e) ? l.sessionOffline : l.sessionLoadFailed,
+                    icon: isOffline(e) ? LucideIcons.cloudOff : LucideIcons.triangleAlert,
+                    actionLabel: l.generationRetry,
+                    onAction: () => ref.invalidate(studySessionProvider(args)),
+                  );
+                },
                 data: (s) => s.cards.isEmpty
                     ? _CenteredMessage(
                         text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
@@ -878,9 +890,14 @@ class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
 }
 
 class _CenteredMessage extends StatelessWidget {
-  const _CenteredMessage({required this.text, this.icon});
+  const _CenteredMessage({required this.text, this.icon, this.actionLabel, this.onAction});
   final String text;
   final IconData? icon;
+
+  /// Optional recovery action — «Повторить» on a failed session build. Absent for the empty
+  /// states, where there is nothing to retry.
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -914,6 +931,10 @@ class _CenteredMessage extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
                 Text(text, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 20)),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: AppSpacing.s16),
+                  QuietButton(label: actionLabel!, icon: LucideIcons.rotateCw, onPressed: onAction),
+                ],
               ],
             ),
           ),
