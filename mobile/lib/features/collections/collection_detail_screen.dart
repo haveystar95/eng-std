@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +47,33 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
 class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen> {
   final _pronouncer = Pronouncer();
   late bool _showTriagePrompt = widget.offerTriage;
+  @override
+  void initState() {
+    super.initState();
+    // Raise the iOS audio session and prime the synthesizer on entry, the same way the training
+    // screen does. Without it the FIRST word tapped here starts mid-way — you hear only its tail —
+    // because the audio route is cold and wakes up while the utterance is already running; a second
+    // tap right after is clean, which is the route being awake by then. This screen exists to be
+    // listened to, so paying for it on entry is right (F20-r2).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_pronouncer.warmUp(targetLang: _speakLang));
+    });
+  }
+
+  @override
+  void dispose() {
+    // Hand the session back. Symmetric with the warm-up: this screen owns it only while it is on
+    // screen, exactly like the training screen.
+    unawaited(_pronouncer.release());
+    super.dispose();
+  }
+
+  /// Pronounce in the COLLECTION's language, not the profile's — a ru→de set must speak German even
+  /// when the profile targets English (language lives on the collection; device-batch F16).
+  String get _speakLang =>
+      _collection?.targetLang ??
+      ref.read(authControllerProvider).value?.profile?.targetLanguage ??
+      'en';
 
   void _openTriage() {
     AppHaptics.light();
@@ -67,12 +96,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 
   Future<void> _speak(Word word) async {
     AppHaptics.light();
-    // Pronounce in the COLLECTION's language, not the profile's — a ru→de set must speak German
-    // even when the profile targets English (language lives on the collection; device-batch F16).
-    final target = _collection?.targetLang ??
-        ref.read(authControllerProvider).value?.profile?.targetLanguage ??
-        'en';
-    await _pronouncer.speak(word, targetLang: target);
+    await _pronouncer.speak(word, targetLang: _speakLang);
   }
 
   Future<void> _delete(Word word) async {
