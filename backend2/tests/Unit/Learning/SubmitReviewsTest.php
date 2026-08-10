@@ -16,7 +16,7 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Tests\Doubles\FakeLatencyMedianReader;
 use Tests\Doubles\FakeLearnerProfileReader;
-use Tests\Doubles\FakeSessionCompositionReader;
+use Tests\Doubles\InMemoryStudySessions;
 use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
@@ -46,6 +46,7 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
     $ctx->progress = new InMemoryTermProgressRepository();
     $ctx->stats = new SpyStatsProjector();
     $ctx->median = new FakeLatencyMedianReader();
+    $ctx->sessions = new InMemoryStudySessions();
 
     return new SubmitReviewsHandler(
         reviews: $ctx->reviews,
@@ -55,7 +56,8 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         answerKeys: new FakeTermAnswerKeyReader(),
         grader: new AnswerGrader(),
         median: $ctx->median,
-        sessionComposition: new FakeSessionCompositionReader(),
+        sessionContexts: $ctx->sessions,
+        sessions: $ctx->sessions,
         snapshots: $ctx->progress, // the in-memory repo doubles as the snapshot reader
         stats: $ctx->stats,
         profile: new FakeLearnerProfileReader(),

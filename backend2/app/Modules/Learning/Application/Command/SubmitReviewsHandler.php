@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Dto\ReviewBatchResult;
+use App\Modules\Learning\Application\Dto\ReviewInput;
+use App\Modules\Learning\Application\Dto\SessionContext;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
-use App\Modules\Learning\Application\Port\SessionCompositionReader;
+use App\Modules\Learning\Application\Port\SessionContextReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Domain\Entity\Review;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Event\ReviewsSubmitted;
+use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\ReviewRepository;
+use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Repository\TermProgressRepository;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Scheduler;
@@ -22,6 +26,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use DateTimeImmutable;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -49,7 +54,8 @@ final readonly class SubmitReviewsHandler
         private TermAnswerKeyReader $answerKeys,
         private AnswerGrader $grader,
         private LatencyMedianReader $median,
-        private SessionCompositionReader $sessionComposition,
+        private SessionContextReader $sessionContexts,
+        private StudySessionRepository $sessions,
         private ProgressSnapshotReader $snapshots,
         private StatsProjector $stats,
         private LearnerProfileReader $profile,
@@ -61,7 +67,10 @@ final readonly class SubmitReviewsHandler
     {
         $known = $this->knownTermIds($command);
         $keys = $this->answerKeys->byIds($command->termIds());
-        $compositions = $this->sessionComposition->compositionsByIds($command->sessionIds());
+        $contexts = $this->sessionContexts->byIds($command->sessionIds());
+        // Practice sessions the device built while offline: the server has never seen the id, so
+        // it is adopted below rather than rejected (see [adoptOfflinePracticeSessions]).
+        $adoptable = $this->adoptableSessions($command, $contexts);
         // Pre-batch states, so an answer can be flagged as a verification (the term was `known`
         // when answered) — a fact that is gone once the fold changes the state.
         $states = $this->snapshots->forTerms(
@@ -69,7 +78,10 @@ final readonly class SubmitReviewsHandler
             array_map(static fn (TermId $id): string => $id->value, $command->termIds()),
         );
 
-        return $this->tx->run(function () use ($command, $known, $keys, $compositions, $states): ReviewBatchResult {
+        return $this->tx->run(function () use ($command, $known, $keys, $contexts, $adoptable, $states): ReviewBatchResult {
+            // Must happen before any review row is written: reviews.session_id has a foreign key
+            // to study_sessions, so an answer naming an unknown session would fail the insert.
+            $contexts += $this->adoptOfflinePracticeSessions($command, $adoptable);
             /** @var list<Review> $accepted */
             $accepted = [];
             /** @var array<string, ExerciseMode> $touchedModes */
@@ -89,9 +101,7 @@ final readonly class SubmitReviewsHandler
 
                     continue;
                 }
-                // An answer that names a session must be for a term in that session's fixed
-                // composition — otherwise a stale/abandoned session's retries land out of context.
-                if ($input->sessionId !== null && ! isset($compositions[$input->sessionId->value][$input->termId->value])) {
+                if ($input->sessionId !== null && ! $this->sessionAccepts($input, $contexts, $command)) {
                     $unknown++;
 
                     continue;
@@ -151,6 +161,113 @@ final readonly class SubmitReviewsHandler
                 unknown: $unknown,
             );
         });
+    }
+
+    /**
+     * May this answer be recorded against the session it names?
+     *
+     * Two different jobs, deliberately separated:
+     *
+     *  * OWNERSHIP — an answer is never accepted against another user's session. No exceptions,
+     *    practice included.
+     *  * COMPOSITION — an answer must be for a term the session was built with, so an abandoned
+     *    session plus a retry cannot push out-of-context terms and spend the daily new-word quota
+     *    on words the user never saw. That protects SCHEDULING, so it does not apply to practice,
+     *    which schedules nothing. It is skipped for practice entirely — not even checked against
+     *    an adopted session, because a second chunk of the same offline run legitimately carries
+     *    terms the first chunk never mentioned.
+     *
+     * A practice answer against the user's own SCHEDULING session is still rejected: the two kinds
+     * of run are not interchangeable, and mixing them would corrupt the history the session groups.
+     *
+     * @param  array<string, SessionContext>  $contexts
+     */
+    private function sessionAccepts(ReviewInput $input, array $contexts, SubmitReviews $command): bool
+    {
+        if ($input->sessionId === null) {
+            return true; // no session named — nothing to check
+        }
+        $context = $contexts[$input->sessionId->value] ?? null;
+        if ($context === null) {
+            return false; // unknown session — an offline practice one would have been adopted
+        }
+        if ($context->userId !== $command->actorId->value) {
+            return false;
+        }
+        if ($input->isPractice) {
+            return $context->isPractice;
+        }
+
+        return $context->has($input->termId->value);
+    }
+
+    /**
+     * Practice sessions this batch names that the server has never seen — i.e. built on the device
+     * while offline. Grouped here, outside the transaction, so the write below is a plain insert.
+     *
+     * Only practice qualifies. An unknown SCHEDULING session stays unknown: its composition is the
+     * guard on the daily quota, and a client that could mint one could mint the quota away with it.
+     *
+     * @param  array<string, SessionContext>  $contexts
+     * @return array<string, array{terms: list<TermId>, startedAt: DateTimeImmutable}>
+     */
+    private function adoptableSessions(SubmitReviews $command, array $contexts): array
+    {
+        $out = [];
+        foreach ($command->reviews as $input) {
+            if ($input->sessionId === null || ! $input->isPractice) {
+                continue;
+            }
+            $sessionId = $input->sessionId->value;
+            if (isset($contexts[$sessionId])) {
+                continue;
+            }
+            if (! isset($out[$sessionId])) {
+                $out[$sessionId] = ['terms' => [], 'startedAt' => $input->answeredAt];
+            }
+            $out[$sessionId]['terms'][] = $input->termId;
+            if ($input->answeredAt < $out[$sessionId]['startedAt']) {
+                $out[$sessionId]['startedAt'] = $input->answeredAt;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Create the study_sessions rows for [adoptableSessions], and return their contexts so the
+     * loop treats them as the user's own practice runs.
+     *
+     * The write is `insertOrIgnore` (see EloquentStudySessionRepository), which is what makes two
+     * chunks of the same offline run safe: the second one finds the row already there and neither
+     * fails nor overwrites the first chunk's `started_at` or composition.
+     *
+     * @param  array<string, array{terms: list<TermId>, startedAt: DateTimeImmutable}>  $adoptable
+     * @return array<string, SessionContext>
+     */
+    private function adoptOfflinePracticeSessions(SubmitReviews $command, array $adoptable): array
+    {
+        $adopted = [];
+        foreach ($adoptable as $sessionId => $session) {
+            $this->sessions->save(StudySession::start(
+                id: StudySessionId::fromString($sessionId),
+                userId: $command->actorId,
+                isPractice: true,
+                composition: $session['terms'],
+                startedAt: $session['startedAt'],
+            ));
+            $composition = [];
+            foreach ($session['terms'] as $termId) {
+                $composition[$termId->value] = true;
+            }
+            $adopted[$sessionId] = new SessionContext(
+                userId: $command->actorId->value,
+                isPractice: true,
+                composition: $composition,
+            );
+        }
+
+        return $adopted;
     }
 
     /**

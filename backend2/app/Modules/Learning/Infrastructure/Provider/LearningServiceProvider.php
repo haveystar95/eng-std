@@ -11,7 +11,7 @@ use App\Modules\Learning\Application\Port\LatencyMedianReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressExistenceReader;
 use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
-use App\Modules\Learning\Application\Port\SessionCompositionReader;
+use App\Modules\Learning\Application\Port\SessionContextReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Application\Port\StatsReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
@@ -35,7 +35,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressExistenceReader
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressSnapshotReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressSyncReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentReviewRepository;
-use App\Modules\Learning\Infrastructure\Eloquent\EloquentSessionCompositionReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentSessionContextReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStatsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentSyncCursorReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentStudySessionRepository;
@@ -61,7 +61,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(ProgressSyncReader::class, EloquentProgressSyncReader::class);
         $this->app->bind(LearnerProfileReader::class, IdentityLearnerProfileReader::class);
         $this->app->bind(LatencyMedianReader::class, CachedLatencyMedianReader::class);
-        $this->app->bind(SessionCompositionReader::class, EloquentSessionCompositionReader::class);
+        $this->app->bind(SessionContextReader::class, EloquentSessionContextReader::class);
         $this->app->bind(StudySessionRepository::class, EloquentStudySessionRepository::class);
         $this->app->bind(DueTermsReader::class, EloquentDueTermsReader::class);
         $this->app->bind(ProgressExistenceReader::class, EloquentProgressExistenceReader::class);
