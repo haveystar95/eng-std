@@ -127,12 +127,24 @@ class Pronouncer {
   /// hardware silent switch. The default audio-session category respects the mute switch (silent
   /// → no sound); `.playback` overrides it, the way media/player apps do (device-batch F10). Set
   /// once, iOS-only (`defaultTargetPlatform` avoids importing dart:io so web/preview still builds).
+  ///
+  /// `mixWithOthers`, NOT `duckOthers`. Ducking is only released when the session is deactivated
+  /// with `.notifyOthersOnDeactivation`, and flutter_tts exposes no way to pass that: its
+  /// `setSharedInstance(false)` calls a plain `setActive(false)`. The one code path that did notify
+  /// was the per-utterance teardown — the very thing that froze the trainer for ~600 ms a word and
+  /// that we disable. Result on device: music stayed quiet after the app had finished speaking.
+  ///
+  /// Mixing removes the problem instead of managing it: there is no ducking to restore, so nothing
+  /// can be left ducked. It also makes the plugin's `shouldDeactivateAndNotifyOthers` false by
+  /// construction, so the per-utterance teardown can never come back even if the flag drifts.
+  /// The trade is deliberate: a pronounced word now plays over the user's music rather than
+  /// lowering it (F20-r2).
   Future<void> _configureIosAudioSession() async {
     if (_audioSessionReady || defaultTargetPlatform != TargetPlatform.iOS) return;
     _audioSessionReady = true;
     await _tts.setIosAudioCategory(
       IosTextToSpeechAudioCategory.playback,
-      [IosTextToSpeechAudioCategoryOptions.duckOthers],
+      [IosTextToSpeechAudioCategoryOptions.mixWithOthers],
       IosTextToSpeechAudioMode.defaultMode,
     );
   }
