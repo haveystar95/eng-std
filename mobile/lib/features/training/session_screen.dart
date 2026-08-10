@@ -350,6 +350,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       onSpeak: _speak,
       photoUrl: _photoUrl[_pos],
       photoResolved: _photoUrl.containsKey(_pos),
+      showDue: !widget.practice,
       // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's deferred
       // speak/focus is cancelled instead of firing on the next card.
       isCurrent: () => mounted && _pos == builtAt,

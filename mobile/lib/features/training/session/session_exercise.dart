@@ -73,6 +73,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     this.isCurrent = _alwaysCurrent,
     this.photoUrl,
     this.photoResolved = false,
+    this.showDue = true,
   });
 
   static bool _alwaysCurrent() => true;
@@ -86,6 +87,11 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// collapse was a 164 px layout jump right after the slide, which read as a stutter).
   final String? photoUrl;
   final bool photoResolved;
+
+  /// Whether the feedback may show «увидишь снова через N дней». Free practice NEVER schedules, so
+  /// the line would report the term's OLD due date as if this answer had set it — the summary
+  /// already hides it for the same reason (Training Loop v2 / F17).
+  final bool showDue;
 
   /// True while this card is still the on-screen one. Deferred side-effects (autopronounce, listening
   /// autoplay, keyboard focus) check it so a fast «Дальше-Дальше» that leaves the card before the
@@ -316,6 +322,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             onSpeak: widget.onSpeak,
             photoUrl: widget.photoUrl,
             photoResolved: widget.photoResolved,
+            showDue: widget.showDue,
           ),
         ],
       ],
@@ -925,6 +932,7 @@ class _FeedbackBlock extends ConsumerWidget {
     required this.onSpeak,
     this.photoUrl,
     this.photoResolved = false,
+    this.showDue = true,
   });
 
   final SessionCard card;
@@ -934,6 +942,9 @@ class _FeedbackBlock extends ConsumerWidget {
   /// Same resolved photo the prompt uses — the feedback of a wrong answer shows it too.
   final String? photoUrl;
   final bool photoResolved;
+
+  /// See [SessionExerciseCard.showDue].
+  final bool showDue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -963,7 +974,7 @@ class _FeedbackBlock extends ConsumerWidget {
         const SizedBox(height: AppSpacing.s12),
         Text(card.example!, style: AppText.usageExample),
       ],
-      _NextDue(termId: card.termId),
+      if (showDue) _NextDue(termId: card.termId),
     ];
 
     return AnimatedSize(
