@@ -1035,7 +1035,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionNewExampleExhausted => 'You\'ve used today\'s examples';
 
   @override
-  String get sessionPracticeBanner => 'Practice — progress doesn\'t change';
+  String get sessionPracticeBanner =>
+      'Free practice — progress doesn\'t change';
 
   @override
   String get sessionExitTitle => 'End the session?';

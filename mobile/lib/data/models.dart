@@ -391,6 +391,10 @@ class Stats {
   final int reviewsTotal;
   final int streakDays;
 
+  /// Local (user-tz) calendar dates `YYYY-MM-DD` with any activity — the server-truth activity
+  /// calendar (F18). Merged into the local `daily_activity` map so a relogin restores it.
+  final List<String> activeDays;
+
   Stats({
     required this.totalWords,
     required this.learned,
@@ -398,6 +402,7 @@ class Stats {
     required this.dueToday,
     required this.reviewsTotal,
     required this.streakDays,
+    this.activeDays = const [],
   });
 
   factory Stats.fromJson(Map<String, dynamic> j) => Stats(
@@ -407,6 +412,7 @@ class Stats {
         dueToday: (j['due_today'] as int?) ?? 0,
         reviewsTotal: (j['reviews_today'] as int?) ?? 0,
         streakDays: (j['streak_days'] as int?) ?? 0,
+        activeDays: (j['active_days'] as List?)?.map((e) => e as String).toList() ?? const [],
       );
 }
 

@@ -336,6 +336,19 @@ class AppDatabase extends _$AppDatabase {
         [day],
       );
 
+  /// Merge the server's activity calendar (F18) into the local map: a day the client hasn't
+  /// recorded lights up (count 1); a day it already counted keeps its exact optimistic tally
+  /// (max(existing, 1) via ON CONFLICT DO NOTHING). So a relogin/reinstall restores the whole
+  /// calendar from `/stats` without clobbering today's live count.
+  Future<void> mergeActiveDays(List<String> days) => transaction(() async {
+        for (final day in days) {
+          await customStatement(
+            'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) ON CONFLICT(day) DO NOTHING',
+            [day],
+          );
+        }
+      });
+
   // ---- Durable review queue (client-only, not synced) -----------------------
 
   /// The queue in upload order. `client_seq` is the ONLY ordering — never row order, never a

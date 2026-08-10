@@ -256,6 +256,9 @@ class SyncService {
       final s = await _api.stats();
       await _db.setMeta(_kStreak, '${s.streakDays}');
       await _db.setMeta(_kReviewsToday, '${s.reviewsTotal}');
+      // Restore the activity calendar from server truth (F18): merge the active days into the local
+      // map so a relogin/reinstall re-lights every past day; the local optimistic count survives.
+      await _db.mergeActiveDays(s.activeDays);
       // «Лучший результат» (Progress screen): there is no server best-streak field, so keep a local
       // running maximum of the streak we've observed. Accumulates from now, like the activity chart.
       final best = int.tryParse(await _db.getMeta(_kBestStreak) ?? '') ?? 0;

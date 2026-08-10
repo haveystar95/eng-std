@@ -1076,7 +1076,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionNewExampleExhausted => 'Лимит примеров на сегодня исчерпан';
 
   @override
-  String get sessionPracticeBanner => 'Тренировка — прогресс не меняется';
+  String get sessionPracticeBanner =>
+      'Свободная тренировка — прогресс не меняется';
 
   @override
   String get sessionExitTitle => 'Прервать сессию?';

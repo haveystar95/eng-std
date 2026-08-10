@@ -830,7 +830,7 @@
   "sessionNewExampleExhausted": "Лимит примеров на сегодня исчерпан",
   "@sessionNewExampleExhausted": { "description": "Сообщение при 429 на «Новый пример» (квота исчерпана)." },
 
-  "sessionPracticeBanner": "Тренировка — прогресс не меняется",
+  "sessionPracticeBanner": "Свободная тренировка — прогресс не меняется",
   "@sessionPracticeBanner": { "description": "Тихая плашка сверху в тренировочной сессии (кадр 12f)." },
 
   "sessionExitTitle": "Прервать сессию?",
