@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentStatsReader implements StatsReader
 {
-    public function read(UserId $userId, DateTimeImmutable $now): StatsView
+    /** How far back the activity calendar reaches (a year heatmap + headroom for the streak). */
+    private const ACTIVITY_WINDOW_DAYS = 365;
+
+    public function read(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): StatsView
     {
         $uid = $userId->value;
 
@@ -34,9 +37,12 @@ final class EloquentStatsReader implements StatsReader
             ->where('user_id', $uid)->where('state', '<>', 'new')
             ->where('due_at', '<=', $now)->count();
 
-        $today = $now->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
-        $reviewsToday = (int) DB::table('daily_user_stats')
-            ->where('user_id', $uid)->where('date', $today)->value('reviews_count');
+        // Activity is derived live from the append-only review log in the user's timezone — no
+        // client state to lose on relogin, and a late-arriving (offline/end-of-session) practice
+        // batch credits its own day the moment it lands, because its answered_at names that day.
+        $today = $now->setTimezone($tz)->format('Y-m-d');
+        $activeDays = $this->activeDays($uid, $now, $tz);
+        $reviewsToday = $this->reviewsOn($uid, $today, $tz);
 
         return new StatsView(
             totalTerms: $totalTerms,
@@ -44,25 +50,61 @@ final class EloquentStatsReader implements StatsReader
             mastered: $mastered,
             dueToday: $dueToday,
             reviewsToday: $reviewsToday,
-            streakDays: $this->streak($uid, $now),
+            streakDays: $this->streak($activeDays, $today),
+            activeDays: $activeDays,
         );
     }
 
-    private function streak(string $uid, DateTimeImmutable $now): int
+    /**
+     * Distinct local calendar dates (user timezone) that have >=1 review of any kind (study or
+     * practice) within the activity window, oldest first.
+     *
+     * @return list<string>
+     */
+    private function activeDays(string $uid, DateTimeImmutable $now, DateTimeZone $tz): array
     {
-        $days = [];
-        foreach (DB::table('daily_user_stats')->where('user_id', $uid)->where('reviews_count', '>', 0)->pluck('date') as $date) {
-            $days[(string) $date] = true;
-        }
+        $windowStart = $now->modify('-' . self::ACTIVITY_WINDOW_DAYS . ' days')->setTimezone($tz)->setTime(0, 0, 0);
 
-        $day = $now->setTimezone(new DateTimeZone('UTC'))->setTime(0, 0);
+        $rows = DB::table('reviews')
+            ->where('user_id', $uid)
+            ->where('answered_at', '>=', $windowStart)
+            ->distinct()
+            ->orderBy('d')
+            ->selectRaw('(answered_at AT TIME ZONE ?)::date AS d', [$tz->getName()])
+            ->pluck('d');
+
+        return array_values(array_map(
+            static fn ($d): string => (new DateTimeImmutable((string) $d))->format('Y-m-d'),
+            $rows->all(),
+        ));
+    }
+
+    private function reviewsOn(string $uid, string $localDate, DateTimeZone $tz): int
+    {
+        return DB::table('reviews')
+            ->where('user_id', $uid)
+            ->whereRaw('(answered_at AT TIME ZONE ?)::date = ?', [$tz->getName(), $localDate])
+            ->count();
+    }
+
+    /**
+     * Consecutive active days ending today (or yesterday, if today has no review yet), counted on
+     * the user's local calendar dates.
+     *
+     * @param  list<string>  $activeDays  ascending local dates
+     */
+    private function streak(array $activeDays, string $today): int
+    {
+        $set = array_flip($activeDays);
+
+        $day = new DateTimeImmutable($today);
         // A streak may run up to today; if nothing is done yet today, count back from yesterday.
-        if (! isset($days[$day->format('Y-m-d')])) {
+        if (! isset($set[$day->format('Y-m-d')])) {
             $day = $day->modify('-1 day');
         }
 
         $streak = 0;
-        while (isset($days[$day->format('Y-m-d')])) {
+        while (isset($set[$day->format('Y-m-d')])) {
             $streak++;
             $day = $day->modify('-1 day');
         }

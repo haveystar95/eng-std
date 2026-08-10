@@ -21,6 +21,9 @@ final class StatsResource extends JsonResource
             'due_today' => $this->resource->dueToday,
             'reviews_today' => $this->resource->reviewsToday,
             'streak_days' => $this->resource->streakDays,
+            // Local (user-tz) dates with any activity — the calendar's source of truth. The client
+            // renders these and lights today optimistically; the server is the truth on top (F18).
+            'active_days' => $this->resource->activeDays,
         ];
     }
 }

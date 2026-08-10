@@ -1333,3 +1333,11 @@ components:
         due_today: { type: integer }
         reviews_today: { type: integer }
         streak_days: { type: integer }
+        active_days:
+          type: array
+          items: { type: string, format: date }
+          description: >
+            Local (user-timezone) calendar dates with ≥1 review of ANY kind — study OR practice —
+            within the last ~year, oldest first. The server-truth source for the activity calendar
+            and the streak (device-batch F18): the client renders these and lights today
+            optimistically, and a relogin/reinstall restores the full calendar from here.

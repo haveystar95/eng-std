@@ -34,6 +34,17 @@ Then, depending on the task:
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.
 
+## Glossary — practice vs study (device-batch F18)
+
+- **Practice** (free practice): entered from a collection, unlimited, every review flagged
+  `is_practice`. Counts as **activity = yes**; touches the **daily goal / SRS = no** (never
+  schedules, never spends quota, never resolves a `known` verification).
+- **Study** (учебная тренировка): the main-screen session, server-assembled, under the daily
+  new-term quota. **Activity = yes**, **daily goal / SRS = yes**.
+- **Activity** = any review of either kind. Source of truth is the **server**, derived live from
+  the append-only review log in the user's timezone (`profiles.timezone`, like F19) — the client
+  only displays it (see `active_days` on `/stats`). "Любая тренировка — это активность."
+
 ## Where information lives (don't duplicate it)
 
 | Question | Answer lives in |
