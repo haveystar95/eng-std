@@ -19,4 +19,11 @@ interface CollectionSubscriptions
 
     /** Idempotent soft-unsubscribe: stamps `unsubscribed_at` (a per-user tombstone) — keeps the row. */
     public function unsubscribe(UserId $userId, CollectionId $collectionId, DateTimeImmutable $at): void;
+
+    /**
+     * Whether the user has an ACTIVE subscription to the collection (a `user_collections` row with
+     * no `unsubscribed_at` tombstone). The single-collection form of the "active subscription" rule
+     * the sync feed and the study-term scope use — read it here rather than re-testing the column.
+     */
+    public function isActive(UserId $userId, CollectionId $collectionId): bool;
 }

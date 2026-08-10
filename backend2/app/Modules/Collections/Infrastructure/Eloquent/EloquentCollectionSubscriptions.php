@@ -50,4 +50,13 @@ final class EloquentCollectionSubscriptions implements CollectionSubscriptions
             ->whereNull('unsubscribed_at')
             ->update(['unsubscribed_at' => $at]);
     }
+
+    public function isActive(UserId $userId, CollectionId $collectionId): bool
+    {
+        return DB::table('user_collections')
+            ->where('user_id', $userId->value)
+            ->where('collection_id', $collectionId->value)
+            ->whereNull('unsubscribed_at')
+            ->exists();
+    }
 }

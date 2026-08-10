@@ -6,6 +6,7 @@ namespace App\Modules\Collections\Application\Query;
 
 use App\Modules\Collections\Application\Dto\CollectionItemView;
 use App\Modules\Collections\Application\Dto\CollectionView;
+use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
@@ -15,17 +16,21 @@ final readonly class GetCollectionHandler
     public function __construct(
         private CollectionRepository $collections,
         private TermContentReader $termContent,
+        private CollectionSubscriptions $subscriptions,
     ) {}
 
     public function __invoke(GetCollection $query): ?CollectionView
     {
         $collection = $this->collections->findById($query->collectionId);
+        if ($collection === null) {
+            return null;
+        }
 
-        // Owner-only for now; a non-owner (or missing id) gets 404, not existence disclosure.
-        if ($collection === null
-            || $collection->ownerId() === null
-            || ! $collection->ownerId()->equals($query->actorId)
-        ) {
+        // READ access = owner ∪ active subscriber (a store deck added to the user's library).
+        // Editing stays owner-only (Collection::assertEditableBy) — a subscriber can't mutate a
+        // store deck. A non-owner without an active subscription gets 404, not existence disclosure.
+        $isOwner = $collection->ownerId() !== null && $collection->ownerId()->equals($query->actorId);
+        if (! $isOwner && ! $this->subscriptions->isActive($query->actorId, $query->collectionId)) {
             return null;
         }
 

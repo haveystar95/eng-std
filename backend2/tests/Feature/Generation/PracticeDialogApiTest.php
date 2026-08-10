@@ -65,6 +65,39 @@ function seedPracticeCollection(User $user, array $words = ['withdraw cash', 'ac
     return $collectionId->value;
 }
 
+/** A store deck (system, owner NULL) with target terms + a subscription for $user. Returns its id. */
+function subscribedStoreDeck(User $user, bool $active = true): string
+{
+    $cid = Ulid::generate();
+    DB::table('collections')->insert([
+        'id' => $cid, 'owner_id' => null, 'type' => 'system', 'title' => 'At the airport',
+        'source_lang' => 'ru', 'target_lang' => 'en', 'visibility' => 'public', 'source' => 'curated',
+        'items_count' => 2, 'is_premium' => false, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $pos = 0;
+    foreach (['passport' => 'паспорт', 'boarding pass' => 'посадочный'] as $text => $ru) {
+        $tid = Ulid::generate();
+        DB::table('terms')->insert([
+            'id' => $tid, 'lang' => 'en', 'text' => $text, 'normalized_text' => $text, 'type' => 'word',
+            'source' => 'curated', 'cefr' => 'A2', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('term_translations')->insert([
+            'id' => Ulid::generate(), 'term_id' => $tid, 'lang' => 'ru', 'text' => $ru, 'is_primary' => true,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('collection_items')->insert([
+            'id' => Ulid::generate(), 'collection_id' => $cid, 'term_id' => $tid, 'position' => $pos++,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+    DB::table('user_collections')->insert([
+        'user_id' => $user->id, 'collection_id' => $cid, 'added_at' => now(),
+        'unsubscribed_at' => $active ? null : now(), 'is_pinned' => false,
+    ]);
+
+    return $cid;
+}
+
 it('starts a dialog for a premium user with a token, target words and TTL', function () {
     [$user, $token] = premiumLearner();
     $collectionId = seedPracticeCollection($user);
@@ -309,4 +342,27 @@ it('404s on finish for an unknown dialog', function () {
 it('requires authentication', function () {
     $this->postJson('/api/v1/practice/dialogs', ['collection_id' => Ulid::generate(), 'client_id' => Ulid::generate()])
         ->assertUnauthorized();
+});
+
+// ── F25: realtime dialog on a SUBSCRIBED store collection (owner NULL) ──────────────────
+
+it('starts a realtime dialog on a subscribed store collection (F25)', function () {
+    [$user, $token] = premiumLearner();
+    $cid = subscribedStoreDeck($user, active: true);
+    $clientId = Ulid::generate();
+
+    // Before F25 the lesson loaded the collection owner-only → null → 404 for a store deck.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/practice/dialogs', ['collection_id' => $cid, 'client_id' => $clientId])
+        ->assertCreated()
+        ->assertJsonPath('dialog_id', $clientId);
+});
+
+it('404s a realtime dialog on a store collection after unsubscribe (F25)', function () {
+    [$user, $token] = premiumLearner();
+    $cid = subscribedStoreDeck($user, active: false); // tombstoned subscription
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/practice/dialogs', ['collection_id' => $cid, 'client_id' => Ulid::generate()])
+        ->assertNotFound();
 });
