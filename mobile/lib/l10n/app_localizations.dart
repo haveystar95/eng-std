@@ -1478,6 +1478,12 @@ abstract class AppLocalizations {
   /// **'собери из слов'**
   String get sessionInstrAssemble;
 
+  /// Плейсхолдер в пустой строке сборки (word_bank и scramble) — куда кладутся слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собери из слов ниже'**
+  String get sessionAssemblyEmptyHint;
+
   /// Инструкция под промптом, сборка предложения-примера из чипов (scramble).
   ///
   /// In ru, this message translates to:

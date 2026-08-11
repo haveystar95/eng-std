@@ -713,6 +713,7 @@ class _AssemblyLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final underline = answered
         ? (correct ? AppColors.verdictKnown : AppColors.destructiveText)
         : AppColors.track;
@@ -723,7 +724,22 @@ class _AssemblyLine extends StatelessWidget {
       ),
       padding: const EdgeInsets.only(bottom: 7),
       child: words.isEmpty
-          ? const SizedBox(height: 30)
+          // Empty, the line is the whole affordance — so it has to be VISIBLE. A bare
+          // SizedBox(height:) is zero-wide, and the parent Column is start-aligned, so the
+          // container collapsed to nothing and the underline never drew: the card read as a blank
+          // box with no hint of where the words go. Stretch it across the card and name the
+          // gesture. The hint is dropped once answered — «Не помню» leaves the line empty, and a
+          // verdict-coloured line captioned "tap the words" would be instructions after the fact.
+          ? SizedBox(
+              width: double.infinity,
+              height: 30,
+              child: answered
+                  ? null
+                  : Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(l.sessionAssemblyEmptyHint, style: AppTextExercise.taskInstruction),
+                    ),
+            )
           : Wrap(
               spacing: 9,
               runSpacing: 4,

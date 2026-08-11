@@ -963,6 +963,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssemble => 'собери из слов';
 
   @override
+  String get sessionAssemblyEmptyHint => 'Собери из слов ниже';
+
+  @override
   String get sessionInstrAssembleSentence => 'собери предложение из слов';
 
   @override

@@ -757,6 +757,8 @@
   "@sessionInstrChoose": { "description": "Инструкция под промптом, выбор из четырёх (кадр 12a)." },
   "sessionInstrAssemble": "собери из слов",
   "@sessionInstrAssemble": { "description": "Инструкция под промптом, сборка фразы (кадр 12b)." },
+  "sessionAssemblyEmptyHint": "Собери из слов ниже",
+  "@sessionAssemblyEmptyHint": { "description": "Плейсхолдер в пустой строке сборки (word_bank и scramble) — куда кладутся слова." },
   "sessionInstrAssembleSentence": "собери предложение из слов",
   "@sessionInstrAssembleSentence": { "description": "Инструкция под промптом, сборка предложения-примера из чипов (scramble)." },
   "sessionInstrType": "напиши по-английски",
