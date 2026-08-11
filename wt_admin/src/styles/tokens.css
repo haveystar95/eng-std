@@ -1,0 +1,67 @@
+/* Paper/ink design tokens — mirror of mobile/lib/theme (source of truth:
+   backend2/docs/design/tokens.html). No dark theme. Any raw colour in a
+   component that is not one of these vars is a design-system violation. */
+
+:root {
+  /* ── Surfaces ── */
+  --paper: #f6f3ec;          /* app background */
+  --surface-raised: #fcfaf5; /* layered card surface (no border, shadow only) */
+  --field: #ffffff;          /* input paper inside a card */
+  --alert-surface: #f8f6f0;  /* confirmation dialogs */
+
+  /* ── Ink (warm umber #2E2620) and its neutrals ── */
+  --ink: #2e2620;            /* primary text, main buttons, active tab */
+  --ink-body: #4a443d;       /* long prose, italic usage examples */
+  --secondary: #6e6862;      /* translations, section labels, secondary rows */
+  --tertiary: #8a857e;       /* placeholders, hints, axes */
+
+  --ink-rgb: 46, 38, 32;
+  --hairline: rgba(46, 38, 32, 0.14);   /* field/chip borders, table rules */
+  --track: rgba(46, 38, 32, 0.18);      /* progress track, empty dots */
+  --dashed: rgba(46, 38, 32, 0.24);     /* dashed frame of unavailable action */
+  --faint-ink: rgba(46, 38, 32, 0.06);  /* used-chip fill, quiet buttons, zebra */
+  --divider-faint: rgba(46, 38, 32, 0.1);
+  --scrim: rgba(46, 38, 32, 0.42);
+  --menu-scrim: rgba(46, 38, 32, 0.46);
+
+  /* ── The only chromatic colour in the UI: the three review verdicts ── */
+  --verdict-unknown: #b5533c; /* terracotta — «Не знаю» */
+  --verdict-unsure: #a6761f;  /* ochre — «Не уверен» */
+  --verdict-known: #4e6b52;   /* sage — «Знаю» */
+  --destructive: #9a4430;     /* destructive text/icon (never a fill) */
+
+  --on-verdict-unknown: #ffffff;
+  --on-verdict-unsure: var(--ink);
+  --on-verdict-known: var(--paper);
+
+  /* ── Type ── */
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Literata', Georgia, 'Times New Roman', serif;
+
+  /* ── Radii ── */
+  --r-thumb: 6px;
+  --r-small: 14px;
+  --r-field: 18px;
+  --r-button: 20px;
+  --r-menu: 20px;
+  --r-alert: 22px;
+  --r-card: 24px;
+  --r-chip: 26px;
+  --r-pill: 28px;
+
+  /* ── Spacing (base-4 grid) ── */
+  --s4: 4px;
+  --s8: 8px;
+  --s12: 12px;
+  --s16: 16px;
+  --s22: 22px;
+  --s26: 26px;
+  --screen-h: 22px;
+  --card-pad: 15px;
+  --menu-pad: 16px;
+
+  /* ── Elevation — warm shadows, never borders (rule 13) ── */
+  --shadow-card: 0 2px 8px rgba(46, 38, 32, 0.04), 0 12px 28px rgba(46, 38, 32, 0.07);
+  --shadow-menu: 0 4px 12px rgba(46, 38, 32, 0.1), 0 22px 48px rgba(46, 38, 32, 0.26);
+  --shadow-pill: 0 12px 32px rgba(60, 50, 40, 0.16);
+}
