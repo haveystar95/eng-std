@@ -31,12 +31,21 @@ use Illuminate\Console\Command;
  */
 final class EnrichBackfillCommand extends Command
 {
+    /**
+     * The generator-version option is `--generator`, NOT `--version`: Symfony Console reserves
+     * `--version` globally, and passing it makes artisan print the framework version and exit
+     * instead of running this command at all.
+     *
+     * Also: keep every `{...}` token in the signature on ONE line. Symfony parses them with a regex
+     * that does not span newlines, so a wrapped token is silently dropped and its option "does not
+     * exist" at runtime.
+     */
     /** Inline runs still go term-by-term in chunks, so a Ctrl-C loses at most one chunk's marks. */
     private const CHUNK = 20;
 
     protected $signature = 'enrich:backfill
         {--collection=* : collection id (ULID); repeatable, REQUIRED — there is no run-everything mode}
-        {--version= : generator version to write and to skip by (default ' . BuildTermEnrichmentsHandler::VERSION . ')}
+        {--generator= : generator version to write and to skip by (default ' . BuildTermEnrichmentsHandler::VERSION . ')}
         {--limit=0 : stop after this many terms (0 = no cap), for a cheap first taste}
         {--fake : use the deterministic fake packer — no network, no spend (wiring smoke test only)}
         {--queue : dispatch chunk jobs instead of running inline}
@@ -51,7 +60,6 @@ final class EnrichBackfillCommand extends Command
 
     public function handle(
         ListPendingEnrichmentTargetsHandler $pending,
-        BuildTermEnrichmentsHandler $build,
         ExportEnrichmentHandler $export,
     ): int {
         $collectionIds = $this->collectionIds();
@@ -59,11 +67,17 @@ final class EnrichBackfillCommand extends Command
             return self::FAILURE;
         }
 
-        $version = $this->stringOption('version') ?? BuildTermEnrichmentsHandler::VERSION;
+        $version = $this->stringOption('generator') ?? BuildTermEnrichmentsHandler::VERSION;
 
         if ((bool) $this->option('fake')) {
             config(['services.generation.driver' => 'fake']);
         }
+
+        // Resolved HERE, not method-injected: method injection happens before handle() runs, so an
+        // injected handler would already hold the OpenAI packer and `--fake` would silently spend
+        // real money. (It did, once, before this line existed.) Everything the driver switch governs
+        // has to be resolved after the switch is flipped.
+        $build = app(BuildTermEnrichmentsHandler::class);
 
         $termIds = $pending(new ListPendingEnrichmentTargets($collectionIds, $version));
         $limit = (int) $this->option('limit');
