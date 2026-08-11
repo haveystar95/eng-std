@@ -15,7 +15,10 @@ uses(RefreshDatabase::class);
 function dealtModes(object $ctx, string $token, bool $practice = false): array
 {
     $cards = $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/study/sessions', ['session_size' => 10, 'is_practice' => $practice])
+        // The wire names are `limit` and `practice` (BuildSessionRequest). Sending anything else
+        // is silently ignored — the rules are `sometimes` — so a typo here would quietly test the
+        // scheduling path while claiming to test practice.
+        ->postJson('/api/v1/study/sessions', ['limit' => 10, 'practice' => $practice])
         ->assertOk()
         ->json('data.cards');
 
