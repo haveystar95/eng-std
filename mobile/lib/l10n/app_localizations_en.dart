@@ -156,7 +156,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePracticeButton => 'Practice';
 
   @override
-  String get homePracticeSubtitle => 'Free practice';
+  String get homePracticeSubtitle => 'Study session';
 
   @override
   String get homeGenerateTitle => 'Describe a topic — we\'ll build a set';

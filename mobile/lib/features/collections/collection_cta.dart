@@ -10,13 +10,18 @@ import '../home/home_cta.dart';
 /// separate, always-available secondary button under this one (see [CollectionDetailScreen]) so the
 /// user can drill the whole collection at any moment. When nothing is due / learnable / untriaged
 /// this returns [HomeCtaKind.none] and only the secondary practice button shows.
+/// The daily new-term quota gates «Учить N» here exactly as on home (F13b): [remainingNewQuota] is
+/// the user-wide new_remaining, so «Учить M» = min(learnable, remaining) and, once it's spent while
+/// learnable words remain, the CTA is the inactive [HomeCtaKind.limitReached] (the collection's
+/// always-available «Свободная тренировка» button sits right below it). Reviews are never gated.
 HomeCta computeCollectionCta({
   required int untriaged,
   required int learnable,
   required int due,
+  required int remainingNewQuota,
 }) {
   if (due > 0) return HomeCta(HomeCtaKind.review, count: due);
-  if (learnable > 0) return HomeCta(HomeCtaKind.learn, count: learnable);
+  if (learnable > 0) return learnOrLimitCta(learnable, remainingNewQuota);
   if (untriaged > 0) return HomeCta(HomeCtaKind.triage, count: untriaged);
   return const HomeCta(HomeCtaKind.none);
 }

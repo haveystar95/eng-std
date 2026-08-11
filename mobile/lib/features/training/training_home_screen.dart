@@ -13,6 +13,7 @@ import '../collections/collection_detail_screen.dart';
 import '../collections/generate_screen.dart';
 import '../home/home_cta.dart';
 import '../home/home_providers.dart';
+import '../home/limit_reached_card.dart';
 import '../home/streak.dart';
 import 'session_screen.dart';
 import 'triage_screen.dart';
@@ -42,6 +43,10 @@ class TrainingHomeScreen extends ConsumerWidget {
     final goal = user?.profile?.dailyGoal ?? 20;
     final done = stats?.reviewsTotal ?? 0;
     final streak = stats?.streakDays ?? 0;
+    // The goal ring counts NEW terms introduced today against the new-term goal (F13b) — reviews
+    // and free practice never count toward a "new words/day" goal. Falls back to the profile goal
+    // until the first /stats sync populates new_goal.
+    final ring = stats != null && stats.newGoal > 0 ? homeGoalRing(stats) : (done: 0, goal: goal);
 
     // 9b «всё повторено»: the daily goal is met and there's nothing due / learnable / to triage
     // (cta == none) while words already exist. Free practice is NOT offered here — it lives only on
@@ -78,7 +83,7 @@ class TrainingHomeScreen extends ConsumerWidget {
               _pad(const _OfflineBanner()),
               const SizedBox(height: AppSpacing.sectionAiry),
             ],
-            _pad(_GoalStreak(done: done, goal: goal, streak: streak)),
+            _pad(_GoalStreak(done: ring.done, goal: ring.goal, streak: streak)),
             if (allDone) ...[
               const SizedBox(height: AppSpacing.sectionAiry),
               _pad(_AllDoneCard(
@@ -255,7 +260,7 @@ class _CtaButton extends StatelessWidget {
         onTap = () => target == null ? onReview() : onTriage(target.id, target.title);
       case HomeCtaKind.limitReached:
         // Quota spent but new words remain — an inactive card, not a blocked session (F13).
-        return const _LimitReachedCard();
+        return const LimitReachedCard();
       case HomeCtaKind.practice: // practice is never a home CTA — render nothing if it ever appears
       case HomeCtaKind.none:
         return const SizedBox.shrink();
@@ -539,34 +544,6 @@ class _AllDoneCard extends StatelessWidget {
             AppHaptics.light();
             onGenerate();
           }),
-        ],
-      ),
-    );
-  }
-}
-
-/// F13: the daily new-term quota is spent while new words still wait. An inactive card — never a
-/// button into a session the server would return empty — pointing at free practice in collections
-/// (which ignores the quota). Reviews, when due, get their own active CTA instead of this.
-class _LimitReachedCard extends StatelessWidget {
-  const _LimitReachedCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return PaperCard(
-      radius: AppRadii.chip,
-      padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 20, AppSpacing.s22, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l.homeLimitReachedTitle, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 22)),
-          const SizedBox(height: 8),
-          Text(
-            l.homeLimitReachedHint,
-            textAlign: TextAlign.center,
-            style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45, color: AppColors.secondary),
-          ),
         ],
       ),
     );

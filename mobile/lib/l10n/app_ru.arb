@@ -126,8 +126,8 @@
   "homePracticeButton": "Повторить",
   "@homePracticeButton": { "description": "Главная кнопка: свободная тренировка (нет due и разбора)." },
 
-  "homePracticeSubtitle": "Свободная тренировка",
-  "@homePracticeSubtitle": { "description": "Подстрока кнопки свободной тренировки." },
+  "homePracticeSubtitle": "Учебная тренировка",
+  "@homePracticeSubtitle": { "description": "Подстрока: учебная тренировка (главный экран) — в отличие от свободной тренировки в коллекции." },
 
   "homeGenerateTitle": "Опиши тему — соберём коллекцию",
   "@homeGenerateTitle": { "description": "Антиква-заголовок карточки генерации." },

@@ -326,8 +326,9 @@ class _CollectionRow extends ConsumerWidget {
     final learnable = ref.watch(learnableByCollectionProvider).value?[collection.id] ?? 0;
     final total = prog?.total ?? collection.wordsCount;
     final mastered = prog?.mastered ?? 0;
+    final remainingNewQuota = ref.watch(statsProvider).value?.newRemaining ?? 0;
     final cta = computeCollectionCta(
-        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0);
+        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0, remainingNewQuota: remainingNewQuota);
 
     return DecoratedBox(
       decoration: BoxDecoration(

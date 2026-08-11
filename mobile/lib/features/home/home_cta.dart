@@ -1,3 +1,5 @@
+import '../../data/models.dart';
+
 /// The home primary action is state-dependent (кадр 2.1). All inputs come from
 /// the local DB, so it resolves offline.
 enum HomeCtaKind {
@@ -55,13 +57,7 @@ HomeCta computeHomeCta({
 
   final totalLearnable =
       learnableByCollection.values.fold<int>(0, (s, v) => s + (v > 0 ? v : 0));
-  if (totalLearnable > 0) {
-    // Quota spent but new words remain → inactive "limit reached", not a blocked session.
-    if (remainingNewQuota <= 0) return const HomeCta(HomeCtaKind.limitReached);
-    // Offer only what the next session would actually introduce.
-    final m = totalLearnable < remainingNewQuota ? totalLearnable : remainingNewQuota;
-    return HomeCta(HomeCtaKind.learn, count: m);
-  }
+  if (totalLearnable > 0) return learnOrLimitCta(totalLearnable, remainingNewQuota);
 
   final eligible = untriagedByCollection.entries.where((e) => e.value > 0).toList()
     ..sort((a, b) {
@@ -74,4 +70,23 @@ HomeCta computeHomeCta({
   }
 
   return const HomeCta(HomeCtaKind.none);
+}
+
+/// The one learn-vs-limit decision, shared by the home and collection CTAs (F13/F13b) so the quota
+/// gate lives in a single place: offer «Учить M» for M = min(learnable, remaining), or the inactive
+/// [HomeCtaKind.limitReached] once the day's new-term quota is spent. Callers apply it only when
+/// there are learnable words and nothing due.
+HomeCta learnOrLimitCta(int learnable, int remainingNewQuota) {
+  if (remainingNewQuota <= 0) return const HomeCta(HomeCtaKind.limitReached);
+  final m = learnable < remainingNewQuota ? learnable : remainingNewQuota;
+  return HomeCta(HomeCtaKind.learn, count: m);
+}
+
+/// The home goal ring counts NEW terms introduced today against the daily new-term goal (F13b) —
+/// reviews and free practice never count toward a "new words/day" goal. `done = new_today =
+/// new_goal − new_remaining`, clamped into `[0, goal]`.
+({int done, int goal}) homeGoalRing(Stats stats) {
+  final goal = stats.newGoal;
+  final done = (stats.newGoal - stats.newRemaining).clamp(0, stats.newGoal);
+  return (done: done, goal: goal);
 }

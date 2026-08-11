@@ -33,7 +33,7 @@
   "homeLearnSubtitle": "New words — first study",
   "homeTriageButton": "{count, plural, one{Triage {count} word} other{Triage {count} words}}",
   "homePracticeButton": "Practice",
-  "homePracticeSubtitle": "Free practice",
+  "homePracticeSubtitle": "Study session",
   "homeGenerateTitle": "Describe a topic — we'll build a set",
   "homeGenerateSubtitle": "AI picks the words and phrases you'll actually need",
   "homeGeneratePlaceholder": "e.g. a visit to the doctor",

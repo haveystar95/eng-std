@@ -169,7 +169,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homePracticeButton => 'Повторить';
 
   @override
-  String get homePracticeSubtitle => 'Свободная тренировка';
+  String get homePracticeSubtitle => 'Учебная тренировка';
 
   @override
   String get homeGenerateTitle => 'Опиши тему — соберём коллекцию';

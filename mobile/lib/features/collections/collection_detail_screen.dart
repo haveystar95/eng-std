@@ -14,6 +14,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
+import '../home/limit_reached_card.dart';
 import '../practice_dialog/dialog_entry_button.dart';
 import '../training/session_screen.dart';
 import '../training/triage_screen.dart';
@@ -230,7 +231,13 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final learnable = ref.watch(learnableByCollectionProvider).value?[widget.collectionId] ?? 0;
     final due = cprog?.due ?? 0;
     final total = cprog?.total ?? collection?.wordsCount ?? 0;
-    final cta = computeCollectionCta(untriaged: untriaged, learnable: learnable, due: due);
+    final remainingNewQuota = ref.watch(statsProvider).value?.newRemaining ?? 0;
+    final cta = computeCollectionCta(
+      untriaged: untriaged,
+      learnable: learnable,
+      due: due,
+      remainingNewQuota: remainingNewQuota,
+    );
 
     // Light status-bar glyphs over the dark cover photo (overrides the app-wide
     // dark default set in main()).
@@ -473,16 +480,17 @@ class _CtaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // limitReached is a home-only state (F13); computeCollectionCta never emits it — guard + a
-    // defensive switch arm keep this exhaustive without changing the collection screen's behaviour.
-    if (cta.kind == HomeCtaKind.none || cta.kind == HomeCtaKind.limitReached) return const SizedBox.shrink();
+    if (cta.kind == HomeCtaKind.none) return const SizedBox.shrink();
+    // New quota spent while new words remain (F13b): the same inactive card as home — the collection's
+    // «Свободная тренировка» button sits right below it.
+    if (cta.kind == HomeCtaKind.limitReached) return const LimitReachedCard();
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
       HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
       HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false, learn: true), true),
       HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
       HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
-      HomeCtaKind.limitReached || HomeCtaKind.none => ('', '', () => onSession(false), false),
+      HomeCtaKind.limitReached || HomeCtaKind.none => ('', '', () => onSession(false), false), // unreachable; keeps the switch exhaustive
     };
 
     final fg = filled ? AppColors.paper : AppColors.ink;
