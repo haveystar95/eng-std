@@ -114,7 +114,14 @@ export interface UserDetail {
 }
 
 export type ProgressState = 'new' | 'learning' | 'review' | 'relearning' | 'known'
-export type ExerciseMode = 'multiple_choice' | 'word_bank' | 'typing' | 'listening' | 'cloze' | 'scramble'
+export type ExerciseMode =
+  | 'multiple_choice'
+  | 'word_bank'
+  | 'typing'
+  | 'listening'
+  | 'cloze'
+  | 'scramble'
+  | 'dictation'
 export type Grade = 'again' | 'hard' | 'good' | 'easy'
 
 export interface PlanEntry {

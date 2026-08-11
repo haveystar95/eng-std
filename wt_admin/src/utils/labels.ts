@@ -24,6 +24,18 @@ export function gradeTone(g: Grade): Tone {
   return 'known'
 }
 
+/**
+ * The Russian name of a trainer, falling back to its wire name.
+ *
+ * Always go through this rather than indexing [MODE_LABEL] directly: `available` comes from the
+ * SERVER's enum, so a mode built after this panel was last deployed is a value the map has never
+ * heard of, and a direct lookup renders as blank. That is how `dictation` first appeared here —
+ * a row with a checkbox and no name.
+ */
+export function modeLabel(mode: ExerciseMode): string {
+  return MODE_LABEL[mode] ?? mode
+}
+
 export const MODE_LABEL: Record<ExerciseMode, string> = {
   multiple_choice: 'выбор',
   word_bank: 'сборка',
@@ -31,6 +43,7 @@ export const MODE_LABEL: Record<ExerciseMode, string> = {
   listening: 'аудио',
   cloze: 'пропуск',
   scramble: 'предложение',
+  dictation: 'диктант',
 }
 
 export const STATE_LABEL: Record<ProgressState, string> = {

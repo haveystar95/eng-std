@@ -7,7 +7,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { api } from '@/api'
 import { useAsync } from '@/composables/useAsync'
-import { MODE_LABEL } from '@/utils/labels'
+import { modeLabel } from '@/utils/labels'
 import ModeToggles from '@/components/ModeToggles.vue'
 import PaperButton from '@/components/PaperButton.vue'
 import PaperCard from '@/components/PaperCard.vue'
@@ -35,7 +35,7 @@ const savedSet = computed(() => data.value?.override ?? data.value?.global ?? []
 const dirty = computed(
   () => custom.value !== savedCustom.value || (custom.value && draft.value.join(',') !== savedSet.value.join(',')),
 )
-const globalLabels = computed(() => (data.value?.global ?? []).map((m) => MODE_LABEL[m]).join(', '))
+const globalLabels = computed(() => (data.value?.global ?? []).map(modeLabel).join(', '))
 
 /** Back to the common set in one action — the same null the radio+save path sends. */
 async function resetToGlobal() {

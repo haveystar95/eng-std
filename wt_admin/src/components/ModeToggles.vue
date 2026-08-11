@@ -5,7 +5,7 @@
 // server and mirrored on the device. So the checkboxes render in `available` order and the value
 // is emitted in that same order — never as a set.
 import { computed } from 'vue'
-import { MODE_LABEL } from '@/utils/labels'
+import { modeLabel } from '@/utils/labels'
 import type { ExerciseMode } from '@/api/types'
 
 const props = defineProps<{
@@ -16,6 +16,9 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [ExerciseMode[]] }>()
 
 const selected = computed(() => new Set(props.modelValue))
+
+/** Named through [modeLabel], which falls back to the wire name — see the note there. */
+const label = modeLabel
 
 function toggle(mode: ExerciseMode) {
   if (props.disabled) return
@@ -37,7 +40,7 @@ function toggle(mode: ExerciseMode) {
         <span class="box" aria-hidden="true">
           <span v-if="selected.has(mode)" class="tick">✓</span>
         </span>
-        <span class="name">{{ MODE_LABEL[mode] }}</span>
+        <span class="name">{{ label(mode) }}</span>
         <span class="wire faint tnum">{{ mode }}</span>
       </label>
     </li>

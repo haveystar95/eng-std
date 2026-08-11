@@ -42,7 +42,15 @@ const DAY = 86_400_000
 
 // Trainer toggles. The mock keeps them in memory for the session so the screen can be driven
 // standalone: flip, save, navigate away and back, and the change is still there.
-const ALL_MODES: ExerciseMode[] = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble']
+const ALL_MODES: ExerciseMode[] = [
+  'multiple_choice',
+  'word_bank',
+  'typing',
+  'listening',
+  'cloze',
+  'scramble',
+  'dictation',
+]
 let globalModes: ExerciseMode[] = [...ALL_MODES]
 const modeOverrides = new Map<string, ExerciseMode[]>()
 

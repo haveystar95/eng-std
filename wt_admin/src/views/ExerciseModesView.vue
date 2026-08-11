@@ -6,7 +6,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { api } from '@/api'
 import { useAsync } from '@/composables/useAsync'
-import { MODE_LABEL } from '@/utils/labels'
+import { modeLabel } from '@/utils/labels'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ModeToggles from '@/components/ModeToggles.vue'
 import PageHeader from '@/components/PageHeader.vue'
@@ -32,7 +32,7 @@ const saved = computed(() => data.value?.global ?? [])
 const dirty = computed(() => draft.value.join(',') !== saved.value.join(','))
 const turningOff = computed(() => saved.value.filter((m) => !draft.value.includes(m)))
 const turningOn = computed(() => draft.value.filter((m) => !saved.value.includes(m)))
-const labels = (modes: ExerciseMode[]) => modes.map((m) => MODE_LABEL[m]).join(', ')
+const labels = (modes: ExerciseMode[]) => modes.map(modeLabel).join(', ')
 
 function reset() {
   draft.value = [...saved.value]

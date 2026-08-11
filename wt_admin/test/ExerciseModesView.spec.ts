@@ -17,9 +17,23 @@ describe('ExerciseModesView (global toggles)', () => {
     await flushPromises()
 
     expect(w.text()).toContain('Общий набор')
-    // `available` is what the build can deal, so every mode has a row — on or off.
-    expect(w.findAll('label.row')).toHaveLength(6)
+    // `available` is what the build can deal, so every mode has a row — on or off. Counted from
+    // the API rather than hard-coded, or this test needs editing every time a trainer ships.
+    expect(w.findAll('label.row')).toHaveLength((await mock.getExerciseModes()).available.length)
     expect(w.text()).toContain('scramble')
+  })
+
+  it('names every row, even a trainer this build has never heard of', async () => {
+    // `available` comes from the SERVER's enum, so a mode released after this panel was deployed
+    // arrives as an unknown value. It rendered blank once (dictation) — a checkbox with no name is
+    // a toggle you cannot identify. Untranslated is fine; nameless is not.
+    const w = mount(ExerciseModesView)
+    await flushPromises()
+
+    for (const row of w.findAll('label.row')) {
+      expect(row.find('.name').text()).not.toBe('')
+    }
+    expect(w.text()).toContain('диктант')
   })
 
   it('asks before a global flip, naming what turns off', async () => {
