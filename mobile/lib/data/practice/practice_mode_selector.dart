@@ -19,6 +19,7 @@ class PracticeModes {
     ExerciseMode.typing,
     ExerciseMode.listening,
     ExerciseMode.cloze,
+    ExerciseMode.scramble,
   ]);
 
   final List<ExerciseMode> modes;
@@ -29,9 +30,8 @@ class PracticeModes {
 /// Client port of the server's `ExerciseSelector::selectForPractice`.
 ///
 /// Free practice is NOT the SRS ladder: it fans across every mode a term can be drilled in,
-/// round-robin, so one session shows them all and a repeat re-deals. Only the hard type limits
-/// filter — word_bank needs at least two words to assemble, cloze needs an example the answer can
-/// be cut from; multiple_choice, typing and listening fit anything.
+/// round-robin, so one session shows them all and a repeat re-deals. The only filter is what the
+/// term's own data supports — see [TermPlayability], which holds every such rule.
 ///
 /// Pinned to the server by a fixture the server generates
 /// (`backend2/tests/Fixtures/practice-mode-contract.json`), because a divergence here is silent:
@@ -46,48 +46,116 @@ abstract final class PracticeModeSelector {
   static ExerciseMode select({
     required PracticeModes enabled,
     required int rotation,
-    required int answerWordCount,
-    required bool clozeable,
+    required TermPlayability playable,
   }) {
-    final applicable = applicableModes(
-      enabled: enabled,
-      answerWordCount: answerWordCount,
-      clozeable: clozeable,
-    );
+    final applicable = playable.only(enabled.modes);
     // Only reachable if the enabled set is exotic — typing and multiple_choice always apply.
     if (applicable.isEmpty) return enabled.first;
     final n = applicable.length;
     return applicable[((rotation % n) + n) % n]; // guard a negative seed into range
   }
+}
 
-  /// The enabled modes this term can actually be drilled in, in config order.
-  static List<ExerciseMode> applicableModes({
-    required PracticeModes enabled,
-    required int answerWordCount,
-    required bool clozeable,
+/// Client port of the server's `TermPlayability` — "which exercises can this term's DATA support".
+///
+/// Same split as on the server, for the same reason: the ladder decides what comes next, this
+/// decides what is possible at all, and keeping them apart is what lets a ladder stay a plain list.
+/// Every applicability rule lives in [supports] and nowhere else.
+class TermPlayability {
+  const TermPlayability({
+    required this.answerWordCount,
+    required this.clozeable,
+    this.exampleTokenCount = 0,
+    this.hasExampleTranslation = false,
+    this.exampleIsAnswer = false,
+  });
+
+  /// Derive it from a term's own content, exactly as the server's `PlayabilityAssessor` does.
+  factory TermPlayability.of({
+    required String answer,
+    String? example,
+    String? exampleTranslation,
   }) {
-    return [
-      for (final mode in enabled.modes)
-        if (switch (mode) {
-          ExerciseMode.wordBank => answerWordCount >= 2, // nothing to assemble from one word
-          ExerciseMode.cloze => clozeable, // needs an example holding the answer
-          _ => true, // multiple_choice / typing / listening fit any term
-        })
-          mode,
-    ];
+    final hasExample = example != null && example.isNotEmpty;
+    return TermPlayability(
+      answerWordCount: wordsIn(answer),
+      clozeable: hasExample && answer.isNotEmpty && example.toLowerCase().contains(answer.toLowerCase()),
+      exampleTokenCount: hasExample ? SentenceTokenizer.tokenize(example).length : 0,
+      hasExampleTranslation: exampleTranslation != null && exampleTranslation.trim().isNotEmpty,
+      exampleIsAnswer: hasExample && SentenceTokenizer.sameTokens(example, answer),
+    );
   }
+
+  /// Nothing to assemble from a single word.
+  static const int minWordBankWords = 2;
+
+  /// Scramble's sentence-length window (see the server VO for why these numbers).
+  static const int minScrambleTokens = 4;
+  static const int maxScrambleTokens = 12;
+
+  final int answerWordCount;
+  final bool clozeable;
+  final int exampleTokenCount;
+  final bool hasExampleTranslation;
+  final bool exampleIsAnswer;
+
+  /// Can this term be drilled in this mode at all?
+  bool supports(ExerciseMode mode) => switch (mode) {
+        ExerciseMode.wordBank => answerWordCount >= minWordBankWords,
+        ExerciseMode.cloze => clozeable, // needs an example holding the answer
+        ExerciseMode.scramble => !exampleIsAnswer && // else it is word_bank with extra steps
+            hasExampleTranslation && // the translation IS the question
+            exampleTokenCount >= minScrambleTokens &&
+            exampleTokenCount <= maxScrambleTokens,
+        // multiple_choice / typing / listening fit any term — they ask for the term itself.
+        ExerciseMode.multipleChoice || ExerciseMode.typing || ExerciseMode.listening => true,
+      };
+
+  /// The given modes this term can be drilled in, order preserved.
+  List<ExerciseMode> only(List<ExerciseMode> modes) => [
+        for (final mode in modes)
+          if (supports(mode)) mode,
+      ];
 
   /// Whitespace-separated words in the answer — what gates word_bank. Mirrors the server's
   /// `ChipShuffler::wordCount`.
-  static int answerWordCount(String answer) =>
+  static int wordsIn(String answer) =>
       answer.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+}
 
-  /// Can a blank be cut from this example? The example must exist and contain the answer,
-  /// case-insensitively — the same test the server makes, and the same one the cloze card uses
-  /// when it blanks the span.
-  static bool clozeable(String answer, String? example) {
-    if (example == null || example.isEmpty || answer.isEmpty) return false;
-    return example.toLowerCase().contains(answer.toLowerCase());
+/// Client port of the server's `SentenceTokenizer` — the chips a `scramble` card is assembled from,
+/// and therefore how long a sentence "is" for the gate.
+///
+/// The rules (see the server class for the corpus numbers behind each): split on whitespace only;
+/// an in-word apostrophe stays inside its token; the FINAL `.`/`!`/`?` is dropped and never becomes
+/// a chip; inner punctuation stays glued to its word; case is not folded.
+abstract final class SentenceTokenizer {
+  static final RegExp _whitespace = RegExp(r'\s+');
+  static final RegExp _terminal = RegExp(r'[.!?…]+$');
+
+  static List<String> tokenize(String sentence) {
+    final tokens = sentence.trim().split(_whitespace).where((t) => t.isNotEmpty).toList();
+    if (tokens.isEmpty) return const [];
+
+    final last = tokens.last.replaceFirst(_terminal, '');
+    if (last.isEmpty) {
+      tokens.removeLast(); // the sentence ended on a standalone "!" — drop the empty chip
+      return tokens;
+    }
+    tokens[tokens.length - 1] = last;
+    return tokens;
+  }
+
+  /// Do two strings tokenize to the same words (ignoring case)? A term whose example IS the term
+  /// would make scramble a copy of word_bank.
+  static bool sameTokens(String a, String b) {
+    final ta = tokenize(a).map((t) => t.toLowerCase()).toList();
+    final tb = tokenize(b).map((t) => t.toLowerCase()).toList();
+    if (ta.length != tb.length) return false;
+    for (var i = 0; i < ta.length; i++) {
+      if (ta[i] != tb[i]) return false;
+    }
+    return true;
   }
 }
 

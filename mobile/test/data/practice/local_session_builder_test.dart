@@ -88,6 +88,15 @@ void main() {
           expect(card.chips, isNotNull);
           expect(card.chips, isNotEmpty);
           expect(card.options, isNull);
+        case ExerciseMode.scramble:
+          // The card asks for the SENTENCE: the answer is the example, the prompt is its
+          // translation, and the chips are that sentence's own words with no full stop.
+          expect(card.chips, isNotNull);
+          expect(card.answer, card.example);
+          expect(card.prompt, card.exampleTranslation);
+          expect(card.options, isNull);
+          expect(card.chips!.length, greaterThanOrEqualTo(TermPlayability.minScrambleTokens));
+          expect(card.chips, everyElement(isNot(endsWith('.'))));
         case ExerciseMode.cloze:
           // The selector only picks cloze when the example can be blanked — so it must be here.
           expect(card.example, isNotNull);
@@ -122,8 +131,11 @@ void main() {
         PracticeModeSelector.select(
           enabled: PracticeModes.serverDefault,
           rotation: PracticeModeSelector.rotationFor(card.termId, i),
-          answerWordCount: PracticeModeSelector.answerWordCount(source.termText!),
-          clozeable: PracticeModeSelector.clozeable(source.termText!, source.example),
+          playable: TermPlayability.of(
+            answer: source.termText!,
+            example: source.example,
+            exampleTranslation: source.exampleTranslation,
+          ),
         ),
       );
     }

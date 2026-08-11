@@ -69,17 +69,25 @@ abstract final class LocalPracticeSessionBuilder {
     required PracticeModes enabled,
     required Random random,
   }) {
-    final answer = (term.termText ?? '').trim();
+    var answer = (term.termText ?? '').trim();
     final example = term.example;
     final mode = PracticeModeSelector.select(
       enabled: enabled,
       rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
-      answerWordCount: PracticeModeSelector.answerWordCount(answer),
-      clozeable: PracticeModeSelector.clozeable(answer, example),
+      playable: TermPlayability.of(
+        answer: answer,
+        example: example,
+        exampleTranslation: term.exampleTranslation,
+      ),
     );
 
     List<String>? options;
     List<String>? chips;
+    // A sentence-level mode asks for the EXAMPLE, so the card's answer — what the grading compares
+    // against — is that sentence, and the prompt is its translation. Same swap the server's
+    // StudyCardAssembler makes, so an offline card and an online one are the same card.
+    var prompt = term.translation;
+
     if (mode == ExerciseMode.multipleChoice) {
       final candidates = [...pool]..shuffle(random);
       final distractors = PracticeDistractors.forTarget(
@@ -90,13 +98,18 @@ abstract final class LocalPracticeSessionBuilder {
       options = [answer, ...distractors]..shuffle(random);
     } else if (mode == ExerciseMode.wordBank) {
       chips = _chips(answer, phrasalVerb: term.type == 'phrasal_verb', random: random);
+    } else if (mode == ExerciseMode.scramble) {
+      // The gate only lets scramble through when the example and its translation are both there.
+      answer = example!;
+      prompt = term.exampleTranslation;
+      chips = _sentenceChips(answer, random: random);
     }
 
     return SessionCard(
       termId: term.id,
       mode: mode,
       type: term.type,
-      prompt: term.translation,
+      prompt: prompt,
       answer: answer,
       transcription: term.transcription,
       example: example,
@@ -116,6 +129,21 @@ abstract final class LocalPracticeSessionBuilder {
     if (phrasalVerb && tokens.length >= 2) {
       tokens = [...tokens, ..._particleDecoys(tokens, random)];
     }
+    if (tokens.length < 2) return tokens;
+
+    final shuffled = [...tokens];
+    for (var attempt = 0; attempt < 10; attempt++) {
+      shuffled.shuffle(random);
+      if (!_sameOrder(shuffled, tokens)) break;
+    }
+    return shuffled;
+  }
+
+  /// Chips for a scramble card: the example sentence's own tokens, shuffled — no decoys (on a
+  /// sentence an extra tile turns "recall the order" into "spot the intruder"). Mirrors the
+  /// server's `ChipShuffler::sentenceChips`.
+  static List<String> _sentenceChips(String sentence, {required Random random}) {
+    final tokens = SentenceTokenizer.tokenize(sentence);
     if (tokens.length < 2) return tokens;
 
     final shuffled = [...tokens];

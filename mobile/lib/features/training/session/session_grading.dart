@@ -110,8 +110,14 @@ enum SessionPhase { intro, assemble, review }
 
 SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
       ExerciseMode.multipleChoice => SessionPhase.intro,
+      // scramble assembles too, but a sentence, and it is a LATER rung than word_bank — the header
+      // should read as review, not as the recognition→production step.
       ExerciseMode.wordBank => SessionPhase.assemble,
-      ExerciseMode.typing || ExerciseMode.listening || ExerciseMode.cloze => SessionPhase.review,
+      ExerciseMode.typing ||
+      ExerciseMode.listening ||
+      ExerciseMode.cloze ||
+      ExerciseMode.scramble =>
+        SessionPhase.review,
     };
 
 /// Whole calendar days from [now] to [due], in LOCAL time (0 = today, 1 = tomorrow, …). Negative

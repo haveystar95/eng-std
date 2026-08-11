@@ -127,6 +127,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   bool get _isListening => _mode == ExerciseMode.listening;
   bool get _isCloze => _mode == ExerciseMode.cloze;
+  bool get _isScramble => _mode == ExerciseMode.scramble;
 
   /// A listening card with options is recognition (12g); without, production/typing (12h). The
   /// backend currently sends no options for listening, so this is the typed path — but it stays
@@ -299,7 +300,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
-        if (_mode == ExerciseMode.wordBank) ...[
+        if (_mode.isAssembled) ...[
           const SizedBox(height: AppSpacing.s16),
           _chipTray(l),
         ],
@@ -307,7 +308,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           _auxButtons(l),
         ],
-        if (!_answered && _mode == ExerciseMode.wordBank && _placed.isNotEmpty) ...[
+        // Assembling a whole sentence is long enough that giving up must stay reachable — the
+        // typed modes' «Не помню» is the same code path, not a copy.
+        if (!_answered && _isScramble) ...[
+          const SizedBox(height: AppSpacing.s12),
+          QuietButton(label: l.sessionDontRemember, onPressed: _giveUp),
+        ],
+        if (!_answered && _mode.isAssembled && _placed.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s12),
           // «Проверить», not «Дальше»: this submits the assembled phrase (grades it) — the
           // feedback block then shows the real «Дальше» that advances. Two distinct steps, two
@@ -334,6 +341,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isListening && !_isRecognitionListening) return _listeningPrompt(l, typed: true);
     if (_isRecognitionListening) return _listeningPrompt(l, typed: false);
     if (_isCloze) return _clozePrompt(l);
+    if (_isScramble) return _scramblePrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
     if (_mode == ExerciseMode.typing) return _typingPrompt(l);
     return _choicePrompt(l); // multiple_choice
@@ -344,6 +352,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ExerciseMode.wordBank => l.sessionInstrAssemble,
         ExerciseMode.typing => l.sessionInstrType,
         ExerciseMode.cloze => l.sessionInstrType,
+        ExerciseMode.scramble => l.sessionInstrAssembleSentence,
         ExerciseMode.listening => _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
       };
 
@@ -408,6 +417,30 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
           _instructionLine(l),
+          const SizedBox(height: AppSpacing.s16),
+          _AssemblyLine(
+            words: _placed.map((i) => _chips[i]).toList(),
+            answered: _answered,
+            correct: _verdict?.isAccepted ?? false,
+            onTapWord: (idx) => _unplaceChip(_placed[idx]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // scramble — the sentence's translation is the task, the assembly line collects the chips.
+  // No photo and no term text: showing either would give away words of the sentence being built.
+  Widget _scramblePrompt(AppLocalizations l) {
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The prompt is the EXAMPLE's translation (the server swaps it in for this mode), so this
+          // reads as «собери это по-английски» rather than as the term's own translation.
+          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
+          const SizedBox(height: AppSpacing.s4),
+          _instructionLine(l, withType: false),
           const SizedBox(height: AppSpacing.s16),
           _AssemblyLine(
             words: _placed.map((i) => _chips[i]).toList(),
@@ -965,12 +998,15 @@ class _FeedbackBlock extends ConsumerWidget {
             _SpeakDot(onTap: () => onSpeak(card.answer)),
           ],
         ),
-        if (card.transcription != null && card.transcription!.isNotEmpty) ...[
+        // The transcription belongs to the TERM; under a whole sentence it reads as nonsense.
+        if (!card.mode.asksForExample && card.transcription != null && card.transcription!.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s4),
           Text('/${card.transcription}/', style: AppTextExercise.feedbackTranscription),
         ],
       ],
-      if (card.example != null && card.example!.isNotEmpty) ...[
+      // On a sentence card the example IS the answer, already shown above — printing it again as
+      // "the example" would just be the same line twice.
+      if (!card.mode.asksForExample && card.example != null && card.example!.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.s12),
         Text(card.example!, style: AppText.usageExample),
       ],

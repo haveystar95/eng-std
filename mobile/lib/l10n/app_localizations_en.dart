@@ -927,6 +927,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssemble => 'assemble it from the words';
 
   @override
+  String get sessionInstrAssembleSentence => 'put the sentence together';
+
+  @override
   String get sessionInstrType => 'write it in English';
 
   @override

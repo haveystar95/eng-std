@@ -1478,6 +1478,12 @@ abstract class AppLocalizations {
   /// **'собери из слов'**
   String get sessionInstrAssemble;
 
+  /// Инструкция под промптом, сборка предложения-примера из чипов (scramble).
+  ///
+  /// In ru, this message translates to:
+  /// **'собери предложение из слов'**
+  String get sessionInstrAssembleSentence;
+
   /// Инструкция под промптом, ввод с клавиатуры (кадр 12c).
   ///
   /// In ru, this message translates to:

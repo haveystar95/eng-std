@@ -757,6 +757,8 @@
   "@sessionInstrChoose": { "description": "Инструкция под промптом, выбор из четырёх (кадр 12a)." },
   "sessionInstrAssemble": "собери из слов",
   "@sessionInstrAssemble": { "description": "Инструкция под промптом, сборка фразы (кадр 12b)." },
+  "sessionInstrAssembleSentence": "собери предложение из слов",
+  "@sessionInstrAssembleSentence": { "description": "Инструкция под промптом, сборка предложения-примера из чипов (scramble)." },
   "sessionInstrType": "напиши по-английски",
   "@sessionInstrType": { "description": "Инструкция под промптом, ввод с клавиатуры (кадр 12c)." },
   "sessionInstrListenChoose": "прослушай и выбери перевод · можно повторить",

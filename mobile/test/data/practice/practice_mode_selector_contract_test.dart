@@ -50,13 +50,28 @@ void main() {
     }
   });
 
-  test('word count and clozeable are derived the same way', () {
+  /// The gate inputs, derived here exactly as the server's PlayabilityAssessor derived them.
+  TermPlayability playabilityOf(Map<String, dynamic> c) => TermPlayability.of(
+        answer: c['answer'] as String,
+        example: c['example'] as String?,
+        exampleTranslation: c['example_translation'] as String?,
+      );
+
+  test('every gate input is derived the same way', () {
+    // One assertion per input, so a drift names the gate it breaks instead of just "wrong mode".
     for (final c in cases) {
       final answer = c['answer'] as String;
-      expect(PracticeModeSelector.answerWordCount(answer), c['word_count'],
+      final p = playabilityOf(c);
+      expect(p.answerWordCount, c['word_count'],
           reason: 'word count drift on "$answer" — this gates word_bank');
-      expect(PracticeModeSelector.clozeable(answer, c['example'] as String?), c['clozeable'],
+      expect(p.clozeable, c['clozeable'],
           reason: 'clozeable drift on "$answer" — this gates cloze');
+      expect(p.exampleTokenCount, c['example_token_count'],
+          reason: 'tokenizer drift on "${c['example']}" — this gates scramble length');
+      expect(p.hasExampleTranslation, c['has_example_translation'],
+          reason: 'translation gate drift on "$answer"');
+      expect(p.exampleIsAnswer, c['example_is_answer'],
+          reason: 'example-is-the-term drift on "$answer" — this keeps scramble off word_bank\'s turf');
     }
   });
 
@@ -65,8 +80,13 @@ void main() {
       final picked = PracticeModeSelector.select(
         enabled: enabled,
         rotation: c['rotation'] as int,
-        answerWordCount: c['word_count'] as int,
-        clozeable: c['clozeable'] as bool,
+        playable: TermPlayability(
+          answerWordCount: c['word_count'] as int,
+          clozeable: c['clozeable'] as bool,
+          exampleTokenCount: c['example_token_count'] as int,
+          hasExampleTranslation: c['has_example_translation'] as bool,
+          exampleIsAnswer: c['example_is_answer'] as bool,
+        ),
       );
       expect(picked.wire, c['expected_mode'],
           reason: 'mode drift on ${c['term_id']} @${c['card_index']} ("${c['answer']}")');
@@ -77,12 +97,10 @@ void main() {
     // The previous tests pin each step; this one pins them composed, which is how the builder
     // actually calls it — a compensating pair of bugs would survive the parts but not this.
     for (final c in cases) {
-      final answer = c['answer'] as String;
       final picked = PracticeModeSelector.select(
         enabled: enabled,
         rotation: PracticeModeSelector.rotationFor(c['term_id'] as String, c['card_index'] as int),
-        answerWordCount: PracticeModeSelector.answerWordCount(answer),
-        clozeable: PracticeModeSelector.clozeable(answer, c['example'] as String?),
+        playable: playabilityOf(c),
       );
       expect(picked.wire, c['expected_mode']);
     }
@@ -100,8 +118,7 @@ void main() {
       dealt.add(PracticeModeSelector.select(
         enabled: phase1,
         rotation: rotation,
-        answerWordCount: 3,
-        clozeable: true,
+        playable: const TermPlayability(answerWordCount: 3, clozeable: true),
       ).wire);
     }
 
@@ -113,8 +130,7 @@ void main() {
       () => PracticeModeSelector.select(
         enabled: enabled,
         rotation: -1,
-        answerWordCount: 3,
-        clozeable: true,
+        playable: const TermPlayability(answerWordCount: 3, clozeable: true),
       ),
       returnsNormally,
     );
