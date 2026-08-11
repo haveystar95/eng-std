@@ -17,10 +17,10 @@ final class TermController
 
     public function index(Request $request): JsonResponse
     {
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
         $search = $request->string('search')->toString();
 
-        $result = $this->terms->list($search !== '' ? $search : null, $page, $perPage);
+        $result = $this->terms->list($search !== '' ? $search : null, $window);
 
         return response()->json(AdminJson::page($result, AdminJson::termRow(...)));
     }

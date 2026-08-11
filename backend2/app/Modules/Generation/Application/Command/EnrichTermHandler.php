@@ -8,7 +8,7 @@ use App\Modules\Generation\Application\Dto\TermEnrichmentBrief;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Vocabulary\Application\Command\AttachTermImage;

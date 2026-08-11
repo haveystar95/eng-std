@@ -6,34 +6,32 @@ namespace App\Modules\Admin\Infrastructure\Eloquent;
 
 use App\Modules\Admin\Application\Dto\DialogDetail;
 use App\Modules\Admin\Application\Dto\DialogRow;
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\TranscriptLineRow;
 use App\Modules\Admin\Application\Port\AdminDialogReader;
 use App\Modules\Admin\Infrastructure\Support\Iso;
+use App\Modules\Admin\Infrastructure\Support\Keyset;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
 /** Projection over Generation's practice_dialogs (+ transcript from practice_dialog_messages). */
 final class EloquentAdminDialogReader implements AdminDialogReader
 {
-    public function list(?string $userId, int $page, int $perPage): Page
+    public function list(?string $userId, ListWindow $window): Page
     {
         $base = DB::table('practice_dialogs');
         if ($userId !== null && $userId !== '') {
             $base->where('user_id', $userId);
         }
 
-        $total = (clone $base)->count();
-
-        $rows = (clone $base)
-            ->orderByDesc('created_at')
-            ->offset(max(0, ($page - 1) * $perPage))
-            ->limit($perPage)
-            ->get(['id', 'user_id', 'collection_id', 'status', 'tokens_in', 'tokens_out', 'cost_usd', 'created_at', 'finished_at']);
-
-        $items = array_map(fn (stdClass $r): DialogRow => $this->toRow($r), $rows->all());
-
-        return new Page(array_values($items), $total, $page, $perPage);
+        return Keyset::page(
+            $base,
+            $window,
+            'id',
+            ['id', 'user_id', 'collection_id', 'status', 'tokens_in', 'tokens_out', 'cost_usd', 'created_at', 'finished_at'],
+            fn (array $rows): array => array_map($this->toRow(...), $rows),
+        );
     }
 
     public function detail(string $dialogId): ?DialogDetail

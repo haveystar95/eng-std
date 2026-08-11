@@ -6,6 +6,7 @@ namespace App\Modules\Observability\Infrastructure\Listener;
 
 use App\Modules\Observability\Application\Dto\ApiLogEntry;
 use App\Modules\Observability\Application\Port\ApiLogWriter;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Observability\Domain\Service\SecretRedactor;
 use DateTimeImmutable;
 use Illuminate\Http\Client\Events\ConnectionFailed;
@@ -26,6 +27,7 @@ final class LogOutboundHttp
     public function __construct(
         private readonly ApiLogWriter $writer,
         private readonly SecretRedactor $redactor,
+        private readonly OutboundCallContext $context,
     ) {}
 
     public function handleResponse(ResponseReceived $event): void
@@ -45,12 +47,14 @@ final class LogOutboundHttp
             $host = parse_url($url, PHP_URL_HOST);
             $path = parse_url($url, PHP_URL_PATH);
 
-            $this->writer->write(new ApiLogEntry(
+            $id = $this->writer->write(new ApiLogEntry(
                 direction: 'outbound',
                 method: $request->method(),
                 path: is_string($path) ? $path : '/',
                 host: is_string($host) ? $host : null,
                 service: $this->serviceFor(is_string($host) ? $host : ''),
+                purpose: $this->context->purpose(),
+                collectionId: $this->context->collectionId(),
                 status: $response?->status(),
                 durationMs: $this->durationMs($response),
                 userId: null,
@@ -62,6 +66,12 @@ final class LogOutboundHttp
                 error: $error,
                 occurredAt: new DateTimeImmutable(),
             ));
+
+            // Report back so a collection that only becomes known after the call (generation) can
+            // still be stamped on this row.
+            if ($id !== null) {
+                $this->context->record($id);
+            }
         } catch (Throwable) {
             // Observability must never break the call it is observing.
         }

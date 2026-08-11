@@ -36,3 +36,30 @@ it('does not over-redact ordinary keys', function () {
 
     expect($out['monkey'])->toBe('ok')->and($out['prompt'])->toBe('иду в банк');
 });
+
+it('redacts a credential-shaped VALUE under an innocent key', function () {
+    // Gemini hands its minted ephemeral token back as `name` — an innocuous key holding a live
+    // credential. Key-only matching let it through and it sat in the log table in clear.
+    $out = (new SecretRedactor())->redact([
+        'name' => 'auth_tokens/AbCd1234',
+        'model' => 'gemini-3.1-flash-live-preview',
+        'nested' => ['key' => 'sk-live-abcdef', 'note' => 'Bearer with me a moment'],
+    ]);
+
+    expect($out['name'])->toBe('[REDACTED]')
+        ->and($out['model'])->toBe('gemini-3.1-flash-live-preview')
+        ->and($out['nested']['key'])->toBe('[REDACTED]')
+        // Anchored prefixes only — "Bearer with me…" starts with `bearer `, so this one IS caught;
+        // what must not be caught is ordinary prose that merely CONTAINS the word.
+        ->and($out['nested']['note'])->toBe('[REDACTED]');
+});
+
+it('leaves ordinary prose that merely mentions a credential word alone', function () {
+    $out = (new SecretRedactor())->redact([
+        'prompt' => 'a bearer of good news',
+        'text' => 'ask-me about auth_tokens/ someday',
+    ]);
+
+    expect($out['prompt'])->toBe('a bearer of good news')
+        ->and($out['text'])->toBe('ask-me about auth_tokens/ someday');
+});

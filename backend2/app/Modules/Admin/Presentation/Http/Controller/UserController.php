@@ -35,9 +35,9 @@ final class UserController
     public function index(Request $request): JsonResponse
     {
         $search = $request->string('search')->toString();
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
 
-        $result = $this->users->list($search !== '' ? $search : null, $page, $perPage);
+        $result = $this->users->list($search !== '' ? $search : null, $window);
 
         return response()->json(AdminJson::page($result, AdminJson::userRow(...)));
     }
@@ -76,7 +76,7 @@ final class UserController
     public function reviews(Request $request, string $id): JsonResponse
     {
         $userId = $this->userId($id);
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
         $from = $request->string('from')->toString();
         $to = $request->string('to')->toString();
 
@@ -84,8 +84,7 @@ final class UserController
             $userId->value,
             $from !== '' ? $from : null,
             $to !== '' ? $to : null,
-            $page,
-            $perPage,
+            $window,
         );
 
         return response()->json(AdminJson::page($result, AdminJson::review(...)));

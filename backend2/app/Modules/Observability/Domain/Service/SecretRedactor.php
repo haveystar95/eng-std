@@ -29,6 +29,19 @@ final class SecretRedactor
     ];
 
     /**
+     * Credential-shaped VALUES, caught whatever they are keyed under. A key-only rule missed the
+     * one that matters most: Gemini returns its minted ephemeral token as `name`
+     * ("auth_tokens/…") — an innocuous key holding a live credential, which then sat in the log
+     * table in clear. Anchored prefixes only, so ordinary text can't trip them.
+     */
+    private const SENSITIVE_VALUE_PREFIXES = [
+        'auth_tokens/',   // Gemini Live ephemeral token resource name
+        'sk-',            // OpenAI standing API key
+        'ek_',            // OpenAI realtime ephemeral client secret
+        'bearer ',        // any Authorization value that leaked into a body field
+    ];
+
+    /**
      * @param  array<mixed>  $data
      * @return array<mixed>
      */
@@ -41,10 +54,27 @@ final class SecretRedactor
 
                 continue;
             }
+            if (is_string($value) && $this->isSensitiveValue($value)) {
+                $out[$key] = self::REDACTED;
+
+                continue;
+            }
             $out[$key] = is_array($value) ? $this->redact($value) : $value;
         }
 
         return $out;
+    }
+
+    private function isSensitiveValue(string $value): bool
+    {
+        $lower = strtolower($value);
+        foreach (self::SENSITIVE_VALUE_PREFIXES as $prefix) {
+            if (str_starts_with($lower, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isSensitive(string $key): bool

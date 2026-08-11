@@ -17,15 +17,14 @@ final class CollectionController
 
     public function index(Request $request): JsonResponse
     {
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
         $type = $request->string('type')->toString();
         $search = $request->string('search')->toString();
 
         $result = $this->collections->list(
             $type !== '' ? $type : null,
             $search !== '' ? $search : null,
-            $page,
-            $perPage,
+            $window,
         );
 
         return response()->json(AdminJson::page($result, AdminJson::collectionRow(...)));

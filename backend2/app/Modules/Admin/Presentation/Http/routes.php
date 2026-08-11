@@ -43,6 +43,10 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/terms', [TermController::class, 'index']);
     Route::get('/terms/{id}', [TermController::class, 'show']);
 
+    // `/request-logs` is the original name, kept so nothing that already calls it breaks; `/logs`
+    // is what the panel and the contract use. Same controller — one implementation, two paths.
+    Route::get('/logs', [RequestLogController::class, 'index']);
+    Route::get('/logs/{id}', [RequestLogController::class, 'show']);
     Route::get('/request-logs', [RequestLogController::class, 'index']);
 
     Route::get('/practice-dialogs', [PracticeDialogController::class, 'index']);

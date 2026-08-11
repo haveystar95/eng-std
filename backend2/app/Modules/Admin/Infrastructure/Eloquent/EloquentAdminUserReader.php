@@ -7,10 +7,12 @@ namespace App\Modules\Admin\Infrastructure\Eloquent;
 use App\Modules\Admin\Application\Dto\AdminUserCollectionRow;
 use App\Modules\Admin\Application\Dto\AdminUserProfileRow;
 use App\Modules\Admin\Application\Dto\AdminUserRow;
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\ProgressStateCounts;
 use App\Modules\Admin\Application\Port\AdminUserReader;
 use App\Modules\Admin\Infrastructure\Support\Iso;
+use App\Modules\Admin\Infrastructure\Support\Keyset;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
@@ -22,41 +24,35 @@ use stdClass;
  */
 final class EloquentAdminUserReader implements AdminUserReader
 {
-    public function list(?string $search, int $page, int $perPage): Page
+    public function list(?string $search, ListWindow $window): Page
     {
         $base = DB::table('users as u')->leftJoin('profiles as p', 'p.user_id', '=', 'u.id');
         if ($search !== null && $search !== '') {
             $base->where('u.email', 'ILIKE', '%' . $search . '%');
         }
 
-        $total = (clone $base)->count();
+        return Keyset::page(
+            $base,
+            $window,
+            'u.id',
+            ['u.id', 'u.name', 'u.email', 'u.created_at', 'p.tier', 'p.cefr_level'],
+            function (array $rows): array {
+                $ids = array_map(static fn (stdClass $r): string => (string) $r->id, $rows);
+                $collectionCounts = $this->collectionCounts($ids);
+                $progressCounts = $this->countByUser('user_term_progress', $ids);
 
-        $rows = (clone $base)
-            ->orderByDesc('u.created_at')
-            ->offset(max(0, ($page - 1) * $perPage))
-            ->limit($perPage)
-            ->get(['u.id', 'u.name', 'u.email', 'u.created_at', 'p.tier', 'p.cefr_level']);
-
-        $ids = array_values(array_map(static fn (stdClass $r): string => (string) $r->id, $rows->all()));
-        $collectionCounts = $this->collectionCounts($ids);
-        $progressCounts = $this->countByUser('user_term_progress', $ids);
-
-        $items = array_map(function (stdClass $r) use ($collectionCounts, $progressCounts): AdminUserRow {
-            $id = (string) $r->id;
-
-            return new AdminUserRow(
-                id: $id,
-                name: (string) $r->name,
-                email: $r->email !== null ? (string) $r->email : null,
-                tier: $r->tier !== null ? (string) $r->tier : 'free',
-                cefr: $r->cefr_level !== null ? (string) $r->cefr_level : null,
-                createdAt: Iso::orNull($r->created_at),
-                collectionsCount: $collectionCounts[$id] ?? 0,
-                progressCount: $progressCounts[$id] ?? 0,
-            );
-        }, $rows->all());
-
-        return new Page(array_values($items), $total, $page, $perPage);
+                return array_map(static fn (stdClass $r): AdminUserRow => new AdminUserRow(
+                    id: (string) $r->id,
+                    name: (string) $r->name,
+                    email: $r->email !== null ? (string) $r->email : null,
+                    tier: $r->tier !== null ? (string) $r->tier : 'free',
+                    cefr: $r->cefr_level !== null ? (string) $r->cefr_level : null,
+                    createdAt: Iso::orNull($r->created_at),
+                    collectionsCount: $collectionCounts[(string) $r->id] ?? 0,
+                    progressCount: $progressCounts[(string) $r->id] ?? 0,
+                ), $rows);
+            },
+        );
     }
 
     public function profile(string $userId): ?AdminUserProfileRow

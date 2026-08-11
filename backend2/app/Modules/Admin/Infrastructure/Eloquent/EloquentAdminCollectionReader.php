@@ -7,9 +7,11 @@ namespace App\Modules\Admin\Infrastructure\Eloquent;
 use App\Modules\Admin\Application\Dto\CollectionDetail;
 use App\Modules\Admin\Application\Dto\CollectionRow;
 use App\Modules\Admin\Application\Dto\CollectionTermRow;
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Port\AdminCollectionReader;
 use App\Modules\Admin\Infrastructure\Support\Iso;
+use App\Modules\Admin\Infrastructure\Support\Keyset;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -18,7 +20,7 @@ final class EloquentAdminCollectionReader implements AdminCollectionReader
 {
     private const TERMS_CAP = 500;
 
-    public function list(?string $type, ?string $search, int $page, int $perPage): Page
+    public function list(?string $type, ?string $search, ListWindow $window): Page
     {
         $base = DB::table('collections')->whereNull('deleted_at');
         if ($type !== null && $type !== '') {
@@ -28,25 +30,24 @@ final class EloquentAdminCollectionReader implements AdminCollectionReader
             $base->where('title', 'ILIKE', '%' . $search . '%');
         }
 
-        $total = (clone $base)->count();
-
-        $rows = (clone $base)
-            ->orderByDesc('created_at')
-            ->offset(max(0, ($page - 1) * $perPage))
-            ->limit($perPage)
-            ->get(['id', 'type', 'title', 'owner_id', 'source', 'items_count', 'created_at']);
-
-        $items = array_map(static fn (stdClass $r): CollectionRow => new CollectionRow(
-            id: (string) $r->id,
-            type: (string) $r->type,
-            title: (string) $r->title,
-            ownerId: $r->owner_id !== null ? (string) $r->owner_id : null,
-            source: (string) $r->source,
-            itemsCount: (int) $r->items_count,
-            createdAt: Iso::orNull($r->created_at),
-        ), $rows->all());
-
-        return new Page(array_values($items), $total, $page, $perPage);
+        return Keyset::page(
+            $base,
+            $window,
+            'id',
+            ['id', 'type', 'title', 'owner_id', 'source', 'items_count', 'created_at'],
+            static fn (array $rows): array => array_map(
+                static fn (stdClass $r): CollectionRow => new CollectionRow(
+                    id: (string) $r->id,
+                    type: (string) $r->type,
+                    title: (string) $r->title,
+                    ownerId: $r->owner_id !== null ? (string) $r->owner_id : null,
+                    source: (string) $r->source,
+                    itemsCount: (int) $r->items_count,
+                    createdAt: Iso::orNull($r->created_at),
+                ),
+                $rows,
+            ),
+        );
     }
 
     public function detail(string $collectionId): ?CollectionDetail

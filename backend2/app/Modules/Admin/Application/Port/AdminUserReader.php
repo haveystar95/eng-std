@@ -7,13 +7,14 @@ namespace App\Modules\Admin\Application\Port;
 use App\Modules\Admin\Application\Dto\AdminUserCollectionRow;
 use App\Modules\Admin\Application\Dto\AdminUserProfileRow;
 use App\Modules\Admin\Application\Dto\AdminUserRow;
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\ProgressStateCounts;
 
 interface AdminUserReader
 {
     /** @return Page<AdminUserRow> */
-    public function list(?string $search, int $page, int $perPage): Page;
+    public function list(?string $search, ListWindow $window): Page;
 
     public function profile(string $userId): ?AdminUserProfileRow;
 

@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Generation\Domain\Service;
+namespace App\Modules\Shared\Domain\Service;
 
 /**
- * Estimates the USD cost of a model call from its token counts. One pricing table for every AI
- * spend in the module (collection generation, term enrichment) so cost is computed the same way
- * everywhere. Rates are USD per 1K tokens [input, output]; an unknown model or missing counts → null.
+ * Estimates the USD cost of a model call from its token counts. ONE pricing table for the whole
+ * app so cost is computed the same way everywhere: Generation prices the spend it records in its
+ * ledgers, and Admin prices an individual outbound call read back out of the request log. It lives
+ * in the Shared kernel for that reason — a second copy of these rates is how two screens start
+ * disagreeing about what a collection cost.
+ *
+ * Rates are USD per 1K tokens [input, output]; an unknown model or missing counts → null.
  */
 final class ModelCost
 {

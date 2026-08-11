@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Infrastructure\Eloquent;
 
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\ReviewRow;
 use App\Modules\Admin\Application\Port\AdminReviewReader;
@@ -11,10 +12,16 @@ use App\Modules\Admin\Infrastructure\Support\Iso;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
-/** Review feed projection. Reads `reviews`, then hydrates term text from `terms` (separate reads). */
+/**
+ * Review feed projection. Reads `reviews`, then hydrates term text from `terms` (separate reads).
+ *
+ * Deliberately NOT converted to the id-keyset walk the other listings use: a review's id is
+ * generated on the DEVICE, so paging by it would page by the device clock — the one ordering this
+ * project forbids. The feed stays on offset paging over `answered_at`.
+ */
 final class EloquentAdminReviewReader implements AdminReviewReader
 {
-    public function list(string $userId, ?string $from, ?string $to, int $page, int $perPage): Page
+    public function list(string $userId, ?string $from, ?string $to, ListWindow $window): Page
     {
         $base = DB::table('reviews')->where('user_id', $userId);
         if ($from !== null && $from !== '') {
@@ -28,8 +35,8 @@ final class EloquentAdminReviewReader implements AdminReviewReader
 
         $rows = (clone $base)
             ->orderByDesc('answered_at')
-            ->offset(max(0, ($page - 1) * $perPage))
-            ->limit($perPage)
+            ->offset($window->offset())
+            ->limit($window->limit)
             ->get(['id', 'term_id', 'exercise_mode', 'grade', 'is_correct', 'is_practice', 'client_seq', 'answered_at']);
 
         $termIds = array_values(array_unique(array_map(static fn (stdClass $r): string => (string) $r->term_id, $rows->all())));
@@ -47,7 +54,7 @@ final class EloquentAdminReviewReader implements AdminReviewReader
             answeredAt: Iso::orNull($r->answered_at),
         ), $rows->all());
 
-        return new Page(array_values($items), $total, $page, $perPage);
+        return new Page(array_values($items), $total, $window->page, $window->limit);
     }
 
     /**

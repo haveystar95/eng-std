@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Service;
 
 use App\Modules\Generation\Application\Dto\CostEstimate;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Generation\Domain\ValueObject\TranscriptLine;
 
 /**

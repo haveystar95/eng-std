@@ -49,6 +49,8 @@ final class LogApiRequests
                 path: $request->path(),
                 host: $request->getHost(),
                 service: null,
+                purpose: null,          // purpose/collection label outbound spend only
+                collectionId: null,
                 status: $response->getStatusCode(),
                 durationMs: $durationMs,
                 userId: $this->userId($request),

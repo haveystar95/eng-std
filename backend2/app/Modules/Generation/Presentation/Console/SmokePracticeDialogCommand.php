@@ -7,7 +7,7 @@ namespace App\Modules\Generation\Presentation\Console;
 use App\Modules\Generation\Application\Dto\RealtimeSessionSpec;
 use App\Modules\Generation\Application\Dto\RealtimeVad;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use Illuminate\Console\Command;
 use Throwable;
 

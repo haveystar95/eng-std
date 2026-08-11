@@ -17,10 +17,10 @@ final class PracticeDialogController
 
     public function index(Request $request): JsonResponse
     {
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
         $userId = $request->string('user_id')->toString();
 
-        $result = $this->dialogs->list($userId !== '' ? $userId : null, $page, $perPage);
+        $result = $this->dialogs->list($userId !== '' ? $userId : null, $window);
 
         return response()->json(AdminJson::page($result, AdminJson::dialogRow(...)));
     }

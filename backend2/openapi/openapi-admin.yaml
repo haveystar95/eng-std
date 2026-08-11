@@ -9,8 +9,16 @@ info:
     `openapi.yaml` and is not touched here. The admin panel (Vue) is generated from this file, so an
     endpoint not described here effectively does not exist. Errors are RFC 7807
     `application/problem+json` with a stable machine `code`, except input validation which uses
-    Laravel's 422 `{message, errors}` shape. Read endpoints are paginated with `page` / `per_page`
-    (default 25, max 100) and wrap results as `{ data: [...], meta: { total, page, per_page } }`.
+    Laravel's 422 `{message, errors}` shape.
+
+    Listings page in either of two modes and always wrap results as
+    `{ data: [...], meta: { total, page, per_page, next_cursor } }`:
+      * KEYSET (what the panel's infinite scroll uses) — send `limit`, then follow
+        `meta.next_cursor` back as `cursor`. Rows come back ordered by id DESC, which for ULIDs is
+        newest-first on a strictly unique key, so a scroll cannot skip or repeat a row while new
+        rows are landing. `next_cursor` null = last page.
+      * OFFSET (the original) — `page` / `per_page`, default 25, max 100. `next_cursor` stays null.
+    Sending neither keeps the offset behaviour, so nothing that already calls these breaks.
 
 servers:
   - url: http://localhost:8001/admin/api
@@ -102,6 +110,8 @@ paths:
         - { name: search, in: query, schema: { type: string }, description: substring match on email }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -180,6 +190,8 @@ paths:
         - { name: to, in: query, schema: { type: string }, description: 'ISO upper bound on answered_at' }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -319,6 +331,8 @@ paths:
         - { name: search, in: query, schema: { type: string }, description: substring match on title }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -353,6 +367,8 @@ paths:
         - { name: search, in: query, schema: { type: string }, description: substring match on text / normalized_text }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -379,16 +395,77 @@ paths:
               schema: { $ref: '#/components/schemas/TermDetail' }
         '404': { $ref: '#/components/responses/Problem' }
 
+  /logs:
+    get:
+      tags: [Logs]
+      summary: API request/response log, filtered
+      description: >
+        Every filter is a query parameter, so the panel keeps its filter state in the URL and a
+        shared link reproduces the exact same slice. Rows carry `model`/`tokens_*`/`cost_usd`
+        DERIVED from the stored bodies (the usage block is already there), priced with the same
+        table Generation uses for its spend ledgers. Bodies themselves are NOT in the list — a page
+        of 50 model round-trips is megabytes; fetch `/logs/{id}` for the row the operator expanded.
+      parameters:
+        - { name: direction, in: query, schema: { type: string, enum: [inbound, outbound] } }
+        - { name: provider, in: query, schema: { type: string }, description: the `service` tag, e.g. openai }
+        - { name: purpose, in: query, schema: { $ref: '#/components/schemas/CallPurpose' } }
+        - { name: status, in: query, schema: { type: integer, minimum: 100, maximum: 599 } }
+        - name: status_class
+          in: query
+          description: Coarser than `status`; `error` means the call never returned a status at all.
+          schema: { type: string, enum: ['2xx', '4xx', '5xx', error] }
+        - { name: user_id, in: query, schema: { type: string } }
+        - { name: collection_id, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: path, in: query, schema: { type: string }, description: substring match on path }
+        - { name: search, in: query, schema: { type: string }, description: substring match inside request/response bodies }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/RequestLog' } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /logs/{id}:
+    get:
+      tags: [Logs]
+      summary: One log row with its full payloads
+      description: >
+        Bodies and headers are redacted on WRITE — the log table never holds a credential — so this
+        returns exactly what is stored.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RequestLogDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
   /request-logs:
     get:
       tags: [Logs]
-      summary: API request/response log
+      summary: Deprecated alias of /logs
+      deprecated: true
+      description: The original path, kept so nothing that already calls it breaks. Same controller.
       parameters:
-        - { name: user_id, in: query, schema: { type: string } }
-        - { name: status, in: query, schema: { type: integer } }
-        - { name: path, in: query, schema: { type: string }, description: substring match on path }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -410,6 +487,8 @@ paths:
         - { name: user_id, in: query, schema: { type: string } }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -445,6 +524,8 @@ paths:
         - { name: status, in: query, schema: { type: string, enum: [pending, running, succeeded, failed] } }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Cursor' }
       responses:
         '200':
           description: OK
@@ -473,6 +554,18 @@ components:
       name: per_page
       in: query
       schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Limit:
+      name: limit
+      in: query
+      description: >
+        Row count in KEYSET mode. Sending `limit` (or `cursor`) switches a listing from offset to
+        keyset paging: rows come back id DESC and `meta.next_cursor` carries the walk forward.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      description: The `meta.next_cursor` of the previous page (the last id seen).
+      schema: { type: string }
     UserId:
       name: id
       in: path
@@ -544,6 +637,11 @@ components:
             total: { type: integer }
             page: { type: integer }
             per_page: { type: integer }
+            next_cursor:
+              type: [string, 'null']
+              description: >
+                Keyset mode only: pass back as `cursor` for the next page; null means this was the
+                last page. Always null in offset (`page`/`per_page`) mode.
 
     Admin:
       type: object
@@ -786,6 +884,11 @@ components:
               type: { type: string }
         progress_count: { type: integer }
 
+    CallPurpose:
+      type: string
+      description: Why an outbound call was made. Null on inbound rows and on unlabelled calls.
+      enum: [generation, images, enrichment, realtime, recap, example_regen]
+
     RequestLog:
       type: object
       properties:
@@ -795,10 +898,29 @@ components:
         host: { type: [string, 'null'] }
         path: { type: string }
         service: { type: [string, 'null'] }
+        purpose:
+          oneOf: [{ $ref: '#/components/schemas/CallPurpose' }, { type: 'null' }]
+        collection_id: { type: [string, 'null'] }
         status: { type: [integer, 'null'] }
         duration_ms: { type: [integer, 'null'] }
         user_id: { type: [string, 'null'] }
         occurred_at: { type: [string, 'null'], format: date-time }
+        model: { type: [string, 'null'], description: derived from the stored bodies }
+        tokens_in: { type: [integer, 'null'], description: derived from the stored response usage block }
+        tokens_out: { type: [integer, 'null'] }
+        cost_usd: { type: [number, 'null'], description: priced from tokens; null for an unpriced model }
+        error: { type: [string, 'null'], description: transport error, when the call never completed }
+
+    RequestLogDetail:
+      allOf:
+        - $ref: '#/components/schemas/RequestLog'
+        - type: object
+          properties:
+            request_bytes: { type: [integer, 'null'] }
+            response_bytes: { type: [integer, 'null'] }
+            request_headers: { type: [object, 'null'], additionalProperties: true }
+            request_body: { type: [object, 'null'], additionalProperties: true }
+            response_body: { type: [object, 'null'], additionalProperties: true }
 
     DialogRow:
       type: object

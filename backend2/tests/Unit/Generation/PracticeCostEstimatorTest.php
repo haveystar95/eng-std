@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Generation\Application\Service\PracticeCostEstimator;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Generation\Domain\ValueObject\TranscriptLine;
 use App\Modules\Generation\Domain\ValueObject\TranscriptRole;
 

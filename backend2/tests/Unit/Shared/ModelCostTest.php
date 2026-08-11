@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 
 it('prices a known model from its token counts', function () {
     // gpt-4o-mini: $0.00015/1K in, $0.0006/1K out → 1000*0.00015/1000 + 2000*0.0006/1000.

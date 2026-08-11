@@ -6,6 +6,7 @@ namespace App\Modules\Observability\Infrastructure\Provider;
 
 use App\Modules\Observability\Application\Port\ApiLogWriter;
 use App\Modules\Observability\Application\Port\RequestLogAnonymizer;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Observability\Infrastructure\Eloquent\EloquentApiLogWriter;
 use App\Modules\Observability\Infrastructure\Eloquent\EloquentRequestLogAnonymizer;
 use App\Modules\Observability\Infrastructure\Http\Middleware\LogApiRequests;
@@ -22,6 +23,9 @@ final class ObservabilityServiceProvider extends ServiceProvider
     {
         $this->app->bind(ApiLogWriter::class, EloquentApiLogWriter::class);
         $this->app->bind(RequestLogAnonymizer::class, EloquentRequestLogAnonymizer::class);
+        // One ambient label stack per process — the listener that writes the row and the job that
+        // opened the scope must see the same instance.
+        $this->app->singleton(OutboundCallContext::class);
     }
 
     public function boot(): void

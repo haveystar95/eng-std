@@ -20,6 +20,7 @@ use App\Modules\Admin\Application\Dto\DialogDetail;
 use App\Modules\Admin\Application\Dto\DialogRow;
 use App\Modules\Admin\Application\Dto\GenerationRow;
 use App\Modules\Admin\Application\Dto\Page;
+use App\Modules\Admin\Application\Dto\RequestLogDetail;
 use App\Modules\Admin\Application\Dto\RequestLogRow;
 use App\Modules\Admin\Application\Dto\ReviewRow;
 use App\Modules\Admin\Application\Dto\TermDetail;
@@ -36,16 +37,24 @@ use App\Modules\Admin\Application\Dto\UserCostBreakdown;
 final class AdminJson
 {
     /**
+     * `meta.next_cursor` is null on the last page (and always null in offset mode), which is the
+     * infinite scroll's stop condition — it never has to compare a running count against a total.
+     *
      * @template T
      * @param  Page<T>  $page
      * @param  callable(T): array<string, mixed>  $map
-     * @return array{data: list<array<string, mixed>>, meta: array{total: int, page: int, per_page: int}}
+     * @return array{data: list<array<string, mixed>>, meta: array{total: int, page: int, per_page: int, next_cursor: string|null}}
      */
     public static function page(Page $page, callable $map): array
     {
         return [
             'data' => array_map($map, $page->items),
-            'meta' => ['total' => $page->total, 'page' => $page->page, 'per_page' => $page->perPage],
+            'meta' => [
+                'total' => $page->total,
+                'page' => $page->page,
+                'per_page' => $page->perPage,
+                'next_cursor' => $page->nextCursor,
+            ],
         ];
     }
 
@@ -298,10 +307,29 @@ final class AdminJson
             'host' => $r->host,
             'path' => $r->path,
             'service' => $r->service,
+            'purpose' => $r->purpose,
+            'collection_id' => $r->collectionId,
             'status' => $r->status,
             'duration_ms' => $r->durationMs,
             'user_id' => $r->userId,
             'occurred_at' => $r->occurredAt,
+            'model' => $r->model,
+            'tokens_in' => $r->tokensIn,
+            'tokens_out' => $r->tokensOut,
+            'cost_usd' => $r->costUsd,
+            'error' => $r->error,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function requestLogDetail(RequestLogDetail $d): array
+    {
+        return self::requestLog($d->row) + [
+            'request_bytes' => $d->requestBytes,
+            'response_bytes' => $d->responseBytes,
+            'request_headers' => $d->requestHeaders,
+            'request_body' => $d->requestBody,
+            'response_body' => $d->responseBody,
         ];
     }
 

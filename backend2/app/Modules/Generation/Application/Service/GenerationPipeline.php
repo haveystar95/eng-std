@@ -10,7 +10,7 @@ use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 
 /**
  * The generate → validate → top-up pipeline, in one place so every caller measures the same thing.

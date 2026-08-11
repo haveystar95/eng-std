@@ -15,16 +15,19 @@ final class EloquentApiLogWriter implements ApiLogWriter
     /** Bodies larger than this (JSON-encoded) are dropped for a marker — e.g. 500 stack traces. */
     private const MAX_BODY_BYTES = 16384;
 
-    public function write(ApiLogEntry $entry): void
+    public function write(ApiLogEntry $entry): ?string
     {
         try {
+            $id = Ulid::generate();
             ApiRequestLogModel::query()->create([
-                'id' => Ulid::generate(),
+                'id' => $id,
                 'direction' => $entry->direction,
                 'method' => $entry->method,
                 'host' => $entry->host,
                 'path' => mb_substr($entry->path, 0, 1000),
                 'service' => $entry->service,
+                'purpose' => $entry->purpose,
+                'collection_id' => $entry->collectionId,
                 'status' => $entry->status,
                 'duration_ms' => $entry->durationMs,
                 'user_id' => $entry->userId,
@@ -37,9 +40,26 @@ final class EloquentApiLogWriter implements ApiLogWriter
                 'occurred_at' => $entry->occurredAt,
                 'created_at' => now(),
             ]);
+
+            return $id;
         } catch (Throwable $e) {
             // Observability must never break the request it is observing.
             Log::warning('api log write failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    public function linkCollection(array $logIds, string $collectionId): void
+    {
+        if ($logIds === []) {
+            return;
+        }
+
+        try {
+            ApiRequestLogModel::query()->whereIn('id', $logIds)->update(['collection_id' => $collectionId]);
+        } catch (Throwable $e) {
+            Log::warning('api log collection link failed', ['error' => $e->getMessage()]);
         }
     }
 

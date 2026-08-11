@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $host
  * @property string $path
  * @property string|null $service
+ * @property string|null $purpose
+ * @property string|null $collection_id
  * @property int|null $status
  * @property int|null $duration_ms
  * @property string|null $user_id

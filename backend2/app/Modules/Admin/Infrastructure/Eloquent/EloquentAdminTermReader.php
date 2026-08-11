@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Admin\Infrastructure\Eloquent;
 
 use App\Modules\Admin\Application\Dto\CollectionRefRow;
+use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\TermDetail;
 use App\Modules\Admin\Application\Dto\TermExampleRow;
@@ -12,6 +13,7 @@ use App\Modules\Admin\Application\Dto\TermRow;
 use App\Modules\Admin\Application\Dto\TermTranslationRow;
 use App\Modules\Admin\Application\Port\AdminTermReader;
 use App\Modules\Admin\Infrastructure\Support\Iso;
+use App\Modules\Admin\Infrastructure\Support\Keyset;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use stdClass;
@@ -19,7 +21,7 @@ use stdClass;
 /** Term list/detail projection over the Vocabulary tables (+ a progress-footprint count). */
 final class EloquentAdminTermReader implements AdminTermReader
 {
-    public function list(?string $search, int $page, int $perPage): Page
+    public function list(?string $search, ListWindow $window): Page
     {
         $base = DB::table('terms');
         if ($search !== null && $search !== '') {
@@ -29,27 +31,25 @@ final class EloquentAdminTermReader implements AdminTermReader
             });
         }
 
-        $total = (clone $base)->count();
+        return Keyset::page(
+            $base,
+            $window,
+            'id',
+            ['id', 'lang', 'text', 'type', 'created_at'],
+            function (array $rows): array {
+                $termIds = array_map(static fn (stdClass $r): string => (string) $r->id, $rows);
+                $translations = $this->primaryTranslations($termIds);
 
-        $rows = (clone $base)
-            ->orderByDesc('created_at')
-            ->offset(max(0, ($page - 1) * $perPage))
-            ->limit($perPage)
-            ->get(['id', 'lang', 'text', 'type', 'created_at']);
-
-        $termIds = array_values(array_map(static fn (stdClass $r): string => (string) $r->id, $rows->all()));
-        $translations = $this->primaryTranslations($termIds);
-
-        $items = array_map(static fn (stdClass $r): TermRow => new TermRow(
-            id: (string) $r->id,
-            lang: (string) $r->lang,
-            text: (string) $r->text,
-            type: (string) $r->type,
-            translation: $translations[(string) $r->id] ?? null,
-            createdAt: Iso::orNull($r->created_at),
-        ), $rows->all());
-
-        return new Page(array_values($items), $total, $page, $perPage);
+                return array_map(static fn (stdClass $r): TermRow => new TermRow(
+                    id: (string) $r->id,
+                    lang: (string) $r->lang,
+                    text: (string) $r->text,
+                    type: (string) $r->type,
+                    translation: $translations[(string) $r->id] ?? null,
+                    createdAt: Iso::orNull($r->created_at),
+                ), $rows);
+            },
+        );
     }
 
     public function detail(string $termId): ?TermDetail

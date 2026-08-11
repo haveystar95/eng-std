@@ -23,6 +23,11 @@ final readonly class ApiLogEntry
         public string $path,
         public ?string $host,
         public ?string $service,
+        // Why the call was made (generation | images | enrichment | realtime | recap |
+        // example_regen) and what it was spent on — supplied by the ambient OutboundCallContext,
+        // null for inbound rows and for any call made outside a labelled scope.
+        public ?string $purpose,
+        public ?string $collectionId,
         public ?int $status,
         public ?int $durationMs,
         public ?string $userId,

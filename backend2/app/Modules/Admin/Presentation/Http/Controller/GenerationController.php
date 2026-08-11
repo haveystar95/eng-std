@@ -16,15 +16,14 @@ final class GenerationController
 
     public function index(Request $request): JsonResponse
     {
-        [$page, $perPage] = Paging::of($request);
+        $window = Paging::of($request);
         $userId = $request->string('user_id')->toString();
         $status = $request->string('status')->toString();
 
         $result = $this->generations->list(
             $userId !== '' ? $userId : null,
             $status !== '' ? $status : null,
-            $page,
-            $perPage,
+            $window,
         );
 
         return response()->json(AdminJson::page($result, AdminJson::generation(...)));

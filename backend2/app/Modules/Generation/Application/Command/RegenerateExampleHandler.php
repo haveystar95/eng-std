@@ -11,7 +11,7 @@ use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
-use App\Modules\Generation\Domain\Service\ModelCost;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Identity\Application\Port\UserTierReader;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
