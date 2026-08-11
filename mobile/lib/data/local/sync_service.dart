@@ -19,6 +19,7 @@ abstract final class SyncKeys {
   static const bestStreak = 'best_streak'; // running max of observed streak (Progress screen)
   static const newGoal = 'new_goal'; // daily new-term quota (F13 home CTA)
   static const newRemaining = 'new_remaining'; // new terms still introducible today (F13)
+  static const exerciseModes = 'exercise_modes'; // the trainer toggles this user is on (CSV, in order)
 }
 
 const _kCursor = SyncKeys.cursor;
@@ -27,6 +28,7 @@ const _kReviewsToday = SyncKeys.reviewsToday;
 const _kBestStreak = SyncKeys.bestStreak;
 const _kNewGoal = SyncKeys.newGoal;
 const _kNewRemaining = SyncKeys.newRemaining;
+const _kExerciseModes = SyncKeys.exerciseModes;
 
 /// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
 /// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
@@ -101,6 +103,10 @@ class SyncService {
         final n = await _applyPage(page);
         cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu; tr += n.tr;
         if (isSnapshot) seenCollectionIds.addAll(n.colIds);
+        // Settings ride every page whole (they are not a change stream). Stored as they arrive, so
+        // a trainer switched on in the admin panel reaches the offline practice builder on the next
+        // sync — no reinstall, no new build.
+        await _applySettings(page);
         serverTime = page['server_time'] as String?;
         cursor = page['next_cursor'] as String?;
         hasMore = (page['has_more'] as bool?) ?? false;
@@ -250,6 +256,16 @@ class SyncService {
       tr: triageUpserts.length,
       colIds: [for (final c in collectionUpserts) c.id.value],
     );
+  }
+
+  /// The user's trainer toggles, in rotation ORDER — the local practice builder round-robins by
+  /// index into this list, so the order is stored as sent. A page without the field (an older
+  /// server) leaves the previous value alone rather than wiping it to a guess.
+  Future<void> _applySettings(Map<String, dynamic> page) async {
+    final settings = page['settings'] as Map<String, dynamic>?;
+    final modes = (settings?['exercise_modes'] as List?)?.cast<String>();
+    if (modes == null || modes.isEmpty) return;
+    await _db.setMeta(_kExerciseModes, modes.join(','));
   }
 
   /// Streak and reviews-today are server-side daily aggregates that the delta feed doesn't carry.

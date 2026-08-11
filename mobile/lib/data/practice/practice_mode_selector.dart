@@ -12,7 +12,20 @@ class PracticeModes {
   // error that surfaces immediately on the first card.
   const PracticeModes(this.modes);
 
-  /// Today's server default (`config/learning.php`).
+  /// The set the server told us this user is on, as stored by the sync service (CSV, in rotation
+  /// order). Unknown names are dropped — a mode a newer server has and this build does not must not
+  /// become a card nobody can play. An empty or missing value falls back to [serverDefault], which
+  /// is what a device that has not synced yet has to assume.
+  factory PracticeModes.fromWire(String? csv) {
+    final wires = (csv ?? '').split(',').map((w) => w.trim()).where((w) => w.isNotEmpty);
+    final modes = [
+      for (final wire in wires) ?ExerciseMode.values.where((m) => m.wire == wire).firstOrNull,
+    ];
+
+    return modes.isEmpty ? serverDefault : PracticeModes(modes);
+  }
+
+  /// The set a device assumes before its first sync (mirrors `config/learning.php`'s seed).
   static const PracticeModes serverDefault = PracticeModes([
     ExerciseMode.multipleChoice,
     ExerciseMode.wordBank,

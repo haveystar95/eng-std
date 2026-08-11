@@ -12,6 +12,7 @@ import 'generation_controller.dart';
 import 'local/app_database.dart';
 import 'local/sync_service.dart';
 import 'practice/local_session_builder.dart';
+import 'practice/practice_mode_selector.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
@@ -444,12 +445,18 @@ final studySessionProvider =
       // Practice is always entered from a collection; a global practice pool has no rule yet.
       throw StateError('practice needs a collection');
     }
-    final terms = await ref.watch(appDatabaseProvider).collectionTerms(collectionId);
+    final db = ref.watch(appDatabaseProvider);
+    final terms = await db.collectionTerms(collectionId);
+    // The trainer toggles the server last told us about (stored by the sync service). Read from the
+    // local DB like everything else on this path, so practice keeps working offline — and so a
+    // toggle flipped in the admin panel changes the offline session on the next sync.
+    final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
     return LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: args.limit,
       random: Random(),
       sessionId: args.sessionId,
+      enabled: enabled,
     );
   }
 
