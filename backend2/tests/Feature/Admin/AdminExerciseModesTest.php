@@ -17,9 +17,9 @@ it('lists every mode this build can deal, plus the current default', function ()
         ->assertOk()
         // `available` comes from the enum, so a newly built mode shows up in the panel the moment
         // it exists — switched off, per the release rule.
-        ->assertJsonPath('data.available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'])
-        ->assertJsonPath('data.global', config('learning.enabled_modes'))
-        ->assertJsonPath('data.inherits', true);
+        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'])
+        ->assertJsonPath('global', config('learning.enabled_modes'))
+        ->assertJsonPath('inherits', true);
 });
 
 it('sets the product default and keeps the order it was given', function () {
@@ -28,11 +28,11 @@ it('sets the product default and keeps the order it was given', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->putJson('/admin/api/exercise-modes', ['modes' => ['typing', 'multiple_choice']])
         ->assertOk()
-        ->assertJsonPath('data.global', ['typing', 'multiple_choice']);
+        ->assertJsonPath('global', ['typing', 'multiple_choice']);
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/admin/api/exercise-modes')
-        ->assertJsonPath('data.global', ['typing', 'multiple_choice']);
+        ->assertJsonPath('global', ['typing', 'multiple_choice']);
 });
 
 it('refuses to leave the product default empty — there is nothing to inherit from', function () {
@@ -61,14 +61,14 @@ it('gives one user an override and shows it as custom, not as inherited', functi
     $this->withHeader('Authorization', "Bearer {$token}")
         ->putJson("/admin/api/users/{$user->id}/exercise-modes", ['modes' => ['scramble', 'typing']])
         ->assertOk()
-        ->assertJsonPath('data.override', ['scramble', 'typing'])
-        ->assertJsonPath('data.effective', ['scramble', 'typing'])
-        ->assertJsonPath('data.inherits', false);
+        ->assertJsonPath('override', ['scramble', 'typing'])
+        ->assertJsonPath('effective', ['scramble', 'typing'])
+        ->assertJsonPath('inherits', false);
 
     // The default is untouched — an override is one user's setting, not a global edit.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/admin/api/exercise-modes')
-        ->assertJsonPath('data.global', config('learning.enabled_modes'));
+        ->assertJsonPath('global', config('learning.enabled_modes'));
 });
 
 it('clears an override with an empty set, putting the user back on the default', function () {
@@ -81,9 +81,9 @@ it('clears an override with an empty set, putting the user back on the default',
     $this->withHeader('Authorization', "Bearer {$token}")
         ->putJson("/admin/api/users/{$user->id}/exercise-modes", ['modes' => null])
         ->assertOk()
-        ->assertJsonPath('data.override', null)
-        ->assertJsonPath('data.inherits', true)
-        ->assertJsonPath('data.effective', config('learning.enabled_modes'));
+        ->assertJsonPath('override', null)
+        ->assertJsonPath('inherits', true)
+        ->assertJsonPath('effective', config('learning.enabled_modes'));
 
     expect(DB::table('learning_mode_settings')->where('user_id', $user->id)->count())->toBe(0);
 });

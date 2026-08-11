@@ -21,6 +21,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *
  * Four routes rather than one with a scope field — the URL says which scope is being written, so
  * an override can never be sent to the global default by a missing parameter.
+ *
+ * Responses are bare objects, no `data` envelope: that is the admin API's convention (only the
+ * paginated lists wrap, and they wrap for their `meta`). The app-facing /api/v1 wraps everything;
+ * these are two different contracts and the panel's client assumes this one.
  */
 final class ExerciseModeController
 {
@@ -32,7 +36,7 @@ final class ExerciseModeController
     /** The product default + every mode this build can deal. */
     public function index(): JsonResponse
     {
-        return response()->json(['data' => $this->payload(($this->read)(new GetExerciseModes()))]);
+        return response()->json($this->payload(($this->read)(new GetExerciseModes())));
     }
 
     public function update(ChangeExerciseModesRequest $request): JsonResponse
@@ -49,7 +53,7 @@ final class ExerciseModeController
     /** What one user trains with: their override (or null = inherits) and the effective set. */
     public function showForUser(string $id): JsonResponse
     {
-        return response()->json(['data' => $this->payload(($this->read)(new GetExerciseModes($this->userId($id))))]);
+        return response()->json($this->payload(($this->read)(new GetExerciseModes($this->userId($id)))));
     }
 
     /** `modes: null` (or []) drops the override and puts the user back on the global default. */
