@@ -73,8 +73,11 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));
 
         $this->app->singleton(EnabledModes::class, static function (): EnabledModes {
+            // No fallback list here on purpose: a second copy of the mode set is exactly the thing
+            // that drifts. Missing config throws out of EnabledModes ("at least one mode"), loudly,
+            // instead of quietly running a three-mode app.
             /** @var list<string> $modes */
-            $modes = config('learning.enabled_modes', ['multiple_choice', 'word_bank', 'typing']);
+            $modes = config('learning.enabled_modes', []);
 
             return new EnabledModes(array_map(static fn (string $m): ExerciseMode => ExerciseMode::from($m), $modes));
         });

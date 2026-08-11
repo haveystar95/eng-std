@@ -25,13 +25,30 @@ final readonly class TermPlayability
     public const MIN_WORD_BANK_WORDS = 2;
 
     /**
-     * @param  int   $answerWordCount  whitespace-separated words in the target answer
-     * @param  bool  $clozeable        the term's example exists and contains the answer, so a blank
-     *                                 can be cut from it
+     * Scramble's sentence-length window. Below the floor there is nothing to assemble (3 chips is
+     * six possible orders); above the ceiling the screen fills with tiles and one misplaced word
+     * costs the whole card. 4…12 covers 96% of the examples in the live corpus.
+     */
+    public const MIN_SCRAMBLE_TOKENS = 4;
+    public const MAX_SCRAMBLE_TOKENS = 12;
+
+    /**
+     * @param  int   $answerWordCount        whitespace-separated words in the target answer
+     * @param  bool  $clozeable              the term's example exists and contains the answer, so a
+     *                                       blank can be cut from it
+     * @param  int   $exampleTokenCount      chips the pinned example yields ({@see SentenceTokenizer})
+     * @param  bool  $hasExampleTranslation  the example is translated — scramble's prompt IS that
+     *                                       translation ("assemble this in English"), so without it
+     *                                       the card has no question
+     * @param  bool  $exampleIsAnswer        the example tokenizes to the term itself, so scrambling
+     *                                       it would deal the same tiles word_bank already deals
      */
     public function __construct(
         public int $answerWordCount,
         public bool $clozeable,
+        public int $exampleTokenCount = 0,
+        public bool $hasExampleTranslation = false,
+        public bool $exampleIsAnswer = false,
     ) {}
 
     /** Can this term be drilled in this mode at all? The ONE place applicability is decided. */
@@ -40,6 +57,10 @@ final readonly class TermPlayability
         return match ($mode) {
             ExerciseMode::WordBank => $this->answerWordCount >= self::MIN_WORD_BANK_WORDS,
             ExerciseMode::Cloze => $this->clozeable,
+            ExerciseMode::Scramble => ! $this->exampleIsAnswer
+                && $this->hasExampleTranslation
+                && $this->exampleTokenCount >= self::MIN_SCRAMBLE_TOKENS
+                && $this->exampleTokenCount <= self::MAX_SCRAMBLE_TOKENS,
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
             ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening => true,
         };

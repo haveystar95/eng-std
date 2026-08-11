@@ -6,6 +6,7 @@ use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
+use App\Modules\Learning\Domain\Service\SentenceTokenizer;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
@@ -190,7 +191,7 @@ it('practice honours the enabled set — a phase-1 config never yields listening
  * The cases the fixture pins. Fixed term ids and answers — the rotation seed is
  * `cardIndex + crc32(termId)`, so the ids must never change or the expectations move with them.
  *
- * @return list<array{term_id: string, card_index: int, answer: string, example: string|null}>
+ * @return list<array{term_id: string, card_index: int, answer: string, example: string|null, example_translation: string|null}>
  */
 function practiceContractCases(): array
 {
@@ -200,16 +201,27 @@ function practiceContractCases(): array
         '01KZETAAC103WZ24WQ7H087ZJ3',
         '01KZETAAD2EWE2H5ZV7WD8JWKT',
         '01KZETAAE63W6K93C55NCYXKVA',
+        '01KZETAAF7QK4M2NB9XR6TC1YZ',
+        '01KZETAAG3WD5P7HJ2VT8NQ4XB',
+        '01KZETAAH6ZC2Q9MK4RB7XD3VT',
     ];
-    // Deliberately covers every applicability branch: single word vs phrase (word_bank), example
-    // containing the answer vs not vs absent (cloze), and a mixed-case example (the match is
-    // case-insensitive on both sides).
+    // Deliberately covers every applicability branch: single word vs phrase (word_bank); example
+    // containing the answer vs not vs absent (cloze); a mixed-case example (the match is
+    // case-insensitive on both sides); and, for scramble, an untranslated example, one that is
+    // merely the term itself, and sentences on both sides of the 4…12 window.
     $answers = [
-        ['answer' => 'reservation', 'example' => 'I have a reservation for tonight.'],
-        ['answer' => 'give up', 'example' => "I won't give up until I've achieved my goals."],
-        ['answer' => 'front desk', 'example' => null],
-        ['answer' => 'towel', 'example' => 'Could I have extra sheets, please?'],
-        ['answer' => 'check in', 'example' => 'CHECK IN starts at 3 pm.'],
+        ['answer' => 'reservation', 'example' => 'I have a reservation for tonight.', 'example_translation' => 'У меня бронь на сегодня.'],
+        ['answer' => 'give up', 'example' => "I won't give up until I've achieved my goals.", 'example_translation' => 'Я не сдамся, пока не добьюсь своего.'],
+        ['answer' => 'front desk', 'example' => null, 'example_translation' => null],
+        ['answer' => 'towel', 'example' => 'Could I have extra sheets, please?', 'example_translation' => 'Можно мне ещё простыни?'],
+        // Example present but never translated → no question to ask, so no scramble.
+        ['answer' => 'check in', 'example' => 'CHECK IN starts at 3 pm.', 'example_translation' => null],
+        // The "example" IS the term — scrambling it would deal word_bank's tiles a second time.
+        ['answer' => 'Nice to meet you', 'example' => 'Nice to meet you.', 'example_translation' => 'Приятно познакомиться.'],
+        // Three chips: below the floor.
+        ['answer' => 'hurry', 'example' => 'Please hurry up.', 'example_translation' => 'Пожалуйста, поторопись.'],
+        // Sixteen chips: above the ceiling.
+        ['answer' => 'suitcase', 'example' => 'I left my suitcase at the hotel and had to go back for it in the evening.', 'example_translation' => 'Я оставил чемодан в отеле и вечером вернулся за ним.'],
     ];
 
     $cases = [];
@@ -220,6 +232,7 @@ function practiceContractCases(): array
                 'card_index' => $cardIndex,
                 'answer' => $answers[$t]['answer'],
                 'example' => $answers[$t]['example'],
+                'example_translation' => $answers[$t]['example_translation'],
             ];
         }
     }
@@ -234,8 +247,8 @@ function practiceRotation(string $termId, int $cardIndex): int
 }
 
 it('practice_contract: the committed fixture still matches this selector', function () {
-    $assessor = new PlayabilityAssessor(new ChipShuffler());
-    $modes = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze'];
+    $assessor = new PlayabilityAssessor(new ChipShuffler(), new SentenceTokenizer());
+    $modes = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'];
     $enabled = new EnabledModes(array_map(
         static fn (string $m): ExerciseMode => ExerciseMode::from($m),
         $modes,
@@ -245,13 +258,16 @@ it('practice_contract: the committed fixture still matches this selector', funct
     foreach (practiceContractCases() as $case) {
         $answer = $case['answer'];
         // Exactly the derivation StudyCardAssembler does, so the port is pinned on these too —
-        // word count and "can this example be blanked" are two more places to drift.
-        $playable = $assessor->assess($answer, $case['example']);
+        // every gate input is one more place the two runtimes can drift apart.
+        $playable = $assessor->assess($answer, $case['example'], $case['example_translation']);
 
         $cases[] = [
             ...$case,
             'word_count' => $playable->answerWordCount,
             'clozeable' => $playable->clozeable,
+            'example_token_count' => $playable->exampleTokenCount,
+            'has_example_translation' => $playable->hasExampleTranslation,
+            'example_is_answer' => $playable->exampleIsAnswer,
             'rotation' => practiceRotation($case['term_id'], $case['card_index']),
             'expected_mode' => $this->selector->selectForPractice(
                 $enabled,

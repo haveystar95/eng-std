@@ -54,7 +54,7 @@ final readonly class StudyCardAssembler
         );
         $answer = $content->text;
         // What the term's data allows at all — one derivation, shared with the day-plan simulator.
-        $playable = $this->playability->assess($answer, $content->example);
+        $playable = $this->playability->assess($answer, $content->example, $content->exampleTranslation);
         // Practice fans across every applicable mode (round-robin by card + a per-term offset), so a
         // session shows them all and repeats re-deal; SRS keeps the reps ladder.
         $mode = $isPractice
@@ -63,6 +63,10 @@ final readonly class StudyCardAssembler
 
         $options = null;
         $chips = null;
+        // A sentence-level mode asks for the EXAMPLE, so the card's answer (what the client checks
+        // against and what the server grades) is that sentence, and the prompt is its translation —
+        // "assemble this in English". The term's own translation would be the wrong question here.
+        $prompt = $content->translation;
 
         if ($mode === ExerciseMode::MultipleChoice) {
             $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, self::OPTION_COUNT - 1);
@@ -70,13 +74,18 @@ final readonly class StudyCardAssembler
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::WordBank) {
             $chips = $this->chips->chips($answer, $content->type === self::PHRASAL_VERB);
+        } elseif ($mode === ExerciseMode::Scramble) {
+            // The selector only reaches scramble when the gate passed, so the example is present.
+            $answer = (string) $content->example;
+            $prompt = $content->exampleTranslation;
+            $chips = $this->chips->sentenceChips($answer);
         }
 
         return new SessionCardView(
             termId: $view->termId->value,
             exerciseMode: $mode->value,
             type: $content->type,
-            prompt: $content->translation,
+            prompt: $prompt,
             answer: $answer,
             transcription: $content->transcription,
             example: $content->example,

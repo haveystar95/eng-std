@@ -20,6 +20,14 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
 
         $ids = array_map(static fn (TermId $id): string => $id->value, $termIds);
 
+        // The term's PINNED example — ordered by id, the same one EloquentTermContentReader put on
+        // the card. A sentence exercise is graded against the sentence the learner actually saw, so
+        // these two reads must agree; ordering is what makes them agree.
+        $examples = [];
+        foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'sentence']) as $row) {
+            $examples[(string) $row->term_id] ??= (string) $row->sentence;
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'type']) as $row) {
             $id = (string) $row->id;
@@ -29,6 +37,7 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
                 termId: $id,
                 accepted: [(string) $row->text],
                 isPhrase: TermType::from((string) $row->type)->isPhraseLike(),
+                example: $examples[$id] ?? null,
             );
         }
 

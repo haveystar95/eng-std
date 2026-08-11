@@ -178,11 +178,20 @@ produced it.
   `good`): normalise (case, spacing, punctuation, contractions, article optional both ways) →
   full grade; an accepted synonym → full grade; a single-character typo on a ≥ 5-char answer →
   capped at `hard`; else `again`.
-- **The answer key is the TARGET-language forms only.** Production is always into the language
-  being learned: prompt in the user's language (translation/example/audio), answer in the
-  target. `ExpectedAnswer` = `terms.text` + alternative forms of the term when they exist;
+- **The answer key is TARGET-language text the term owns — never a translation.** Production is
+  always into the language being learned: prompt in the user's language, answer in the target.
   `term_translations` are the prompt side and are **never** in the answer key — accepting the
   translation where the target was asked is a wrong answer scored correct.
+  What counts as the key depends on what the mode ASKED for, and that is decided in exactly one
+  place, `ExerciseMode::gradesAgainstExample()`:
+  - a word-level mode asks for the term → `terms.text` + alternative forms of the term;
+  - a sentence-level mode (`scramble`; `dictation`/`pick_correct` when they land) asks the learner
+    to reproduce the term's **pinned example sentence**, so the key is that sentence — the same one
+    the card was built from (`term_examples`, ordered by `id`; both readers order identically so a
+    term with several examples cannot be graded against one it never showed).
+
+  Both branches stay inside the rule: the key is target-language text belonging to the term. A
+  translation is not an accepted answer in either.
 - **Distractors** (`multiple_choice`) are other terms' target text, never a translation (mixing
   languages gives it away), and exclude any candidate whose translations overlap the target's
   (the near-duplicate that reads as correct for the same prompt).

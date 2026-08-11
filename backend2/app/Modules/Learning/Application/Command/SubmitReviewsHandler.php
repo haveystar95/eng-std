@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\TermAnswerKeyView;
 use App\Modules\Vocabulary\Application\Query\TermAnswerKeyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
 
@@ -110,7 +111,7 @@ final readonly class SubmitReviewsHandler
                 $grade = $this->grader->grade(
                     new Answer($input->response, $input->usedHint, $input->latencyMs),
                     $input->exerciseMode,
-                    new ExpectedAnswer($key->accepted, $key->isPhrase),
+                    $this->expectedFor($input, $key),
                     // Cached per (user, mode); frozen for this batch, invalidated below.
                     $this->median->medianFor($command->actorId, $input->exerciseMode),
                 );
@@ -161,6 +162,28 @@ final readonly class SubmitReviewsHandler
                 unknown: $unknown,
             );
         });
+    }
+
+    /**
+     * What this answer is graded against. Word-level modes are checked against the term's own
+     * accepted forms; a sentence-level mode (scramble) is checked against the term's PINNED example
+     * — the very sentence its card was built from, which the answer key carries for exactly this.
+     *
+     * `isPhrase` is forced true for the sentence case: the latency thresholds are per shape, and a
+     * sentence held to the single-word "slow" bound (8 s) would grade an honest assembly as `hard`.
+     *
+     * A term that lost its example between the card and the upload falls back to the term forms —
+     * the assembled sentence then won't match and grades `again`. Rare (it takes a "New example"
+     * mid-session) and honest: we never invent a key the learner wasn't shown.
+     *
+     */
+    private function expectedFor(ReviewInput $input, TermAnswerKeyView $key): ExpectedAnswer
+    {
+        if ($input->exerciseMode->gradesAgainstExample() && $key->example !== null && trim($key->example) !== '') {
+            return new ExpectedAnswer([$key->example], isPhrase: true);
+        }
+
+        return new ExpectedAnswer($key->accepted, $key->isPhrase);
     }
 
     /**

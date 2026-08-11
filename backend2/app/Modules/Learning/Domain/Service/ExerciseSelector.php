@@ -18,8 +18,8 @@ use App\Modules\Learning\Domain\ValueObject\TermPlayability;
  *   reps 0 (first meeting, incl. a skipped intro)  → recognition: multiple_choice
  *   reps ≥ 1 (learning/relearning, produced before) → production rotation, base first:
  *                                                     multi-word → word_bank, single word → typing,
- *                                                     then listening, then cloze
- *   review                                         → production rotation: typing / listening / cloze
+ *                                                     then listening, cloze, scramble
+ *   review                                         → rotation: typing / listening / cloze / scramble
  *   known (verification due)                       → always typing
  *
  * Rationale: `reps` is the honest signal of familiarity. A brand-new term (no progress row → reps
@@ -61,11 +61,11 @@ final class ExerciseSelector
         // branch leads with its base mode (word_bank/typing) on `(reps-1) % n` so the second
         // meeting is the base and later ones fan out.
         if ($progress->state() === LearningState::Review) {
-            $ladder = [ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze];
+            $ladder = [ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble];
             $offset = $progress->reps();
         } else {
             $base = $playable->supports(ExerciseMode::WordBank) ? ExerciseMode::WordBank : ExerciseMode::Typing;
-            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze];
+            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble];
             $offset = max(0, $progress->reps() - 1);
         }
 

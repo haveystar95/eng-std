@@ -9,13 +9,24 @@ namespace App\Modules\Vocabulary\Application\Dto;
  * typed/assembled answer against. Always a set (one entry today, term text; alternative forms
  * like colour/color are added later without changing this shape). Translations are the prompt
  * side and never belong here.
+ *
+ * `example` is the term's PINNED example sentence (the same one the card showed — ordered by id,
+ * like every other reader). It is carried here for the sentence-level exercises, which ask the
+ * learner to reproduce that sentence rather than the term: the mode decides which of the two is
+ * the expected answer ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::gradesAgainstExample()}).
+ * Note what did NOT change: the key still holds only target-language text the term itself owns —
+ * a translation is still never an accepted answer.
  */
 final readonly class TermAnswerKeyView
 {
-    /** @param list<string> $accepted non-empty set of accepted target forms */
+    /**
+     * @param  list<string>  $accepted  non-empty set of accepted target forms
+     * @param  string|null   $example   the pinned example sentence, when the term has one
+     */
     public function __construct(
         public string $termId,
         public array $accepted,
         public bool $isPhrase,
+        public ?string $example = null,
     ) {}
 }

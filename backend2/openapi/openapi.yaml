@@ -715,7 +715,7 @@ paths:
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
-                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
                       response: { type: string, description: The user's raw answer text }
                       answered_at:
                         type: string
@@ -1279,10 +1279,10 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze] }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
-        prompt: { type: string, nullable: true, description: "The cue, in the user's language" }
-        answer: { type: string, description: The correct target-language answer }
+        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation" }
+        answer: { type: string, description: "What a correct answer must match. The target-language term, except for `scramble`, where the exercise is the sentence and this is the example sentence itself" }
         transcription: { type: string, nullable: true }
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
@@ -1294,7 +1294,7 @@ components:
         chips:
           type: array
           nullable: true
-          description: word_bank — the answer's tokens (words, or letters for a single word), shuffled
+          description: "Tiles to assemble the answer from, shuffled (never in the answer's own order). word_bank — the term's words, or its letters when it is a single word; scramble — the example sentence's words (final `.`/`!`/`?` dropped, inner punctuation kept on its word)"
           items: { type: string }
 
     TriageCard:

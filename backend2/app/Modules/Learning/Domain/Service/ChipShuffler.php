@@ -22,7 +22,10 @@ final class ChipShuffler
     /** Common phrasal-verb particles used as decoys. Never includes the answer's own particle. */
     private const PARTICLES = ['up', 'on', 'in', 'off', 'out', 'down', 'over', 'away', 'back'];
 
-    public function __construct(private readonly Randomizer $rng = new Randomizer()) {}
+    public function __construct(
+        private readonly Randomizer $rng = new Randomizer(),
+        private readonly SentenceTokenizer $tokenizer = new SentenceTokenizer(),
+    ) {}
 
     /**
      * @param  bool  $phrasalVerb  add 1–2 decoy particle chips (only affects multi-word answers)
@@ -36,6 +39,19 @@ final class ChipShuffler
             $tokens = [...$tokens, ...$this->particleDecoys($tokens)];
         }
 
+        return $this->shuffleDifferently($tokens);
+    }
+
+    /**
+     * Shuffle until the order differs from the original (with two chips a plain shuffle returns the
+     * original half the time). Gives up after 10 attempts, which only happens for degenerate input
+     * like two identical tokens — where every order IS the original anyway.
+     *
+     * @param  list<string>  $tokens
+     * @return list<string>
+     */
+    private function shuffleDifferently(array $tokens): array
+    {
         if (count($tokens) < 2) {
             return $tokens;
         }
@@ -47,6 +63,19 @@ final class ChipShuffler
         }
 
         return $shuffled;
+    }
+
+    /**
+     * Chips for a `scramble` card: the example sentence's own tokens, shuffled. Same guarantee as
+     * {@see chips()} — the shuffle never comes back in the sentence's order — but the tokens come
+     * from {@see SentenceTokenizer} (punctuation rules), and there are no decoys: on a sentence an
+     * extra tile changes the exercise from "recall the order" to "spot the intruder".
+     *
+     * @return list<string>
+     */
+    public function sentenceChips(string $sentence): array
+    {
+        return $this->shuffleDifferently($this->tokenizer->tokenize($sentence));
     }
 
     /** How many whitespace-separated words the answer has — drives word_bank eligibility. */
