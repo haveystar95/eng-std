@@ -49,11 +49,18 @@ If the example sentence is missing or too short to damage in one place, return a
 
 ## 2. `accepted_variants` — other answers that are equally CORRECT
 
-Additional {{term_lang}} answers a learner could reasonably give for this term's
-{{translation_lang}} prompt, which mean the same thing and should be accepted.
+Other ways to write **the TERM itself** — alternatives to the value of `TERM`, which mean the same
+thing and should be accepted if the learner types them instead.
+
+This is about the term, NOT about the example sentence. The example is given to you only as context
+for the distractors above. A variant must be a replacement for the term: roughly its length, the same
+kind of expression. If `TERM` is one word, a variant is one or two words — never a clause, never a
+full sentence, and never the example sentence reworded. A sentence stored here would make a one-word
+card accept a whole sentence as the right answer.
 
 - Include real alternations: near-deictic pairs, permission modals, aspectual near-synonyms that are
-  genuinely interchangeable here, regional spelling variants, an equally valid word order.
+  genuinely interchangeable here, regional spelling variants, one-word/two-word spellings of the same
+  compound, an equally valid word order within the term.
 - Do **not** include: a form that only differs by case, punctuation, a contraction or an optional
   article (all already accepted); a near-synonym with a different meaning or register; anything that
   would also be a correct answer for a DIFFERENT term.
@@ -72,16 +79,36 @@ give the one you would actually pick — do not reverse-engineer it from the ter
 field exists to detect prompts that do not determine their own answer, and copying the term back
 hides exactly the problem we are looking for.
 
-## 4. `language_notes` — wrong-language lexis
+Two things about the FORM of this field, because it is compared mechanically:
 
-Zero or more short {{translation_lang}} notes, each naming one concrete problem:
+- Write it **in {{term_lang}}**. This is a translation INTO {{term_lang}}, so returning the
+  {{translation_lang}} words back — even the same ones you were given — answers nothing.
+- Give the bare dictionary form, exactly as the term itself would be written: no added infinitive
+  marker, no added article, no trailing punctuation, nothing the term does not carry. An extra
+  particle makes an otherwise correct answer read as a mismatch.
 
-- a word or grammatical form from a language CLOSELY RELATED to {{translation_lang}} sitting in a
-  {{translation_lang}} field — the case that matters most, because between close relatives the slip
-  is spelled in letters both languages share and no spell-checker sees it. Name the offending word
-  and the correct {{translation_lang}} form.
-- a word in the {{term_lang}} fields that is not {{term_lang}};
-- a translation that is not actually in {{translation_lang}}.
+## 4. `language_notes` — is the {{translation_lang}} side actually {{translation_lang}}, and real?
 
-Report only what you can point at. Return an empty list when the language is clean — style
-complaints and word choice you merely dislike do not belong here.
+Read the {{translation_lang}} fields and ask the plain question: **is this a real, correctly spelled
+{{translation_lang}} word or phrase that a native speaker would write?** Report each problem you can
+point at, with its class in `kind`:
+
+- `ua_leakage` — a word, spelling or grammatical form from a language CLOSELY RELATED to
+  {{translation_lang}}, used where {{translation_lang}} has its own word. **If {{translation_lang}} is
+  Russian, this means Ukrainian words, Ukrainian spellings or суржик** — «здаватися» for «сдаваться»,
+  «треба»/«потрібно» for «нужно», «зараз» for «сейчас». A native speaker must not perceive any word as
+  foreign. This is the class that hides best: between close relatives the slip is written in letters
+  both languages share, so no spell-checker sees it. Name the word and the correct
+  {{translation_lang}} form.
+- `misspelled_or_nonword` — not a real word of {{translation_lang}} at all: a typo, an invented or
+  malformed form, or a transliteration of the {{term_lang}} word dressed up as {{translation_lang}}.
+  If you would not find it in a {{translation_lang}} dictionary and a native would not recognise it,
+  it belongs here. Name it and give the word that was meant.
+- `wrong_language` — a whole field in the wrong language: a {{translation_lang}} field not in
+  {{translation_lang}} at all, or a word in the {{term_lang}} fields that is not {{term_lang}}.
+
+Write `detail` in {{translation_lang}}, naming the offending word and the correct form.
+
+Report only what you can point at, and be strict about real-word-ness — a misspelled translation is a
+card whose question is gibberish. Return an empty list when the language is clean: style complaints
+and word choice you merely dislike do not belong here.

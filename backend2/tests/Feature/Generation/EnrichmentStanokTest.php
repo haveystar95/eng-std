@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\EnrichmentBrief;
 use App\Modules\Generation\Application\Dto\EnrichmentPack;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
+use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -132,14 +133,29 @@ it('runs again for a NEW version and does not duplicate the variant it already s
         ->and(DB::table('term_accepted_variants')->where('term_id', ENRICH_TERM_ID)->count())->toBe(1);
 });
 
-it('persists a language finding for a Ukrainian word in the Russian field', function () {
+it('persists a Ukrainian leakage finding for a Ukrainian word in the Russian field', function () {
     seedEnrichmentTerm();
     DB::table('term_translations')->where('term_id', ENRICH_TERM_ID)->update(['text' => 'знімати гроші']);
     app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(enrichPack()));
 
     app(BuildTermEnrichmentsHandler::class)(new BuildTermEnrichments([ENRICH_TERM_ID], 'enrich-test'));
 
-    expect(DB::table('enrichment_findings')->where('term_id', ENRICH_TERM_ID)->where('kind', 'language')->exists())->toBeTrue();
+    // `ua_leakage`, not the coarse `language`: the repair is a regeneration, and the CHECK on the
+    // column has to accept the split kinds for the row to land at all.
+    expect(DB::table('enrichment_findings')->where('term_id', ENRICH_TERM_ID)->where('kind', 'ua_leakage')->exists())->toBeTrue();
+});
+
+it('persists a nonword finding from the model — the case no charset check can see', function () {
+    seedEnrichmentTerm();
+    app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(new EnrichmentPack(
+        [], [], 'withdraw money',
+        [new RawLanguageNote('misspelled_or_nonword', '«колледка» — не слово; должно быть «коллега».')],
+        'test', 10, 20,
+    )));
+
+    app(BuildTermEnrichmentsHandler::class)(new BuildTermEnrichments([ENRICH_TERM_ID], 'enrich-test'));
+
+    expect(DB::table('enrichment_findings')->where('term_id', ENRICH_TERM_ID)->where('kind', 'misspelled_or_nonword')->exists())->toBeTrue();
 });
 
 it('counts a term whose pack throws as failed without taking down the rest of the chunk', function () {

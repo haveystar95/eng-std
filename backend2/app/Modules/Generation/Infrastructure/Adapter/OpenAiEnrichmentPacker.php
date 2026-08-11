@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\EnrichmentBrief;
 use App\Modules\Generation\Application\Dto\EnrichmentPack;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
+use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -114,14 +115,17 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
         return $out;
     }
 
-    /** @return list<string> */
+    /** @return list<RawLanguageNote> */
     private function notes(mixed $rows): array
     {
         $out = [];
         foreach (is_array($rows) ? $rows : [] as $row) {
-            $note = $this->nonEmpty($row);
-            if ($note !== null) {
-                $out[] = $note;
+            if (! is_array($row)) {
+                continue;
+            }
+            $detail = $this->nonEmpty($row['detail'] ?? null);
+            if ($detail !== null) {
+                $out[] = new RawLanguageNote($this->asString($row['kind'] ?? null), $detail);
             }
         }
 
@@ -196,7 +200,21 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
                     ],
                 ],
                 'back_translation' => ['type' => 'string'],
-                'language_notes' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'language_notes' => [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => [
+                            'kind' => [
+                                'type' => 'string',
+                                'enum' => ['ua_leakage', 'misspelled_or_nonword', 'wrong_language'],
+                            ],
+                            'detail' => ['type' => 'string'],
+                        ],
+                        'required' => ['kind', 'detail'],
+                    ],
+                ],
             ],
             'required' => ['distractors', 'accepted_variants', 'back_translation', 'language_notes'],
         ];

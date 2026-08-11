@@ -18,9 +18,14 @@ final readonly class EnrichmentRunMetrics
         public int $distractorsRejected = 0,
         public int $distractorsWritten = 0,
         public int $variantsWritten = 0,
+        public int $variantsRejected = 0,
         public int $termsAmbiguous = 0,
         public int $termsLanguageFlagged = 0,
         public int $termsVariantConflict = 0,
+        /** Ukrainian/суржик leakage in a Russian field — fixed by REGENERATING the item. */
+        public int $termsUaLeakage = 0,
+        /** Not a real word (typo, invented form, transliteration) — fixed by EDITING the wording. */
+        public int $termsMisspelled = 0,
     ) {}
 
     public function plus(self $other): self
@@ -32,9 +37,12 @@ final readonly class EnrichmentRunMetrics
             distractorsRejected: $this->distractorsRejected + $other->distractorsRejected,
             distractorsWritten: $this->distractorsWritten + $other->distractorsWritten,
             variantsWritten: $this->variantsWritten + $other->variantsWritten,
+            variantsRejected: $this->variantsRejected + $other->variantsRejected,
             termsAmbiguous: $this->termsAmbiguous + $other->termsAmbiguous,
             termsLanguageFlagged: $this->termsLanguageFlagged + $other->termsLanguageFlagged,
             termsVariantConflict: $this->termsVariantConflict + $other->termsVariantConflict,
+            termsUaLeakage: $this->termsUaLeakage + $other->termsUaLeakage,
+            termsMisspelled: $this->termsMisspelled + $other->termsMisspelled,
         );
     }
 
@@ -51,9 +59,20 @@ final readonly class EnrichmentRunMetrics
         return $this->ratePct($this->termsAmbiguous);
     }
 
+    /** Any language problem — the three kinds together. */
     public function languageRatePct(): float
     {
         return $this->ratePct($this->termsLanguageFlagged);
+    }
+
+    public function misspelledRatePct(): float
+    {
+        return $this->ratePct($this->termsMisspelled);
+    }
+
+    public function uaLeakageRatePct(): float
+    {
+        return $this->ratePct($this->termsUaLeakage);
     }
 
     private function ratePct(int $count): float

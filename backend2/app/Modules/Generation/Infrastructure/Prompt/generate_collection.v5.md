@@ -70,11 +70,18 @@ well, the translation is too vague — narrow it.
 
 ## Language purity
 
-- Every {{source_lang}} field must be written in {{source_lang}} ONLY. Do not mix in words or forms
-  from a related language. When {{source_lang}} is Russian, this specifically means **no Ukrainian
-  lexis or grammar** — no «здаватися», «треба», «потрібно», «зараз» in the sense of "now", no
-  Ukrainian verb endings — even where the two languages share the letters, which makes the slip
-  invisible to a spell-checker. Write «сдаваться», «нужно», «сейчас».
+- **Every word must be a real word.** A translation must be an existing, correctly spelled
+  {{source_lang}} word or phrase — something a native speaker would actually write. No typos, no
+  invented forms, no transliteration of the {{target_lang}} word dressed up as {{source_lang}}.
+  Re-read each translation and ask: would a native {{source_lang}} speaker recognise every word here
+  as a normal word of their language? If not, replace it. This is not a style preference: a
+  misspelled translation is a card whose question is gibberish.
+- Translations must be in {{source_lang}} ONLY. Do not mix in words or forms from a closely related
+  language. **If {{source_lang}} is Russian: never use Ukrainian words or spellings** — «сдаваться»,
+  not «здаватися»; «нужно», not «треба»/«потрібно»; «сейчас», not «зараз» — and no Ukrainian verb
+  endings. A native Russian speaker must not perceive any word as foreign or misspelled. Between
+  close relatives the slip is written in letters both languages share, so no spell-checker catches
+  it; only this rule does.
 - Every {{target_lang}} field (`text`, `example`) must be written in {{target_lang}} only, with no
   {{source_lang}} words left inside.
 

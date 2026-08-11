@@ -20,7 +20,7 @@ final readonly class EnrichmentCandidate
      * @param  list<string>  $acceptedForms  non-empty: the term text first, then stored variants
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
-     * @param  list<string>  $languageNotes  the model's own lexis observations (see the validator)
+     * @param  list<RawLanguageNote>  $languageNotes  the model's own lexis observations (see the validator)
      */
     public function __construct(
         public string $termId,

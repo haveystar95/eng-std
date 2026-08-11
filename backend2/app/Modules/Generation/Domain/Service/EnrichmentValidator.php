@@ -37,6 +37,22 @@ final class EnrichmentValidator
     /** A pinned example gets 2–3 options' worth of wrong sentences; more is paid-for noise. */
     public const MAX_DISTRACTORS = 3;
 
+    /**
+     * How many whitespace tokens longer than the target a variant may be.
+     *
+     * This guards the one failure that reaches live grading. The model, shown a term AND its example
+     * sentence, reliably answers the wrong question: asked for another way to say "workstation" it
+     * returns "Your work station is ready for you." Stored, that sentence becomes an accepted answer
+     * for a one-word card — the answer key would accept an utterance of a completely different kind,
+     * and the grader would be looser than anyone intended.
+     *
+     * A token budget is the language-neutral way to say "an alternative FORM, not a different kind of
+     * utterance": real alternations differ by a word or two (workstation / work station, this / that),
+     * sentences differ by many. It counts whitespace runs, so it makes no assumption about script,
+     * alphabet or word order.
+     */
+    public const MAX_VARIANT_EXTRA_TOKENS = 2;
+
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly LanguagePurityCheck $purity = new LanguagePurityCheck(),
@@ -47,7 +63,7 @@ final class EnrichmentValidator
         $findings = [];
 
         $accepted = $this->normalizedSet($candidate->acceptedForms);
-        $variants = $this->validVariants($candidate, $accepted);
+        [$variants, $rejectedVariants] = $this->validVariants($candidate, $accepted);
 
         // The two halves of "correct" are kept apart on purpose. Both kill a distractor, but only a
         // collision with a VARIANT is a contradiction worth a person's time: the same pack claimed
@@ -85,34 +101,62 @@ final class EnrichmentValidator
             findings: $findings,
             proposedDistractors: $proposed,
             rejectedDistractors: $rejected,
+            rejectedVariants: $rejectedVariants,
         );
     }
 
     /**
      * Variants that are worth storing: non-empty, not a normalisation-equal restatement of a form
-     * the key ALREADY accepts (that row would buy nothing), and distinct from each other.
+     * the key ALREADY accepts (that row would buy nothing), within the token budget (see
+     * {@see MAX_VARIANT_EXTRA_TOKENS}), and distinct from each other.
      *
      * @param  array<string, true>  $accepted
-     * @return list<RawVariant>
+     * @return array{0: list<RawVariant>, 1: int}  kept, rejected
      */
     private function validVariants(EnrichmentCandidate $candidate, array $accepted): array
     {
+        // The term's own text is the length reference — the first accepted form, by construction.
+        $budget = $this->tokenCount($candidate->acceptedForms[0] ?? '') + self::MAX_VARIANT_EXTRA_TOKENS;
+
         $kept = [];
+        $rejected = 0;
         $seen = $accepted;
         foreach ($candidate->variants as $variant) {
             $text = trim($variant->text);
             if ($text === '') {
+                $rejected++;
+
                 continue;
             }
             $key = $this->normalizer->normalize($text);
-            if ($key === '' || isset($seen[$key])) {
+            if ($key === '') {
+                $rejected++;
+
+                continue;
+            }
+            // A restatement of something already accepted is not a rejection — it is a no-op, and
+            // counting it as scrap would make a well-behaved run look broken.
+            if (isset($seen[$key])) {
+                continue;
+            }
+            if ($this->tokenCount($text) > $budget) {
+                $rejected++;
+
                 continue;
             }
             $seen[$key] = true;
             $kept[] = new RawVariant($text, $this->nullIfBlank($variant->note));
         }
 
-        return $kept;
+        return [$kept, $rejected];
+    }
+
+    /** Whitespace-run token count — script-agnostic on purpose. */
+    private function tokenCount(string $value): int
+    {
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? 0 : count(preg_split('/\s+/u', $trimmed) ?: [$trimmed]);
     }
 
     /**
@@ -217,7 +261,8 @@ final class EnrichmentValidator
     {
         $out = [];
 
-        // Russian fields: Ukrainian-only letters are decisive evidence.
+        // Learner-language fields: letters that only exist in the close relative are decisive
+        // evidence of leakage, which is repaired by regenerating — hence UaLeakage, not Language.
         foreach (['translation' => $candidate->translation, 'example_translation' => $candidate->exampleTranslation] as $field => $value) {
             $value = $this->nullIfBlank($value);
             if ($value === null) {
@@ -227,7 +272,7 @@ final class EnrichmentValidator
             if ($ua !== []) {
                 $out[] = new EnrichmentFinding(
                     $candidate->termId,
-                    FindingKind::Language,
+                    FindingKind::UaLeakage,
                     $field,
                     'Украинские буквы в русском поле (' . implode(' ', $ua) . "): «{$value}».",
                 );
@@ -248,15 +293,27 @@ final class EnrichmentValidator
             }
         }
 
-        // The model's lexis notes — the half a character check cannot see (see LanguagePurityCheck).
+        // The model's lexis notes — the half a character check cannot see (see LanguagePurityCheck):
+        // leakage spelled in shared letters, and words that are simply not words. The model names the
+        // class; an unrecognised class degrades to the coarse kind rather than being dropped, so a
+        // newer prompt can add one without a run losing findings.
         foreach ($candidate->languageNotes as $note) {
-            $note = $this->nullIfBlank($note);
-            if ($note !== null) {
-                $out[] = new EnrichmentFinding($candidate->termId, FindingKind::Language, null, $note);
+            $detail = $this->nullIfBlank($note->detail);
+            if ($detail !== null) {
+                $out[] = new EnrichmentFinding($candidate->termId, $this->noteKind($note->kind), null, $detail);
             }
         }
 
         return $out;
+    }
+
+    private function noteKind(string $wire): FindingKind
+    {
+        return match (strtolower(trim($wire))) {
+            'ua_leakage' => FindingKind::UaLeakage,
+            'misspelled_or_nonword' => FindingKind::MisspelledOrNonword,
+            default => FindingKind::Language,
+        };
     }
 
     /**

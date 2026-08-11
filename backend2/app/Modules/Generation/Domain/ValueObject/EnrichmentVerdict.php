@@ -23,12 +23,25 @@ final readonly class EnrichmentVerdict
         public array $findings,
         public int $proposedDistractors,
         public int $rejectedDistractors,
+        public int $rejectedVariants = 0,
     ) {}
 
     public function hasFinding(FindingKind $kind): bool
     {
         foreach ($this->findings as $finding) {
             if ($finding->kind === $kind) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Any of the three language kinds — the union behind the run's headline language rate. */
+    public function hasLanguageFinding(): bool
+    {
+        foreach ($this->findings as $finding) {
+            if ($finding->kind->isLanguageIssue()) {
                 return true;
             }
         }

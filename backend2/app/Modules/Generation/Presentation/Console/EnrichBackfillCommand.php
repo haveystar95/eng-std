@@ -131,8 +131,12 @@ final class EnrichBackfillCommand extends Command
             ['дистракторов записано', (string) $m->distractorsWritten],
             ['<options=bold>% брака дистракторов</>', '<options=bold>' . $m->scrapRatePct() . '%</> (' . $m->distractorsRejected . ')'],
             ['вариантов записано', (string) $m->variantsWritten],
+            ['вариантов забраковано (длина)', $m->variantsRejected > 0 ? "<fg=yellow>{$m->variantsRejected}</>" : '0'],
             ['<options=bold>% ambiguous</>', '<options=bold>' . $m->ambiguousRatePct() . '%</> (' . $m->termsAmbiguous . ')'],
-            ['<options=bold>% языковых флагов</>', '<options=bold>' . $m->languageRatePct() . '%</> (' . $m->termsLanguageFlagged . ')'],
+            ['<options=bold>% языковых флагов (всего)</>', '<options=bold>' . $m->languageRatePct() . '%</> (' . $m->termsLanguageFlagged . ')'],
+            // Split out because the repair differs: leakage → переген, не-слово → правка текста.
+            ['  · % misspelled_or_nonword', $m->misspelledRatePct() . '% (' . $m->termsMisspelled . ')'],
+            ['  · % ua_leakage', $m->uaLeakageRatePct() . '% (' . $m->termsUaLeakage . ')'],
             ['конфликтов вариант↔дистрактор', (string) $m->termsVariantConflict],
         ]);
     }
@@ -223,9 +227,12 @@ final class EnrichBackfillCommand extends Command
 
     private function findingLabel(FindingKind $kind): string
     {
+        // The label says what to DO, not just what was seen — the export is a worklist.
         return match ($kind) {
             FindingKind::Ambiguity => '⚠️ **переформулировать** —',
-            FindingKind::Language => '🌐 **язык** —',
+            FindingKind::Language => '🌐 **не тот язык** —',
+            FindingKind::UaLeakage => '🇺🇦 **украинизм → переген** —',
+            FindingKind::MisspelledOrNonword => '✍️ **не слово → правка** —',
             FindingKind::VariantConflict => '❗ **конфликт** —',
         };
     }

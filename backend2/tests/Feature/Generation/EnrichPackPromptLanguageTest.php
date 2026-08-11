@@ -60,14 +60,22 @@ it('names the learner language from the brief, not a hardcoded one', function ()
         ->and($system)->not->toContain('{{term_lang}}');
 });
 
-it('renders a different pair without a trace of Russian', function () {
+it('renders a different pair without ever claiming the learner is Russian', function () {
     packFor('en', 'es');
 
     $system = sentSystemPrompt();
 
     expect($system)->toContain('native speaker of Spanish learning English')
-        // The whole point: no language name leaks in from the template itself.
-        ->and($system)->not->toContain('Russian');
+        // The learner is never described as Russian for a Spanish pair…
+        ->and($system)->not->toContain('native speaker of Russian')
+        ->and($system)->not->toContain('Russian speaker')
+        // …and the one place Russian is named at all is CONDITIONAL, so it stays inert for other
+        // pairs while still being explicit where it matters (the close-relative rule that catches
+        // Ukrainian leakage between languages sharing an alphabet).
+        // For a Spanish pair this renders as "If Spanish is Russian, …" — a condition the model
+        // evaluates as false and skips, which is exactly what a templated conditional should do.
+        // (Substring kept clear of the markdown line wrap inside that sentence.)
+        ->and($system)->toContain('Russian, this means Ukrainian words');
 });
 
 it('keeps the error taxonomy language-independent — no baked-in calques', function () {
@@ -80,10 +88,11 @@ it('keeps the error taxonomy language-independent — no baked-in calques', func
         ->and($system)->toContain('`preposition`')
         ->and($system)->toContain('`false_friend`')
         ->and($system)->toContain('`modal_to`')
-        // …but the concrete mistakes are derived by the model, not listed for one pair.
+        // …but the concrete mistakes are derived by the model, not listed for one pair. (The Russian
+        // examples that DO remain live in the conditional purity rule of §4, not in this taxonomy.)
         ->and($system)->not->toContain('I can to swim')
         ->and($system)->not->toContain('depends from')
-        ->and($system)->not->toContain('здаватися');
+        ->and($system)->not->toContain('sportsman');
 });
 
 it('falls back to the raw code for a language it has no name for', function () {

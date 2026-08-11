@@ -6,6 +6,7 @@ use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentCandidate;
 use App\Modules\Generation\Domain\ValueObject\FindingKind;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
+use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
 
 beforeEach(fn () => $this->validator = new EnrichmentValidator());
@@ -13,7 +14,7 @@ beforeEach(fn () => $this->validator = new EnrichmentValidator());
 /**
  * @param  list<RawDistractor>  $distractors
  * @param  list<RawVariant>  $variants
- * @param  list<string>  $languageNotes
+ * @param  list<RawLanguageNote>  $languageNotes
  */
 function enrichmentCandidate(
     array $distractors = [],
@@ -146,6 +147,56 @@ it('drops a variant that only restates an already accepted form', function () {
     expect($verdict->variants)->toBeEmpty();
 });
 
+// The failure that reaches LIVE grading: shown the term and its example, the model answers the wrong
+// question and returns a sentence. Stored, it makes a one-word card accept a whole sentence.
+it('rejects a variant that is a sentence rather than an alternative to the term', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('You can take a break in the break room during lunch.', 'синоним')],
+        acceptedForms: ['break room'],
+        backTranslation: 'break room',
+    ));
+
+    expect($verdict->variants)->toBeEmpty()
+        ->and($verdict->rejectedVariants)->toBe(1);
+});
+
+it('keeps a variant within the token budget (a compound written as two words)', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('work station', 'то же слово раздельно')],
+        acceptedForms: ['workstation'],
+        backTranslation: 'workstation',
+    ));
+
+    expect($verdict->variants)->toHaveCount(1)
+        ->and($verdict->rejectedVariants)->toBe(0);
+});
+
+it('scales the budget with the target, so a phrase may have a phrase-length variant', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('show someone the ropes at work', null)],   // 6 tokens vs 3 + 2 → out
+        acceptedForms: ['show the ropes'],                                    // 3 tokens
+        backTranslation: 'show the ropes',
+    ));
+
+    expect($verdict->variants)->toBeEmpty();
+
+    $ok = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('show somebody the ropes', null)],          // 4 tokens → within 5
+        acceptedForms: ['show the ropes'],
+        backTranslation: 'show the ropes',
+    ));
+
+    expect($ok->variants)->toHaveCount(1);
+});
+
+it('does not count an already-accepted restatement as scrap', function () {
+    // A no-op, not a rejection — counting it would make a well-behaved run look broken.
+    $verdict = $this->validator->validate(enrichmentCandidate(variants: [new RawVariant('The Withdraw Money.', null)]));
+
+    expect($verdict->variants)->toBeEmpty()
+        ->and($verdict->rejectedVariants)->toBe(0);
+});
+
 it('dedupes variants against each other', function () {
     $verdict = $this->validator->validate(enrichmentCandidate(variants: [
         new RawVariant('take out money', null),
@@ -208,8 +259,40 @@ it('flags ambiguity when the model returned no back-translation at all', functio
 
 // ---- language purity --------------------------------------------------------------------------
 
-it('flags Ukrainian letters in a Russian field', function () {
+it('flags Ukrainian letters in a Russian field as LEAKAGE, not as a generic language problem', function () {
+    // The kind decides the repair: leakage means regenerate the item, so it must not land in the
+    // same bucket as a typo (which is repaired by editing the wording).
     $verdict = $this->validator->validate(enrichmentCandidate(translation: 'знімати гроші'));
+
+    expect($verdict->hasFinding(FindingKind::UaLeakage))->toBeTrue()
+        ->and($verdict->hasFinding(FindingKind::MisspelledOrNonword))->toBeFalse();
+});
+
+it('classifies the model note that a translation is not a real word', function () {
+    // The live case: `colleague` → «колледка». All-Russian letters, so no charset check can see it;
+    // only the model's judgement catches it, and it is an EDIT, not a regeneration.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        languageNotes: [new RawLanguageNote('misspelled_or_nonword', '«колледка» — не слово; должно быть «коллега».')],
+    ));
+
+    expect($verdict->hasFinding(FindingKind::MisspelledOrNonword))->toBeTrue()
+        ->and($verdict->hasFinding(FindingKind::UaLeakage))->toBeFalse();
+});
+
+it('classifies a model-reported украинизм as leakage', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        // Spelled entirely in letters Russian also has — invisible to any charset check.
+        languageNotes: [new RawLanguageNote('ua_leakage', '«здаватися» — украинское, по-русски «сдаваться».')],
+    ));
+
+    expect($verdict->hasFinding(FindingKind::UaLeakage))->toBeTrue();
+});
+
+it('degrades an unknown note class to the coarse language kind instead of dropping it', function () {
+    // A newer prompt may add a class; a run must not lose the finding because of it.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        languageNotes: [new RawLanguageNote('some_future_class', 'что-то не так со словом')],
+    ));
 
     expect($verdict->hasFinding(FindingKind::Language))->toBeTrue();
 });
@@ -226,9 +309,10 @@ it('passes clean Russian and English', function () {
     expect($verdict->hasFinding(FindingKind::Language))->toBeFalse();
 });
 
-it('carries the model lexis note through, since a charset check cannot see shared-Cyrillic UA words', function () {
-    // «здаватися» is spelled entirely in letters Russian also has — only the model can catch it.
-    $verdict = $this->validator->validate(enrichmentCandidate(languageNotes: ['«здаватися» — украинское, по-русски «сдаваться».']));
+it('ignores a note with an empty detail', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        languageNotes: [new RawLanguageNote('misspelled_or_nonword', '   ')],
+    ));
 
-    expect($verdict->hasFinding(FindingKind::Language))->toBeTrue();
+    expect($verdict->hasLanguageFinding())->toBeFalse();
 });

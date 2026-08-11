@@ -147,9 +147,14 @@ final readonly class BuildTermEnrichmentsHandler
             distractorsRejected: $verdict->rejectedDistractors,
             distractorsWritten: count($verdict->distractors),
             variantsWritten: count($verdict->variants),
+            variantsRejected: $verdict->rejectedVariants,
             termsAmbiguous: $verdict->hasFinding(FindingKind::Ambiguity) ? 1 : 0,
-            termsLanguageFlagged: $verdict->hasFinding(FindingKind::Language) ? 1 : 0,
+            // "Any language problem" is the union of the three kinds, so a term that only has a
+            // nonword still counts once in the headline language rate.
+            termsLanguageFlagged: $verdict->hasLanguageFinding() ? 1 : 0,
             termsVariantConflict: $verdict->hasFinding(FindingKind::VariantConflict) ? 1 : 0,
+            termsUaLeakage: $verdict->hasFinding(FindingKind::UaLeakage) ? 1 : 0,
+            termsMisspelled: $verdict->hasFinding(FindingKind::MisspelledOrNonword) ? 1 : 0,
         );
     }
 }

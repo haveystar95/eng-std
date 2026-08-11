@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Dto;
 
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
+use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
 
 /**
@@ -20,7 +21,7 @@ final readonly class EnrichmentPack
     /**
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
-     * @param  list<string>  $languageNotes
+     * @param  list<RawLanguageNote>  $languageNotes
      */
     public function __construct(
         public array $distractors,
