@@ -10,8 +10,8 @@ use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\TermProgress;
-use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
+use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -41,7 +41,7 @@ final readonly class GetDayPlanHandler
         private IntroducedTermsReader $introduced,
         private TermContentReader $content,
         private ExerciseSelector $selector,
-        private ChipShuffler $chips,
+        private PlayabilityAssessor $playability,
         private EnabledModes $enabled,
         private Clock $clock,
     ) {}
@@ -81,16 +81,15 @@ final readonly class GetDayPlanHandler
             }
 
             $answer = $termContent->text;
-            $clozeable = $termContent->example !== null
-                && $termContent->example !== ''
-                && mb_stripos($termContent->example, $answer) !== false;
-            $wordCount = $this->chips->wordCount($answer);
+            // Same derivation as the live session (StudyCardAssembler) — a plan that disagrees with
+            // the session it simulates is worse than no plan, so both go through the one assessor.
+            $playable = $this->playability->assess($answer, $termContent->example);
 
             $progress = TermProgress::reconstitute(
                 $query->userId, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
                 $view->intervalDays, $view->dueAt, $view->reps, 0, null,
             );
-            $mode = $this->selector->select($progress, $this->enabled, $wordCount, $clozeable);
+            $mode = $this->selector->select($progress, $this->enabled, $playable);
 
             $isNew = $view->state === LearningState::New;
             $isNew ? $newIntroduced++ : $dueCount++;
@@ -105,7 +104,7 @@ final readonly class GetDayPlanHandler
                 intervalDays: $view->intervalDays,
                 dueAt: $view->dueAt?->format(DateTimeInterface::ATOM),
                 exerciseMode: $mode->value,
-                clozeable: $clozeable,
+                clozeable: $playable->clozeable,
                 isNew: $isNew,
             );
         }

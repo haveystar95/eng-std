@@ -9,6 +9,7 @@ use App\Modules\Learning\Application\Dto\SessionCardView;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
+use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -31,6 +32,7 @@ final readonly class StudyCardAssembler
 
     public function __construct(
         private ExerciseSelector $selector,
+        private PlayabilityAssessor $playability,
         private DistractorReader $distractors,
         private ChipShuffler $chips,
         private Randomizer $rng,
@@ -51,18 +53,13 @@ final readonly class StudyCardAssembler
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
         );
         $answer = $content->text;
-        // Cloze needs an example that actually contains the answer (the client blanks that span from
-        // the same `example`); without one the selector must not pick cloze. Case-insensitive
-        // substring, matching the client's blanking.
-        $clozeable = $content->example !== null
-            && $content->example !== ''
-            && mb_stripos($content->example, $answer) !== false;
-        $wordCount = $this->chips->wordCount($answer);
+        // What the term's data allows at all — one derivation, shared with the day-plan simulator.
+        $playable = $this->playability->assess($answer, $content->example);
         // Practice fans across every applicable mode (round-robin by card + a per-term offset), so a
         // session shows them all and repeats re-deal; SRS keeps the reps ladder.
         $mode = $isPractice
-            ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $wordCount, $clozeable)
-            : $this->selector->select($progress, $enabled, $wordCount, $clozeable);
+            ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $playable)
+            : $this->selector->select($progress, $enabled, $playable);
 
         $options = null;
         $chips = null;

@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
+use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Learning\Domain\ValueObject\TermPlayability;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
@@ -20,6 +22,12 @@ beforeEach(function () {
     ]);
 });
 
+/** A term's data-applicability, with the shape most cases want (a multi-word, non-clozeable term). */
+function playable(int $answerWordCount = 2, bool $clozeable = false): TermPlayability
+{
+    return new TermPlayability(answerWordCount: $answerWordCount, clozeable: $clozeable);
+}
+
 function atState(LearningState $state, int $reps = 0): TermProgress
 {
     return TermProgress::reconstitute(
@@ -28,40 +36,40 @@ function atState(LearningState $state, int $reps = 0): TermProgress
 }
 
 it('introduces a new term (reps 0) with multiple choice', function () {
-    expect($this->selector->select(atState(LearningState::New), $this->phase1))->toBe(ExerciseMode::MultipleChoice);
+    expect($this->selector->select(atState(LearningState::New), $this->phase1, playable()))->toBe(ExerciseMode::MultipleChoice);
 });
 
 it('recognises any reps-0 card first, whatever the answer shape', function () {
     // The first meeting is recognition regardless of word count — a multi-word reps-0 card is still MC.
-    expect($this->selector->select(atState(LearningState::Learning, 0), $this->phase1, answerWordCount: 3))
+    expect($this->selector->select(atState(LearningState::Learning, 0), $this->phase1, playable(answerWordCount: 3)))
         ->toBe(ExerciseMode::MultipleChoice);
 });
 
 it('produces a multi-word term (reps ≥ 1) from a word bank', function () {
-    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, answerWordCount: 3))
+    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, playable(answerWordCount: 3)))
         ->toBe(ExerciseMode::WordBank);
 });
 
 it('produces a single-word term (reps ≥ 1) by typing — variety from the second meeting', function () {
     // Was multiple_choice under the old state-only ladder; now a produced single word is typed.
-    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, answerWordCount: 1))
+    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, playable(answerWordCount: 1)))
         ->toBe(ExerciseMode::Typing);
 });
 
 it('produces a relearning term (reps ≥ 1) rather than recognising it again', function () {
     // A lapsed term has always been produced before (reps ≥ 1) → production, not recognition.
-    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, answerWordCount: 1))
+    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, playable(answerWordCount: 1)))
         ->toBe(ExerciseMode::Typing);
-    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, answerWordCount: 2))
+    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, playable(answerWordCount: 2)))
         ->toBe(ExerciseMode::WordBank);
 });
 
 it('always checks a due known term in typing', function () {
-    expect($this->selector->select(atState(LearningState::Known), $this->phase1))->toBe(ExerciseMode::Typing);
+    expect($this->selector->select(atState(LearningState::Known), $this->phase1, playable()))->toBe(ExerciseMode::Typing);
 });
 
 it('rotates review modes deterministically by the review counter (example-backed)', function () {
-    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, clozeable: true);
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable(clozeable: true));
     expect($rev(0))->toBe(ExerciseMode::Typing)
         ->and($rev(1))->toBe(ExerciseMode::Listening)
         ->and($rev(2))->toBe(ExerciseMode::Cloze)
@@ -70,14 +78,14 @@ it('rotates review modes deterministically by the review counter (example-backed
 
 it('leads the reps ≥ 1 production rotation with the base mode, then fans out (offset (reps-1))', function () {
     // Single word: base is typing. Second meeting (reps 1) is typing (TLv2), then listening, then cloze.
-    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 1, clozeable: true);
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1, clozeable: true));
     expect($single(1))->toBe(ExerciseMode::Typing)
         ->and($single(2))->toBe(ExerciseMode::Listening)
         ->and($single(3))->toBe(ExerciseMode::Cloze)
         ->and($single(4))->toBe(ExerciseMode::Typing);
 
     // Multi-word: base is word_bank; the rotation leads with it.
-    $multi = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 3, clozeable: true);
+    $multi = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 3, clozeable: true));
     expect($multi(1))->toBe(ExerciseMode::WordBank)
         ->and($multi(2))->toBe(ExerciseMode::Listening)
         ->and($multi(3))->toBe(ExerciseMode::Cloze);
@@ -85,13 +93,13 @@ it('leads the reps ≥ 1 production rotation with the base mode, then fans out (
 
 it('never offers cloze when the term has no usable example (falls through to the typed ladder)', function () {
     // clozeable defaults false → cloze is dropped from every rotation.
-    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, answerWordCount: 1);
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1));
     expect($single(1))->toBe(ExerciseMode::Typing)
         ->and($single(2))->toBe(ExerciseMode::Listening)
         ->and($single(3))->toBe(ExerciseMode::Typing); // wraps typing/listening — cloze never appears
 
     // Review with no example: typing/listening only.
-    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all);
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable());
     expect($rev(0))->toBe(ExerciseMode::Typing)
         ->and($rev(1))->toBe(ExerciseMode::Listening)
         ->and($rev(2))->toBe(ExerciseMode::Typing);
@@ -99,14 +107,14 @@ it('never offers cloze when the term has no usable example (falls through to the
 
 it('degrades review to the only enabled review mode in phase 1', function () {
     // Among typing/listening/cloze, only typing is on — every review card is typing.
-    expect($this->selector->select(atState(LearningState::Review, 5), $this->phase1))->toBe(ExerciseMode::Typing);
+    expect($this->selector->select(atState(LearningState::Review, 5), $this->phase1, playable()))->toBe(ExerciseMode::Typing);
 });
 
 it('falls back to an enabled mode when the preferred one is switched off', function () {
     $onlyMc = new EnabledModes([ExerciseMode::MultipleChoice]);
 
     // A produced single word prefers typing, which is off → fall back to the one enabled mode.
-    expect($this->selector->select(atState(LearningState::Learning, 1), $onlyMc, answerWordCount: 1))
+    expect($this->selector->select(atState(LearningState::Learning, 1), $onlyMc, playable(answerWordCount: 1)))
         ->toBe(ExerciseMode::MultipleChoice);
 });
 
@@ -118,7 +126,7 @@ function practiceRun(ExerciseSelector $sel, EnabledModes $enabled, int $wordCoun
     // rotation is card-index + a per-term offset in production; here we sweep indices to see the fan.
     $out = [];
     for ($i = 0; $i < $rounds; $i++) {
-        $out[] = $sel->selectForPractice($enabled, $i, $wordCount, $clozeable);
+        $out[] = $sel->selectForPractice($enabled, $i, playable(answerWordCount: $wordCount, clozeable: $clozeable));
     }
 
     return $out;
@@ -149,12 +157,12 @@ it('practice never offers cloze without a usable example', function () {
 
 it('practice round-robins deterministically by the rotation seed', function () {
     // Same seed → same mode (reproducible); consecutive seeds walk the applicable set in order.
-    $a = $this->selector->selectForPractice($this->all, 0, 3, true);
-    $b = $this->selector->selectForPractice($this->all, 0, 3, true);
+    $a = $this->selector->selectForPractice($this->all, 0, playable(answerWordCount: 3, clozeable: true));
+    $b = $this->selector->selectForPractice($this->all, 0, playable(answerWordCount: 3, clozeable: true));
     expect($a)->toBe($b);
 
     // A negative seed (a large per-term offset can push it) still maps into range.
-    expect($this->selector->selectForPractice($this->all, -1, 3, true))->toBeInstanceOf(ExerciseMode::class);
+    expect($this->selector->selectForPractice($this->all, -1, playable(answerWordCount: 3, clozeable: true)))->toBeInstanceOf(ExerciseMode::class);
 });
 
 it('practice honours the enabled set — a phase-1 config never yields listening or cloze', function () {
@@ -226,7 +234,7 @@ function practiceRotation(string $termId, int $cardIndex): int
 }
 
 it('practice_contract: the committed fixture still matches this selector', function () {
-    $shuffler = new ChipShuffler();
+    $assessor = new PlayabilityAssessor(new ChipShuffler());
     $modes = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze'];
     $enabled = new EnabledModes(array_map(
         static fn (string $m): ExerciseMode => ExerciseMode::from($m),
@@ -236,22 +244,19 @@ it('practice_contract: the committed fixture still matches this selector', funct
     $cases = [];
     foreach (practiceContractCases() as $case) {
         $answer = $case['answer'];
-        $example = $case['example'];
         // Exactly the derivation StudyCardAssembler does, so the port is pinned on these too —
         // word count and "can this example be blanked" are two more places to drift.
-        $wordCount = $shuffler->wordCount($answer);
-        $clozeable = $example !== null && $example !== '' && mb_stripos($example, $answer) !== false;
+        $playable = $assessor->assess($answer, $case['example']);
 
         $cases[] = [
             ...$case,
-            'word_count' => $wordCount,
-            'clozeable' => $clozeable,
+            'word_count' => $playable->answerWordCount,
+            'clozeable' => $playable->clozeable,
             'rotation' => practiceRotation($case['term_id'], $case['card_index']),
             'expected_mode' => $this->selector->selectForPractice(
                 $enabled,
                 practiceRotation($case['term_id'], $case['card_index']),
-                $wordCount,
-                $clozeable,
+                $playable,
             )->value,
         ];
     }
