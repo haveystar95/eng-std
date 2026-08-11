@@ -3,6 +3,7 @@
 use App\Console\Commands\BatchAgeProgressCommand;
 use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
+use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         GenerateCollectionCommand::class,
         EvalGenerationCommand::class,
+        EnrichBackfillCommand::class,
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,

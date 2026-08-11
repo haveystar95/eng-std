@@ -16,6 +16,9 @@ use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
+use App\Modules\Generation\Application\Port\DispatchesEnrichment;
+use App\Modules\Generation\Application\Port\EnrichmentJournal;
+use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
 use App\Modules\Generation\Application\Dto\PracticeDialogConfig;
@@ -29,9 +32,12 @@ use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\FakeExampleRegenerator;
+use App\Modules\Generation\Infrastructure\Adapter\FakeEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTermEnricher;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedTermEnrichmentDispatcher;
@@ -40,6 +46,7 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeRealtimeTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiLiveTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiRealtimeTokenMinter;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentEnrichmentJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentExampleRegenerationLog;
@@ -67,6 +74,24 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
         $this->app->bind(DispatchesTermEnrichment::class, QueuedTermEnrichmentDispatcher::class);
+        // The enrichment станок: its own bookkeeping (marks + findings) and its own queue entry.
+        $this->app->bind(EnrichmentJournal::class, EloquentEnrichmentJournal::class);
+        $this->app->bind(DispatchesEnrichment::class, QueuedEnrichmentDispatcher::class);
+
+        $this->app->bind(EnrichmentPackerPort::class, function (): EnrichmentPackerPort {
+            if (config('services.generation.driver') === 'fake') {
+                return new FakeEnrichmentPacker();
+            }
+
+            return new OpenAiEnrichmentPacker(
+                apiKey: (string) config('services.openai.api_key'),
+                // The станок reasons about grammar rather than recalling facts, and it runs over
+                // hundreds of terms — the cheaper model is the wrong trade here only if the scrap
+                // rate says so, which is exactly what the run metrics measure.
+                model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
+                promptVersion: (string) config('services.generation.enrich_pack_prompt_version', 'v1'),
+            );
+        });
 
         $this->app->bind(TermEnricherPort::class, function (): TermEnricherPort {
             if (config('services.generation.driver') === 'fake') {
