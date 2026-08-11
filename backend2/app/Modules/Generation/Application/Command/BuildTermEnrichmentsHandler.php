@@ -97,6 +97,11 @@ final readonly class BuildTermEnrichmentsHandler
             translation: $target->translation,
             exampleSentence: $target->exampleSentence,
             exampleTranslation: $target->exampleTranslation,
+            termLang: $target->lang,
+            // A term with no translation has no prompt side; ru is the only learner language the
+            // content actually has today, and the brief needs *a* value. If a second one ever shows
+            // up, it arrives with translations, so this fallback stays unreached.
+            translationLang: $target->translationLang ?? 'ru',
         ));
 
         $verdict = $this->validator->validate(new EnrichmentCandidate(

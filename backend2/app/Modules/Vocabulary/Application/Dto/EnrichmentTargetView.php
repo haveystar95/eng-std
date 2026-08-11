@@ -15,7 +15,12 @@ namespace App\Modules\Vocabulary\Application\Dto;
  */
 final readonly class EnrichmentTargetView
 {
-    /** @param  list<string>  $acceptedForms  non-empty; the term text first */
+    /**
+     * @param  list<string>  $acceptedForms  non-empty; the term text first
+     * @param  string  $lang  the language being LEARNED (the term's own)
+     * @param  string|null  $translationLang  the learner's language — the primary translation's. Null
+     *        when the term has no translation, in which case there is no prompt side to reason about.
+     */
     public function __construct(
         public string $termId,
         public string $text,
@@ -24,5 +29,7 @@ final readonly class EnrichmentTargetView
         public ?string $exampleId,
         public ?string $exampleSentence,
         public ?string $exampleTranslation,
+        public string $lang = 'en',
+        public ?string $translationLang = null,
     ) {}
 }

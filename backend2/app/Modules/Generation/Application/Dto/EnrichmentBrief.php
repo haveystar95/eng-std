@@ -14,7 +14,13 @@ namespace App\Modules\Generation\Application\Dto;
  */
 final readonly class EnrichmentBrief
 {
-    /** @param  list<string>  $acceptedForms */
+    /**
+     * @param  list<string>  $acceptedForms
+     * @param  string  $termLang  the language being learned
+     * @param  string  $translationLang  the learner's language — it decides which native-speaker
+     *        interference the distractors should imitate, so the prompt is written around it rather
+     *        than around any one hardcoded language
+     */
     public function __construct(
         public string $termId,
         public string $text,
@@ -22,5 +28,7 @@ final readonly class EnrichmentBrief
         public ?string $translation,
         public ?string $exampleSentence,
         public ?string $exampleTranslation,
+        public string $termLang = 'en',
+        public string $translationLang = 'ru',
     ) {}
 }

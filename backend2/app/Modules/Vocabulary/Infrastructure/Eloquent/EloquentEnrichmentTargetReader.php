@@ -29,9 +29,17 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
             $examples[(string) $row->term_id] ??= $row;
         }
 
+        // The primary translation carries the LEARNER's language, which is what decides the whole
+        // shape of the prompt (which native-speaker interference the distractors should imitate).
         $translations = [];
-        foreach (DB::table('term_translations')->whereIn('term_id', $ids)->orderByDesc('is_primary')->get(['term_id', 'text']) as $row) {
-            $translations[(string) $row->term_id] ??= (string) $row->text;
+        $translationLangs = [];
+        foreach (DB::table('term_translations')->whereIn('term_id', $ids)->orderByDesc('is_primary')
+            ->get(['term_id', 'text', 'lang']) as $row) {
+            $termId = (string) $row->term_id;
+            if (! isset($translations[$termId])) {
+                $translations[$termId] = (string) $row->text;
+                $translationLangs[$termId] = (string) $row->lang;
+            }
         }
 
         // Variants an earlier run already accepted: part of the answer key from now on.
@@ -41,7 +49,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         }
 
         $out = [];
-        foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text']) as $term) {
+        foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'lang']) as $term) {
             $id = (string) $term->id;
             $example = $examples[$id] ?? null;
 
@@ -55,6 +63,8 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                 exampleTranslation: $example !== null && $example->sentence_translation !== null
                     ? (string) $example->sentence_translation
                     : null,
+                lang: (string) $term->lang,
+                translationLang: $translationLangs[$id] ?? null,
             );
         }
 

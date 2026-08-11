@@ -24,14 +24,16 @@ use RuntimeException;
  */
 final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
 {
-    private const LANGUAGE_NAMES = ['en' => 'English', 'ru' => 'Russian'];
+    private const LANGUAGE_NAMES = [
+        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
+        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
+        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
+    ];
 
     public function __construct(
         private readonly string $apiKey,
         private readonly string $model,
         private readonly string $promptVersion = 'v1',
-        private readonly string $termLang = 'en',
-        private readonly string $translationLang = 'ru',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
     ) {}
 
@@ -42,7 +44,7 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
                 'messages' => [
-                    ['role' => 'system', 'content' => $this->systemPrompt()],
+                    ['role' => 'system', 'content' => $this->systemPrompt($brief)],
                     ['role' => 'user', 'content' => $this->dataBlock($brief)],
                 ],
                 'response_format' => [
@@ -142,13 +144,18 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
             TXT;
     }
 
-    private function systemPrompt(): string
+    /**
+     * The languages come from the BRIEF, not from adapter config: the direction is a property of the
+     * content (the term's language and its translation's), so one binding serves every language pair.
+     * The prompt is written entirely around these two placeholders — it names no language itself.
+     */
+    private function systemPrompt(EnrichmentBrief $brief): string
     {
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/enrich_pack.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{term_lang}}' => self::LANGUAGE_NAMES[$this->termLang] ?? $this->termLang,
-            '{{translation_lang}}' => self::LANGUAGE_NAMES[$this->translationLang] ?? $this->translationLang,
+            '{{term_lang}}' => self::LANGUAGE_NAMES[$brief->termLang] ?? $brief->termLang,
+            '{{translation_lang}}' => self::LANGUAGE_NAMES[$brief->translationLang] ?? $brief->translationLang,
         ]);
     }
 
