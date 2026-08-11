@@ -2,7 +2,7 @@
 // `useMocks`. One typed facade means views never branch on transport, and the mock and
 // the wire always present the same camelCase DTOs (mirrors of openapi-admin.yaml).
 import { useMocks } from './config'
-import { httpGet, httpGetPage, httpPost } from './http'
+import { httpGet, httpGetPage, httpPost, httpPut } from './http'
 import { mock } from './mock'
 import type {
   Admin,
@@ -10,6 +10,8 @@ import type {
   CollectionRow,
   CollectionsQuery,
   Dashboard,
+  ExerciseMode,
+  ExerciseModes,
   DialogDetail,
   DialogRow,
   Generation,
@@ -54,6 +56,19 @@ export const api = {
     useMocks ? mock.getUserReviews(id, q) : httpGetPage(`/users/${id}/reviews`, q),
   setTier: (id: string, tier: Tier): Promise<{ id: string; tier: Tier }> =>
     useMocks ? mock.setTier(id, tier) : httpPost(`/users/${id}/tier`, { tier }),
+
+  // ── Exercise modes (trainer toggles) ──
+  // The ORDER of `modes` is the contract: free practice round-robins by index into it, on the
+  // server and mirrored on the device — so the screen sends the list, never a set.
+  getExerciseModes: (): Promise<ExerciseModes> =>
+    useMocks ? mock.getExerciseModes() : httpGet('/exercise-modes'),
+  setExerciseModes: (modes: ExerciseMode[]): Promise<ExerciseModes> =>
+    useMocks ? mock.setExerciseModes(modes) : httpPut('/exercise-modes', { modes }),
+  getUserExerciseModes: (id: string): Promise<ExerciseModes> =>
+    useMocks ? mock.getUserExerciseModes(id) : httpGet(`/users/${id}/exercise-modes`),
+  // null drops the override — the user goes back to the product default, including later changes.
+  setUserExerciseModes: (id: string, modes: ExerciseMode[] | null): Promise<ExerciseModes> =>
+    useMocks ? mock.setUserExerciseModes(id, modes) : httpPut(`/users/${id}/exercise-modes`, { modes }),
 
   // ── Collections ──
   listCollections: (q: CollectionsQuery = {}): Promise<Paginated<CollectionRow>> =>

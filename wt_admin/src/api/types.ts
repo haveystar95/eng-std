@@ -114,7 +114,7 @@ export interface UserDetail {
 }
 
 export type ProgressState = 'new' | 'learning' | 'review' | 'relearning' | 'known'
-export type ExerciseMode = 'multiple_choice' | 'word_bank' | 'typing' | 'listening' | 'cloze'
+export type ExerciseMode = 'multiple_choice' | 'word_bank' | 'typing' | 'listening' | 'cloze' | 'scramble'
 export type Grade = 'again' | 'hard' | 'good' | 'easy'
 
 export interface PlanEntry {
@@ -272,6 +272,20 @@ export interface Generation {
   error: string | null
   createdAt: string | null
   finishedAt: string | null
+}
+
+// ── Exercise modes (trainer toggles) ──
+/**
+ * `override` null means the user INHERITS the product default — a different state from an override
+ * that happens to equal it, and what the Inherit/Custom switch is bound to. `available` comes from
+ * the server's own enum, so a newly built trainer shows up here the moment it exists (switched off).
+ */
+export interface ExerciseModes {
+  available: ExerciseMode[]
+  global: ExerciseMode[]
+  override: ExerciseMode[] | null
+  effective: ExerciseMode[]
+  inherits: boolean
 }
 
 // ── Query params (FE side; mapped to snake_case + page/per_page at the boundary) ──

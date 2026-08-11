@@ -29,6 +29,11 @@ export const router = createRouter({
         },
         { path: 'terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
         { path: 'terms/:id', name: 'term', component: () => import('@/views/TermDetailView.vue'), props: true },
+        {
+          path: 'exercise-modes',
+          name: 'exercise-modes',
+          component: () => import('@/views/ExerciseModesView.vue'),
+        },
         { path: 'generations', name: 'generations', component: () => import('@/views/GenerationsView.vue') },
         { path: 'logs', name: 'logs', component: () => import('@/views/LogsView.vue') },
       ],

@@ -18,17 +18,19 @@ import CollectionsTab from './user/CollectionsTab.vue'
 import DialogsTab from './user/DialogsTab.vue'
 import LogsTab from './user/LogsTab.vue'
 import GenerationsTab from './user/GenerationsTab.vue'
+import ModesTab from './user/ModesTab.vue'
 
 const props = defineProps<{ id: string }>()
 
 const { data: user, loading, error, run } = useAsync(() => api.getUser(props.id))
 onMounted(run)
 
-const tab = ref<'plan' | 'reviews' | 'collections' | 'dialogs' | 'generations' | 'logs'>('plan')
+const tab = ref<'plan' | 'reviews' | 'collections' | 'modes' | 'dialogs' | 'generations' | 'logs'>('plan')
 const tabs = [
   { key: 'plan', label: 'План' },
   { key: 'reviews', label: 'Ревью' },
   { key: 'collections', label: 'Коллекции' },
+  { key: 'modes', label: 'Тренажёры' },
   { key: 'dialogs', label: 'Диалоги' },
   { key: 'generations', label: 'Генерации' },
   { key: 'logs', label: 'Логи' },
@@ -145,6 +147,7 @@ async function confirmToggle() {
       <PlanTab v-if="tab === 'plan'" :user-id="user.id" :timezone="user.timezone" />
       <ReviewsTab v-else-if="tab === 'reviews'" :user-id="user.id" />
       <CollectionsTab v-else-if="tab === 'collections'" :collections="user.collections" />
+      <ModesTab v-else-if="tab === 'modes'" :user-id="user.id" />
       <DialogsTab v-else-if="tab === 'dialogs'" :user-id="user.id" />
       <GenerationsTab v-else-if="tab === 'generations'" :user-id="user.id" />
       <LogsTab v-else :user-id="user.id" />

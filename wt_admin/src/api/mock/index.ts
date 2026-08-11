@@ -6,6 +6,8 @@ import type {
   CollectionRow,
   CollectionsQuery,
   Dashboard,
+  ExerciseMode,
+  ExerciseModes,
   DayPlan,
   DialogDetail,
   DialogRow,
@@ -37,6 +39,23 @@ import {
 } from './data'
 
 const DAY = 86_400_000
+
+// Trainer toggles. The mock keeps them in memory for the session so the screen can be driven
+// standalone: flip, save, navigate away and back, and the change is still there.
+const ALL_MODES: ExerciseMode[] = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble']
+let globalModes: ExerciseMode[] = [...ALL_MODES]
+const modeOverrides = new Map<string, ExerciseMode[]>()
+
+function modesFor(userId?: string): ExerciseModes {
+  const override = userId !== undefined ? (modeOverrides.get(userId) ?? null) : null
+  return {
+    available: [...ALL_MODES],
+    global: [...globalModes],
+    override: override ? [...override] : null,
+    effective: override ? [...override] : [...globalModes],
+    inherits: override === null,
+  }
+}
 
 function paginate<T>(rows: T[], page = 1, perPage = 25): Paginated<T> {
   const total = rows.length
@@ -152,6 +171,25 @@ export const mock = {
     if (q.from) rows = rows.filter((r) => (r.answeredAt ?? '') >= q.from!)
     if (q.to) rows = rows.filter((r) => (r.answeredAt ?? '') <= q.to! + 'T23:59:59.999Z')
     return paginate(rows, q.page, q.perPage)
+  },
+
+  async getExerciseModes(): Promise<ExerciseModes> {
+    return modesFor()
+  },
+  async setExerciseModes(modes: ExerciseMode[]): Promise<ExerciseModes> {
+    globalModes = [...modes]
+    return modesFor()
+  },
+  async getUserExerciseModes(id: string): Promise<ExerciseModes> {
+    findUser(id) // same 404 as the real API for an unknown user
+    return modesFor(id)
+  },
+  async setUserExerciseModes(id: string, modes: ExerciseMode[] | null): Promise<ExerciseModes> {
+    findUser(id)
+    // null (or an empty list) drops the override — inherit is the absence of a row, not a copy.
+    if (modes === null || modes.length === 0) modeOverrides.delete(id)
+    else modeOverrides.set(id, [...modes])
+    return modesFor(id)
   },
 
   async setTier(id: string, tier: Tier): Promise<{ id: string; tier: Tier }> {

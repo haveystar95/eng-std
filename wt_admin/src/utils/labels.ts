@@ -30,6 +30,7 @@ export const MODE_LABEL: Record<ExerciseMode, string> = {
   typing: 'ввод',
   listening: 'аудио',
   cloze: 'пропуск',
+  scramble: 'предложение',
 }
 
 export const STATE_LABEL: Record<ProgressState, string> = {

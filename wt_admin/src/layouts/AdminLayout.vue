@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { LayoutDashboard, Users, Library, Type, Sparkles, ScrollText, LogOut } from 'lucide-vue-next'
+import { LayoutDashboard, Users, Library, Type, Sparkles,
+  SlidersHorizontal, ScrollText, LogOut } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useMocks } from '@/api'
 
@@ -12,6 +13,7 @@ const nav = [
   { to: { name: 'users' }, label: 'Пользователи', icon: Users },
   { to: { name: 'collections' }, label: 'Коллекции', icon: Library },
   { to: { name: 'terms' }, label: 'Термины', icon: Type },
+  { to: { name: 'exercise-modes' }, label: 'Тренажёры', icon: SlidersHorizontal },
   { to: { name: 'generations' }, label: 'Генерации', icon: Sparkles },
   { to: { name: 'logs' }, label: 'Логи', icon: ScrollText },
 ]
