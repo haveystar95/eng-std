@@ -24,8 +24,16 @@ final class EloquentTermContentReader implements TermContentReader
             $translations[(string) $row->term_id] ??= (string) $row->text;
         }
 
+        // A term may hold several examples (ImportTerm appends one per generation pass), but a card
+        // shows exactly one — so which one must be PINNED, not whichever the heap hands back. Without
+        // an explicit order an unordered scan can return a different row after any UPDATE to the
+        // table, i.e. the same term would show a different example between two requests, and the
+        // client (which mirrors one example per term via /sync) would disagree with the card the
+        // server built. `id` is a ULID, so ordering by it pins the term's FIRST example and keeps
+        // the same one for good. Same order as EloquentExampleRegenContextReader, so "New example"
+        // replaces the example the user is actually looking at.
         $examples = [];
-        foreach (DB::table('term_examples')->whereIn('term_id', $ids)->get() as $row) {
+        foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get() as $row) {
             $examples[(string) $row->term_id] ??= $row;
         }
 

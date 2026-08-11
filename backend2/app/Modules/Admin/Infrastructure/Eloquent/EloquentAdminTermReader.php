@@ -66,6 +66,7 @@ final class EloquentAdminTermReader implements AdminTermReader
 
         $examples = DB::table('term_examples')
             ->where('term_id', $termId)
+            ->orderBy('id')
             ->get(['sentence', 'sentence_translation']);
 
         $collections = DB::table('collection_items as ci')
