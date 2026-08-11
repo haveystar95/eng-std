@@ -27,6 +27,17 @@ final class EloquentEnabledModesReader implements EnabledModesReader
     /** @var array<string, EnabledModes|null> */
     private array $overrides = [];
 
+    /**
+     * Drop the memo. Called by the writer: within one request the admin panel writes a toggle and
+     * immediately reads it back to render the result, and a memo taken before the write would show
+     * the admin the value they just replaced.
+     */
+    public function forget(): void
+    {
+        $this->global = null;
+        $this->overrides = [];
+    }
+
     public function forUser(UserId $userId): EnabledModes
     {
         return $this->overrideFor($userId) ?? $this->globalDefault();

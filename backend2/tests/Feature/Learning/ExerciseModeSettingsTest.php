@@ -12,11 +12,9 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-/** The reader is memoised per instance, so a test that writes must ask a fresh one. */
+/** The reader memoises, but every write invalidates it — so one shared instance is honest here. */
 function modes(): EnabledModesReader
 {
-    app()->forgetInstance(EnabledModesReader::class);
-
     return app(EnabledModesReader::class);
 }
 

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\EnabledModesWriter;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -15,8 +14,6 @@ uses(RefreshDatabase::class);
 /** Build a study session over HTTP and return the modes it dealt. */
 function dealtModes(object $ctx, string $token, bool $practice = false): array
 {
-    app()->forgetInstance(EnabledModesReader::class); // pick up a toggle written in this test
-
     $cards = $ctx->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['session_size' => 10, 'is_practice' => $practice])
         ->assertOk()
@@ -81,8 +78,6 @@ it('ships the user own mode set on every /sync page', function () {
         UserId::fromString($user->id),
         new EnabledModes([ExerciseMode::Typing, ExerciseMode::Scramble]),
     );
-    app()->forgetInstance(EnabledModesReader::class);
-
     $data = sync($this, $token);
 
     // The device rebuilds free practice locally, so it needs the SET, not just the cards the

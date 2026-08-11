@@ -221,6 +221,107 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /exercise-modes:
+    get:
+      tags: [Exercise modes]
+      summary: The product default, and every mode this build can deal
+      description: >
+        `available` comes from the application's own enum, so a newly built trainer appears here the
+        moment it exists in code — switched off, per the release rule (new mode ships disabled
+        globally; enable for yourself → beta → everyone).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Exercise modes]
+      summary: Set the product default (audited)
+      description: >
+        The ORDER is part of the contract — free practice round-robins by index into this list, on
+        the server and mirrored on the device. At least one mode is required: the global default has
+        nothing above it to inherit from.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modes]
+              properties:
+                modes:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '#/components/schemas/ExerciseMode' }
+      responses:
+        '200':
+          description: Applied — returns the new settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{id}/exercise-modes:
+    get:
+      tags: [Exercise modes]
+      summary: What one user trains with
+      description: >
+        `override` is null when the user inherits the product default — a different state from an
+        override that happens to equal it, and what the panel's Inherit/Custom switch is bound to.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      tags: [Exercise modes]
+      summary: Give a user their own set, or drop the override (audited)
+      description: >
+        `modes: null` (or an empty array) DELETES the override, putting the user back on the product
+        default — including later changes to it. The user's set is never stored as a copy of the
+        default, or they would silently miss the next mode that ships.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modes]
+              properties:
+                modes:
+                  type: array
+                  nullable: true
+                  items: { $ref: '#/components/schemas/ExerciseMode' }
+      responses:
+        '200':
+          description: Applied — returns the new settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /collections:
     get:
       tags: [Collections]
@@ -407,6 +508,34 @@ components:
               errors: { type: object, additionalProperties: { type: array, items: { type: string } } }
 
   schemas:
+    ExerciseMode:
+      type: string
+      enum: [multiple_choice, word_bank, typing, listening, cloze, scramble]
+
+    ExerciseModes:
+      type: object
+      properties:
+        available:
+          type: array
+          description: Every mode this build can deal, in enum order.
+          items: { $ref: '#/components/schemas/ExerciseMode' }
+        global:
+          type: array
+          description: The product default, in rotation order.
+          items: { $ref: '#/components/schemas/ExerciseMode' }
+        override:
+          type: array
+          nullable: true
+          description: This user's own set, or null when they inherit. Absent scope (global read) is null.
+          items: { $ref: '#/components/schemas/ExerciseMode' }
+        effective:
+          type: array
+          description: What the user actually trains with — the override if any, else the default.
+          items: { $ref: '#/components/schemas/ExerciseMode' }
+        inherits:
+          type: boolean
+          description: Convenience for the Inherit/Custom switch — true when `override` is null.
+
     Problem:
       type: object
       properties:

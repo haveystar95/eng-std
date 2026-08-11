@@ -80,7 +80,11 @@ final class LearningServiceProvider extends ServiceProvider
         // depends on who is asking — so it is a reader, singleton only for its per-request memo.
         // `config/learning.php` survives as the seed for the global row and as the emergency
         // fallback if that row is ever deleted; nothing reads it on the hot path.
-        $this->app->singleton(EnabledModesReader::class, EloquentEnabledModesReader::class);
+        // Singleton on the CONCRETE class, with the port aliased to it: bound the other way round,
+        // anything that asks for the concrete reader (the writer, to invalidate the memo) would get
+        // a second instance and the invalidation would land on nobody.
+        $this->app->singleton(EloquentEnabledModesReader::class);
+        $this->app->alias(EloquentEnabledModesReader::class, EnabledModesReader::class);
         $this->app->bind(EnabledModesWriter::class, EloquentEnabledModesWriter::class);
         $this->app->bind(ModeFallbackReporter::class, LoggingModeFallbackReporter::class);
     }

@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentEnabledModesWriter implements EnabledModesWriter
 {
+    /**
+     * The reader is a per-request memo and a singleton, so it is the same instance the rest of this
+     * request will ask. Handing it to the writer is what makes write-then-read inside one request
+     * (which is exactly what the admin panel does) return the new value.
+     */
+    public function __construct(private readonly EloquentEnabledModesReader $reader) {}
+
     public function setGlobalDefault(EnabledModes $modes): void
     {
         $this->upsert(null, $modes);
@@ -24,6 +31,7 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
             // Inherit = no row. Storing the global set as a copy would silently pin the user to
             // today's default and quietly exclude them from tomorrow's.
             DB::table('learning_mode_settings')->where('user_id', $userId->value)->delete();
+            $this->reader->forget();
 
             return;
         }
@@ -42,6 +50,7 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
 
         if ($row->exists()) {
             $row->update(['modes' => json_encode($values), 'updated_at' => now()]);
+            $this->reader->forget();
 
             return;
         }
@@ -53,5 +62,6 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        $this->reader->forget();
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Admin\Presentation\Http\Controller\AuthController;
 use App\Modules\Admin\Presentation\Http\Controller\CollectionController;
 use App\Modules\Admin\Presentation\Http\Controller\DashboardController;
+use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
 use App\Modules\Admin\Presentation\Http\Controller\PracticeDialogController;
 use App\Modules\Admin\Presentation\Http\Controller\RequestLogController;
@@ -29,6 +30,12 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/users/{id}/collections', [UserController::class, 'collections']);
     Route::get('/users/{id}/reviews', [UserController::class, 'reviews']);
     Route::post('/users/{id}/tier', [TierController::class, 'update']);
+
+    // Trainer toggles: the product default, and a per-user override (audited, like the tier).
+    Route::get('/exercise-modes', [ExerciseModeController::class, 'index']);
+    Route::put('/exercise-modes', [ExerciseModeController::class, 'update']);
+    Route::get('/users/{id}/exercise-modes', [ExerciseModeController::class, 'showForUser']);
+    Route::put('/users/{id}/exercise-modes', [ExerciseModeController::class, 'updateForUser']);
 
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);
