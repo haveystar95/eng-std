@@ -25,8 +25,12 @@ use App\Modules\Learning\Domain\Repository\TriageRepository;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Scheduler;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
-use App\Modules\Learning\Domain\ValueObject\EnabledModes;
-use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\EnabledModesWriter;
+use App\Modules\Learning\Application\Port\ModeFallbackReporter;
+use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentIntroducedTermsReader;
@@ -72,15 +76,13 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(LearningAccountEraser::class, EloquentLearningAccountEraser::class);
         $this->app->bind(Scheduler::class, static fn (): Sm2Scheduler => new Sm2Scheduler(Fuzz::random()));
 
-        $this->app->singleton(EnabledModes::class, static function (): EnabledModes {
-            // No fallback list here on purpose: a second copy of the mode set is exactly the thing
-            // that drifts. Missing config throws out of EnabledModes ("at least one mode"), loudly,
-            // instead of quietly running a three-mode app.
-            /** @var list<string> $modes */
-            $modes = config('learning.enabled_modes', []);
-
-            return new EnabledModes(array_map(static fn (string $m): ExerciseMode => ExerciseMode::from($m), $modes));
-        });
+        // The mode set is DATA now (learning_mode_settings), not a compile-time value, because it
+        // depends on who is asking — so it is a reader, singleton only for its per-request memo.
+        // `config/learning.php` survives as the seed for the global row and as the emergency
+        // fallback if that row is ever deleted; nothing reads it on the hot path.
+        $this->app->singleton(EnabledModesReader::class, EloquentEnabledModesReader::class);
+        $this->app->bind(EnabledModesWriter::class, EloquentEnabledModesWriter::class);
+        $this->app->bind(ModeFallbackReporter::class, LoggingModeFallbackReporter::class);
     }
 
     public function boot(): void

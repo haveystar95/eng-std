@@ -16,7 +16,7 @@ use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
 use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
-use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -52,13 +52,16 @@ final readonly class BuildStudySessionHandler
         private StudySessionRepository $sessions,
         private TransactionManager $tx,
         private Clock $clock,
-        private EnabledModes $enabled,
+        private EnabledModesReader $enabledModes,
     ) {}
 
     public function __invoke(BuildStudySession $command): SessionView
     {
         $now = $this->clock->now();
         $size = max(1, min(self::MAX_SESSION_SIZE, $command->sessionSize));
+        // Which trainers this learner has switched on — their override, or the product default.
+        // Read once per session so every card in it is dealt from the same set.
+        $enabled = $this->enabledModes->forUser($command->actorId);
 
         // Practice draws the whole scope (all terms, any state, ignoring due_at) and never spends
         // the daily quota; a normal session takes due-then-new under the remaining new-term quota.
@@ -94,7 +97,7 @@ final readonly class BuildStudySessionHandler
                 continue; // nothing to render without content
             }
             $cards[] = $this->assembler->assemble(
-                $command->actorId, $view, $termContent, $poolIds, $this->enabled,
+                $command->actorId, $view, $termContent, $poolIds, $enabled,
                 isPractice: $command->isPractice, cardIndex: $cardIndex,
             );
             $composition[] = $view->termId;

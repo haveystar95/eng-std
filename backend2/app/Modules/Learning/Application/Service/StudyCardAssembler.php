@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Service;
 
 use App\Modules\Learning\Application\Dto\DueTermView;
+use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Application\Dto\SessionCardView;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
@@ -33,6 +34,7 @@ final readonly class StudyCardAssembler
     public function __construct(
         private ExerciseSelector $selector,
         private PlayabilityAssessor $playability,
+        private ModeFallbackReporter $fallbacks,
         private DistractorReader $distractors,
         private ChipShuffler $chips,
         private Randomizer $rng,
@@ -55,6 +57,15 @@ final readonly class StudyCardAssembler
         $answer = $content->text;
         // What the term's data allows at all — one derivation, shared with the day-plan simulator.
         $playable = $this->playability->assess($answer, $content->example, $content->exampleTranslation);
+        // Toggles are per-user data, so "nothing fits this term" is now reachable by configuration.
+        // The selector still returns a playable card; this is what stops that being silent.
+        if (! $this->selector->hasApplicableMode($enabled, $playable)) {
+            $this->fallbacks->noApplicableMode(
+                $user,
+                $view->termId,
+                array_map(static fn (ExerciseMode $m): string => $m->value, $enabled->modes),
+            );
+        }
         // Practice fans across every applicable mode (round-robin by card + a per-term offset), so a
         // session shows them all and repeats re-deal; SRS keeps the reps ladder.
         $mode = $isPractice

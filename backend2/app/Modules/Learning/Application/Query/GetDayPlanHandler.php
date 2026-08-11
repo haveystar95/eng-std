@@ -12,7 +12,7 @@ use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
-use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -42,13 +42,14 @@ final readonly class GetDayPlanHandler
         private TermContentReader $content,
         private ExerciseSelector $selector,
         private PlayabilityAssessor $playability,
-        private EnabledModes $enabled,
+        private EnabledModesReader $enabledModes,
         private Clock $clock,
     ) {}
 
     public function __invoke(GetDayPlan $query): DayPlanView
     {
         $size = max(1, min(self::MAX_SESSION_SIZE, $query->sessionSize));
+        $enabled = $this->enabledModes->forUser($query->userId);
         $tz = $this->profile->timezoneFor($query->userId);
 
         $dayStart = ($query->date !== null && $query->date !== ''
@@ -89,7 +90,7 @@ final readonly class GetDayPlanHandler
                 $query->userId, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
                 $view->intervalDays, $view->dueAt, $view->reps, 0, null,
             );
-            $mode = $this->selector->select($progress, $this->enabled, $playable);
+            $mode = $this->selector->select($progress, $enabled, $playable);
 
             $isNew = $view->state === LearningState::New;
             $isNew ? $newIntroduced++ : $dueCount++;

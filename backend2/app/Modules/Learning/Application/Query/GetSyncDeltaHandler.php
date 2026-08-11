@@ -15,8 +15,10 @@ use App\Modules\Learning\Application\Dto\SyncCursor;
 use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
 use App\Modules\Learning\Application\Dto\TriageSyncRow;
+use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Learning\Application\Port\TriageSyncReader;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\TermChangeRef;
@@ -41,6 +43,7 @@ final readonly class GetSyncDeltaHandler
         private TermContentReader $termContent,
         private ProgressSyncReader $progressSync,
         private TriageSyncReader $triageSync,
+        private EnabledModesReader $enabledModes,
         private Clock $clock,
     ) {}
 
@@ -113,7 +116,16 @@ final readonly class GetSyncDeltaHandler
             $pTermRefs,
         );
 
-        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress, $pTriages);
+        // The user's trainer toggles ride along with every page. They are settings, not a change
+        // stream: tiny, and diffing them would buy nothing but a way for a flipped toggle to get
+        // stuck on a client that happened to miss its window. The device applies them to its local
+        // practice builder, so a toggle reaches the phone on the next sync — no reinstall.
+        $modes = array_map(
+            static fn (ExerciseMode $m): string => $m->value,
+            $this->enabledModes->forUser($query->userId)->modes,
+        );
+
+        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress, $pTriages, $modes);
     }
 
     /**

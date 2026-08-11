@@ -37,8 +37,8 @@ use App\Modules\Learning\Domain\ValueObject\TermPlayability;
  * next enabled production mode). That split is what keeps the ladder readable as more modes land —
  * and what will let the list itself come from a stored policy later without touching this logic.
  *
- * Everything degrades only within the enabled set (config), so a mode that isn't switched on is
- * never handed out.
+ * Everything degrades only within the enabled set, so a mode a user has switched off is never
+ * handed out — with one deliberate exception, {@see floor()}.
  */
 final class ExerciseSelector
 {
@@ -49,12 +49,12 @@ final class ExerciseSelector
     ): ExerciseMode {
         // `known` verification is always typing — recognition proves nothing here.
         if ($progress->state() === LearningState::Known) {
-            return $this->prefer(ExerciseMode::Typing, $enabled);
+            return $this->prefer(ExerciseMode::Typing, $enabled, $playable);
         }
 
         // First meeting (reps 0, new/learning/relearning) → recognition.
         if ($progress->state() !== LearningState::Review && $progress->reps() === 0) {
-            return $this->prefer(ExerciseMode::MultipleChoice, $enabled);
+            return $this->prefer(ExerciseMode::MultipleChoice, $enabled, $playable);
         }
 
         // Production rotation. `review` cycles on `reps % n`; the reps ≥ 1 learning/relearning
@@ -74,7 +74,9 @@ final class ExerciseSelector
             return $rotation[$offset % count($rotation)];
         }
 
-        return $this->prefer(ExerciseMode::Typing, $enabled);
+        // The ladder is empty for this term — every rung is either switched off or gated out by the
+        // term's own data.
+        return $this->prefer(ExerciseMode::Typing, $enabled, $playable);
     }
 
     /**
@@ -90,7 +92,7 @@ final class ExerciseSelector
     {
         $applicable = $playable->only($enabled->modes);
         if ($applicable === []) {
-            return $enabled->first(); // typing/MC always apply, so this is only a safety net
+            return $this->floor($enabled, $playable);
         }
 
         $n = count($applicable);
@@ -98,8 +100,42 @@ final class ExerciseSelector
         return $applicable[(($rotation % $n) + $n) % $n]; // guard against a negative seed
     }
 
-    private function prefer(ExerciseMode $mode, EnabledModes $enabled): ExerciseMode
+    /**
+     * Can this term be drilled at all under these toggles? False means every enabled mode is gated
+     * out by the term's data, and the card the learner gets is the {@see floor()} — worth shouting
+     * about, which is the caller's job (Domain does not log).
+     */
+    public function hasApplicableMode(EnabledModes $enabled, TermPlayability $playable): bool
     {
-        return $enabled->has($mode) ? $mode : $enabled->first();
+        return $playable->only($enabled->modes) !== [];
+    }
+
+    /** The mode this rung wants, if it is switched on and the term supports it; else the floor. */
+    private function prefer(ExerciseMode $mode, EnabledModes $enabled, TermPlayability $playable): ExerciseMode
+    {
+        return $enabled->has($mode) && $playable->supports($mode)
+            ? $mode
+            : $this->floor($enabled, $playable);
+    }
+
+    /**
+     * The last resort: multiple_choice, even when it is switched off.
+     *
+     * Toggles are per-user data now, so "no mode applies" is reachable by configuration — switch
+     * off everything but word_bank and cloze, and a single-word term with no example has nowhere to
+     * go. A card must still be playable, and multiple_choice is the only mode that fits every term
+     * (it asks for the term itself and builds its options from other terms). Choosing to honour the
+     * toggles here instead would mean an empty session, which is a worse answer to a misconfigured
+     * toggle than an unexpected exercise.
+     */
+    private function floor(EnabledModes $enabled, TermPlayability $playable): ExerciseMode
+    {
+        foreach ($enabled->modes as $mode) {
+            if ($playable->supports($mode)) {
+                return $mode; // unreachable while MC is enabled, kept so the floor is never worse
+            }
+        }
+
+        return ExerciseMode::MultipleChoice;
     }
 }

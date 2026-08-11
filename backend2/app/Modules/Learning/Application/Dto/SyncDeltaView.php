@@ -19,6 +19,9 @@ final readonly class SyncDeltaView
      * @param  list<TermSyncView>  $terms
      * @param  list<ProgressSyncRow>  $progress
      * @param  list<TriageSyncRow>  $triages
+     * @param  list<string>  $exerciseModes  the trainers this user has switched on, in rotation
+     *                                       order — settings, not a change stream, so they ride
+     *                                       every page rather than being diffed
      */
     public function __construct(
         public DateTimeImmutable $serverTime,
@@ -29,5 +32,6 @@ final readonly class SyncDeltaView
         public array $terms,
         public array $progress,
         public array $triages,
+        public array $exerciseModes = [],
     ) {}
 }

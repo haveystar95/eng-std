@@ -963,6 +963,19 @@ paths:
                       server_time: { type: string, format: date-time, description: Store as the next `since` once has_more is false. }
                       next_cursor: { type: string, nullable: true, description: Pass back verbatim while has_more is true. }
                       has_more: { type: boolean }
+                      settings:
+                        type: object
+                        description: >
+                          The user's settings, sent whole on every page rather than diffed — they are
+                          tiny, and a missed delta would strand a client on stale settings.
+                        properties:
+                          exercise_modes:
+                            type: array
+                            description: >
+                              The trainers this user has switched on, IN ROTATION ORDER (their own
+                              override, or the product default). The client mirrors this into its
+                              offline practice builder, so a toggle takes effect on the next sync.
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
                       changes:
                         type: object
                         properties:

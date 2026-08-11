@@ -37,6 +37,9 @@ Our working rituals are encoded in `.claude/` so they don't depend on a session 
 | `invariant-reviewer` | subagent | **Manual**, run before `/close-task`: checks the diff against the project invariants (Domain purity, progress on (user,term), append-only logs, client_seq order, one «усвоено», cross-module via Application, client reads-from-DB + cursor-in-DB). Reports violations or CLEAN — invariants only, no style. |
 
 New process rules change **here** (a skill/command/hook/agent file), never silently in one commit.
+
+**Новый тренажёр выкатывается ВЫКЛЮЧЕННЫМ глобально** (`learning_mode_settings`, админка →
+«Тренажёры»): включить себе → бете → всем. Код в main ≠ режим у пользователей.
 Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code
 session to register.
 

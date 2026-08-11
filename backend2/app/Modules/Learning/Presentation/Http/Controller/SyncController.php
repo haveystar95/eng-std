@@ -75,6 +75,9 @@ final class SyncController
             'server_time' => $view->serverTime->format(DATE_ATOM),
             'next_cursor' => $view->nextCursor,
             'has_more' => $view->hasMore,
+            // Settings, not a change stream — see GetSyncDeltaHandler. The client mirrors this into
+            // its practice builder, which is how a flipped trainer toggle reaches the device.
+            'settings' => ['exercise_modes' => $view->exerciseModes],
             'changes' => [
                 'collections' => array_map($this->collection(...), $view->collections),
                 'collection_items' => array_map($this->item(...), $view->collectionItems),
