@@ -1254,6 +1254,28 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _acceptedVariantsMeta = const VerificationMeta(
+    'acceptedVariants',
+  );
+  @override
+  late final GeneratedColumn<String> acceptedVariants = GeneratedColumn<String>(
+    'accepted_variants',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exampleDistractorsMeta =
+      const VerificationMeta('exampleDistractors');
+  @override
+  late final GeneratedColumn<String> exampleDistractors =
+      GeneratedColumn<String>(
+        'example_distractors',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1277,6 +1299,8 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     imageUrl,
     imageAuthor,
     imageAuthorUrl,
+    acceptedVariants,
+    exampleDistractors,
     updatedAt,
   ];
   @override
@@ -1365,6 +1389,24 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         ),
       );
     }
+    if (data.containsKey('accepted_variants')) {
+      context.handle(
+        _acceptedVariantsMeta,
+        acceptedVariants.isAcceptableOrUnknown(
+          data['accepted_variants']!,
+          _acceptedVariantsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('example_distractors')) {
+      context.handle(
+        _exampleDistractorsMeta,
+        exampleDistractors.isAcceptableOrUnknown(
+          data['example_distractors']!,
+          _exampleDistractorsMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -1422,6 +1464,14 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         DriftSqlType.string,
         data['${effectivePrefix}image_author_url'],
       ),
+      acceptedVariants: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accepted_variants'],
+      ),
+      exampleDistractors: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example_distractors'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -1446,6 +1496,19 @@ class Term extends DataClass implements Insertable<Term> {
   final String? imageUrl;
   final String? imageAuthor;
   final String? imageAuthorUrl;
+
+  /// Other answers that also count as correct, as a JSON array of strings. Needed OFFLINE: the
+  /// instant check grades against `{termText} ∪ acceptedVariants`, so a device without them would
+  /// reject an answer the server accepts.
+  ///
+  /// JSON in a column rather than a child table on purpose — `/sync` sends a term's whole variant
+  /// list on every term upsert, so one write replaces the whole set atomically and there is no
+  /// orphan row to clean up. A child table would buy queryability nothing here needs.
+  final String? acceptedVariants;
+
+  /// Wrong versions of [example], as a JSON array of objects. Mirrored ahead of the trainer that
+  /// reads them, so it works offline the day it is switched on.
+  final String? exampleDistractors;
   final DateTime updatedAt;
   const Term({
     required this.id,
@@ -1458,6 +1521,8 @@ class Term extends DataClass implements Insertable<Term> {
     this.imageUrl,
     this.imageAuthor,
     this.imageAuthorUrl,
+    this.acceptedVariants,
+    this.exampleDistractors,
     required this.updatedAt,
   });
   @override
@@ -1488,6 +1553,12 @@ class Term extends DataClass implements Insertable<Term> {
     }
     if (!nullToAbsent || imageAuthorUrl != null) {
       map['image_author_url'] = Variable<String>(imageAuthorUrl);
+    }
+    if (!nullToAbsent || acceptedVariants != null) {
+      map['accepted_variants'] = Variable<String>(acceptedVariants);
+    }
+    if (!nullToAbsent || exampleDistractors != null) {
+      map['example_distractors'] = Variable<String>(exampleDistractors);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1521,6 +1592,12 @@ class Term extends DataClass implements Insertable<Term> {
       imageAuthorUrl: imageAuthorUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageAuthorUrl),
+      acceptedVariants: acceptedVariants == null && nullToAbsent
+          ? const Value.absent()
+          : Value(acceptedVariants),
+      exampleDistractors: exampleDistractors == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exampleDistractors),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1543,6 +1620,10 @@ class Term extends DataClass implements Insertable<Term> {
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
       imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
+      acceptedVariants: serializer.fromJson<String?>(json['acceptedVariants']),
+      exampleDistractors: serializer.fromJson<String?>(
+        json['exampleDistractors'],
+      ),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1560,6 +1641,8 @@ class Term extends DataClass implements Insertable<Term> {
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'imageAuthor': serializer.toJson<String?>(imageAuthor),
       'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
+      'acceptedVariants': serializer.toJson<String?>(acceptedVariants),
+      'exampleDistractors': serializer.toJson<String?>(exampleDistractors),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -1575,6 +1658,8 @@ class Term extends DataClass implements Insertable<Term> {
     Value<String?> imageUrl = const Value.absent(),
     Value<String?> imageAuthor = const Value.absent(),
     Value<String?> imageAuthorUrl = const Value.absent(),
+    Value<String?> acceptedVariants = const Value.absent(),
+    Value<String?> exampleDistractors = const Value.absent(),
     DateTime? updatedAt,
   }) => Term(
     id: id ?? this.id,
@@ -1593,6 +1678,12 @@ class Term extends DataClass implements Insertable<Term> {
     imageAuthorUrl: imageAuthorUrl.present
         ? imageAuthorUrl.value
         : this.imageAuthorUrl,
+    acceptedVariants: acceptedVariants.present
+        ? acceptedVariants.value
+        : this.acceptedVariants,
+    exampleDistractors: exampleDistractors.present
+        ? exampleDistractors.value
+        : this.exampleDistractors,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Term copyWithCompanion(TermsCompanion data) {
@@ -1617,6 +1708,12 @@ class Term extends DataClass implements Insertable<Term> {
       imageAuthorUrl: data.imageAuthorUrl.present
           ? data.imageAuthorUrl.value
           : this.imageAuthorUrl,
+      acceptedVariants: data.acceptedVariants.present
+          ? data.acceptedVariants.value
+          : this.acceptedVariants,
+      exampleDistractors: data.exampleDistractors.present
+          ? data.exampleDistractors.value
+          : this.exampleDistractors,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1634,6 +1731,8 @@ class Term extends DataClass implements Insertable<Term> {
           ..write('imageUrl: $imageUrl, ')
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
+          ..write('acceptedVariants: $acceptedVariants, ')
+          ..write('exampleDistractors: $exampleDistractors, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1651,6 +1750,8 @@ class Term extends DataClass implements Insertable<Term> {
     imageUrl,
     imageAuthor,
     imageAuthorUrl,
+    acceptedVariants,
+    exampleDistractors,
     updatedAt,
   );
   @override
@@ -1667,6 +1768,8 @@ class Term extends DataClass implements Insertable<Term> {
           other.imageUrl == this.imageUrl &&
           other.imageAuthor == this.imageAuthor &&
           other.imageAuthorUrl == this.imageAuthorUrl &&
+          other.acceptedVariants == this.acceptedVariants &&
+          other.exampleDistractors == this.exampleDistractors &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -1681,6 +1784,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
   final Value<String?> imageUrl;
   final Value<String?> imageAuthor;
   final Value<String?> imageAuthorUrl;
+  final Value<String?> acceptedVariants;
+  final Value<String?> exampleDistractors;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermsCompanion({
@@ -1694,6 +1799,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.imageUrl = const Value.absent(),
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
+    this.acceptedVariants = const Value.absent(),
+    this.exampleDistractors = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1708,6 +1815,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.imageUrl = const Value.absent(),
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
+    this.acceptedVariants = const Value.absent(),
+    this.exampleDistractors = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1723,6 +1832,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Expression<String>? imageUrl,
     Expression<String>? imageAuthor,
     Expression<String>? imageAuthorUrl,
+    Expression<String>? acceptedVariants,
+    Expression<String>? exampleDistractors,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -1737,6 +1848,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
       if (imageUrl != null) 'image_url': imageUrl,
       if (imageAuthor != null) 'image_author': imageAuthor,
       if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
+      if (acceptedVariants != null) 'accepted_variants': acceptedVariants,
+      if (exampleDistractors != null) 'example_distractors': exampleDistractors,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1753,6 +1866,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Value<String?>? imageUrl,
     Value<String?>? imageAuthor,
     Value<String?>? imageAuthorUrl,
+    Value<String?>? acceptedVariants,
+    Value<String?>? exampleDistractors,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -1767,6 +1882,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
       imageUrl: imageUrl ?? this.imageUrl,
       imageAuthor: imageAuthor ?? this.imageAuthor,
       imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
+      acceptedVariants: acceptedVariants ?? this.acceptedVariants,
+      exampleDistractors: exampleDistractors ?? this.exampleDistractors,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1805,6 +1922,12 @@ class TermsCompanion extends UpdateCompanion<Term> {
     if (imageAuthorUrl.present) {
       map['image_author_url'] = Variable<String>(imageAuthorUrl.value);
     }
+    if (acceptedVariants.present) {
+      map['accepted_variants'] = Variable<String>(acceptedVariants.value);
+    }
+    if (exampleDistractors.present) {
+      map['example_distractors'] = Variable<String>(exampleDistractors.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -1827,6 +1950,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
           ..write('imageUrl: $imageUrl, ')
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
+          ..write('acceptedVariants: $acceptedVariants, ')
+          ..write('exampleDistractors: $exampleDistractors, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5491,6 +5616,8 @@ typedef $$TermsTableCreateCompanionBuilder =
       Value<String?> imageUrl,
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
+      Value<String?> acceptedVariants,
+      Value<String?> exampleDistractors,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -5506,6 +5633,8 @@ typedef $$TermsTableUpdateCompanionBuilder =
       Value<String?> imageUrl,
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
+      Value<String?> acceptedVariants,
+      Value<String?> exampleDistractors,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -5565,6 +5694,16 @@ class $$TermsTableFilterComposer extends Composer<_$AppDatabase, $TermsTable> {
 
   ColumnFilters<String> get imageAuthorUrl => $composableBuilder(
     column: $table.imageAuthorUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get acceptedVariants => $composableBuilder(
+    column: $table.acceptedVariants,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exampleDistractors => $composableBuilder(
+    column: $table.exampleDistractors,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5633,6 +5772,16 @@ class $$TermsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get acceptedVariants => $composableBuilder(
+    column: $table.acceptedVariants,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exampleDistractors => $composableBuilder(
+    column: $table.exampleDistractors,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -5688,6 +5837,16 @@ class $$TermsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get acceptedVariants => $composableBuilder(
+    column: $table.acceptedVariants,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get exampleDistractors => $composableBuilder(
+    column: $table.exampleDistractors,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -5730,6 +5889,8 @@ class $$TermsTableTableManager
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
+                Value<String?> acceptedVariants = const Value.absent(),
+                Value<String?> exampleDistractors = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion(
@@ -5743,6 +5904,8 @@ class $$TermsTableTableManager
                 imageUrl: imageUrl,
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
+                acceptedVariants: acceptedVariants,
+                exampleDistractors: exampleDistractors,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -5758,6 +5921,8 @@ class $$TermsTableTableManager
                 Value<String?> imageUrl = const Value.absent(),
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
+                Value<String?> acceptedVariants = const Value.absent(),
+                Value<String?> exampleDistractors = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion.insert(
@@ -5771,6 +5936,8 @@ class $$TermsTableTableManager
                 imageUrl: imageUrl,
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
+                acceptedVariants: acceptedVariants,
+                exampleDistractors: exampleDistractors,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

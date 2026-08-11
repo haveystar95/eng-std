@@ -37,6 +37,32 @@ final class EloquentTermContentReader implements TermContentReader
             $examples[(string) $row->term_id] ??= $row;
         }
 
+        // The device grades typed answers offline against {text ∪ variants}, so the variants travel
+        // with the term. Without them the client rejects an answer the server accepts, and the
+        // learner sees «Не то» on a card the scheduler then counts as correct.
+        $variants = [];
+        foreach (DB::table('term_accepted_variants')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
+            $variants[(string) $row->term_id][] = (string) $row->text;
+        }
+
+        // Distractors hang off the PINNED example's id, so only that example's rows are shipped.
+        $exampleIds = [];
+        foreach ($examples as $termId => $row) {
+            $exampleIds[(string) $row->id] = (string) $termId;
+        }
+        $distractors = [];
+        if ($exampleIds !== []) {
+            foreach (DB::table('example_distractors')->whereIn('example_id', array_keys($exampleIds))->orderBy('id')
+                ->get(['example_id', 'sentence', 'error_type', 'error_span', 'correction']) as $row) {
+                $distractors[$exampleIds[(string) $row->example_id]][] = [
+                    'sentence' => (string) $row->sentence,
+                    'error_type' => (string) $row->error_type,
+                    'error_span' => (string) $row->error_span,
+                    'correction' => (string) $row->correction,
+                ];
+            }
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get() as $term) {
             $id = (string) $term->id;
@@ -54,6 +80,8 @@ final class EloquentTermContentReader implements TermContentReader
                 imageUrl: $term->image_url !== null ? (string) $term->image_url : null,
                 imageAuthor: $term->image_author !== null ? (string) $term->image_author : null,
                 imageAuthorUrl: $term->image_author_url !== null ? (string) $term->image_author_url : null,
+                acceptedVariants: $variants[$id] ?? [],
+                exampleDistractors: $distractors[$id] ?? [],
             );
         }
 

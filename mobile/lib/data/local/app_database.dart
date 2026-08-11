@@ -58,6 +58,17 @@ class Terms extends Table {
   TextColumn get imageUrl => text().nullable()();
   TextColumn get imageAuthor => text().nullable()();
   TextColumn get imageAuthorUrl => text().nullable()();
+  /// Other answers that also count as correct, as a JSON array of strings. Needed OFFLINE: the
+  /// instant check grades against `{termText} ∪ acceptedVariants`, so a device without them would
+  /// reject an answer the server accepts.
+  ///
+  /// JSON in a column rather than a child table on purpose — `/sync` sends a term's whole variant
+  /// list on every term upsert, so one write replaces the whole set atomically and there is no
+  /// orphan row to clean up. A child table would buy queryability nothing here needs.
+  TextColumn get acceptedVariants => text().nullable()();
+  /// Wrong versions of [example], as a JSON array of objects. Mirrored ahead of the trainer that
+  /// reads them, so it works offline the day it is switched on.
+  TextColumn get exampleDistractors => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -239,7 +250,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -273,6 +284,19 @@ class AppDatabase extends _$AppDatabase {
           // Disk cache for remote images (F22): photos seen once stay visible offline and across
           // restarts. The files are created lazily, so there is nothing to backfill here.
           if (from < 9) await m.createTable(cachedImages);
+          if (from < 10) {
+            // Enrichment станок: accepted variants (needed for offline typed grading) and example
+            // distractors (mirrored ahead of the trainer that reads them).
+            await m.addColumn(terms, terms.acceptedVariants);
+            await m.addColumn(terms, terms.exampleDistractors);
+            // Drop the sync cursor so the next sync is a FULL snapshot. A delta only carries terms
+            // whose `updated_at` moved, so terms already mirrored here would otherwise keep their
+            // new columns null forever — and a null variant list is exactly the state where the
+            // client grades an answer wrong that the server grades right.
+            await m.database.customStatement(
+              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
+            );
+          }
         },
       );
 

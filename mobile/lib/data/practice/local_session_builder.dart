@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import '../api_client.dart';
@@ -120,7 +121,25 @@ abstract final class LocalPracticeSessionBuilder {
       exampleTranslation: term.exampleTranslation,
       options: options,
       chips: chips,
+      // Same rule as the server's StudyCardAssembler: variants belong to the TERM, so they apply
+      // only while the answer is the term. On scramble/dictation the answer is the sentence.
+      acceptedVariants: mode.asksForExample ? const [] : _variantsOf(term),
     );
+  }
+
+  /// The term's accepted variants, as mirrored by `/sync` (a JSON array in one column). Malformed
+  /// or absent JSON degrades to "no variants": that only makes the check stricter than the server,
+  /// never looser, so a bad row can never let a wrong answer pass.
+  static List<String> _variantsOf(Term term) {
+    final raw = term.acceptedVariants;
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return decoded.whereType<String>().toList(growable: false);
+    } on FormatException {
+      return const [];
+    }
   }
 
   /// Word chips for a phrase, letter chips for a single word — so word_bank never degenerates into

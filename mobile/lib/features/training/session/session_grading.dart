@@ -7,9 +7,10 @@ import '../../../data/models.dart';
 /// contractions, optional leading article) and its single-character-typo tolerance on long-enough
 /// answers, so anything the server would accept, the client also shows as accepted.
 ///
-/// It knows only the card's own canonical answer, not the server's full synonym set, so it can be
-/// *more* lenient in edge cases (a rejected synonym still schedules correctly once the server
-/// folds it) — but it is never harsher. Pure and unit-tested.
+/// It now grades against the same SET the server does — the card's answer plus its
+/// `accepted_variants` — because the device grades offline and a client that didn't know the
+/// variants would show «Не то» for an answer the scheduler then counts as correct. Pure and
+/// unit-tested.
 enum LocalCheck {
   /// Exact after normalisation — «Верно».
   correct,
@@ -29,15 +30,30 @@ abstract final class SessionGrader {
   /// Typo leniency only kicks in for longer answers, else "cat"/"cut" pass as correct.
   static const int _minTypoLength = 5;
 
-  /// Check a raw [response] against the card's canonical [answer]. Uniform across modes: a
-  /// multiple-choice pick, an assembled word_bank string and typed text all normalise-compare the
-  /// same way (matching the server, which grades every mode through one path).
-  static LocalCheck check(String response, String answer) {
+  /// Check a raw [response] against the card's canonical [answer] plus any [variants] that are
+  /// equally correct. Uniform across modes: a multiple-choice pick, an assembled word_bank string
+  /// and typed text (typing / cloze / dictation) all run this one path — matching the server, which
+  /// also grades every mode through one grader.
+  ///
+  /// Staged exactly like the server's [AnswerGrader]: an exact match on ANY accepted form first,
+  /// then a one-character typo against any of them. Doing it in that order matters — checking typos
+  /// per-candidate before exhausting the exact matches could report «Почти» for something that is
+  /// simply a correct variant.
+  static LocalCheck check(
+    String response,
+    String answer, {
+    List<String> variants = const [],
+  }) {
     final r = _normalize(response);
-    final a = _normalize(answer);
     if (r.isEmpty) return LocalCheck.wrong; // «Не помню» / blank
-    if (r == a) return LocalCheck.correct;
-    if (_isTypo(r, a)) return LocalCheck.typo;
+
+    final accepted = [answer, ...variants].map(_normalize).where((a) => a.isNotEmpty);
+    for (final a in accepted) {
+      if (r == a) return LocalCheck.correct;
+    }
+    for (final a in accepted) {
+      if (_isTypo(r, a)) return LocalCheck.typo;
+    }
     return LocalCheck.wrong;
   }
 

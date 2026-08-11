@@ -185,6 +185,11 @@ class SessionCard {
   final List<String>? options; // multiple_choice — answer + distractors, shuffled
   final List<String>? chips; // word_bank — the answer's tokens, shuffled
 
+  /// Other answers that also count as correct for [answer], so the instant check matches the
+  /// server's. Always empty on the sentence modes (scramble, dictation), where [answer] is the
+  /// example sentence — a variant of the term is not a variant of the sentence.
+  final List<String> acceptedVariants;
+
   SessionCard({
     required this.termId,
     required this.mode,
@@ -196,6 +201,7 @@ class SessionCard {
     this.exampleTranslation,
     this.options,
     this.chips,
+    this.acceptedVariants = const [],
   });
 
   bool get isPhrase => type != 'word';
@@ -211,6 +217,8 @@ class SessionCard {
         exampleTranslation: j['example_translation'] as String?,
         options: (j['options'] as List?)?.map((e) => e as String).toList(),
         chips: (j['chips'] as List?)?.map((e) => e as String).toList(),
+        acceptedVariants:
+            (j['accepted_variants'] as List?)?.map((e) => e as String).toList() ?? const [],
       );
 }
 

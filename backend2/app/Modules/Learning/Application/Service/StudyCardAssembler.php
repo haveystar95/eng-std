@@ -109,6 +109,10 @@ final readonly class StudyCardAssembler
             exampleTranslation: $content->exampleTranslation,
             options: $options,
             chips: $chips,
+            // Only when this card's answer IS the term. On scramble/dictation the answer is the
+            // example sentence, and the server's own expected set is that sentence alone — sending
+            // the term's variants there would make the client accept what the server rejects.
+            acceptedVariants: $mode->gradesAgainstExample() ? [] : $content->acceptedVariants,
         );
     }
 

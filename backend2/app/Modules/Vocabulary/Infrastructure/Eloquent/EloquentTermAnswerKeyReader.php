@@ -28,14 +28,20 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
             $examples[(string) $row->term_id] ??= (string) $row->sentence;
         }
 
+        // The alternative forms this reader's shape was always waiting for: variants the enrichment
+        // станок validated (`this`/`that`, `may`/`can`, colour/color). Still only target-language
+        // text the term itself owns — a translation is never an accepted answer.
+        $variants = [];
+        foreach (DB::table('term_accepted_variants')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
+            $variants[(string) $row->term_id][] = (string) $row->text;
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'type']) as $row) {
             $id = (string) $row->id;
-            // One accepted form today (the term text); alternative spellings/forms join this set
-            // later via a term_forms table, without changing the reader's shape.
             $out[$id] = new TermAnswerKeyView(
                 termId: $id,
-                accepted: [(string) $row->text],
+                accepted: [(string) $row->text, ...($variants[$id] ?? [])],
                 isPhrase: TermType::from((string) $row->type)->isPhraseLike(),
                 example: $examples[$id] ?? null,
             );

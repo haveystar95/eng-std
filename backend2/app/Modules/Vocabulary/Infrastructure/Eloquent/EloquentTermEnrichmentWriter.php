@@ -24,12 +24,13 @@ final class EloquentTermEnrichmentWriter implements TermEnrichmentWriter
 
         DB::transaction(function () use ($termId, $exampleId, $variants, $distractors, $generatorVersion): void {
             $now = now();
+            $written = 0;
 
             if ($variants !== []) {
                 // insertOrIgnore against `term_accepted_variants_uidx`: a variant this term already
                 // accepts keeps its existing row (and its hand-edited note), so a re-run neither
                 // duplicates nor overwrites. Same reason the distractor insert below is ignoring.
-                DB::table('term_accepted_variants')->insertOrIgnore(array_map(
+                $written += DB::table('term_accepted_variants')->insertOrIgnore(array_map(
                     static fn ($v): array => [
                         'id' => Ulid::generate(),
                         'term_id' => $termId->value,
@@ -44,7 +45,7 @@ final class EloquentTermEnrichmentWriter implements TermEnrichmentWriter
             }
 
             if ($exampleId !== null && $distractors !== []) {
-                DB::table('example_distractors')->insertOrIgnore(array_map(
+                $written += DB::table('example_distractors')->insertOrIgnore(array_map(
                     static fn ($d): array => [
                         'id' => Ulid::generate(),
                         'example_id' => $exampleId,
@@ -58,6 +59,15 @@ final class EloquentTermEnrichmentWriter implements TermEnrichmentWriter
                     ],
                     $distractors,
                 ));
+            }
+
+            // The delta feed decides what to ship by `terms.updated_at`, and these rows live in
+            // OTHER tables — so without this touch the станок's output would sit on the server
+            // invisible to every already-synced device, and offline grading would keep rejecting
+            // answers the server accepts. Touched only when something was actually inserted, so a
+            // no-op re-run doesn't re-send the whole collection to every client.
+            if ($written > 0) {
+                DB::table('terms')->where('id', $termId->value)->update(['updated_at' => $now]);
             }
         });
     }

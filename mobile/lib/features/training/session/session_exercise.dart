@@ -210,7 +210,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   void _commit(String response, {bool usedHint = false}) {
     if (_answered) return;
-    final verdict = SessionGrader.check(response, _card.answer);
+    final verdict = SessionGrader.check(
+      response,
+      _card.answer,
+      variants: _card.acceptedVariants,
+    );
     switch (verdict) {
       case LocalCheck.correct:
       case LocalCheck.typo:
@@ -555,7 +559,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _SessionOption(
             text: o,
             answered: _answered,
-            isAnswer: SessionGrader.check(o, _card.answer).isAccepted,
+            // Same accepted set as _commit, so the option highlighted as correct is exactly the
+            // one that would be graded correct — not a narrower guess.
+            isAnswer: SessionGrader.check(o, _card.answer, variants: _card.acceptedVariants)
+                .isAccepted,
             isPicked: _picked == o,
             onTap: () => _pick(o),
           ),

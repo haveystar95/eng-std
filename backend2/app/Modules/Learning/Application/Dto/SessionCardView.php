@@ -14,6 +14,9 @@ final readonly class SessionCardView
     /**
      * @param  list<string>|null  $options  multiple_choice: the answer plus distractors, shuffled
      * @param  list<string>|null  $chips    word_bank: the answer's tokens, shuffled
+     * @param  list<string>  $acceptedVariants  other answers that count as correct for THIS card's
+     *        `answer`, so the client's instant check matches the server's. Empty on the
+     *        sentence-graded modes: a variant of the term is not a variant of the sentence.
      */
     public function __construct(
         public string $termId,
@@ -26,5 +29,6 @@ final readonly class SessionCardView
         public ?string $exampleTranslation,
         public ?array $options,
         public ?array $chips,
+        public array $acceptedVariants = [],
     ) {}
 }

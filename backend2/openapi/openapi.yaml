@@ -1028,6 +1028,26 @@ paths:
                                 image_url: { type: string, nullable: true, description: 'Pexels photo; null = none, show a placeholder' }
                                 image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
                                 image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
+                                accepted_variants:
+                                  type: array
+                                  description: >
+                                    Extra CORRECT answers for this term, beyond `text` (e.g. this/that, may/can,
+                                    colour/color). The client grades typed answers offline against
+                                    `{text} ∪ accepted_variants` — the same set the server grades against, so the
+                                    device is never stricter than the server. Empty when the term has none.
+                                  items: { type: string }
+                                example_distractors:
+                                  type: array
+                                  description: >
+                                    Deliberately WRONG versions of `example`, each with its error typed and located.
+                                    Mirrored ahead of the trainer that consumes them; no client feature reads these yet.
+                                  items:
+                                    type: object
+                                    properties:
+                                      sentence: { type: string }
+                                      error_type: { type: string, enum: [article, preposition, tense, word_order, false_friend, modal_to] }
+                                      error_span: { type: string, description: 'the wrong fragment, verbatim from `sentence`' }
+                                      correction: { type: string }
                           progress:
                             type: array
                             items:
@@ -1308,6 +1328,15 @@ components:
           type: array
           nullable: true
           description: "Tiles to assemble the answer from, shuffled (never in the answer's own order). word_bank — the term's words, or its letters when it is a single word; scramble — the example sentence's words (final `.`/`!`/`?` dropped, inner punctuation kept on its word)"
+          items: { type: string }
+        accepted_variants:
+          type: array
+          description: >
+            Other answers that also count as correct for THIS card's `answer` (e.g. this/that,
+            may/can). The client's instant check tests `{answer} ∪ accepted_variants` so it is never
+            stricter than the server. Always an empty list on the sentence-graded modes
+            (`scramble`, `dictation`): a variant of the term is not a variant of the sentence, and
+            the server's expected set there is the sentence alone.
           items: { type: string }
 
     TriageCard:

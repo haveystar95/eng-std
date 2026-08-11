@@ -87,6 +87,82 @@ void main() {
     });
   });
 
+  // The станок's accepted variants are the client's half of "never stricter than the server". The
+  // server folds them into its answer key; if the device didn't, it would print «Не то» on a card
+  // the scheduler counts as correct — the one disagreement the invariant forbids.
+  group('SessionGrader.check — accepted variants (offline grading agrees with the server)', () {
+    test('a variant is accepted, not rejected', () {
+      expect(
+        SessionGrader.check('that is my seat', 'this is my seat',
+            variants: const ['that is my seat']),
+        LocalCheck.correct,
+      );
+    });
+    test('the canonical answer still wins when variants are present', () {
+      expect(
+        SessionGrader.check('this is my seat', 'this is my seat',
+            variants: const ['that is my seat']),
+        LocalCheck.correct,
+      );
+    });
+    test('a typo against a VARIANT is «Почти», not «Не то»', () {
+      expect(
+        SessionGrader.check('that is my seaf', 'this is my seat',
+            variants: const ['that is my seat']),
+        LocalCheck.typo,
+      );
+    });
+    test('an exact variant beats a typo on the canonical answer', () {
+      // "may I" is one edit from "can I", and also an exact variant. Exact must win, else a correct
+      // answer would be reported as «Почти» and look like a mistake to the learner.
+      expect(
+        SessionGrader.check('may I', 'can I', variants: const ['may I']),
+        LocalCheck.correct,
+      );
+    });
+    test('something outside the set is still wrong', () {
+      expect(
+        SessionGrader.check('this is my chair', 'this is my seat',
+            variants: const ['that is my seat']),
+        LocalCheck.wrong,
+      );
+    });
+    test('no variants behaves exactly as before', () {
+      expect(SessionGrader.check('withdraw', 'withdraw'), LocalCheck.correct);
+      expect(SessionGrader.check('deposit', 'withdraw'), LocalCheck.wrong);
+    });
+    test('blank is wrong even with variants on the card', () {
+      expect(SessionGrader.check('   ', 'withdraw', variants: const ['take out']),
+          LocalCheck.wrong);
+    });
+    test('an empty variant string cannot make everything correct', () {
+      expect(SessionGrader.check('nonsense', 'withdraw', variants: const ['', '   ']),
+          LocalCheck.wrong);
+    });
+  });
+
+  group('SessionCard.fromJson — accepted_variants', () {
+    test('reads the list from the wire', () {
+      final card = SessionCard.fromJson({
+        'term_id': 't1',
+        'exercise_mode': 'typing',
+        'answer': 'this is my seat',
+        'accepted_variants': ['that is my seat'],
+      });
+
+      expect(card.acceptedVariants, ['that is my seat']);
+    });
+    test('an absent field is an empty list, never null', () {
+      final card = SessionCard.fromJson({
+        'term_id': 't1',
+        'exercise_mode': 'typing',
+        'answer': 'x',
+      });
+
+      expect(card.acceptedVariants, isEmpty);
+    });
+  });
+
   group('ExerciseMode.fromWire — forward-compatible', () {
     test('known wires map', () {
       expect(ExerciseMode.fromWire('word_bank'), ExerciseMode.wordBank);

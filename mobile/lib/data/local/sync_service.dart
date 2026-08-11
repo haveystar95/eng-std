@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
@@ -207,6 +208,11 @@ class SyncService {
         imageUrl: Value(t['image_url'] as String?),
         imageAuthor: Value(t['image_author'] as String?),
         imageAuthorUrl: Value(t['image_author_url'] as String?),
+        // Stored as the JSON the server sent. Encoding it back rather than keeping the raw string
+        // keeps the column's shape ours, not the wire's — and an absent key becomes null, not the
+        // string "null".
+        acceptedVariants: Value(_jsonOrNull(t['accepted_variants'])),
+        exampleDistractors: Value(_jsonOrNull(t['example_distractors'])),
       ));
     }
 
@@ -293,4 +299,9 @@ class SyncService {
 
   static DateTime _dt(Object? v) => DateTime.parse(v as String);
   static DateTime? _dtn(Object? v) => v == null ? null : DateTime.parse(v as String);
+
+  /// A list from the wire, re-encoded for storage. An empty list stores as null so "the server said
+  /// none" and "we haven't synced this yet" collapse into one cheap check at read time.
+  static String? _jsonOrNull(Object? v) =>
+      v is List && v.isNotEmpty ? jsonEncode(v) : null;
 }

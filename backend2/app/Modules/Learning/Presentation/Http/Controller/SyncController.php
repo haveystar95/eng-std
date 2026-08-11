@@ -144,6 +144,14 @@ final class SyncController
             'image_url' => $c?->imageUrl,
             'image_author' => $c?->imageAuthor,
             'image_author_url' => $c?->imageAuthorUrl,
+            // Additive, and required rather than cosmetic: the client grades typed answers from its
+            // own database, so it has to hold the same accepted set the server grades against.
+            // Absent variants would make the device stricter than the server, which the invariant
+            // «клиентская проверка никогда не строже серверной» forbids.
+            'accepted_variants' => $c->acceptedVariants ?? [],
+            // Shipped ahead of the trainer that reads them, so the device already has them offline
+            // when find_the_mistake is switched on.
+            'example_distractors' => $c->exampleDistractors ?? [],
         ];
     }
 

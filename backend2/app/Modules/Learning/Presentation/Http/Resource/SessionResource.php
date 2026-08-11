@@ -28,6 +28,7 @@ final class SessionResource extends JsonResource
                 'example_translation' => $card->exampleTranslation,
                 'options' => $card->options,
                 'chips' => $card->chips,
+                'accepted_variants' => $card->acceptedVariants,
             ], $this->resource->cards),
         ];
     }
