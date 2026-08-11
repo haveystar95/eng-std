@@ -15,5 +15,9 @@ use DateTimeZone;
  */
 interface StatsReader
 {
-    public function read(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): StatsView;
+    /**
+     * @param  int  $newGoal   the user's daily new-term quota (clamped), as the session builder sees it
+     * @param  int  $newToday  new terms already introduced today, on the same accounting the quota uses
+     */
+    public function read(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $newGoal, int $newToday): StatsView;
 }

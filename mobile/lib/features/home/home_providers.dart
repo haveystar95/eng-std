@@ -16,6 +16,7 @@ final homeCtaProvider = Provider<HomeCta>((ref) {
     due: stats.dueToday,
     learnableByCollection: learnable,
     untriagedByCollection: untriaged,
+    remainingNewQuota: stats.newRemaining,
   );
 });
 

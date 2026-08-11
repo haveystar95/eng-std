@@ -690,6 +690,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get homeLimitReachedTitle => 'Лимит новых на сегодня';
+
+  @override
+  String get homeLimitReachedHint =>
+      'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.';
+
+  @override
   String get homeAllDoneTitle => 'На сегодня всё';
 
   @override

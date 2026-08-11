@@ -395,6 +395,11 @@ class Stats {
   /// calendar (F18). Merged into the local `daily_activity` map so a relogin restores it.
   final List<String> activeDays;
 
+  /// Daily NEW-term quota state (F13). [newRemaining] = how many new terms a "Learn N" home CTA
+  /// may still introduce today (0 = new-term limit reached; reviews are never gated by it).
+  final int newGoal;
+  final int newRemaining;
+
   Stats({
     required this.totalWords,
     required this.learned,
@@ -403,6 +408,8 @@ class Stats {
     required this.reviewsTotal,
     required this.streakDays,
     this.activeDays = const [],
+    this.newGoal = 0,
+    this.newRemaining = 0,
   });
 
   factory Stats.fromJson(Map<String, dynamic> j) => Stats(
@@ -413,6 +420,8 @@ class Stats {
         reviewsTotal: (j['reviews_today'] as int?) ?? 0,
         streakDays: (j['streak_days'] as int?) ?? 0,
         activeDays: (j['active_days'] as List?)?.map((e) => e as String).toList() ?? const [],
+        newGoal: (j['new_goal'] as int?) ?? 0,
+        newRemaining: (j['new_remaining'] as int?) ?? 0,
       );
 }
 

@@ -473,14 +473,16 @@ class _CtaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    if (cta.kind == HomeCtaKind.none) return const SizedBox.shrink();
+    // limitReached is a home-only state (F13); computeCollectionCta never emits it — guard + a
+    // defensive switch arm keep this exhaustive without changing the collection screen's behaviour.
+    if (cta.kind == HomeCtaKind.none || cta.kind == HomeCtaKind.limitReached) return const SizedBox.shrink();
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
       HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
       HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false, learn: true), true),
       HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
       HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
-      HomeCtaKind.none => ('', '', () => onSession(false), false),
+      HomeCtaKind.limitReached || HomeCtaKind.none => ('', '', () => onSession(false), false),
     };
 
     final fg = filled ? AppColors.paper : AppColors.ink;

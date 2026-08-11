@@ -574,6 +574,12 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
+  "homeLimitReachedTitle": "Лимит новых на сегодня",
+  "@homeLimitReachedTitle": { "description": "Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13)." },
+
+  "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
+  "@homeLimitReachedHint": { "description": "Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту." },
+
   "homeAllDoneTitle": "На сегодня всё",
   "@homeAllDoneTitle": { "description": "Заголовок карточки «всё повторено» (кадр 9b)." },
 

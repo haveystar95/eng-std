@@ -215,7 +215,9 @@ final statsProvider = StreamProvider<Stats>((ref) async* {
   await for (final rows in db.watchAllProgress()) {
     final streak = int.tryParse(await db.getMeta(SyncKeys.streak) ?? '') ?? 0;
     final reviews = int.tryParse(await db.getMeta(SyncKeys.reviewsToday) ?? '') ?? 0;
-    yield _deriveStats(rows, streak: streak, reviewsToday: reviews);
+    final newGoal = int.tryParse(await db.getMeta(SyncKeys.newGoal) ?? '') ?? 0;
+    final newRemaining = int.tryParse(await db.getMeta(SyncKeys.newRemaining) ?? '') ?? 0;
+    yield _deriveStats(rows, streak: streak, reviewsToday: reviews, newGoal: newGoal, newRemaining: newRemaining);
   }
 });
 
@@ -368,7 +370,13 @@ const int _masteredIntervalDays = 21;
 bool _isMastered(String? state, int intervalDays) =>
     state == 'known' || (state == 'review' && intervalDays >= _masteredIntervalDays);
 
-Stats _deriveStats(List<TermProgressData> rows, {required int streak, required int reviewsToday}) {
+Stats _deriveStats(
+  List<TermProgressData> rows, {
+  required int streak,
+  required int reviewsToday,
+  int newGoal = 0,
+  int newRemaining = 0,
+}) {
   final now = DateTime.now();
   var learned = 0, mastered = 0, due = 0;
   for (final r in rows) {
@@ -383,6 +391,8 @@ Stats _deriveStats(List<TermProgressData> rows, {required int streak, required i
     dueToday: due,
     reviewsTotal: reviewsToday,
     streakDays: streak,
+    newGoal: newGoal,
+    newRemaining: newRemaining,
   );
 }
 

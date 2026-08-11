@@ -1040,6 +1040,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}'**
   String progressAllWords(int count);
 
+  /// Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13).
+  ///
+  /// In ru, this message translates to:
+  /// **'Лимит новых на сегодня'**
+  String get homeLimitReachedTitle;
+
+  /// Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.'**
+  String get homeLimitReachedHint;
+
   /// Заголовок карточки «всё повторено» (кадр 9b).
   ///
   /// In ru, this message translates to:

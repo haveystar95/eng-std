@@ -24,6 +24,12 @@ final class StatsResource extends JsonResource
             // Local (user-tz) dates with any activity — the calendar's source of truth. The client
             // renders these and lights today optimistically; the server is the truth on top (F18).
             'active_days' => $this->resource->activeDays,
+            // Daily NEW-term quota state (F13): the home "Learn N" CTA offers min(learnable,
+            // new_remaining); new_remaining == 0 means the new-term limit is reached (reviews are
+            // never gated by it).
+            'new_goal' => $this->resource->newGoal,
+            'new_today' => $this->resource->newToday,
+            'new_remaining' => max(0, $this->resource->newGoal - $this->resource->newToday),
         ];
     }
 }

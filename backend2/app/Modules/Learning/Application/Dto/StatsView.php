@@ -21,5 +21,11 @@ final readonly class StatsView
         public int $reviewsToday,
         public int $streakDays,
         public array $activeDays = [],
+        // The daily NEW-term quota and how much of it today has spent — the exact figures the
+        // session builder uses to cap introductions (F13). `newRemaining = max(0, goal - today)`
+        // is what a "Learn N" home CTA may introduce; 0 means the new-term limit is reached (reviews
+        // are unaffected — they never spend this quota).
+        public int $newGoal = 0,
+        public int $newToday = 0,
     ) {}
 }

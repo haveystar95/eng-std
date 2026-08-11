@@ -253,6 +253,9 @@ class _CtaButton extends StatelessWidget {
         final target = collections.where((c) => c.id == cta.collectionId).firstOrNull;
         subtitle = target?.title;
         onTap = () => target == null ? onReview() : onTriage(target.id, target.title);
+      case HomeCtaKind.limitReached:
+        // Quota spent but new words remain — an inactive card, not a blocked session (F13).
+        return const _LimitReachedCard();
       case HomeCtaKind.practice: // practice is never a home CTA — render nothing if it ever appears
       case HomeCtaKind.none:
         return const SizedBox.shrink();
@@ -536,6 +539,34 @@ class _AllDoneCard extends StatelessWidget {
             AppHaptics.light();
             onGenerate();
           }),
+        ],
+      ),
+    );
+  }
+}
+
+/// F13: the daily new-term quota is spent while new words still wait. An inactive card — never a
+/// button into a session the server would return empty — pointing at free practice in collections
+/// (which ignores the quota). Reviews, when due, get their own active CTA instead of this.
+class _LimitReachedCard extends StatelessWidget {
+  const _LimitReachedCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PaperCard(
+      radius: AppRadii.chip,
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 20, AppSpacing.s22, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.homeLimitReachedTitle, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 22)),
+          const SizedBox(height: 8),
+          Text(
+            l.homeLimitReachedHint,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45, color: AppColors.secondary),
+          ),
         ],
       ),
     );

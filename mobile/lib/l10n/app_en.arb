@@ -162,6 +162,8 @@
   "progressActivityMonth": "Activity this month",
   "progressMonth": "{month, select, 1{January} 2{February} 3{March} 4{April} 5{May} 6{June} 7{July} 8{August} 9{September} 10{October} 11{November} 12{December} other{}}",
   "progressAllWords": "{count, plural, one{All {count} word} other{All {count} words}}",
+  "homeLimitReachedTitle": "Daily new-word limit reached",
+  "homeLimitReachedHint": "New words resume tomorrow. For now, free-practice any collection.",
   "homeAllDoneTitle": "All done for today",
   "homeAllDoneSubtitle": "{count, plural, one{{count} review done, no new words queued.} other{{count} reviews done, no new words queued.}}",
   "homeAllDonePractice": "Free practice",

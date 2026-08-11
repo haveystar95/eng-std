@@ -417,6 +417,46 @@ it('does not spend the daily new-term quota during practice', function () {
         ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 
+it('reports the new-term quota state on /stats (F13)', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 3]);
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    $bank = seedWordFor($user, 'bank', 'банк');
+
+    // Introduce two new terms via study answers (quota gates the session build, not what a
+    // submitted answer introduces).
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [
+            ['id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $bank, 'exercise_mode' => 'typing', 'response' => 'bank', 'answered_at' => now()->toIso8601String(), 'client_seq' => 2],
+        ]])->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/stats')
+        ->assertOk()
+        ->assertJsonPath('data.new_goal', 3)
+        ->assertJsonPath('data.new_today', 2)
+        ->assertJsonPath('data.new_remaining', 1); // 3 goal − 2 introduced
+});
+
+it('reports a zero new-remaining once the daily new quota is spent (F13)', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 1]);
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [
+            ['id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'client_seq' => 1],
+        ]])->assertOk();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/stats')
+        ->assertOk()
+        ->assertJsonPath('data.new_goal', 1)
+        ->assertJsonPath('data.new_today', 1)
+        ->assertJsonPath('data.new_remaining', 0);
+});
+
 it('requires authentication for stats', function () {
     $this->getJson('/api/v1/stats')->assertUnauthorized();
 });

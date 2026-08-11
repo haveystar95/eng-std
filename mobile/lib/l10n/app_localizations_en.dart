@@ -661,6 +661,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get homeLimitReachedTitle => 'Daily new-word limit reached';
+
+  @override
+  String get homeLimitReachedHint =>
+      'New words resume tomorrow. For now, free-practice any collection.';
+
+  @override
   String get homeAllDoneTitle => 'All done for today';
 
   @override

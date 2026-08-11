@@ -17,12 +17,16 @@ abstract final class SyncKeys {
   static const streak = 'streak'; // cached — not in the delta feed
   static const reviewsToday = 'reviews_today'; // cached — not in the delta feed
   static const bestStreak = 'best_streak'; // running max of observed streak (Progress screen)
+  static const newGoal = 'new_goal'; // daily new-term quota (F13 home CTA)
+  static const newRemaining = 'new_remaining'; // new terms still introducible today (F13)
 }
 
 const _kCursor = SyncKeys.cursor;
 const _kStreak = SyncKeys.streak;
 const _kReviewsToday = SyncKeys.reviewsToday;
 const _kBestStreak = SyncKeys.bestStreak;
+const _kNewGoal = SyncKeys.newGoal;
+const _kNewRemaining = SyncKeys.newRemaining;
 
 /// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
 /// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
@@ -256,6 +260,9 @@ class SyncService {
       final s = await _api.stats();
       await _db.setMeta(_kStreak, '${s.streakDays}');
       await _db.setMeta(_kReviewsToday, '${s.reviewsTotal}');
+      // New-term quota state for the home CTA (F13): cached like streak/reviews (not in the delta).
+      await _db.setMeta(_kNewGoal, '${s.newGoal}');
+      await _db.setMeta(_kNewRemaining, '${s.newRemaining}');
       // Restore the activity calendar from server truth (F18): merge the active days into the local
       // map so a relogin/reinstall re-lights every past day; the local optimistic count survives.
       await _db.mergeActiveDays(s.activeDays);

@@ -18,7 +18,7 @@ final class EloquentStatsReader implements StatsReader
     /** How far back the activity calendar reaches (a year heatmap + headroom for the streak). */
     private const ACTIVITY_WINDOW_DAYS = 365;
 
-    public function read(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): StatsView
+    public function read(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $newGoal, int $newToday): StatsView
     {
         $uid = $userId->value;
 
@@ -52,6 +52,8 @@ final class EloquentStatsReader implements StatsReader
             reviewsToday: $reviewsToday,
             streakDays: $this->streak($activeDays, $today),
             activeDays: $activeDays,
+            newGoal: $newGoal,
+            newToday: $newToday,
         );
     }
 
