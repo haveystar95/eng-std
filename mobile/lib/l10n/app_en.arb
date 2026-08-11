@@ -249,6 +249,7 @@
   "sessionInstrType": "write it in English",
   "sessionInstrListenChoose": "listen and choose the translation · replay any time",
   "sessionInstrListenType": "listen and write it in English",
+  "sessionInstrDictation": "listen and write the sentence down",
   "sessionClozeInsert": "Insert the word",
   "sessionChipReturnHint": "Tap a word in the line to send it back",
 

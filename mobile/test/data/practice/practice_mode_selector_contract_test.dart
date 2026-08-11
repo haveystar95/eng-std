@@ -75,6 +75,23 @@ void main() {
     }
   });
 
+  test('the gates agree for EVERY mode, including ones nobody has enabled', () {
+    // `enabled_modes` is the shipped default, so a trainer released switched off (the release rule
+    // in CLAUDE.md) never appears in `expected_mode` and its gate would go unpinned until the day
+    // it is turned on — which is the worst possible day to discover a divergence. This asserts the
+    // applicability itself, which depends on the term's data and not on anyone's toggles.
+    for (final c in cases) {
+      final p = playabilityOf(c);
+      final supported = [
+        for (final mode in ExerciseMode.values)
+          if (p.supports(mode)) mode.wire,
+      ];
+
+      expect(supported, (c['supported_modes'] as List).cast<String>(),
+          reason: 'gate drift on "${c['answer']}" / "${c['example']}"');
+    }
+  });
+
   test('every case picks the mode the server picked', () {
     for (final c in cases) {
       final picked = PracticeModeSelector.select(

@@ -106,6 +106,11 @@ class TermPlayability {
   static const int minScrambleTokens = 4;
   static const int maxScrambleTokens = 12;
 
+  /// Dictation's window — same floor, lower ceiling: typing a sentence out by ear costs more than
+  /// dropping tiles into place.
+  static const int minDictationTokens = 4;
+  static const int maxDictationTokens = 10;
+
   final int answerWordCount;
   final bool clozeable;
   final int exampleTokenCount;
@@ -120,6 +125,10 @@ class TermPlayability {
             hasExampleTranslation && // the translation IS the question
             exampleTokenCount >= minScrambleTokens &&
             exampleTokenCount <= maxScrambleTokens,
+        // No translation needed — the task is the audio, so the card carries no written cue.
+        ExerciseMode.dictation => !exampleIsAnswer && // else it is listening with extra steps
+            exampleTokenCount >= minDictationTokens &&
+            exampleTokenCount <= maxDictationTokens,
         // multiple_choice / typing / listening fit any term — they ask for the term itself.
         ExerciseMode.multipleChoice || ExerciseMode.typing || ExerciseMode.listening => true,
       };

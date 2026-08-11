@@ -142,7 +142,8 @@ enum ExerciseMode {
   typing('typing'),
   listening('listening'),
   cloze('cloze'),
-  scramble('scramble');
+  scramble('scramble'),
+  dictation('dictation');
 
   const ExerciseMode(this.wire);
   final String wire;
@@ -153,15 +154,19 @@ enum ExerciseMode {
   /// A production mode reproduces from memory (free recall / assembly), so the answer is TYPED or
   /// assembled rather than picked. Recognition modes (pick one of four) are handled inline.
   /// `scramble` is assembled from chips, not typed — it shares word_bank's affordances.
-  bool get isTyped => this == typing || this == cloze || this == listening;
+  /// `dictation` IS typed, which is what gives it the hint row and «Не помню» for free.
+  bool get isTyped => this == typing || this == cloze || this == listening || this == dictation;
 
   /// Modes that assemble the answer from given tiles rather than picking or typing it.
   bool get isAssembled => this == wordBank || this == scramble;
 
+  /// Modes whose content is heard, not read: the card plays on appearance and offers a replay.
+  bool get isHeard => this == listening || this == dictation;
+
   /// Does this card ask for the term's EXAMPLE SENTENCE rather than the term itself? Mirrors the
   /// server's `ExerciseMode::gradesAgainstExample()` — on these cards [SessionCard.answer] is the
   /// sentence, so the feedback must not also print it as "the example".
-  bool get asksForExample => this == scramble;
+  bool get asksForExample => this == scramble || this == dictation;
 }
 
 /// One self-contained card in a study session (`POST /study/sessions`). Carries the prompt (user's

@@ -943,6 +943,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrListenType => 'listen and write it in English';
 
   @override
+  String get sessionInstrDictation => 'listen and write the sentence down';
+
+  @override
   String get sessionClozeInsert => 'Insert the word';
 
   @override

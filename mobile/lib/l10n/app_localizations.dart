@@ -1508,6 +1508,12 @@ abstract class AppLocalizations {
   /// **'прослушай и напиши по-английски'**
   String get sessionInstrListenType;
 
+  /// Инструкция диктанта: звучит предложение-пример целиком (dictation).
+  ///
+  /// In ru, this message translates to:
+  /// **'прослушай и запиши предложение'**
+  String get sessionInstrDictation;
+
   /// Лейбл над примером с пропуском (кадр 12i).
   ///
   /// In ru, this message translates to:

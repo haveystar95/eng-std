@@ -767,6 +767,8 @@
   "@sessionInstrListenChoose": { "description": "Инструкция аудирования-узнавания (кадр 12g)." },
   "sessionInstrListenType": "прослушай и напиши по-английски",
   "@sessionInstrListenType": { "description": "Инструкция аудирования-воспроизведения (кадр 12h)." },
+  "sessionInstrDictation": "прослушай и запиши предложение",
+  "@sessionInstrDictation": { "description": "Инструкция диктанта: звучит предложение-пример целиком (dictation)." },
   "sessionClozeInsert": "Вставь слово",
   "@sessionClozeInsert": { "description": "Лейбл над примером с пропуском (кадр 12i)." },
   "sessionChipReturnHint": "Тап по слову в строке возвращает его вниз",

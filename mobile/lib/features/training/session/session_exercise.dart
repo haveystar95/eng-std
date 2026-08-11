@@ -129,6 +129,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isListening => _mode == ExerciseMode.listening;
   bool get _isCloze => _mode == ExerciseMode.cloze;
   bool get _isScramble => _mode == ExerciseMode.scramble;
+  bool get _isDictation => _mode == ExerciseMode.dictation;
 
   /// A listening card with options is recognition (12g); without, production/typing (12h). The
   /// backend currently sends no options for listening, so this is the typed path — but it stays
@@ -153,13 +154,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     });
     // F20: side-effects that used to fire DURING the card's slide-in (and stalled it) now run AFTER
     // the transition settles, and are cancelled if the card is no longer current (fast «Дальше»).
-    if (_isListening) {
-      // Listening plays on appearance — the term is never shown, only heard. The audio IS the
+    if (_mode.isHeard) {
+      // A heard card plays on appearance — the text is never shown, only spoken. The audio IS the
       // card's content, so it must NOT wait out the whole slide: a full 250 ms of silence on a
       // listen-and-type card reads as the app hanging (F20-r — the user called it a lag on a
       // transition where every frame was on time). The shell pre-warms the audio session, so
       // speak() is now a single channel call and one frame of headroom is enough to keep it off
-      // the transition's first, heaviest frame.
+      // the transition's first, heaviest frame. Dictation joins listening here unchanged: the only
+      // difference is the length of what is spoken.
       _afterTransition(
         () => widget.onSpeak(_card.answer),
         delay: const Duration(milliseconds: 100),
@@ -339,6 +341,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   // The prompt / question region — differs per mode.
   Widget _promptCard(AppLocalizations l) {
+    // Dictation is the same card as typed listening — a play circle, a slow replay and a field.
+    // What differs is the length of what is spoken, which is not a layout concern.
+    if (_isDictation) return _listeningPrompt(l, typed: true);
     if (_isListening && !_isRecognitionListening) return _listeningPrompt(l, typed: true);
     if (_isRecognitionListening) return _listeningPrompt(l, typed: false);
     if (_isCloze) return _clozePrompt(l);
@@ -354,6 +359,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ExerciseMode.typing => l.sessionInstrType,
         ExerciseMode.cloze => l.sessionInstrType,
         ExerciseMode.scramble => l.sessionInstrAssembleSentence,
+        ExerciseMode.dictation => l.sessionInstrDictation,
         ExerciseMode.listening => _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
       };
 

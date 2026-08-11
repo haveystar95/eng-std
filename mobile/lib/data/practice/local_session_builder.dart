@@ -103,6 +103,10 @@ abstract final class LocalPracticeSessionBuilder {
       answer = example!;
       prompt = term.exampleTranslation;
       chips = _sentenceChips(answer, random: random);
+    } else if (mode == ExerciseMode.dictation) {
+      // The task is the audio: no written cue at all, or it becomes a translation exercise.
+      answer = example!;
+      prompt = null;
     }
 
     return SessionCard(

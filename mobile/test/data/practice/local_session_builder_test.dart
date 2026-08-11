@@ -97,6 +97,13 @@ void main() {
           expect(card.options, isNull);
           expect(card.chips!.length, greaterThanOrEqualTo(TermPlayability.minScrambleTokens));
           expect(card.chips, everyElement(isNot(endsWith('.'))));
+        case ExerciseMode.dictation:
+          // The task is the audio, so there is no written cue at all — and the answer is the
+          // sentence that will be spoken, not the term.
+          expect(card.prompt, isNull);
+          expect(card.answer, card.example);
+          expect(card.options, isNull);
+          expect(card.chips, isNull);
         case ExerciseMode.cloze:
           // The selector only picks cloze when the example can be blanked — so it must be here.
           expect(card.example, isNotNull);

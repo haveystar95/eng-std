@@ -979,6 +979,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrListenType => 'прослушай и напиши по-английски';
 
   @override
+  String get sessionInstrDictation => 'прослушай и запиши предложение';
+
+  @override
   String get sessionClozeInsert => 'Вставь слово';
 
   @override

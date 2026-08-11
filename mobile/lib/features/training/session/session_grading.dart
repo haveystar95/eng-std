@@ -116,7 +116,8 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
       ExerciseMode.typing ||
       ExerciseMode.listening ||
       ExerciseMode.cloze ||
-      ExerciseMode.scramble =>
+      ExerciseMode.scramble ||
+      ExerciseMode.dictation =>
         SessionPhase.review,
     };
 
