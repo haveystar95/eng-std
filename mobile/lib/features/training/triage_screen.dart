@@ -14,6 +14,7 @@ import '../../data/models.dart';
 import '../../data/perf_log.dart';
 import '../../data/providers.dart';
 import 'triage_swipe.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// The triage vertical slice: swipe a collection's new terms → знаю / не знаю /
 /// не уверен. Its job is to exercise the contract — self-contained queue,
@@ -664,8 +665,8 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (hasImage)
-            Image.network(
-              card.imageUrl!,
+            Image(
+              image: CachedNetworkImage(card.imageUrl!),
               height: 212,
               width: double.infinity,
               fit: BoxFit.cover,

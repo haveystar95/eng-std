@@ -53,6 +53,10 @@ class _AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Start the on-disk image cache. `read`, not `watch`: nothing on screen depends on it — until
+    // it is ready images load from the network as before — and subscribing would rebuild the whole
+    // tree when a disk scan finishes.
+    ref.read(imageDiskCacheProvider);
     final auth = ref.watch(authControllerProvider);
 
     return auth.when(

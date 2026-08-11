@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/theme/theme.dart';
 
 import '../../data/models.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// A collection's cover: the Pexels photo once it's synced, or a monochrome paper placeholder
 /// (track fill + image glyph) until then. Images dock in asynchronously — this widget swaps in on
@@ -36,8 +37,8 @@ class CollectionCover extends StatelessWidget {
           ? placeholder
           : ClipRRect(
               borderRadius: br,
-              child: Image.network(
-                url,
+              child: Image(
+                image: CachedNetworkImage(url),
                 width: size,
                 height: size,
                 fit: BoxFit.cover,

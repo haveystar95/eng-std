@@ -9,6 +9,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../../data/local/app_database.dart';
+import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/perf_log.dart';
 import '../../../data/providers.dart';
@@ -37,11 +38,11 @@ class SessionAnswer {
 /// bounds the footprint to the cards actually in play and can never touch the look-ahead (F20-r).
 Future<void> evictSessionImage(BuildContext context, String? url) async {
   if (url == null || url.isEmpty) return;
-  await ResizeImage(NetworkImage(url), width: promptPhotoCacheWidth(context)).evict();
+  await ResizeImage(CachedNetworkImage(url), width: promptPhotoCacheWidth(context)).evict();
 }
 
 /// The pixel width the prompt photo is decoded to — the on-screen banner width (F20). Shared by the
-/// live [Image.network] `cacheWidth` and the shell's precache so both hit the SAME image-cache entry.
+/// live banner and the shell's precache so both hit the SAME image-cache entry.
 int promptPhotoCacheWidth(BuildContext context) {
   final mq = MediaQuery.of(context);
   return (mq.size.width * mq.devicePixelRatio).round();
@@ -52,7 +53,7 @@ int promptPhotoCacheWidth(BuildContext context) {
 /// forget; a null/empty url or a decode error is ignored.
 Future<void> precacheSessionImage(BuildContext context, String? url) async {
   if (url == null || url.isEmpty) return;
-  final provider = ResizeImage(NetworkImage(url), width: promptPhotoCacheWidth(context));
+  final provider = ResizeImage(CachedNetworkImage(url), width: promptPhotoCacheWidth(context));
   try {
     await precacheImage(provider, context);
   } catch (_) {
@@ -901,6 +902,10 @@ class _PromptPhoto extends ConsumerStatefulWidget {
 }
 
 class _PromptPhotoState extends ConsumerState<_PromptPhoto> {
+  /// Whether this photo's bytes are already on disk — asked once, while building, because it
+  /// changes how the image may appear (no fade). A synchronous map lookup, not I/O.
+  bool get _fromDisk => CachedNetworkImage.isCached(widget.url);
+
   // Fallback only — used when the shell hasn't resolved this term (e.g. the feedback photo of a
   // card whose warm-up hasn't run). `late final` means it never executes if never read.
   late final Future<Term?> _term = ref.read(appDatabaseProvider).termById(widget.termId);
@@ -946,16 +951,24 @@ class _PromptPhotoState extends ConsumerState<_PromptPhoto> {
             fit: StackFit.expand,
             children: [
               const ColoredBox(color: AppColors.track),
-              Image.network(
-                url,
+              Image(
+                // Bytes come from the disk cache when we have them (F22), so a photo seen once
+                // renders in airplane mode and after a restart. Everything around it is unchanged:
+                // same ResizeImage key, same decode width, same entry the warm-up filled.
+                image: ResizeImage(CachedNetworkImage(url), width: promptPhotoCacheWidth(context)),
                 fit: BoxFit.cover,
-                // Decode to the on-screen width, not the source's native size; matches
-                // `precacheSessionImage` so the warm-up hits this exact cache entry (F20).
-                cacheWidth: promptPhotoCacheWidth(context),
                 frameBuilder: (context, child, frame, wasSync) {
                   // Already decoded (warm cache) → straight in, no fade. That is F20's win and it
-                  // must survive. Otherwise hold the plate until the slide settles, then fade.
+                  // must survive.
                   if (wasSync) return child;
+                  // On disk → the bytes are local, so the decode lands in a frame or two. Fading
+                  // that in would invent a delay the user does not have; the banner's height is
+                  // already reserved, so appearing at once moves nothing (F20-r's rule was about
+                  // pictures materialising mid-slide, which the reveal gate still prevents).
+                  if (_fromDisk) {
+                    return Opacity(opacity: frame != null && widget.reveal ? 1 : 0, child: child);
+                  }
+                  // Cold: hold the plate until the slide settles, then fade.
                   return AnimatedOpacity(
                     opacity: frame != null && widget.reveal ? 1 : 0,
                     duration: const Duration(milliseconds: 180),

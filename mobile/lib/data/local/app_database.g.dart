@@ -4564,6 +4564,313 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
   }
 }
 
+class $CachedImagesTable extends CachedImages
+    with TableInfo<$CachedImagesTable, CachedImage> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedImagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileMeta = const VerificationMeta('file');
+  @override
+  late final GeneratedColumn<String> file = GeneratedColumn<String>(
+    'file',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bytesMeta = const VerificationMeta('bytes');
+  @override
+  late final GeneratedColumn<int> bytes = GeneratedColumn<int>(
+    'bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usedAtMeta = const VerificationMeta('usedAt');
+  @override
+  late final GeneratedColumn<DateTime> usedAt = GeneratedColumn<DateTime>(
+    'used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [url, file, bytes, usedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_images';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedImage> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('file')) {
+      context.handle(
+        _fileMeta,
+        file.isAcceptableOrUnknown(data['file']!, _fileMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileMeta);
+    }
+    if (data.containsKey('bytes')) {
+      context.handle(
+        _bytesMeta,
+        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bytesMeta);
+    }
+    if (data.containsKey('used_at')) {
+      context.handle(
+        _usedAtMeta,
+        usedAt.isAcceptableOrUnknown(data['used_at']!, _usedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {url};
+  @override
+  CachedImage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedImage(
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      file: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file'],
+      )!,
+      bytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}bytes'],
+      )!,
+      usedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CachedImagesTable createAlias(String alias) {
+    return $CachedImagesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedImage extends DataClass implements Insertable<CachedImage> {
+  final String url;
+  final String file;
+  final int bytes;
+  final DateTime usedAt;
+  const CachedImage({
+    required this.url,
+    required this.file,
+    required this.bytes,
+    required this.usedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['url'] = Variable<String>(url);
+    map['file'] = Variable<String>(file);
+    map['bytes'] = Variable<int>(bytes);
+    map['used_at'] = Variable<DateTime>(usedAt);
+    return map;
+  }
+
+  CachedImagesCompanion toCompanion(bool nullToAbsent) {
+    return CachedImagesCompanion(
+      url: Value(url),
+      file: Value(file),
+      bytes: Value(bytes),
+      usedAt: Value(usedAt),
+    );
+  }
+
+  factory CachedImage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedImage(
+      url: serializer.fromJson<String>(json['url']),
+      file: serializer.fromJson<String>(json['file']),
+      bytes: serializer.fromJson<int>(json['bytes']),
+      usedAt: serializer.fromJson<DateTime>(json['usedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'url': serializer.toJson<String>(url),
+      'file': serializer.toJson<String>(file),
+      'bytes': serializer.toJson<int>(bytes),
+      'usedAt': serializer.toJson<DateTime>(usedAt),
+    };
+  }
+
+  CachedImage copyWith({
+    String? url,
+    String? file,
+    int? bytes,
+    DateTime? usedAt,
+  }) => CachedImage(
+    url: url ?? this.url,
+    file: file ?? this.file,
+    bytes: bytes ?? this.bytes,
+    usedAt: usedAt ?? this.usedAt,
+  );
+  CachedImage copyWithCompanion(CachedImagesCompanion data) {
+    return CachedImage(
+      url: data.url.present ? data.url.value : this.url,
+      file: data.file.present ? data.file.value : this.file,
+      bytes: data.bytes.present ? data.bytes.value : this.bytes,
+      usedAt: data.usedAt.present ? data.usedAt.value : this.usedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedImage(')
+          ..write('url: $url, ')
+          ..write('file: $file, ')
+          ..write('bytes: $bytes, ')
+          ..write('usedAt: $usedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(url, file, bytes, usedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedImage &&
+          other.url == this.url &&
+          other.file == this.file &&
+          other.bytes == this.bytes &&
+          other.usedAt == this.usedAt);
+}
+
+class CachedImagesCompanion extends UpdateCompanion<CachedImage> {
+  final Value<String> url;
+  final Value<String> file;
+  final Value<int> bytes;
+  final Value<DateTime> usedAt;
+  final Value<int> rowid;
+  const CachedImagesCompanion({
+    this.url = const Value.absent(),
+    this.file = const Value.absent(),
+    this.bytes = const Value.absent(),
+    this.usedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedImagesCompanion.insert({
+    required String url,
+    required String file,
+    required int bytes,
+    required DateTime usedAt,
+    this.rowid = const Value.absent(),
+  }) : url = Value(url),
+       file = Value(file),
+       bytes = Value(bytes),
+       usedAt = Value(usedAt);
+  static Insertable<CachedImage> custom({
+    Expression<String>? url,
+    Expression<String>? file,
+    Expression<int>? bytes,
+    Expression<DateTime>? usedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (url != null) 'url': url,
+      if (file != null) 'file': file,
+      if (bytes != null) 'bytes': bytes,
+      if (usedAt != null) 'used_at': usedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedImagesCompanion copyWith({
+    Value<String>? url,
+    Value<String>? file,
+    Value<int>? bytes,
+    Value<DateTime>? usedAt,
+    Value<int>? rowid,
+  }) {
+    return CachedImagesCompanion(
+      url: url ?? this.url,
+      file: file ?? this.file,
+      bytes: bytes ?? this.bytes,
+      usedAt: usedAt ?? this.usedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (file.present) {
+      map['file'] = Variable<String>(file.value);
+    }
+    if (bytes.present) {
+      map['bytes'] = Variable<int>(bytes.value);
+    }
+    if (usedAt.present) {
+      map['used_at'] = Variable<DateTime>(usedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedImagesCompanion(')
+          ..write('url: $url, ')
+          ..write('file: $file, ')
+          ..write('bytes: $bytes, ')
+          ..write('usedAt: $usedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4581,6 +4888,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReviewQueueRowsTable reviewQueueRows = $ReviewQueueRowsTable(
     this,
   );
+  late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4595,6 +4903,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     pendingGenerations,
     dailyActivity,
     reviewQueueRows,
+    cachedImages,
   ];
 }
 
@@ -6937,6 +7246,187 @@ typedef $$ReviewQueueRowsTableProcessedTableManager =
       ReviewQueueRow,
       PrefetchHooks Function()
     >;
+typedef $$CachedImagesTableCreateCompanionBuilder =
+    CachedImagesCompanion Function({
+      required String url,
+      required String file,
+      required int bytes,
+      required DateTime usedAt,
+      Value<int> rowid,
+    });
+typedef $$CachedImagesTableUpdateCompanionBuilder =
+    CachedImagesCompanion Function({
+      Value<String> url,
+      Value<String> file,
+      Value<int> bytes,
+      Value<DateTime> usedAt,
+      Value<int> rowid,
+    });
+
+class $$CachedImagesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
+  $$CachedImagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get file => $composableBuilder(
+    column: $table.file,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CachedImagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
+  $$CachedImagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get file => $composableBuilder(
+    column: $table.file,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CachedImagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
+  $$CachedImagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get file =>
+      $composableBuilder(column: $table.file, builder: (column) => column);
+
+  GeneratedColumn<int> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get usedAt =>
+      $composableBuilder(column: $table.usedAt, builder: (column) => column);
+}
+
+class $$CachedImagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CachedImagesTable,
+          CachedImage,
+          $$CachedImagesTableFilterComposer,
+          $$CachedImagesTableOrderingComposer,
+          $$CachedImagesTableAnnotationComposer,
+          $$CachedImagesTableCreateCompanionBuilder,
+          $$CachedImagesTableUpdateCompanionBuilder,
+          (
+            CachedImage,
+            BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>,
+          ),
+          CachedImage,
+          PrefetchHooks Function()
+        > {
+  $$CachedImagesTableTableManager(_$AppDatabase db, $CachedImagesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedImagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedImagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedImagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> url = const Value.absent(),
+                Value<String> file = const Value.absent(),
+                Value<int> bytes = const Value.absent(),
+                Value<DateTime> usedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CachedImagesCompanion(
+                url: url,
+                file: file,
+                bytes: bytes,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String url,
+                required String file,
+                required int bytes,
+                required DateTime usedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CachedImagesCompanion.insert(
+                url: url,
+                file: file,
+                bytes: bytes,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CachedImagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CachedImagesTable,
+      CachedImage,
+      $$CachedImagesTableFilterComposer,
+      $$CachedImagesTableOrderingComposer,
+      $$CachedImagesTableAnnotationComposer,
+      $$CachedImagesTableCreateCompanionBuilder,
+      $$CachedImagesTableUpdateCompanionBuilder,
+      (
+        CachedImage,
+        BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>,
+      ),
+      CachedImage,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6959,4 +7449,6 @@ class $AppDatabaseManager {
       $$DailyActivityTableTableManager(_db, _db.dailyActivity);
   $$ReviewQueueRowsTableTableManager get reviewQueueRows =>
       $$ReviewQueueRowsTableTableManager(_db, _db.reviewQueueRows);
+  $$CachedImagesTableTableManager get cachedImages =>
+      $$CachedImagesTableTableManager(_db, _db.cachedImages);
 }

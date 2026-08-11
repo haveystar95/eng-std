@@ -21,6 +21,7 @@ import '../training/triage_screen.dart';
 import 'collection_cta.dart';
 import 'collection_edit_dialog.dart';
 import 'word_edit_dialog.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// Collection screen (кадр 2.3): cover photo, three ink-density segments, a
 /// state-dependent primary action (triage → review → practice), and the word
@@ -357,7 +358,7 @@ class _Cover extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (hasImage)
-            Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const _CoverPlaceholder())
+            Image(image: CachedNetworkImage(imageUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const _CoverPlaceholder())
           else
             const _CoverPlaceholder(),
           // Top scrim so the white status bar + back chip read over any photo.
@@ -900,7 +901,7 @@ class _Thumb extends StatelessWidget {
           ? placeholder
           : ClipRRect(
               borderRadius: radius,
-              child: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, _, _) => placeholder),
+              child: Image(image: CachedNetworkImage(url), fit: BoxFit.cover, errorBuilder: (_, _, _) => placeholder),
             ),
     );
   }

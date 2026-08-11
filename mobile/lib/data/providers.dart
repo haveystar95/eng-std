@@ -10,6 +10,8 @@ import 'auth_repository.dart';
 import 'device_timezone.dart';
 import 'generation_controller.dart';
 import 'local/app_database.dart';
+import 'local/cached_image_provider.dart';
+import 'local/image_disk_cache.dart';
 import 'local/sync_service.dart';
 import 'practice/local_session_builder.dart';
 import 'practice/practice_mode_selector.dart';
@@ -28,6 +30,13 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);
   return db;
+});
+
+/// The on-disk image byte cache, installed once so [CachedNetworkImage] can find it. Awaited by
+/// nothing: until it is ready, images load from the network exactly as they always did, so a slow
+/// disk cannot delay the first screen.
+final imageDiskCacheProvider = FutureProvider<ImageDiskCache?>((ref) async {
+  return installImageDiskCache(ref.watch(appDatabaseProvider));
 });
 
 /// Background delta-sync: pulls GET /sync into the local DB. Never on a read path.

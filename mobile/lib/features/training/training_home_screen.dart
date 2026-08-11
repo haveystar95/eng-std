@@ -17,6 +17,7 @@ import '../home/limit_reached_card.dart';
 import '../home/streak.dart';
 import 'session_screen.dart';
 import 'triage_screen.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// «Главная» (кадр 2.1). Everything reads the local DB — the screen renders in
 /// airplane mode: daily goal + streak, the state-dependent primary action, the
@@ -730,8 +731,8 @@ class _Cover extends StatelessWidget {
           ? placeholder
           : ClipRRect(
               borderRadius: radius,
-              child: Image.network(
-                imageUrl!,
+              child: Image(
+                image: CachedNetworkImage(imageUrl!),
                 width: 150,
                 height: 104,
                 fit: BoxFit.cover,

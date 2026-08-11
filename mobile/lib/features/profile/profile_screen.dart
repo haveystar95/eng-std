@@ -16,6 +16,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
 import 'perf_log_screen.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// Профиль (кадры 11a / 13a). Sections: обучение · приложение · подписка · аккаунт. Reads local
 /// where it can (settings, stats); the learning rows edit the server profile. Paper/ink.
@@ -227,7 +228,7 @@ class _Header extends StatelessWidget {
             alignment: Alignment.center,
             decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
             child: user.avatar != null
-                ? ClipOval(child: Image.network(user.avatar!, width: 52, height: 52, fit: BoxFit.cover))
+                ? ClipOval(child: Image(image: CachedNetworkImage(user.avatar!), width: 52, height: 52, fit: BoxFit.cover))
                 : Text(initials,
                     style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.paper)),
           ),

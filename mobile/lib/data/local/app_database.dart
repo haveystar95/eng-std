@@ -203,6 +203,25 @@ class ItemProgressRow {
   final DateTime? dueAt;
 }
 
+/// Index of the on-disk image byte cache: one row per cached remote image.
+///
+/// The BYTES live in files (an image in a SQLite row would be read through the DB isolate on
+/// every decode); this table is what makes the cache accountable — exact sizes for the ceiling,
+/// and a last-used stamp for the LRU sweep. Keeping it here rather than scanning the directory
+/// means the sweep never has to stat a thousand files to find the coldest one.
+///
+/// Client-only, never synced. Wiped with the account on sign-out (another account's photos are
+/// not ours to keep) — see [AppDatabase.clearAll].
+class CachedImages extends Table {
+  TextColumn get url => text()();
+  TextColumn get file => text()(); // relative to the cache directory
+  IntColumn get bytes => integer()();
+  DateTimeColumn get usedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {url};
+}
+
 @DriftDatabase(tables: [
   Collections,
   CollectionItems,
@@ -213,13 +232,14 @@ class ItemProgressRow {
   PendingGenerations,
   DailyActivity,
   ReviewQueueRows,
+  CachedImages,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -250,6 +270,9 @@ class AppDatabase extends _$AppDatabase {
           // once at start-up by ReviewQueue.migrateFromKeychain — not here, because the migration
           // needs the Keychain, which the DB layer must not know about.
           if (from < 8) await m.createTable(reviewQueueRows);
+          // Disk cache for remote images (F22): photos seen once stay visible offline and across
+          // restarts. The files are created lazily, so there is nothing to backfill here.
+          if (from < 9) await m.createTable(cachedImages);
         },
       );
 
@@ -623,6 +646,9 @@ class AppDatabase extends _$AppDatabase {
       await delete(pendingGenerations).go();
       await delete(dailyActivity).go();
       await delete(syncMeta).go();
+      // The image files themselves are deleted by ImageDiskCache.clear(), which owns them; this
+      // drops the index so a half-finished sign-out can't leave rows pointing at deleted files.
+      await delete(cachedImages).go();
     });
   }
 }

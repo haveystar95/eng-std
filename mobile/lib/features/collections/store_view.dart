@@ -11,6 +11,7 @@ import '../../data/languages.dart' show kLanguages, languageByCode;
 import '../../data/models.dart';
 import '../../data/store_providers.dart';
 import '../paywall/paywall_screen.dart';
+import '../../data/local/cached_image_provider.dart';
 
 /// The store surface (кадр 2.8) — the «Готовые» segment of the Collections tab. Language-pair row +
 /// topic sections of horizontal cards; premium sets carry a lock badge, already-added sets a «В моих»
@@ -249,8 +250,8 @@ class _StoreCover extends StatelessWidget {
         ? placeholder
         : ClipRRect(
             borderRadius: br,
-            child: Image.network(
-              url,
+            child: Image(
+              image: CachedNetworkImage(url),
               width: width,
               height: height,
               fit: BoxFit.cover,
