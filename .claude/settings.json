@@ -28,7 +28,11 @@
       "Bash(git --no-pager diff:*)", "Bash(git --no-pager log:*)", "Bash(git --no-pager show:*)",
       "Bash(composer check:*)", "Bash(composer arch:*)",
       "Bash(composer stan:*)", "Bash(composer test:*)",
-      "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter --version)", "Bash(dart:*)"
+      "Bash(flutter analyze:*)", "Bash(flutter test:*)", "Bash(flutter --version)", "Bash(dart:*)",
+      "Bash(flutter:*)", "Bash(dart:*)", "Bash(composer:*)",
+      "Bash(git:*)", "Bash(docker:*)", "Bash(docker compose:*)",
+      "Bash(php:*)", "Bash(psql:*)", "Bash(curl:*)",
+      "Bash(grep:*)", "Bash(find:*)", "Bash(tail:*)", "Bash(python3:*)"
     ]
   }
 }
