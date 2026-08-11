@@ -79,7 +79,7 @@
 ### 1.4 Полный список мест, где режимы перечислены (что придётся тронуть)
 
 Это и есть ответ на «как встают три режима без новых хардкод-списков»: **новых списков заводить не
-надо — надо расширить существующие десять и не добавить одиннадцатый.**
+надо — надо расширить существующие пятнадцать и не добавить шестнадцатый.**
 
 **Сервер**
 
@@ -103,9 +103,18 @@
 12. `session/session_exercise.dart` — рендер (`_promptCard:333`, `_instructionFor:342`) и аффордансы
 13. `session/session_grading.dart:phaseFor` — exhaustive switch (компилятор поймает)
 
+**Админка (`wt_admin`)**
+
+14. `wt_admin/src/api/types.ts:117-124` — TS-union `ExerciseMode` **+**
+    `wt_admin/src/utils/labels.ts:39-47` — `MODE_LABEL` (русская подпись режима).
+    Союз и карта подписей обязаны расширяться **вместе**: `available` в панели приходит с сервера,
+    поэтому режим, выкаченный после последнего деплоя панели, — значение, которого карта не знает.
+    `modeLabel()` (`labels.ts:35`) деградирует до wire-имени, а не до пустой строки — именно так
+    `dictation` однажды нарисовался строкой с чекбоксом и без названия (см. `f4148f8`).
+
 **Контракт между ними**
 
-14. `backend2/tests/Fixtures/practice-mode-contract.json`, генерится
+15. `backend2/tests/Fixtures/practice-mode-contract.json`, генерится
     `tests/Unit/Learning/ExerciseSelectorTest.php:230-273` (`EXPORT_PRACTICE_FIXTURE=1`),
     сверяется `mobile/test/data/practice/practice_mode_selector_contract_test.dart`
 
