@@ -26,7 +26,7 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
  */
 final readonly class RequestCollectionGenerationHandler
 {
-    public const PROMPT_VERSION = 'v4';
+    public const PROMPT_VERSION = 'v5';
 
     public function __construct(
         private GenerationRequestRepository $requests,

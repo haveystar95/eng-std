@@ -39,6 +39,14 @@ use Throwable;
  */
 final readonly class BuildTermEnrichmentsHandler
 {
+    /**
+     * The станок's current generator version — one source of truth for everything that writes or
+     * skips by it (the console backfill, the post-generation chain). Bump it when the prompt or the
+     * validation rules change in a way that makes a re-run worth paying for; every already-processed
+     * term is then pending again at the new version.
+     */
+    public const VERSION = 'enrich-v1';
+
     public function __construct(
         private EnrichmentTargetReader $targets,
         private EnrichmentPackerPort $packer,

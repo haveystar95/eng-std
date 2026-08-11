@@ -15,6 +15,7 @@ use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
@@ -56,6 +57,7 @@ final readonly class ProcessGenerationHandler
         private AddTermToCollectionHandler $addTerm,
         private GetCollectionTermSetHandler $cachedTermSet,
         private DispatchesImageAttachment $attachImages,
+        private DispatchesEnrichment $enrich,
         private TransactionManager $tx,
         private Clock $clock,
     ) {
@@ -102,6 +104,9 @@ final readonly class ProcessGenerationHandler
                 // Reused terms already carry photos (globally shared); only the fresh personal
                 // collection needs its cover searched — the job's readers skip everything else.
                 $this->attachImages->dispatch($collectionId);
+                // Cheap on this path: the terms are reused, so the version mark usually makes it a
+                // no-op. Chained anyway, because "reused" does not guarantee "already enriched".
+                $this->chainEnrichment($collectionId);
 
                 return;
             }
@@ -143,6 +148,21 @@ final readonly class ProcessGenerationHandler
 
         // Fire-and-forget: attach photos to the new terms + cover, off the generation thread.
         $this->attachImages->dispatch($collectionId);
+        $this->chainEnrichment($collectionId);
+    }
+
+    /**
+     * Queue the enrichment станок for the finished collection — accepted variants (which offline
+     * grading needs) and distractors. Same shape as the image chain and for the same reason: it runs
+     * AFTER the generation the user is waiting on, on its own job, so it can neither slow that down
+     * nor fail it. A collection without variants is still a complete, playable collection.
+     *
+     * Whether the chain is switched on at all is the adapter's business (it reads the config) — this
+     * layer only says that a finished generation is the moment to enrich.
+     */
+    private function chainEnrichment(CollectionId $collectionId): void
+    {
+        $this->enrich->enrichCollection($collectionId->value, BuildTermEnrichmentsHandler::VERSION);
     }
 
     private function requestedBrief(GenerationRequest $request): GenerationBrief

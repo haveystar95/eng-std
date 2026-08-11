@@ -7,6 +7,7 @@ use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler
 use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Command\FailGeneration;
 use App\Modules\Generation\Application\Command\FailGenerationHandler;
+use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
 use App\Modules\Generation\Application\Command\ProcessGeneration;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Application\Command\RequestCollectionGeneration;
@@ -36,6 +37,7 @@ use Tests\Doubles\ImmediateTransactionManager;
 use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
+use Tests\Doubles\RecordingEnrichmentDispatcher;
 use Tests\Doubles\RecordingImageAttachmentDispatcher;
 
 beforeEach(function () {
@@ -44,6 +46,7 @@ beforeEach(function () {
     $this->terms = new InMemoryTermRepository();
     $this->collections = new InMemoryCollectionRepository();
     $this->attach = new RecordingImageAttachmentDispatcher();
+    $this->enrich = new RecordingEnrichmentDispatcher();
     $this->user = UserId::generate();
 
     $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
@@ -56,6 +59,7 @@ beforeEach(function () {
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: $this->attach,
+        enrich: $this->enrich,
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -87,6 +91,7 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         addTerm: new AddTermToCollectionHandler($ctx->collections),
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
+        enrich: new RecordingEnrichmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );
@@ -142,7 +147,13 @@ it('materializes a collection with deduplicated terms from a pending request', f
         ->and($collection?->ownerId()?->value)->toBe($this->user->value)
         ->and($request?->deliveredCount())->toBe(12) // asked 12, over-generated, trimmed back to 12
         // Image attachment is kicked off once, for the new collection, after success.
-        ->and($this->attach->dispatched)->toBe([$request->collectionId()->value]);
+        ->and($this->attach->dispatched)->toBe([$request->collectionId()->value])
+        // …and so is the enrichment станок, on its own job, AFTER the generation the user waited
+        // for — so it can neither slow that down nor fail it.
+        ->and($this->enrich->collections)->toBe([[
+            'collection_id' => $request->collectionId()->value,
+            'version' => BuildTermEnrichmentsHandler::VERSION,
+        ]]);
 });
 
 it('tops up a shortfall and sums tokens and cost across both model calls', function () {
@@ -233,6 +244,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
+        enrich: new RecordingEnrichmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -275,6 +287,7 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         addTerm: new AddTermToCollectionHandler($this->collections),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
+        enrich: new RecordingEnrichmentDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );

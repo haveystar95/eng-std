@@ -31,14 +31,12 @@ use Illuminate\Console\Command;
  */
 final class EnrichBackfillCommand extends Command
 {
-    public const VERSION = 'enrich-v1';
-
     /** Inline runs still go term-by-term in chunks, so a Ctrl-C loses at most one chunk's marks. */
     private const CHUNK = 20;
 
     protected $signature = 'enrich:backfill
         {--collection=* : collection id (ULID); repeatable, REQUIRED — there is no run-everything mode}
-        {--version= : generator version to write and to skip by (default ' . self::VERSION . ')}
+        {--version= : generator version to write and to skip by (default ' . BuildTermEnrichmentsHandler::VERSION . ')}
         {--limit=0 : stop after this many terms (0 = no cap), for a cheap first taste}
         {--fake : use the deterministic fake packer — no network, no spend (wiring smoke test only)}
         {--queue : dispatch chunk jobs instead of running inline}
@@ -61,7 +59,7 @@ final class EnrichBackfillCommand extends Command
             return self::FAILURE;
         }
 
-        $version = $this->stringOption('version') ?? self::VERSION;
+        $version = $this->stringOption('version') ?? BuildTermEnrichmentsHandler::VERSION;
 
         if ((bool) $this->option('fake')) {
             config(['services.generation.driver' => 'fake']);

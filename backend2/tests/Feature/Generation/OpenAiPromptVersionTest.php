@@ -80,6 +80,35 @@ it('adds the image fields to the schema on v4 and parses them back', function ()
     });
 });
 
+it('adds the v5 rules: the translation must determine its answer, and no UA lexis in RU fields', function () {
+    fakeOpenAi();
+    generateWith('v5');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        // The back-translation rule (an ambiguous prompt is unanswerable) and the purity rule,
+        // named concretely enough that the model can't read it as generic style advice.
+        return str_contains($system, 'determine its own answer')
+            && str_contains($system, 'Language purity')
+            && str_contains($system, 'здаватися')
+            // v4's content is inherited, not replaced.
+            && str_contains($system, 'image_api_prompt');
+    });
+});
+
+it('keeps the v5 rules out of the frozen v4 prompt', function () {
+    fakeOpenAi();
+    generateWith('v4');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return ! str_contains($system, 'Language purity')
+            && ! str_contains($system, 'determine its own answer');
+    });
+});
+
 it('keeps the image fields out of the v3 schema (frozen taxonomy eval)', function () {
     fakeOpenAi();
     generateWith('v3');

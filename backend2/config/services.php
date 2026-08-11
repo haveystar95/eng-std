@@ -74,6 +74,11 @@ return [
         'driver' => env('GENERATION_DRIVER', 'openai'),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
+        // Chain the enrichment станок onto a finished generation (accepted variants + distractors).
+        // A switch rather than a hardcoded chain because it multiplies the cost of every generation
+        // by roughly one model call per term: if the scrap rate turns out bad, this is how the bleed
+        // stops without a deploy. Off makes generation behave exactly as before.
+        'auto_enrich' => (bool) env('GENERATION_AUTO_ENRICH', true),
     ],
 
     'practice' => [
