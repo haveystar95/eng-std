@@ -715,7 +715,7 @@ paths:
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
-                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
                       response: { type: string, description: The user's raw answer text }
                       answered_at:
                         type: string
@@ -975,7 +975,7 @@ paths:
                               The trainers this user has switched on, IN ROTATION ORDER (their own
                               override, or the product default). The client mirrors this into its
                               offline practice builder, so a toggle takes effect on the next sync.
-                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
                       changes:
                         type: object
                         properties:
@@ -1292,10 +1292,10 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble] }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
-        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation" }
-        answer: { type: string, description: "What a correct answer must match. The target-language term, except for `scramble`, where the exercise is the sentence and this is the example sentence itself" }
+        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise" }
+        answer: { type: string, description: "What a correct answer must match. The target-language term, except for the sentence modes (`scramble`, `dictation`), where this is the example sentence itself — the client must not display it before the answer is committed" }
         transcription: { type: string, nullable: true }
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }

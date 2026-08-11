@@ -19,7 +19,8 @@ use App\Modules\Learning\Domain\ValueObject\TermPlayability;
  *   reps ≥ 1 (learning/relearning, produced before) → production rotation, base first:
  *                                                     multi-word → word_bank, single word → typing,
  *                                                     then listening, cloze, scramble
- *   review                                         → rotation: typing / listening / cloze / scramble
+ *   review                                         → rotation: typing / listening / cloze /
+ *                                                     scramble / dictation
  *   known (verification due)                       → always typing
  *
  * Rationale: `reps` is the honest signal of familiarity. A brand-new term (no progress row → reps
@@ -61,7 +62,17 @@ final class ExerciseSelector
         // branch leads with its base mode (word_bank/typing) on `(reps-1) % n` so the second
         // meeting is the base and later ones fan out.
         if ($progress->state() === LearningState::Review) {
-            $ladder = [ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble];
+            // `dictation` only here, and last: writing a whole sentence from hearing it is the most
+            // demanding thing the app asks, so it belongs to terms already in review rather than to
+            // one still being learned. New rungs go on the END so enabling one does not renumber
+            // the rotation for words that are already partway through it.
+            $ladder = [
+                ExerciseMode::Typing,
+                ExerciseMode::Listening,
+                ExerciseMode::Cloze,
+                ExerciseMode::Scramble,
+                ExerciseMode::Dictation,
+            ];
             $offset = $progress->reps();
         } else {
             $base = $playable->supports(ExerciseMode::WordBank) ? ExerciseMode::WordBank : ExerciseMode::Typing;

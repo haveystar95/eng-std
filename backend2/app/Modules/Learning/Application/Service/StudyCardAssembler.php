@@ -90,6 +90,12 @@ final readonly class StudyCardAssembler
             $answer = (string) $content->example;
             $prompt = $content->exampleTranslation;
             $chips = $this->chips->sentenceChips($answer);
+        } elseif ($mode === ExerciseMode::Dictation) {
+            // The task is the AUDIO. No written prompt at all — a translation on screen would turn
+            // "write what you hear" into "translate this", which is a different exercise and an
+            // easier one. The gate guarantees the example is there to be spoken.
+            $answer = (string) $content->example;
+            $prompt = null;
         }
 
         return new SessionCardView(

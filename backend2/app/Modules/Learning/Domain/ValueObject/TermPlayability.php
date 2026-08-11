@@ -33,6 +33,15 @@ final readonly class TermPlayability
     public const MAX_SCRAMBLE_TOKENS = 12;
 
     /**
+     * Dictation's window, tighter at the top than scramble's on purpose: typing a sentence out by
+     * ear costs far more than dropping tiles into place, and a twelve-word sentence typed blind is
+     * a chore rather than a drill. The floor is the same — below four words there is no sentence
+     * to hear, only the term, which is what `listening` already asks for.
+     */
+    public const MIN_DICTATION_TOKENS = 4;
+    public const MAX_DICTATION_TOKENS = 10;
+
+    /**
      * @param  int   $answerWordCount        whitespace-separated words in the target answer
      * @param  bool  $clozeable              the term's example exists and contains the answer, so a
      *                                       blank can be cut from it
@@ -61,6 +70,12 @@ final readonly class TermPlayability
                 && $this->hasExampleTranslation
                 && $this->exampleTokenCount >= self::MIN_SCRAMBLE_TOKENS
                 && $this->exampleTokenCount <= self::MAX_SCRAMBLE_TOKENS,
+            // No translation needed: the task IS the audio, so the card has no written prompt to
+            // put one in. An example that is merely the term is excluded for the same reason as in
+            // scramble — hearing the term and typing it is `listening`, which already exists.
+            ExerciseMode::Dictation => ! $this->exampleIsAnswer
+                && $this->exampleTokenCount >= self::MIN_DICTATION_TOKENS
+                && $this->exampleTokenCount <= self::MAX_DICTATION_TOKENS,
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
             ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening => true,
         };

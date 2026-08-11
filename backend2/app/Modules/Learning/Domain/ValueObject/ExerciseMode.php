@@ -18,12 +18,15 @@ enum ExerciseMode: string
     case Listening = 'listening';
     case Cloze = 'cloze';
     case Scramble = 'scramble';
+    case Dictation = 'dictation';
 
     /** The best grade this mode is allowed to produce. Recognition caps at `good`. */
     public function maxGrade(): Grade
     {
         return match ($this) {
-            self::Typing, self::Listening => Grade::Easy,
+            // `dictation` writes a whole sentence from hearing it alone — nothing is on the screen
+            // to lean on, so it is production in the fullest sense the app has.
+            self::Typing, self::Listening, self::Dictation => Grade::Easy,
             // `scramble` hands over every word of the sentence — assembling given tiles is
             // recognition, exactly like word_bank, so it can never buy a month-long interval.
             self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble => Grade::Good,
@@ -41,7 +44,7 @@ enum ExerciseMode: string
     public function gradesAgainstExample(): bool
     {
         return match ($this) {
-            self::Scramble => true,
+            self::Scramble, self::Dictation => true,
             self::MultipleChoice, self::WordBank, self::Typing, self::Listening, self::Cloze => false,
         };
     }

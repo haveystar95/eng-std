@@ -12,14 +12,19 @@ uses(RefreshDatabase::class);
 it('lists every mode this build can deal, plus the current default', function () {
     [, $token] = adminActor();
 
-    $this->withHeader('Authorization', "Bearer {$token}")
+    $response = $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/admin/api/exercise-modes')
         ->assertOk()
         // `available` comes from the enum, so a newly built mode shows up in the panel the moment
         // it exists — switched off, per the release rule.
-        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'])
+        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation'])
         ->assertJsonPath('global', config('learning.enabled_modes'))
         ->assertJsonPath('inherits', true);
+
+    // The release rule, stated as an assertion: the newest trainer is offerable but not on. This is
+    // the pair that has to stay true for every mode that follows — listed, and off.
+    expect($response->json('available'))->toContain('dictation')
+        ->and($response->json('global'))->not->toContain('dictation');
 });
 
 it('sets the product default and keeps the order it was given', function () {

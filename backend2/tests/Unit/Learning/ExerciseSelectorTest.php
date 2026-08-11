@@ -204,11 +204,13 @@ function practiceContractCases(): array
         '01KZETAAF7QK4M2NB9XR6TC1YZ',
         '01KZETAAG3WD5P7HJ2VT8NQ4XB',
         '01KZETAAH6ZC2Q9MK4RB7XD3VT',
+        '01KZETAAJ4XN8V2CQ7MB5RT9WD',
     ];
     // Deliberately covers every applicability branch: single word vs phrase (word_bank); example
     // containing the answer vs not vs absent (cloze); a mixed-case example (the match is
-    // case-insensitive on both sides); and, for scramble, an untranslated example, one that is
-    // merely the term itself, and sentences on both sides of the 4…12 window.
+    // case-insensitive on both sides); an untranslated example and one that is merely the term
+    // itself; and sentences on both sides of BOTH windows — scramble's 4…12 and dictation's
+    // tighter 4…10, which only a sentence of 11 or 12 words tells apart.
     $answers = [
         ['answer' => 'reservation', 'example' => 'I have a reservation for tonight.', 'example_translation' => 'У меня бронь на сегодня.'],
         ['answer' => 'give up', 'example' => "I won't give up until I've achieved my goals.", 'example_translation' => 'Я не сдамся, пока не добьюсь своего.'],
@@ -222,6 +224,9 @@ function practiceContractCases(): array
         ['answer' => 'hurry', 'example' => 'Please hurry up.', 'example_translation' => 'Пожалуйста, поторопись.'],
         // Sixteen chips: above the ceiling.
         ['answer' => 'suitcase', 'example' => 'I left my suitcase at the hotel and had to go back for it in the evening.', 'example_translation' => 'Я оставил чемодан в отеле и вечером вернулся за ним.'],
+        // Eleven chips: inside scramble's window, past dictation's. The one case that proves the
+        // two ceilings are actually different numbers on both runtimes.
+        ['answer' => 'umbrella', 'example' => 'She left her umbrella on the train and never saw it again.', 'example_translation' => 'Она забыла зонт в поезде и больше его не видела.'],
     ];
 
     $cases = [];
@@ -248,6 +253,10 @@ function practiceRotation(string $termId, int $cardIndex): int
 
 it('practice_contract: the committed fixture still matches this selector', function () {
     $assessor = new PlayabilityAssessor(new ChipShuffler(), new SentenceTokenizer());
+    // The SHIPPED default, which is what a device assumes before its first sync — deliberately not
+    // "every mode the enum has". A trainer released switched off (dictation) is absent here on
+    // purpose; what pins ITS behaviour across the two runtimes is `supported_modes` below, which
+    // is about the term's data and so is independent of anyone's toggles.
     $modes = ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble'];
     $enabled = new EnabledModes(array_map(
         static fn (string $m): ExerciseMode => ExerciseMode::from($m),
@@ -268,6 +277,13 @@ it('practice_contract: the committed fixture still matches this selector', funct
             'example_token_count' => $playable->exampleTokenCount,
             'has_example_translation' => $playable->hasExampleTranslation,
             'example_is_answer' => $playable->exampleIsAnswer,
+            // Every mode this term's DATA supports, whatever is switched on. This is what pins a
+            // gate across the two runtimes for a mode nobody has enabled yet — by the time someone
+            // does, the client either already agreed or the fixture went red.
+            'supported_modes' => array_values(array_map(
+                static fn (ExerciseMode $m): string => $m->value,
+                array_filter(ExerciseMode::cases(), $playable->supports(...)),
+            )),
             'rotation' => practiceRotation($case['term_id'], $case['card_index']),
             'expected_mode' => $this->selector->selectForPractice(
                 $enabled,
