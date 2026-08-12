@@ -10,6 +10,7 @@ use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
 use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
+use App\Modules\Vocabulary\Application\Query\DistractorAuditReader;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 use App\Modules\Vocabulary\Application\Query\ExampleRegenContextReader;
 use App\Modules\Vocabulary\Application\Query\TermEnrichmentExportReader;
@@ -25,6 +26,7 @@ use App\Modules\Vocabulary\Domain\Repository\TermRepository;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentAuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichableTermReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorAuditReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichmentTargetReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentExampleRegenContextReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentPendingTermImageReader;
@@ -63,6 +65,7 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(ExampleRegenContextReader::class, EloquentExampleRegenContextReader::class);
         $this->app->bind(TermExampleWriter::class, EloquentTermExampleWriter::class);
         // Enrichment станок: Vocabulary owns the two content tables; Generation fills them.
+        $this->app->bind(DistractorAuditReader::class, EloquentDistractorAuditReader::class);
         $this->app->bind(EnrichmentTargetReader::class, EloquentEnrichmentTargetReader::class);
         $this->app->bind(TermEnrichmentWriter::class, EloquentTermEnrichmentWriter::class);
         $this->app->bind(TermEnrichmentExportReader::class, EloquentTermEnrichmentExportReader::class);
