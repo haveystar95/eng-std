@@ -93,6 +93,36 @@ it('accepts a single-character typo on a long word but caps it at hard', functio
     expect($grade)->toBe(Grade::Hard);
 });
 
+// Found on the device: pick_correct offered "Could you takes a photo of us…" against "Could you take
+// a photo of us…" — one character apart — and the typo stage marked the BROKEN sentence correct,
+// scheduling the term as learned. Typo leniency forgives typing; a tapped answer has no typing in it.
+it('does not forgive a one-character difference when the answer was PICKED, not typed', function () {
+    $right = 'Could you take a photo of us in front of the monument?';
+    $wrong = 'Could you takes a photo of us in front of the monument?';
+
+    $grade = $this->grader->grade(
+        new Answer($wrong), ExerciseMode::PickCorrect, answerKey([$right], isPhrase: true), LatencyBaseline::insufficient(),
+    );
+
+    expect($grade)->toBe(Grade::Again);
+});
+
+it('still forgives that same difference when it WAS typed', function () {
+    $grade = $this->grader->grade(
+        new Answer('withdrow'), ExerciseMode::Typing, answerKey(['withdraw']), LatencyBaseline::insufficient(),
+    );
+
+    expect($grade)->toBe(Grade::Hard);
+});
+
+it('does not forgive a typo on multiple_choice or the assembling modes either', function () {
+    foreach ([ExerciseMode::MultipleChoice, ExerciseMode::WordBank, ExerciseMode::Scramble] as $mode) {
+        expect($this->grader->grade(
+            new Answer('withdrow'), $mode, answerKey(['withdraw']), LatencyBaseline::insufficient(),
+        ))->toBe(Grade::Again);
+    }
+});
+
 it('rejects a one-letter difference on a short word as wrong', function () {
     $grade = $this->grader->grade(new Answer('cut'), ExerciseMode::Typing, answerKey(['cat']), LatencyBaseline::insufficient());
 

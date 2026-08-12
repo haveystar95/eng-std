@@ -53,10 +53,14 @@ final class AnswerGrader
             }
         }
 
-        // Stage 3: a single-character typo on a long-enough answer — correct, ceiling `hard`.
-        foreach ($expected->accepted as $candidate) {
-            if ($this->isTypo($response, $this->normalizer->normalize($candidate))) {
-                return Grade::Hard;
+        // Stage 3: a single-character typo on a long-enough answer — correct, ceiling `hard`. Only
+        // where there was typing to forgive: on a picked or assembled answer a one-character
+        // difference is usually the very distinction the card tests ({@see forgivesTypos}).
+        if ($mode->forgivesTypos()) {
+            foreach ($expected->accepted as $candidate) {
+                if ($this->isTypo($response, $this->normalizer->normalize($candidate))) {
+                    return Grade::Hard;
+                }
             }
         }
 

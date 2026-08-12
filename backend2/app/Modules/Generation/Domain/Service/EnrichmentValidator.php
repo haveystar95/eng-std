@@ -79,6 +79,19 @@ final class EnrichmentValidator
     /** JSON punctuation the model sometimes leaks INSIDE a legal string value — see sanitizeNote(). */
     private const JSON_DEBRIS = ['"},{', '},{', '"}', '{"', '"],', '["'];
 
+    /**
+     * Markdown emphasis the model wraps the broken fragment in: «Excuse me, is this seat **take**?».
+     *
+     * Found on the device, and it is not cosmetic — it GIVES THE CARD AWAY. The marked word is exactly
+     * the error, so a learner picks the wrong sentence by looking for asterisks and never reads the
+     * grammar. The fragment already has a home in `error_span`; decorating the sentence is redundant
+     * and harmful, so the markers are stripped from every field before validation, which also keeps
+     * the span findable in its own sentence.
+     *
+     * Neither English nor Russian prose needs these characters, so removing them cannot damage content.
+     */
+    private const EMPHASIS_MARKERS = ['**', '__', '*', '_'];
+
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly LanguagePurityCheck $purity = new LanguagePurityCheck(),
@@ -153,7 +166,7 @@ final class EnrichmentValidator
         $rejected = 0;
         $seen = $accepted;
         foreach ($candidate->variants as $variant) {
-            $text = trim($variant->text);
+            $text = $this->stripEmphasis($variant->text);
             if ($text === '') {
                 $rejected++;
 
@@ -211,8 +224,10 @@ final class EnrichmentValidator
         $conflicts = [];
         $seen = [];
         foreach ($candidate->distractors as $raw) {
-            $text = trim($raw->sentence);
-            $span = trim($raw->errorSpan);
+            // Emphasis first: the span has to be findable in its own sentence, and stripping both
+            // sides keeps that true instead of failing a row the model merely over-decorated.
+            $text = $this->stripEmphasis($raw->sentence);
+            $span = $this->stripEmphasis($raw->errorSpan);
             $key = $this->normalizer->normalize($text);
 
             if ($text === '' || $key === '' || isset($seen[$key])) {
@@ -238,7 +253,8 @@ final class EnrichmentValidator
             if ($span === '' || mb_stripos($text, $span) === false) {
                 continue;
             }
-            if (trim($raw->correction) === '') {
+            $correction = $this->stripEmphasis($raw->correction);
+            if ($correction === '') {
                 continue;
             }
             // A distractor identical to the pinned example is not a distractor.
@@ -246,7 +262,7 @@ final class EnrichmentValidator
                 continue;
             }
 
-            $kept[] = new RawDistractor($text, strtolower(trim($raw->errorType)), $span, trim($raw->correction));
+            $kept[] = new RawDistractor($text, strtolower(trim($raw->errorType)), $span, $correction);
             if (count($kept) === self::MAX_DISTRACTORS) {
                 break;
             }
@@ -406,6 +422,12 @@ final class EnrichmentValidator
         }
 
         return $set;
+    }
+
+    /** @see EMPHASIS_MARKERS — the model marks the error, which hands the learner the answer. */
+    private function stripEmphasis(string $value): string
+    {
+        return trim(str_replace(self::EMPHASIS_MARKERS, '', $value));
     }
 
     private function nullIfBlank(?string $value): ?string

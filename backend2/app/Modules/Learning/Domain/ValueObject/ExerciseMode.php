@@ -59,4 +59,25 @@ enum ExerciseMode: string
     {
         return $this->maxGrade() === Grade::Easy;
     }
+
+    /**
+     * Does a single-character difference deserve forgiveness on this mode?
+     *
+     * Typo leniency exists to forgive TYPING — a slipped key on a long word should not wipe a
+     * month-long interval. When the answer is TAPPED or ASSEMBLED from material we handed over, there
+     * is no typing to forgive, and a one-character difference is very often the exact thing being
+     * tested: `pick_correct` offers "Could you takes a photo…" against "Could you take a photo…",
+     * which is one character apart and is the whole point of the card. Forgiving it there marks the
+     * broken sentence correct and schedules the term as learned.
+     *
+     * So: only the typed modes forgive. For word_bank and scramble the learner can only place tiles
+     * we dealt, so the path was unreachable anyway — stating it here keeps it that way.
+     */
+    public function forgivesTypos(): bool
+    {
+        return match ($this) {
+            self::Typing, self::Listening, self::Cloze, self::Dictation => true,
+            self::MultipleChoice, self::WordBank, self::Scramble, self::PickCorrect => false,
+        };
+    }
 }

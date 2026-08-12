@@ -78,6 +78,38 @@ it('scraps a contraction-only rewrite, which the grader accepts as correct', fun
         ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
+// Found on the device: «Excuse me, is this seat **take**?» — the model marked the error, which hands
+// the learner the answer. The card is then solved by hunting for asterisks, not by reading grammar.
+it('strips markdown emphasis from the sentence, the span and the correction', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate([
+        new RawDistractor('Excuse me, is this seat **take**?', 'tense', '**take**', '**taken**'),
+    ]));
+
+    expect($verdict->distractors)->toHaveCount(1)
+        ->and($verdict->distractors[0]->sentence)->toBe('Excuse me, is this seat take?')
+        ->and($verdict->distractors[0]->errorSpan)->toBe('take')
+        ->and($verdict->distractors[0]->correction)->toBe('taken');
+});
+
+it('keeps the span findable after stripping, rather than scrapping an over-decorated row', function () {
+    // The span arrives bare while the sentence decorates it — stripping both sides is what keeps the
+    // relation true instead of failing a row whose only sin was emphasis.
+    $verdict = $this->validator->validate(enrichmentCandidate([
+        new RawDistractor('Excuse me, is this **seats** taken?', 'tense', 'seats', 'seat'),
+    ]));
+
+    expect($verdict->distractors)->toHaveCount(1)
+        ->and($verdict->distractors[0]->sentence)->toBe('Excuse me, is this seats taken?');
+});
+
+it('strips emphasis from a variant too', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('__take out money__', null)],
+    ));
+
+    expect($verdict->variants[0]->text)->toBe('take out money');
+});
+
 it('scraps a distractor whose error_span is not in its own sentence', function () {
     $verdict = $this->validator->validate(enrichmentCandidate([
         new RawDistractor('I can withdraw money from my account.', 'modal_to', 'can to', 'can'),

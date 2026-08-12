@@ -141,6 +141,46 @@ void main() {
     });
   });
 
+  // Found on the device: pick_correct put a green check on "Could you takes a photo…" beside the real
+  // answer "Could you take a photo…" — one character apart. The typo stage is for forgiving TYPING;
+  // a tapped answer has no typing in it, and here the one character IS the mistake being tested.
+  group('SessionGrader.check — typo leniency only where something was typed', () {
+    const right = 'Could you take a photo of us in front of the monument?';
+    const wrong = 'Could you takes a photo of us in front of the monument?';
+
+    test('a picked sentence one character off is WRONG, not «Почти»', () {
+      expect(SessionGrader.check(wrong, right, forgiveTypos: false), LocalCheck.wrong);
+    });
+
+    test('the same difference is still forgiven when it was typed', () {
+      expect(SessionGrader.check(wrong, right), LocalCheck.typo);
+      expect(SessionGrader.check('withdrow', 'withdraw', forgiveTypos: true), LocalCheck.typo);
+    });
+
+    test('an exact pick is still correct with leniency off', () {
+      expect(SessionGrader.check(right, right, forgiveTypos: false), LocalCheck.correct);
+    });
+
+    test('a variant is still accepted with leniency off', () {
+      expect(
+        SessionGrader.check('that is my seat', 'this is my seat',
+            variants: const ['that is my seat'], forgiveTypos: false),
+        LocalCheck.correct,
+      );
+    });
+
+    test('the mode decides: only typed modes forgive', () {
+      expect(ExerciseMode.pickCorrect.forgivesTypos, isFalse);
+      expect(ExerciseMode.multipleChoice.forgivesTypos, isFalse);
+      expect(ExerciseMode.wordBank.forgivesTypos, isFalse);
+      expect(ExerciseMode.scramble.forgivesTypos, isFalse);
+      expect(ExerciseMode.typing.forgivesTypos, isTrue);
+      expect(ExerciseMode.cloze.forgivesTypos, isTrue);
+      expect(ExerciseMode.listening.forgivesTypos, isTrue);
+      expect(ExerciseMode.dictation.forgivesTypos, isTrue);
+    });
+  });
+
   group('SessionCard.fromJson — accepted_variants', () {
     test('reads the list from the wire', () {
       final card = SessionCard.fromJson({

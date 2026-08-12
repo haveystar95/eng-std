@@ -49,6 +49,10 @@ Hard rules for every distractor:
   character. Not from the original sentence, and not paraphrased — it is used to underline the
   mistake, so it has to be findable in the string you returned.
 - `correction` is what that span should have been.
+- **No markdown, ever.** Do not wrap the broken fragment in asterisks or underscores — not
+  `is this seat **take**?`, not `_take_`, nothing. The fragment already has a field of its own
+  (`error_span`); marking it inside the sentence shows the learner where the error is, and the card
+  can then be solved by looking for punctuation instead of by reading the grammar. Plain sentences.
 - Never introduce a second mistake, and never change the vocabulary being taught.
 - **Never change the MEANING.** Swapping a word for its opposite or its counterpart — before ↔ after,
   always ↔ never, buy ↔ sell, before signing ↔ after signing — produces a sentence that is perfectly

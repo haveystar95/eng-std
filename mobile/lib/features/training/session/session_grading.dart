@@ -39,10 +39,16 @@ abstract final class SessionGrader {
   /// then a one-character typo against any of them. Doing it in that order matters — checking typos
   /// per-candidate before exhausting the exact matches could report «Почти» for something that is
   /// simply a correct variant.
+  /// [forgiveTypos] mirrors the server's `ExerciseMode::forgivesTypos()`. Pass false whenever the
+  /// answer was TAPPED or ASSEMBLED rather than typed: there is no slipped key to forgive, and on
+  /// pick_correct a one-character difference is usually the exact thing the card tests ("Could you
+  /// takes a photo…" against "Could you take a photo…"). Forgiving it there ticks the broken sentence
+  /// as correct — which is what the device caught.
   static LocalCheck check(
     String response,
     String answer, {
     List<String> variants = const [],
+    bool forgiveTypos = true,
   }) {
     final r = _normalize(response);
     if (r.isEmpty) return LocalCheck.wrong; // «Не помню» / blank
@@ -51,6 +57,7 @@ abstract final class SessionGrader {
     for (final a in accepted) {
       if (r == a) return LocalCheck.correct;
     }
+    if (!forgiveTypos) return LocalCheck.wrong;
     for (final a in accepted) {
       if (_isTypo(r, a)) return LocalCheck.typo;
     }

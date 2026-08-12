@@ -172,6 +172,11 @@ enum ExerciseMode {
   /// Does this card ask the learner to TAP one of several given sentences? The body renders options
   /// like multiple_choice, but each option is a whole sentence and a wrong tap gets an explanation.
   bool get isSentenceChoice => this == pickCorrect;
+
+  /// Mirror of the server's `ExerciseMode::forgivesTypos()`. Only a TYPED answer has a slipped key to
+  /// forgive; a tapped or assembled one does not, and on pick_correct a one-character difference is
+  /// usually the very distinction being tested.
+  bool get forgivesTypos => isTyped;
 }
 
 /// Why one option of a `pick_correct` card is wrong: the broken fragment and what it should have

@@ -214,6 +214,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       response,
       _card.answer,
       variants: _card.acceptedVariants,
+      forgiveTypos: _mode.forgivesTypos,
     );
     switch (verdict) {
       case LocalCheck.correct:
@@ -582,10 +583,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _SessionOption(
             text: o,
             answered: _answered,
-            // Same accepted set as _commit, so the option highlighted as correct is exactly the
-            // one that would be graded correct — not a narrower guess.
-            isAnswer: SessionGrader.check(o, _card.answer, variants: _card.acceptedVariants)
-                .isAccepted,
+            // Same accepted set AND the same typo policy as _commit, so the option ticked as correct
+            // is exactly the one that would be graded correct. Getting the policy wrong here is what
+            // put a green check on "Could you takes a photo…" — one character from the answer.
+            isAnswer: SessionGrader.check(
+              o,
+              _card.answer,
+              variants: _card.acceptedVariants,
+              forgiveTypos: _mode.forgivesTypos,
+            ).isAccepted,
             isPicked: _picked == o,
             onTap: () => _pick(o),
             errorSpan: _card.feedbackFor(o)?.errorSpan,
