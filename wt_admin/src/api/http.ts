@@ -82,6 +82,17 @@ export async function httpPut<T>(path: string, body?: unknown, config?: AxiosReq
   return camelizeKeys<T>(res.data)
 }
 
+export async function httpPatch<T>(path: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  const res = await instance.patch(path, body, config)
+  return camelizeKeys<T>(res.data)
+}
+
+// DELETE with a body: the collection delete carries `confirm_title`, which the server verifies.
+export async function httpDelete<T>(path: string, body?: unknown): Promise<T> {
+  const res = await instance.delete(path, body === undefined ? undefined : { data: body })
+  return camelizeKeys<T>(res.data)
+}
+
 // Drop undefined/empty params so they never appear as `?x=` in the URL.
 function cleanParams(params?: Record<string, unknown>): Record<string, unknown> | undefined {
   if (!params) return undefined

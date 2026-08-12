@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from '@/api'
 import { useAsync } from '@/composables/useAsync'
 import { count, money } from '@/utils/format'
@@ -12,6 +13,7 @@ import Badge from '@/components/Badge.vue'
 import RelativeDate from '@/components/RelativeDate.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import PlanTab from './user/PlanTab.vue'
 import ReviewsTab from './user/ReviewsTab.vue'
 import CollectionsTab from './user/CollectionsTab.vue'
@@ -20,12 +22,13 @@ import LogsTab from './user/LogsTab.vue'
 import GenerationsTab from './user/GenerationsTab.vue'
 import ModesTab from './user/ModesTab.vue'
 
-const props = defineProps<{ id: string }>()
+const props = defineProps<{ id: string; tab: string }>()
 
 const { data: user, loading, error, run } = useAsync(() => api.getUser(props.id))
 onMounted(run)
 
-const tab = ref<'plan' | 'reviews' | 'collections' | 'modes' | 'dialogs' | 'generations' | 'logs'>('plan')
+const router = useRouter()
+
 const tabs = [
   { key: 'plan', label: 'План' },
   { key: 'reviews', label: 'Ревью' },
@@ -36,7 +39,33 @@ const tabs = [
   { key: 'logs', label: 'Логи' },
 ]
 
-// ── Tier toggle (the only mutation in v1) ──
+/**
+ * The tab IS the URL. Switching one `replace`s rather than `push`es, so the browser's Back button
+ * leaves the user card entirely instead of walking back through six tab clicks — Back should undo
+ * a navigation, not a glance.
+ */
+const tab = computed({
+  get: () => props.tab,
+  set: (next: string) => {
+    if (next !== props.tab) router.replace({ name: 'user', params: { id: props.id, tab: next } })
+  },
+})
+
+// Tabs whose content comes from the server and can change while the card is open. «Тренажёры» is
+// a settings screen with its own save flow — a refresh button there would just fight the operator.
+const LIVE_TABS = ['reviews', 'plan', 'dialogs', 'collections', 'generations', 'logs']
+const refreshKey = ref(0)
+const refreshing = ref(false)
+
+async function refreshTab() {
+  refreshing.value = true
+  refreshKey.value++
+  // The profile card above the tabs is server data too — refresh it in the same click.
+  await run()
+  refreshing.value = false
+}
+
+// ── Tier toggle ──
 const confirmOpen = ref(false)
 const mutating = ref(false)
 const mutateError = ref<string | null>(null)
@@ -64,6 +93,13 @@ async function confirmToggle() {
 
 <template>
   <div>
+    <Breadcrumbs
+      :items="[
+        { label: 'Пользователи', to: { name: 'users' } },
+        { label: user?.email ?? user?.name ?? id, to: { name: 'user', params: { id, tab: 'plan' } } },
+        { label: tabs.find((t) => t.key === tab)?.label ?? '' },
+      ]"
+    />
     <PageHeader
       :title="user?.email ?? user?.name ?? 'Пользователь'"
       :back="{ to: { name: 'users' }, label: 'Пользователи' }"
@@ -142,15 +178,33 @@ async function confirmToggle() {
 
       <div class="tabbar">
         <PaperTabs v-model="tab" :tabs="tabs" />
+        <!--
+          The live tabs re-fetch from the server. Reloading the whole page to see whether a review
+          landed is the kind of thing you do fifty times an evening while testing on the phone.
+        -->
+        <PaperButton
+          v-if="LIVE_TABS.includes(tab)"
+          variant="quiet"
+          small
+          :disabled="refreshing"
+          @click="refreshTab"
+        >
+          <span v-if="refreshing" class="spinner" aria-hidden="true" />
+          {{ refreshing ? 'Обновляем…' : 'Обновить' }}
+        </PaperButton>
       </div>
 
-      <PlanTab v-if="tab === 'plan'" :user-id="user.id" :timezone="user.timezone" />
-      <ReviewsTab v-else-if="tab === 'reviews'" :user-id="user.id" />
-      <CollectionsTab v-else-if="tab === 'collections'" :collections="user.collections" />
+      <!--
+        `:key` carries the refresh counter: bumping it remounts the tab, which re-runs its own
+        fetch. One mechanism for every tab, instead of an imperative refresh method on each.
+      -->
+      <PlanTab v-if="tab === 'plan'" :key="`plan-${refreshKey}`" :user-id="user.id" :timezone="user.timezone" />
+      <ReviewsTab v-else-if="tab === 'reviews'" :key="`rev-${refreshKey}`" :user-id="user.id" />
+      <CollectionsTab v-else-if="tab === 'collections'" :key="`col-${refreshKey}`" :collections="user.collections" />
       <ModesTab v-else-if="tab === 'modes'" :user-id="user.id" />
-      <DialogsTab v-else-if="tab === 'dialogs'" :user-id="user.id" />
-      <GenerationsTab v-else-if="tab === 'generations'" :user-id="user.id" />
-      <LogsTab v-else :user-id="user.id" />
+      <DialogsTab v-else-if="tab === 'dialogs'" :key="`dlg-${refreshKey}`" :user-id="user.id" />
+      <GenerationsTab v-else-if="tab === 'generations'" :key="`gen-${refreshKey}`" :user-id="user.id" />
+      <LogsTab v-else :key="`log-${refreshKey}`" :user-id="user.id" />
     </template>
 
     <ConfirmDialog
@@ -213,6 +267,26 @@ async function confirmToggle() {
 }
 .tabbar {
   margin: var(--s26) 0 var(--s16);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s12);
+}
+.spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -1px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .mut-err {
   color: var(--destructive);

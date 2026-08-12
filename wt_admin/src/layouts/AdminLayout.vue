@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { LayoutDashboard, Users, Library, Type, Sparkles,
   SlidersHorizontal, ScrollText, LogOut } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -9,14 +9,22 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const nav = [
-  { to: { name: 'dashboard' }, label: 'Обзор', icon: LayoutDashboard },
-  { to: { name: 'users' }, label: 'Пользователи', icon: Users },
-  { to: { name: 'collections' }, label: 'Коллекции', icon: Library },
-  { to: { name: 'terms' }, label: 'Термины', icon: Type },
-  { to: { name: 'exercise-modes' }, label: 'Тренажёры', icon: SlidersHorizontal },
-  { to: { name: 'generations' }, label: 'Генерации', icon: Sparkles },
-  { to: { name: 'logs' }, label: 'Логи', icon: ScrollText },
+  { to: { name: 'dashboard' }, label: 'Обзор', icon: LayoutDashboard, section: '/dashboard' },
+  { to: { name: 'users' }, label: 'Пользователи', icon: Users, section: '/users' },
+  { to: { name: 'collections' }, label: 'Коллекции', icon: Library, section: '/collections' },
+  { to: { name: 'terms' }, label: 'Термины', icon: Type, section: '/terms' },
+  { to: { name: 'exercise-modes' }, label: 'Тренажёры', icon: SlidersHorizontal, section: '/exercise-modes' },
+  { to: { name: 'generations' }, label: 'Генерации', icon: Sparkles, section: '/generations' },
+  { to: { name: 'logs' }, label: 'Логи', icon: ScrollText, section: '/logs' },
 ]
+
+// Highlight by SECTION, not by exact route: a detail page (/users/:id/dialogs) is still
+// "Пользователи". RouterLink's own active-class can't do this — detail routes are siblings of the
+// list route, not children of it.
+const route = useRoute()
+function isActive(section: string): boolean {
+  return route.path === section || route.path.startsWith(section + '/')
+}
 
 function logout() {
   auth.logout()
@@ -37,7 +45,7 @@ function logout() {
           :key="item.label"
           :to="item.to"
           class="nav-link"
-          active-class="active"
+          :class="{ active: isActive(item.section) }"
         >
           <component :is="item.icon" :size="18" class="nav-icon" />
           <span>{{ item.label }}</span>

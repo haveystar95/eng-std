@@ -8,13 +8,13 @@ function makeRouter() {
     history: createMemoryHistory(),
     routes: [
       { path: '/users', name: 'users', component: UsersView },
-      { path: '/users/:id', name: 'user', component: { template: '<div />' } },
+      { path: '/users/:id/:tab', name: 'user', component: { template: '<div />' } },
     ],
   })
 }
 
 describe('UsersView', () => {
-  it('renders a paginated table of users from the (mock) API', async () => {
+  it('renders an infinite-scrolling table of users from the (mock) API', async () => {
     const router = makeRouter()
     router.push('/users')
     await router.isReady()
@@ -23,8 +23,9 @@ describe('UsersView', () => {
     // Seed users are listed with their email and tier badge.
     expect(w.text()).toContain('alpha@example.com')
     expect(w.text()).toContain('Premium')
-    // The pagination summary renders a total.
-    expect(w.text()).toMatch(/из\s+\d/)
+    // The whole (small) seed fits in one page, so the list reports that it reached the end —
+    // which is the infinite scroll's stop condition, not a page counter.
+    expect(w.text()).toMatch(/Всё\s+—\s+\d/)
   })
 
   it('navigates to the user detail on row click', async () => {

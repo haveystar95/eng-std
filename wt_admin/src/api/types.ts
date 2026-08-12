@@ -9,12 +9,21 @@ export interface Paginated<T> {
   meta: PageMeta
 }
 
-// BE meta is { total, page, per_page }; totalPages is derived client-side.
+// BE meta is { total, page, per_page, next_cursor }; totalPages is derived client-side.
+// `nextCursor` is the keyset walk: pass it back as `cursor` for the next page, null = the end.
 export interface PageMeta {
   page: number
   perPage: number
   total: number
   totalPages: number
+  nextCursor: string | null
+}
+
+// Every list endpoint accepts either mode. Sending `limit` (with or without `cursor`)
+// switches the BE to keyset paging — which is what the infinite scroll uses.
+export interface CursorQuery {
+  limit?: number
+  cursor?: string
 }
 
 // ── Auth ──
@@ -166,9 +175,12 @@ export interface CollectionRow {
   type: CollectionType
   title: string
   ownerId: string | null
+  ownerEmail: string | null
   source: CollectionSource
   itemsCount: number
   createdAt: string | null
+  /** Directly-attributable spend (generation + realtime); the card has the full split. */
+  costUsd: number
 }
 export interface CollectionTerm {
   termId: string
@@ -204,9 +216,47 @@ export interface TermTranslation {
   text: string
   isPrimary: boolean
 }
+export type DistractorErrorType =
+  | 'article'
+  | 'preposition'
+  | 'tense'
+  | 'word_order'
+  | 'false_friend'
+  | 'modal_to'
+export interface ExampleDistractor {
+  id: string
+  sentence: string
+  errorType: DistractorErrorType
+  /** The exact substring of `sentence` that is wrong — highlighted in place. */
+  errorSpan: string
+  correction: string
+  generatorVersion: string
+}
 export interface TermExample {
+  id: string
   sentence: string
   translation: string | null
+  /** Exactly one example per term is pinned (lowest id); only it is ever shown to the learner. */
+  isPinned: boolean
+  distractors: ExampleDistractor[]
+}
+export type FindingKind =
+  | 'ambiguity'
+  | 'language'
+  | 'ua_leakage'
+  | 'misspelled_or_nonword'
+  | 'variant_conflict'
+export interface EnrichmentFinding {
+  kind: FindingKind
+  field: string | null
+  detail: string
+  generatorVersion: string
+  createdAt: string | null
+}
+export interface TermVariant {
+  text: string
+  note: string | null
+  generatorVersion: string
 }
 export interface TermDetail {
   id: string
@@ -217,16 +267,70 @@ export interface TermDetail {
   pos: string | null
   ipa: string | null
   audioUrl: string | null
+  imageUrl: string | null
+  imageAuthor: string | null
+  imageAuthorUrl: string | null
+  cefr: string | null
   source: string
   createdAt: string | null
-  imageUrl?: string | null // BE must add `image_url` — see TermRow.imageUrl
+  updatedAt: string | null
   translations: TermTranslation[]
   examples: TermExample[]
   collections: { id: string; title: string; type: string }[]
+  acceptedVariants: TermVariant[]
+  findings: EnrichmentFinding[]
+  enrichmentVersion: string | null
   progressCount: number
 }
 
-// ── Logs (no request/response bodies, no detail endpoint in the contract) ──
+// ── Curation (impact = the blast radius, read before a confirm dialog is drawn) ──
+export interface TermImpact {
+  termId: string
+  text: string
+  collectionsCount: number
+  usersWithProgress: number
+  reviewsCount: number
+}
+export interface CollectionImpact {
+  collectionId: string
+  title: string
+  type: CollectionType
+  ownerId: string | null
+  termsCount: number
+  subscribers: number
+  learnersWithProgress: number
+}
+export interface TermPatch {
+  text?: string
+  translation?: string
+  ipa?: string | null
+  exampleId?: string
+  exampleSentence?: string
+  exampleTranslation?: string | null
+}
+
+// ── Costs ──
+export type CallPurpose = 'generation' | 'images' | 'enrichment' | 'realtime' | 'recap' | 'example_regen'
+export interface PurposeCost {
+  purpose: CallPurpose
+  tokensIn: number
+  tokensOut: number
+  costUsd: number
+  calls: number
+}
+export interface CostByPurpose {
+  scopeId: string | null
+  period: string | null
+  since: string | null
+  totalUsd: number
+  tokensIn: number
+  tokensOut: number
+  byPurpose: PurposeCost[]
+  /** Caveats the numbers alone would hide (shared terms, log-priced purposes). */
+  note: string | null
+}
+
+// ── Logs ──
 export type LogDirection = 'inbound' | 'outbound'
 export interface RequestLog {
   id: string
@@ -235,10 +339,25 @@ export interface RequestLog {
   host: string | null
   path: string
   service: string | null
+  purpose: CallPurpose | null
+  collectionId: string | null
   status: number | null
   durationMs: number | null
   userId: string | null
   occurredAt: string | null
+  /** Derived from the stored bodies, so the whole history is priced — not just new rows. */
+  model: string | null
+  tokensIn: number | null
+  tokensOut: number | null
+  costUsd: number | null
+  error: string | null
+}
+export interface RequestLogDetail extends RequestLog {
+  requestBytes: number | null
+  responseBytes: number | null
+  requestHeaders: Record<string, unknown> | null
+  requestBody: Record<string, unknown> | null
+  responseBody: Record<string, unknown> | null
 }
 
 // ── Practice dialogs ──
@@ -296,7 +415,7 @@ export interface ExerciseModes {
 }
 
 // ── Query params (FE side; mapped to snake_case + page/per_page at the boundary) ──
-export interface PageQuery {
+export interface PageQuery extends CursorQuery {
   page?: number
   perPage?: number
 }
@@ -314,10 +433,22 @@ export interface CollectionsQuery extends PageQuery {
 export interface TermsQuery extends PageQuery {
   search?: string
 }
+/**
+ * Every field here is also a URL query parameter of the Logs screen — that is what makes a filtered
+ * view shareable: paste the link, see the same slice.
+ */
 export interface LogsQuery extends PageQuery {
-  userId?: string
+  direction?: LogDirection
+  provider?: string
+  purpose?: CallPurpose
   status?: number
+  statusClass?: '2xx' | '4xx' | '5xx' | 'error'
+  userId?: string
+  collectionId?: string
+  from?: string
+  to?: string
   path?: string
+  search?: string
 }
 export interface GenerationsQuery extends PageQuery {
   userId?: string

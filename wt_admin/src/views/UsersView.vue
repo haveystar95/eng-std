@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api'
-import { usePaginated } from '@/composables/usePaginated'
+import { useInfinite } from '@/composables/useInfinite'
 import { count } from '@/utils/format'
 import { TIER_LABEL } from '@/utils/labels'
 import type { UserRow } from '@/api/types'
@@ -12,30 +12,31 @@ import SearchInput from '@/components/SearchInput.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import Badge from '@/components/Badge.vue'
 import RelativeDate from '@/components/RelativeDate.vue'
-import Pagination from '@/components/Pagination.vue'
-import StateBlock from '@/components/StateBlock.vue'
+import InfiniteList from '@/components/InfiniteList.vue'
 
 const router = useRouter()
 const search = ref('')
-const { rows, meta, loading, error, load, goTo, reset } = usePaginated<UserRow>((page) =>
-  api.listUsers({ search: search.value, page }),
+const { rows, total, loading, loadingMore, error, done, reload, loadMore } = useInfinite<UserRow>((q) =>
+  api.listUsers({ search: search.value, ...q }),
 )
 
 const columns: Column[] = [
-  { key: 'email', label: 'Email / имя' },
-  { key: 'tier', label: 'Тариф' },
-  { key: 'cefr', label: 'CEFR' },
-  { key: 'collections', label: 'Колл.', align: 'right', tnum: true },
-  { key: 'progress', label: 'В прогрессе', align: 'right', tnum: true },
-  { key: 'created', label: 'Регистрация', align: 'right' },
+  // No cap on the email column: it is the identity of the row, and an ellipsised email is a
+  // column you have to click through to read.
+  { key: 'email', label: 'Email / имя', width: '34%' },
+  { key: 'tier', label: 'Тариф', width: '110px' },
+  { key: 'cefr', label: 'CEFR', width: '80px' },
+  { key: 'collections', label: 'Колл.', align: 'right', tnum: true, width: '90px' },
+  { key: 'progress', label: 'В прогрессе', align: 'right', tnum: true, width: '120px' },
+  { key: 'created', label: 'Регистрация', align: 'right', width: '150px' },
 ]
 
-onMounted(load)
+onMounted(reload)
 function onSearch() {
-  reset()
+  reload()
 }
 function open(u: UserRow) {
-  router.push({ name: 'user', params: { id: u.id } })
+  router.push({ name: 'user', params: { id: u.id, tab: 'plan' } })
 }
 </script>
 
@@ -48,16 +49,25 @@ function open(u: UserRow) {
     </PageHeader>
 
     <PaperCard :pad="false" class="wrap">
-      <StateBlock v-if="loading && rows.length === 0" kind="loading" />
-      <StateBlock v-else-if="error" kind="error" :message="error" retryable @retry="load" />
-      <StateBlock
-        v-else-if="rows.length === 0"
-        kind="empty"
-        title="Никого не найдено"
-        message="Измените запрос поиска."
-      />
-      <template v-else>
-        <DataTable :columns="columns" :rows="rows" :row-key="(u) => u.id" clickable @row-click="open">
+      <InfiniteList
+        :loading="loading"
+        :loading-more="loadingMore"
+        :error="error"
+        :done="done"
+        :count="rows.length"
+        :total="total"
+        empty-message="Никого не найдено — измените запрос поиска."
+        @more="loadMore"
+        @retry="reload"
+      >
+        <DataTable
+          :columns="columns"
+          :rows="rows"
+          :row-key="(u) => u.id"
+          clickable
+          sticky-header
+          @row-click="open"
+        >
           <template #cell-email="{ row }">
             <div class="email-cell">
               <span class="email">{{ row.email ?? '—' }}</span>
@@ -75,10 +85,7 @@ function open(u: UserRow) {
           <template #cell-progress="{ row }">{{ count(row.progressCount) }}</template>
           <template #cell-created="{ row }"><RelativeDate :value="row.createdAt" /></template>
         </DataTable>
-        <div class="pad">
-          <Pagination :meta="meta" @change="goTo" />
-        </div>
-      </template>
+      </InfiniteList>
     </PaperCard>
   </div>
 </template>

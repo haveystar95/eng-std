@@ -2,13 +2,16 @@
 // `useMocks`. One typed facade means views never branch on transport, and the mock and
 // the wire always present the same camelCase DTOs (mirrors of openapi-admin.yaml).
 import { useMocks } from './config'
-import { httpGet, httpGetPage, httpPost, httpPut } from './http'
+import { httpDelete, httpGet, httpGetPage, httpPatch, httpPost, httpPut } from './http'
+import { snakeizeParams } from './mapping'
 import { mock } from './mock'
 import type {
   Admin,
   CollectionDetail,
+  CollectionImpact,
   CollectionRow,
   CollectionsQuery,
+  CostByPurpose,
   Dashboard,
   ExerciseMode,
   ExerciseModes,
@@ -20,9 +23,12 @@ import type {
   Paginated,
   PageQuery,
   RequestLog,
+  RequestLogDetail,
   Review,
   ReviewsQuery,
   TermDetail,
+  TermImpact,
+  TermPatch,
   TermRow,
   TermsQuery,
   Tier,
@@ -75,15 +81,42 @@ export const api = {
     useMocks ? mock.listCollections(q) : httpGetPage('/collections', q),
   getCollection: (id: string): Promise<CollectionDetail> =>
     useMocks ? mock.getCollection(id) : httpGet(`/collections/${id}`),
+  getCollectionCosts: (id: string): Promise<CostByPurpose> =>
+    useMocks ? mock.getCollectionCosts(id) : httpGet(`/collections/${id}/costs`),
+  getCollectionImpact: (id: string): Promise<CollectionImpact> =>
+    useMocks ? mock.getCollectionImpact(id) : httpGet(`/collections/${id}/impact`),
+  updateCollection: (id: string, patch: { title?: string; description?: string | null }): Promise<CollectionDetail> =>
+    useMocks ? mock.updateCollection(id, patch) : httpPatch(`/collections/${id}`, patch),
+  addCollectionTerm: (id: string, termId: string): Promise<CollectionDetail> =>
+    useMocks ? mock.addCollectionTerm(id, termId) : httpPost(`/collections/${id}/terms`, { term_id: termId }),
+  removeCollectionTerm: (id: string, termId: string): Promise<CollectionDetail> =>
+    useMocks ? mock.removeCollectionTerm(id, termId) : httpDelete(`/collections/${id}/terms/${termId}`),
+  // The title has to be typed back — the server checks it too, so this is not a browser-only guard.
+  deleteCollection: (id: string, confirmTitle: string): Promise<{ id: string; deleted: boolean }> =>
+    useMocks
+      ? mock.deleteCollection(id, confirmTitle)
+      : httpDelete(`/collections/${id}`, { confirm_title: confirmTitle }),
+
+  // ── Costs ──
+  getCosts: (period: 'day' | 'week' | 'month' | 'all' = 'week'): Promise<CostByPurpose> =>
+    useMocks ? mock.getCosts(period) : httpGet('/costs', { period }),
 
   // ── Terms ──
   listTerms: (q: TermsQuery = {}): Promise<Paginated<TermRow>> =>
     useMocks ? mock.listTerms(q) : httpGetPage('/terms', q),
   getTerm: (id: string): Promise<TermDetail> => (useMocks ? mock.getTerm(id) : httpGet(`/terms/${id}`)),
+  getTermImpact: (id: string): Promise<TermImpact> =>
+    useMocks ? mock.getTermImpact(id) : httpGet(`/terms/${id}/impact`),
+  updateTerm: (id: string, patch: TermPatch): Promise<TermDetail> =>
+    useMocks ? mock.updateTerm(id, patch) : httpPatch(`/terms/${id}`, snakeizeParams(patch)),
+  retireTerm: (id: string): Promise<{ id: string; retired: boolean }> =>
+    useMocks ? mock.retireTerm(id) : httpDelete(`/terms/${id}`),
 
-  // ── Logs (global; no per-row bodies, no detail endpoint in the contract) ──
+  // ── Logs ──
   listLogs: (q: LogsQuery = {}): Promise<Paginated<RequestLog>> =>
-    useMocks ? mock.listLogs(q) : httpGetPage('/request-logs', q),
+    useMocks ? mock.listLogs(q) : httpGetPage('/logs', q),
+  getLog: (id: string): Promise<RequestLogDetail> =>
+    useMocks ? mock.getLog(id) : httpGet(`/logs/${id}`),
 
   // ── Practice dialogs (global; filter by userId) ──
   listDialogs: (q: { userId?: string } & PageQuery = {}): Promise<Paginated<DialogRow>> =>

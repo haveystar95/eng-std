@@ -39,7 +39,10 @@ export function snakeizeParams(params?: object): Record<string, unknown> | undef
 // BE paginated envelope { data, meta:{ total, page, per_page } } → FE Paginated with a
 // derived totalPages. Applied after camelization (so meta is { total, page, perPage }).
 export function mapPage<T>(raw: unknown): Paginated<T> {
-  const camel = camelizeKeys<{ data: T[]; meta: { total: number; page: number; perPage: number } }>(raw)
+  const camel = camelizeKeys<{
+    data: T[]
+    meta: { total: number; page: number; perPage: number; nextCursor?: string | null }
+  }>(raw)
   const perPage = camel.meta?.perPage || 25
   const total = camel.meta?.total || 0
   const meta: PageMeta = {
@@ -47,6 +50,9 @@ export function mapPage<T>(raw: unknown): Paginated<T> {
     page: camel.meta?.page || 1,
     perPage,
     totalPages: Math.max(1, Math.ceil(total / perPage)),
+    // Null (or absent, on an offset read) means there is no next page. That, and not a
+    // count-versus-total comparison, is what stops the infinite scroll.
+    nextCursor: camel.meta?.nextCursor ?? null,
   }
   return { data: camel.data ?? [], meta }
 }

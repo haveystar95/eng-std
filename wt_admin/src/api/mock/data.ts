@@ -245,9 +245,11 @@ export const collectionRows: CollectionRow[] = COLLECTION_TITLES.map((title, i) 
   type: COLLECTION_TYPES[i % COLLECTION_TYPES.length],
   title,
   ownerId: i % 3 === 0 ? null : users[i % users.length].detail.id,
+  ownerEmail: i % 3 === 0 ? null : users[i % users.length].detail.email,
   source: SOURCES[i % SOURCES.length],
   itemsCount: 8 + Math.floor(rand() * 50),
   createdAt: iso((i + 1) * 2 * DAY),
+  costUsd: Math.round(rand() * 250_000) / 1e6,
 }))
 export const collectionTermsById = new Map<string, CollectionTerm[]>(
   collectionRows.map((c, i) => [
@@ -276,14 +278,67 @@ export const termDetails: TermDetail[] = EN_TERMS.map(([text, translation, type]
   ipa: rand() < 0.6 ? '/ˈledʒər/' : null,
   audioUrl: null,
   imageUrl: i % 4 === 0 ? null : img(`term${i}`),
+  imageAuthor: i % 4 === 0 ? null : 'Ann Photographer',
+  imageAuthorUrl: i % 4 === 0 ? null : 'https://pexels.com/@ann',
+  cefr: pick(['A1', 'A2', 'B1', 'B2']),
   source: pick(['curated', 'ai']),
   createdAt: iso((i + 1) * DAY),
+  updatedAt: iso((i + 1) * DAY),
   translations: [
     { lang: 'ru', text: translation, isPrimary: true },
     ...(rand() < 0.4 ? [{ lang: 'ru', text: '(разг.) ' + translation, isPrimary: false }] : []),
   ],
-  examples: [{ sentence: `The bank sent me a ${text}.`, translation: `Банк прислал мне ${translation}.` }],
+  // Two examples on some terms, so the pinned-first rule is visible in the mock too.
+  examples: [
+    {
+      id: ulid(85000 + i * 2),
+      sentence: `The bank sent me a ${text}.`,
+      translation: `Банк прислал мне ${translation}.`,
+      isPinned: true,
+      distractors:
+        i % 3 === 0
+          ? [
+              {
+                id: ulid(86000 + i),
+                sentence: `The bank sent me a ${text} on Monday morning.`,
+                errorType: 'preposition' as const,
+                errorSpan: 'on Monday morning',
+                correction: 'in the morning on Monday',
+                generatorVersion: 'enrich-v1',
+              },
+            ]
+          : [],
+    },
+    ...(i % 5 === 0
+      ? [
+          {
+            id: ulid(85000 + i * 2 + 1),
+            sentence: `Please keep the ${text} safe.`,
+            translation: `Пожалуйста, храни ${translation} в надёжном месте.`,
+            isPinned: false,
+            distractors: [],
+          },
+        ]
+      : []),
+  ],
   collections: collectionRows.slice(0, 1 + Math.floor(rand() * 4)).map((c) => ({ id: c.id, title: c.title, type: c.type })),
+  acceptedVariants:
+    i % 3 === 0
+      ? [{ text: text + 's', note: 'множественное число', generatorVersion: 'enrich-v1' }]
+      : [],
+  findings:
+    i % 7 === 0
+      ? [
+          {
+            kind: 'ambiguity' as const,
+            field: 'translation',
+            detail: `«${translation}» имеет второе значение в другом контексте`,
+            generatorVersion: 'enrich-v1',
+            createdAt: iso((i + 1) * DAY),
+          },
+        ]
+      : [],
+  enrichmentVersion: i % 3 === 0 ? 'enrich-v1' : null,
   progressCount: 1 + Math.floor(rand() * 20),
 }))
 
@@ -293,20 +348,38 @@ const PATHS = [
   'api/v1/collections', 'api/v1/auth/me', 'api/v1/profile', 'api/v1/practice/dialogs',
 ]
 const STATUSES = [200, 200, 200, 201, 204, 401, 422, 500]
+const PURPOSES = ['generation', 'images', 'enrichment', 'realtime', 'recap', 'example_regen'] as const
 export const requestLogs: RequestLog[] = Array.from({ length: 140 }, (_, i) => {
   const direction: 'inbound' | 'outbound' = rand() < 0.8 ? 'inbound' : 'outbound'
   const user = pick(users)
+  const purpose = direction === 'outbound' ? pick([...PURPOSES]) : null
+  const tokensIn = purpose && purpose !== 'images' ? 400 + Math.floor(rand() * 3000) : null
+  const tokensOut = tokensIn ? Math.floor(tokensIn * (0.2 + rand() * 0.6)) : null
+  const model = purpose === 'images' ? null : purpose ? pick(['gpt-4o', 'gpt-4o-mini']) : null
+  // Same rates the backend prices with (USD per 1K tokens), so the mock's numbers are believable.
+  const rates: Record<string, [number, number]> = { 'gpt-4o': [0.0025, 0.01], 'gpt-4o-mini': [0.00015, 0.0006] }
+  const costUsd =
+    model && tokensIn && tokensOut
+      ? Math.round(((tokensIn / 1000) * rates[model][0] + (tokensOut / 1000) * rates[model][1]) * 1e6) / 1e6
+      : null
   return {
     id: ulid(90000 + i),
     direction,
     method: pick(['GET', 'GET', 'POST', 'PUT', 'DELETE']),
-    host: direction === 'outbound' ? 'api.openai.com' : 'localhost',
-    path: direction === 'inbound' ? pick(PATHS) : 'v1/chat/completions',
-    service: direction === 'outbound' ? 'openai' : null,
+    host: direction === 'outbound' ? (purpose === 'images' ? 'api.pexels.com' : 'api.openai.com') : 'localhost',
+    path: direction === 'inbound' ? pick(PATHS) : purpose === 'images' ? '/v1/search' : '/v1/chat/completions',
+    service: direction === 'outbound' ? (purpose === 'images' ? 'pexels' : 'openai') : null,
+    purpose,
+    collectionId: purpose && rand() < 0.7 ? collectionRows[i % collectionRows.length].id : null,
     status: pick(STATUSES),
     durationMs: 10 + Math.floor(rand() * 1200),
     userId: direction === 'inbound' ? user.detail.id : null,
     occurredAt: iso(i * 900_000 + Math.floor(rand() * 400_000)),
+    model,
+    tokensIn,
+    tokensOut,
+    costUsd,
+    error: null,
   }
 })
 for (const u of users) {

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api'
-import { usePaginated } from '@/composables/usePaginated'
+import { useInfinite } from '@/composables/useInfinite'
 import { langLabel } from '@/utils/labels'
 import type { TermRow } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
@@ -11,22 +11,21 @@ import SearchInput from '@/components/SearchInput.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import Badge from '@/components/Badge.vue'
 import ImageThumb from '@/components/ImageThumb.vue'
-import Pagination from '@/components/Pagination.vue'
-import StateBlock from '@/components/StateBlock.vue'
+import InfiniteList from '@/components/InfiniteList.vue'
 
 const router = useRouter()
 const search = ref('')
-const { rows, meta, loading, error, load, goTo, reset } = usePaginated<TermRow>((page) =>
-  api.listTerms({ search: search.value, page }),
+const { rows, total, loading, loadingMore, error, done, reload, loadMore } = useInfinite<TermRow>((q) =>
+  api.listTerms({ search: search.value, ...q }),
 )
-onMounted(load)
+onMounted(reload)
 
 const columns: Column[] = [
   { key: 'image', label: 'Фото', width: '60px' },
-  { key: 'text', label: 'Термин' },
-  { key: 'lang', label: 'Язык' },
-  { key: 'type', label: 'Тип' },
-  { key: 'translation', label: 'Перевод' },
+  { key: 'text', label: 'Термин', width: '28%' },
+  { key: 'lang', label: 'Язык', width: '110px' },
+  { key: 'type', label: 'Тип', width: '120px' },
+  { key: 'translation', label: 'Перевод', truncate: '32ch' },
 ]
 </script>
 
@@ -34,20 +33,28 @@ const columns: Column[] = [
   <div>
     <PageHeader title="Термины">
       <template #actions>
-        <SearchInput v-model="search" placeholder="Поиск по термину или переводу" @search="reset" />
+        <SearchInput v-model="search" placeholder="Поиск по термину или переводу" @search="reload" />
       </template>
     </PageHeader>
 
     <PaperCard :pad="false" class="wrap">
-      <StateBlock v-if="loading && rows.length === 0" kind="loading" />
-      <StateBlock v-else-if="error" kind="error" :message="error" retryable @retry="load" />
-      <StateBlock v-else-if="rows.length === 0" kind="empty" title="Терминов не найдено" />
-      <template v-else>
+      <InfiniteList
+        :loading="loading"
+        :loading-more="loadingMore"
+        :error="error"
+        :done="done"
+        :count="rows.length"
+        :total="total"
+        empty-message="Терминов не найдено"
+        @more="loadMore"
+        @retry="reload"
+      >
         <DataTable
           :columns="columns"
           :rows="rows"
           :row-key="(t) => t.id"
           clickable
+          sticky-header
           @row-click="(t) => router.push({ name: 'term', params: { id: t.id } })"
         >
           <template #cell-image="{ row }"><ImageThumb :url="row.imageUrl" :size="44" :alt="row.text" /></template>
@@ -58,8 +65,7 @@ const columns: Column[] = [
             <span class="muted">{{ row.translation ?? '—' }}</span>
           </template>
         </DataTable>
-        <div class="pad"><Pagination :meta="meta" @change="goTo" /></div>
-      </template>
+      </InfiniteList>
     </PaperCard>
   </div>
 </template>

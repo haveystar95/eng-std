@@ -5,7 +5,7 @@ import type { PageMeta, Paginated } from '@/api/types'
 // the page and returns the server envelope. Changing filters should call reset().
 export function usePaginated<T>(fetcher: (page: number) => Promise<Paginated<T>>, perPage = 25) {
   const rows = shallowRef<T[]>([])
-  const meta = ref<PageMeta>({ page: 1, perPage, total: 0, totalPages: 1 })
+  const meta = ref<PageMeta>({ page: 1, perPage, total: 0, totalPages: 1, nextCursor: null })
   const loading = ref(false)
   const error = ref<string | null>(null)
   const page = ref(1)

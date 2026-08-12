@@ -8,6 +8,12 @@ export interface Column {
   align?: 'left' | 'right' | 'center'
   tnum?: boolean
   width?: string
+  /**
+   * Cap the column and ellipsise what overflows. The cell keeps a `title`, so the full value is
+   * one hover away — used for prompts and paths, never for an email or an owner, which have to be
+   * readable at a glance or the column is pointless.
+   */
+  truncate?: string
 }
 
 defineProps<{
@@ -15,6 +21,8 @@ defineProps<{
   rows: T[]
   rowKey: (row: T) => string
   clickable?: boolean
+  /** Keep the header visible while a long list scrolls under it. */
+  stickyHeader?: boolean
 }>()
 defineEmits<{ rowClick: [row: T] }>()
 defineSlots<Record<`cell-${string}`, (props: { row: T }) => unknown>>()
@@ -27,7 +35,7 @@ function cellText(row: T, key: string): unknown {
 
 <template>
   <div class="table-wrap">
-    <table class="ptable">
+    <table class="ptable" :class="{ sticky: stickyHeader }">
       <thead>
         <tr>
           <th
@@ -49,8 +57,9 @@ function cellText(row: T, key: string): unknown {
           <td
             v-for="col in columns"
             :key="col.key"
-            :class="{ tnum: col.tnum }"
-            :style="{ textAlign: col.align ?? 'left' }"
+            :class="{ tnum: col.tnum, trunc: !!col.truncate }"
+            :style="{ textAlign: col.align ?? 'left', maxWidth: col.truncate }"
+            :title="col.truncate ? String(cellText(row, col.key) ?? '') : undefined"
           >
             <slot :name="`cell-${col.key}`" :row="row">{{ cellText(row, col.key) }}</slot>
           </td>
@@ -63,6 +72,18 @@ function cellText(row: T, key: string): unknown {
 <style scoped>
 .table-wrap {
   overflow-x: auto;
+}
+/* Sticky against the page scroll, so a hundred rows still have labelled columns. */
+.ptable.sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper, #fff);
+}
+td.trunc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ptable {
   width: 100%;

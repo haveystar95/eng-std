@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Pagination from '@/components/Pagination.vue'
 
-const meta = (page: number, totalPages: number) => ({ page, perPage: 25, total: totalPages * 25, totalPages })
+const meta = (page: number, totalPages: number) => ({
+  page,
+  perPage: 25,
+  total: totalPages * 25,
+  totalPages,
+  nextCursor: null,
+})
 
 describe('Pagination', () => {
   it('shows the row range', () => {
-    const w = mount(Pagination, { props: { meta: { page: 2, perPage: 25, total: 137, totalPages: 6 } } })
+    const w = mount(Pagination, { props: { meta: { page: 2, perPage: 25, total: 137, totalPages: 6, nextCursor: null } } })
     expect(w.text()).toContain('26–50')
     expect(w.text()).toContain('137')
     expect(w.text()).toContain('2 / 6')

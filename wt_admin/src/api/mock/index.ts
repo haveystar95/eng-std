@@ -2,9 +2,12 @@
 // endpoints route here when `useMocks` is true (no backend configured).
 import type {
   Admin,
+  CallPurpose,
   CollectionDetail,
+  CollectionImpact,
   CollectionRow,
   CollectionsQuery,
+  CostByPurpose,
   Dashboard,
   ExerciseMode,
   ExerciseModes,
@@ -18,9 +21,12 @@ import type {
   PageQuery,
   Paginated,
   RequestLog,
+  RequestLogDetail,
   Review,
   ReviewsQuery,
   TermDetail,
+  TermImpact,
+  TermPatch,
   TermRow,
   TermsQuery,
   Tier,
@@ -65,11 +71,43 @@ function modesFor(userId?: string): ExerciseModes {
   }
 }
 
-function paginate<T>(rows: T[], page = 1, perPage = 25): Paginated<T> {
+/**
+ * Serves both paging modes, like the real API: `cursor`/`limit` walks the id-DESC keyset, plain
+ * `page` keeps the offset behaviour. The mock has to honour the cursor too, or the infinite scroll
+ * is only ever exercised against the live backend.
+ */
+function paginate<T extends { id?: string }>(
+  rows: T[],
+  q: { page?: number; perPage?: number; limit?: number; cursor?: string } = {},
+): Paginated<T> {
   const total = rows.length
+  const keyset = q.limit !== undefined || q.cursor !== undefined
+  const perPage = keyset ? (q.limit ?? 25) : (q.perPage ?? 25)
   const totalPages = Math.max(1, Math.ceil(total / perPage))
-  const start = (page - 1) * perPage
-  return { data: rows.slice(start, start + perPage), meta: { page, perPage, total, totalPages } }
+
+  if (!keyset) {
+    const page = q.page ?? 1
+    const start = (page - 1) * perPage
+    return {
+      data: rows.slice(start, start + perPage),
+      meta: { page, perPage, total, totalPages, nextCursor: null },
+    }
+  }
+
+  const startIndex = q.cursor ? rows.findIndex((r) => r.id === q.cursor) + 1 : 0
+  const slice = rows.slice(startIndex, startIndex + perPage)
+  const last = slice[slice.length - 1]
+  const hasMore = startIndex + perPage < total
+  return {
+    data: slice,
+    meta: {
+      page: 1,
+      perPage,
+      total,
+      totalPages,
+      nextCursor: hasMore && last?.id ? last.id : null,
+    },
+  }
 }
 
 function notFound(what: string): never {
@@ -148,7 +186,7 @@ export const mock = {
     const rows = users
       .map((u) => userRow(u.detail))
       .filter((u) => !search || (u.email ?? '').toLowerCase().includes(search) || u.name.toLowerCase().includes(search))
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 
   async getUser(id: string): Promise<UserDetail> {
@@ -178,7 +216,7 @@ export const mock = {
     let rows = findUser(id).reviews
     if (q.from) rows = rows.filter((r) => (r.answeredAt ?? '') >= q.from!)
     if (q.to) rows = rows.filter((r) => (r.answeredAt ?? '') <= q.to! + 'T23:59:59.999Z')
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 
   async getExerciseModes(): Promise<ExerciseModes> {
@@ -211,7 +249,7 @@ export const mock = {
     const rows = collectionRows.filter(
       (c) => (!q.type || c.type === q.type) && (!search || c.title.toLowerCase().includes(search)),
     )
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 
   async getCollection(id: string): Promise<CollectionDetail> {
@@ -247,7 +285,7 @@ export const mock = {
         createdAt: t.createdAt,
         imageUrl: t.imageUrl,
       }))
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 
   async getTerm(id: string): Promise<TermDetail> {
@@ -257,17 +295,167 @@ export const mock = {
 
   async listLogs(q: LogsQuery = {}): Promise<Paginated<RequestLog>> {
     let rows = requestLogs
+    if (q.direction) rows = rows.filter((l) => l.direction === q.direction)
+    if (q.provider) rows = rows.filter((l) => l.service === q.provider)
+    if (q.purpose) rows = rows.filter((l) => l.purpose === q.purpose)
     if (q.userId) rows = rows.filter((l) => l.userId === q.userId)
+    if (q.collectionId) rows = rows.filter((l) => l.collectionId === q.collectionId)
     if (q.status) rows = rows.filter((l) => l.status === Number(q.status))
+    if (q.statusClass) rows = rows.filter((l) => matchesStatusClass(l, q.statusClass!))
+    if (q.from) rows = rows.filter((l) => (l.occurredAt ?? '') >= q.from!)
+    if (q.to) rows = rows.filter((l) => (l.occurredAt ?? '') <= q.to!)
     if (q.path) rows = rows.filter((l) => l.path.toLowerCase().includes(q.path!.toLowerCase()))
-    return paginate(rows, q.page, q.perPage)
+    if (q.search) {
+      const needle = q.search.toLowerCase()
+      rows = rows.filter((l) => JSON.stringify(mockBodies(l)).toLowerCase().includes(needle))
+    }
+    return paginate(rows, q)
+  },
+
+  async getLog(id: string): Promise<RequestLogDetail> {
+    const row = requestLogs.find((l) => l.id === id)
+    if (!row) return notFound('Запись лога')
+    const bodies = mockBodies(row)
+    return {
+      ...row,
+      requestBytes: JSON.stringify(bodies.request).length,
+      responseBytes: JSON.stringify(bodies.response).length,
+      // Redacted on write, exactly as the real log stores them.
+      requestHeaders: { Authorization: '[REDACTED]', 'Content-Type': 'application/json' },
+      requestBody: bodies.request,
+      responseBody: bodies.response,
+    }
+  },
+
+  async getCollectionCosts(id: string): Promise<CostByPurpose> {
+    const c = collectionRows.find((x) => x.id === id)
+    if (!c) return notFound('Коллекция')
+    return costsFromLogs(requestLogs.filter((l) => l.collectionId === id), { scopeId: id })
+  },
+
+  async getCosts(period: 'day' | 'week' | 'month' | 'all' = 'week'): Promise<CostByPurpose> {
+    const cutoff = { day: 1, week: 7, month: 30, all: 10_000 }[period]
+    const since = new Date(MOCK_NOW - cutoff * DAY).toISOString()
+    return costsFromLogs(
+      requestLogs.filter((l) => (l.occurredAt ?? '') >= since),
+      { period, since },
+    )
+  },
+
+  async getTermImpact(id: string): Promise<TermImpact> {
+    const t = termDetails.find((x) => x.id === id)
+    if (!t) return notFound('Термин')
+    return {
+      termId: t.id,
+      text: t.text,
+      collectionsCount: t.collections.length,
+      usersWithProgress: t.progressCount,
+      reviewsCount: t.progressCount * 3,
+    }
+  },
+
+  async updateTerm(id: string, patch: TermPatch): Promise<TermDetail> {
+    const t = termDetails.find((x) => x.id === id)
+    if (!t) return notFound('Термин')
+    if (patch.text !== undefined) t.text = patch.text
+    if (patch.ipa !== undefined) t.ipa = patch.ipa
+    if (patch.translation !== undefined) {
+      const primary = t.translations.find((tr) => tr.isPrimary) ?? t.translations[0]
+      if (primary) primary.text = patch.translation
+      else t.translations.push({ lang: 'ru', text: patch.translation, isPrimary: true })
+    }
+    if (patch.exampleId && patch.exampleSentence !== undefined) {
+      const ex = t.examples.find((e) => e.id === patch.exampleId)
+      if (ex) {
+        const changed = ex.sentence !== patch.exampleSentence
+        ex.sentence = patch.exampleSentence
+        if (patch.exampleTranslation !== undefined) ex.translation = patch.exampleTranslation
+        // Mirrors the server: distractors describe the OLD sentence, so they go, and the term is
+        // unmarked for the enrichment run.
+        if (changed) {
+          ex.distractors = []
+          t.enrichmentVersion = null
+        }
+      }
+    }
+    t.updatedAt = new Date(MOCK_NOW).toISOString()
+    return t
+  },
+
+  async retireTerm(id: string): Promise<{ id: string; retired: boolean }> {
+    const i = termDetails.findIndex((x) => x.id === id)
+    if (i === -1) return notFound('Термин')
+    termDetails.splice(i, 1)
+    return { id, retired: true }
+  },
+
+  async getCollectionImpact(id: string): Promise<CollectionImpact> {
+    const c = collectionRows.find((x) => x.id === id)
+    if (!c) return notFound('Коллекция')
+    return {
+      collectionId: c.id,
+      title: c.title,
+      type: c.type,
+      ownerId: c.ownerId,
+      termsCount: c.itemsCount,
+      subscribers: c.type === 'system' ? 4 : 0,
+      learnersWithProgress: 2,
+    }
+  },
+
+  async updateCollection(id: string, patch: { title?: string; description?: string | null }): Promise<CollectionDetail> {
+    const c = collectionRows.find((x) => x.id === id)
+    if (!c) return notFound('Коллекция')
+    if (patch.title !== undefined) c.title = patch.title
+    const detail = await mock.getCollection(id)
+    return { ...detail, description: patch.description ?? detail.description }
+  },
+
+  async addCollectionTerm(id: string, termId: string): Promise<CollectionDetail> {
+    const c = collectionRows.find((x) => x.id === id)
+    const t = termDetails.find((x) => x.id === termId)
+    if (!c || !t) return notFound('Коллекция или термин')
+    const terms = collectionTermsById.get(id) ?? []
+    if (!terms.some((x) => x.termId === termId)) {
+      terms.push({
+        termId: t.id,
+        text: t.text,
+        translation: t.translations[0]?.text ?? null,
+        position: terms.length,
+        imageUrl: t.imageUrl,
+      })
+      collectionTermsById.set(id, terms)
+      c.itemsCount = terms.length
+    }
+    return mock.getCollection(id)
+  },
+
+  async removeCollectionTerm(id: string, termId: string): Promise<CollectionDetail> {
+    const c = collectionRows.find((x) => x.id === id)
+    if (!c) return notFound('Коллекция')
+    const terms = (collectionTermsById.get(id) ?? []).filter((x) => x.termId !== termId)
+    collectionTermsById.set(id, terms)
+    c.itemsCount = terms.length
+    return mock.getCollection(id)
+  },
+
+  async deleteCollection(id: string, confirmTitle: string): Promise<{ id: string; deleted: boolean }> {
+    const i = collectionRows.findIndex((x) => x.id === id)
+    if (i === -1) return notFound('Коллекция')
+    if (collectionRows[i].title !== confirmTitle) {
+      const err = new Error('Название не совпадает') as Error & { status?: number }
+      err.status = 422
+      throw err
+    }
+    collectionRows.splice(i, 1)
+    return { id, deleted: true }
   },
 
   async listDialogs(q: { userId?: string } & PageQuery = {}): Promise<Paginated<DialogRow>> {
     let all: DialogDetail[] = users.flatMap((u) => u.dialogs)
     if (q.userId) all = all.filter((d) => d.userId === q.userId)
     const rows: DialogRow[] = all.map(stripTranscript)
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 
   async getDialog(id: string): Promise<DialogDetail> {
@@ -279,11 +467,72 @@ export const mock = {
     let rows = generationRows
     if (q.userId) rows = rows.filter((g) => g.userId === q.userId)
     if (q.status) rows = rows.filter((g) => g.status === q.status)
-    return paginate(rows, q.page, q.perPage)
+    return paginate(rows, q)
   },
 }
 
 // ── helpers ──
+function matchesStatusClass(l: RequestLog, cls: string): boolean {
+  if (cls === 'error') return l.error !== null
+  if (l.status === null) return false
+  if (cls === '2xx') return l.status >= 200 && l.status < 300
+  if (cls === '4xx') return l.status >= 400 && l.status < 500
+  if (cls === '5xx') return l.status >= 500
+  return true
+}
+
+/** Plausible bodies for a log row, so the JSON viewer and the body search have something real. */
+function mockBodies(l: RequestLog): { request: Record<string, unknown>; response: Record<string, unknown> } {
+  if (l.direction === 'inbound') {
+    return { request: { path: l.path }, response: { data: { ok: l.status !== null && l.status < 400 } } }
+  }
+  if (l.purpose === 'images') {
+    return { request: { query: 'bank account', per_page: 1 }, response: { photos: [{ id: 42 }] } }
+  }
+  return {
+    request: {
+      model: l.model,
+      messages: [
+        { role: 'system', content: 'You are a vocabulary generator.' },
+        { role: 'user', content: 'иду открывать счёт в банке' },
+      ],
+    },
+    response: {
+      model: l.model,
+      usage: { prompt_tokens: l.tokensIn, completion_tokens: l.tokensOut },
+      choices: [{ message: { content: '{"items":[{"text":"account","translation":"счёт"}]}' } }],
+    },
+  }
+}
+
+/** Sum a set of log rows into the by-purpose shape the cost endpoints return. */
+function costsFromLogs(
+  rows: RequestLog[],
+  extra: { scopeId?: string; period?: string; since?: string },
+): CostByPurpose {
+  const purposes: CallPurpose[] = ['generation', 'images', 'enrichment', 'realtime', 'recap', 'example_regen']
+  const byPurpose = purposes.map((purpose) => {
+    const mine = rows.filter((l) => l.purpose === purpose)
+    return {
+      purpose,
+      tokensIn: mine.reduce((n, l) => n + (l.tokensIn ?? 0), 0),
+      tokensOut: mine.reduce((n, l) => n + (l.tokensOut ?? 0), 0),
+      costUsd: round(mine.reduce((n, l) => n + (l.costUsd ?? 0), 0)),
+      calls: mine.length,
+    }
+  })
+  return {
+    scopeId: extra.scopeId ?? null,
+    period: extra.period ?? null,
+    since: extra.since ?? null,
+    totalUsd: round(byPurpose.reduce((n, p) => n + p.costUsd, 0)),
+    tokensIn: byPurpose.reduce((n, p) => n + p.tokensIn, 0),
+    tokensOut: byPurpose.reduce((n, p) => n + p.tokensOut, 0),
+    byPurpose,
+    note: 'enrichment и example_regen считаются по термину, поэтому общий термин учтён в каждой коллекции.',
+  }
+}
+
 function findUser(id: string) {
   return users.find((u) => u.detail.id === id) ?? notFound('Пользователь')
 }

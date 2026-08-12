@@ -3,6 +3,18 @@ import { getToken } from '@/api/token'
 
 const AdminLayout = () => import('@/layouts/AdminLayout.vue')
 
+/**
+ * Every screen, every tab and every entity has its own URL.
+ *
+ * Two consequences that are the whole point:
+ *  - the browser Back button goes to the previous PAGE, not the previous tab click, because a tab
+ *    switch is a `replace`, not a `push` (see UserDetailView);
+ *  - a link can be shared. `/users/:id/dialogs` and `/logs?purpose=generation&status_class=5xx`
+ *    open exactly what the sender was looking at.
+ *
+ * The layout is the parent route, so moving between children swaps only the content — the sidebar
+ * never remounts and never flashes.
+ */
 export const router = createRouter({
   history: createWebHistory('/'),
   routes: [
@@ -18,8 +30,21 @@ export const router = createRouter({
       children: [
         { path: '', redirect: { name: 'dashboard' } },
         { path: 'dashboard', name: 'dashboard', component: () => import('@/views/DashboardView.vue') },
+
         { path: 'users', name: 'users', component: () => import('@/views/UsersView.vue') },
-        { path: 'users/:id', name: 'user', component: () => import('@/views/UserDetailView.vue'), props: true },
+        // The tab lives in the path. `/users/:id` alone redirects to the first tab, so there is
+        // exactly one URL per view and every tab is linkable.
+        {
+          path: 'users/:id',
+          redirect: (to) => ({ name: 'user', params: { id: to.params.id, tab: 'plan' } }),
+        },
+        {
+          path: 'users/:id/:tab(plan|reviews|collections|modes|dialogs|generations|logs)',
+          name: 'user',
+          component: () => import('@/views/UserDetailView.vue'),
+          props: true,
+        },
+
         { path: 'collections', name: 'collections', component: () => import('@/views/CollectionsView.vue') },
         {
           path: 'collections/:id',
@@ -27,8 +52,10 @@ export const router = createRouter({
           component: () => import('@/views/CollectionDetailView.vue'),
           props: true,
         },
+
         { path: 'terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
         { path: 'terms/:id', name: 'term', component: () => import('@/views/TermDetailView.vue'), props: true },
+
         {
           path: 'exercise-modes',
           name: 'exercise-modes',

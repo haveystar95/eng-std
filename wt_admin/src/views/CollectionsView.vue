@@ -2,8 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api'
-import { usePaginated } from '@/composables/usePaginated'
-import { count } from '@/utils/format'
+import { useInfinite } from '@/composables/useInfinite'
+import { count, money } from '@/utils/format'
 import { COLLECTION_SOURCE_LABEL, COLLECTION_TYPE_LABEL } from '@/utils/labels'
 import type { CollectionRow, CollectionType } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
@@ -12,8 +12,7 @@ import SearchInput from '@/components/SearchInput.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import Badge from '@/components/Badge.vue'
 import RelativeDate from '@/components/RelativeDate.vue'
-import Pagination from '@/components/Pagination.vue'
-import StateBlock from '@/components/StateBlock.vue'
+import InfiniteList from '@/components/InfiniteList.vue'
 
 const router = useRouter()
 const search = ref('')
@@ -26,26 +25,26 @@ const TYPES: { key: '' | CollectionType; label: string }[] = [
   { key: 'custom', label: 'Свои' },
 ]
 
-const { rows, meta, loading, error, load, goTo, reset } = usePaginated<CollectionRow>((page) =>
-  api.listCollections({ search: search.value, type: typeFilter.value || undefined, page }),
+const { rows, total, loading, loadingMore, error, done, reload, loadMore } = useInfinite<CollectionRow>((q) =>
+  api.listCollections({ search: search.value, type: typeFilter.value || undefined, ...q }),
 )
-onMounted(load)
+onMounted(reload)
 function setType(t: '' | CollectionType) {
   typeFilter.value = t
-  reset()
+  reload()
 }
 
 const columns: Column[] = [
-  { key: 'title', label: 'Коллекция' },
-  { key: 'type', label: 'Тип' },
-  { key: 'source', label: 'Источник' },
-  { key: 'owner', label: 'Владелец' },
-  { key: 'items', label: 'Терминов', align: 'right', tnum: true },
-  { key: 'created', label: 'Создана', align: 'right' },
+  { key: 'title', label: 'Коллекция', width: '26%' },
+  { key: 'type', label: 'Тип', width: '110px' },
+  { key: 'source', label: 'Источник', width: '110px' },
+  // The owner is an email now, not an id — wide enough to read whole, which is the point of
+  // having the column at all.
+  { key: 'owner', label: 'Владелец', width: '22%' },
+  { key: 'items', label: 'Терминов', align: 'right', tnum: true, width: '100px' },
+  { key: 'cost', label: 'Стоимость', align: 'right', tnum: true, width: '110px' },
+  { key: 'created', label: 'Создана', align: 'right', width: '140px' },
 ]
-function shortId(id: string): string {
-  return id.slice(-6)
-}
 </script>
 
 <template>
@@ -62,34 +61,47 @@ function shortId(id: string): string {
             {{ t.label }}
           </button>
         </div>
-        <SearchInput v-model="search" placeholder="Поиск по названию" @search="reset" />
+        <SearchInput v-model="search" placeholder="Поиск по названию" @search="reload" />
       </template>
     </PageHeader>
 
     <PaperCard :pad="false" class="wrap">
-      <StateBlock v-if="loading && rows.length === 0" kind="loading" />
-      <StateBlock v-else-if="error" kind="error" :message="error" retryable @retry="load" />
-      <StateBlock v-else-if="rows.length === 0" kind="empty" title="Коллекций не найдено" />
-      <template v-else>
+      <InfiniteList
+        :loading="loading"
+        :loading-more="loadingMore"
+        :error="error"
+        :done="done"
+        :count="rows.length"
+        :total="total"
+        empty-message="Коллекций не найдено"
+        @more="loadMore"
+        @retry="reload"
+      >
         <DataTable
           :columns="columns"
           :rows="rows"
           :row-key="(c) => c.id"
           clickable
+          sticky-header
           @row-click="(c) => router.push({ name: 'collection', params: { id: c.id } })"
         >
           <template #cell-title="{ row }"><span class="serif name">{{ row.title }}</span></template>
           <template #cell-type="{ row }"><Badge>{{ COLLECTION_TYPE_LABEL[row.type] }}</Badge></template>
           <template #cell-source="{ row }"><Badge>{{ COLLECTION_SOURCE_LABEL[row.source] }}</Badge></template>
           <template #cell-owner="{ row }">
-            <span v-if="row.ownerId" class="owner tnum">···{{ shortId(row.ownerId) }}</span>
+            <span v-if="row.ownerEmail" class="owner">{{ row.ownerEmail }}</span>
+            <span v-else-if="row.ownerId" class="owner tnum">···{{ row.ownerId.slice(-6) }}</span>
             <span v-else class="faint">системная</span>
           </template>
           <template #cell-items="{ row }">{{ count(row.itemsCount) }}</template>
+          <template #cell-cost="{ row }">
+            <!-- Direct spend only (generation + realtime); the card shows the full split. -->
+            <span v-if="row.costUsd" class="cost">{{ money(row.costUsd) }}</span>
+            <span v-else class="faint">—</span>
+          </template>
           <template #cell-created="{ row }"><RelativeDate :value="row.createdAt" /></template>
         </DataTable>
-        <div class="pad"><Pagination :meta="meta" @change="goTo" /></div>
-      </template>
+      </InfiniteList>
     </PaperCard>
   </div>
 </template>
@@ -106,6 +118,9 @@ function shortId(id: string): string {
 }
 .owner {
   font-size: 12.5px;
+}
+.cost {
+  font-variant-numeric: tabular-nums;
 }
 .switch {
   display: inline-flex;
