@@ -7,6 +7,8 @@ namespace App\Modules\Generation\Application\Query;
 use App\Modules\Collections\Application\Query\GetCollectionTermSet;
 use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Port\EnrichmentJournal;
+use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 
 /**
  * Resolves collections to the term ids that still need enriching, deduped across collections (the
@@ -22,6 +24,7 @@ final readonly class ListPendingEnrichmentTargetsHandler
     public function __construct(
         private GetCollectionTermSetHandler $termSet,
         private EnrichmentJournal $journal,
+        private EnrichmentTargetReader $targets,
     ) {}
 
     /** @return list<string> */
@@ -37,7 +40,15 @@ final readonly class ListPendingEnrichmentTargetsHandler
                 $seen[$termId] = true;
             }
         }
+        $termIds = array_keys($seen);
 
-        return $this->journal->pending(array_keys($seen), $query->generatorVersion);
+        if ($query->topUpBelow !== null) {
+            return $this->targets->underCovered(
+                array_map(static fn (string $id): TermId => TermId::fromString($id), $termIds),
+                $query->topUpBelow,
+            );
+        }
+
+        return $this->journal->pending($termIds, $query->generatorVersion);
     }
 }

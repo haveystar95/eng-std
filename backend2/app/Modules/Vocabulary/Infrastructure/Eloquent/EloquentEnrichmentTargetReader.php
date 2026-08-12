@@ -11,6 +11,46 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
 {
+    public function underCovered(array $termIds, int $minDistractors): array
+    {
+        if ($termIds === []) {
+            return [];
+        }
+
+        $ids = array_map(static fn (TermId $id): string => $id->value, $termIds);
+
+        // The PINNED example only — the one the card shows and the one distractors hang off.
+        $pinned = [];
+        foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get(['id', 'term_id']) as $row) {
+            $pinned[(string) $row->term_id] ??= (string) $row->id;
+        }
+        if ($pinned === []) {
+            return [];
+        }
+
+        $counts = [];
+        foreach (DB::table('example_distractors')
+            ->whereIn('example_id', array_values($pinned))
+            ->groupBy('example_id')
+            ->selectRaw('example_id, count(*) AS n')
+            ->get() as $row) {
+            $counts[(string) $row->example_id] = (int) $row->n;
+        }
+
+        $out = [];
+        foreach ($ids as $termId) {
+            $exampleId = $pinned[$termId] ?? null;
+            if ($exampleId === null) {
+                continue;
+            }
+            if (($counts[$exampleId] ?? 0) < $minDistractors) {
+                $out[] = $termId;
+            }
+        }
+
+        return $out;
+    }
+
     public function byIds(array $termIds): array
     {
         if ($termIds === []) {

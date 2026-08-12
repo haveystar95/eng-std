@@ -19,4 +19,18 @@ interface EnrichmentTargetReader
      * @return array<string, EnrichmentTargetView>  keyed by term id; absent = no such term
      */
     public function byIds(array $termIds): array;
+
+    /**
+     * Of these terms, which ones' PINNED example carries fewer than $minDistractors — i.e. cannot host
+     * a mode that needs that many wrong options.
+     *
+     * This is the top-up selector, and it deliberately asks about CONTENT rather than about runs: a
+     * proofreader deleting bad distractors leaves a term that is "already processed" and nonetheless
+     * short, so the version mark is exactly the wrong question here. Terms without an example are not
+     * returned — they are not short of distractors, they have nothing to build them against.
+     *
+     * @param  list<TermId>  $termIds
+     * @return list<string>  term ids, order preserved
+     */
+    public function underCovered(array $termIds, int $minDistractors): array;
 }

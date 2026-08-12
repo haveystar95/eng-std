@@ -47,6 +47,7 @@ final class EnrichBackfillCommand extends Command
         {--collection=* : collection id (ULID); repeatable, REQUIRED — there is no run-everything mode}
         {--generator= : generator version to write and to skip by (default ' . BuildTermEnrichmentsHandler::VERSION . ')}
         {--limit=0 : stop after this many terms (0 = no cap), for a cheap first taste}
+        {--topup= : top-up mode — take terms whose pinned example has FEWER than N distractors, ignoring the version mark}
         {--fake : use the deterministic fake packer — no network, no spend (wiring smoke test only)}
         {--queue : dispatch chunk jobs instead of running inline}
         {--out= : write the proofreading export (markdown) to this path}';
@@ -79,7 +80,14 @@ final class EnrichBackfillCommand extends Command
         // has to be resolved after the switch is flipped.
         $build = app(BuildTermEnrichmentsHandler::class);
 
-        $termIds = $pending(new ListPendingEnrichmentTargets($collectionIds, $version));
+        // Top-up asks about coverage, not about runs: a proofreader's deletions leave terms both
+        // "already processed" and short of options, and the version mark hides exactly those.
+        $topUp = $this->stringOption('topup');
+        $termIds = $pending(new ListPendingEnrichmentTargets(
+            $collectionIds,
+            $version,
+            $topUp !== null ? max(1, (int) $topUp) : null,
+        ));
         $limit = (int) $this->option('limit');
         if ($limit > 0 && count($termIds) > $limit) {
             $this->warn("Capped at {$limit} of " . count($termIds) . ' pending terms (--limit).');
@@ -87,10 +95,11 @@ final class EnrichBackfillCommand extends Command
         }
 
         $this->info(sprintf(
-            'Enrichment %s · %d collection(s) · %d term(s) pending · driver %s',
+            'Enrichment %s · %d collection(s) · %d term(s) %s · driver %s',
             $version,
             count($collectionIds),
             count($termIds),
+            $topUp !== null ? "под догон (<{$topUp} дистракторов)" : 'pending',
             (string) config('services.generation.driver'),
         ));
 
