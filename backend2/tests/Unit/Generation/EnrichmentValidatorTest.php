@@ -339,6 +339,58 @@ it('passes clean Russian and English', function () {
     expect($verdict->hasFinding(FindingKind::Language))->toBeFalse();
 });
 
+// Two of eight language findings on the store run argued themselves down. The prompt now forbids it;
+// this is the guarantee behind the request.
+it('drops a language note that concludes there is no problem', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(languageNotes: [
+        new RawLanguageNote('misspelled_or_nonword', 'банкомат не является ошибкой.'),
+    ]));
+
+    expect($verdict->hasLanguageFinding())->toBeFalse();
+});
+
+it('drops a self-refuting note whatever the case', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(languageNotes: [
+        new RawLanguageNote('misspelled_or_nonword', '«куриный» должно быть «куриный», Но Это Корректно'),
+    ]));
+
+    expect($verdict->hasLanguageFinding())->toBeFalse();
+});
+
+it('keeps a note that names a real problem and does not retract it', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(languageNotes: [
+        new RawLanguageNote('misspelled_or_nonword', '«колледка» — не слово; должно быть «коллега».'),
+    ]));
+
+    expect($verdict->hasFinding(FindingKind::MisspelledOrNonword))->toBeTrue();
+});
+
+it('scrubs JSON debris the model leaked into a variant note', function () {
+    // Legal JSON, garbage on screen — seen live on «Синонимы."},{».
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('take out money', 'Синонимы."},{')],
+    ));
+
+    expect($verdict->variants[0]->note)->toBe('Синонимы.');
+});
+
+it('keeps quotes that are part of the prose', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('take out money', 'синоним к слову "залог"')],
+    ));
+
+    expect($verdict->variants[0]->note)->toBe('синоним к слову "залог"');
+});
+
+it('nulls a note that is nothing but debris, keeping the variant', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('take out money', '"},{')],
+    ));
+
+    expect($verdict->variants)->toHaveCount(1)
+        ->and($verdict->variants[0]->note)->toBeNull();
+});
+
 it('ignores a note with an empty detail', function () {
     $verdict = $this->validator->validate(enrichmentCandidate(
         languageNotes: [new RawLanguageNote('misspelled_or_nonword', '   ')],

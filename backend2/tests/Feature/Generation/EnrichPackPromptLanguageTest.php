@@ -96,6 +96,56 @@ it('keeps the error taxonomy language-independent — no baked-in calques', func
         ->and($system)->not->toContain('sportsman');
 });
 
+// The store run's 38 deletions were dominated by one failure: "tense" distractors that were simply
+// the same sentence in another tense — grammatical, and marked wrong. The prompt now names the only
+// acceptable tense error (broken agreement) and forbids meaning swaps outright.
+it('demands broken agreement for a tense distractor, not a different tense', function () {
+    packFor('en', 'ru');
+
+    $system = sentSystemPrompt();
+
+    expect($system)->toContain('broken agreement')
+        ->and($system)->toContain('Changing WHEN the sentence happens is not an error')
+        // The concrete pair that generated most of the scrap.
+        ->and($system)->toContain('I want to');
+});
+
+it('forbids meaning swaps and article errors on optional articles', function () {
+    packFor('en', 'ru');
+
+    $system = sentSystemPrompt();
+
+    expect($system)->toContain('Never change the MEANING')
+        ->and($system)->toContain('before ↔ after')
+        ->and($system)->toContain('Never on a plural or a mass noun');
+});
+
+it('ends the distractor section with a standalone re-read self-check', function () {
+    packFor('en', 'ru');
+
+    // The cheapest guard available: judge the sentence without the original beside it.
+    expect(sentSystemPrompt())->toContain('Re-read the sentence ALONE');
+});
+
+it('makes a variant answer the same prompt, not a neighbouring one', function () {
+    packFor('en', 'ru');
+
+    $system = sentSystemPrompt();
+
+    expect($system)->toContain('a TYPE of the thing is not the thing')
+        ->and($system)->toContain('a DIFFERENT STEP of the same process')
+        ->and($system)->toContain('a BROADER word is not the thing');
+});
+
+it('forbids a note that argues itself down, and JSON punctuation in notes', function () {
+    packFor('en', 'ru');
+
+    $system = sentSystemPrompt();
+
+    expect($system)->toContain('Do not report a non-problem')
+        ->and($system)->toContain('plain prose only');
+});
+
 it('falls back to the raw code for a language it has no name for', function () {
     packFor('en', 'kk');
 

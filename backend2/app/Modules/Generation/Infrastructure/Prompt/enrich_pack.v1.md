@@ -18,12 +18,20 @@ Use `error_type` to say which class you used:
 
 - `article` — an article error typical of {{translation_lang}} speakers: a missing, extra or wrong
   article, in the direction {{translation_lang}}'s own article system (or lack of one) pushes them.
+  Only where the article is actually REQUIRED or forbidden. Never on a plural or a mass noun whose
+  article is optional — "I paid my bills by direct debit" and "…by the direct debit" are both things
+  a native says in some context, so neither is a mistake.
 - `preposition` — a preposition chosen by literally translating the {{translation_lang}} pattern
-  instead of the {{term_lang}} one.
-- `tense` — a tense/aspect chosen because {{translation_lang}} expresses that meaning differently, so
-  the learner reaches for the nearest {{translation_lang}} equivalent.
+  instead of the {{term_lang}} one. It must be a preposition {{term_lang}} does not allow here, not
+  merely a different one that also works.
+- `tense` — a **broken agreement**, not a different tense. The error must be an ungrammatical
+  combination: subject and verb that disagree ("your workstation **are** ready"), an auxiliary that
+  cannot take that form ("I **has** been waiting"), a participle where a finite verb belongs.
+  Changing WHEN the sentence happens is not an error: "I wanted to minimize fees" and "I want to
+  minimize fees" are both perfectly grammatical, and a learner who reads one as the other has made
+  no mistake. If you cannot break agreement in this sentence, do not use this class.
 - `word_order` — {{translation_lang}}'s word order carried into {{term_lang}} where {{term_lang}}
-  requires its own.
+  requires its own. The result must be one {{term_lang}} refuses, not one that is merely less usual.
 - `false_friend` — a word that looks or sounds like a {{translation_lang}} word but does not mean it
   here (a false cognate), or a {{translation_lang}} word's most common gloss used in a context where
   {{term_lang}} demands a different one.
@@ -42,8 +50,19 @@ Hard rules for every distractor:
   mistake, so it has to be findable in the string you returned.
 - `correction` is what that span should have been.
 - Never introduce a second mistake, and never change the vocabulary being taught.
+- **Never change the MEANING.** Swapping a word for its opposite or its counterpart — before ↔ after,
+  always ↔ never, buy ↔ sell, before signing ↔ after signing — produces a sentence that is perfectly
+  grammatical and simply says something else. That is not a grammar mistake, and a learner who picks
+  it is being punished for reading correctly. The distractor must be the SAME statement, said wrongly.
 - If a class does not apply to this language pair or this sentence, do not force it — use another
   class, or return fewer distractors.
+
+**Final self-check, on each distractor, before you answer.** Re-read the sentence ALONE, without the
+original beside it, as if you had found it in a book. If a native speaker could have written it — in
+any context, in any register — discard it. Fewer distractors is a good outcome; a grammatical
+"distractor" is a card that marks a correct learner wrong, and that is the most expensive thing you
+can produce here. Returning one distractor, or none, is better than returning two that survive only
+because they were compared against the original.
 
 If the example sentence is missing or too short to damage in one place, return an empty list.
 
@@ -61,9 +80,22 @@ card accept a whole sentence as the right answer.
 - Include real alternations: near-deictic pairs, permission modals, aspectual near-synonyms that are
   genuinely interchangeable here, regional spelling variants, one-word/two-word spellings of the same
   compound, an equally valid word order within the term.
+**The test a variant must pass.** Cover the {{term_lang}} side and read ONLY the
+{{translation_lang}} translation. Would a competent speaker answer it with your variant? If the
+variant answers a *neighbouring* question instead, it is wrong, however related it sounds:
+
+- a TYPE of the thing is not the thing — "savings account" does not answer «банковский счёт», it
+  answers «сберегательный счёт», and it is usually its own term elsewhere in the collection;
+- a DIFFERENT STEP of the same process is not the thing — "obtain a prescription" (get it from the
+  doctor) does not answer «получить лекарство по рецепту» (collect it at the pharmacy);
+- a BROADER word is not the thing — "inhabitant" (anyone who lives somewhere) does not answer
+  «арендатор» (someone who rents).
+
 - Do **not** include: a form that only differs by case, punctuation, a contraction or an optional
-  article (all already accepted); a near-synonym with a different meaning or register; anything that
-  would also be a correct answer for a DIFFERENT term.
+  article (all already accepted); a near-synonym with a different meaning or register; a word whose
+  connotation differs ("drugs" for medicine); a phrase that is not idiomatic in {{term_lang}} ("pay
+  for the rent"); a plural where the term is singular; anything that would also be a correct answer
+  for a DIFFERENT term.
 - `note` says in one short {{translation_lang}} phrase why it is equivalent.
 - Return an empty list rather than padding. A wrong "correct answer" is the most expensive mistake
   you can make here — it teaches an error as if it were right.
@@ -112,3 +144,13 @@ Write `detail` in {{translation_lang}}, naming the offending word and the correc
 Report only what you can point at, and be strict about real-word-ness — a misspelled translation is a
 card whose question is gibberish. Return an empty list when the language is clean: style complaints
 and word choice you merely dislike do not belong here.
+
+**Do not report a non-problem.** If your own note would end in "…but this is correct", "…is not an
+error", "…is acceptable here" — then there is nothing to report, and the entry must not exist. A note
+that argues itself down costs a human the same read as a real one.
+
+## `note` fields — plain prose only
+
+Every `note` in this answer is prose a person reads. Write words. Never put JSON punctuation inside
+it — no braces, no brackets, no quote-comma sequences. A note like `Синонимы."},{` is legal JSON and
+still garbage on screen.

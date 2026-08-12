@@ -53,6 +53,32 @@ final class EnrichmentValidator
      */
     public const MAX_VARIANT_EXTRA_TOKENS = 2;
 
+    /**
+     * Phrases with which the model argues its own finding down. Two of the eight language findings on
+     * the store run ended this way — «банкомат не является ошибкой», «но это корректно» — so the model
+     * filled the field, cost a human a read, and concluded there was nothing there. The prompt now
+     * forbids it; this is the deterministic backstop, because a prompt rule is a request and this is a
+     * guarantee.
+     *
+     * Matched against the note's own prose, which is written in the learner's language — Russian for
+     * every collection that exists. An unrecognised phrasing keeps the finding, so the list is safe to
+     * be incomplete.
+     */
+    private const SELF_REFUTING = [
+        'не является ошибкой',
+        'не ошибка',
+        'это корректно',
+        'но корректно',
+        'является корректным',
+        'вполне корректно',
+        'допустимо',
+        'is not an error',
+        'is correct',
+    ];
+
+    /** JSON punctuation the model sometimes leaks INSIDE a legal string value — see sanitizeNote(). */
+    private const JSON_DEBRIS = ['"},{', '},{', '"}', '{"', '"],', '["'];
+
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly LanguagePurityCheck $purity = new LanguagePurityCheck(),
@@ -150,7 +176,7 @@ final class EnrichmentValidator
                 continue;
             }
             $seen[$key] = true;
-            $kept[] = new RawVariant($text, $this->nullIfBlank($variant->note));
+            $kept[] = new RawVariant($text, $this->sanitizeNote($variant->note));
         }
 
         return [$kept, $rejected];
@@ -312,12 +338,48 @@ final class EnrichmentValidator
         // newer prompt can add one without a run losing findings.
         foreach ($candidate->languageNotes as $note) {
             $detail = $this->nullIfBlank($note->detail);
-            if ($detail !== null) {
-                $out[] = new EnrichmentFinding($candidate->termId, $this->noteKind($note->kind), null, $detail);
+            if ($detail === null || $this->isSelfRefuting($detail)) {
+                continue;
             }
+            $out[] = new EnrichmentFinding($candidate->termId, $this->noteKind($note->kind), null, $detail);
         }
 
         return $out;
+    }
+
+    /** A note that concludes there is no problem is not a finding — it is a wasted read. */
+    private function isSelfRefuting(string $detail): bool
+    {
+        $lowered = mb_strtolower($detail);
+        foreach (self::SELF_REFUTING as $phrase) {
+            if (str_contains($lowered, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Scrub JSON punctuation out of a note. Structured Outputs guarantees the ENVELOPE is valid JSON;
+     * it does not stop the model putting `"},{ ` inside a string, which is legal JSON and garbage on
+     * screen (seen live on «Синонимы."},{»). The note is a proofreading aid, so scrubbing it is right
+     * and dropping the variant over it would be absurd. A note that is only debris becomes null.
+     */
+    private function sanitizeNote(?string $note): ?string
+    {
+        $note = $this->nullIfBlank($note);
+        if ($note === null) {
+            return null;
+        }
+
+        $clean = str_replace(self::JSON_DEBRIS, '', $note);
+        // Braces/brackets left at the ends are debris. The double quote is NOT in this list on
+        // purpose: a note legitimately ends with one («синоним к слову "залог"»), and trimming it
+        // would eat the prose to tidy up the model's mess.
+        $clean = trim($clean, " \t\n\r\0\x0B{}[],");
+
+        return $this->nullIfBlank($clean);
     }
 
     private function noteKind(string $wire): FindingKind
