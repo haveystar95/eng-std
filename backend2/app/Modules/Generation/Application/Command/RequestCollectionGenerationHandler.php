@@ -26,7 +26,12 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
  */
 final readonly class RequestCollectionGenerationHandler
 {
-    public const PROMPT_VERSION = 'v5';
+    /**
+     * The prompt file the model is given, and part of the prompt-cache key — so a bump here is also
+     * a deliberate cache miss: the next identical prompt is regenerated rather than served the set
+     * the previous version produced. That is the point of bumping rather than editing v5 in place.
+     */
+    public const PROMPT_VERSION = 'v6';
 
     public function __construct(
         private GenerationRequestRepository $requests,

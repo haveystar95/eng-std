@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -96,6 +97,48 @@ it('adds the v5 rules: the translation must determine its answer, and no UA lexi
             // v4's content is inherited, not replaced.
             && str_contains($system, 'image_api_prompt');
     });
+});
+
+/**
+ * v6 is the answer to a Ukrainian translation reaching a card (docs/ua-audit.md). v5 already
+ * forbade Ukrainian; what it lacked was a language stated as a SETTING rather than something to be
+ * inferred from the topic, and a step where the model reads its own items back.
+ */
+it('adds the v6 rules: the languages are pinned settings and every item is read back', function () {
+    fakeOpenAi();
+    generateWith('v6');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, 'The two languages, fixed before you start')
+            && str_contains($system, 'does not depend on the topic')
+            && str_contains($system, 'Final self-check')
+            // The letters are named, not just the language: this is the class the deterministic
+            // barrier also keys on, and the prompt and the barrier must be talking about the same thing.
+            && str_contains($system, 'і')
+            && str_contains($system, 'на одній хвилі')
+            // v5's content is inherited, not replaced.
+            && str_contains($system, 'determine its own answer')
+            && str_contains($system, 'Language purity')
+            && str_contains($system, 'image_api_prompt');
+    });
+});
+
+it('keeps the v6 rules out of the frozen v5 prompt', function () {
+    fakeOpenAi();
+    generateWith('v5');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return ! str_contains($system, 'Final self-check')
+            && ! str_contains($system, 'The two languages, fixed before you start');
+    });
+});
+
+it('generates on v6 by default', function () {
+    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v6');
 });
 
 it('keeps the v5 rules out of the frozen v4 prompt', function () {
