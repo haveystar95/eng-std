@@ -9,15 +9,21 @@ use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
+use App\Modules\Generation\Application\Dto\RepairedTranslation;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Shared\Domain\Service\ModelCost;
 
 /**
- * The generate → validate → top-up pipeline, in one place so every caller measures the same thing.
- * Models routinely under-deliver ("asked 15, got 13"), so this overshoots the ask by ~30%, trims
- * back to the requested size, and — if still short — does ONE more call with an avoid list, never a
- * loop. Tokens/cost are summed across both calls. Owned here (not in the command handler) so the
- * eval tool exercises the exact production behaviour rather than a drifting copy.
+ * The generate → validate → screen → top-up pipeline, in one place so every caller measures the
+ * same thing. Models routinely under-deliver ("asked 15, got 13"), so this overshoots the ask by
+ * ~30%, trims back to the requested size, and — if still short — does ONE more call with an avoid
+ * list, never a loop. Tokens/cost are summed across every call, repairs included. Owned here (not
+ * in the command handler) so the eval tool exercises the exact production behaviour rather than a
+ * drifting copy.
+ *
+ * The language barrier sits between validation and the caller: nothing leaves this class in the
+ * wrong language, and what it refused travels alongside the draft rather than disappearing into a
+ * smaller item count.
  */
 final readonly class GenerationPipeline
 {
@@ -26,6 +32,7 @@ final readonly class GenerationPipeline
     public function __construct(
         private CollectionGeneratorPort $generator,
         private DraftValidator $validator,
+        private LanguageBarrier $barrier,
     ) {
         $this->cost = new ModelCost();
     }
@@ -56,6 +63,18 @@ final readonly class GenerationPipeline
         // here — a genuinely broken/truncated first response throws (terminal failure, no retry).
         $draft = $this->validator->validate($raw, $this->resize($brief, $overshoot), targetCount: $requested);
 
+        // Screen BEFORE the shortfall check, so an item dropped for language leaves a hole the
+        // top-up fills like any other under-delivery. A collection that quietly came back two items
+        // short because two translations were Ukrainian is the exact silence this whole change exists
+        // to remove — the hole is filled, and what made it is returned.
+        $screened = $this->barrier->screen($draft->items, $brief);
+        $rejections = $screened->rejections;
+        $draft = $this->withItems($draft, $screened->items);
+        if ($screened->repairs !== []) {
+            [$tokensIn, $tokensOut, $costUsd] = $this->addRepairs($tokensIn, $tokensOut, $costUsd, $screened->repairs);
+            $onAttempt(new AttemptUsage($model, $tokensIn, $tokensOut, $costUsd, $raw->rawResponse));
+        }
+
         if (count($draft->items) < $requested) {
             $shortfall = $requested - count($draft->items);
             $topUpSize = min(DraftValidator::MAX_ITEMS, (int) ceil($shortfall * 1.3));
@@ -73,7 +92,19 @@ final readonly class GenerationPipeline
             // Supplemental: no floor — a top-up of a couple of items is valid. Cross-dedup + trim to
             // the requested size happens in the merge.
             $topUp = $this->validator->validate($topUpRaw, $topUpBrief, targetCount: $topUpSize, supplemental: true);
-            $draft = $this->merge($draft, $topUp, $requested);
+
+            // The top-up is model output like any other and gets the same barrier. There is no
+            // third pass: a top-up that also comes back tainted under-delivers, honestly logged.
+            $screenedTopUp = $this->barrier->screen($topUp->items, $brief);
+            foreach ($screenedTopUp->rejections as $rejection) {
+                $rejections[] = $rejection;
+            }
+            if ($screenedTopUp->repairs !== []) {
+                [$tokensIn, $tokensOut, $costUsd] = $this->addRepairs($tokensIn, $tokensOut, $costUsd, $screenedTopUp->repairs);
+                $onAttempt(new AttemptUsage($model, $tokensIn, $tokensOut, $costUsd, $topUpRaw->rawResponse));
+            }
+
+            $draft = $this->merge($draft, $this->withItems($topUp, $screenedTopUp->items), $requested);
         }
 
         return new AssembledDraft(
@@ -84,6 +115,44 @@ final readonly class GenerationPipeline
             tokensOut: $tokensOut,
             costUsd: $costUsd,
             delivered: count($draft->items),
+            rejections: $rejections,
+        );
+    }
+
+    /**
+     * Fold every repair call's usage into the running total. Failed repairs are in here too: a call
+     * that answered in Ukrainian again cost exactly what a good one costs, and a spend figure that
+     * omitted it would make bad runs look cheap.
+     *
+     * The request carries ONE model name, and it stays the generator's — the repairer runs on a
+     * different (cheaper) model, so its tokens are summed but its price is estimated at its own rate.
+     *
+     * @param  list<RepairedTranslation>  $repairs
+     * @return array{0: int|null, 1: int|null, 2: string|null}
+     */
+    private function addRepairs(?int $tokensIn, ?int $tokensOut, ?string $costUsd, array $repairs): array
+    {
+        foreach ($repairs as $repair) {
+            $tokensIn = $this->sumTokens($tokensIn, $repair->tokensIn);
+            $tokensOut = $this->sumTokens($tokensOut, $repair->tokensOut);
+            $costUsd = $this->sumCost($costUsd, $this->estimateCost($repair->model, $repair->tokensIn, $repair->tokensOut));
+        }
+
+        return [$tokensIn, $tokensOut, $costUsd];
+    }
+
+    /** @param  list<GeneratedItem>  $items */
+    private function withItems(GeneratedCollectionDraft $draft, array $items): GeneratedCollectionDraft
+    {
+        return new GeneratedCollectionDraft(
+            title: $draft->title,
+            description: $draft->description,
+            items: $items,
+            model: $draft->model,
+            tokensIn: $draft->tokensIn,
+            tokensOut: $draft->tokensOut,
+            rawResponse: $draft->rawResponse,
+            imageApiPrompt: $draft->imageApiPrompt,
         );
     }
 

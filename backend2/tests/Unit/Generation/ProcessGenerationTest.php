@@ -17,12 +17,14 @@ use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
+use App\Modules\Generation\Application\Service\LanguageBarrier;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
 use App\Modules\Generation\Domain\Service\PromptNormalizer;
 use App\Modules\Generation\Domain\ValueObject\GenerationStatus;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTranslationRepairer;
 use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -39,6 +41,8 @@ use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
 use Tests\Doubles\RecordingEnrichmentDispatcher;
 use Tests\Doubles\RecordingImageAttachmentDispatcher;
+use Tests\Doubles\RecordingRejectionJournal;
+use Tests\Doubles\ScriptedTranslationRepairer;
 
 beforeEach(function () {
     $this->clock = new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z'));
@@ -54,6 +58,8 @@ beforeEach(function () {
         requests: $this->requests,
         generator: new FakeCollectionGenerator(),
         validator: new DraftValidator(),
+        barrier: new LanguageBarrier(new FakeTranslationRepairer()),
+        rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
@@ -86,6 +92,8 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         requests: $ctx->requests,
         generator: $generator,
         validator: new DraftValidator(),
+        barrier: new LanguageBarrier(new FakeTranslationRepairer()),
+        rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($ctx->collections, $ctx->clock),
         addTerm: new AddTermToCollectionHandler($ctx->collections),
@@ -239,6 +247,8 @@ it('records tokens, cost and raw response even when the draft fails validation',
         requests: $this->requests,
         generator: $badGenerator,
         validator: new DraftValidator(),
+        barrier: new LanguageBarrier(new FakeTranslationRepairer()),
+        rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
@@ -282,6 +292,8 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         requests: $this->requests,
         generator: $throwing,
         validator: new DraftValidator(),
+        barrier: new LanguageBarrier(new FakeTranslationRepairer()),
+        rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
         addTerm: new AddTermToCollectionHandler($this->collections),
@@ -311,4 +323,109 @@ it('records a terminal failure via FailGeneration', function () {
 
     expect($this->requests->findById($id)?->status())->toBe(GenerationStatus::Failed)
         ->and($this->requests->findById($id)?->error())->toBe('boom');
+});
+
+/** A batch of clean items, with one field of one item optionally poisoned. */
+function batch(int $count, ?string $poisonedTranslation = null, int $offset = 0): array
+{
+    $items = [];
+    for ($n = 1; $n <= $count; $n++) {
+        $i = $offset + $n;
+        $items[] = new GeneratedItem(
+            text: "term {$i}",
+            type: 'phrase',
+            translation: $n === 1 && $poisonedTranslation !== null ? $poisonedTranslation : "перевод {$i}",
+            example: "This is sentence {$i}.",
+            cefr: 'B1',
+            transcription: "ipa {$i}",
+            exampleTranslation: "Это предложение {$i}.",
+        );
+    }
+
+    return $items;
+}
+
+/** Build a handler with an explicit barrier + journal, so a test can script the repairer. */
+function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, LanguageBarrier $barrier, RecordingRejectionJournal $journal): ProcessGenerationHandler
+{
+    $findOrCreate = new FindOrCreateTermHandler($ctx->terms, new TermNormalizer(), $ctx->clock);
+
+    return new ProcessGenerationHandler(
+        requests: $ctx->requests,
+        generator: $generator,
+        validator: new DraftValidator(),
+        barrier: $barrier,
+        rejections: $journal,
+        importTerm: new ImportTermHandler($findOrCreate),
+        createCollection: new CreateGeneratedCollectionHandler($ctx->collections, $ctx->clock),
+        addTerm: new AddTermToCollectionHandler($ctx->collections),
+        cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
+        attachImages: new RecordingImageAttachmentDispatcher(),
+        enrich: new RecordingEnrichmentDispatcher(),
+        tx: new ImmediateTransactionManager(),
+        clock: $ctx->clock,
+    );
+}
+
+/**
+ * Outcome one, end to end: a Ukrainian translation never reaches the database, because the retry
+ * fixed it. The term IS written — with the repaired Russian, not the model's first answer.
+ */
+it('writes the repaired translation when the barrier fixes a tainted item', function () {
+    $journal = new RecordingRejectionJournal();
+    $repairer = new ScriptedTranslationRepairer(['держаться на одной волне']);
+    $generator = scriptedGenerator([[batch(12, 'на одній хвилі'), 900, 1500]]);
+
+    $id = openGeneration($this);
+    (processWithBarrier($this, $generator, new LanguageBarrier($repairer), $journal))(new ProcessGeneration($id));
+
+    expect($repairer->calls)->toBe(1)
+        ->and($journal->all())->toBe([])
+        ->and($this->requests->findById($id)?->deliveredCount())->toBe(12);
+
+    $written = $this->terms->all();
+    $translations = [];
+    foreach ($written as $term) {
+        foreach ($term->translations() as $translation) {
+            $translations[] = $translation->text;
+        }
+    }
+    expect($translations)->toContain('держаться на одной волне')
+        ->and($translations)->not->toContain('на одній хвилі');
+});
+
+/**
+ * Outcome two, end to end: the retries fail, the term is NOT written, the hole is filled by the
+ * top-up, and the drop leaves a row saying which item and why. The collection is full-size, so
+ * without that row nothing about the run would look unusual — which is the failure mode this
+ * whole change exists to remove.
+ */
+it('drops an unfixable item, tops up the hole, and records the rejection', function () {
+    $journal = new RecordingRejectionJournal();
+    $repairer = new ScriptedTranslationRepairer(['на одній хвилі', 'розуміти одне одного']);
+    $generator = scriptedGenerator([
+        [batch(12, 'на одній хвилі'), 900, 1500],
+        [batch(2, null, 100), 200, 300],   // the top-up, clean
+    ]);
+
+    $id = openGeneration($this);
+    (processWithBarrier($this, $generator, new LanguageBarrier($repairer), $journal))(new ProcessGeneration($id));
+
+    expect($repairer->calls)->toBe(LanguageBarrier::MAX_ATTEMPTS)
+        ->and($generator->calls)->toBe(2)                       // the hole triggered a top-up
+        ->and($this->requests->findById($id)?->deliveredCount())->toBe(12);
+
+    $rejections = $journal->all();
+    expect($rejections)->toHaveCount(1)
+        ->and($rejections[0]->text)->toBe('term 1')
+        ->and($rejections[0]->field)->toBe('translation')
+        ->and($rejections[0]->attempts)->toBe(LanguageBarrier::MAX_ATTEMPTS);
+
+    $translations = [];
+    foreach ($this->terms->all() as $term) {
+        foreach ($term->translations() as $translation) {
+            $translations[] = $translation->text;
+        }
+    }
+    expect($translations)->not->toContain('на одній хвилі');
 });

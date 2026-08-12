@@ -12,6 +12,7 @@ use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
+use App\Modules\Generation\Application\Service\LanguageBarrier;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use Illuminate\Console\Command;
 use Throwable;
@@ -60,9 +61,11 @@ final class EvalGenerationCommand extends Command
         /** @var CollectionGeneratorPort $generator */
         $generator = app(CollectionGeneratorPort::class);
 
-        // Run the SAME overshoot + top-up pipeline production uses, so the eval measures real
-        // delivered-vs-requested, not a single raw call. Cost lives on AssembledDraft (summed).
-        $pipeline = new GenerationPipeline($generator, $validator);
+        // Run the SAME overshoot + barrier + top-up pipeline production uses, so the eval measures
+        // real delivered-vs-requested, not a single raw call. Cost lives on AssembledDraft (summed,
+        // repairs included) — a prompt version that provokes re-translations should look expensive
+        // in the eval, which is only true if the eval runs the barrier too.
+        $pipeline = new GenerationPipeline($generator, $validator, app(LanguageBarrier::class));
 
         $source = new LanguageCode($this->asString($this->option('source')));
         $target = new LanguageCode($this->asString($this->option('target')));

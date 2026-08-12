@@ -17,8 +17,10 @@ use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
+use App\Modules\Generation\Application\Service\LanguageBarrier;
 use App\Modules\Generation\Domain\Entity\GenerationRequest;
 use App\Modules\Generation\Domain\Exception\GenerationRequestNotFound;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
@@ -52,6 +54,8 @@ final readonly class ProcessGenerationHandler
         private GenerationRequestRepository $requests,
         CollectionGeneratorPort $generator,
         DraftValidator $validator,
+        LanguageBarrier $barrier,
+        private RecordsGenerationRejections $rejections,
         private ImportTermHandler $importTerm,
         private CreateGeneratedCollectionHandler $createCollection,
         private AddTermToCollectionHandler $addTerm,
@@ -61,7 +65,7 @@ final readonly class ProcessGenerationHandler
         private TransactionManager $tx,
         private Clock $clock,
     ) {
-        $this->pipeline = new GenerationPipeline($generator, $validator);
+        $this->pipeline = new GenerationPipeline($generator, $validator, $barrier);
     }
 
     public function __invoke(ProcessGeneration $command): void
@@ -130,6 +134,12 @@ final readonly class ProcessGenerationHandler
                 $this->requests->save($request);
             },
         );
+
+        // What the language barrier refused, written before the collection so a crash between the
+        // two loses the collection (recoverable — the user regenerates) rather than the evidence of
+        // WHY it was short (not recoverable — the model output is gone). No-op when nothing was
+        // refused, which is the normal case.
+        $this->rejections->record($request->id()->value, $assembled->rejections);
 
         // Materialize the *final accepted* set (after filter + top-up). This is also what the prompt
         // cache stores, so the next identical prompt reuses the fixed-up set, not the raw under-delivery.

@@ -16,6 +16,8 @@ use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
+use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
+use App\Modules\Generation\Application\Port\TranslationRepairPort;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Port\EnrichmentJournal;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
@@ -35,6 +37,8 @@ use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\FakeExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\FakeEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTermEnricher;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTranslationRepairer;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiTranslationRepairer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
@@ -51,6 +55,7 @@ use App\Modules\Generation\Infrastructure\Eloquent\EloquentEnrichmentJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentExampleRegenerationLog;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRejectionJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeDialogMessageRepository;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeDialogRepository;
@@ -71,6 +76,8 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
         $this->app->bind(RecordsTermEnrichment::class, EloquentTermEnrichmentLog::class);
         $this->app->bind(RecordsExampleRegeneration::class, EloquentExampleRegenerationLog::class);
+        // The language barrier's log: which items a generation refused to write, and why.
+        $this->app->bind(RecordsGenerationRejections::class, EloquentGenerationRejectionJournal::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
@@ -132,6 +139,21 @@ final class GenerationServiceProvider extends ServiceProvider
                 // prompt_version and the file used always match; the eval command overrides it via
                 // config to trial a new version (e.g. v3) without flipping production.
                 promptVersion: (string) config('services.generation.prompt_version', RequestCollectionGenerationHandler::PROMPT_VERSION),
+            );
+        });
+
+        $this->app->bind(TranslationRepairPort::class, function (): TranslationRepairPort {
+            if (config('services.generation.driver') === 'fake') {
+                return new FakeTranslationRepairer();
+            }
+
+            return new OpenAiTranslationRepairer(
+                context: $this->app->make(OutboundCallContext::class),
+                apiKey: (string) config('services.openai.api_key'),
+                // Translating one short string that has already been chosen is not the job the
+                // expensive model earns its price on, and this call happens while the user waits.
+                model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
+                promptVersion: (string) config('services.generation.repair_prompt_version', 'v1'),
             );
         });
 
