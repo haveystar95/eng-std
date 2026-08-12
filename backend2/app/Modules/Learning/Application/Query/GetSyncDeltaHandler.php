@@ -56,8 +56,15 @@ final readonly class GetSyncDeltaHandler
         $items = $this->collectionSync->changedItems($query->userId, $since, $upper);
         // Terms that changed globally, plus terms pulled in by a fresh subscription this window
         // (their own updated_at is old, so a subscribed collection would otherwise arrive contentless).
+        // The id set also carries terms that just LEFT the user's scope: a retired term is gone
+        // from every live item by the time we look, so without them its tombstone would have
+        // nothing to ride and the word would stay in the phone's mirror forever.
+        $scopedTermIds = array_values(array_unique([
+            ...$this->collectionSync->liveTermIds($query->userId),
+            ...$this->collectionSync->recentlyRemovedTermIds($query->userId, $since, $upper),
+        ]));
         $termRefs = $this->mergeTermRefs(
-            $this->termChanges->changedTermIds($this->collectionSync->liveTermIds($query->userId), $since, $upper),
+            $this->termChanges->changedTermIds($scopedTermIds, $since, $upper),
             $this->collectionSync->newlySubscribedTermRefs($query->userId, $since, $upper),
         );
         $progress = $this->progressSync->changedProgress($query->userId, $since, $upper);
@@ -107,12 +114,18 @@ final readonly class GetSyncDeltaHandler
             }
         }
 
+        // Tombstones need no content — and asking for it would return nothing anyway.
         $content = $this->termContent->byIds(array_map(
             static fn (TermChangeRef $r): TermId => TermId::fromString($r->id),
-            $pTermRefs,
+            array_values(array_filter($pTermRefs, static fn (TermChangeRef $r): bool => ! $r->deleted)),
         ));
         $terms = array_map(
-            static fn (TermChangeRef $r): TermSyncView => new TermSyncView($r->id, $r->updatedAt, $content[$r->id] ?? null),
+            static fn (TermChangeRef $r): TermSyncView => new TermSyncView(
+                $r->id,
+                $r->updatedAt,
+                $r->deleted ? null : ($content[$r->id] ?? null),
+                $r->deleted,
+            ),
             $pTermRefs,
         );
 

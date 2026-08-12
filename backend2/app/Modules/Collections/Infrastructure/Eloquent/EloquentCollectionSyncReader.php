@@ -83,6 +83,40 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
         return array_keys($ids);
     }
 
+    public function recentlyRemovedTermIds(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array
+    {
+        if ($since === null) {
+            return []; // snapshot: nothing to tombstone
+        }
+
+        // Deliberately does NOT filter ci.deleted_at / c.deleted_at away — removed rows are the
+        // whole point here. Both halves of the user's scope (owned + subscribed, subscription in
+        // any state, since deleting a collection also ends its subscriptions).
+        $owned = DB::table('collection_items as ci')
+            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+            ->where('c.owner_id', $userId->value)
+            ->whereNotNull('ci.deleted_at')
+            ->where('ci.deleted_at', '>=', $since)
+            ->where('ci.deleted_at', '<=', $upper)
+            ->pluck('ci.term_id');
+
+        $subscribed = DB::table('collection_items as ci')
+            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+            ->join('user_collections as uc', 'uc.collection_id', '=', 'c.id')
+            ->where('uc.user_id', $userId->value)
+            ->whereNotNull('ci.deleted_at')
+            ->where('ci.deleted_at', '>=', $since)
+            ->where('ci.deleted_at', '<=', $upper)
+            ->pluck('ci.term_id');
+
+        $ids = [];
+        foreach ([...$owned->all(), ...$subscribed->all()] as $id) {
+            $ids[(string) $id] = true;
+        }
+
+        return array_keys($ids);
+    }
+
     public function newlySubscribedTermRefs(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array
     {
         // Snapshot already ships every live term (liveTermIds ∋ subscribed) — nothing extra to force.

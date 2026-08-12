@@ -22,9 +22,11 @@ function termDetailFixture(): array
     Profile::create(['user_id' => $user->id, 'daily_goal' => 5, 'tier' => 'free']);
     [, $termId] = adminSeedTerm($user, 'Banking', 'account', 'счёт');
 
-    // The pinned example is the lowest id, so generate ids in order deliberately.
-    $pinned = Ulid::generate();
-    $second = Ulid::generate();
+    // The pinned example is the LOWEST id. Two ULIDs minted in the same millisecond are not
+    // ordered by generation, so sort them rather than assume.
+    $ids = [Ulid::generate(), Ulid::generate()];
+    sort($ids);
+    [$pinned, $second] = $ids;
     DB::table('term_examples')->where('term_id', $termId)->delete();
     DB::table('term_examples')->insert([
         ['id' => $pinned, 'term_id' => $termId, 'sentence' => 'I opened a bank account.',

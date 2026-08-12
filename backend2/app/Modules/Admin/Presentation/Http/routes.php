@@ -41,11 +41,20 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);
     Route::get('/collections/{id}/costs', [CostController::class, 'collection']);
+    // Content curation. `impact` is read first so the confirm dialog can state the blast radius.
+    Route::get('/collections/{id}/impact', [CollectionController::class, 'impact']);
+    Route::patch('/collections/{id}', [CollectionController::class, 'update']);
+    Route::post('/collections/{id}/terms', [CollectionController::class, 'addTerm']);
+    Route::delete('/collections/{id}/terms/{termId}', [CollectionController::class, 'removeTerm']);
+    Route::delete('/collections/{id}', [CollectionController::class, 'destroy']);
 
     Route::get('/costs', [CostController::class, 'summary']);
 
     Route::get('/terms', [TermController::class, 'index']);
     Route::get('/terms/{id}', [TermController::class, 'show']);
+    Route::get('/terms/{id}/impact', [TermController::class, 'impact']);
+    Route::patch('/terms/{id}', [TermController::class, 'update']);
+    Route::delete('/terms/{id}', [TermController::class, 'destroy']);
 
     // `/request-logs` is the original name, kept so nothing that already calls it breaks; `/logs`
     // is what the panel and the contract use. Same controller — one implementation, two paths.

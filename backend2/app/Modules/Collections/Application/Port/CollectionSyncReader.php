@@ -36,6 +36,18 @@ interface CollectionSyncReader
     public function liveTermIds(UserId $userId): array;
 
     /**
+     * Term ids that LEFT the user's scope in (since, upper] — their collection item was removed
+     * (individually, by a term being retired, or by the whole collection being deleted).
+     *
+     * `liveTermIds` can't see these by definition, and without them a retired term would never be
+     * offered to `changedTermIds`, so its tombstone would never reach the device: the word would
+     * sit in the local mirror forever. Empty for a full snapshot.
+     *
+     * @return list<string>
+     */
+    public function recentlyRemovedTermIds(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array;
+
+    /**
      * Terms that must ship in a DELTA because a collection was (re)subscribed in (since, upper] —
      * their own `updated_at` is old (the store term didn't change), so `changedTermIds` alone would
      * miss them and the client would get a collection with no term content. Empty for a full

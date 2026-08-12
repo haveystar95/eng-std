@@ -26,7 +26,9 @@ final class EloquentAdminTermReader implements AdminTermReader
 {
     public function list(?string $search, ListWindow $window): Page
     {
-        $base = DB::table('terms');
+        // Retired terms stay in the table (the review log points at them) but are not dictionary
+        // any more, so the list must not offer them.
+        $base = DB::table('terms')->whereNull('deleted_at');
         if ($search !== null && $search !== '') {
             $like = '%' . $search . '%';
             $base->where(function (Builder $q) use ($like): void {

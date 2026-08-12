@@ -22,13 +22,19 @@ final class EloquentTermChangeReader implements TermChangeReader
             ->where('updated_at', '<=', $upper);
         if ($since !== null) {
             $q->where('updated_at', '>=', $since);
+        } else {
+            // Full snapshot: upserts only. A fresh client has nothing to tombstone.
+            $q->whereNull('deleted_at');
         }
 
         return array_values($q->orderBy('updated_at')->orderBy('id')
-            ->get(['id', 'updated_at'])
+            ->get(['id', 'updated_at', 'deleted_at'])
             ->map(fn ($r): TermChangeRef => new TermChangeRef(
                 id: (string) $r->id,
+                // Retiring a term bumps updated_at alongside deleted_at, so one column still
+                // catches both upserts and deletes.
                 updatedAt: new DateTimeImmutable((string) $r->updated_at),
+                deleted: $r->deleted_at !== null,
             ))->all());
     }
 }

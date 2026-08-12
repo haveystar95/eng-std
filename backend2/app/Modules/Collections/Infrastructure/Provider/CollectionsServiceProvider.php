@@ -12,7 +12,9 @@ use App\Modules\Collections\Application\Port\StorePreviewReader;
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Query\PendingCollectionImageReader;
+use App\Modules\Collections\Application\Port\CollectionCurator;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionCurator;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionsAccountEraser;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSubscriptions;
@@ -30,6 +32,7 @@ final class CollectionsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(CollectionRepository::class, EloquentCollectionRepository::class);
+        $this->app->bind(CollectionCurator::class, EloquentCollectionCurator::class);
         $this->app->bind(UserCollectionsReader::class, EloquentUserCollectionsReader::class);
         $this->app->bind(UserCollectionTermsReader::class, EloquentUserCollectionTermsReader::class);
         $this->app->bind(CollectionSyncReader::class, EloquentCollectionSyncReader::class);

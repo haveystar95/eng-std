@@ -127,10 +127,17 @@ deptrac:
     # GetUserStats) and Identity (the tier mutation goes through UserTierWriter — the tier's owner).
     # Its Infrastructure reads other modules' read tables directly as reporting projections (like
     # Observability, it imports no other module's classes).
+    # Admin READS other modules' tables as projections, but it MUTATES only through their
+    # Application — curating a term goes through Vocabulary, curating a collection through
+    # Collections, exactly as the tier change goes through Identity.
     AdminDomain: [SharedDomain]
-    AdminApplication: [AdminDomain, SharedDomain, IdentityApplication, LearningApplication]
+    AdminApplication:
+      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication]
     AdminInfrastructure: [AdminApplication, AdminDomain, SharedDomain, SharedInfra, Framework]
-    AdminPresentation: [AdminApplication, AdminDomain, SharedDomain, Framework]
+    # Presentation reads the impact ports (Vocabulary/Collections Application) to state the blast
+    # radius of a delete before it happens — a cross-module read through Application, like /me's.
+    AdminPresentation:
+      [AdminApplication, AdminDomain, SharedDomain, Framework, VocabularyApplication, CollectionsApplication]
 
     # Presentation may use the framework, its own Application/Domain — never Infrastructure.
     # /me aggregates cross-module facts about the user; the generation quota (to grey the create

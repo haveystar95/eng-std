@@ -129,6 +129,12 @@ final class SyncController
     /** @return array<string, mixed> */
     private function term(TermSyncView $t): array
     {
+        // A retired term: the client drops it from its mirror. Same shape as a collection
+        // tombstone — id, op, timestamp, no payload.
+        if ($t->deleted) {
+            return ['id' => $t->id, 'op' => 'delete', 'updated_at' => $t->updatedAt->format(DATE_ATOM)];
+        }
+
         $c = $t->content;
 
         return [

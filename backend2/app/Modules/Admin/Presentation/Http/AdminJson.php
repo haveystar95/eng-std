@@ -33,6 +33,8 @@ use App\Modules\Admin\Application\Dto\TermRow;
 use App\Modules\Admin\Application\Dto\TermTranslationRow;
 use App\Modules\Admin\Application\Dto\TermVariantRow;
 use App\Modules\Admin\Application\Dto\UserCollectionWithProgress;
+use App\Modules\Collections\Application\Dto\CollectionImpact;
+use App\Modules\Vocabulary\Application\Dto\TermImpact;
 use App\Modules\Admin\Application\Dto\UserCostBreakdown;
 
 /**
@@ -336,6 +338,32 @@ final class AdminJson
                 'correction' => $d->correction,
                 'generator_version' => $d->generatorVersion,
             ], $e->distractors),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function termImpact(TermImpact $i): array
+    {
+        return [
+            'term_id' => $i->termId,
+            'text' => $i->text,
+            'collections_count' => $i->collectionsCount,
+            'users_with_progress' => $i->usersWithProgress,
+            'reviews_count' => $i->reviewsCount,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function collectionImpact(CollectionImpact $i): array
+    {
+        return [
+            'collection_id' => $i->collectionId,
+            'title' => $i->title,
+            'type' => $i->type,
+            'owner_id' => $i->ownerId,
+            'terms_count' => $i->termsCount,
+            'subscribers' => $i->subscribers,
+            'learners_with_progress' => $i->learnersWithProgress,
         ];
     }
 

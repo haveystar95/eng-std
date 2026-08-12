@@ -35,6 +35,7 @@ tags:
   - name: Terms
   - name: Logs
   - name: Costs
+  - name: Curation
   - name: Practice
   - name: Generation
 
@@ -359,6 +360,118 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CollectionDetail' }
         '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [Curation]
+      summary: Edit a collection's title/description
+      description: >
+        Works on store collections too — curating them is the job, and the user-facing edit command
+        next door refuses because it asks "is the actor the owner", which a store deck has none of.
+        Changes reach every owner and subscriber through the next `/sync` delta.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, maxLength: 200 }
+                description: { type: [string, 'null'], maxLength: 1000 }
+      responses:
+        '200':
+          description: The updated collection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Curation]
+      summary: Delete a collection for EVERY owner and subscriber
+      description: >
+        Soft-deletes the collection and ends every subscription. Both halves matter: an owner learns
+        from the collection's own tombstone, a subscriber from theirs, and a subscription row that
+        was deleted outright would produce no delta at all — the deck would linger on their phone.
+        `confirm_title` must equal the collection's title; the check is enforced here, not only in
+        the dialog.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm_title]
+              properties:
+                confirm_title: { type: string }
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  deleted: { type: boolean }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /collections/{id}/impact:
+    get:
+      tags: [Curation]
+      summary: What deleting or editing this collection would touch
+      description: Read before the confirm dialog is drawn, so the operator sees the blast radius.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionImpact' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /collections/{id}/terms:
+    post:
+      tags: [Curation]
+      summary: Add an existing term to a collection
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [term_id]
+              properties:
+                term_id: { type: string }
+      responses:
+        '200':
+          description: The updated collection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /collections/{id}/terms/{termId}:
+    delete:
+      tags: [Curation]
+      summary: Remove a term from THIS collection (the term stays in the dictionary)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: termId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The updated collection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 
   /collections/{id}/costs:
     get:
@@ -430,6 +543,73 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TermDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [Curation]
+      summary: Edit a term's content
+      description: >
+        Terms are GLOBAL and deduplicated: this edit is felt by every collection holding the term
+        and every learner studying it. That is the point (one fix lands everywhere) and the danger —
+        read `/terms/{id}/impact` first and say so in the dialog.
+
+        Editing the EXAMPLE additionally drops that example's distractors and unmarks the term for
+        the enrichment run, because everything derived from the old sentence describes text that no
+        longer exists. At least one editable field is required.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string, maxLength: 200 }
+                translation: { type: string, maxLength: 200 }
+                ipa: { type: [string, 'null'], maxLength: 200 }
+                example_id: { type: string, description: required together with example_sentence }
+                example_sentence: { type: string, maxLength: 500 }
+                example_translation: { type: [string, 'null'], maxLength: 500 }
+      responses:
+        '200':
+          description: The updated term
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TermDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Curation]
+      summary: Retire a term from the dictionary
+      description: >
+        Soft-deletes the term, removes it from every collection and deletes the (user, term)
+        progress rows. The append-only review log is NOT touched — it is history, and history does
+        not change because a term was retired. Clients receive a term tombstone in the next delta.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: Retired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  retired: { type: boolean }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /terms/{id}/impact:
+    get:
+      tags: [Curation]
+      summary: What editing or retiring this term would touch
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TermImpact' }
+        '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
 
   /logs:
@@ -979,6 +1159,27 @@ components:
               error_span: { type: string }
               correction: { type: string }
               generator_version: { type: string }
+
+    TermImpact:
+      type: object
+      description: The blast radius of touching one term — terms are global.
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        collections_count: { type: integer }
+        users_with_progress: { type: integer }
+        reviews_count: { type: integer, description: answers already in the append-only log; never deleted }
+
+    CollectionImpact:
+      type: object
+      properties:
+        collection_id: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [system, shared, custom] }
+        owner_id: { type: [string, 'null'] }
+        terms_count: { type: integer }
+        subscribers: { type: integer, description: active subscriptions that would end }
+        learners_with_progress: { type: integer }
 
     CostByPurpose:
       type: object
