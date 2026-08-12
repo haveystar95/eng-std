@@ -4558,11 +4558,6 @@
                 },
                 "translations": [
                     {
-                        "lang": "de",
-                        "text": "Kann ich mit Karte bezahlen?",
-                        "is_primary": true
-                    },
-                    {
                         "lang": "ru",
                         "text": "Могу я оплатить картой?",
                         "is_primary": true
@@ -4571,7 +4566,7 @@
                 "examples": [
                     {
                         "sentence": "Can I pay by card, or is it cash only?",
-                        "sentence_translation": "Kann ich mit Karte bezahlen, oder nur bar?",
+                        "sentence_translation": "Могу я заплатить картой или только наличными?",
                         "source": "ai"
                     },
                     {
@@ -9681,30 +9676,20 @@
                 },
                 "translations": [
                     {
-                        "lang": "uk",
-                        "text": "ладити з",
-                        "is_primary": true
-                    },
-                    {
                         "lang": "ru",
                         "text": "ладить с",
                         "is_primary": true
-                    },
-                    {
-                        "lang": "uk",
-                        "text": "ладнати",
-                        "is_primary": false
                     }
                 ],
                 "examples": [
                     {
                         "sentence": "I get along with my team well, making collaboration effective.",
-                        "sentence_translation": "Я добре лажу зі своєю командою, що робить співпрацю ефективною.",
+                        "sentence_translation": "Я хорошо лажу со своей командой.",
                         "source": "ai"
                     },
                     {
                         "sentence": "I get along well with all my colleagues.",
-                        "sentence_translation": "Я добре ладнаю з усіма колегами.",
+                        "sentence_translation": "Я хорошо лажу со всеми своими коллегами.",
                         "source": "ai"
                     },
                     {
@@ -10745,11 +10730,6 @@
                 },
                 "translations": [
                     {
-                        "lang": "uk",
-                        "text": "Що вас мотивує?",
-                        "is_primary": true
-                    },
-                    {
                         "lang": "ru",
                         "text": "Что вас мотивирует?",
                         "is_primary": true
@@ -10758,7 +10738,7 @@
                 "examples": [
                     {
                         "sentence": "What motivates you to pursue a career in IT?",
-                        "sentence_translation": "Що вас мотивує обрати кар'єру в ІТ?",
+                        "sentence_translation": "Что вас мотивирует заниматься карьерой в сфере ИТ?",
                         "source": "ai"
                     },
                     {
@@ -11367,11 +11347,6 @@
                 },
                 "translations": [
                     {
-                        "lang": "uk",
-                        "text": "на одній хвилі, розуміти одне одного",
-                        "is_primary": true
-                    },
-                    {
                         "lang": "ru",
                         "text": "быть на одной волне",
                         "is_primary": true
@@ -11380,7 +11355,7 @@
                 "examples": [
                     {
                         "sentence": "It's important for the team to be on the same page about the project goals.",
-                        "sentence_translation": "Важливо, щоб команда розуміла одне одного щодо цілей проєкту.",
+                        "sentence_translation": "Важно, чтобы команда была на одной волне по поводу целей проекта.",
                         "source": "ai"
                     },
                     {

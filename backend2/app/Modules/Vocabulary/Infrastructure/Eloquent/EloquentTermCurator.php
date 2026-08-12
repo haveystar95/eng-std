@@ -107,6 +107,29 @@ final class EloquentTermCurator implements TermCurator
         });
     }
 
+    public function dropTranslation(TermId $termId, string $translationId): bool
+    {
+        return DB::transaction(function () use ($termId, $translationId): bool {
+            $rows = DB::table('term_translations')->where('term_id', $termId->value)->count();
+            if ($rows <= 1) {
+                return false;
+            }
+
+            $deleted = DB::table('term_translations')
+                ->where('id', $translationId)
+                ->where('term_id', $termId->value)
+                ->delete();
+
+            if ($deleted === 0) {
+                return false;
+            }
+
+            DB::table('terms')->where('id', $termId->value)->update(['updated_at' => now()]);
+
+            return true;
+        });
+    }
+
     public function retire(TermId $termId): bool
     {
         return DB::transaction(function () use ($termId): bool {

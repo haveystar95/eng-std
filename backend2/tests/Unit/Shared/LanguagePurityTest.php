@@ -47,6 +47,33 @@ it('has no opinion about a language it does not police', function () {
     expect($this->purity->foreignLetters('', 'на одній хвилі'))->toBe([]);
 });
 
+/**
+ * The other half of "wrong language", found live AFTER the letter check had been applied: a German
+ * example translation sitting in a Russian field, sharing no letter with Ukrainian.
+ */
+it('flags a Russian field written wholesale in another script', function () {
+    expect($this->purity->isWrongScript('ru', 'Kann ich mit Karte bezahlen, oder nur bar?'))->toBeTrue()
+        ->and($this->purity->isClean('ru', 'Kann ich mit Karte bezahlen, oder nur bar?'))->toBeFalse();
+});
+
+/**
+ * The reason it is a majority and not "any Latin letter". Russian carries these legitimately, and a
+ * check that rejected them would reject correct content — the failure mode that gets a barrier
+ * switched off.
+ */
+it('leaves a Latin borrowing inside a Russian phrase alone', function () {
+    expect($this->purity->isClean('ru', 'пароль от Wi-Fi'))->toBeTrue()
+        ->and($this->purity->isClean('ru', 'подключиться к Wi-Fi'))->toBeTrue()
+        // A tie is not a majority: «сеть Wi-Fi» is 4 Cyrillic letters against 4 Latin.
+        ->and($this->purity->isClean('ru', 'сеть Wi-Fi'))->toBeTrue();
+});
+
+it('does not judge the script of a language it does not police', function () {
+    expect($this->purity->isWrongScript('de', 'Kann ich mit Karte bezahlen?'))->toBeFalse()
+        // No letters at all is not a wrong script.
+        ->and($this->purity->isWrongScript('ru', '12:30 — 15%'))->toBeFalse();
+});
+
 it('reads the language code case- and whitespace-insensitively', function () {
     expect($this->purity->foreignLetters(' RU ', 'на одній хвилі'))->toBe(['і']);
 });

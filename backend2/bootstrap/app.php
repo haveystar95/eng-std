@@ -8,6 +8,7 @@ use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
+use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         EvalGenerationCommand::class,
         EnrichBackfillCommand::class,
         ApplyEnrichmentReviewCommand::class,
+        RepairContentLanguageCommand::class,
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,

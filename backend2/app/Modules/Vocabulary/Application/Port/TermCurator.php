@@ -37,6 +37,20 @@ interface TermCurator
     public function updateExample(TermId $termId, string $exampleId, string $sentence, ?string $translation): bool;
 
     /**
+     * Delete ONE translation row by id. Returns false when the row does not belong to this term, or
+     * when it is the term's last translation.
+     *
+     * Not expressible as {@see updateContent()}: that edits "the" translation, found by
+     * `is_primary`, which is the wrong row precisely in the case this exists for — a term carrying
+     * a correct Russian translation ALONGSIDE one in another language. The repair there is not a
+     * rewrite, it is a removal, and it must name the row it removes.
+     *
+     * The last-translation guard is not politeness: a term with no translation is a card whose
+     * question is blank, which is worse than a card whose question is in the wrong language.
+     */
+    public function dropTranslation(TermId $termId, string $translationId): bool;
+
+    /**
      * Retire a term everywhere: soft-delete it, drop it out of every collection, and delete the
      * (user, term) progress rows.
      *

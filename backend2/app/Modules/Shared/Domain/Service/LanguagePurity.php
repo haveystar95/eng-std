@@ -52,10 +52,55 @@ final class LanguagePurity
         };
     }
 
-    /** @see foreignLetters() — the boolean form, for callers that only decide pass/fail. */
+    /**
+     * Is this value clean for `$lang` — by letters AND by script?
+     *
+     * The two checks catch different failures and neither implies the other: «на одній хвилі» is
+     * Cyrillic through and through and still not Russian, while «Kann ich mit Karte bezahlen?»
+     * contains no Ukrainian letter at all and is not Russian either.
+     */
     public function isClean(string $lang, string $value): bool
     {
-        return $this->foreignLetters($lang, $value) === [];
+        return $this->foreignLetters($lang, $value) === [] && ! $this->isWrongScript($lang, $value);
+    }
+
+    /**
+     * MOST of the letters belong to a script the declared language is not written in.
+     *
+     * Found live, after the letter check had already been applied: a German example translation
+     * («Kann ich mit Karte bezahlen, oder nur bar?») sitting in a Russian field, invisible to
+     * {@see foreignLetters()} because German shares no letter with Ukrainian. Whole-field wrong
+     * language is the coarser and more obvious failure, and nothing was looking for it.
+     *
+     * A MAJORITY, not "any", and that threshold is the whole design. Russian legitimately carries
+     * Latin fragments — «пароль от Wi-Fi», «сеть Wi-Fi» — and a rule that flagged any Latin letter
+     * would reject correct content, which is worse than missing something: a barrier that cries
+     * wolf gets switched off. On the live data the separation is not close (33 Latin vs 0 Cyrillic
+     * for the German row; 4 vs 13 for the Wi-Fi ones), so a tie counts as clean.
+     */
+    public function isWrongScript(string $lang, string $value): bool
+    {
+        $expected = match (strtolower(trim($lang))) {
+            'ru', 'uk' => '/\p{Cyrillic}/u',
+            'en' => '/\p{Latin}/u',
+            default => null,
+        };
+        if ($expected === null) {
+            return false;
+        }
+
+        if (preg_match_all('/\p{L}/u', $value, $m) === false || $m[0] === []) {
+            return false;
+        }
+
+        $right = 0;
+        foreach ($m[0] as $char) {
+            if (preg_match($expected, $char) === 1) {
+                $right++;
+            }
+        }
+
+        return $right * 2 < count($m[0]);
     }
 
     /**

@@ -185,6 +185,11 @@ final readonly class LanguageBarrier
             if ($letters !== []) {
                 return ['field' => $field, 'value' => $value, 'letters' => $letters];
             }
+            // The coarser failure: no forbidden letter anywhere, and still the wrong language —
+            // a German sentence in a Russian field. Nothing to name, so the letter list is empty.
+            if ($this->purity->isWrongScript($lang, $value)) {
+                return ['field' => $field, 'value' => $value, 'letters' => []];
+            }
         }
 
         return null;
@@ -204,8 +209,10 @@ final readonly class LanguageBarrier
     /** @param  array{field: string, value: string, letters: list<string>}  $offence */
     private function reason(array $offence, string $lang): string
     {
-        $letters = implode(' ', $offence['letters']);
+        $what = $offence['letters'] === []
+            ? 'написано не на нём'
+            : 'содержит чужие буквы (' . implode(' ', $offence['letters']) . ')';
 
-        return "Поле {$offence['field']} должно быть на «{$lang}», а содержит чужие буквы ({$letters}): «{$offence['value']}».";
+        return "Поле {$offence['field']} должно быть на «{$lang}», а {$what}: «{$offence['value']}».";
     }
 }
