@@ -40,6 +40,8 @@ export interface LoginResponse {
 // ── Dashboard ──
 export interface DashboardTotals {
   users: number
+  /** Distinct users who answered a review in the last 7 days — "using it", not "signed up". */
+  activeUsers7d: number
   collections: number
   terms: number
   reviewsToday: number
@@ -59,6 +61,8 @@ export interface Dashboard {
     last7d: CostBreakdown
     allTime: CostBreakdown
   }
+  /** The last few outbound calls that failed — "what is broken right now", without going looking. */
+  recentFailures: RequestLog[]
 }
 
 // ── Users ──

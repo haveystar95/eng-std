@@ -154,6 +154,7 @@ export const mock = {
   async dashboard(): Promise<Dashboard> {
     const totals = {
       users: users.length,
+      activeUsers7d: users.filter((u) => u.detail.reviewsToday > 0 || u.detail.streakDays > 0).length,
       collections: collectionRows.length,
       terms: termDetails.length,
       reviewsToday: users.reduce((n, u) => n + u.detail.reviewsToday, 0),
@@ -178,7 +179,13 @@ export const mock = {
         total: round(generation + practice + enrichment + exampleRegen),
       }
     }
-    return { totals, costs: { today: breakdown(0.2), last7d: breakdown(1), allTime: breakdown(1.6) } }
+    return {
+      totals,
+      costs: { today: breakdown(0.2), last7d: breakdown(1), allTime: breakdown(1.6) },
+      recentFailures: requestLogs
+        .filter((l) => l.direction === 'outbound' && l.status !== null && l.status >= 500)
+        .slice(0, 5),
+    }
   },
 
   async listUsers(q: UserListQuery = {}): Promise<Paginated<UserRow>> {

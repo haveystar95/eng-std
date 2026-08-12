@@ -34,11 +34,29 @@ const CATEGORIES: { key: 'generation' | 'practice' | 'enrichment' | 'exampleRege
       <div class="section-label mb">Всего в системе</div>
       <div class="grid totals">
         <StatCard label="Пользователи" :value="count(data.totals.users)" />
+        <!-- Active = actually answered something in the last 7 days. Registered ≠ using it. -->
+        <StatCard label="Активных за 7 дней" :value="count(data.totals.activeUsers7d ?? 0)" />
         <StatCard label="Коллекции" :value="count(data.totals.collections)" />
         <StatCard label="Термины" :value="count(data.totals.terms)" />
         <StatCard label="Ревью сегодня" :value="count(data.totals.reviewsToday)" />
         <StatCard label="Ревью за 7 дней" :value="count(data.totals.reviews7d)" />
       </div>
+
+      <template v-if="data.recentFailures?.length">
+        <div class="section-label mb mt">Последние упавшие исходящие</div>
+        <PaperCard :pad="false">
+          <ul class="failures">
+            <li v-for="f in data.recentFailures" :key="f.id">
+              <span class="fail-status tnum">{{ f.status ?? 'нет ответа' }}</span>
+              <span class="fail-purpose">{{ f.purpose ?? '—' }}</span>
+              <span class="fail-path">{{ f.method }} {{ f.host }}{{ f.path }}</span>
+              <RouterLink :to="{ name: 'logs', query: { direction: 'outbound', status_class: '5xx' } }" class="fail-link">
+                в логи
+              </RouterLink>
+            </li>
+          </ul>
+        </PaperCard>
+      </template>
 
       <div class="section-label mb mt">Расходы (USD)</div>
       <div class="grid spend">
@@ -72,6 +90,43 @@ const CATEGORIES: { key: 'generation' | 'practice' | 'enrichment' | 'exampleRege
 }
 .mb {
   margin-bottom: var(--s12);
+}
+.failures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.failures li {
+  display: flex;
+  align-items: center;
+  gap: var(--s12);
+  padding: 9px var(--s16);
+  border-bottom: 1px solid var(--divider-faint);
+  font-size: 13px;
+}
+.failures li:last-child {
+  border-bottom: none;
+}
+.fail-status {
+  font-weight: 700;
+  color: var(--destructive, #b4423a);
+  min-width: 70px;
+}
+.fail-purpose {
+  min-width: 110px;
+  color: var(--secondary);
+}
+.fail-path {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.fail-link {
+  color: var(--ink);
+  font-size: 12px;
 }
 .mt {
   margin-top: var(--s26);
