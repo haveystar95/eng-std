@@ -30,10 +30,17 @@ interface EnrichmentJournal
     public function recordFindings(array $findings, string $generatorVersion): void;
 
     /**
-     * Findings for these terms at this version, for the proofreading export.
+     * UNACKNOWLEDGED findings for these terms at this version — the proofreading worklist. A finding a
+     * human has already ruled on stays in the log but leaves the list.
      *
      * @param  list<string>  $termIds
      * @return list<EnrichmentFinding>
      */
     public function findingsFor(array $termIds, string $generatorVersion): array;
+
+    /**
+     * Record that a human has ruled on every still-open finding of this version, and return how many.
+     * Idempotent: acknowledging twice acknowledges nothing new.
+     */
+    public function acknowledgeOpenFindings(string $generatorVersion, ?string $note = null): int;
 }

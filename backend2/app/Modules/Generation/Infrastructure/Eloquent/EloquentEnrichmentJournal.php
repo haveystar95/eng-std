@@ -70,6 +70,10 @@ final class EloquentEnrichmentJournal implements EnrichmentJournal
         foreach (DB::table('enrichment_findings')
             ->where('generator_version', $generatorVersion)
             ->whereIn('term_id', $termIds)
+            // Acknowledged findings stay in the log and leave the worklist.
+            ->whereNotExists(fn ($q) => $q->select(DB::raw(1))
+                ->from('enrichment_finding_acks')
+                ->whereColumn('enrichment_finding_acks.finding_id', 'enrichment_findings.id'))
             ->orderBy('id')
             ->get(['term_id', 'kind', 'field', 'detail']) as $row) {
             $kind = FindingKind::tryFrom((string) $row->kind);
@@ -85,5 +89,32 @@ final class EloquentEnrichmentJournal implements EnrichmentJournal
         }
 
         return $out;
+    }
+
+    public function acknowledgeOpenFindings(string $generatorVersion, ?string $note = null): int
+    {
+        $open = DB::table('enrichment_findings')
+            ->where('generator_version', $generatorVersion)
+            ->whereNotExists(fn ($q) => $q->select(DB::raw(1))
+                ->from('enrichment_finding_acks')
+                ->whereColumn('enrichment_finding_acks.finding_id', 'enrichment_findings.id'))
+            ->pluck('id')
+            ->all();
+
+        if ($open === []) {
+            return 0;
+        }
+
+        $now = now();
+        DB::table('enrichment_finding_acks')->insertOrIgnore(array_map(
+            static fn (mixed $id): array => [
+                'finding_id' => (string) $id,
+                'note' => $note,
+                'created_at' => $now,
+            ],
+            $open,
+        ));
+
+        return count($open);
     }
 }

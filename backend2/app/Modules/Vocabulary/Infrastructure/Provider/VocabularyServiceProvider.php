@@ -6,6 +6,7 @@ namespace App\Modules\Vocabulary\Infrastructure\Provider;
 
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Application\Port\TermEnrichmentWriter;
+use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
 use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
@@ -28,6 +29,7 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentExampleRegenContextRe
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentPendingTermImageReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermEnrichmentExportReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermEnrichmentWriter;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermReviewWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExampleWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAnswerKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermChangeReader;
@@ -60,6 +62,8 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(EnrichmentTargetReader::class, EloquentEnrichmentTargetReader::class);
         $this->app->bind(TermEnrichmentWriter::class, EloquentTermEnrichmentWriter::class);
         $this->app->bind(TermEnrichmentExportReader::class, EloquentTermEnrichmentExportReader::class);
+        // The other direction: a human removing a bad row or correcting a wording.
+        $this->app->bind(TermReviewWriter::class, EloquentTermReviewWriter::class);
     }
 
     public function boot(): void
