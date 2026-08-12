@@ -117,6 +117,49 @@ it('never deals the mode to a term with fewer than two distractors', function ()
     expect($card['exercise_mode'])->not->toBe('pick_correct');
 });
 
+it('never puts two distractors with the same error span on one card', function () {
+    [$user, $token] = learner();
+    [$collectionId, $termId] = seedCollectionWith($user, 'workstation', 'рабочее место');
+    pickCorrectContent($termId);
+    // A third row breaking the SAME fragment as the first. Two options differing from the example in
+    // the same place turn the card into "which spelling of `are` did we mean", and the underline
+    // afterwards points at the same word whichever one was picked.
+    DB::table('example_distractors')->insert([
+        'id' => Ulid::generate(),
+        'example_id' => DB::table('term_examples')->where('term_id', $termId)->value('id'),
+        'sentence' => 'Your workstation ARE ready for you now.',
+        'error_type' => 'tense',
+        'error_span' => 'ARE',
+        'correction' => 'is',
+        'generator_version' => 'enrich-v1',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    enablePickCorrectFor($user->id);
+
+    $card = pickCorrectCard($this, $token, $collectionId);
+
+    // Comparison is trim + lowercase, so `ARE` and `are` are the same span.
+    $spans = array_map(static fn (array $f): string => mb_strtolower($f['error_span']), $card['option_feedback']);
+    expect($card['exercise_mode'])->toBe('pick_correct')
+        ->and($spans)->toHaveCount(2)
+        ->and(array_unique($spans))->toHaveCount(2);
+});
+
+it('does not deal the mode when the second distractor only repeats the first span', function () {
+    [$user, $token] = learner();
+    [$collectionId, $termId] = seedCollectionWith($user, 'workstation', 'рабочее место');
+    pickCorrectContent($termId);
+    // Two rows, one usable span: the gate has to count what a card can actually use, or it passes the
+    // ≥2 check and then hands the assembler one wrong option — a two-option coin flip.
+    DB::table('example_distractors')->where('error_span', 'of')->update(['error_span' => 'are', 'correction' => 'is']);
+    enablePickCorrectFor($user->id);
+
+    $card = pickCorrectCard($this, $token, $collectionId);
+
+    expect($card['exercise_mode'])->not->toBe('pick_correct');
+});
+
 it('grades a correct pick against the sentence, capped at good', function () {
     [$user, $token] = learner();
     [$collectionId, $termId] = seedCollectionWith($user, 'workstation', 'рабочее место');

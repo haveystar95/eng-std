@@ -76,6 +76,8 @@ abstract final class LocalPracticeSessionBuilder {
   }) {
     var answer = (term.termText ?? '').trim();
     final example = term.example;
+    // Span-distinct, because that is what a card can actually use — see _spanDistinct.
+    final usableDistractors = _spanDistinct(_distractorsOf(term));
     final mode = PracticeModeSelector.select(
       enabled: enabled,
       rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
@@ -83,7 +85,7 @@ abstract final class LocalPracticeSessionBuilder {
         answer: answer,
         example: example,
         exampleTranslation: term.exampleTranslation,
-        distractorCount: _distractorsOf(term).length,
+        distractorCount: usableDistractors.length,
       ),
     );
 
@@ -115,7 +117,7 @@ abstract final class LocalPracticeSessionBuilder {
       // its translation, and the options are three sentences.
       answer = example!;
       prompt = term.exampleTranslation;
-      final wrong = _distractorsOf(term).take(pickCorrectWrongOptions).toList();
+      final wrong = usableDistractors.take(pickCorrectWrongOptions).toList();
       options = [answer, ...wrong.map((d) => d.sentence)]..shuffle(random);
       optionFeedback = wrong;
     } else if (mode == ExerciseMode.dictation) {
@@ -158,6 +160,26 @@ abstract final class LocalPracticeSessionBuilder {
     } on FormatException {
       return const [];
     }
+  }
+
+  /// The distractors a card can actually use: one per `errorSpan`, first occurrence winning.
+  ///
+  /// Two distractors sharing a span put two options on screen that differ from the example in the
+  /// same place — «Could you explain the fees?» beside «Could you explain fees?» — and the card stops
+  /// asking which sentence is right. It is also what the playability gate must count: two same-span
+  /// rows would pass the ≥2 check and then yield one usable option, i.e. a two-option coin flip.
+  ///
+  /// Mirrors the server's StudyCardAssembler.spanDistinct() exactly — same order, same first-wins
+  /// rule, same trim + lowercase comparison — so an offline card and an online one drop the same row.
+  static List<OptionFeedback> _spanDistinct(List<OptionFeedback> distractors) {
+    final kept = <OptionFeedback>[];
+    final spans = <String>{};
+    for (final d in distractors) {
+      final span = d.errorSpan.trim().toLowerCase();
+      if (span.isEmpty || !spans.add(span)) continue;
+      kept.add(d);
+    }
+    return kept;
   }
 
   /// The term's accepted variants, as mirrored by `/sync` (a JSON array in one column). Malformed

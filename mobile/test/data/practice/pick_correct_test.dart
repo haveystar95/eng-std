@@ -29,7 +29,11 @@ void main() {
         {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
       ].take(count).toList();
 
-  Future<Term> seed({int distractorCount = 2, bool translated = true}) async {
+  Future<Term> seed({
+    int distractorCount = 2,
+    bool translated = true,
+    List<Map<String, String>>? rows,
+  }) async {
     await db.applyDelta(
       collectionUpserts: [
         CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Офис')),
@@ -44,7 +48,8 @@ void main() {
           example: const Value(right),
           exampleTranslation:
               translated ? const Value('Ваше рабочее место готово.') : const Value.absent(),
-          exampleDistractors: Value(jsonEncode(distractors(count: distractorCount))),
+          exampleDistractors:
+              Value(jsonEncode(rows ?? distractors(count: distractorCount))),
         ),
       ],
       itemUpserts: [
@@ -102,6 +107,36 @@ void main() {
 
     // Not playable, so the practice fan falls back to something else rather than dealing a two-way
     // choice where a coin toss scores 50%.
+    expect(card.mode, isNot(ExerciseMode.pickCorrect));
+  });
+
+  test('never puts two distractors with the same error span on one card', () async {
+    // Two options differing from the example in the same place stop asking which sentence is right;
+    // the underline afterwards points at the same fragment whichever one was picked. Same rule, same
+    // trim + lowercase comparison, same first-wins order as the server's StudyCardAssembler.
+    final card = cardFor(await seed(rows: [
+      {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
+      {'sentence': 'Your workstation ARE ready for you now.', 'error_span': 'ARE', 'correction': 'is'},
+      {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
+    ]));
+
+    expect(card.mode, ExerciseMode.pickCorrect);
+    expect(card.optionFeedback, hasLength(2));
+    expect(
+      card.optionFeedback.map((f) => f.errorSpan.toLowerCase()).toSet(),
+      hasLength(2),
+    );
+    expect(card.options, contains(wrongPrep));
+  });
+
+  test('the gate refuses two distractors that repeat one span — one usable option', () async {
+    // The count the gate reads has to be the span-distinct one, or the term passes the ≥2 check and
+    // the card is then built from a single wrong option: a two-way choice a coin toss wins half of.
+    final card = cardFor(await seed(rows: [
+      {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
+      {'sentence': 'Your workstation are ready for you now.', 'error_span': 'are', 'correction': 'is'},
+    ]));
+
     expect(card.mode, isNot(ExerciseMode.pickCorrect));
   });
 

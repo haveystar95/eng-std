@@ -62,12 +62,14 @@ final readonly class StudyCardAssembler
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
         );
         $answer = $content->text;
+        // Span-distinct, because that is what a card can actually use — see spanDistinct().
+        $usableDistractors = $this->spanDistinct($content->exampleDistractors);
         // What the term's data allows at all — one derivation, shared with the day-plan simulator.
         $playable = $this->playability->assess(
             $answer,
             $content->example,
             $content->exampleTranslation,
-            count($content->exampleDistractors),
+            count($usableDistractors),
         );
         // Toggles are per-user data, so "nothing fits this term" is now reachable by configuration.
         // The selector still returns a playable card; this is what stops that being silent.
@@ -109,7 +111,7 @@ final readonly class StudyCardAssembler
             // the example), the prompt is its translation — "which of these says this correctly?".
             $answer = (string) $content->example;
             $prompt = $content->exampleTranslation;
-            $wrong = array_slice($content->exampleDistractors, 0, self::PICK_CORRECT_WRONG_OPTIONS);
+            $wrong = array_slice($usableDistractors, 0, self::PICK_CORRECT_WRONG_OPTIONS);
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([
                 $answer,
@@ -152,6 +154,41 @@ final readonly class StudyCardAssembler
             // the term's variants there would make the client accept what the server rejects.
             acceptedVariants: $mode->gradesAgainstExample() ? [] : $content->acceptedVariants,
         );
+    }
+
+    /**
+     * The distractors this example can actually contribute to a card: one per `error_span`.
+     *
+     * Two distractors sharing a span put two options on screen that differ from the example in the
+     * same place — «Could you explain the fees?» beside «Could you explain fees?» — so the card stops
+     * asking "which sentence is right" and starts asking "which spelling of this one word did we
+     * mean". Whichever the learner picks, the underline afterwards points at the same fragment twice.
+     * One error per card is the shape this mode is for.
+     *
+     * This is also what the PLAYABILITY gate has to count. Counting the raw rows would let a term with
+     * two same-span distractors through the ≥2 check and then hand the assembler one usable option —
+     * a pick_correct card with two options, which is a coin flip. One derivation, used by both.
+     *
+     * Order is preserved, first occurrence wins, comparison is trim + lowercase: the client applies
+     * exactly this rule to exactly this list, so both sides drop the same row.
+     *
+     * @param  list<array{sentence: string, error_type: string, error_span: string, correction: string}>  $distractors
+     * @return list<array{sentence: string, error_type: string, error_span: string, correction: string}>
+     */
+    private function spanDistinct(array $distractors): array
+    {
+        $kept = [];
+        $spans = [];
+        foreach ($distractors as $distractor) {
+            $span = mb_strtolower(trim($distractor['error_span']));
+            if ($span === '' || isset($spans[$span])) {
+                continue;
+            }
+            $spans[$span] = true;
+            $kept[] = $distractor;
+        }
+
+        return $kept;
     }
 
     /**
