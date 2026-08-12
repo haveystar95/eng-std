@@ -98,7 +98,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 // hundreds of terms — the cheaper model is the wrong trade here only if the scrap
                 // rate says so, which is exactly what the run metrics measure.
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
-                promptVersion: (string) config('services.generation.enrich_pack_prompt_version', 'v1'),
+                promptVersion: (string) config('services.generation.enrich_pack_prompt_version', 'v2'),
             );
         });
 
