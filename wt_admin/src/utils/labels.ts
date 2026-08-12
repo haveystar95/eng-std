@@ -44,6 +44,7 @@ export const MODE_LABEL: Record<ExerciseMode, string> = {
   cloze: 'пропуск',
   scramble: 'предложение',
   dictation: 'диктант',
+  pick_correct: 'верное предложение',
 }
 
 export const STATE_LABEL: Record<ProgressState, string> = {

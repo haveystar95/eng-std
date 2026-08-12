@@ -135,6 +135,7 @@ export type ExerciseMode =
   | 'cloze'
   | 'scramble'
   | 'dictation'
+  | 'pick_correct'
 export type Grade = 'again' | 'hard' | 'good' | 'easy'
 
 export interface PlanEntry {

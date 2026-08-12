@@ -1514,6 +1514,18 @@ abstract class AppLocalizations {
   /// **'прослушай и запиши предложение'**
   String get sessionInstrDictation;
 
+  /// Инструкция pick_correct: три предложения, одно верное.
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери верное предложение'**
+  String get sessionInstrPickCorrect;
+
+  /// Под неверным выбором в pick_correct: чем должен был быть подчёркнутый фрагмент.
+  ///
+  /// In ru, this message translates to:
+  /// **'должно быть: {correction}'**
+  String sessionPickCorrectShouldBe(String correction);
+
   /// Лейбл над примером с пропуском (кадр 12i).
   ///
   /// In ru, this message translates to:

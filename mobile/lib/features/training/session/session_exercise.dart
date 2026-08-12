@@ -364,6 +364,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ExerciseMode.cloze => l.sessionInstrType,
         ExerciseMode.scramble => l.sessionInstrAssembleSentence,
         ExerciseMode.dictation => l.sessionInstrDictation,
+        ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
         ExerciseMode.listening => _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
       };
 
@@ -565,11 +566,26 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
                 .isAccepted,
             isPicked: _picked == o,
             onTap: () => _pick(o),
+            errorSpan: _card.feedbackFor(o)?.errorSpan,
           ),
           if (o != opts.last) const SizedBox(height: AppSpacing.s12),
         ],
+        if (_wrongPickCorrection(l) case final line?) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(line, style: AppTextExercise.answerOption.copyWith(color: AppColors.inkBody)),
+        ],
       ],
     );
+  }
+
+  /// «должно быть: …» under a wrong pick_correct pick. Shown only after answering and only for a
+  /// wrong pick — a correct pick has nothing to explain.
+  String? _wrongPickCorrection(AppLocalizations l) {
+    if (!_answered || _picked == null) return null;
+    final feedback = _card.feedbackFor(_picked!);
+    if (feedback == null || feedback.correction.isEmpty) return null;
+
+    return l.sessionPickCorrectShouldBe(feedback.correction);
   }
 
   Widget _chipTray(AppLocalizations l) {
@@ -614,6 +630,7 @@ class _SessionOption extends StatelessWidget {
     required this.isAnswer,
     required this.isPicked,
     required this.onTap,
+    this.errorSpan,
   });
 
   final String text;
@@ -621,6 +638,10 @@ class _SessionOption extends StatelessWidget {
   final bool isAnswer;
   final bool isPicked;
   final VoidCallback onTap;
+
+  /// pick_correct: the broken fragment of THIS option, underlined once the answer is committed. Null
+  /// for every other mode and for the correct option.
+  final String? errorSpan;
 
   @override
   Widget build(BuildContext context) {
@@ -639,7 +660,7 @@ class _SessionOption extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text(text, style: AppTextExercise.answerOption)),
+              Expanded(child: _label(showWrong)),
               if (icon != null) Icon(icon, size: 17, color: markColor),
             ],
           ),
@@ -647,6 +668,40 @@ class _SessionOption extends StatelessWidget {
             const SizedBox(height: 9),
             _DrawnUnderline(color: markColor, draw: showCorrect),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// The option's text, with the broken fragment marked once a wrong pick is committed. This is the
+  /// point of pick_correct over multiple_choice: the learner sees WHERE the sentence went wrong
+  /// instead of just that it did. Falls back to plain text whenever the span cannot be located —
+  /// the server validates that it occurs in the sentence, so that is a belt-and-braces path.
+  Widget _label(bool showWrong) {
+    final span = errorSpan;
+    if (!showWrong || span == null || span.isEmpty) {
+      return Text(text, style: AppTextExercise.answerOption);
+    }
+
+    final at = text.toLowerCase().indexOf(span.toLowerCase());
+    if (at < 0) return Text(text, style: AppTextExercise.answerOption);
+
+    return Text.rich(
+      TextSpan(
+        style: AppTextExercise.answerOption,
+        children: [
+          TextSpan(text: text.substring(0, at)),
+          TextSpan(
+            // Marked, not recoloured away: the wrong words stay readable, which is what makes the
+            // correction below make sense.
+            text: text.substring(at, at + span.length),
+            style: const TextStyle(
+              color: AppColors.destructiveText,
+              decoration: TextDecoration.underline,
+              decorationStyle: TextDecorationStyle.wavy,
+            ),
+          ),
+          TextSpan(text: text.substring(at + span.length)),
         ],
       ),
     );

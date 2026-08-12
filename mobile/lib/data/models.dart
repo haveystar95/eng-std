@@ -143,7 +143,8 @@ enum ExerciseMode {
   listening('listening'),
   cloze('cloze'),
   scramble('scramble'),
-  dictation('dictation');
+  dictation('dictation'),
+  pickCorrect('pick_correct');
 
   const ExerciseMode(this.wire);
   final String wire;
@@ -166,7 +167,38 @@ enum ExerciseMode {
   /// Does this card ask for the term's EXAMPLE SENTENCE rather than the term itself? Mirrors the
   /// server's `ExerciseMode::gradesAgainstExample()` — on these cards [SessionCard.answer] is the
   /// sentence, so the feedback must not also print it as "the example".
-  bool get asksForExample => this == scramble || this == dictation;
+  bool get asksForExample => this == scramble || this == dictation || this == pickCorrect;
+
+  /// Does this card ask the learner to TAP one of several given sentences? The body renders options
+  /// like multiple_choice, but each option is a whole sentence and a wrong tap gets an explanation.
+  bool get isSentenceChoice => this == pickCorrect;
+}
+
+/// Why one option of a `pick_correct` card is wrong: the broken fragment and what it should have
+/// been. Produced by the enrichment станок, validated server-side (the span is guaranteed to occur
+/// in [sentence]), and shipped with the card so the explanation works offline.
+class OptionFeedback {
+  final String sentence;
+  final String errorSpan;
+  final String correction;
+
+  const OptionFeedback({
+    required this.sentence,
+    required this.errorSpan,
+    required this.correction,
+  });
+
+  factory OptionFeedback.fromJson(Map<String, dynamic> j) => OptionFeedback(
+        sentence: (j['sentence'] as String?) ?? '',
+        errorSpan: (j['error_span'] as String?) ?? '',
+        correction: (j['correction'] as String?) ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sentence': sentence,
+        'error_span': errorSpan,
+        'correction': correction,
+      };
 }
 
 /// One self-contained card in a study session (`POST /study/sessions`). Carries the prompt (user's
@@ -190,6 +222,19 @@ class SessionCard {
   /// example sentence — a variant of the term is not a variant of the sentence.
   final List<String> acceptedVariants;
 
+  /// pick_correct: per WRONG option, which fragment is broken and what it should have been. The
+  /// reason this mode beats multiple_choice — a wrong tap is explained, not merely marked. Keyed by
+  /// the option's own sentence so the feedback survives the shuffle.
+  final List<OptionFeedback> optionFeedback;
+
+  /// The explanation for a wrong pick, or null when the pick was right (nothing to underline).
+  OptionFeedback? feedbackFor(String option) {
+    for (final f in optionFeedback) {
+      if (f.sentence == option) return f;
+    }
+    return null;
+  }
+
   SessionCard({
     required this.termId,
     required this.mode,
@@ -202,6 +247,7 @@ class SessionCard {
     this.options,
     this.chips,
     this.acceptedVariants = const [],
+    this.optionFeedback = const [],
   });
 
   bool get isPhrase => type != 'word';
@@ -219,6 +265,10 @@ class SessionCard {
         chips: (j['chips'] as List?)?.map((e) => e as String).toList(),
         acceptedVariants:
             (j['accepted_variants'] as List?)?.map((e) => e as String).toList() ?? const [],
+        optionFeedback: (j['option_feedback'] as List?)
+                ?.map((e) => OptionFeedback.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            const [],
       );
 }
 

@@ -946,6 +946,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrDictation => 'listen and write the sentence down';
 
   @override
+  String get sessionInstrPickCorrect => 'pick the correct sentence';
+
+  @override
+  String sessionPickCorrectShouldBe(String correction) {
+    return 'should be: $correction';
+  }
+
+  @override
   String get sessionClozeInsert => 'Insert the word';
 
   @override

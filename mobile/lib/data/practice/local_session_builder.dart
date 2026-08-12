@@ -19,6 +19,10 @@ import 'practice_mode_selector.dart';
 /// server generates. What is NOT pinned, deliberately: which distractors and which chip order —
 /// those are shuffled per session by design, on both sides.
 abstract final class LocalPracticeSessionBuilder {
+  /// pick_correct shows the right sentence plus two wrong ones — three options, mirroring the
+  /// server's StudyCardAssembler. A fourth whole sentence turns the card into a reading test.
+  static const int pickCorrectWrongOptions = 2;
+
   /// Options on a multiple-choice card: the answer plus up to three distractors, as the server does.
   static const int optionCount = 4;
 
@@ -79,11 +83,13 @@ abstract final class LocalPracticeSessionBuilder {
         answer: answer,
         example: example,
         exampleTranslation: term.exampleTranslation,
+        distractorCount: _distractorsOf(term).length,
       ),
     );
 
     List<String>? options;
     List<String>? chips;
+    List<OptionFeedback> optionFeedback = const [];
     // A sentence-level mode asks for the EXAMPLE, so the card's answer — what the grading compares
     // against — is that sentence, and the prompt is its translation. Same swap the server's
     // StudyCardAssembler makes, so an offline card and an online one are the same card.
@@ -104,6 +110,14 @@ abstract final class LocalPracticeSessionBuilder {
       answer = example!;
       prompt = term.exampleTranslation;
       chips = _sentenceChips(answer, random: random);
+    } else if (mode == ExerciseMode.pickCorrect) {
+      // Same swap the server's StudyCardAssembler makes: the answer is the example, the prompt is
+      // its translation, and the options are three sentences.
+      answer = example!;
+      prompt = term.exampleTranslation;
+      final wrong = _distractorsOf(term).take(pickCorrectWrongOptions).toList();
+      options = [answer, ...wrong.map((d) => d.sentence)]..shuffle(random);
+      optionFeedback = wrong;
     } else if (mode == ExerciseMode.dictation) {
       // The task is the audio: no written cue at all, or it becomes a translation exercise.
       answer = example!;
@@ -124,7 +138,26 @@ abstract final class LocalPracticeSessionBuilder {
       // Same rule as the server's StudyCardAssembler: variants belong to the TERM, so they apply
       // only while the answer is the term. On scramble/dictation the answer is the sentence.
       acceptedVariants: mode.asksForExample ? const [] : _variantsOf(term),
+      optionFeedback: optionFeedback,
     );
+  }
+
+  /// The term's example distractors, as mirrored by `/sync` (a JSON array in one column). Malformed
+  /// or absent JSON degrades to "none", which simply gates pick_correct out for that term — the safe
+  /// direction, since the alternative is a card with too few options.
+  static List<OptionFeedback> _distractorsOf(Term term) {
+    final raw = term.exampleDistractors;
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final row in decoded)
+          if (row is Map<String, dynamic>) OptionFeedback.fromJson(row),
+      ];
+    } on FormatException {
+      return const [];
+    }
   }
 
   /// The term's accepted variants, as mirrored by `/sync` (a JSON array in one column). Malformed

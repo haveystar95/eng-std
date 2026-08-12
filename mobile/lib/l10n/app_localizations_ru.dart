@@ -982,6 +982,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrDictation => 'прослушай и запиши предложение';
 
   @override
+  String get sessionInstrPickCorrect => 'выбери верное предложение';
+
+  @override
+  String sessionPickCorrectShouldBe(String correction) {
+    return 'должно быть: $correction';
+  }
+
+  @override
   String get sessionClozeInsert => 'Вставь слово';
 
   @override

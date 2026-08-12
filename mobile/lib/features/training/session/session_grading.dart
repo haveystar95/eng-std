@@ -129,6 +129,9 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
       // scramble assembles too, but a sentence, and it is a LATER rung than word_bank — the header
       // should read as review, not as the recognition→production step.
       ExerciseMode.wordBank => SessionPhase.assemble,
+      // pick_correct is a LATER rung than word_bank (it reads whole sentences), so the header reads
+      // as review rather than as the recognition→production step.
+      ExerciseMode.pickCorrect ||
       ExerciseMode.typing ||
       ExerciseMode.listening ||
       ExerciseMode.cloze ||

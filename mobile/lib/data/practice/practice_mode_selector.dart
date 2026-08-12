@@ -62,8 +62,16 @@ abstract final class PracticeModeSelector {
     required TermPlayability playable,
   }) {
     final applicable = playable.only(enabled.modes);
-    // Only reachable if the enabled set is exotic — typing and multiple_choice always apply.
-    if (applicable.isEmpty) return enabled.first;
+    // The floor, matching the server's `ExerciseSelector::floor()`: multiple_choice, EVEN WHEN IT IS
+    // SWITCHED OFF, because it is the only mode every term supports.
+    //
+    // This used to return `enabled.first` on the assumption that an enabled set always contains
+    // something universal. `pick_correct` broke that: its gate depends on content (two validated
+    // distractors), so a user with only pick_correct switched on meets a term that supports nothing —
+    // and `enabled.first` would hand back pick_correct itself, a card this builder cannot fill.
+    // Falling back to the same mode the server falls back to is what keeps the two from disagreeing
+    // about what the learner is looking at.
+    if (applicable.isEmpty) return ExerciseMode.multipleChoice;
     final n = applicable.length;
     return applicable[((rotation % n) + n) % n]; // guard a negative seed into range
   }
@@ -81,6 +89,7 @@ class TermPlayability {
     this.exampleTokenCount = 0,
     this.hasExampleTranslation = false,
     this.exampleIsAnswer = false,
+    this.distractorCount = 0,
   });
 
   /// Derive it from a term's own content, exactly as the server's `PlayabilityAssessor` does.
@@ -88,6 +97,7 @@ class TermPlayability {
     required String answer,
     String? example,
     String? exampleTranslation,
+    int distractorCount = 0,
   }) {
     final hasExample = example != null && example.isNotEmpty;
     return TermPlayability(
@@ -96,6 +106,8 @@ class TermPlayability {
       exampleTokenCount: hasExample ? SentenceTokenizer.tokenize(example).length : 0,
       hasExampleTranslation: exampleTranslation != null && exampleTranslation.trim().isNotEmpty,
       exampleIsAnswer: hasExample && SentenceTokenizer.sameTokens(example, answer),
+      // Distractors hang off the pinned example; with no example they cannot make a term playable.
+      distractorCount: hasExample ? distractorCount : 0,
     );
   }
 
@@ -111,11 +123,18 @@ class TermPlayability {
   static const int minDictationTokens = 4;
   static const int maxDictationTokens = 10;
 
+  /// pick_correct needs two WRONG sentences beside the right one. Two is the card's floor, not a
+  /// preference: with one wrong option a coin toss scores 50% and buys a month-long interval.
+  static const int minPickCorrectDistractors = 2;
+
   final int answerWordCount;
   final bool clozeable;
   final int exampleTokenCount;
   final bool hasExampleTranslation;
   final bool exampleIsAnswer;
+
+  /// Validated wrong versions of the pinned example, as mirrored by `/sync`.
+  final int distractorCount;
 
   /// Can this term be drilled in this mode at all?
   bool supports(ExerciseMode mode) => switch (mode) {
@@ -129,6 +148,12 @@ class TermPlayability {
         ExerciseMode.dictation => !exampleIsAnswer && // else it is listening with extra steps
             exampleTokenCount >= minDictationTokens &&
             exampleTokenCount <= maxDictationTokens,
+        // The prompt is the example's translation, and two wrong sentences must exist. No length
+        // window: three sentences are READ, not assembled, so a long example costs attention rather
+        // than becoming unplayable.
+        ExerciseMode.pickCorrect => !exampleIsAnswer &&
+            hasExampleTranslation &&
+            distractorCount >= minPickCorrectDistractors,
         // multiple_choice / typing / listening fit any term — they ask for the term itself.
         ExerciseMode.multipleChoice || ExerciseMode.typing || ExerciseMode.listening => true,
       };

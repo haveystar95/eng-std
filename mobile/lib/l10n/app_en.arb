@@ -250,6 +250,10 @@
   "sessionInstrListenChoose": "listen and choose the translation · replay any time",
   "sessionInstrListenType": "listen and write it in English",
   "sessionInstrDictation": "listen and write the sentence down",
+  "sessionInstrPickCorrect": "pick the correct sentence",
+  "@sessionInstrPickCorrect": { "description": "pick_correct instruction: three sentences, one of them right." },
+  "sessionPickCorrectShouldBe": "should be: {correction}",
+  "@sessionPickCorrectShouldBe": { "description": "Shown under a wrong pick_correct pick, giving the fix for the underlined fragment.", "placeholders": { "correction": { "type": "String" } } },
   "sessionClozeInsert": "Insert the word",
   "sessionChipReturnHint": "Tap a word in the line to send it back",
 

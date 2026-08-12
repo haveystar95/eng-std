@@ -104,6 +104,16 @@ void main() {
           expect(card.answer, card.example);
           expect(card.options, isNull);
           expect(card.chips, isNull);
+        case ExerciseMode.pickCorrect:
+          // Three whole sentences: the example plus two wrong ones, with the translation as the
+          // question. Each wrong option must carry its own explanation, or the mode is pointless.
+          expect(card.answer, card.example);
+          expect(card.prompt, card.exampleTranslation);
+          expect(card.options, hasLength(3));
+          expect(card.options, contains(card.answer));
+          expect(card.optionFeedback, hasLength(2));
+          expect(card.feedbackFor(card.answer), isNull, reason: 'the right option explains nothing');
+          expect(card.chips, isNull);
         case ExerciseMode.cloze:
           // The selector only picks cloze when the example can be blanked — so it must be here.
           expect(card.example, isNotNull);
@@ -208,6 +218,11 @@ void main() {
     ).cards.single;
     expect(phrase.chips, containsAll(['front', 'desk']));
 
+    // A SINGLE word is gated out of word_bank (minWordBankWords is 2 — one chip is not a puzzle), so
+    // with only word_bank switched on the term falls to the floor. It used to come back as word_bank
+    // with letter chips, but only because the floor returned `enabled.first` and skipped the gate;
+    // the server has always answered multiple_choice here. ChipShuffler keeps its letter branch for a
+    // future policy that lowers the floor — nothing selects it today.
     final single = LocalPracticeSessionBuilder.build(
       terms: [terms[3]], // "towel"
       limit: 1,
@@ -215,8 +230,8 @@ void main() {
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.wordBank]),
     ).cards.single;
-    expect(single.chips, hasLength('towel'.length));
-    expect(single.chips!.join(), isNot('towel'), reason: 'a shuffle that returns the answer is no puzzle');
+    expect(single.mode, ExerciseMode.multipleChoice, reason: 'the floor, exactly as on the server');
+    expect(single.chips, isNull);
   });
 
   test('a phrasal verb gets decoy particles that are never its own', () {
