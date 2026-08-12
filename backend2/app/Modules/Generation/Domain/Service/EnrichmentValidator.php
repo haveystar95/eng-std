@@ -56,6 +56,7 @@ final class EnrichmentValidator
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly LanguagePurityCheck $purity = new LanguagePurityCheck(),
+        private readonly BackTranslationTolerance $tolerance = new BackTranslationTolerance(),
     ) {}
 
     public function validate(EnrichmentCandidate $candidate): EnrichmentVerdict
@@ -85,7 +86,11 @@ final class EnrichmentValidator
             );
         }
 
-        $ambiguity = $this->ambiguityFinding($candidate, $accepted + $variantSet);
+        $ambiguity = $this->ambiguityFinding(
+            $candidate,
+            $accepted + $variantSet,
+            [...$candidate->acceptedForms, ...array_map(static fn (RawVariant $v): string => $v->text, $variants)],
+        );
         if ($ambiguity !== null) {
             $findings[] = $ambiguity;
         }
@@ -230,9 +235,10 @@ final class EnrichmentValidator
      * asks a question its own prompt doesn't determine — and no variant closed the gap. That is a
      * rewrite candidate, never an automatic edit.
      *
-     * @param  array<string, true>  $correct
+     * @param  array<string, true>  $correct  normalised {target ∪ variants}, for the exact match
+     * @param  list<string>  $acceptedForms  the same set unnormalised, for the tolerance check
      */
-    private function ambiguityFinding(EnrichmentCandidate $candidate, array $correct): ?EnrichmentFinding
+    private function ambiguityFinding(EnrichmentCandidate $candidate, array $correct, array $acceptedForms): ?EnrichmentFinding
     {
         $back = $this->nullIfBlank($candidate->backTranslation);
         if ($back === null) {
@@ -245,6 +251,13 @@ final class EnrichmentValidator
         }
 
         if (isset($correct[$this->normalizer->normalize($back)])) {
+            return null;
+        }
+
+        // Not an exact match, but close enough that flagging it would be noise: one function word, or
+        // the same word inflected. Suppressing these is what makes the ambiguity rate a number worth
+        // reading — see BackTranslationTolerance for why "one token" alone is not the rule.
+        if ($this->tolerance->isNearMiss($back, $acceptedForms)) {
             return null;
         }
 

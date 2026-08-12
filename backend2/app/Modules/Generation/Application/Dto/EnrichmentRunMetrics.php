@@ -26,6 +26,14 @@ final readonly class EnrichmentRunMetrics
         public int $termsUaLeakage = 0,
         /** Not a real word (typo, invented form, transliteration) — fixed by EDITING the wording. */
         public int $termsMisspelled = 0,
+        /** Terms that HAVE a pinned example, i.e. the denominator for distractors-per-example. */
+        public int $termsWithExample = 0,
+        /**
+         * Examples left with fewer than two valid distractors. `pick_correct` needs 1 correct + 2
+         * wrong, so these examples cannot host that mode however good the rest of the run is — the
+         * number is the decision input for asking the model for 3–4 instead of 2–3.
+         */
+        public int $examplesUnderTwoDistractors = 0,
     ) {}
 
     public function plus(self $other): self
@@ -43,6 +51,8 @@ final readonly class EnrichmentRunMetrics
             termsVariantConflict: $this->termsVariantConflict + $other->termsVariantConflict,
             termsUaLeakage: $this->termsUaLeakage + $other->termsUaLeakage,
             termsMisspelled: $this->termsMisspelled + $other->termsMisspelled,
+            termsWithExample: $this->termsWithExample + $other->termsWithExample,
+            examplesUnderTwoDistractors: $this->examplesUnderTwoDistractors + $other->examplesUnderTwoDistractors,
         );
     }
 
@@ -73,6 +83,22 @@ final readonly class EnrichmentRunMetrics
     public function uaLeakageRatePct(): float
     {
         return $this->ratePct($this->termsUaLeakage);
+    }
+
+    /** Valid distractors per example that HAS an example — the yield of one paid call. */
+    public function distractorsPerExample(): float
+    {
+        return $this->termsWithExample > 0
+            ? round($this->distractorsWritten / $this->termsWithExample, 2)
+            : 0.0;
+    }
+
+    /** Share of examples that cannot host `pick_correct` (needs two wrong options). */
+    public function underTwoDistractorsPct(): float
+    {
+        return $this->termsWithExample > 0
+            ? round(100 * $this->examplesUnderTwoDistractors / $this->termsWithExample, 1)
+            : 0.0;
     }
 
     private function ratePct(int $count): float

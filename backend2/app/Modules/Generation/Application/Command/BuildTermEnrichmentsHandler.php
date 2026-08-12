@@ -136,13 +136,17 @@ final readonly class BuildTermEnrichmentsHandler
         $this->journal->recordFindings($verdict->findings, $version);
         $this->journal->markDone($target->termId, $version);
 
-        return $this->measure($verdict);
+        return $this->measure($verdict, $target->exampleId !== null && $target->exampleSentence !== null);
     }
 
-    private function measure(EnrichmentVerdict $verdict): EnrichmentRunMetrics
+    private function measure(EnrichmentVerdict $verdict, bool $hasExample): EnrichmentRunMetrics
     {
         return new EnrichmentRunMetrics(
             termsSeen: 1,
+            termsWithExample: $hasExample ? 1 : 0,
+            // Counted only where an example exists: a term with no example is not an example short of
+            // distractors, it is a term with nothing to build them against.
+            examplesUnderTwoDistractors: $hasExample && count($verdict->distractors) < 2 ? 1 : 0,
             distractorsProposed: $verdict->proposedDistractors,
             distractorsRejected: $verdict->rejectedDistractors,
             distractorsWritten: count($verdict->distractors),

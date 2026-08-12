@@ -130,6 +130,11 @@ final class EnrichBackfillCommand extends Command
             ['дистракторов предложено', (string) $m->distractorsProposed],
             ['дистракторов записано', (string) $m->distractorsWritten],
             ['<options=bold>% брака дистракторов</>', '<options=bold>' . $m->scrapRatePct() . '%</> (' . $m->distractorsRejected . ')'],
+            ['дистракторов на пример (валидных)', (string) $m->distractorsPerExample()],
+            // pick_correct needs 1 correct + 2 wrong: these examples cannot host it at all.
+            ['примеров с <2 дистракторами', $m->examplesUnderTwoDistractors > 0
+                ? "<fg=yellow>{$m->examplesUnderTwoDistractors}</> ({$m->underTwoDistractorsPct()}%)"
+                : '0'],
             ['вариантов записано', (string) $m->variantsWritten],
             ['вариантов забраковано (длина)', $m->variantsRejected > 0 ? "<fg=yellow>{$m->variantsRejected}</>" : '0'],
             ['<options=bold>% ambiguous</>', '<options=bold>' . $m->ambiguousRatePct() . '%</> (' . $m->termsAmbiguous . ')'],
