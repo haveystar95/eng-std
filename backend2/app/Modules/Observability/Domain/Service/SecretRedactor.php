@@ -77,9 +77,24 @@ final class SecretRedactor
         return false;
     }
 
+    /**
+     * Keys that merely CONTAIN a sensitive word but are plainly not credentials.
+     *
+     * `prompt_tokens`, `completion_tokens`, `total_tokens` — OpenAI's usage block. The substring
+     * rule matched "token" in every one of them and replaced the counts with [REDACTED], which
+     * quietly destroyed the only record of what a call cost. Plural `_tokens` is a count; a
+     * credential is singular (`token`, `id_token`, `access_token`).
+     */
+    private const COUNT_KEY_PATTERN = '/_tokens(_details)?$/';
+
     private function isSensitive(string $key): bool
     {
         $lower = strtolower($key);
+
+        if (preg_match(self::COUNT_KEY_PATTERN, $lower) === 1) {
+            return false;
+        }
+
         foreach (self::SENSITIVE as $needle) {
             if (str_contains($lower, $needle)) {
                 return true;

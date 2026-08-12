@@ -77,9 +77,19 @@ final class LogOutboundHttp
         }
     }
 
+    /**
+     * The vendor tag the panel filters by. Every host we actually call has to be here — an
+     * unrecognised one comes back null and its rows are invisible to a provider filter, which is
+     * how the Pexels calls went untagged.
+     */
     private function serviceFor(string $host): ?string
     {
-        return str_contains($host, 'openai') ? 'openai' : null;
+        return match (true) {
+            str_contains($host, 'openai') => 'openai',
+            str_contains($host, 'pexels') => 'pexels',
+            str_contains($host, 'googleapis') => 'gemini',
+            default => null,
+        };
     }
 
     private function durationMs(?Response $response): ?int

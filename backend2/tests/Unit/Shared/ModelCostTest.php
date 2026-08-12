@@ -9,6 +9,13 @@ it('prices a known model from its token counts', function () {
     expect((new ModelCost())->estimate('gpt-4o-mini', 1000, 2000))->toBe('0.001350');
 });
 
+it('prices a dated snapshot at its base model rate', function () {
+    // The API answers with `gpt-4o-mini-2024-07-18`; the price list keys on `gpt-4o-mini`. Without
+    // stripping the date, every call read back out of the request log came out unpriced.
+    expect((new ModelCost())->estimate('gpt-4o-mini-2024-07-18', 1000, 500))
+        ->toBe((new ModelCost())->estimate('gpt-4o-mini', 1000, 500));
+});
+
 it('returns null for an unknown model or missing token counts', function () {
     $cost = new ModelCost();
 

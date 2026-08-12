@@ -48,14 +48,26 @@ final class ModelCost
 
     public function estimate(string $model, ?int $tokensIn, ?int $tokensOut): ?string
     {
-        if (! isset(self::PRICING[$model]) || $tokensIn === null || $tokensOut === null) {
+        $key = self::baseModel($model);
+
+        if (! isset(self::PRICING[$key]) || $tokensIn === null || $tokensOut === null) {
             return null;
         }
 
-        [$inRate, $outRate] = self::PRICING[$model];
+        [$inRate, $outRate] = self::PRICING[$key];
         $cost = ($tokensIn / 1000) * $inRate + ($tokensOut / 1000) * $outRate;
 
         return number_format($cost, 6, '.', '');
+    }
+
+    /**
+     * Strip the dated snapshot suffix: a response says `gpt-4o-mini-2024-07-18`, we price
+     * `gpt-4o-mini`. Without this, every call read back out of the request log came out unpriced —
+     * what we ASK for and what the API says it USED are different strings.
+     */
+    public static function baseModel(string $model): string
+    {
+        return (string) preg_replace('/-\d{4}-\d{2}-\d{2}$/', '', $model);
     }
 
     /**
@@ -71,11 +83,13 @@ final class ModelCost
         int $promptTextTokens,
         int $completionTextTokens,
     ): ?string {
-        if (! isset(self::REALTIME_PRICING[$model])) {
+        $key = self::baseModel($model);
+
+        if (! isset(self::REALTIME_PRICING[$key])) {
             return null;
         }
 
-        [$audioInPer1M, $audioOutPer1M, $inTokPerSec, $outTokPerSec, $textInRate, $textOutRate] = self::REALTIME_PRICING[$model];
+        [$audioInPer1M, $audioOutPer1M, $inTokPerSec, $outTokPerSec, $textInRate, $textOutRate] = self::REALTIME_PRICING[$key];
 
         $audioInTokens = max(0, $inputAudioSeconds) * $inTokPerSec;
         $audioOutTokens = max(0, $outputAudioSeconds) * $outTokPerSec;

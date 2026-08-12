@@ -251,6 +251,36 @@ it('does not flag ambiguity when a variant covers the back-translation', functio
     expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeFalse();
 });
 
+it('suppresses ambiguity for a one-inflection near miss', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        acceptedForms: ['company policies'],
+        backTranslation: 'company policy',
+    ));
+
+    expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeFalse();
+});
+
+it('still flags ambiguity when the differing token is a different word', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        acceptedForms: ['break room'],
+        backTranslation: 'rest room',
+    ));
+
+    expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeTrue();
+});
+
+it('suppresses ambiguity when a stored VARIANT is the near miss', function () {
+    // The tolerance runs against the whole key, variants included — so a variant this same pack
+    // proposed can retire the flag.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('greet the team', null)],
+        acceptedForms: ['meet the team'],
+        backTranslation: 'greet the teams',
+    ));
+
+    expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeFalse();
+});
+
 it('flags ambiguity when the model returned no back-translation at all', function () {
     $verdict = $this->validator->validate(enrichmentCandidate(backTranslation: ''));
 

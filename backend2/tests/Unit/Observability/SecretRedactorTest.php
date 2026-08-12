@@ -54,6 +54,28 @@ it('redacts a credential-shaped VALUE under an innocent key', function () {
         ->and($out['nested']['note'])->toBe('[REDACTED]');
 });
 
+it('keeps the usage token COUNTS — they are money, not credentials', function () {
+    // The substring rule matched "token" inside prompt_tokens and replaced every count with
+    // [REDACTED], which destroyed the only record of what a call cost. Caught live on real rows.
+    $out = (new SecretRedactor())->redact([
+        'model' => 'gpt-4o-mini-2024-07-18',
+        'usage' => [
+            'prompt_tokens' => 975,
+            'completion_tokens' => 200,
+            'total_tokens' => 1175,
+            'completion_tokens_details' => ['reasoning_tokens' => 0],
+        ],
+        // …while an actual credential under a similar name still goes.
+        'access_token' => 'ya29.secret',
+    ]);
+
+    expect($out['usage']['prompt_tokens'])->toBe(975)
+        ->and($out['usage']['completion_tokens'])->toBe(200)
+        ->and($out['usage']['total_tokens'])->toBe(1175)
+        ->and($out['usage']['completion_tokens_details'])->toBe(['reasoning_tokens' => 0])
+        ->and($out['access_token'])->toBe('[REDACTED]');
+});
+
 it('leaves ordinary prose that merely mentions a credential word alone', function () {
     $out = (new SecretRedactor())->redact([
         'prompt' => 'a bearer of good news',
