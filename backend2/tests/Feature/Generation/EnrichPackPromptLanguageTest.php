@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Dto\EnrichmentBrief;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -26,7 +27,7 @@ function packFor(string $termLang, string $translationLang): void
         'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
     ], 200)]);
 
-    (new OpenAiEnrichmentPacker('key', 'gpt-4o-mini'))->pack(new EnrichmentBrief(
+    (new OpenAiEnrichmentPacker(app(OutboundCallContext::class), 'key', 'gpt-4o-mini'))->pack(new EnrichmentBrief(
         termId: '01TERM000000000000000000A',
         text: 'withdraw money',
         acceptedForms: ['withdraw money'],

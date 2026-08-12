@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\RealtimeSessionSpec;
 use App\Modules\Generation\Application\Dto\RealtimeToken;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
 use App\Modules\Generation\Infrastructure\Prompt\PracticeDialogInstructions;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\Clock;
 use DateTimeZone;
 use Illuminate\Support\Facades\Http;
@@ -40,6 +41,7 @@ final class GeminiLiveTokenMinter implements RealtimeTokenPort
     private const WS_ENDPOINT = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained';
 
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly PracticeDialogInstructions $instructions,
         private readonly Clock $clock,
@@ -65,9 +67,9 @@ final class GeminiLiveTokenMinter implements RealtimeTokenPort
             $body['liveConnectConstraints'] = $this->constraints($spec);
         }
 
-        $response = Http::withHeaders(['x-goog-api-key' => $this->apiKey])
+        $response = $this->context->run('realtime', $spec->collectionId, fn () => Http::withHeaders(['x-goog-api-key' => $this->apiKey])
             ->timeout(30)
-            ->post(rtrim($this->baseUrl, '/') . '/auth_tokens', $body);
+            ->post(rtrim($this->baseUrl, '/') . '/auth_tokens', $body));
 
         if ($response->failed()) {
             throw new RuntimeException('Gemini auth-token error: ' . $response->status() . ' ' . $response->body());

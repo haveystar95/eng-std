@@ -10,6 +10,7 @@ use App\Modules\Admin\Application\Dto\CollectionTermRow;
 use App\Modules\Admin\Application\Dto\ListWindow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Port\AdminCollectionReader;
+use App\Modules\Admin\Application\Port\AdminCostReader;
 use App\Modules\Admin\Infrastructure\Support\Iso;
 use App\Modules\Admin\Infrastructure\Support\Keyset;
 use Illuminate\Support\Facades\DB;
@@ -20,33 +21,48 @@ final class EloquentAdminCollectionReader implements AdminCollectionReader
 {
     private const TERMS_CAP = 500;
 
+    public function __construct(private readonly AdminCostReader $costs) {}
+
     public function list(?string $type, ?string $search, ListWindow $window): Page
     {
-        $base = DB::table('collections')->whereNull('deleted_at');
+        // Owner joined in rather than resolved per row: the list shows an email, and an id column
+        // nobody can read is the reason you end up opening every collection to find one.
+        $base = DB::table('collections as c')
+            ->leftJoin('users as u', 'u.id', '=', 'c.owner_id')
+            ->whereNull('c.deleted_at');
         if ($type !== null && $type !== '') {
-            $base->where('type', $type);
+            $base->where('c.type', $type);
         }
         if ($search !== null && $search !== '') {
-            $base->where('title', 'ILIKE', '%' . $search . '%');
+            $base->where('c.title', 'ILIKE', '%' . $search . '%');
         }
 
         return Keyset::page(
             $base,
             $window,
-            'id',
-            ['id', 'type', 'title', 'owner_id', 'source', 'items_count', 'created_at'],
-            static fn (array $rows): array => array_map(
-                static fn (stdClass $r): CollectionRow => new CollectionRow(
-                    id: (string) $r->id,
-                    type: (string) $r->type,
-                    title: (string) $r->title,
-                    ownerId: $r->owner_id !== null ? (string) $r->owner_id : null,
-                    source: (string) $r->source,
-                    itemsCount: (int) $r->items_count,
-                    createdAt: Iso::orNull($r->created_at),
-                ),
-                $rows,
-            ),
+            'c.id',
+            ['c.id', 'c.type', 'c.title', 'c.owner_id', 'c.source', 'c.items_count', 'c.created_at', 'u.email as owner_email'],
+            function (array $rows): array {
+                $costs = $this->costs->totalsForCollections(array_map(
+                    static fn (stdClass $r): string => (string) $r->id,
+                    $rows,
+                ));
+
+                return array_map(
+                    static fn (stdClass $r): CollectionRow => new CollectionRow(
+                        id: (string) $r->id,
+                        type: (string) $r->type,
+                        title: (string) $r->title,
+                        ownerId: $r->owner_id !== null ? (string) $r->owner_id : null,
+                        source: (string) $r->source,
+                        itemsCount: (int) $r->items_count,
+                        createdAt: Iso::orNull($r->created_at),
+                        ownerEmail: $r->owner_email !== null ? (string) $r->owner_email : null,
+                        costUsd: $costs[(string) $r->id] ?? 0.0,
+                    ),
+                    $rows,
+                );
+            },
         );
     }
 

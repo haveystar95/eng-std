@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -23,7 +24,7 @@ function fakeOpenAi(): void
 
 function generateWith(string $version): void
 {
-    (new OpenAiCollectionGenerator('key', 'gpt-4o', $version))->generate(
+    (new OpenAiCollectionGenerator(app(OutboundCallContext::class), 'key', 'gpt-4o', $version))->generate(
         new GenerationBrief('в банке', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 15),
     );
 }
@@ -63,7 +64,7 @@ it('adds the image fields to the schema on v4 and parses them back', function ()
         'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
     ], 200)]);
 
-    $draft = (new OpenAiCollectionGenerator('key', 'gpt-4o', 'v4'))->generate(
+    $draft = (new OpenAiCollectionGenerator(app(OutboundCallContext::class), 'key', 'gpt-4o', 'v4'))->generate(
         new GenerationBrief('в банке', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 15),
     );
 

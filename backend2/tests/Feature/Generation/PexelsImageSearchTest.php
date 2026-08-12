@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -14,7 +15,7 @@ uses(RefreshDatabase::class);
 
 function pexels(): PexelsImageSearch
 {
-    return new PexelsImageSearch('test-key');
+    return new PexelsImageSearch(app(OutboundCallContext::class), 'test-key');
 }
 
 it('maps a photo to url + attribution and sends the key in the Authorization header', function () {

@@ -15,5 +15,12 @@ final readonly class CollectionRow
         public string $source,      // curated | ai | user
         public int $itemsCount,
         public ?string $createdAt,
+        public ?string $ownerEmail = null,
+        /**
+         * Directly-attributable spend (generation + realtime). The per-term purposes are left out
+         * of the LIST on purpose — they need a join per row, and the collection card shows the
+         * full split anyway.
+         */
+        public float $costUsd = 0.0,
     ) {}
 }

@@ -54,6 +54,7 @@ final readonly class FinishPracticeDialogHandler
             targetLang: is_string($lesson['target'] ?? null) ? $lesson['target'] : '',
             topic: is_string($lesson['topic'] ?? null) ? $lesson['topic'] : '',
             lines: $lines,
+            collectionId: $dialog->collectionId()->value,
         ))->summary;
 
         // Close it (idempotent) with the estimated spend and the recorded result. A repeat finish

@@ -9,6 +9,8 @@ use App\Modules\Generation\Application\Command\FailGenerationHandler;
 use App\Modules\Generation\Application\Command\ProcessGeneration;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
+use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -33,10 +35,22 @@ final class GenerateCollectionJob implements ShouldQueue
 
     public function __construct(private readonly string $requestId) {}
 
-    public function handle(ProcessGenerationHandler $handler): void
-    {
+    public function handle(
+        ProcessGenerationHandler $handler,
+        OutboundCallContext $context,
+        GenerationRequestRepository $requests,
+    ): void {
+        $id = GenerationRequestId::fromString($this->requestId);
+
         try {
-            $handler(new ProcessGeneration(GenerationRequestId::fromString($this->requestId)));
+            $context->run(null, null, fn () => $handler(new ProcessGeneration($id)));
+
+            // The model call is paid for BEFORE the collection exists, so its log row can only be
+            // linked to the collection now, once the request carries the id it produced.
+            $collectionId = $requests->findById($id)?->collectionId();
+            if ($collectionId !== null) {
+                $context->attachCollection($collectionId->value);
+            }
         } catch (InvalidGeneratedDraft $e) {
             // A rejected draft is deterministic: the same prompt + model will reject again, so a
             // retry only burns time and money. Fail terminally now — failed() records the reason.

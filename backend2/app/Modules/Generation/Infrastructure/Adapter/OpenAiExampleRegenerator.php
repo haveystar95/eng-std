@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
 use App\Modules\Generation\Application\Dto\ExampleRegenBrief;
 use App\Modules\Generation\Application\Dto\ExampleRegenResult;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -20,6 +21,7 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
     ];
 
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
         private readonly string $promptVersion = 'v1',
@@ -33,7 +35,7 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
             $user .= "\n\nAVOID — the example currently shown, produce a different one:\n\"\"\"\n{$brief->avoid}\n\"\"\"";
         }
 
-        $response = Http::withToken($this->apiKey)
+        $response = $this->context->run('example_regen', null, fn () => Http::withToken($this->apiKey)
             ->timeout(60)
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
@@ -45,7 +47,7 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
                     'type' => 'json_schema',
                     'json_schema' => ['name' => 'example', 'strict' => true, 'schema' => $this->schema()],
                 ],
-            ]);
+            ]));
 
         if ($response->failed()) {
             throw new RuntimeException('OpenAI API error: ' . $response->status() . ' ' . $response->body());

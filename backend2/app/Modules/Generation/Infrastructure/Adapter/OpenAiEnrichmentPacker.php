@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
 use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -32,6 +33,7 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
     ];
 
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
         private readonly string $promptVersion = 'v1',
@@ -40,7 +42,7 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
 
     public function pack(EnrichmentBrief $brief): EnrichmentPack
     {
-        $response = Http::withToken($this->apiKey)
+        $response = $this->context->run('enrichment', null, fn () => Http::withToken($this->apiKey)
             ->timeout(90)
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
@@ -52,7 +54,7 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
                     'type' => 'json_schema',
                     'json_schema' => ['name' => 'enrichment_pack', 'strict' => true, 'schema' => $this->schema()],
                 ],
-            ]);
+            ]));
 
         if ($response->failed()) {
             throw new RuntimeException('OpenAI API error: ' . $response->status() . ' ' . $response->body());

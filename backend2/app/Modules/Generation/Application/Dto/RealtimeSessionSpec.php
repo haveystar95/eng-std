@@ -21,5 +21,8 @@ final readonly class RealtimeSessionSpec
         public array $lesson,
         // Output-audio playback speed (1.0 = normal; < 1 slower, used for A1/A2). Provider-dependent.
         public float $speed = 1.0,
+        // Which deck this session practises — carried only so the adapter can label the mint call
+        // in the request log with the collection that caused the spend.
+        public ?string $collectionId = null,
     ) {}
 }

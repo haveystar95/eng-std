@@ -72,7 +72,7 @@ final readonly class StartPracticeDialogHandler
                 throw PracticeDialogIdConflict::make();
             }
             if ($existing->status() === PracticeDialogStatus::Active && ! $existing->isExpiredAt($now)) {
-                $token = $this->mint($existing->lesson());
+                $token = $this->mint($existing->lesson(), $existing->collectionId()->value);
                 $existing->renew($token->expiresAt);
                 $this->dialogs->save($existing);
 
@@ -101,7 +101,7 @@ final readonly class StartPracticeDialogHandler
         $lesson = $this->buildLesson($command, $collection, $now);
 
         // 3 & 4. Mint the ephemeral token, briefed with the lesson, then record the dialog.
-        $token = $this->mint($lesson);
+        $token = $this->mint($lesson, $command->collectionId->value);
 
         $dialog = PracticeDialog::open(
             id: $command->id,
@@ -174,7 +174,7 @@ final readonly class StartPracticeDialogHandler
     }
 
     /** @param array<string, mixed> $lesson */
-    private function mint(array $lesson): RealtimeToken
+    private function mint(array $lesson, string $collectionId): RealtimeToken
     {
         // A1/A2 lessons get a slower playback speed (the prompt also instructs a slow pace).
         $level = strtoupper(is_string($lesson['level'] ?? null) ? $lesson['level'] : '');
@@ -188,6 +188,7 @@ final readonly class StartPracticeDialogHandler
             vad: $this->config->vad,
             lesson: $lesson,
             speed: $speed,
+            collectionId: $collectionId,
         ));
     }
 

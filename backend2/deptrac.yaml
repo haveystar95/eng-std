@@ -112,7 +112,10 @@ deptrac:
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
     LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]
     # Generation fulfils Vocabulary's DispatchesTermEnrichment port (the enrich-term dispatcher).
-    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication]
+    # It also labels its own outbound calls (OutboundCallContext) so the request log can say WHY
+    # money was spent and on which collection — the label has to be applied where the vendor call
+    # is made, which is here. Deliberate edge, same shape as IdentityInfrastructure's.
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication]
 
     # Observability: a thin, cross-cutting technical module (no Presentation layer).
     ObservabilityDomain: [SharedDomain]

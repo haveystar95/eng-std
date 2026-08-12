@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Dto\RealtimeToken;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
 use App\Modules\Generation\Infrastructure\Prompt\PracticeDialogInstructions;
 use DateTimeImmutable;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -23,6 +24,7 @@ use RuntimeException;
 final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
 {
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly PracticeDialogInstructions $instructions,
         private readonly string $promptVersion = 'v1',
@@ -34,7 +36,7 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/practice_dialog.{$this->promptVersion}.md");
         $instructions = $this->instructions->render($template, $spec->lesson);
 
-        $response = Http::withToken($this->apiKey)
+        $response = $this->context->run('realtime', $spec->collectionId, fn () => Http::withToken($this->apiKey)
             ->timeout(30)
             ->post(rtrim($this->baseUrl, '/') . '/realtime/client_secrets', [
                 'expires_after' => ['anchor' => 'created_at', 'seconds' => $spec->ttlSeconds],
@@ -62,7 +64,7 @@ final class OpenAiRealtimeTokenMinter implements RealtimeTokenPort
                         'output' => ['voice' => $spec->voice, 'speed' => $spec->speed],
                     ],
                 ],
-            ]);
+            ]));
 
         if ($response->failed()) {
             throw new RuntimeException('OpenAI realtime mint error: ' . $response->status() . ' ' . $response->body());

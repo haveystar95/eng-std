@@ -13,13 +13,17 @@ use App\Modules\Admin\Application\Dto\AdminUserRow;
 use App\Modules\Admin\Application\Dto\CollectionDetail;
 use App\Modules\Admin\Application\Dto\CollectionRow;
 use App\Modules\Admin\Application\Dto\CollectionTermRow;
+use App\Modules\Admin\Application\Dto\CostByPurposeView;
 use App\Modules\Admin\Application\Dto\CostBreakdown;
 use App\Modules\Admin\Application\Dto\CostCategory;
 use App\Modules\Admin\Application\Dto\DashboardView;
+use App\Modules\Admin\Application\Dto\EnrichmentFindingRow;
+use App\Modules\Admin\Application\Dto\ExampleDistractorRow;
 use App\Modules\Admin\Application\Dto\DialogDetail;
 use App\Modules\Admin\Application\Dto\DialogRow;
 use App\Modules\Admin\Application\Dto\GenerationRow;
 use App\Modules\Admin\Application\Dto\Page;
+use App\Modules\Admin\Application\Dto\PurposeCost;
 use App\Modules\Admin\Application\Dto\RequestLogDetail;
 use App\Modules\Admin\Application\Dto\RequestLogRow;
 use App\Modules\Admin\Application\Dto\ReviewRow;
@@ -27,6 +31,7 @@ use App\Modules\Admin\Application\Dto\TermDetail;
 use App\Modules\Admin\Application\Dto\TermExampleRow;
 use App\Modules\Admin\Application\Dto\TermRow;
 use App\Modules\Admin\Application\Dto\TermTranslationRow;
+use App\Modules\Admin\Application\Dto\TermVariantRow;
 use App\Modules\Admin\Application\Dto\UserCollectionWithProgress;
 use App\Modules\Admin\Application\Dto\UserCostBreakdown;
 
@@ -64,6 +69,7 @@ final class AdminJson
         return [
             'totals' => [
                 'users' => $d->users,
+                'active_users_7d' => $d->activeUsers7d,
                 'collections' => $d->collections,
                 'terms' => $d->terms,
                 'reviews_today' => $d->reviewsToday,
@@ -74,6 +80,7 @@ final class AdminJson
                 'last_7d' => self::cost($d->cost7d),
                 'all_time' => self::cost($d->costAllTime),
             ],
+            'recent_failures' => array_map(self::requestLog(...), $d->recentFailures),
         ];
     }
 
@@ -221,9 +228,11 @@ final class AdminJson
             'type' => $c->type,
             'title' => $c->title,
             'owner_id' => $c->ownerId,
+            'owner_email' => $c->ownerEmail,
             'source' => $c->source,
             'items_count' => $c->itemsCount,
             'created_at' => $c->createdAt,
+            'cost_usd' => $c->costUsd,
         ];
     }
 
@@ -282,18 +291,72 @@ final class AdminJson
             'pos' => $t->pos,
             'ipa' => $t->ipa,
             'audio_url' => $t->audioUrl,
+            'image_url' => $t->imageUrl,
+            'image_author' => $t->imageAuthor,
+            'image_author_url' => $t->imageAuthorUrl,
+            'cefr' => $t->cefr,
             'source' => $t->source,
             'created_at' => $t->createdAt,
+            'updated_at' => $t->updatedAt,
             'translations' => array_map(static fn (TermTranslationRow $r): array => [
                 'lang' => $r->lang, 'text' => $r->text, 'is_primary' => $r->isPrimary,
             ], $t->translations),
-            'examples' => array_map(static fn (TermExampleRow $r): array => [
-                'sentence' => $r->sentence, 'translation' => $r->translation,
-            ], $t->examples),
+            'examples' => array_map(self::termExample(...), $t->examples),
             'collections' => array_map(static fn ($r): array => [
                 'id' => $r->id, 'title' => $r->title, 'type' => $r->type,
             ], $t->collections),
+            'accepted_variants' => array_map(static fn (TermVariantRow $r): array => [
+                'text' => $r->text, 'note' => $r->note, 'generator_version' => $r->generatorVersion,
+            ], $t->acceptedVariants),
+            'findings' => array_map(static fn (EnrichmentFindingRow $r): array => [
+                'kind' => $r->kind,
+                'field' => $r->field,
+                'detail' => $r->detail,
+                'generator_version' => $r->generatorVersion,
+                'created_at' => $r->createdAt,
+            ], $t->findings),
+            'enrichment_version' => $t->enrichmentVersion,
             'progress_count' => $t->progressCount,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function termExample(TermExampleRow $e): array
+    {
+        return [
+            'id' => $e->id,
+            'sentence' => $e->sentence,
+            'translation' => $e->translation,
+            'is_pinned' => $e->isPinned,
+            'distractors' => array_map(static fn (ExampleDistractorRow $d): array => [
+                'id' => $d->id,
+                'sentence' => $d->sentence,
+                'error_type' => $d->errorType,
+                'error_span' => $d->errorSpan,
+                'correction' => $d->correction,
+                'generator_version' => $d->generatorVersion,
+            ], $e->distractors),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function costByPurpose(CostByPurposeView $c): array
+    {
+        return [
+            'scope_id' => $c->scopeId,
+            'period' => $c->period,
+            'since' => $c->since,
+            'total_usd' => $c->totalUsd,
+            'tokens_in' => $c->tokensIn,
+            'tokens_out' => $c->tokensOut,
+            'by_purpose' => array_map(static fn (PurposeCost $p): array => [
+                'purpose' => $p->purpose,
+                'tokens_in' => $p->tokensIn,
+                'tokens_out' => $p->tokensOut,
+                'cost_usd' => $p->costUsd,
+                'calls' => $p->calls,
+            ], $c->byPurpose),
+            'note' => $c->note,
         ];
     }
 

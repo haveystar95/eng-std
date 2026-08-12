@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
 use App\Modules\Generation\Application\Dto\ImageResult;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\TransientImageSearchError;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -22,6 +23,7 @@ use RuntimeException;
 final class PexelsImageSearch implements ImageSearchPort
 {
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $baseUrl = 'https://api.pexels.com/v1',
         private readonly int $timeoutSeconds = 15,
@@ -43,13 +45,13 @@ final class PexelsImageSearch implements ImageSearchPort
         }
 
         try {
-            $response = Http::withHeaders(['Authorization' => $this->apiKey])
+            $response = $this->context->run('images', null, fn () => Http::withHeaders(['Authorization' => $this->apiKey])
                 ->timeout($this->timeoutSeconds)
                 ->get(rtrim($this->baseUrl, '/') . '/search', [
                     'query' => $q,
                     'per_page' => 1,
                     'orientation' => 'landscape',
-                ]);
+                ]));
         } catch (ConnectionException $e) {
             throw TransientImageSearchError::network($e->getMessage());
         }

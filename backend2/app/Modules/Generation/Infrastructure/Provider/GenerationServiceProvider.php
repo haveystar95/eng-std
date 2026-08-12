@@ -28,6 +28,7 @@ use App\Modules\Generation\Domain\Repository\PracticeDialogMessageRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\PexelsImageSearch;
@@ -84,6 +85,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiEnrichmentPacker(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 // The станок reasons about grammar rather than recalling facts, and it runs over
                 // hundreds of terms — the cheaper model is the wrong trade here only if the scrap
@@ -99,6 +101,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiTermEnricher(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );
@@ -110,6 +113,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiExampleRegenerator(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );
@@ -121,6 +125,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiCollectionGenerator(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.generate_model', 'gpt-4o'),
                 // Which prompt file to load. Defaults to the production version so the recorded
@@ -136,6 +141,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new PexelsImageSearch(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.pexels.key'),
                 throttleMs: (int) config('services.pexels.throttle_ms', 0),
             );
@@ -181,6 +187,7 @@ final class GenerationServiceProvider extends ServiceProvider
 
             if ($driver === 'gemini') {
                 return new GeminiLiveTokenMinter(
+                    context: $this->app->make(OutboundCallContext::class),
                     apiKey: (string) config('services.gemini.api_key'),
                     instructions: $this->app->make(PracticeDialogInstructions::class),
                     clock: $this->app->make(Clock::class),
@@ -190,6 +197,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiRealtimeTokenMinter(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 instructions: $this->app->make(PracticeDialogInstructions::class),
                 promptVersion: (string) config('services.practice.prompt_version', 'v3'),
@@ -202,6 +210,7 @@ final class GenerationServiceProvider extends ServiceProvider
             }
 
             return new OpenAiDialogSummarizer(
+                context: $this->app->make(OutboundCallContext::class),
                 apiKey: (string) config('services.openai.api_key'),
                 model: (string) config('services.openai.summary_model', 'gpt-4o-mini'),
             );

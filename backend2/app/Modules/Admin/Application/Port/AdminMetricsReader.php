@@ -17,4 +17,7 @@ interface AdminMetricsReader
 
     /** Reviews (real answers, incl. practice) with answered_at at/after $since. */
     public function reviewsSince(DateTimeImmutable $since): int;
+
+    /** Distinct users who answered at least one review since $since — "active", not "registered". */
+    public function activeUsersSince(DateTimeImmutable $since): int;
 }

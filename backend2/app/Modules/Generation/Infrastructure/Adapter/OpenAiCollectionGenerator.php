@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -34,6 +35,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
     ];
 
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
         private readonly string $promptVersion = 'v2',
@@ -42,7 +44,8 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
 
     public function generate(GenerationBrief $brief): GeneratedCollectionDraft
     {
-        $response = Http::withToken($this->apiKey)
+        // Labelled so the request log can say what this spend was FOR — see OutboundCallContext.
+        $response = $this->context->run('generation', null, fn () => Http::withToken($this->apiKey)
             ->timeout(90)
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
@@ -54,7 +57,7 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
                     'type' => 'json_schema',
                     'json_schema' => ['name' => 'collection', 'strict' => true, 'schema' => $this->schema()],
                 ],
-            ]);
+            ]));
 
         if ($response->failed()) {
             throw new RuntimeException('OpenAI API error: ' . $response->status() . ' ' . $response->body());

@@ -33,4 +33,14 @@ final class EloquentAdminMetricsReader implements AdminMetricsReader
     {
         return DB::table('reviews')->where('answered_at', '>=', $since)->count();
     }
+
+    public function activeUsersSince(DateTimeImmutable $since): int
+    {
+        // "Active" = actually answered something. Any review counts, practice included — the same
+        // definition of activity the app uses on /stats.
+        return DB::table('reviews')
+            ->where('answered_at', '>=', $since)
+            ->distinct()
+            ->count('user_id');
+    }
 }

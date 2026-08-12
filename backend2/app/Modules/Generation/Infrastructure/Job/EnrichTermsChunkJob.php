@@ -6,6 +6,7 @@ namespace App\Modules\Generation\Infrastructure\Job;
 
 use App\Modules\Generation\Application\Command\BuildTermEnrichments;
 use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -38,15 +39,24 @@ final class EnrichTermsChunkJob implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [30, 120, 300];
 
-    /** @param  list<string>  $termIds */
+    /**
+     * @param  list<string>  $termIds
+     * @param  ?string  $collectionId  only for labelling the outbound log — a backfill run over the
+     *                                 whole dictionary belongs to no collection and passes null.
+     */
     public function __construct(
         private readonly array $termIds,
         private readonly string $generatorVersion,
+        private readonly ?string $collectionId = null,
     ) {}
 
-    public function handle(BuildTermEnrichmentsHandler $handler): void
+    public function handle(BuildTermEnrichmentsHandler $handler, OutboundCallContext $context): void
     {
-        $metrics = $handler(new BuildTermEnrichments($this->termIds, $this->generatorVersion));
+        $metrics = $context->run(
+            null,
+            $this->collectionId,
+            fn () => $handler(new BuildTermEnrichments($this->termIds, $this->generatorVersion)),
+        );
 
         // A chunk where EVERY term threw is the shape of "the provider is down", not "the content is
         // odd" — worth a loud line, because the per-term catch would otherwise swallow it entirely.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Admin\Presentation\Http\Controller\AuthController;
 use App\Modules\Admin\Presentation\Http\Controller\CollectionController;
+use App\Modules\Admin\Presentation\Http\Controller\CostController;
 use App\Modules\Admin\Presentation\Http\Controller\DashboardController;
 use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
@@ -39,6 +40,9 @@ Route::middleware('auth:admin')->group(function (): void {
 
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);
+    Route::get('/collections/{id}/costs', [CostController::class, 'collection']);
+
+    Route::get('/costs', [CostController::class, 'summary']);
 
     Route::get('/terms', [TermController::class, 'index']);
     Route::get('/terms/{id}', [TermController::class, 'show']);

@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\DialogSummaryBrief;
 use App\Modules\Generation\Application\Dto\DialogSummaryResult;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Domain\ValueObject\TranscriptLine;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -25,6 +26,7 @@ final class OpenAiDialogSummarizer implements DialogSummarizerPort
     ];
 
     public function __construct(
+        private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
         private readonly string $baseUrl = 'https://api.openai.com/v1',
@@ -37,7 +39,7 @@ final class OpenAiDialogSummarizer implements DialogSummarizerPort
             . "{$native}: what the learner did well, and the one or two most important mistakes to fix. "
             . 'Be encouraging and specific. Output only the recap, no preamble.';
 
-        $response = Http::withToken($this->apiKey)
+        $response = $this->context->run('recap', $brief->collectionId, fn () => Http::withToken($this->apiKey)
             ->timeout(30)
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
@@ -45,7 +47,7 @@ final class OpenAiDialogSummarizer implements DialogSummarizerPort
                     ['role' => 'system', 'content' => $system],
                     ['role' => 'user', 'content' => "TOPIC: {$brief->topic}\n\nTRANSCRIPT:\n" . $this->transcript($brief->lines)],
                 ],
-            ]);
+            ]));
 
         if ($response->failed()) {
             throw new RuntimeException('OpenAI summary error: ' . $response->status() . ' ' . $response->body());

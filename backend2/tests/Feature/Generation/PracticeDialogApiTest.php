@@ -12,6 +12,7 @@ use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Infrastructure\Adapter\FakeDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\FakeRealtimeTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiLiveTokenMinter;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Generation\Infrastructure\Prompt\PracticeDialogInstructions;
 use Illuminate\Support\Facades\Http;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
@@ -146,6 +147,7 @@ it('returns a pre-rendered gemini session_setup carrying the lesson CEFR rules',
     Http::fake(['*generativelanguage.googleapis.com*' => Http::response(['name' => 'auth_tokens/fake-abc'])]);
     config(['services.practice.driver' => 'gemini']); // → the lesson carries the Gemini model
     $this->app->bind(RealtimeTokenPort::class, fn ($app) => new GeminiLiveTokenMinter(
+        context: $app->make(OutboundCallContext::class),
         apiKey: 'test-key',
         instructions: $app->make(PracticeDialogInstructions::class),
         clock: $app->make(Clock::class),

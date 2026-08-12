@@ -6,6 +6,7 @@ namespace App\Modules\Generation\Infrastructure\Job;
 
 use App\Modules\Generation\Application\Command\AttachCollectionImages;
 use App\Modules\Generation\Application\Command\AttachCollectionImagesHandler;
+use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -34,9 +35,13 @@ final class AttachImagesJob implements ShouldQueue
 
     public function __construct(private readonly string $collectionId) {}
 
-    public function handle(AttachCollectionImagesHandler $handler): void
+    public function handle(AttachCollectionImagesHandler $handler, OutboundCallContext $context): void
     {
-        $handler(new AttachCollectionImages(CollectionId::fromString($this->collectionId)));
+        // Every image search inside this scope is stamped with the collection it is buying art for,
+        // so "what did this deck cost me" is one filter in the log rather than a guess.
+        $context->run(null, $this->collectionId, fn () => $handler(
+            new AttachCollectionImages(CollectionId::fromString($this->collectionId)),
+        ));
     }
 
     public function failed(Throwable $e): void

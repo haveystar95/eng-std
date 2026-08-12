@@ -45,7 +45,9 @@ final class EnrichCollectionJob implements ShouldQueue
         ));
 
         foreach (array_chunk($termIds, EnrichTermsChunkJob::CHUNK_SIZE) as $chunk) {
-            EnrichTermsChunkJob::dispatch($chunk, $this->generatorVersion);
+            // Carry the collection through so each chunk's model calls land in the log labelled
+            // with the deck that caused them.
+            EnrichTermsChunkJob::dispatch($chunk, $this->generatorVersion, $this->collectionId);
         }
     }
 

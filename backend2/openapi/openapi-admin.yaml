@@ -34,6 +34,7 @@ tags:
   - name: Collections
   - name: Terms
   - name: Logs
+  - name: Costs
   - name: Practice
   - name: Generation
 
@@ -359,6 +360,42 @@ paths:
               schema: { $ref: '#/components/schemas/CollectionDetail' }
         '404': { $ref: '#/components/responses/Problem' }
 
+  /collections/{id}/costs:
+    get:
+      tags: [Costs]
+      summary: What one collection has cost, split by purpose
+      description: >
+        The spend LEDGERS are the money (generation_requests, practice_dialogs, term_enrichments,
+        example_regenerations) — they hold the whole history and the request log can be pruned. Only
+        `images` and `recap`, which have no ledger of their own, are priced from the log.
+        Caveats that a bare number would hide are returned in `note`.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CostByPurpose' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /costs:
+    get:
+      tags: [Costs]
+      summary: Fleet spend by purpose over a window
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, enum: [day, week, month, all], default: week }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CostByPurpose' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /terms:
     get:
       tags: [Terms]
@@ -675,6 +712,7 @@ components:
           type: object
           properties:
             users: { type: integer }
+            active_users_7d: { type: integer, description: distinct users who answered a review in the last 7 days }
             collections: { type: integer }
             terms: { type: integer }
             reviews_today: { type: integer }
@@ -685,6 +723,10 @@ components:
             today: { $ref: '#/components/schemas/CostBreakdown' }
             last_7d: { $ref: '#/components/schemas/CostBreakdown' }
             all_time: { $ref: '#/components/schemas/CostBreakdown' }
+        recent_failures:
+          type: array
+          description: The last few outbound calls that failed (5xx or a transport error).
+          items: { $ref: '#/components/schemas/RequestLog' }
 
     UserRow:
       type: object
@@ -813,9 +855,15 @@ components:
         type: { type: string, enum: [system, shared, custom] }
         title: { type: string }
         owner_id: { type: [string, 'null'] }
+        owner_email: { type: [string, 'null'] }
         source: { type: string, enum: [curated, ai, user] }
         items_count: { type: integer }
         created_at: { type: [string, 'null'], format: date-time }
+        cost_usd:
+          type: number
+          description: >
+            Directly-attributable spend (generation + realtime). The per-term purposes are left out
+            of the list — see /collections/{id}/costs for the full split.
 
     CollectionDetail:
       allOf:
@@ -857,8 +905,13 @@ components:
         pos: { type: [string, 'null'] }
         ipa: { type: [string, 'null'] }
         audio_url: { type: [string, 'null'] }
+        image_url: { type: [string, 'null'] }
+        image_author: { type: [string, 'null'] }
+        image_author_url: { type: [string, 'null'] }
+        cefr: { type: [string, 'null'] }
         source: { type: string }
         created_at: { type: [string, 'null'], format: date-time }
+        updated_at: { type: [string, 'null'], format: date-time }
         translations:
           type: array
           items:
@@ -869,11 +922,11 @@ components:
               is_primary: { type: boolean }
         examples:
           type: array
-          items:
-            type: object
-            properties:
-              sentence: { type: string }
-              translation: { type: [string, 'null'] }
+          description: >
+            EVERY example the term has, pinned one first. A term accumulates one example per
+            generation pass, but only the pinned one (lowest id) is ever shown to the learner and
+            only it carries distractors.
+          items: { $ref: '#/components/schemas/TermExample' }
         collections:
           type: array
           items:
@@ -882,7 +935,73 @@ components:
               id: { type: string }
               title: { type: string }
               type: { type: string }
+        accepted_variants:
+          type: array
+          description: Alternative forms the grader accepts. Empty if the enrichment run never ran.
+          items:
+            type: object
+            properties:
+              text: { type: string }
+              note: { type: [string, 'null'] }
+              generator_version: { type: string }
+        findings:
+          type: array
+          description: What the enrichment run flagged about this term. Empty if it never ran.
+          items:
+            type: object
+            properties:
+              kind: { type: string, enum: [ambiguity, language, ua_leakage, misspelled_or_nonword, variant_conflict] }
+              field: { type: [string, 'null'] }
+              detail: { type: string }
+              generator_version: { type: string }
+              created_at: { type: [string, 'null'], format: date-time }
+        enrichment_version: { type: [string, 'null'] }
         progress_count: { type: integer }
+
+    TermExample:
+      type: object
+      properties:
+        id: { type: string }
+        sentence: { type: string }
+        translation: { type: [string, 'null'] }
+        is_pinned: { type: boolean }
+        distractors:
+          type: array
+          description: >
+            Deliberately-broken variants for find-the-mistake. `error_span` is the exact substring
+            of `sentence` that is wrong, so a reader can be shown WHERE rather than made to diff.
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              sentence: { type: string }
+              error_type: { type: string, enum: [article, preposition, tense, word_order, false_friend, modal_to] }
+              error_span: { type: string }
+              correction: { type: string }
+              generator_version: { type: string }
+
+    CostByPurpose:
+      type: object
+      properties:
+        scope_id: { type: [string, 'null'], description: the collection, when the scope is one }
+        period: { type: [string, 'null'], enum: [day, week, month, all, 'null'] }
+        since: { type: [string, 'null'], format: date-time }
+        total_usd: { type: number }
+        tokens_in: { type: integer }
+        tokens_out: { type: integer }
+        by_purpose:
+          type: array
+          items:
+            type: object
+            properties:
+              purpose: { $ref: '#/components/schemas/CallPurpose' }
+              tokens_in: { type: integer }
+              tokens_out: { type: integer }
+              cost_usd: { type: number }
+              calls: { type: integer }
+        note:
+          type: [string, 'null']
+          description: Caveats the numbers alone would hide (shared terms, log-priced purposes).
 
     CallPurpose:
       type: string
