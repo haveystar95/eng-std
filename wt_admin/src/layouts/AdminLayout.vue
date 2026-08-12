@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { LayoutDashboard, Users, Library, Type, Sparkles,
   SlidersHorizontal, ScrollText, LogOut } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useMocks } from '@/api'
+import CommandPalette from '@/components/CommandPalette.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const palette = ref<InstanceType<typeof CommandPalette> | null>(null)
 
 const nav = [
   { to: { name: 'dashboard' }, label: 'Обзор', icon: LayoutDashboard, section: '/dashboard' },
@@ -39,6 +42,10 @@ function logout() {
         <span class="brand-mark serif">Слова</span>
         <span class="brand-sub">админка</span>
       </div>
+      <button class="search-trigger" @click="palette?.show()">
+        <span>Поиск</span>
+        <kbd>⌘K</kbd>
+      </button>
       <nav class="nav">
         <RouterLink
           v-for="item in nav"
@@ -65,6 +72,7 @@ function logout() {
     <main class="content">
       <RouterView />
     </main>
+    <CommandPalette ref="palette" />
   </div>
 </template>
 
@@ -103,6 +111,28 @@ function logout() {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--tertiary);
+}
+.search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--s12);
+  padding: 8px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-field);
+  background: var(--field);
+  font-size: 13px;
+  color: var(--secondary);
+  cursor: pointer;
+}
+.search-trigger:hover {
+  color: var(--ink);
+}
+.search-trigger kbd {
+  font-family: inherit;
+  font-size: 11px;
+  opacity: 0.7;
 }
 .nav {
   display: flex;
