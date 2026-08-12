@@ -11,6 +11,7 @@ use App\Modules\Generation\Domain\ValueObject\ErrorType;
 use App\Modules\Generation\Domain\ValueObject\FindingKind;
 use App\Modules\Generation\Domain\ValueObject\RawDistractor;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
+use App\Modules\Shared\Domain\Service\LanguagePurity;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 
 /**
@@ -76,6 +77,17 @@ final class EnrichmentValidator
         'is correct',
     ];
 
+    /**
+     * The languages an enrichment candidate's fields are written in. Fixed, not passed in, because
+     * {@see EnrichmentCandidate} itself declares them: `translation`/`example_translation` are the
+     * learner's side, `example` the target side, and every collection in existence is ru→en. Named
+     * constants rather than inline literals so the two calls into {@see LanguagePurity} read as the
+     * same question the generation barrier asks — one detector, one vocabulary for asking it.
+     */
+    private const LEARNER_LANG = 'ru';
+
+    private const TARGET_LANG = 'en';
+
     /** JSON punctuation the model sometimes leaks INSIDE a legal string value — see sanitizeNote(). */
     private const JSON_DEBRIS = ['"},{', '},{', '"}', '{"', '"],', '["'];
 
@@ -94,7 +106,7 @@ final class EnrichmentValidator
 
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
-        private readonly LanguagePurityCheck $purity = new LanguagePurityCheck(),
+        private readonly LanguagePurity $purity = new LanguagePurity(),
         private readonly BackTranslationTolerance $tolerance = new BackTranslationTolerance(),
     ) {}
 
@@ -323,7 +335,7 @@ final class EnrichmentValidator
             if ($value === null) {
                 continue;
             }
-            $ua = $this->purity->ukrainianLetters($value);
+            $ua = $this->purity->foreignLetters(self::LEARNER_LANG, $value);
             if ($ua !== []) {
                 $out[] = new EnrichmentFinding(
                     $candidate->termId,
@@ -337,7 +349,7 @@ final class EnrichmentValidator
         // English fields: any non-Latin letter.
         $sentence = $this->nullIfBlank($candidate->exampleSentence);
         if ($sentence !== null) {
-            $foreign = $this->purity->nonEnglishLetters($sentence);
+            $foreign = $this->purity->foreignLetters(self::TARGET_LANG, $sentence);
             if ($foreign !== []) {
                 $out[] = new EnrichmentFinding(
                     $candidate->termId,
@@ -348,7 +360,7 @@ final class EnrichmentValidator
             }
         }
 
-        // The model's lexis notes — the half a character check cannot see (see LanguagePurityCheck):
+        // The model's lexis notes — the half a character check cannot see (see LanguagePurity):
         // leakage spelled in shared letters, and words that are simply not words. The model names the
         // class; an unrecognised class degrades to the coarse kind rather than being dropped, so a
         // newer prompt can add one without a run losing findings.
