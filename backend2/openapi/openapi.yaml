@@ -715,7 +715,7 @@ paths:
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
-                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
                       response: { type: string, description: The user's raw answer text }
                       answered_at:
                         type: string
@@ -975,7 +975,7 @@ paths:
                               The trainers this user has switched on, IN ROTATION ORDER (their own
                               override, or the product default). The client mirrors this into its
                               offline practice builder, so a toggle takes effect on the next sync.
-                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
                       changes:
                         type: object
                         properties:
@@ -1312,7 +1312,7 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation] }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
         prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise" }
         answer: { type: string, description: "What a correct answer must match. The target-language term, except for the sentence modes (`scramble`, `dictation`), where this is the example sentence itself — the client must not display it before the answer is committed" }
@@ -1329,6 +1329,20 @@ components:
           nullable: true
           description: "Tiles to assemble the answer from, shuffled (never in the answer's own order). word_bank — the term's words, or its letters when it is a single word; scramble — the example sentence's words (final `.`/`!`/`?` dropped, inner punctuation kept on its word)"
           items: { type: string }
+        option_feedback:
+          type: array
+          nullable: true
+          description: >
+            `pick_correct` only. For each WRONG option: which fragment is broken and what it should
+            have been. This is why the mode exists over `multiple_choice` — a wrong pick is explained
+            (underline the span, show the correction) instead of merely marked. Rides with the card so
+            the explanation works offline. The correct option never appears here.
+          items:
+            type: object
+            properties:
+              sentence: { type: string, description: 'the wrong option this feedback belongs to' }
+              error_span: { type: string, description: 'the broken fragment, verbatim from `sentence`' }
+              correction: { type: string }
         accepted_variants:
           type: array
           description: >

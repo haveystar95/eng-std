@@ -72,11 +72,14 @@ final class ExerciseSelector
                 ExerciseMode::Cloze,
                 ExerciseMode::Scramble,
                 ExerciseMode::Dictation,
+                ExerciseMode::PickCorrect,
             ];
             $offset = $progress->reps();
         } else {
             $base = $playable->supports(ExerciseMode::WordBank) ? ExerciseMode::WordBank : ExerciseMode::Typing;
-            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble];
+            // `pick_correct` joins the learning rung too: spotting a wrong sentence is recognition,
+            // which a term still being learned can do — unlike dictation, which stays review-only.
+            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::PickCorrect];
             $offset = max(0, $progress->reps() - 1);
         }
 

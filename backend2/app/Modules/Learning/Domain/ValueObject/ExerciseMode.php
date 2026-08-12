@@ -19,6 +19,7 @@ enum ExerciseMode: string
     case Cloze = 'cloze';
     case Scramble = 'scramble';
     case Dictation = 'dictation';
+    case PickCorrect = 'pick_correct';
 
     /** The best grade this mode is allowed to produce. Recognition caps at `good`. */
     public function maxGrade(): Grade
@@ -29,7 +30,8 @@ enum ExerciseMode: string
             self::Typing, self::Listening, self::Dictation => Grade::Easy,
             // `scramble` hands over every word of the sentence — assembling given tiles is
             // recognition, exactly like word_bank, so it can never buy a month-long interval.
-            self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble => Grade::Good,
+            // `pick_correct` is a three-way choice: the weakest evidence the app collects.
+            self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble, self::PickCorrect => Grade::Good,
         };
     }
 
@@ -44,7 +46,10 @@ enum ExerciseMode: string
     public function gradesAgainstExample(): bool
     {
         return match ($this) {
-            self::Scramble, self::Dictation => true,
+            // `pick_correct` shows three sentences and asks which one is right, so the answer the
+            // learner commits IS a sentence — the pinned example, verbatim. Grading it against the
+            // term's forms would fail every correct pick.
+            self::Scramble, self::Dictation, self::PickCorrect => true,
             self::MultipleChoice, self::WordBank, self::Typing, self::Listening, self::Cloze => false,
         };
     }

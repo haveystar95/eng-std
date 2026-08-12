@@ -24,9 +24,14 @@ final readonly class PlayabilityAssessor
      * @param  string       $answer              the target answer (the term's own text)
      * @param  string|null  $example             the term's pinned example sentence, if it has one
      * @param  string|null  $exampleTranslation  that sentence in the user's language
+     * @param  int          $distractorCount     validated wrong versions of that sentence
      */
-    public function assess(string $answer, ?string $example, ?string $exampleTranslation = null): TermPlayability
-    {
+    public function assess(
+        string $answer,
+        ?string $example,
+        ?string $exampleTranslation = null,
+        int $distractorCount = 0,
+    ): TermPlayability {
         $hasExample = $example !== null && $example !== '';
 
         return new TermPlayability(
@@ -38,6 +43,9 @@ final readonly class PlayabilityAssessor
             hasExampleTranslation: $exampleTranslation !== null && trim($exampleTranslation) !== '',
             // A "term" that is itself the whole sentence — scrambling it would just be word_bank.
             exampleIsAnswer: $hasExample && $this->tokenizer->sameTokens((string) $example, $answer),
+            // Distractors belong to the PINNED example; with no example there is nothing they could
+            // hang off, so they cannot make the term playable on their own.
+            distractorCount: $hasExample ? $distractorCount : 0,
         );
     }
 }

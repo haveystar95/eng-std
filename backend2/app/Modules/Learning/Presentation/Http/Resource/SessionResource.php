@@ -29,6 +29,7 @@ final class SessionResource extends JsonResource
                 'options' => $card->options,
                 'chips' => $card->chips,
                 'accepted_variants' => $card->acceptedVariants,
+                'option_feedback' => $card->optionFeedback,
             ], $this->resource->cards),
         ];
     }

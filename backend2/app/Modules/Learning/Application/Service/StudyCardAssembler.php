@@ -28,6 +28,13 @@ final readonly class StudyCardAssembler
 {
     private const OPTION_COUNT = 4;
 
+    /**
+     * `pick_correct` shows three sentences: the example plus two wrong ones. Three rather than
+     * multiple_choice's four because each option is a whole sentence to read — a fourth turns the card
+     * into a reading comprehension test.
+     */
+    private const PICK_CORRECT_WRONG_OPTIONS = 2;
+
     /** Vocabulary term-type string (kept as a literal — Learning must not import Vocabulary Domain). */
     private const PHRASAL_VERB = 'phrasal_verb';
 
@@ -56,7 +63,12 @@ final readonly class StudyCardAssembler
         );
         $answer = $content->text;
         // What the term's data allows at all — one derivation, shared with the day-plan simulator.
-        $playable = $this->playability->assess($answer, $content->example, $content->exampleTranslation);
+        $playable = $this->playability->assess(
+            $answer,
+            $content->example,
+            $content->exampleTranslation,
+            count($content->exampleDistractors),
+        );
         // Toggles are per-user data, so "nothing fits this term" is now reachable by configuration.
         // The selector still returns a playable card; this is what stops that being silent.
         if (! $this->selector->hasApplicableMode($enabled, $playable)) {
@@ -74,6 +86,8 @@ final readonly class StudyCardAssembler
 
         $options = null;
         $chips = null;
+        /** @var list<array{sentence: string, error_span: string, correction: string}>|null $optionFeedback */
+        $optionFeedback = null;
         // A sentence-level mode asks for the EXAMPLE, so the card's answer (what the client checks
         // against and what the server grades) is that sentence, and the prompt is its translation —
         // "assemble this in English". The term's own translation would be the wrong question here.
@@ -90,6 +104,29 @@ final readonly class StudyCardAssembler
             $answer = (string) $content->example;
             $prompt = $content->exampleTranslation;
             $chips = $this->chips->sentenceChips($answer);
+        } elseif ($mode === ExerciseMode::PickCorrect) {
+            // Three sentences, one right. The answer is the example verbatim (the mode grades against
+            // the example), the prompt is its translation — "which of these says this correctly?".
+            $answer = (string) $content->example;
+            $prompt = $content->exampleTranslation;
+            $wrong = array_slice($content->exampleDistractors, 0, self::PICK_CORRECT_WRONG_OPTIONS);
+            /** @var list<string> $options */
+            $options = $this->rng->shuffleArray([
+                $answer,
+                ...array_map(static fn (array $d): string => $d['sentence'], $wrong),
+            ]);
+            // Why the feedback rides on the card: the whole point of this mode over multiple_choice is
+            // that a wrong pick can be EXPLAINED — underline the broken fragment, show what it should
+            // have been. Sending it with the card keeps that working offline, and the client never has
+            // to ask which part of the sentence was wrong.
+            $optionFeedback = array_map(
+                static fn (array $d): array => [
+                    'sentence' => $d['sentence'],
+                    'error_span' => $d['error_span'],
+                    'correction' => $d['correction'],
+                ],
+                $wrong,
+            );
         } elseif ($mode === ExerciseMode::Dictation) {
             // The task is the AUDIO. No written prompt at all — a translation on screen would turn
             // "write what you hear" into "translate this", which is a different exercise and an
@@ -109,6 +146,7 @@ final readonly class StudyCardAssembler
             exampleTranslation: $content->exampleTranslation,
             options: $options,
             chips: $chips,
+            optionFeedback: $optionFeedback,
             // Only when this card's answer IS the term. On scramble/dictation the answer is the
             // example sentence, and the server's own expected set is that sentence alone — sending
             // the term's variants there would make the client accept what the server rejects.

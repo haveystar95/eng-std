@@ -77,6 +77,33 @@ it('rotates review modes deterministically by the review counter (example-backed
         ->and($rev(3))->toBe(ExerciseMode::Typing);
 });
 
+it('puts pick_correct LAST in the review rotation, renumbering nothing before it', function () {
+    // The ladder order is a contract: a term partway through the rotation must not get its earlier
+    // rungs re-dealt because a new rung was switched on. So the newest mode goes on the END and the
+    // first five positions must still read the same.
+    $everything = new EnabledModes([
+        ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze,
+        ExerciseMode::Scramble, ExerciseMode::Dictation, ExerciseMode::PickCorrect,
+    ]);
+    $rich = new TermPlayability(
+        answerWordCount: 3,
+        clozeable: true,
+        exampleTokenCount: 7,          // inside both scramble's and dictation's windows
+        hasExampleTranslation: true,
+        distractorCount: 2,            // …and pick_correct's gate is met
+    );
+
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $everything, $rich);
+
+    expect($rev(0))->toBe(ExerciseMode::Typing)
+        ->and($rev(1))->toBe(ExerciseMode::Listening)
+        ->and($rev(2))->toBe(ExerciseMode::Cloze)
+        ->and($rev(3))->toBe(ExerciseMode::Scramble)
+        ->and($rev(4))->toBe(ExerciseMode::Dictation)
+        ->and($rev(5))->toBe(ExerciseMode::PickCorrect)
+        ->and($rev(6))->toBe(ExerciseMode::Typing);   // wraps
+});
+
 it('leads the reps ≥ 1 production rotation with the base mode, then fans out (offset (reps-1))', function () {
     // Single word: base is typing. Second meeting (reps 1) is typing (TLv2), then listening, then cloze.
     $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1, clozeable: true));

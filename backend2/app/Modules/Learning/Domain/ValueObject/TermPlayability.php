@@ -42,6 +42,17 @@ final readonly class TermPlayability
     public const MAX_DICTATION_TOKENS = 10;
 
     /**
+     * `pick_correct` shows the right sentence plus two wrong ones. Two is therefore not a preference
+     * but the card's floor: with one wrong option the choice is between two sentences and a coin toss
+     * scores 50%, which teaches nothing and schedules a month.
+     *
+     * The enrichment станок writes these, and the review deletes the ones that turned out to be
+     * grammatical — so a term's eligibility genuinely comes and goes with its CONTENT, which is
+     * exactly what this class is for.
+     */
+    public const MIN_PICK_CORRECT_DISTRACTORS = 2;
+
+    /**
      * @param  int   $answerWordCount        whitespace-separated words in the target answer
      * @param  bool  $clozeable              the term's example exists and contains the answer, so a
      *                                       blank can be cut from it
@@ -51,6 +62,8 @@ final readonly class TermPlayability
      *                                       the card has no question
      * @param  bool  $exampleIsAnswer        the example tokenizes to the term itself, so scrambling
      *                                       it would deal the same tiles word_bank already deals
+     * @param  int   $distractorCount        validated wrong versions of the pinned example that the
+     *                                       enrichment станок wrote — pick_correct's options
      */
     public function __construct(
         public int $answerWordCount,
@@ -58,6 +71,7 @@ final readonly class TermPlayability
         public int $exampleTokenCount = 0,
         public bool $hasExampleTranslation = false,
         public bool $exampleIsAnswer = false,
+        public int $distractorCount = 0,
     ) {}
 
     /** Can this term be drilled in this mode at all? The ONE place applicability is decided. */
@@ -76,6 +90,13 @@ final readonly class TermPlayability
             ExerciseMode::Dictation => ! $this->exampleIsAnswer
                 && $this->exampleTokenCount >= self::MIN_DICTATION_TOKENS
                 && $this->exampleTokenCount <= self::MAX_DICTATION_TOKENS,
+            // The prompt is the example's translation ("which of these is right?"), so the card needs
+            // it, and it needs two wrong sentences to choose among. No length window: the learner
+            // reads three sentences instead of assembling one, so a long example costs attention
+            // rather than becoming unplayable.
+            ExerciseMode::PickCorrect => ! $this->exampleIsAnswer
+                && $this->hasExampleTranslation
+                && $this->distractorCount >= self::MIN_PICK_CORRECT_DISTRACTORS,
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
             ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening => true,
         };
