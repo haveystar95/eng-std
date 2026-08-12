@@ -303,7 +303,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _promptCard(l),
-        if (_mode == ExerciseMode.multipleChoice || _isRecognitionListening) ...[
+        // Every mode whose answer is TAPPED from given options. pick_correct belongs here even
+        // though its options are whole sentences — that only changes how they read, not how they
+        // are answered. Leaving it out was the device-batch bug: prompt and photo rendered, and
+        // there was nothing on screen to tap.
+        if (_mode == ExerciseMode.multipleChoice || _mode.isSentenceChoice || _isRecognitionListening) ...[
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
@@ -352,6 +356,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isRecognitionListening) return _listeningPrompt(l, typed: false);
     if (_isCloze) return _clozePrompt(l);
     if (_isScramble) return _scramblePrompt(l);
+    if (_mode.isSentenceChoice) return _pickCorrectPrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
     if (_mode == ExerciseMode.typing) return _typingPrompt(l);
     return _choicePrompt(l); // multiple_choice
@@ -399,6 +404,23 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
           _instructionLine(l),
+        ],
+      ),
+    );
+  }
+
+  // pick_correct — the translated sentence + instruction. NO photo, deliberately: the answer area
+  // already holds three whole sentences to read and compare, and a banner above them pushes the
+  // third option off the first screen. The photo is a memory aid for a WORD; this card is a
+  // reading task.
+  Widget _pickCorrectPrompt(AppLocalizations l) {
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
+          const SizedBox(height: AppSpacing.s4),
+          _instructionLine(l, withType: false),
         ],
       ),
     );
