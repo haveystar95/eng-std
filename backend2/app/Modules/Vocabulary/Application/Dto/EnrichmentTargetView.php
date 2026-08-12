@@ -20,6 +20,9 @@ final readonly class EnrichmentTargetView
      * @param  string  $lang  the language being LEARNED (the term's own)
      * @param  string|null  $translationLang  the learner's language — the primary translation's. Null
      *        when the term has no translation, in which case there is no prompt side to reason about.
+     * @param  list<string>  $existingDistractors  wrong sentences already stored against the pinned
+     *        example. A top-up run adds to what is there, so "already there" is part of the context it
+     *        has to be judged against — otherwise it re-proposes a sibling it cannot see.
      */
     public function __construct(
         public string $termId,
@@ -31,5 +34,6 @@ final readonly class EnrichmentTargetView
         public ?string $exampleTranslation,
         public string $lang = 'en',
         public ?string $translationLang = null,
+        public array $existingDistractors = [],
     ) {}
 }

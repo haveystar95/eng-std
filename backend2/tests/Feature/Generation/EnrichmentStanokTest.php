@@ -79,7 +79,7 @@ function enrichPack(array $distractors = [], array $variants = [], ?string $back
 it('writes validated distractors and variants, and marks the term at the version', function () {
     seedEnrichmentTerm();
     $packer = countingEnrichmentPacker(enrichPack(
-        distractors: [new RawDistractor('I can to withdraw money.', 'modal_to', 'can to', 'can')],
+        distractors: [new RawDistractor('I would like to withdrawing money.', 'modal_to', 'to withdrawing', 'to withdraw')],
         variants: [new RawVariant('take out money', 'то же значение')],
     ));
     app()->instance(EnrichmentPackerPort::class, $packer);

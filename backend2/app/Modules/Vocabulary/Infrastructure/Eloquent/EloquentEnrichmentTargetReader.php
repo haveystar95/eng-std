@@ -88,6 +88,17 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
             $variants[(string) $row->term_id][] = (string) $row->text;
         }
 
+        // Distractors an earlier run already wrote against the pinned example. Read by example id, so
+        // a term whose pinned example changed does not drag the old sentences along.
+        $distractors = [];
+        $pinnedIds = array_values(array_map(static fn (object $row): string => (string) $row->id, $examples));
+        if ($pinnedIds !== []) {
+            foreach (DB::table('example_distractors')->whereIn('example_id', $pinnedIds)->orderBy('id')
+                ->get(['example_id', 'sentence']) as $row) {
+                $distractors[(string) $row->example_id][] = (string) $row->sentence;
+            }
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'lang']) as $term) {
             $id = (string) $term->id;
@@ -105,6 +116,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                     : null,
                 lang: (string) $term->lang,
                 translationLang: $translationLangs[$id] ?? null,
+                existingDistractors: $example !== null ? ($distractors[(string) $example->id] ?? []) : [],
             );
         }
 

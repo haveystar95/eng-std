@@ -115,6 +115,7 @@ final readonly class BuildTermEnrichmentsHandler
             variants: $pack->variants,
             backTranslation: $pack->backTranslation,
             languageNotes: $pack->languageNotes,
+            existingDistractors: $target->existingDistractors,
         ));
 
         ($this->import)(new ImportTermEnrichment(

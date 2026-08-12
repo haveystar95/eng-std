@@ -32,6 +32,13 @@ use App\Modules\Shared\Domain\Service\LexicalNormalizer;
  *      still kill a distractor from that pack;
  *   3. a collision between the two is not just a dropped row — it means one of the model's two
  *      claims about the same sentence is false, so the TERM goes to a human.
+ *
+ * A distractor's three fields are a claim that can be CHECKED, not just fields to fill: «this is the
+ * example with exactly this fragment broken, and that fragment should have read this». Four checks
+ * hold it to that claim, all through the same normaliser the grader uses — sentence-equal to the
+ * example, sentence-equal to a sibling distractor (stored ones included), a span that equals its own
+ * correction, and a repair that does not reproduce the example. Each of the four was found in live
+ * store content, and each of them is a card that teaches the learner something false.
  */
 final class EnrichmentValidator
 {
@@ -232,9 +239,16 @@ final class EnrichmentValidator
         }
 
         $sentence = (string) $candidate->exampleSentence;
+        $reference = $this->normalizer->normalize($sentence);
         $kept = [];
         $conflicts = [];
-        $seen = [];
+
+        // Dedup starts from what is ALREADY on this example, not from an empty set. A pack that only
+        // knows its own rows deduplicates only within itself, which is exactly how the top-up run put
+        // «I'd like the pasta for go» beside «I’d like the pasta for go» — the same sentence twice,
+        // differing in the apostrophe glyph, because the twin lived in the database and not in the pack.
+        $seen = $this->normalizedSet($candidate->existingDistractors);
+
         foreach ($candidate->distractors as $raw) {
             // Emphasis first: the span has to be findable in its own sentence, and stripping both
             // sides keeps that true instead of failing a row the model merely over-decorated.
@@ -270,7 +284,30 @@ final class EnrichmentValidator
                 continue;
             }
             // A distractor identical to the pinned example is not a distractor.
-            if ($key === $this->normalizer->normalize($sentence)) {
+            if ($key === $reference) {
+                continue;
+            }
+            // A correction that corrects nothing. «has been» → «has been» is the whole feedback the
+            // learner gets for picking this option: the card underlines a fragment and then offers the
+            // same fragment back as what it should have been. Compared through canonicalize() and NOT
+            // normalize(), because the leading article normalize() drops is precisely what an
+            // `article` row corrects — «bank account» → «a bank account» is the class working.
+            if ($this->normalizer->canonicalize($span) === $this->normalizer->canonicalize($correction)) {
+                continue;
+            }
+            // The circular check: apply the row's OWN repair and see whether it lands on the example.
+            //
+            // Every field of a distractor claims the same thing — «this sentence is the example with
+            // exactly this fragment broken». The claim is checkable: put the correction back where the
+            // span is and the example must come out. When it does not, one of the three fields is
+            // lying, and the learner is shown a repair that does not repair. «Do you offer online
+            // banking at services?» with `at` → `services` yields «…banking services services?», which
+            // is how that row announced that its span was never the error.
+            //
+            // canonicalize(), not normalize(): the repair has to reproduce the example INCLUDING its
+            // leading article, or «Delivery must arrive…» would repair to itself and still match
+            // «The delivery must arrive…» with the article thrown away on both sides.
+            if ($this->repair($text, $span, $correction) !== $this->normalizer->canonicalize($sentence)) {
                 continue;
             }
 
@@ -401,7 +438,10 @@ final class EnrichmentValidator
             return null;
         }
 
-        $clean = str_replace(self::JSON_DEBRIS, '', $note);
+        // Emphasis too. The sweep that cleaned the sentences went field by field and this field was
+        // not on the list — the note is prose a person reads, and «_синоним_» is decoration in it for
+        // exactly the same reason it is decoration in a sentence.
+        $clean = $this->stripEmphasis(str_replace(self::JSON_DEBRIS, '', $note));
         // Braces/brackets left at the ends are debris. The double quote is NOT in this list on
         // purpose: a note legitimately ends with one («синоним к слову "залог"»), and trimming it
         // would eat the prose to tidy up the model's mess.
@@ -434,6 +474,25 @@ final class EnrichmentValidator
         }
 
         return $set;
+    }
+
+    /**
+     * Substitute the correction for the span and normalise the result — the distractor as the row
+     * itself says it should have been written.
+     *
+     * The FIRST occurrence only, case-insensitively: that is the one the card underlines, so this
+     * repairs the fragment the learner is actually shown rather than every look-alike in the string.
+     */
+    private function repair(string $sentence, string $span, string $correction): string
+    {
+        $at = mb_stripos($sentence, $span);
+        if ($at === false) {
+            return '';
+        }
+
+        $repaired = mb_substr($sentence, 0, $at) . $correction . mb_substr($sentence, $at + mb_strlen($span));
+
+        return $this->normalizer->canonicalize($repaired);
     }
 
     /** @see EMPHASIS_MARKERS — the model marks the error, which hands the learner the answer. */

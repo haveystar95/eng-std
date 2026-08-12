@@ -17,12 +17,28 @@ final class LexicalNormalizer
     /** Lowercase, expand contractions, punctuation → space, whitespace collapsed, article dropped. */
     public function normalize(string $value): string
     {
+        return $this->stripArticle($this->canonicalize($value));
+    }
+
+    /**
+     * The same canonicalisation WITHOUT dropping the leading article — for comparisons where the
+     * article is the very thing under examination.
+     *
+     * {@see normalize()} throws the leading article away because a typed answer should match whether
+     * or not the learner wrote "the". That is right for an ANSWER and wrong for a fragment: an
+     * `article` distractor's whole content is "bank account" against "a bank account", and normalize()
+     * folds those two onto each other — so a check built on it would declare every article correction
+     * a no-op and scrap the entire class. 98 of the 101 rows the first run of that check flagged were
+     * exactly this.
+     */
+    public function canonicalize(string $value): string
+    {
         $value = mb_strtolower(trim($value));
         $value = $this->expandContractions($value);            // before punctuation strips the apostrophe
         $value = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $value) ?? $value;
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
 
-        return $this->stripArticle(trim($value));
+        return trim($value);
     }
 
     /** Leading article optional in both directions: "the bank" ↔ "bank". */
@@ -39,6 +55,7 @@ final class LexicalNormalizer
     private function expandContractions(string $value): string
     {
         $value = str_replace(['’', '`'], "'", $value); // normalise apostrophe glyphs first
+        $value = $this->expandPerfectAuxiliary($value);
         $map = [
             "i'd" => 'i would', "i'll" => 'i will', "i'm" => 'i am', "i've" => 'i have',
             "you're" => 'you are', "you'd" => 'you would', "you'll" => 'you will', "you've" => 'you have',
@@ -56,5 +73,28 @@ final class LexicalNormalizer
             static fn (array $m): string => $map[$m[0]] ?? $m[0],
             $value,
         );
+    }
+
+    /**
+     * The one place where `'s` and `'d` are NOT ambiguous: in front of «been».
+     *
+     * «he's been running» can only be «he has been running» — «he is been» is not English — and
+     * «I'd been waiting» can only be «I had been waiting». Everywhere else the reading genuinely is
+     * a guess, which is why the curated map picks one and stops there; here the grammar decides, so
+     * a deterministic rule is available and the map's guess («it's» → «it is») would be wrong.
+     * Hence: applied BEFORE the map, so it wins over the entries that would otherwise fire.
+     *
+     * Subject-agnostic on purpose — the rule is about the auxiliary, not about who the subject is, so
+     * it covers «he's been», «she's been», «the delivery's been» without listing pronouns.
+     *
+     * The live evidence: a generated distractor «He has been running a temperature since last night.»
+     * against the example «He's been running a temperature since last night.» — the SAME sentence,
+     * offered to the learner as the wrong answer, because the two spellings did not fold together.
+     */
+    private function expandPerfectAuxiliary(string $value): string
+    {
+        $value = preg_replace("/\b([a-z]+)'s(\s+been\b)/u", '$1 has$2', $value) ?? $value;
+
+        return preg_replace("/\b([a-z]+)'d(\s+been\b)/u", '$1 had$2', $value) ?? $value;
     }
 }

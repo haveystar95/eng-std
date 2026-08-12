@@ -21,6 +21,7 @@ final readonly class EnrichmentCandidate
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
      * @param  list<RawLanguageNote>  $languageNotes  the model's own lexis observations (see the validator)
+     * @param  list<string>  $existingDistractors  sentences ALREADY stored against the pinned example
      */
     public function __construct(
         public string $termId,
@@ -33,5 +34,6 @@ final readonly class EnrichmentCandidate
         public array $variants,
         public ?string $backTranslation,       // model's EN reconstruction from the RU prompt alone
         public array $languageNotes = [],
+        public array $existingDistractors = [],
     ) {}
 }

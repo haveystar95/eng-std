@@ -26,6 +26,7 @@ function enrichmentCandidate(
     ?string $exampleTranslation = 'Я хотел бы снять деньги со счёта.',
     ?string $exampleId = '01J000000000000000000000EX',
     array $languageNotes = [],
+    array $existingDistractors = [],
 ): EnrichmentCandidate {
     return new EnrichmentCandidate(
         termId: '01J000000000000000000000TM',
@@ -38,12 +39,17 @@ function enrichmentCandidate(
         variants: $variants,
         backTranslation: $backTranslation,
         languageNotes: $languageNotes,
+        existingDistractors: $existingDistractors,
     );
 }
 
-function validEnrichmentDistractor(string $sentence = 'I can to withdraw money from my account.'): RawDistractor
+/**
+ * A distractor that survives every rule: it is the pinned example with exactly one fragment broken,
+ * and putting the correction back where the span is gives the example again.
+ */
+function validEnrichmentDistractor(string $sentence = 'I would like to withdrawing money from my account.'): RawDistractor
 {
-    return new RawDistractor($sentence, 'modal_to', 'can to', 'can');
+    return new RawDistractor($sentence, 'modal_to', 'to withdrawing', 'to withdraw');
 }
 
 // ---- distractors: the scrap rules ------------------------------------------------------------
@@ -81,9 +87,10 @@ it('scraps a contraction-only rewrite, which the grader accepts as correct', fun
 // Found on the device: «Excuse me, is this seat **take**?» — the model marked the error, which hands
 // the learner the answer. The card is then solved by hunting for asterisks, not by reading grammar.
 it('strips markdown emphasis from the sentence, the span and the correction', function () {
-    $verdict = $this->validator->validate(enrichmentCandidate([
-        new RawDistractor('Excuse me, is this seat **take**?', 'tense', '**take**', '**taken**'),
-    ]));
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Excuse me, is this seat **take**?', 'tense', '**take**', '**taken**')],
+        example: 'Excuse me, is this seat taken?',
+    ));
 
     expect($verdict->distractors)->toHaveCount(1)
         ->and($verdict->distractors[0]->sentence)->toBe('Excuse me, is this seat take?')
@@ -94,9 +101,10 @@ it('strips markdown emphasis from the sentence, the span and the correction', fu
 it('keeps the span findable after stripping, rather than scrapping an over-decorated row', function () {
     // The span arrives bare while the sentence decorates it — stripping both sides is what keeps the
     // relation true instead of failing a row whose only sin was emphasis.
-    $verdict = $this->validator->validate(enrichmentCandidate([
-        new RawDistractor('Excuse me, is this **seats** taken?', 'tense', 'seats', 'seat'),
-    ]));
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Excuse me, is this **seats** taken?', 'tense', 'seats', 'seat')],
+        example: 'Excuse me, is this seat taken?',
+    ));
 
     expect($verdict->distractors)->toHaveCount(1)
         ->and($verdict->distractors[0]->sentence)->toBe('Excuse me, is this seats taken?');
@@ -110,6 +118,16 @@ it('strips emphasis from a variant too', function () {
     expect($verdict->variants[0]->text)->toBe('take out money');
 });
 
+it('strips emphasis from a variant NOTE — the field the sweep went past', function () {
+    // The sweep of 46f9076 cleaned sentences, spans and corrections. The note is prose a person reads
+    // for exactly the same reason, and it was not on that list.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        variants: [new RawVariant('take out money', '_то же значение_')],
+    ));
+
+    expect($verdict->variants[0]->note)->toBe('то же значение');
+});
+
 it('scraps a distractor whose error_span is not in its own sentence', function () {
     $verdict = $this->validator->validate(enrichmentCandidate([
         new RawDistractor('I can withdraw money from my account.', 'modal_to', 'can to', 'can'),
@@ -120,9 +138,12 @@ it('scraps a distractor whose error_span is not in its own sentence', function (
 });
 
 it('accepts an error_span that differs only in case from the sentence', function () {
-    $verdict = $this->validator->validate(enrichmentCandidate([
-        new RawDistractor('Can to withdraw money is my plan.', 'modal_to', 'can to', 'can'),
-    ]));
+    // The span is written lowercase while the sentence capitalises it — a sentence-initial capital
+    // must not fail an otherwise good row.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Can to withdraw money from my account?', 'modal_to', 'can to', 'Can I')],
+        example: 'Can I withdraw money from my account?',
+    ));
 
     expect($verdict->distractors)->toHaveCount(1);
 });
@@ -153,14 +174,101 @@ it('scraps every distractor when the term has no pinned example to hang them on'
 
 it('caps distractors at three and dedupes them', function () {
     $verdict = $this->validator->validate(enrichmentCandidate([
-        validEnrichmentDistractor('I can to withdraw money.'),
-        validEnrichmentDistractor('I can to withdraw money.'),        // duplicate
-        validEnrichmentDistractor('I must to withdraw money.'),
-        validEnrichmentDistractor('You can to withdraw money.'),
-        validEnrichmentDistractor('She can to withdraw money.'),      // over the cap
+        new RawDistractor('I would like to withdrawing money from my account.', 'modal_to', 'to withdrawing', 'to withdraw'),
+        new RawDistractor('I would like to withdrawing money from my account.', 'modal_to', 'to withdrawing', 'to withdraw'), // duplicate
+        new RawDistractor('I would likes to withdraw money from my account.', 'tense', 'likes', 'like'),
+        new RawDistractor('I would like to withdraw money for my account.', 'preposition', 'for', 'from'),
+        new RawDistractor('I would like to withdraw moneys from my account.', 'tense', 'moneys', 'money'), // over the cap
     ]));
 
     expect($verdict->distractors)->toHaveCount(EnrichmentValidator::MAX_DISTRACTORS);
+});
+
+// ---- the four v2 checks, each with the row from store5 that made it necessary -------------------
+
+it('scraps a distractor that is the example with the contraction spelled out', function () {
+    // «run a temperature». The example is «He's been running…», the станок offered «He has been
+    // running…» as the WRONG sentence — one and the same answer, and the card would mark the learner
+    // wrong for picking it. It survived because the normaliser did not fold «'s been» onto «has been».
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('He has been running a temperature since last night.', 'tense', 'has been', 'has')],
+        example: "He's been running a temperature since last night.",
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps a distractor that only re-types the apostrophe of a sibling already stored', function () {
+    // «Can I get this to go?» carried «I'd like the pasta for go, please.» from the first run, and the
+    // top-up added the same sentence with a typographic apostrophe. The pack dedupes against itself
+    // only, so the twin was invisible until the STORED rows joined the comparison.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('I’d like the pasta for go, please.', 'preposition', 'for go', 'to go')],
+        example: "I'd like the pasta to go, please.",
+        existingDistractors: ["I'd like the pasta for go, please."],
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps a correction identical to its own span', function () {
+    // The same «run a temperature» row: `has been` → `has been`. The card underlines a fragment and
+    // then offers the same fragment back as the fix.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('He has been running a temperature since last night.', 'tense', 'has been', 'has been')],
+        example: 'He was running a temperature since last night.',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('keeps an article correction, whose whole content is the article normalize() drops', function () {
+    // The guard on the check above: «bank account» → «a bank account» is not a no-op, and comparing
+    // through normalize() (which throws the leading article away) would scrap the entire class.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('I need bank account to receive my salary.', 'article', 'bank account', 'a bank account')],
+        example: 'I need a bank account to receive my salary.',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
+it('scraps a distractor whose own repair does not give back the example', function () {
+    // «online banking»: `at` → `services` turns «Do you offer online banking at services?» into
+    // «…online banking services services?». The span was never the error, so the underline and the
+    // fix shown to the learner are both pointing at the wrong place.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Do you offer online banking at services?', 'preposition', 'at', 'services')],
+        example: 'Do you offer online banking services?',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps a row whose correction repairs to a different word than the example uses', function () {
+    // «cold»: the example is «I think I have a cold.», the row corrects `the cold` → `cold`, so the
+    // learner is taught «I think I have cold». Grammatically the distractor is fine too — this is the
+    // determiner swap the prompt now forbids, caught here as well because the repair misses.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('I think I have the cold.', 'article', 'the cold', 'cold')],
+        example: 'I think I have a cold.',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty();
+});
+
+it('dedupes against a stored sibling even when the pack itself is clean', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [validEnrichmentDistractor()],
+        existingDistractors: ['I would like to withdrawing money from my account.'],
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
 // ---- variants ---------------------------------------------------------------------------------
