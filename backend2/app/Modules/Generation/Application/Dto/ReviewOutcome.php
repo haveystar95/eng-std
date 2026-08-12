@@ -14,7 +14,9 @@ final readonly class ReviewOutcome
     /** @param  list<string>  $unmatched  human-readable description of each entry that hit nothing */
     public function __construct(
         public int $distractorsRemoved = 0,
+        public int $distractorsFixed = 0,
         public int $variantsRemoved = 0,
+        public int $variantNotesFixed = 0,
         public int $variantsAdded = 0,
         public int $variantsRejected = 0,
         public int $translationsFixed = 0,

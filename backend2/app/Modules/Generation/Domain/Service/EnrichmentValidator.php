@@ -307,7 +307,7 @@ final class EnrichmentValidator
             // canonicalize(), not normalize(): the repair has to reproduce the example INCLUDING its
             // leading article, or «Delivery must arrive…» would repair to itself and still match
             // «The delivery must arrive…» with the article thrown away on both sides.
-            if ($this->repair($text, $span, $correction) !== $this->normalizer->canonicalize($sentence)) {
+            if (! $this->repairsTo($text, $span, $correction, $sentence)) {
                 continue;
             }
 
@@ -477,6 +477,18 @@ final class EnrichmentValidator
     }
 
     /**
+     * The circular check as a question anyone can ask: does this row's own repair give back the
+     * example? Public because a human editing a span/correction by hand is subject to exactly the same
+     * rule as the model, and the review applier checks a proposed fix with it before writing it.
+     */
+    public function repairsTo(string $sentence, string $span, string $correction, string $example): bool
+    {
+        $repaired = $this->repair($sentence, $span, $correction);
+
+        return $repaired !== '' && $repaired === $this->normalizer->canonicalize($example);
+    }
+
+    /**
      * Substitute the correction for the span and normalise the result — the distractor as the row
      * itself says it should have been written.
      *
@@ -485,7 +497,7 @@ final class EnrichmentValidator
      */
     private function repair(string $sentence, string $span, string $correction): string
     {
-        $at = mb_stripos($sentence, $span);
+        $at = $this->spanPosition($sentence, $span);
         if ($at === false) {
             return '';
         }
@@ -493,6 +505,39 @@ final class EnrichmentValidator
         $repaired = mb_substr($sentence, 0, $at) . $correction . mb_substr($sentence, $at + mb_strlen($span));
 
         return $this->normalizer->canonicalize($repaired);
+    }
+
+    /**
+     * Where the span really sits in its sentence: the first occurrence that is not buried inside a
+     * longer word.
+     *
+     * A raw substring search is wrong for exactly the spans that matter most — the short function
+     * words. «on» is inside «resp**on**sible», «in» is inside «**in**tegrate», «a» is inside almost
+     * everything. A preposition distractor whose span is «on» would have its repair applied to the
+     * middle of another word, come out as «respforsible», and be scrapped as a broken row although
+     * nothing was wrong with it. Three live rows died this way before this method existed.
+     *
+     * Falls back to the raw first occurrence when no standalone one exists, so this only ever makes
+     * the search SMARTER — it never makes a span unfindable that was findable before.
+     */
+    private function spanPosition(string $sentence, string $span): int|false
+    {
+        $offset = 0;
+        while (($at = mb_stripos($sentence, $span, $offset)) !== false) {
+            $before = $at > 0 ? mb_substr($sentence, $at - 1, 1) : ' ';
+            $after = mb_substr($sentence, $at + mb_strlen($span), 1);
+            if (! $this->isWordChar($before) && ! $this->isWordChar($after)) {
+                return $at;
+            }
+            $offset = $at + 1;
+        }
+
+        return mb_stripos($sentence, $span);
+    }
+
+    private function isWordChar(string $char): bool
+    {
+        return $char !== '' && preg_match('/[\p{L}\p{N}]/u', $char) === 1;
     }
 
     /** @see EMPHASIS_MARKERS — the model marks the error, which hands the learner the answer. */

@@ -47,7 +47,9 @@ final class ApplyEnrichmentReviewCommand extends Command
 
         $this->table(['действие', 'сделано'], [
             ['дистракторов удалено', (string) $outcome->distractorsRemoved],
+            ['дистракторов исправлено (span/correction)', (string) $outcome->distractorsFixed],
             ['вариантов удалено', (string) $outcome->variantsRemoved],
+            ['заметок варианта исправлено', (string) $outcome->variantNotesFixed],
             ['вариантов добавлено', (string) $outcome->variantsAdded],
             ['вариантов отклонено валидатором', $outcome->variantsRejected > 0
                 ? "<fg=yellow>{$outcome->variantsRejected}</>"

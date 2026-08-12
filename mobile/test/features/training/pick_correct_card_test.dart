@@ -83,6 +83,36 @@ void main() {
     expect(find.byType(Image), findsNothing);
   });
 
+  group('spanPositionIn — which occurrence the underline means', () {
+    test('skips a match buried inside a longer word', () {
+      // «on» lives inside «responsible». Underlining the first raw match draws the wavy line through
+      // the middle of an unrelated word and tells the learner the mistake is there.
+      const sentence = 'The tenant is responsible on minor repairs.';
+      expect(sentence.toLowerCase().indexOf('on'), 18); // what indexOf would have marked
+      expect(sentence.substring(18, 20), 'on'); // …inside «responsible»
+      expect(spanPositionIn(sentence, 'on'), 26);
+      expect(sentence.substring(26, 28), 'on');
+    });
+
+    test('matches case-insensitively, as the server does', () {
+      expect(spanPositionIn('Your workstation ARE ready.', 'are'), 17);
+    });
+
+    test('falls back to a plain search when no standalone occurrence exists', () {
+      // Only ever smarter, never stricter: a span that was findable before stays findable.
+      expect(spanPositionIn('I would like to withdrawing money.', 'withdrawin'), 16);
+    });
+
+    test('returns -1 when the span is not there at all', () {
+      expect(spanPositionIn('Your workstation is ready.', 'nowhere'), -1);
+    });
+
+    test('handles a span at the very start and at the very end', () {
+      expect(spanPositionIn('On your first day, introduce yourself.', 'On'), 0);
+      expect(spanPositionIn('The doctor will see you', 'you'), 20);
+    });
+  });
+
   // NOT covered here: what a TAP renders (the wavy underline on the broken fragment and the
   // «должно быть: …» line). Committing an answer subscribes to the local mirror, and the in-memory
   // drift stream leaves a zero-duration timer alive that the harness reports as pending at teardown —

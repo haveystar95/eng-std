@@ -261,6 +261,29 @@ it('scraps a row whose correction repairs to a different word than the example u
     expect($verdict->distractors)->toBeEmpty();
 });
 
+it('finds a short span as a WORD, not as a substring of another word', function () {
+    // «on» lives inside «responsible». Applying the repair to the first raw match produced
+    // «respforsible» and the row was scrapped as broken, although nothing was wrong with it. Three
+    // live rows died this way — tenant, integrate, reservation — all short-preposition spans.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('The tenant is responsible on minor repairs.', 'preposition', 'on', 'for')],
+        example: 'The tenant is responsible for minor repairs.',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
+it('still finds a span that only ever occurs inside a word', function () {
+    // The fallback: with no standalone occurrence the search degrades to the plain one, so this only
+    // ever makes the finder smarter and never makes a findable span unfindable.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('I would like to withdrawing money from my account.', 'modal_to', 'withdrawin', 'withdraw')],
+        example: 'I would like to withdrawg money from my account.',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
 it('dedupes against a stored sibling even when the pack itself is clean', function () {
     $verdict = $this->validator->validate(enrichmentCandidate(
         [validEnrichmentDistractor()],

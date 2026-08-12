@@ -36,6 +36,37 @@ final class EloquentTermReviewWriter implements TermReviewWriter
         return $deleted;
     }
 
+    public function fixDistractor(string $termId, string $sentence, string $errorSpan, string $correction): int
+    {
+        $exampleId = $this->pinnedExampleId($termId);
+        if ($exampleId === null) {
+            return 0;
+        }
+
+        $updated = DB::table('example_distractors')
+            ->where('example_id', $exampleId)
+            ->where('sentence', $sentence)
+            ->update(['error_span' => $errorSpan, 'correction' => $correction, 'updated_at' => now()]);
+        if ($updated > 0) {
+            $this->touchTerm($termId);
+        }
+
+        return $updated;
+    }
+
+    public function setVariantNote(string $termId, string $text, ?string $note): int
+    {
+        $updated = DB::table('term_accepted_variants')
+            ->where('term_id', $termId)
+            ->where('text', $text)
+            ->update(['note' => $note, 'updated_at' => now()]);
+        if ($updated > 0) {
+            $this->touchTerm($termId);
+        }
+
+        return $updated;
+    }
+
     public function removeVariant(string $termId, string $text): int
     {
         $deleted = DB::table('term_accepted_variants')->where('term_id', $termId)->where('text', $text)->delete();

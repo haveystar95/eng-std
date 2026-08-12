@@ -57,6 +57,8 @@ final readonly class ApplyEnrichmentReviewHandler
                 : $unmatched[] = "дистрактор «{$needle}» у «{$row['term']}» — не найден";
         }
 
+        [$distractorsFixed, $notesFixed] = $this->applyFixes($r, $unmatched);
+
         $variantsRemoved = 0;
         foreach ($this->rows($r, 'remove_variants') as $row) {
             $termId = $this->termId($row, $unmatched, 'вариант');
@@ -96,7 +98,9 @@ final readonly class ApplyEnrichmentReviewHandler
 
         return new ReviewOutcome(
             distractorsRemoved: $distractorsRemoved,
+            distractorsFixed: $distractorsFixed,
             variantsRemoved: $variantsRemoved,
+            variantNotesFixed: $notesFixed,
             variantsAdded: $variantsAdded,
             variantsRejected: $variantsRejected,
             translationsFixed: $translations,
@@ -104,6 +108,68 @@ final readonly class ApplyEnrichmentReviewHandler
             findingsAcknowledged: $acknowledged,
             unmatched: $unmatched,
         );
+    }
+
+    /**
+     * The two edits a reviewer makes without deleting anything: a distractor whose EXPLANATION is
+     * wrong, and a note polluted by the model's own JSON.
+     *
+     * A span/correction fix is checked before it is written, with the same circular rule the validator
+     * applies to a generated row: substitute the correction for the span and the pinned example has to
+     * come back. A reviewer is better than the model at seeing that «at → services» underlines the
+     * wrong word and no better at typing the replacement — and a fix that does not close the loop
+     * would be written once and then thrown out by the next validation pass anyway. Rejected fixes are
+     * reported, never applied silently.
+     *
+     * @param  array<string, mixed>  $review
+     * @param  list<string>  $unmatched
+     * @return array{0: int, 1: int}  distractors fixed, notes fixed
+     */
+    private function applyFixes(array $review, array &$unmatched): array
+    {
+        $distractors = 0;
+        foreach ($this->rows($review, 'fix_distractors') as $row) {
+            $termId = $this->termId($row, $unmatched, 'правка дистрактора');
+            if ($termId === null) {
+                continue;
+            }
+
+            $sentence = (string) ($row['sentence'] ?? '');
+            $span = (string) ($row['error_span'] ?? '');
+            $correction = (string) ($row['correction'] ?? '');
+
+            $target = $this->targets->byIds([TermId::fromString($termId)])[$termId] ?? null;
+            $example = $target?->exampleSentence;
+            if ($example === null) {
+                $unmatched[] = "правка дистрактора «{$sentence}»: у «{$row['term']}» нет закреплённого примера";
+
+                continue;
+            }
+            if (! $this->validator->repairsTo($sentence, $span, $correction, $example)) {
+                $unmatched[] = "правка дистрактора «{$sentence}»: «{$span}» → «{$correction}» не даёт эталон — не применена";
+
+                continue;
+            }
+
+            $hit = $this->review->fixDistractor($termId, $sentence, $span, $correction);
+            $hit > 0
+                ? $distractors += $hit
+                : $unmatched[] = "правка дистрактора «{$sentence}» у «{$row['term']}» — строка не найдена";
+        }
+
+        $notes = 0;
+        foreach ($this->rows($review, 'set_variant_notes') as $row) {
+            $termId = $this->termId($row, $unmatched, 'заметка варианта');
+            if ($termId === null) {
+                continue;
+            }
+            $hit = $this->review->setVariantNote($termId, (string) $row['text'], $this->noteOf($row));
+            $hit > 0
+                ? $notes += $hit
+                : $unmatched[] = "заметка варианта «{$row['text']}» у «{$row['term']}» — вариант не найден";
+        }
+
+        return [$distractors, $notes];
     }
 
     /**

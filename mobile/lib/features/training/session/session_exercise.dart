@@ -15,6 +15,35 @@ import '../../../data/perf_log.dart';
 import '../../../data/providers.dart';
 import 'session_grading.dart';
 
+/// Where an `error_span` really sits in its sentence: the first occurrence that is not buried inside
+/// a longer word, falling back to a plain search when no standalone one exists.
+///
+/// A plain `indexOf` is wrong for exactly the spans that matter most — the short function words.
+/// «on» is inside «resp**on**sible», «in» is inside «**in**tegrate»: underlining the first raw match
+/// draws the wavy line through the middle of an unrelated word and tells the learner the mistake is
+/// there. Mirrors the server's EnrichmentValidator.spanPosition(), which uses the same rule to decide
+/// whether a distractor's own repair reproduces the example — the two must agree about which
+/// occurrence the span means, or the card underlines one place and was validated about another.
+@visibleForTesting
+int spanPositionIn(String sentence, String span) {
+  final haystack = sentence.toLowerCase();
+  final needle = span.toLowerCase();
+  final isWordChar = RegExp(r'[\p{L}\p{N}]', unicode: true);
+
+  var from = 0;
+  while (true) {
+    final at = haystack.indexOf(needle, from);
+    if (at < 0) break;
+    final before = at > 0 ? haystack[at - 1] : ' ';
+    final afterAt = at + needle.length;
+    final after = afterAt < haystack.length ? haystack[afterAt] : ' ';
+    if (!isWordChar.hasMatch(before) && !isWordChar.hasMatch(after)) return at;
+    from = at + 1;
+  }
+
+  return haystack.indexOf(needle);
+}
+
 /// One committed answer, handed up to the shell so it can record the RAW review (the server
 /// grades it) and tally the summary. [verdict] is the client's instant read — feedback only.
 class SessionAnswer {
@@ -711,7 +740,7 @@ class _SessionOption extends StatelessWidget {
       return Text(text, style: AppTextExercise.answerOption);
     }
 
-    final at = text.toLowerCase().indexOf(span.toLowerCase());
+    final at = spanPositionIn(text, span);
     if (at < 0) return Text(text, style: AppTextExercise.answerOption);
 
     return Text.rich(

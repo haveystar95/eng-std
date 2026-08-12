@@ -25,7 +25,17 @@ interface TermReviewWriter
      */
     public function removeDistractor(string $termId, string $sentence, bool $contains = false): int;
 
+    /**
+     * Rewrite one distractor's span and correction, addressed by its sentence. The sentence itself is
+     * never touched: a review that reaches for this has decided the wrong sentence is fine and the
+     * EXPLANATION of it is wrong — «at → services» underlining the wrong word.
+     */
+    public function fixDistractor(string $termId, string $sentence, string $errorSpan, string $correction): int;
+
     public function removeVariant(string $termId, string $text): int;
+
+    /** Rewrite a variant's note, addressed by the variant's text. The variant itself stays. */
+    public function setVariantNote(string $termId, string $text, ?string $note): int;
 
     /** Replace the term's primary translation (the prompt side of every card). */
     public function setPrimaryTranslation(string $termId, string $text): int;
