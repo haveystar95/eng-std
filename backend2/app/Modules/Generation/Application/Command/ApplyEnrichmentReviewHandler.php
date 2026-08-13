@@ -51,7 +51,7 @@ final readonly class ApplyEnrichmentReviewHandler
             }
             $contains = isset($row['contains']);
             $needle = $contains ? (string) $row['contains'] : (string) ($row['sentence'] ?? '');
-            $hit = $this->review->removeDistractor($termId, $needle, $contains);
+            $hit = $this->review->removeDistractor($termId, $needle, $contains, 'review');
             $hit > 0
                 ? $distractorsRemoved += $hit
                 : $unmatched[] = "дистрактор «{$needle}» у «{$row['term']}» — не найден";

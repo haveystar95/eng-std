@@ -22,8 +22,20 @@ interface TermReviewWriter
     /**
      * Drop a distractor of this term's pinned example. `$contains` matches a fragment instead of the
      * whole sentence, for review entries that quote only the offending part.
+     *
+     * `$source` ('review' or 'audit') is recorded alongside every deleted sentence as a suppression —
+     * the reason a deletion outlives the row: the станок filters its candidates through that list
+     * before validation, so a re-proposed sentence does not come back on the next топап.
      */
-    public function removeDistractor(string $termId, string $sentence, bool $contains = false): int;
+    public function removeDistractor(string $termId, string $sentence, bool $contains, string $source): int;
+
+    /**
+     * Record a sentence as suppressed WITHOUT touching `example_distractors` — for backfilling a
+     * suppression from a sentence that was already removed before this table existed (an applied
+     * review file, a past audit run). Returns 1 for a newly-written suppression, 0 when this
+     * (term, sentence) pair was already suppressed.
+     */
+    public function suppressDistractor(string $termId, string $sentence, string $source): int;
 
     /**
      * Rewrite one distractor's span and correction, addressed by its sentence. The sentence itself is

@@ -99,6 +99,14 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
             }
         }
 
+        // Sentences a human (review) or the retro-audit already judged wrong for this term and removed.
+        // Folded into `existingDistractors` below — the validator's dedup treats "already rejected" the
+        // same as "already stored", so the станок never proposes the same sentence back on a топап.
+        $suppressed = [];
+        foreach (DB::table('enrichment_suppressions')->whereIn('term_id', $ids)->get(['term_id', 'sentence']) as $row) {
+            $suppressed[(string) $row->term_id][] = (string) $row->sentence;
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'lang']) as $term) {
             $id = (string) $term->id;
@@ -116,7 +124,10 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                     : null,
                 lang: (string) $term->lang,
                 translationLang: $translationLangs[$id] ?? null,
-                existingDistractors: $example !== null ? ($distractors[(string) $example->id] ?? []) : [],
+                existingDistractors: [
+                    ...($example !== null ? ($distractors[(string) $example->id] ?? []) : []),
+                    ...($suppressed[$id] ?? []),
+                ],
             );
         }
 

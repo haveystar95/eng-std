@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
+use App\Modules\Shared\Domain\Service\LexicalNormalizer;
+use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentTermReviewWriter implements TermReviewWriter
 {
+    public function __construct(private readonly LexicalNormalizer $normalizer) {}
+
     public function findTermIdByText(string $text): ?string
     {
         $id = DB::table('terms')->where('text', $text)->orderBy('id')->value('id');
@@ -16,7 +20,7 @@ final class EloquentTermReviewWriter implements TermReviewWriter
         return $id !== null ? (string) $id : null;
     }
 
-    public function removeDistractor(string $termId, string $sentence, bool $contains = false): int
+    public function removeDistractor(string $termId, string $sentence, bool $contains, string $source): int
     {
         $exampleId = $this->pinnedExampleId($termId);
         if ($exampleId === null) {
@@ -28,12 +32,50 @@ final class EloquentTermReviewWriter implements TermReviewWriter
             ? $query->where('sentence', 'like', '%' . $sentence . '%')
             : $query->where('sentence', $sentence);
 
-        $deleted = $query->delete();
-        if ($deleted > 0) {
-            $this->touchTerm($termId);
+        // Read the sentences before deleting them: `$contains` mode may match several rows, and each
+        // is suppressed under its OWN text, not the fragment the review quoted.
+        /** @var list<string> $removed */
+        $removed = array_values(array_map('strval', $query->pluck('sentence')->all()));
+        if ($removed === []) {
+            return 0;
         }
 
-        return $deleted;
+        DB::transaction(function () use ($exampleId, $removed, $termId, $source): void {
+            DB::table('example_distractors')->where('example_id', $exampleId)->whereIn('sentence', $removed)->delete();
+            $this->suppress($termId, $removed, $source);
+        });
+        $this->touchTerm($termId);
+
+        return count($removed);
+    }
+
+    public function suppressDistractor(string $termId, string $sentence, string $source): int
+    {
+        return $this->suppress($termId, [$sentence], $source);
+    }
+
+    /**
+     * Record that this term's станок must never propose these sentences again — `insertOrIgnore`
+     * against `(term_id, sentence)`, so re-removing an already-suppressed sentence (a re-applied review,
+     * a second audit pass, a re-run backfill) is a no-op rather than an error. Returns how many were
+     * newly written.
+     *
+     * @param  list<string>  $sentences
+     */
+    private function suppress(string $termId, array $sentences, string $source): int
+    {
+        $now = now();
+
+        return DB::table('enrichment_suppressions')->insertOrIgnore(array_map(
+            fn (string $sentence): array => [
+                'id' => Ulid::generate(),
+                'term_id' => $termId,
+                'sentence' => $this->normalizer->canonicalize($sentence),
+                'source' => $source,
+                'created_at' => $now,
+            ],
+            $sentences,
+        ));
     }
 
     public function fixDistractor(string $termId, string $sentence, string $errorSpan, string $correction): int

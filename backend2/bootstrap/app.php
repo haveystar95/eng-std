@@ -5,6 +5,7 @@ use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
+use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
 use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         EnrichBackfillCommand::class,
         ApplyEnrichmentReviewCommand::class,
         AuditDistractorsCommand::class,
+        BackfillEnrichmentSuppressionsCommand::class,
         RepairContentLanguageCommand::class,
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,

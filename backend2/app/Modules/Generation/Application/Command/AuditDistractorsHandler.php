@@ -81,7 +81,7 @@ final readonly class AuditDistractorsHandler
             $deleted[$check] = ($deleted[$check] ?? 0) + 1;
             $notes[] = sprintf('%s · удалён · «%s» :: %s', $check, $row->termText, $row->sentence);
             if ($command->apply) {
-                $this->writer->removeDistractor($row->termId, $row->sentence);
+                $this->writer->removeDistractor($row->termId, $row->sentence, false, 'audit');
             }
         }
 
