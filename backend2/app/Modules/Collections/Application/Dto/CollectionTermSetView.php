@@ -17,5 +17,9 @@ final readonly class CollectionTermSetView
         public ?string $description,
         public array $termIds,
         public ?string $imageApiPrompt = null,   // carried so a cache-hit collection can re-derive its cover
+        // The language this deck teaches FROM — which of a term's translations the станок shows the
+        // model and the export shows a proofreader. Carried here because every caller that needs it
+        // is already reading the collection through this view.
+        public string $sourceLang = 'ru',
     ) {}
 }

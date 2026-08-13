@@ -15,12 +15,12 @@ final class RecordingEnrichmentDispatcher implements DispatchesEnrichment
     /** @var list<array{collection_id: string, version: string}> */
     public array $collections = [];
 
-    /** @var list<array{term_ids: list<string>, version: string}> */
+    /** @var list<array{term_ids: list<string>, version: string, lang: string}> */
     public array $terms = [];
 
-    public function enrichTerms(array $termIds, string $generatorVersion): void
+    public function enrichTerms(array $termIds, string $generatorVersion, string $translationLang = 'ru'): void
     {
-        $this->terms[] = ['term_ids' => $termIds, 'version' => $generatorVersion];
+        $this->terms[] = ['term_ids' => $termIds, 'version' => $generatorVersion, 'lang' => $translationLang];
     }
 
     public function enrichCollection(string $collectionId, string $generatorVersion): void

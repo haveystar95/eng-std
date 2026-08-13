@@ -16,9 +16,13 @@ interface EnrichmentTargetReader
 {
     /**
      * @param  list<TermId>  $termIds
+     * @param  string  $lang  the COLLECTION's language (`collections.source_lang`) — which translation
+     *                        the станок puts in front of the model. `EnrichmentTargetView::$translationLang`
+     *                        reports what was actually found, which may differ when the term has no
+     *                        row in this language at all.
      * @return array<string, EnrichmentTargetView>  keyed by term id; absent = no such term
      */
-    public function byIds(array $termIds): array;
+    public function byIds(array $termIds, string $lang): array;
 
     /**
      * Of these terms, which ones' PINNED example carries fewer than $minDistractors — i.e. cannot host

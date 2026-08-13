@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Query;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\TriageCardView;
 use App\Modules\Learning\Application\Dto\TriageQueueView;
+use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressExistenceReader;
 use App\Modules\Learning\Application\Port\TriagedTermsReader;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -32,6 +33,7 @@ final readonly class GetTriageQueueHandler
         private ProgressExistenceReader $progress,
         private TriagedTermsReader $triaged,
         private TermContentReader $termContent,
+        private LearnerProfileReader $profile,
     ) {}
 
     public function __invoke(GetTriageQueue $query): TriageQueueView
@@ -60,7 +62,10 @@ final readonly class GetTriageQueueHandler
             return new TriageQueueView(cards: [], remaining: $remaining);
         }
 
-        $content = $this->termContent->byIds(array_map(TermId::fromString(...), $page));
+        $content = $this->termContent->byIds(
+            array_map(TermId::fromString(...), $page),
+            $this->profile->nativeLangFor($query->userId),
+        );
 
         $cards = [];
         foreach ($page as $termId) {

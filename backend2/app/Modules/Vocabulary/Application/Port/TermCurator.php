@@ -21,10 +21,15 @@ interface TermCurator
     public function impact(TermId $termId): ?TermImpact;
 
     /**
-     * Update the term's own text/transcription and its primary translation. Null = leave alone.
-     * Returns false when the term does not exist.
+     * Update the term's own text/transcription and its translation IN $translationLang. Null = leave
+     * alone. Returns false when the term does not exist.
+     *
+     * $translationLang names both which row is rewritten and what that row is labelled afterwards —
+     * one parameter for both because they are the same decision. Editing "the" translation without
+     * saying which language it is in is how the retrospective repair wrote Russian text into rows
+     * that stayed labelled `uk`.
      */
-    public function updateContent(TermId $termId, ?string $text, ?string $translation, ?string $ipa): bool;
+    public function updateContent(TermId $termId, ?string $text, ?string $translation, ?string $ipa, string $translationLang): bool;
 
     /**
      * Rewrite one example in place. Returns false when the example does not belong to the term.

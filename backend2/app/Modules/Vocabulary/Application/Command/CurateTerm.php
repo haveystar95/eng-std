@@ -22,6 +22,11 @@ final readonly class CurateTerm
         public ?string $exampleId = null,
         public ?string $exampleSentence = null,
         public ?string $exampleTranslation = null,
+        // Which language `$translation` is written in — the row it replaces AND the label that row
+        // carries afterwards. Defaulted to the only learner language the content has today, so the
+        // panel's ordinary "fix this translation" stays a one-liner; the retrospective language
+        // repair passes it explicitly, because getting it wrong there is what created the mess.
+        public string $translationLang = 'ru',
     ) {}
 
     public function touchesExample(): bool

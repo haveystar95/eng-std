@@ -21,6 +21,7 @@ final readonly class IdentityLearnerProfileReader implements LearnerProfileReade
     private const DEFAULT_LEVEL = CefrLevel::B1;
     private const DEFAULT_NEW_PER_DAY = 20;
     private const MAX_NEW_PER_DAY = 100;
+    private const DEFAULT_NATIVE_LANG = 'ru';
 
     public function __construct(private UserReader $users) {}
 
@@ -40,6 +41,13 @@ final readonly class IdentityLearnerProfileReader implements LearnerProfileReade
 
         // 0 (new disabled) is honoured; anything above the cap is clamped down.
         return max(0, min(self::MAX_NEW_PER_DAY, $profile->dailyGoal));
+    }
+
+    public function nativeLangFor(UserId $user): string
+    {
+        $lang = $this->users->byId($user)?->profile?->nativeLanguage;
+
+        return $lang !== null && $lang !== '' ? $lang : self::DEFAULT_NATIVE_LANG;
     }
 
     public function timezoneFor(UserId $user): DateTimeZone

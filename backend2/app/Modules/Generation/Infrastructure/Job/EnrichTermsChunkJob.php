@@ -43,11 +43,14 @@ final class EnrichTermsChunkJob implements ShouldQueue
      * @param  list<string>  $termIds
      * @param  ?string  $collectionId  only for labelling the outbound log — a backfill run over the
      *                                 whole dictionary belongs to no collection and passes null.
+     * @param  string  $translationLang  the deck's language: which of a term's translations is put in
+     *                                   front of the model.
      */
     public function __construct(
         private readonly array $termIds,
         private readonly string $generatorVersion,
         private readonly ?string $collectionId = null,
+        private readonly string $translationLang = 'ru',
     ) {}
 
     public function handle(BuildTermEnrichmentsHandler $handler, OutboundCallContext $context): void
@@ -55,7 +58,7 @@ final class EnrichTermsChunkJob implements ShouldQueue
         $metrics = $context->run(
             null,
             $this->collectionId,
-            fn () => $handler(new BuildTermEnrichments($this->termIds, $this->generatorVersion)),
+            fn () => $handler(new BuildTermEnrichments($this->termIds, $this->generatorVersion, $this->translationLang)),
         );
 
         // A chunk where EVERY term threw is the shape of "the provider is down", not "the content is

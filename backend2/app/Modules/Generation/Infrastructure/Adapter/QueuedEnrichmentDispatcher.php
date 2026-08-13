@@ -14,10 +14,10 @@ final class QueuedEnrichmentDispatcher implements DispatchesEnrichment
      * An explicit list of terms — always queued. This is the console backfill's path: a human asked
      * for exactly these terms, so the automatic-chain switch has no say in it.
      */
-    public function enrichTerms(array $termIds, string $generatorVersion): void
+    public function enrichTerms(array $termIds, string $generatorVersion, string $translationLang = 'ru'): void
     {
         foreach (array_chunk($termIds, EnrichTermsChunkJob::CHUNK_SIZE) as $chunk) {
-            EnrichTermsChunkJob::dispatch($chunk, $generatorVersion);
+            EnrichTermsChunkJob::dispatch($chunk, $generatorVersion, null, $translationLang);
         }
     }
 

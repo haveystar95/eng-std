@@ -124,7 +124,10 @@ final readonly class RepairContentLanguageHandler
         }
 
         $written = $row->field === 'translation'
-            ? ($this->curate)(new CurateTerm($termId, translation: $value))
+            // The label moves with the text. Without this the repair produced exactly the damage it
+            // was cleaning up in the other direction: correct Russian sitting in a row still marked
+            // `uk`, invisible to any reader that asks for Russian by name.
+            ? ($this->curate)(new CurateTerm($termId, translation: $value, translationLang: $lang->value))
             : ($this->curate)(new CurateTerm(
                 $termId,
                 // The sentence is passed back byte for byte: an example whose sentence changed drops

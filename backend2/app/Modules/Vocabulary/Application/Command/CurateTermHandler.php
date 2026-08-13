@@ -21,6 +21,7 @@ final readonly class CurateTermHandler
             $command->text,
             $command->translation,
             $command->ipa,
+            $command->translationLang,
         );
         if (! $ok) {
             return false;

@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentTermEnrichmentExportReader implements TermEnrichmentExportReader
 {
-    public function byIds(array $termIds): array
+    public function __construct(private readonly TranslationPick $pick = new TranslationPick()) {}
+
+    public function byIds(array $termIds, string $lang): array
     {
         if ($termIds === []) {
             return [];
@@ -26,10 +28,9 @@ final class EloquentTermEnrichmentExportReader implements TermEnrichmentExportRe
             $examples[(string) $row->term_id] ??= $row;
         }
 
-        $translations = [];
-        foreach (DB::table('term_translations')->whereIn('term_id', $ids)->orderByDesc('is_primary')->get(['term_id', 'text']) as $row) {
-            $translations[(string) $row->term_id] ??= (string) $row->text;
-        }
+        // Same rule as the card the proofreader is judging — an export that showed a different
+        // translation than the app does would have a human correcting a row nobody sees.
+        $translations = $this->pick->forTerms($ids, $lang);
 
         $variants = [];
         foreach (DB::table('term_accepted_variants')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text', 'note']) as $row) {
@@ -61,7 +62,7 @@ final class EloquentTermEnrichmentExportReader implements TermEnrichmentExportRe
             $out[$id] = new TermEnrichmentExportRow(
                 termId: $id,
                 text: (string) $term->text,
-                translation: $translations[$id] ?? null,
+                translation: $translations[$id]['text'] ?? null,
                 exampleSentence: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 variants: $variants[$id] ?? [],
                 distractors: $example !== null ? ($distractors[(string) $example->id] ?? []) : [],

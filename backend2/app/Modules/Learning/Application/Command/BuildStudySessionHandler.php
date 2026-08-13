@@ -80,7 +80,10 @@ final readonly class BuildStudySessionHandler
             )));
 
         $termIds = array_map(static fn (DueTermView $v): TermId => $v->termId, $due);
-        $content = $this->content->byIds($termIds);
+        $content = $this->content->byIds(
+            $termIds,
+            $this->profile->nativeLangFor($command->actorId),
+        );
 
         // Distractor pool: the scoped collection's terms, else the session's own term set.
         $poolIds = $command->collectionId !== null

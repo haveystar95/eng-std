@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
 {
+    public function __construct(private readonly TranslationPick $pick = new TranslationPick()) {}
+
     public function underCovered(array $termIds, int $minDistractors): array
     {
         if ($termIds === []) {
@@ -51,7 +53,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         return $out;
     }
 
-    public function byIds(array $termIds): array
+    public function byIds(array $termIds, string $lang): array
     {
         if ($termIds === []) {
             return [];
@@ -69,18 +71,13 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
             $examples[(string) $row->term_id] ??= $row;
         }
 
-        // The primary translation carries the LEARNER's language, which is what decides the whole
-        // shape of the prompt (which native-speaker interference the distractors should imitate).
-        $translations = [];
-        $translationLangs = [];
-        foreach (DB::table('term_translations')->whereIn('term_id', $ids)->orderByDesc('is_primary')
-            ->get(['term_id', 'text', 'lang']) as $row) {
-            $termId = (string) $row->term_id;
-            if (! isset($translations[$termId])) {
-                $translations[$termId] = (string) $row->text;
-                $translationLangs[$termId] = (string) $row->lang;
-            }
-        }
+        // The translation the станок shows the model has to be the one in the COLLECTION's language:
+        // it decides the whole shape of the prompt (which native-speaker interference the distractors
+        // should imitate), and asking about a Ukrainian row while telling the model "Russian learner"
+        // is a prompt describing content that isn't there. Deterministic, and the actual label of the
+        // row that won travels on — TranslationPick may have had to fall back to another language,
+        // and the brief must say so honestly rather than assert the language we asked for.
+        $picked = $this->pick->forTerms($ids, $lang);
 
         // Variants an earlier run already accepted: part of the answer key from now on.
         $variants = [];
@@ -116,14 +113,14 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                 termId: $id,
                 text: (string) $term->text,
                 acceptedForms: [(string) $term->text, ...($variants[$id] ?? [])],
-                translation: $translations[$id] ?? null,
+                translation: $picked[$id]['text'] ?? null,
                 exampleId: $example !== null ? (string) $example->id : null,
                 exampleSentence: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 exampleTranslation: $example !== null && $example->sentence_translation !== null
                     ? (string) $example->sentence_translation
                     : null,
                 lang: (string) $term->lang,
-                translationLang: $translationLangs[$id] ?? null,
+                translationLang: $picked[$id]['lang'] ?? null,
                 existingDistractors: [
                     ...($example !== null ? ($distractors[(string) $example->id] ?? []) : []),
                     ...($suppressed[$id] ?? []),

@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentTermContentReader implements TermContentReader
 {
-    public function byIds(array $termIds): array
+    public function __construct(private readonly TranslationPick $pick = new TranslationPick()) {}
+
+    public function byIds(array $termIds, string $lang): array
     {
         if ($termIds === []) {
             return [];
@@ -19,10 +21,11 @@ final class EloquentTermContentReader implements TermContentReader
 
         $ids = array_map(static fn (TermId $id): string => $id->value, $termIds);
 
-        $translations = [];
-        foreach (DB::table('term_translations')->whereIn('term_id', $ids)->orderByDesc('is_primary')->get() as $row) {
-            $translations[(string) $row->term_id] ??= (string) $row->text;
-        }
+        // The learner's own language decides which translation is the question on this card, and the
+        // pick is deterministic — see TranslationPick. Before it, this was `orderByDesc('is_primary')`
+        // with no language at all, which is how a term carrying a Ukrainian row could ask a
+        // Russian-speaking learner in Ukrainian.
+        $translations = $this->pick->forTerms($ids, $lang);
 
         // A term may hold several examples (ImportTerm appends one per generation pass), but a card
         // shows exactly one — so which one must be PINNED, not whichever the heap hands back. Without
@@ -74,7 +77,7 @@ final class EloquentTermContentReader implements TermContentReader
                 text: (string) $term->text,
                 type: (string) $term->type,
                 transcription: $term->ipa !== null ? (string) $term->ipa : null,
-                translation: $translations[$id] ?? null,
+                translation: $translations[$id]['text'] ?? null,
                 example: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 exampleTranslation: $example !== null && $example->sentence_translation !== null ? (string) $example->sentence_translation : null,
                 imageUrl: $term->image_url !== null ? (string) $term->image_url : null,

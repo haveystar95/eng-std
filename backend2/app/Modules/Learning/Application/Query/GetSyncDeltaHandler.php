@@ -16,6 +16,7 @@ use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
 use App\Modules\Learning\Application\Dto\TriageSyncRow;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Learning\Application\Port\TriageSyncReader;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -45,6 +46,7 @@ final readonly class GetSyncDeltaHandler
         private TriageSyncReader $triageSync,
         private EnabledModesReader $enabledModes,
         private Clock $clock,
+        private LearnerProfileReader $profile,
     ) {}
 
     public function __invoke(GetSyncDelta $query): SyncDeltaView
@@ -115,10 +117,15 @@ final readonly class GetSyncDeltaHandler
         }
 
         // Tombstones need no content — and asking for it would return nothing anyway.
-        $content = $this->termContent->byIds(array_map(
-            static fn (TermChangeRef $r): TermId => TermId::fromString($r->id),
-            array_values(array_filter($pTermRefs, static fn (TermChangeRef $r): bool => ! $r->deleted)),
-        ));
+        // The mirror on the phone is one translation per term, so the language it is written in has
+        // to be the OWNER of that phone's — not whatever row sorted first.
+        $content = $this->termContent->byIds(
+            array_map(
+                static fn (TermChangeRef $r): TermId => TermId::fromString($r->id),
+                array_values(array_filter($pTermRefs, static fn (TermChangeRef $r): bool => ! $r->deleted)),
+            ),
+            $this->profile->nativeLangFor($query->userId),
+        );
         $terms = array_map(
             static fn (TermChangeRef $r): TermSyncView => new TermSyncView(
                 $r->id,

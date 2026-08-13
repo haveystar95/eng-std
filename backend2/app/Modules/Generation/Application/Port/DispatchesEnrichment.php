@@ -16,8 +16,9 @@ interface DispatchesEnrichment
      * not the batch size.
      *
      * @param  list<string>  $termIds
+     * @param  string  $translationLang  the language whose translation the станок reads for each term.
      */
-    public function enrichTerms(array $termIds, string $generatorVersion): void;
+    public function enrichTerms(array $termIds, string $generatorVersion, string $translationLang = 'ru'): void;
 
     /** Queue a whole collection: resolve its pending terms on the worker, then chunk them. */
     public function enrichCollection(string $collectionId, string $generatorVersion): void;

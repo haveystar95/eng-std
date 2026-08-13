@@ -25,6 +25,7 @@ final readonly class GetCollectionTermSetHandler
             description: $collection->description(),
             termIds: array_map(static fn ($item): string => $item->termId->value, $collection->items()),
             imageApiPrompt: $collection->imageApiPrompt(),
+            sourceLang: $collection->sourceLang()->value,
         );
     }
 }

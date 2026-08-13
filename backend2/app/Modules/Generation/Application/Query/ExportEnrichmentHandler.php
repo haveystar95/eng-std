@@ -39,10 +39,10 @@ final readonly class ExportEnrichmentHandler
                 continue;
             }
 
-            $rows = $this->content->byIds(array_map(
-                static fn (string $id): TermId => TermId::fromString($id),
-                $set->termIds,
-            ));
+            $rows = $this->content->byIds(
+                array_map(static fn (string $id): TermId => TermId::fromString($id), $set->termIds),
+                $set->sourceLang,
+            );
             $findings = $this->byTerm($this->journal->findingsFor($set->termIds, $query->generatorVersion));
 
             $items = [];

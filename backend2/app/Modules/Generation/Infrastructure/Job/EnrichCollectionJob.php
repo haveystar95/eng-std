@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Infrastructure\Job;
 
+use App\Modules\Generation\Application\Query\GetCollectionTranslationLang;
+use App\Modules\Generation\Application\Query\GetCollectionTranslationLangHandler;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargets;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargetsHandler;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
@@ -37,17 +39,21 @@ final class EnrichCollectionJob implements ShouldQueue
         private readonly string $generatorVersion,
     ) {}
 
-    public function handle(ListPendingEnrichmentTargetsHandler $pending): void
+    public function handle(ListPendingEnrichmentTargetsHandler $pending, GetCollectionTranslationLangHandler $translationLang): void
     {
-        $termIds = $pending(new ListPendingEnrichmentTargets(
-            [CollectionId::fromString($this->collectionId)],
-            $this->generatorVersion,
-        ));
+        $collectionId = CollectionId::fromString($this->collectionId);
+
+        $termIds = $pending(new ListPendingEnrichmentTargets([$collectionId], $this->generatorVersion));
+
+        // The deck's own language decides which translation the станок shows the model. Resolved here,
+        // on the worker, and carried into the chunk: a term is global and may hold translations in
+        // several languages, so "the translation" is not a question the reader can answer alone.
+        $lang = ($translationLang)(new GetCollectionTranslationLang([$collectionId]));
 
         foreach (array_chunk($termIds, EnrichTermsChunkJob::CHUNK_SIZE) as $chunk) {
             // Carry the collection through so each chunk's model calls land in the log labelled
             // with the deck that caused them.
-            EnrichTermsChunkJob::dispatch($chunk, $this->generatorVersion, $this->collectionId);
+            EnrichTermsChunkJob::dispatch($chunk, $this->generatorVersion, $this->collectionId, $lang);
         }
     }
 

@@ -11,6 +11,8 @@ use App\Modules\Generation\Application\Dto\EnrichmentRunMetrics;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Query\ExportEnrichment;
 use App\Modules\Generation\Application\Query\ExportEnrichmentHandler;
+use App\Modules\Generation\Application\Query\GetCollectionTranslationLang;
+use App\Modules\Generation\Application\Query\GetCollectionTranslationLangHandler;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargets;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargetsHandler;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentFinding;
@@ -92,6 +94,10 @@ final class EnrichBackfillCommand extends Command
             $version,
             $topUp !== null ? max(1, (int) $topUp) : null,
         ));
+        // Every named collection teaches from the same language in practice; when they disagree, the
+        // first one wins and the run says so rather than picking silently.
+        $lang = app(GetCollectionTranslationLangHandler::class)(new GetCollectionTranslationLang($collectionIds));
+
         $limit = (int) $this->option('limit');
         if ($limit > 0 && count($termIds) > $limit) {
             $this->warn("Capped at {$limit} of " . count($termIds) . ' pending terms (--limit).');
@@ -106,6 +112,7 @@ final class EnrichBackfillCommand extends Command
             $topUp !== null ? "под догон (<{$topUp} дистракторов)" : 'pending',
             (string) config('services.generation.driver'),
         ));
+        $this->line("Язык переводов: «{$lang}» (из source_lang коллекции).");
 
         if ($termIds === []) {
             $this->line('Nothing to do — every term is already marked at this version.');
@@ -114,7 +121,7 @@ final class EnrichBackfillCommand extends Command
         }
 
         if ((bool) $this->option('queue')) {
-            $this->dispatcher->enrichTerms($termIds, $version);
+            $this->dispatcher->enrichTerms($termIds, $version, $lang);
             $this->info('Queued ' . count($termIds) . ' term(s) as chunk jobs.');
 
             return self::SUCCESS;
@@ -124,7 +131,7 @@ final class EnrichBackfillCommand extends Command
         $bar = $this->output->createProgressBar(count($termIds));
         $bar->start();
         foreach (array_chunk($termIds, self::CHUNK) as $chunk) {
-            $metrics = $metrics->plus($build(new BuildTermEnrichments($chunk, $version)));
+            $metrics = $metrics->plus($build(new BuildTermEnrichments($chunk, $version, $lang)));
             $bar->advance(count($chunk));
         }
         $bar->finish();

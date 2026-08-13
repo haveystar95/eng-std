@@ -44,9 +44,9 @@ final class EloquentTermCurator implements TermCurator
         );
     }
 
-    public function updateContent(TermId $termId, ?string $text, ?string $translation, ?string $ipa): bool
+    public function updateContent(TermId $termId, ?string $text, ?string $translation, ?string $ipa, string $translationLang): bool
     {
-        return DB::transaction(function () use ($termId, $text, $translation, $ipa): bool {
+        return DB::transaction(function () use ($termId, $text, $translation, $ipa, $translationLang): bool {
             $term = DB::table('terms')->where('id', $termId->value)->whereNull('deleted_at')->first();
             if ($term === null) {
                 return false;
@@ -67,7 +67,7 @@ final class EloquentTermCurator implements TermCurator
             DB::table('terms')->where('id', $termId->value)->update($changes);
 
             if ($translation !== null) {
-                $this->setPrimaryTranslation($termId, (string) $term->lang, $translation);
+                $this->setPrimaryTranslation($termId, (string) $term->lang, $translationLang, $translation);
             }
 
             return true;
@@ -162,16 +162,28 @@ final class EloquentTermCurator implements TermCurator
         });
     }
 
-    private function setPrimaryTranslation(TermId $termId, string $termLang, string $text): void
+    /**
+     * Rewrite the term's translation IN $lang — the same row a reader asking in $lang would show,
+     * picked by the same total order ({@see TranslationPick::ordered()}) so an edit can never land on
+     * a different row than the one the operator was looking at.
+     *
+     * `lang` moves with the text, and that is the half this used to omit. The retrospective repair
+     * (RepairContentLanguageHandler) writes through here: it asked the model for Russian, wrote
+     * Russian into the row, and left the row labelled `uk` or `de` — 118 live rows ended up holding
+     * Russian text under a foreign label, which is precisely what made a language-aware reader see
+     * "no Russian translation" for terms that had one all along.
+     */
+    private function setPrimaryTranslation(TermId $termId, string $termLang, string $lang, string $text): void
     {
-        $existing = DB::table('term_translations')
-            ->where('term_id', $termId->value)
-            ->orderByDesc('is_primary')
-            ->first(['id', 'lang']);
+        $existing = TranslationPick::ordered(
+            DB::table('term_translations')->where('term_id', $termId->value),
+            $lang,
+        )->first(['id', 'lang']);
 
         if ($existing !== null) {
             DB::table('term_translations')->where('id', $existing->id)->update([
                 'text' => $text,
+                'lang' => $lang,
                 'is_primary' => true,
                 'updated_at' => now(),
             ]);
@@ -179,11 +191,12 @@ final class EloquentTermCurator implements TermCurator
             return;
         }
 
-        // No translation yet (possible for an imported term): create one in the paired language.
+        // No translation yet (possible for an imported term): create one. $lang is what the caller
+        // asked for; the paired-language guess only stands in when nobody said.
         DB::table('term_translations')->insert([
             'id' => Ulid::generate(),
             'term_id' => $termId->value,
-            'lang' => $termLang === 'en' ? 'ru' : 'en',
+            'lang' => $lang !== '' ? $lang : ($termLang === 'en' ? 'ru' : 'en'),
             'text' => $text,
             'is_primary' => true,
             'created_at' => now(),

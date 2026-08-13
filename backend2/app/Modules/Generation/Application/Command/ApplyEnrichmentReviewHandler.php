@@ -30,6 +30,14 @@ use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
  */
 final readonly class ApplyEnrichmentReviewHandler
 {
+    /**
+     * The language the target read asks for. Both reads here use the target only for its ENGLISH
+     * side — the pinned example sentence and the accepted forms — so the translation that comes back
+     * decides nothing; ru is named rather than defaulted so the reader has no language-blind caller
+     * left anywhere, which is the whole point of D-2.
+     */
+    private const REVIEW_LANG = 'ru';
+
     public function __construct(
         private TermReviewWriter $review,
         private EnrichmentTargetReader $targets,
@@ -138,7 +146,7 @@ final readonly class ApplyEnrichmentReviewHandler
             $span = (string) ($row['error_span'] ?? '');
             $correction = (string) ($row['correction'] ?? '');
 
-            $target = $this->targets->byIds([TermId::fromString($termId)])[$termId] ?? null;
+            $target = $this->targets->byIds([TermId::fromString($termId)], self::REVIEW_LANG)[$termId] ?? null;
             $example = $target?->exampleSentence;
             if ($example === null) {
                 $unmatched[] = "правка дистрактора «{$sentence}»: у «{$row['term']}» нет закреплённого примера";
@@ -188,7 +196,7 @@ final readonly class ApplyEnrichmentReviewHandler
                 continue;
             }
 
-            $target = $this->targets->byIds([TermId::fromString($termId)])[$termId] ?? null;
+            $target = $this->targets->byIds([TermId::fromString($termId)], self::REVIEW_LANG)[$termId] ?? null;
             if ($target === null) {
                 $unmatched[] = "вариант+ «{$row['text']}»: термин «{$row['term']}» не читается";
 

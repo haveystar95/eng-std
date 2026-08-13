@@ -15,7 +15,13 @@ final class FakeLearnerProfileReader implements LearnerProfileReader
         private readonly CefrLevel $level = CefrLevel::B1,
         private readonly int $newTermsPerDay = 20,
         private readonly string $timezone = 'UTC',
+        private readonly string $nativeLang = 'ru',
     ) {}
+
+    public function nativeLangFor(UserId $user): string
+    {
+        return $this->nativeLang;
+    }
 
     public function cefrLevelFor(UserId $user): CefrLevel
     {

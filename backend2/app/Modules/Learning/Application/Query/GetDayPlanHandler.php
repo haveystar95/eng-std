@@ -70,7 +70,10 @@ final readonly class GetDayPlanHandler
         ));
 
         $termIds = array_map(static fn (DueTermView $v): TermId => $v->termId, $due);
-        $content = $this->content->byIds($termIds);
+        $content = $this->content->byIds(
+            $termIds,
+            $this->profile->nativeLangFor($query->userId),
+        );
 
         $entries = [];
         $dueCount = 0;

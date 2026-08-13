@@ -62,10 +62,10 @@ final readonly class BuildTermEnrichmentsHandler
             return new EnrichmentRunMetrics();
         }
 
-        $targets = $this->targets->byIds(array_map(
-            static fn (string $id): TermId => TermId::fromString($id),
-            $pending,
-        ));
+        $targets = $this->targets->byIds(
+            array_map(static fn (string $id): TermId => TermId::fromString($id), $pending),
+            $command->translationLang,
+        );
 
         $metrics = new EnrichmentRunMetrics();
         foreach ($pending as $termId) {
