@@ -13,6 +13,7 @@ use App\Modules\Generation\Application\Query\ExportEnrichment;
 use App\Modules\Generation\Application\Query\ExportEnrichmentHandler;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargets;
 use App\Modules\Generation\Application\Query\ListPendingEnrichmentTargetsHandler;
+use App\Modules\Generation\Domain\ValueObject\EnrichmentFinding;
 use App\Modules\Generation\Domain\ValueObject\FindingKind;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
@@ -51,7 +52,8 @@ final class EnrichBackfillCommand extends Command
         {--topup= : top-up mode — take terms whose pinned example has FEWER than N distractors, ignoring the version mark}
         {--fake : use the deterministic fake packer — no network, no spend (wiring smoke test only)}
         {--queue : dispatch chunk jobs instead of running inline}
-        {--out= : write the proofreading export (markdown) to this path}';
+        {--out= : write the proofreading export (markdown) to this path}
+        {--include-ambiguity : keep kind=ambiguity ("переформулировать") findings in the report and the export; store5 showed these are mostly back-translation trivia, so they are written to the journal as always but left out of both by default}';
 
     protected $description = 'Run the enrichment станок (distractors, accepted variants, ambiguity + language flags) over named collections';
 
@@ -70,6 +72,7 @@ final class EnrichBackfillCommand extends Command
         }
 
         $version = $this->stringOption('generator') ?? BuildTermEnrichmentsHandler::VERSION;
+        $includeAmbiguity = (bool) $this->option('include-ambiguity');
 
         if ((bool) $this->option('fake')) {
             config(['services.generation.driver' => 'fake']);
@@ -107,7 +110,7 @@ final class EnrichBackfillCommand extends Command
         if ($termIds === []) {
             $this->line('Nothing to do — every term is already marked at this version.');
 
-            return $this->writeExport($export, $collectionIds, $version) ? self::SUCCESS : self::FAILURE;
+            return $this->writeExport($export, $collectionIds, $version, $includeAmbiguity) ? self::SUCCESS : self::FAILURE;
         }
 
         if ((bool) $this->option('queue')) {
@@ -127,14 +130,14 @@ final class EnrichBackfillCommand extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->report($metrics);
+        $this->report($metrics, $includeAmbiguity);
 
-        return $this->writeExport($export, $collectionIds, $version) ? self::SUCCESS : self::FAILURE;
+        return $this->writeExport($export, $collectionIds, $version, $includeAmbiguity) ? self::SUCCESS : self::FAILURE;
     }
 
-    private function report(EnrichmentRunMetrics $m): void
+    private function report(EnrichmentRunMetrics $m, bool $includeAmbiguity): void
     {
-        $this->table(['метрика', 'значение'], [
+        $rows = [
             ['термины обработаны', (string) $m->termsSeen],
             ['термины упали (модель/JSON)', $m->termsFailed > 0 ? "<fg=red>{$m->termsFailed}</>" : '0'],
             ['дистракторов предложено', (string) $m->distractorsProposed],
@@ -147,17 +150,24 @@ final class EnrichBackfillCommand extends Command
                 : '0'],
             ['вариантов записано', (string) $m->variantsWritten],
             ['вариантов забраковано (длина)', $m->variantsRejected > 0 ? "<fg=yellow>{$m->variantsRejected}</>" : '0'],
-            ['<options=bold>% ambiguous</>', '<options=bold>' . $m->ambiguousRatePct() . '%</> (' . $m->termsAmbiguous . ')'],
-            ['<options=bold>% языковых флагов (всего)</>', '<options=bold>' . $m->languageRatePct() . '%</> (' . $m->termsLanguageFlagged . ')'],
-            // Split out because the repair differs: leakage → переген, не-слово → правка текста.
-            ['  · % misspelled_or_nonword', $m->misspelledRatePct() . '% (' . $m->termsMisspelled . ')'],
-            ['  · % ua_leakage', $m->uaLeakageRatePct() . '% (' . $m->termsUaLeakage . ')'],
-            ['конфликтов вариант↔дистрактор', (string) $m->termsVariantConflict],
-        ]);
+        ];
+        // Demoted by default (store5: 31 of 41 flags were back-translation trivia, none useful) — the
+        // finding is still written to the journal by BuildTermEnrichmentsHandler either way, only the
+        // headline rate is noisy enough to hide from a routine run's report.
+        if ($includeAmbiguity) {
+            $rows[] = ['<options=bold>% ambiguous</>', '<options=bold>' . $m->ambiguousRatePct() . '%</> (' . $m->termsAmbiguous . ')'];
+        }
+        $rows[] = ['<options=bold>% языковых флагов (всего)</>', '<options=bold>' . $m->languageRatePct() . '%</> (' . $m->termsLanguageFlagged . ')'];
+        // Split out because the repair differs: leakage → переген, не-слово → правка текста.
+        $rows[] = ['  · % misspelled_or_nonword', $m->misspelledRatePct() . '% (' . $m->termsMisspelled . ')'];
+        $rows[] = ['  · % ua_leakage', $m->uaLeakageRatePct() . '% (' . $m->termsUaLeakage . ')'];
+        $rows[] = ['конфликтов вариант↔дистрактор', (string) $m->termsVariantConflict];
+
+        $this->table(['метрика', 'значение'], $rows);
     }
 
     /** @param  list<CollectionId>  $collectionIds */
-    private function writeExport(ExportEnrichmentHandler $export, array $collectionIds, string $version): bool
+    private function writeExport(ExportEnrichmentHandler $export, array $collectionIds, string $version, bool $includeAmbiguity): bool
     {
         $out = $this->stringOption('out');
         if ($out === null) {
@@ -165,7 +175,7 @@ final class EnrichBackfillCommand extends Command
         }
 
         $groups = $export(new ExportEnrichment($collectionIds, $version));
-        if (file_put_contents($out, $this->markdown($groups, $version)) === false) {
+        if (file_put_contents($out, $this->markdown($groups, $version, $includeAmbiguity)) === false) {
             $this->error("Could not write the export to {$out}");
 
             return false;
@@ -199,7 +209,7 @@ final class EnrichBackfillCommand extends Command
     }
 
     /** @param  list<EnrichmentExportGroup>  $groups */
-    private function markdown(array $groups, string $version): string
+    private function markdown(array $groups, string $version, bool $includeAmbiguity): string
     {
         $snapshot = now()->toIso8601String();
         $head = $this->headRevision();
@@ -235,6 +245,16 @@ final class EnrichBackfillCommand extends Command
 
             foreach ($group->items as $item) {
                 $row = $item->row;
+                // Filtered at display time, not in ExportEnrichmentHandler: whether ambiguity is
+                // noise is a proofreading-worklist concern, not a fact about what the run wrote.
+                $findings = $includeAmbiguity
+                    ? $item->findings
+                    : array_values(array_filter($item->findings, static fn (EnrichmentFinding $f): bool => $f->kind !== FindingKind::Ambiguity));
+
+                if ($row->variants === [] && $row->distractors === [] && $findings === []) {
+                    continue;
+                }
+
                 $lines[] = "### {$row->text}";
                 $lines[] = '';
                 $lines[] = '- **перевод (промпт):** ' . $this->orDash($row->translation);
@@ -261,9 +281,9 @@ final class EnrichBackfillCommand extends Command
                     }
                 }
 
-                if ($item->findings !== []) {
+                if ($findings !== []) {
                     $lines[] = '- **флаги:**';
-                    foreach ($item->findings as $finding) {
+                    foreach ($findings as $finding) {
                         $lines[] = '    - ' . $this->findingLabel($finding->kind) . ' ' . $finding->detail;
                     }
                 }
