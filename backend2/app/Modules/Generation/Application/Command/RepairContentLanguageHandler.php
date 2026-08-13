@@ -59,7 +59,8 @@ final readonly class RepairContentLanguageHandler
         $lang = $command->sourceLang->value;
         $out = [];
 
-        foreach ($this->audit->reachableRows($lang) as $row) {
+        $rows = $command->orphans ? $this->audit->orphanRows($lang) : $this->audit->reachableRows($lang);
+        foreach ($rows as $row) {
             $verdict = $this->judge($row, $lang);
             if ($verdict === null) {
                 continue;

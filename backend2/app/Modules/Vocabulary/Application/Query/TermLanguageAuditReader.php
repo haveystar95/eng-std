@@ -7,15 +7,19 @@ namespace App\Modules\Vocabulary\Application\Query;
 use App\Modules\Vocabulary\Application\Dto\TermLanguageRow;
 
 /**
- * Every learner-language string a user can actually reach, for a language audit.
+ * Every learner-language string on record, for a language audit — split into the two scopes a
+ * caller has to choose between, because they cost differently and mean differently:
  *
- * Scoped to terms that sit in at least one collection on purpose. Terms nobody can reach are not a
- * user-visible defect and repairing them costs model calls for nothing — 118 of the 140 poisoned
- * terms in the live database are orphans (docs/ua-audit.md).
+ *  - `reachableRows()`: terms that sit in at least one collection, so a bad row is a user-visible
+ *    defect right now;
+ *  - `orphanRows()`: terms in no collection at all — 118 of the 140 poisoned terms found by
+ *    docs/ua-audit.md were exactly this. Not user-visible today, but a `migrate:fresh --seed`
+ *    reseeds these terms right back into whatever collection reuses them next (docs/ua-audit.md
+ *    §4, class C), so a cutover-before-rebuild cleanup has to reach them too.
  *
- * It deliberately does NOT decide what is wrong: it returns rows and what each row claims to be,
- * and the caller judges them with the one shared detector. A reader that filtered by a regex here
- * would be a second, silently diverging copy of the rule.
+ * Neither method decides what is wrong: they return rows and what each row claims to be, and the
+ * caller judges them with the one shared detector. A reader that filtered by a regex here would be
+ * a second, silently diverging copy of the rule.
  */
 interface TermLanguageAuditReader
 {
@@ -24,4 +28,10 @@ interface TermLanguageAuditReader
      * @return list<TermLanguageRow>
      */
     public function reachableRows(string $sourceLang): array;
+
+    /**
+     * @param  string  $sourceLang  the learner language to judge every orphan's fields against
+     * @return list<TermLanguageRow>
+     */
+    public function orphanRows(string $sourceLang): array;
 }

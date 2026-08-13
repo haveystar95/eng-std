@@ -25,6 +25,38 @@ final class EloquentTermLanguageAuditReader implements TermLanguageAuditReader
             ->map(static fn (mixed $id): string => (string) $id)
             ->all();
 
+        return $this->rowsForTerms(array_values($termIds), $sourceLang);
+    }
+
+    public function orphanRows(string $sourceLang): array
+    {
+        // "In no collection" is checked without a language filter — a term reachable only through a
+        // German-target collection is still reachable, and not the orphan this scope means.
+        $memberTermIds = DB::table('collection_items as ci')
+            ->join('collections as c', 'c.id', '=', 'ci.collection_id')
+            ->whereNull('ci.deleted_at')
+            ->whereNull('c.deleted_at')
+            ->distinct()
+            ->pluck('ci.term_id')
+            ->map(static fn (mixed $id): string => (string) $id)
+            ->all();
+
+        $termIds = DB::table('terms')
+            ->whereNull('deleted_at')
+            ->when($memberTermIds !== [], static fn ($q) => $q->whereNotIn('id', $memberTermIds))
+            ->pluck('id')
+            ->map(static fn (mixed $id): string => (string) $id)
+            ->all();
+
+        return $this->rowsForTerms(array_values($termIds), $sourceLang);
+    }
+
+    /**
+     * @param  list<string>  $termIds
+     * @return list<TermLanguageRow>
+     */
+    private function rowsForTerms(array $termIds, string $sourceLang): array
+    {
         if ($termIds === []) {
             return [];
         }

@@ -164,3 +164,27 @@ it('ignores content nobody can reach', function () {
     expect(repairHandler(new ScriptedTranslationRepairer([]))(new RepairContentLanguage(new LanguageCode('ru'))))
         ->toBe([]);
 });
+
+/**
+ * docs/ua-audit.md: 118 of 140 poisoned terms are orphans, deliberately outside the default
+ * reachable sweep. --orphans is the complement scope that reaches them for the one-off cleanup.
+ */
+it('finds content nobody can reach when swept as orphans, and reachable sweep still ignores it', function () {
+    seedPoisonedTerm();
+    DB::table('collection_items')->where('term_id', REPAIR_TERM)->update(['deleted_at' => now()]);
+
+    $reachable = repairHandler(new ScriptedTranslationRepairer([]))(new RepairContentLanguage(new LanguageCode('ru')));
+    $orphans = repairHandler(new ScriptedTranslationRepairer([]))(new RepairContentLanguage(new LanguageCode('ru'), orphans: true));
+
+    expect($reachable)->toBe([])
+        ->and($orphans)->toHaveCount(2)
+        ->and(array_map(static fn ($r): string => $r->action, $orphans))->toBe(['planned', 'planned']);
+});
+
+it('excludes a term that sits in even one live collection from the orphan sweep', function () {
+    seedPoisonedTerm();
+
+    $orphans = repairHandler(new ScriptedTranslationRepairer([]))(new RepairContentLanguage(new LanguageCode('ru'), orphans: true));
+
+    expect($orphans)->toBe([]);
+});

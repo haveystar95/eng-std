@@ -19,7 +19,10 @@ use Illuminate\Console\Command;
  */
 final class RepairContentLanguageCommand extends Command
 {
-    protected $signature = 'content:repair-language {--source=ru : learner language of the collections to sweep} {--apply : write the repairs (otherwise dry run)}';
+    protected $signature = 'content:repair-language
+        {--source=ru : learner language of the collections to sweep}
+        {--apply : write the repairs (otherwise dry run)}
+        {--orphans : sweep terms in NO collection instead of reachable ones — see docs/ua-audit.md}';
 
     protected $description = 'Find and repair learner-language content written in the wrong language';
 
@@ -28,11 +31,13 @@ final class RepairContentLanguageCommand extends Command
         $source = $this->option('source');
         $lang = new LanguageCode(is_scalar($source) ? (string) $source : 'ru');
         $apply = (bool) $this->option('apply');
+        $orphans = (bool) $this->option('orphans');
 
-        $report = $handler(new RepairContentLanguage($lang, $apply));
+        $report = $handler(new RepairContentLanguage($lang, $apply, $orphans));
 
         if ($report === []) {
-            $this->info("Ничего не найдено: весь достижимый контент на «{$lang->value}».");
+            $scope = $orphans ? 'весь контент сирот' : 'весь достижимый контент';
+            $this->info("Ничего не найдено: {$scope} на «{$lang->value}».");
 
             return self::SUCCESS;
         }

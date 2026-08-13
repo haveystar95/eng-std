@@ -18,5 +18,10 @@ final readonly class RepairContentLanguage
     public function __construct(
         public LanguageCode $sourceLang,
         public bool $apply = false,
+        // Orphans (no collection at all) are excluded from the default sweep on purpose — repairing
+        // what nobody can see costs model calls for nothing. True switches to that complement scope,
+        // for the one-off cleanup docs/ua-audit.md called for before a database rebuild reseeds them
+        // into whatever collection reuses the term next.
+        public bool $orphans = false,
     ) {}
 }
