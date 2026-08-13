@@ -7,6 +7,7 @@ namespace App\Modules\Observability\Infrastructure\Eloquent;
 use App\Modules\Observability\Application\Dto\ApiLogEntry;
 use App\Modules\Observability\Application\Port\ApiLogWriter;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -19,7 +20,14 @@ final class EloquentApiLogWriter implements ApiLogWriter
     {
         try {
             $id = Ulid::generate();
-            ApiRequestLogModel::query()->create([
+            // Wrapped so a failed INSERT rolls back to a SAVEPOINT rather than poisoning whatever
+            // transaction the observed call happens to be inside. Postgres aborts an entire
+            // transaction on any failed statement, so without this the catch below would "not break
+            // the request it is observing" only when there was no transaction to break — and the
+            // next query of the caller's own work would die with "current transaction is aborted".
+            // Laravel turns a nested transaction() into a savepoint, and starts a real one when
+            // there is no outer transaction, so this is correct on both paths.
+            DB::transaction(fn () => ApiRequestLogModel::query()->create([
                 'id' => $id,
                 'direction' => $entry->direction,
                 'method' => $entry->method,
@@ -39,12 +47,28 @@ final class EloquentApiLogWriter implements ApiLogWriter
                 'error' => $entry->error,
                 'occurred_at' => $entry->occurredAt,
                 'created_at' => now(),
-            ]);
+            ]));
 
             return $id;
         } catch (Throwable $e) {
-            // Observability must never break the request it is observing.
-            Log::warning('api log write failed', ['error' => $e->getMessage()]);
+            // Observability must never break the request it is observing — so this still swallows.
+            // What it must NOT do is swallow QUIETLY: the previous version logged the message alone,
+            // and a `purpose` outside the CHECK constraint therefore dropped 256 outbound calls over
+            // a day with nothing in the line to say WHICH calls or WHY. The identifying fields are
+            // what turns "a write failed" into "translation_repair calls to api.openai.com are not
+            // being recorded"; the exception object carries the trace. Bodies and headers stay out —
+            // they are the large, secret-bearing half, and they identify nothing.
+            $this->report('api log write failed — this outbound/inbound call is NOT recorded', $e, [
+                'direction' => $entry->direction,
+                'method' => $entry->method,
+                'host' => $entry->host,
+                'path' => mb_substr($entry->path, 0, 200),
+                'service' => $entry->service,
+                'purpose' => $entry->purpose,
+                'collection_id' => $entry->collectionId,
+                'status' => $entry->status,
+                'occurred_at' => $entry->occurredAt->format(DATE_ATOM),
+            ]);
 
             return null;
         }
@@ -57,10 +81,33 @@ final class EloquentApiLogWriter implements ApiLogWriter
         }
 
         try {
-            ApiRequestLogModel::query()->whereIn('id', $logIds)->update(['collection_id' => $collectionId]);
+            // Savepoint, for the same reason as write() — see the comment there.
+            DB::transaction(fn () => ApiRequestLogModel::query()
+                ->whereIn('id', $logIds)
+                ->update(['collection_id' => $collectionId]));
         } catch (Throwable $e) {
-            Log::warning('api log collection link failed', ['error' => $e->getMessage()]);
+            $this->report('api log collection link failed — these rows keep no collection', $e, [
+                'collection_id' => $collectionId,
+                'log_ids' => $logIds,
+            ]);
         }
+    }
+
+    /**
+     * One shape for both failures: a named error with the identifying context and the exception
+     * itself. `error`, not `warning` — a log row that was supposed to exist and does not is a defect
+     * in the ledger the spend reports are read from, and `warning` is the level at which it hid.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function report(string $message, Throwable $e, array $context): void
+    {
+        Log::error($message, [
+            ...$context,
+            'exception_class' => $e::class,
+            'error' => $e->getMessage(),
+            'exception' => $e,
+        ]);
     }
 
     /**

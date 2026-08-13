@@ -24,8 +24,10 @@ final readonly class ApiLogEntry
         public ?string $host,
         public ?string $service,
         // Why the call was made (generation | images | enrichment | realtime | recap |
-        // example_regen) and what it was spent on — supplied by the ambient OutboundCallContext,
-        // null for inbound rows and for any call made outside a labelled scope.
+        // example_regen | translation_repair) and what it was spent on — supplied by the ambient
+        // OutboundCallContext, null for inbound rows and for any call made outside a labelled scope.
+        // The set is enforced by a CHECK on the column: a value missing from it does not degrade to
+        // an unlabelled row, it loses the whole row (see EloquentApiLogWriter::write()).
         public ?string $purpose,
         public ?string $collectionId,
         public ?int $status,
