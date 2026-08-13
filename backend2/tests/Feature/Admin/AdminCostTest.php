@@ -155,3 +155,63 @@ it('puts active users and the last failed outbound calls on the dashboard', func
         // No reviews in this fixture — nobody has been active.
         ->assertJsonPath('totals.active_users_7d', 0);
 });
+
+// The станок's ledger was not written between 06.08 and 13.08.2026 — the pack path replaced the
+// one-term path and dropped the spend write — so collections enriched in that window reported
+// станок = 0 while 15 model calls per collection really happened. The log is the only record left,
+// and reporting 0 for work that cost money is the one answer that must not be given.
+it('prices enrichment from the request log when the ledger has nothing for the collection', function () {
+    [$adminToken, $collectionId] = costFixture();
+    DB::table('term_enrichments')->delete();          // the ledger gap, exactly as it is live
+
+    DB::table('api_request_logs')->insert([
+        'id' => Ulid::generate(), 'direction' => 'outbound', 'method' => 'POST',
+        'host' => 'api.openai.com', 'path' => '/v1/chat/completions', 'service' => 'openai',
+        'purpose' => 'enrichment', 'collection_id' => $collectionId, 'status' => 200,
+        'response_body' => json_encode([
+            'model' => 'gpt-4o-mini',
+            'usage' => ['prompt_tokens' => 3000, 'completion_tokens' => 100],
+        ]),
+        'occurred_at' => now(),
+    ]);
+
+    $body = test()->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/collections/{$collectionId}/costs")
+        ->assertOk()
+        ->json();
+
+    $enrichment = collect($body['by_purpose'])->firstWhere('purpose', 'enrichment');
+
+    // 3000/1000*0.00015 + 100/1000*0.0006
+    expect($enrichment['calls'])->toBe(1)
+        ->and($enrichment['cost_usd'])->toBe(0.00051)
+        // …and the panel says which number it is looking at.
+        ->and($body['note'])->toContain('по логу вызовов');
+});
+
+// The ledger is authoritative and path-independent (a console backfill stamps no collection on the
+// log). When it has rows, the log must not be added on top of it.
+it('prefers the ledger over the log and never sums both', function () {
+    [$adminToken, $collectionId] = costFixture();
+
+    DB::table('api_request_logs')->insert([
+        'id' => Ulid::generate(), 'direction' => 'outbound', 'method' => 'POST',
+        'host' => 'api.openai.com', 'path' => '/v1/chat/completions', 'service' => 'openai',
+        'purpose' => 'enrichment', 'collection_id' => $collectionId, 'status' => 200,
+        'response_body' => json_encode([
+            'model' => 'gpt-4o-mini',
+            'usage' => ['prompt_tokens' => 3000, 'completion_tokens' => 100],
+        ]),
+        'occurred_at' => now(),
+    ]);
+
+    $body = test()->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/collections/{$collectionId}/costs")
+        ->assertOk()
+        ->json();
+
+    $enrichment = collect($body['by_purpose'])->firstWhere('purpose', 'enrichment');
+
+    expect($enrichment['cost_usd'])->toBe(0.00024)     // the ledger's number, not the sum
+        ->and($body['note'])->not->toContain('по логу вызовов');
+});

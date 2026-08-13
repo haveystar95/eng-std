@@ -174,3 +174,37 @@ it('counts a term whose pack throws as failed without taking down the rest of th
         // Not marked: the next run must retry it rather than write it off.
         ->and(DB::table('term_enrichment_versions')->where('term_id', ENRICH_TERM_ID)->exists())->toBeFalse();
 });
+
+// The станок's spend ledger. `term_enrichments` is what the admin's per-collection cost reads for
+// the "Станок" row, and the pack path never wrote it — so every collection reported станок = 0 while
+// the calls kept happening (3 rows in the live table, all from before the pack path landed).
+it('records the spend of every enrichment call', function () {
+    seedEnrichmentTerm();
+    app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(
+        enrichPack(variants: [new RawVariant('take out money', null)]),
+    ));
+    $handler = app(BuildTermEnrichmentsHandler::class);
+
+    $handler(new BuildTermEnrichments([ENRICH_TERM_ID], 'enrich-spend-1'));
+
+    $row = DB::table('term_enrichments')->where('term_id', ENRICH_TERM_ID)->first();
+
+    expect($row)->not->toBeNull();
+    expect($row->tokens_in)->not->toBeNull();
+    expect((float) $row->cost_usd)->toBeGreaterThanOrEqual(0.0);
+});
+
+// A pack the validator throws away cost exactly what a good one costs. Booking only the successful
+// ones would make the worst runs look free — the same rule GenerationPipeline follows for generation.
+it('books the call even when the validator keeps nothing from it', function () {
+    seedEnrichmentTerm();
+    // An empty pack: nothing survives to any table, and the call still cost money.
+    app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(enrichPack()));
+    $handler = app(BuildTermEnrichmentsHandler::class);
+
+    $handler(new BuildTermEnrichments([ENRICH_TERM_ID], 'enrich-spend-2'));
+
+    expect(DB::table('term_accepted_variants')->where('term_id', ENRICH_TERM_ID)->count())->toBe(0);
+
+    expect(DB::table('term_enrichments')->where('term_id', ENRICH_TERM_ID)->count())->toBe(1);
+});

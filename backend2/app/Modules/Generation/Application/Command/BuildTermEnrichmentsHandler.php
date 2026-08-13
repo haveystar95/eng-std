@@ -8,10 +8,13 @@ use App\Modules\Generation\Application\Dto\EnrichmentBrief;
 use App\Modules\Generation\Application\Dto\EnrichmentRunMetrics;
 use App\Modules\Generation\Application\Port\EnrichmentJournal;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
+use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentCandidate;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentVerdict;
 use App\Modules\Generation\Domain\ValueObject\FindingKind;
+use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Command\ImportTermEnrichment;
 use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
@@ -53,6 +56,9 @@ final readonly class BuildTermEnrichmentsHandler
         private EnrichmentValidator $validator,
         private ImportTermEnrichmentHandler $import,
         private EnrichmentJournal $journal,
+        private RecordsTermEnrichment $spend,
+        private Clock $clock,
+        private ModelCost $cost = new ModelCost(),
     ) {}
 
     public function __invoke(BuildTermEnrichments $command): EnrichmentRunMetrics
@@ -103,6 +109,22 @@ final readonly class BuildTermEnrichmentsHandler
             // up, it arrives with translations, so this fallback stays unreached.
             translationLang: $target->translationLang ?? 'ru',
         ));
+
+        // Spend is recorded the instant the call answers, BEFORE validation — the same rule
+        // GenerationPipeline follows, and for the same reason: a pack the validator throws away cost
+        // exactly what a good one costs, and a ledger that only booked successful packs would make
+        // the bad runs look free. Without this row the станок spends money nothing accounts for: the
+        // admin's per-collection cost reads `term_enrichments`, and it stopped being written when the
+        // pack path replaced the one-term path, so every collection has reported станок = 0 since
+        // 2026-08-06 while the calls kept happening.
+        $this->spend->record(
+            TermId::fromString($target->termId),
+            $pack->model,
+            $pack->tokensIn,
+            $pack->tokensOut,
+            $this->cost->estimate($pack->model, $pack->tokensIn, $pack->tokensOut),
+            $this->clock->now(),
+        );
 
         $verdict = $this->validator->validate(new EnrichmentCandidate(
             termId: $target->termId,

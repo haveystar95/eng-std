@@ -66,24 +66,37 @@ final class EloquentAdminCostReader implements AdminCostReader
             ->where('collection_id', $collectionId)
             ->whereNull('deleted_at');
 
+        // The станок's ledger is authoritative and path-independent, but it was NOT written between
+        // 2026-08-06 and 2026-08-13: the pack path replaced the one-term path and dropped the spend
+        // write, so every collection enriched in that window has an empty ledger while the calls
+        // really happened. Fall back to the request log for those, and say which number this is —
+        // reporting 0 for work that cost money is the one answer that must not be given.
+        $enrichmentLedger = $this->ledgerPurpose('enrichment', DB::table('term_enrichments')
+            ->whereIn('term_id', $items()->select('term_id')));
+        $enrichment = $enrichmentLedger->calls > 0 ? $enrichmentLedger : $this->logPurpose('enrichment', $collectionId);
+        $enrichmentFromLog = $enrichmentLedger->calls === 0 && $enrichment->calls > 0;
+
         $parts = [
             $this->ledgerPurpose('generation', DB::table('generation_requests')->where('collection_id', $collectionId)),
             $this->ledgerPurpose('realtime', DB::table('practice_dialogs')->where('collection_id', $collectionId)),
-            $this->ledgerPurpose('enrichment', DB::table('term_enrichments')
-                ->whereIn('term_id', $items()->select('term_id'))),
+            $enrichment,
             $this->ledgerPurpose('example_regen', DB::table('example_regenerations')
                 ->whereIn('term_id', $items()->select('term_id'))),
             $this->logPurpose('images', $collectionId),
             $this->logPurpose('recap', $collectionId),
         ];
 
-        return CostByPurposeView::of(
-            $parts,
-            scopeId: $collectionId,
-            note: 'enrichment and example_regen are attributed per term, so a term shared with '
-                . 'another collection is counted in both; images and recap are priced from the '
-                . 'request log (they have no spend ledger).',
-        );
+        $note = 'enrichment and example_regen are attributed per term, so a term shared with '
+            . 'another collection is counted in both; images and recap are priced from the '
+            . 'request log (they have no spend ledger, and Pexels is free — 0 there is the truth).';
+        if ($enrichmentFromLog) {
+            $note .= ' ВНИМАНИЕ: станок посчитан по логу вызовов, а не по реестру — реестр для этой '
+                . 'коллекции пуст (спенд станка не писался с 06.08 по 13.08.2026). Лог ведёт учёт '
+                . 'purpose только с 12.08.2026, так что для коллекций, обогащённых раньше, станок '
+                . 'останется нулём: эти вызовы не записаны нигде.';
+        }
+
+        return CostByPurposeView::of($parts, scopeId: $collectionId, note: $note);
     }
 
     public function costByPurposeSince(?DateTimeImmutable $since, ?string $period): CostByPurposeView
