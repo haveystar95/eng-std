@@ -4,51 +4,15 @@ declare(strict_types=1);
 
 use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
-use App\Modules\Collections\Application\Command\CreateCustomCollection;
-use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
-use App\Modules\Identity\Infrastructure\Eloquent\User;
-use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-/** @return array{0: User, 1: string} */
-function learner(): array
-{
-    $user = User::factory()->create();
-
-    return [$user, $user->createToken('test-device')->plainTextToken];
-}
-
-/** Create a collection + word for the user and return the term id (no HTTP). */
-function seedWordFor(User $user, string $text = 'apple', string $translation = 'яблоко'): string
-{
-    $actor = UserId::fromString($user->id);
-    $collectionId = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
-        $actor, 'Fruit', new LanguageCode('ru'), new LanguageCode('en'),
-    ));
-
-    return app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
-}
-
-/**
- * Like {@see seedWordFor} but also returns the collection id.
- *
- * @return array{0: string, 1: string}  [collectionId, termId]
- */
-function seedCollectionWith(User $user, string $text, string $translation = 'x'): array
-{
-    $actor = UserId::fromString($user->id);
-    $collectionId = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
-        $actor, $text, new LanguageCode('ru'), new LanguageCode('en'),
-    ));
-    $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
-
-    return [$collectionId->value, $termId];
-}
+// learner(), seedWordFor(), seedCollectionWith() live in tests/Pest.php — shared with sibling
+// Learning/Vocabulary Feature tests, and loaded regardless of parallel worker/file order.
 
 it('submits reviews, creating progress and daily stats', function () {
     [$user, $token] = learner();

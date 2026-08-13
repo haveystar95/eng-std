@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-// learner() / seedCollectionWith() live in StudyApiTest and are shared across the suite.
+// learner() / seedCollectionWith() live in tests/Pest.php.
 
 it('reports a zero cursor when nothing is logged yet', function () {
     [, $token] = learner();

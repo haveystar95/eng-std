@@ -20,7 +20,8 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  * Adoption is also the one place a client can create a server row it did not go through an endpoint
  * for, so the guards around it are the point of this file.
  *
- * `buildSubmitHandler` / `answer` live in SubmitReviewsTest.
+ * `buildSubmitHandler` lives in tests/Pest.php; `answer` lives in SubmitReviewsTest (used only there,
+ * so it stayed put).
  */
 function practiceAnswer(TermId $termId, StudySessionId $sessionId, string $answeredAt, int $seq): ReviewInput
 {

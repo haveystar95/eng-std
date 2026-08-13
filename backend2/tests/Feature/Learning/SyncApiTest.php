@@ -8,16 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-// learner() / seedCollectionWith() / addWordTo() are shared across the suite.
-
-/** GET /sync and return the `data` envelope. */
-function sync(object $ctx, string $token, string $query = ''): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/sync' . ($query !== '' ? "?{$query}" : ''))
-        ->assertOk()
-        ->json('data');
-}
+// learner() / seedCollectionWith() / addWordTo() / sync() live in tests/Pest.php.
 
 it('returns a full snapshot when since is omitted', function () {
     [$user, $token] = learner();

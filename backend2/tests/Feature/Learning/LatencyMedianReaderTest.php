@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-/** Append a raw review row. (learner()/seedWordFor() live in StudyApiTest.) */
+/** Append a raw review row. (learner()/seedWordFor() live in tests/Pest.php.) */
 function seedReview(string $userId, string $termId, string $mode, int $latency, bool $correct, bool $practice = false): void
 {
     DB::table('reviews')->insert([

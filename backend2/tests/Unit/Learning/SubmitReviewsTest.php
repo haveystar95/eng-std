@@ -3,27 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Learning\Application\Command\SubmitReviews;
-use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Application\Dto\ReviewInput;
 use App\Modules\Learning\Domain\Entity\TermProgress;
-use App\Modules\Learning\Domain\Service\AnswerGrader;
-use App\Modules\Learning\Domain\Service\Fuzz;
-use App\Modules\Learning\Domain\Service\Sm2Scheduler;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ReviewId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
-use Tests\Doubles\FakeLatencyMedianReader;
-use Tests\Doubles\FakeLearnerProfileReader;
-use Tests\Doubles\InMemoryStudySessions;
-use Tests\Doubles\FakeTermAnswerKeyReader;
-use Tests\Doubles\FakeTermExistenceReader;
-use Tests\Doubles\FixedClock;
-use Tests\Doubles\ImmediateTransactionManager;
-use Tests\Doubles\InMemoryReviewRepository;
-use Tests\Doubles\InMemoryTermProgressRepository;
-use Tests\Doubles\SpyStatsProjector;
 
 /** The fake answer key accepts "correct"; the server grades a matching response as good, else again. */
 function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPractice = false, int $seq = 1): ReviewInput
@@ -39,32 +25,7 @@ function answer(TermId $termId, bool $correct, string $answeredAt, bool $isPract
     );
 }
 
-/** @param list<TermId>|null $known null = all known */
-function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHandler
-{
-    $ctx->reviews = new InMemoryReviewRepository();
-    $ctx->progress = new InMemoryTermProgressRepository();
-    $ctx->stats = new SpyStatsProjector();
-    $ctx->median = new FakeLatencyMedianReader();
-    $ctx->sessions = new InMemoryStudySessions();
-
-    return new SubmitReviewsHandler(
-        reviews: $ctx->reviews,
-        progress: $ctx->progress,
-        scheduler: new Sm2Scheduler(Fuzz::none()),
-        terms: $known === null ? FakeTermExistenceReader::knowingAll() : FakeTermExistenceReader::knowing($known),
-        answerKeys: new FakeTermAnswerKeyReader(),
-        grader: new AnswerGrader(),
-        median: $ctx->median,
-        sessionContexts: $ctx->sessions,
-        sessions: $ctx->sessions,
-        snapshots: $ctx->progress, // the in-memory repo doubles as the snapshot reader
-        stats: $ctx->stats,
-        profile: new FakeLearnerProfileReader(),
-        tx: new ImmediateTransactionManager(),
-        clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
-    );
-}
+// buildSubmitHandler() lives in tests/Pest.php — shared with OfflinePracticeSessionTest.
 
 beforeEach(function () {
     $this->user = UserId::generate();

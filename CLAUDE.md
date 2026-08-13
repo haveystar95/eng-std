@@ -38,6 +38,19 @@ Our working rituals are encoded in `.claude/` so they don't depend on a session 
 
 New process rules change **here** (a skill/command/hook/agent file), never silently in one commit.
 
+**Gate tiering for a multi-commit наряд (task/work order):** промежуточные коммиты одного наряда
+гоняются вручную и легко — `composer arch && composer stan && composer test -- --filter=<модуль>`
+(deptrac + PHPStan + **целевой** Pest-сьют затронутого модуля, не весь backend2). Только
+**финальный** коммит наряда обязан пройти полные ворота — `composer check` для backend2 **и**
+`flutter analyze` для mobile, даже если сам наряд не трогал mobile-файлы (обе стороны, по
+умолчанию). backend2 `composer test` с 2026-08-13 запускает Pest через `brianium/paratest`
+(`vendor/bin/pest --parallel`, изолированная Postgres-БД на процесс через
+`Illuminate\Testing\ParallelTesting` в `AppServiceProvider`) — полный сьют ~40с вместо ~110с
+серийно, поэтому «финальные ворота» перестали быть дорогими и не повод их пропускать.
+`composer test-serial` остаётся для отладки, если параллельный прогон когда-нибудь начнёт мигать.
+Промежуточный коммит **не обязан** запускать commit-gate хук в полном объёме — если ручной
+arch+stan+целевой-сьют уже зелёный, `SKIP_GATES=1` для него легитимен (хук всё равно предупредит).
+
 **Новый тренажёр выкатывается ВЫКЛЮЧЕННЫМ глобально** (`learning_mode_settings`, админка →
 «Тренажёры»): включить себе → бете → всем. Код в main ≠ режим у пользователей.
 Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code

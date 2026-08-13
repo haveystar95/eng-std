@@ -2,22 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Modules\Collections\Application\Command\AddWordToCollection;
-use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
-use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
-use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-/** Add another word to an existing collection; returns its term id. (learner()/seedCollectionWith() live in StudyApiTest.) */
-function addWordTo(string $collectionId, string $userId, string $text, string $translation = 'x'): string
-{
-    return app(AddWordToCollectionHandler::class)(new AddWordToCollection(
-        CollectionId::fromString($collectionId), UserId::fromString($userId), $text, $translation,
-    ))->value;
-}
+// learner() / seedCollectionWith() / addWordTo() live in tests/Pest.php.
 
 it('projects triage verdicts onto progress and never writes reviews', function () {
     [$user, $token] = learner();
