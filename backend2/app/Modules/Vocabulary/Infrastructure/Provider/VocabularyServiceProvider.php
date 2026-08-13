@@ -22,6 +22,7 @@ use App\Modules\Vocabulary\Application\Query\TermLanguageAuditReader;
 use App\Modules\Vocabulary\Application\Query\TermDifficultyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
 use App\Modules\Vocabulary\Application\Port\TermCurator;
+use App\Modules\Vocabulary\Application\Port\TranslationLabelWriter;
 use App\Modules\Vocabulary\Domain\Repository\TermRepository;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentAuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
@@ -40,6 +41,7 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermContentReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermDifficultyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExistenceReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermCurator;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationLabelWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +53,7 @@ final class VocabularyServiceProvider extends ServiceProvider
     {
         $this->app->bind(TermRepository::class, EloquentTermRepository::class);
         $this->app->bind(TermCurator::class, EloquentTermCurator::class);
+        $this->app->bind(TranslationLabelWriter::class, EloquentTranslationLabelWriter::class);
         $this->app->bind(TermExistenceReader::class, EloquentTermExistenceReader::class);
         $this->app->bind(TermContentReader::class, EloquentTermContentReader::class);
         $this->app->bind(TermChangeReader::class, EloquentTermChangeReader::class);

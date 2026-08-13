@@ -14,6 +14,7 @@ use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
+use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -44,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,
         AdminCreateCommand::class,
+        RelabelRepairedTranslationsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         // This is an API-only app (mobile + admin panel, no web login page). Laravel's default
