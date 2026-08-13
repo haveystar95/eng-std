@@ -199,6 +199,29 @@ it('scraps a distractor that is the example with the contraction spelled out', f
         ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
+// Live rows found by the enrich-v2-backfill review (E.2): a bare 's contraction outside the curated
+// pronoun list (it's/that's/there's/i'd/...) is not expanded at all — the apostrophe is stripped as
+// punctuation and the "s" survives as its own token, so normalize() never folds "How's" onto "How is".
+it('scraps a distractor that is the example with a bare apostrophe-s spelled out as "is"', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Hey, Tom! How is it going?', 'tense', 'is', "'s")],
+        example: "Hey, Tom! How's it going?",
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps a distractor that is the example with a bare apostrophe-s spelled out, on the pinned example instead', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Here is a little bit about me.', 'tense', 'Here is', "Here's")],
+        example: "Here's a little bit about me.",
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
 it('scraps a distractor that only re-types the apostrophe of a sibling already stored', function () {
     // «Can I get this to go?» carried «I'd like the pasta for go, please.» from the first run, and the
     // top-up added the same sentence with a typographic apostrophe. The pack dedupes against itself

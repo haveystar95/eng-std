@@ -239,7 +239,6 @@ final class EnrichmentValidator
         }
 
         $sentence = (string) $candidate->exampleSentence;
-        $reference = $this->normalizer->normalize($sentence);
         $kept = [];
         $conflicts = [];
 
@@ -284,7 +283,7 @@ final class EnrichmentValidator
                 continue;
             }
             // A distractor identical to the pinned example is not a distractor.
-            if ($key === $reference) {
+            if ($this->sentenceEquals($text, $sentence)) {
                 continue;
             }
             // A correction that corrects nothing. «has been» → «has been» is the whole feedback the
@@ -486,6 +485,63 @@ final class EnrichmentValidator
         $repaired = $this->repair($sentence, $span, $correction);
 
         return $repaired !== '' && $repaired === $this->normalizer->canonicalize($example);
+    }
+
+    /**
+     * Sentence equality, tolerant of a bare 's contraction on either side.
+     *
+     * {@see LexicalNormalizer::expandContractions()} only resolves the curated pronouns — "it's",
+     * "that's", "there's" — because an arbitrary "'s" is genuinely ambiguous between "is" and "has".
+     * Left unresolved, an arbitrary "'s" (e.g. "How's", "Here's") is not expanded at all: the
+     * apostrophe is stripped as punctuation and the "s" survives as its own dangling token, so
+     * normalize() never folds it onto the spelled-out form. A distractor that only spells out such a
+     * contraction is not a distractor — it's the example — and the risk is one-sided: missing the
+     * match writes a card that marks the correct answer wrong. Both readings are cheap to try, and
+     * either matching is enough to settle it, so this is deliberately over-eager rather than exact.
+     *
+     * Scoped to the two callers that ask "is this sentence secretly the example" — the generation-time
+     * check above and {@see AuditDistractorsHandler}'s retro-audit of the same question on stored rows.
+     * Grading (LexicalNormalizer, used directly by the answer grader) and the circular check
+     * ({@see repairsTo}) are untouched.
+     */
+    public function sentenceEquals(string $a, string $b): bool
+    {
+        $keyA = $this->normalizer->normalize($a);
+        $keyB = $this->normalizer->normalize($b);
+        if ($keyA === $keyB) {
+            return true;
+        }
+        foreach ($this->contractionReadings($a) as $reading) {
+            if ($this->normalizer->normalize($reading) === $keyB) {
+                return true;
+            }
+        }
+        foreach ($this->contractionReadings($b) as $reading) {
+            if ($keyA === $this->normalizer->normalize($reading)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Both readings of every bare 's in the text — "is" and "has" — or an empty list when there is
+     * none to expand. Matches possessives too ("Tom's"), which is harmless here: a bogus reading like
+     * "Tom is" simply matches nothing, so it costs an extra comparison and never a false positive.
+     *
+     * @return list<string>
+     */
+    private function contractionReadings(string $text): array
+    {
+        if (! preg_match("/\b[a-zA-Z]+'s\b/", $text)) {
+            return [];
+        }
+
+        return [
+            (string) preg_replace("/\b([a-zA-Z]+)'s\b/", '$1 is', $text),
+            (string) preg_replace("/\b([a-zA-Z]+)'s\b/", '$1 has', $text),
+        ];
     }
 
     /**

@@ -72,6 +72,20 @@ it('deletes a row that is the example itself, with nothing to relabel', function
         ->and(DB::table('example_distractors')->count())->toBe(0);
 });
 
+// Live case from the enrich-v2-backfill review (E.2): before the fix this row passed every check —
+// equality missed it because normalize() never folds a bare "'s" onto "is" outside the curated
+// pronoun list, and the circular check (which DOES fold "Here's" via canonicalize) then judged the
+// row's own repair correct, so it was never flagged as either broken or mislabelled. It reads as the
+// example with the contraction spelled out, so there is nothing to relabel — it is scrap, not a fix.
+it('deletes a row that is the example with a bare apostrophe-s spelled out, caught only by equality', function () {
+    seedAuditTarget([['Here is a little bit about me.', 'Here is', "Here's"]], "Here's a little bit about me.");
+
+    $outcome = app(AuditDistractorsHandler::class)(new AuditDistractors(apply: true));
+
+    expect($outcome->deleted['equality'] ?? 0)->toBe(1)
+        ->and(DB::table('example_distractors')->count())->toBe(0);
+});
+
 it('deletes the second of two sentences that normalise to the same thing', function () {
     seedAuditTarget([
         ["I think I've the cold.", 'the', 'a'],

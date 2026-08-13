@@ -101,7 +101,7 @@ final readonly class AuditDistractorsHandler
      */
     private function verdict(DistractorAuditRow $row, string $key, array $seen): ?string
     {
-        if ($key === $this->normalizer->normalize($row->exampleSentence)) {
+        if ($this->validator->sentenceEquals($row->sentence, $row->exampleSentence)) {
             return 'equality';
         }
         if (isset($seen[$key])) {
