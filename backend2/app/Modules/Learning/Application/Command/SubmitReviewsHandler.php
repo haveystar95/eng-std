@@ -126,6 +126,15 @@ final readonly class SubmitReviewsHandler
                     continue;
                 }
 
+                // A recognition-rung answer that arrives after the pair has left the ladder — see
+                // isStaleLadderAnswer(). Skipped rather than graded, so a correct tap can never be
+                // turned into a lapse.
+                if ($this->isStaleLadderAnswer($input, $states)) {
+                    $unknown++;
+
+                    continue;
+                }
+
                 $grade = $this->grader->grade(
                     new Answer($input->response, $input->usedHint, $input->latencyMs),
                     $input->exerciseMode,
@@ -218,26 +227,60 @@ final readonly class SubmitReviewsHandler
     }
 
     /**
-     * Is this answer a tap on a forward-recognition card, and may we believe that?
+     * Is this answer a tap on a forward-recognition card?
      *
-     * The rung is a CLAIM by the client, so it is checked against the pre-batch snapshot: only a
-     * pair that was genuinely still on the ladder can produce one. A pair with no row yet also
-     * qualifies — that is a first meeting, which is exactly where rung 1 lives.
+     * Three things must agree, because the rung is a CLAIM by the client and identity grading is
+     * the one path where a bare id counts as a correct answer:
      *
-     * A false claim on a graduated pair falls through to text grading, which the typed answer then
-     * fails. Self-limiting, and never a route to scoring a word correct.
+     *  * the claimed rung is 1, and this is not practice (free training is off the ladder);
+     *  * the MODE is multiple_choice — rung 1 is a tap, and only a tap. Without this, a batch
+     *    claiming `ladder_step: 1` under `typing` would have a tapped id graded as production,
+     *    where a fast answer can earn `easy` and skew that mode's latency median;
+     *  * the pair was genuinely still on the ladder before this batch (a missing row qualifies —
+     *    that is a first meeting, which is exactly where rung 1 lives).
      *
      * @param  array<string, \App\Modules\Learning\Application\Dto\DueTermView>  $states
      */
     private function isForwardRecognition(ReviewInput $input, array $states): bool
     {
-        if ($input->ladderStep !== LearningLadder::STEP_RECOGNITION_FORWARD || $input->isPractice) {
+        if ($input->ladderStep !== LearningLadder::STEP_RECOGNITION_FORWARD
+            || $input->isPractice
+            || $input->exerciseMode !== ExerciseMode::MultipleChoice) {
             return false;
         }
 
+        return $this->isOnLadder($input, $states);
+    }
+
+    /**
+     * Was this pair still on the recognition rungs before this batch?
+     *
+     * @param  array<string, \App\Modules\Learning\Application\Dto\DueTermView>  $states
+     */
+    private function isOnLadder(ReviewInput $input, array $states): bool
+    {
         $snapshot = $states[$input->termId->value] ?? null;
 
         return $snapshot === null || $snapshot->acquisition !== Acquisition::Graduated;
+    }
+
+    /**
+     * A ladder answer for a pair that is no longer on the ladder is DROPPED, not graded as text.
+     *
+     * It takes two devices interleaving uploads of the same word's ladder cards: one finishes the
+     * ladder, the other then sends a rung-1 tap. Grading that as text would compare a term id
+     * against the term's own forms, fail, and — the pair now being graduated — deliver that `again`
+     * to the scheduler as a LAPSE. A correct tap must never cost an interval, and the answer cannot
+     * be graded honestly against a card the server can no longer reconstruct, so it is skipped.
+     *
+     * @param  array<string, \App\Modules\Learning\Application\Dto\DueTermView>  $states
+     */
+    private function isStaleLadderAnswer(ReviewInput $input, array $states): bool
+    {
+        return $input->ladderStep !== null
+            && LearningLadder::isRecognitionStep($input->ladderStep)
+            && ! $input->isPractice
+            && ! $this->isOnLadder($input, $states);
     }
 
     /**

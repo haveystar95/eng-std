@@ -14,33 +14,8 @@ uses(RefreshDatabase::class);
 // learner(), seedWordFor(), seedCollectionWith() live in tests/Pest.php — shared with sibling
 // Learning/Vocabulary Feature tests, and loaded regardless of parallel worker/file order.
 
-/**
- * Answer a term N times correctly, one answer per «day» ending `now`, and return the client_seq
- * reached.
- *
- * Every pair now starts on the ACQUISITION LADDER: the first two correct answers are its
- * recognition steps and reach no scheduler at all, so a test that wants an SM-2 state has to walk
- * the pair off the ladder first. Two extra answers after that put it in `review`, exactly where
- * two answers used to.
- */
-function answerTimes(object $ctx, string $token, string $termId, string $response, int $times, int $lastDaysAgo = 0): void
-{
-    $reviews = [];
-    for ($i = 0; $i < $times; $i++) {
-        $reviews[] = [
-            'id' => Ulid::generate(),
-            'term_id' => $termId,
-            'exercise_mode' => 'typing',
-            'response' => $response,
-            'answered_at' => now()->subDays($lastDaysAgo + $times - 1 - $i)->toIso8601String(),
-            'client_seq' => $i + 1,
-        ];
-    }
-
-    $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
-        ->assertOk();
-}
+// answerTimes() lives in tests/Pest.php — shared with IntroExposureTest, and loaded regardless of
+// parallel worker/file order.
 
 /** How many cards one never-seen term occupies in a session: its remaining ladder chain. */
 const LADDER_CARDS_PER_NEW_TERM = 2; // intro ships switched off, so the chain is rung 1 + rung 2

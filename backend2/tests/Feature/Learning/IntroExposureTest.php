@@ -202,6 +202,50 @@ it('spends the daily new-term quota, so an intro-only session still counts as me
         ->and(array_column($cards, 'ladder_step'))->toBe([1, 2]); // the intro is not shown twice
 });
 
+it('never lets a claimed rung turn a tapped id into typed production', function () {
+    // Identity grading is the one path where a bare id counts as correct, so the MODE has to agree
+    // with the claimed rung. Otherwise `ladder_step: 1` under `typing` would grade a tap as
+    // production — where a fast answer earns `easy` and skews that mode's latency median.
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'apple', 'яблоко');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing',
+            'response' => $termId, 'ladder_step' => 1, 'latency_ms' => 300,
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])->assertOk()->assertJsonPath('data.accepted', 1);
+
+    // The id was graded as TEXT against the term's forms, which it is not → a miss, not an `easy`.
+    expect(DB::table('reviews')->where('term_id', $termId)->value('grade'))->toBe('again');
+});
+
+it('drops a ladder answer that arrives after the pair has left the ladder', function () {
+    // Two devices interleaving uploads of one word's ladder cards: the first finishes the ladder,
+    // the second then sends a rung-1 tap. Grading that as text would fail the term-forms key and —
+    // the pair now being graduated — hand the scheduler a LAPSE for a correct tap.
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'apple', 'яблоко');
+
+    answerTimes($this, $token, $termId, 'apple', times: 3); // ladder done, then one SRS review
+    $before = DB::table('user_term_progress')->where('term_id', $termId)->first();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'multiple_choice',
+            'response' => $termId, 'ladder_step' => 1,
+            'answered_at' => now()->toIso8601String(), 'client_seq' => 99,
+        ]]])
+        ->assertOk()
+        ->assertJsonPath('data.accepted', 0)
+        ->assertJsonPath('data.unknown', 1);
+
+    $after = DB::table('user_term_progress')->where('term_id', $termId)->first();
+    expect((int) $after->lapses)->toBe((int) $before->lapses)
+        ->and((int) $after->interval_days)->toBe((int) $before->interval_days)
+        ->and((string) $after->state)->toBe((string) $before->state);
+});
+
 it('rejects an intro arriving as a review — an intro produces no answer', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'apple', 'яблоко');

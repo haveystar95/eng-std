@@ -40,6 +40,32 @@ pest()->extend(TestCase::class)->in('Feature');
 // file that defines it.
 
 /**
+ * Answer a term N times correctly over HTTP, one answer per «day» ending `$lastDaysAgo` days ago.
+ *
+ * Every pair now starts on the ACQUISITION LADDER: the first two correct answers are its
+ * recognition steps and reach no scheduler at all, so a test that wants an SM-2 state has to walk
+ * the pair off the ladder first. One answer after that enters SM-2 exactly where one answer used to.
+ */
+function answerTimes(object $ctx, string $token, string $termId, string $response, int $times, int $lastDaysAgo = 0): void
+{
+    $reviews = [];
+    for ($i = 0; $i < $times; $i++) {
+        $reviews[] = [
+            'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+            'term_id' => $termId,
+            'exercise_mode' => 'typing',
+            'response' => $response,
+            'answered_at' => now()->subDays($lastDaysAgo + $times - 1 - $i)->toIso8601String(),
+            'client_seq' => $i + 1,
+        ];
+    }
+
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
+        ->assertOk();
+}
+
+/**
  * The SHIPPED admission matrix — the same value the migration seeds `learning_mode_settings` with,
  * so a unit test that never touches the database still asserts the policy that actually runs.
  */
