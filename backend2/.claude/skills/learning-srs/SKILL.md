@@ -39,6 +39,47 @@ new ──first review──► learning ──graduates──► review
 - `known` — a triage self-assessment ("I know this"), **not** an SRS state: the scheduler
   refuses it. Its `due_at` is a verification check, not an interval. See Triage below.
 
+## Acquisition ladder — a second dimension, orthogonal to the scheduler
+
+`state` above answers **WHEN** a pair comes back. A separate column, `acquisition`
+(`new | learning | graduated`) plus `learning_step`, answers **WHAT** it comes back as. The two
+never read each other's fields:
+
+- The **scheduler never sees `acquisition`.** SM-2 keeps every one of its own fields —
+  `state`, `ease_factor`, `interval_days`, `due_at`, `reps`, `lapses`, `last_reviewed_at` — and
+  nothing on the ladder writes them. This is why the ladder could be added without re-deriving a
+  single interval: existing pairs were backfilled to `graduated` and their SM-2 fields were not
+  touched at all.
+- The **mode admission matrix never sees `state`.** Which trainers a pair is allowed to be shown
+  in is a function of its ladder step alone (`ModeAdmission`), so a mode gated off at step 1 is
+  gated off whatever the scheduler thinks.
+
+The step is derived by ONE pure function, `LearningLadder::stepFor(acquisition, reps, learningStep)`
+— mirrored by the client, so it is table-tested on both runtimes:
+
+```
+acquisition=new                    → 0  intro (no grading)
+acquisition=learning, step 1       → 1  recognition, term → translation   (identity-graded)
+acquisition=learning, step 2       → 2  recognition, translation → term
+acquisition=graduated, reps 0–3    → 3  assembly / choice
+acquisition=graduated, reps 4–5    → 4  + typed production
+acquisition=graduated, reps ≥ 6    → 5  + dictation
+```
+
+- **A ladder answer never schedules.** While `acquisition` is `new`/`learning`, a graded answer
+  is appended to `reviews` (it is a real retrieval and keeps the streak) and moves `learning_step`
+  only. A failed step leaves the step where it was — the client re-queues the same card into the
+  tail of the session, which is why a failure must not write a schedule.
+- **Graduation is only the flip to `graduated`.** No interval is invented at graduation; the
+  first real `Grade` afterwards enters SM-2 from `new` exactly as the first success of any new
+  word does today.
+- **`intro` is a mode with no grade.** It is in the mode registry (so it has a toggle like every
+  other trainer) and is dealt only at step 0. It writes an append-only `term_exposures` row
+  (unique per `(user, term)`, so re-upload is an ignored insert), never a `reviews` row — the
+  review log holds real retrievals only, and an intro asks for nothing.
+- A `known` pair is **outside the ladder**: `stepFor` returns `null` and its verification stays
+  typing, as below.
+
 ## Triage — the first-pass sweep of a collection
 
 AI generation mixes basic vocabulary (`money`, `hello`) into the useful set. Triage is a
@@ -48,10 +89,12 @@ time. Its invariants:
 - **A triage marks a term globally, on `(user, term)`** — never inside a collection. Sifting
   out `money` in "Bank" removes it from "Shop" too. Direct consequence of progress living on
   the term.
-- **Three verdicts, not two** — a binary choice makes people lie toward "known":
-  `known` → `known` state (a verification is scheduled); `unknown` → stays `new` (full intro
-  via `multiple_choice`); `unsure` → straight to `learning` (the intro recognition step is
-  skipped — the skip is a *state*, not a flag).
+- **Three verdicts, not two** — a binary choice makes people lie toward "known". Each routes the
+  pair onto the acquisition ladder, and only `known` touches the scheduler:
+  `known` → SM-2 `state=known` with a verification `due_at`, `acquisition=graduated` (outside the
+  ladder); `unknown` → `acquisition=new`, so it starts at the intro step; `unsure` →
+  `acquisition=learning, learning_step=1`, i.e. straight past the intro — the skip is a
+  *position on the ladder*, not a flag.
 - **Triage is never written to `reviews`.** A swipe is a self-assessment, not an exercise
   answer; in the review log it would inflate retention with unproven words. It lives in an
   append-only `term_triages` log (client ULID, no `unique(user, term)` — re-triage and
@@ -178,10 +221,12 @@ produced it.
   `good`): normalise (case, spacing, punctuation, contractions, article optional both ways) →
   full grade; an accepted synonym → full grade; a single-character typo on a ≥ 5-char answer →
   capped at `hard`; else `again`.
-- **The answer key is TARGET-language text the term owns — never a translation.** Production is
-  always into the language being learned: prompt in the user's language, answer in the target.
-  `term_translations` are the prompt side and are **never** in the answer key — accepting the
-  translation where the target was asked is a wrong answer scored correct.
+- **The answer key of a TEXT-graded card is TARGET-language text the term owns — never a
+  translation.** This rule governs every card whose answer is compared as text: typed, assembled
+  from chips, or picked as a sentence. Production is always into the language being learned:
+  prompt in the user's language, answer in the target. `term_translations` are the prompt side and
+  are **never** in a text answer key — accepting the translation where the target was asked is a
+  wrong answer scored correct.
   What counts as the key depends on what the mode ASKED for, and that is decided in exactly one
   place, `ExerciseMode::gradesAgainstExample()`:
   - a word-level mode asks for the term → `terms.text` + alternative forms of the term;
@@ -192,6 +237,15 @@ produced it.
 
   Both branches stay inside the rule: the key is target-language text belonging to the term. A
   translation is not an accepted answer in either.
+- **A reverse-recognition card is graded by IDENTITY, not by text, and that is the only card whose
+  correct option is a translation.** Ladder step 1 (`term → translation`, see «Acquisition ladder»)
+  shows the term and offers translations to tap. There is no text grading to protect: the learner
+  taps an option, the client uploads that option's **id**, and the key is an id — the card's own
+  `term_id`, because every option is identified by the term whose translation it is. So no
+  translation string ever enters an answer key, and the rule above is untouched: the direction of
+  the question is declared by the card (`ladder_step`), and identity-graded cards are a disjoint
+  set from text-graded ones. Do NOT extend this to typed or assembled answers — there the previous
+  rule is absolute.
 - **Distractors** (`multiple_choice`) are other terms' target text, never a translation (mixing
   languages gives it away), and exclude any candidate whose translations overlap the target's
   (the near-duplicate that reads as correct for the same prompt).
