@@ -19,6 +19,7 @@ final class EloquentReviewRepository implements ReviewRepository
             'session_id' => $review->sessionId?->value,
             'grade' => $review->grade->value,
             'exercise_mode' => $review->exerciseMode?->value,
+            'ladder_step' => $review->ladderStep,
             'is_correct' => $review->isCorrect(),
             'is_practice' => $review->isPractice,
             'is_verification' => $review->isVerification,

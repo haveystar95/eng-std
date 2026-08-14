@@ -84,9 +84,11 @@ it('offers a subscribed store collection term as a normal study (new) card too',
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(1);
-    expect($cards[0]['term_id'])->toBe($tid);
-    expect($cards[0]['exercise_mode'])->toBe('multiple_choice'); // new term → recognition
+    // A new term brings its whole recognition chain — introduced and answered in one session.
+    expect($cards)->toHaveCount(2);
+    expect(array_unique(array_column($cards, 'term_id')))->toBe([$tid]);
+    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice'); // both rungs are recognition
+    expect(array_column($cards, 'ladder_step'))->toBe([1, 2]);
 });
 
 it('includes a subscribed store term in the all-collections practice pool', function () {

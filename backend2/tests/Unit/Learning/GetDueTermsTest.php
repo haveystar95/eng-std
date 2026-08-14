@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Query\GetDueTerms;
 use App\Modules\Learning\Application\Query\GetDueTermsHandler;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -18,9 +19,13 @@ function termIds(int $count): array
     return array_map(static fn (): string => TermId::generate()->value, range(1, max(1, $count)));
 }
 
+/** A pair the scheduler owes a review: off the acquisition ladder, so it costs no quota. */
 function dueView(string $id): DueTermView
 {
-    return new DueTermView(TermId::fromString($id), LearningState::Review, 4, null);
+    return new DueTermView(
+        TermId::fromString($id), LearningState::Review, 4, null,
+        acquisition: Acquisition::Graduated,
+    );
 }
 
 /**

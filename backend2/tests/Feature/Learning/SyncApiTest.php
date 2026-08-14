@@ -139,7 +139,7 @@ it('includes progress rows in the delta', function () {
     [$user, $token] = learner();
     [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
 
-    // "unsure" triage → a learning progress row.
+    // "unsure" triage → a progress row on the ACQUISITION ladder, past the intro.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [[
             'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unsure',
@@ -148,7 +148,31 @@ it('includes progress rows in the delta', function () {
 
     $data = sync($this, $token);
     $p = collect($data['changes']['progress'])->firstWhere('term_id', $money);
-    expect($p)->not->toBeNull()->and($p['op'])->toBe('upsert')->and($p['state'])->toBe('learning');
+    // Both dimensions ride the delta: the device mirrors LearningLadder to decide what a card
+    // should be while offline, and `state` alone would only tell it WHEN the word is due.
+    expect($p)->not->toBeNull()
+        ->and($p['op'])->toBe('upsert')
+        ->and($p['state'])->toBe('new')            // the scheduler has never seen it
+        ->and($p['acquisition'])->toBe('learning') // …but the ladder has: rung 1, intro skipped
+        ->and($p['learning_step'])->toBe(1);
+});
+
+it('carries the trainer toggles and the admission matrix as settings on every page', function () {
+    [, $token] = learner();
+
+    $data = sync($this, $token);
+
+    expect($data['settings']['exercise_modes'])->toBe(config('learning.enabled_modes'));
+
+    $byMode = collect($data['settings']['mode_admission'])->keyBy('mode');
+    // The rungs the device needs to build a session offline: which trainer opens where.
+    expect($byMode->has('intro'))->toBeTrue()
+        ->and($byMode['intro']['min_step'])->toBe(0)
+        ->and($byMode['multiple_choice']['min_step'])->toBe(1)
+        ->and($byMode['multiple_choice']['options_policy'])->toBe('distant')
+        ->and($byMode['word_bank']['min_step'])->toBe(3)
+        ->and($byMode['typing']['min_step'])->toBe(4)
+        ->and($byMode['dictation']['min_step'])->toBe(5);
 });
 
 it('carries triage verdicts so a re-login cannot resurrect an unknown swipe', function () {

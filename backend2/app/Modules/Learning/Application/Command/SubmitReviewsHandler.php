@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
+use App\Modules\Learning\Application\Dto\ExposureInput;
 use App\Modules\Learning\Application\Dto\ReviewBatchResult;
 use App\Modules\Learning\Application\Dto\ReviewInput;
 use App\Modules\Learning\Application\Dto\SessionContext;
@@ -13,14 +14,18 @@ use App\Modules\Learning\Application\Port\ProgressSnapshotReader;
 use App\Modules\Learning\Application\Port\SessionContextReader;
 use App\Modules\Learning\Application\Port\StatsProjector;
 use App\Modules\Learning\Domain\Entity\Review;
+use App\Modules\Learning\Domain\Entity\TermExposure;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Event\ReviewsSubmitted;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\ReviewRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
+use App\Modules\Learning\Domain\Repository\TermExposureRepository;
 use App\Modules\Learning\Domain\Repository\TermProgressRepository;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
+use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\Scheduler;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
@@ -49,6 +54,7 @@ final readonly class SubmitReviewsHandler
 
     public function __construct(
         private ReviewRepository $reviews,
+        private TermExposureRepository $exposures,
         private TermProgressRepository $progress,
         private Scheduler $scheduler,
         private TermExistenceReader $terms,
@@ -83,6 +89,9 @@ final readonly class SubmitReviewsHandler
             // Must happen before any review row is written: reviews.session_id has a foreign key
             // to study_sessions, so an answer naming an unknown session would fail the insert.
             $contexts += $this->adoptOfflinePracticeSessions($command, $adoptable);
+            // Intros first: an intro and the recognition it leads to legitimately arrive in one
+            // batch, and the answer must be folded against a pair that has already been introduced.
+            $exposed = $this->recordExposures($command, $known, $contexts);
             /** @var list<Review> $accepted */
             $accepted = [];
             /** @var array<string, ExerciseMode> $touchedModes */
@@ -108,10 +117,19 @@ final readonly class SubmitReviewsHandler
                     continue;
                 }
 
+                // An intro carries no answer, so it can never arrive as a review. If one does, the
+                // client is confused about its own card; refusing it is what stops a retrieval that
+                // never happened from entering the log.
+                if (! $input->exerciseMode->isGraded()) {
+                    $unknown++;
+
+                    continue;
+                }
+
                 $grade = $this->grader->grade(
                     new Answer($input->response, $input->usedHint, $input->latencyMs),
                     $input->exerciseMode,
-                    $this->expectedFor($input, $key),
+                    $this->expectedFor($input, $key, $states),
                     // Cached per (user, mode); frozen for this batch, invalidated below.
                     $this->median->medianFor($command->actorId, $input->exerciseMode),
                 );
@@ -134,6 +152,7 @@ final readonly class SubmitReviewsHandler
                     response: $input->response,
                     sessionId: $input->sessionId,
                     latencyMs: $input->latencyMs,
+                    ladderStep: $input->ladderStep,
                 );
 
                 if (! $this->reviews->insertIgnore($review)) {
@@ -148,8 +167,8 @@ final readonly class SubmitReviewsHandler
 
             $introduced = $this->foldIntoProgress($command, $accepted);
 
-            if ($accepted !== []) {
-                $this->stats->project(new ReviewsSubmitted($this->clock->now(), $accepted, $introduced));
+            if ($accepted !== [] || $exposed !== []) {
+                $this->stats->project(new ReviewsSubmitted($this->clock->now(), $accepted, $introduced, $exposed));
             }
 
             foreach ($touchedModes as $mode) {
@@ -160,6 +179,7 @@ final readonly class SubmitReviewsHandler
                 accepted: count($accepted),
                 duplicates: $duplicates,
                 unknown: $unknown,
+                exposures: count($exposed),
             );
         });
     }
@@ -176,14 +196,100 @@ final readonly class SubmitReviewsHandler
      * the assembled sentence then won't match and grades `again`. Rare (it takes a "New example"
      * mid-session) and honest: we never invent a key the learner wasn't shown.
      *
+     * The one exception is the FORWARD-RECOGNITION card (ladder rung 1), which is graded by
+     * IDENTITY: it shows the term and offers translations to tap, so the client uploads the tapped
+     * option's id and the key is this card's own term id. No translation string is ever compared,
+     * which is what keeps the answer-key rule («never a translation in a text key») literally true
+     * — see `.claude/skills/learning-srs`.
+     *
+     * @param  array<string, \App\Modules\Learning\Application\Dto\DueTermView>  $states  pre-batch snapshot
      */
-    private function expectedFor(ReviewInput $input, TermAnswerKeyView $key): ExpectedAnswer
+    private function expectedFor(ReviewInput $input, TermAnswerKeyView $key, array $states): ExpectedAnswer
     {
+        if ($this->isForwardRecognition($input, $states)) {
+            return new ExpectedAnswer([$input->termId->value]);
+        }
+
         if ($input->exerciseMode->gradesAgainstExample() && $key->example !== null && trim($key->example) !== '') {
             return new ExpectedAnswer([$key->example], isPhrase: true);
         }
 
         return new ExpectedAnswer($key->accepted, $key->isPhrase);
+    }
+
+    /**
+     * Is this answer a tap on a forward-recognition card, and may we believe that?
+     *
+     * The rung is a CLAIM by the client, so it is checked against the pre-batch snapshot: only a
+     * pair that was genuinely still on the ladder can produce one. A pair with no row yet also
+     * qualifies — that is a first meeting, which is exactly where rung 1 lives.
+     *
+     * A false claim on a graduated pair falls through to text grading, which the typed answer then
+     * fails. Self-limiting, and never a route to scoring a word correct.
+     *
+     * @param  array<string, \App\Modules\Learning\Application\Dto\DueTermView>  $states
+     */
+    private function isForwardRecognition(ReviewInput $input, array $states): bool
+    {
+        if ($input->ladderStep !== LearningLadder::STEP_RECOGNITION_FORWARD || $input->isPractice) {
+            return false;
+        }
+
+        $snapshot = $states[$input->termId->value] ?? null;
+
+        return $snapshot === null || $snapshot->acquisition !== Acquisition::Graduated;
+    }
+
+    /**
+     * Append the batch's intro cards and step each pair onto the first recognition rung.
+     *
+     * Nothing here is graded, nothing reaches `reviews`, and no scheduling field is written. The
+     * write is an ignored insert on `(user, term)`, so a re-uploaded batch changes nothing and the
+     * FIRST `shown_at` survives — and only a NEWLY inserted row advances the ladder, which is what
+     * keeps the two idempotent together.
+     *
+     * @param  array<string, true>  $known
+     * @param  array<string, SessionContext>  $contexts
+     * @return list<TermExposure>  the exposures newly recorded
+     */
+    private function recordExposures(SubmitReviews $command, array $known, array $contexts): array
+    {
+        $recorded = [];
+        foreach ($command->exposures as $input) {
+            if (! isset($known[$input->termId->value])) {
+                continue;
+            }
+
+            // An unknown session is dropped from the exposure rather than dropping the exposure:
+            // the fact that matters is that the learner met the word, and `session_id` has a
+            // foreign key that a session the server has never seen would break.
+            $sessionId = $input->sessionId;
+            if ($sessionId !== null) {
+                $context = $contexts[$sessionId->value] ?? null;
+                if ($context === null || $context->userId !== $command->actorId->value) {
+                    $sessionId = null;
+                }
+            }
+
+            $exposure = new TermExposure(
+                userId: $command->actorId,
+                termId: $input->termId,
+                shownAt: $input->shownAt,
+                sessionId: $sessionId,
+            );
+
+            if (! $this->exposures->insertIgnore($exposure)) {
+                continue; // already met — the ladder has moved on since, and must not move back
+            }
+
+            $progress = $this->progress->findForUpdate($command->actorId, $input->termId)
+                ?? TermProgress::start($command->actorId, $input->termId);
+            $this->progress->save($progress->introduce());
+
+            $recorded[] = $exposure;
+        }
+
+        return $recorded;
     }
 
     /**
@@ -333,9 +439,26 @@ final readonly class SubmitReviewsHandler
             foreach ($termReviews as $review) {
                 // An answer to a `known` term is its verification check, not an SRS review — the
                 // scheduler refuses `known`, so resolve pass/fail explicitly here.
-                $termProgress = $termProgress->state() === LearningState::Known
-                    ? $this->resolveVerification($termProgress, $review->grade, $review->answeredAt)
-                    : $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt, $zone);
+                if ($termProgress->state() === LearningState::Known) {
+                    $termProgress = $this->resolveVerification($termProgress, $review->grade, $review->answeredAt);
+
+                    continue;
+                }
+
+                // A RECOGNITION-RUNG answer moves the ladder and nothing else. It is a real
+                // retrieval — it is in the log above, it keeps the streak, it counts in the day's
+                // stats — but the scheduler has never seen this pair and must not start now:
+                // graduation invents no interval, and a failed step invents nothing at all so the
+                // client can re-queue the same card into the tail of the session.
+                if ($termProgress->isOnRecognitionLadder()) {
+                    $termProgress = $review->grade === Grade::Again
+                        ? $termProgress->repeatLadderStep()
+                        : $termProgress->advanceLadder();
+
+                    continue;
+                }
+
+                $termProgress = $this->scheduler->schedule($termProgress, $review->grade, $review->answeredAt, $zone);
             }
 
             $this->progress->save($termProgress);

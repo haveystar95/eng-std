@@ -25,6 +25,8 @@ final readonly class GetExerciseModesHandler
             global: $view->global,
             override: $view->override,
             effective: $view->effective,
+            noGrade: $view->noGrade,
+            admission: $view->admission,
         );
     }
 }

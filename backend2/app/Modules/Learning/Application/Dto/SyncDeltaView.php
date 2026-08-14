@@ -22,6 +22,10 @@ final readonly class SyncDeltaView
      * @param  list<string>  $exerciseModes  the trainers this user has switched on, in rotation
      *                                       order — settings, not a change stream, so they ride
      *                                       every page rather than being diffed
+     * @param  list<array{mode: string, min_acquisition: string, min_learning_step: int|null, min_reps: int|null, options_policy: string, min_step: int}>  $modeAdmission
+     *        the acquisition-ladder matrix, riding along for the same reason: the device builds
+     *        sessions offline and needs to know which rung opens which trainer, not only which
+     *        trainers exist
      */
     public function __construct(
         public DateTimeImmutable $serverTime,
@@ -33,5 +37,6 @@ final readonly class SyncDeltaView
         public array $progress,
         public array $triages,
         public array $exerciseModes = [],
+        public array $modeAdmission = [],
     ) {}
 }

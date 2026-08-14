@@ -16,6 +16,7 @@ use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
 use App\Modules\Learning\Application\Dto\TriageSyncRow;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Learning\Application\Port\TriageSyncReader;
@@ -45,6 +46,7 @@ final readonly class GetSyncDeltaHandler
         private ProgressSyncReader $progressSync,
         private TriageSyncReader $triageSync,
         private EnabledModesReader $enabledModes,
+        private ModeAdmissionReader $admission,
         private Clock $clock,
         private LearnerProfileReader $profile,
     ) {}
@@ -144,8 +146,13 @@ final readonly class GetSyncDeltaHandler
             static fn (ExerciseMode $m): string => $m->value,
             $this->enabledModes->forUser($query->userId)->modes,
         );
+        // …and the ADMISSION MATRIX with them, for the same reason and by the same rule. The device
+        // assembles sessions offline, so it has to know not only which trainers are on but which
+        // rung of the ladder opens each — otherwise it would deal a dictation card to a word the
+        // learner met a minute ago, and only find out at the next sync.
+        $admission = $this->admission->matrixFor($query->userId)->toWire();
 
-        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress, $pTriages, $modes);
+        return new SyncDeltaView($upper, $nextCursor, $hasMore, $pCollections, $pItems, $terms, $pProgress, $pTriages, $modes, $admission);
     }
 
     /**

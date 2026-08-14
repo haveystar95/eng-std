@@ -17,7 +17,9 @@ final class SubmitReviewsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reviews' => ['required', 'array', 'min:1', 'max:200'],
+            // A batch may be answers only, intros only, or both — an intro-only first session is
+            // the normal shape of a brand-new collection, so neither list is required on its own.
+            'reviews' => ['sometimes', 'array', 'max:200'],
             'reviews.*.id' => ['required', 'string', 'size:26'],       // client-generated ULID
             'reviews.*.term_id' => ['required', 'string', 'size:26'],
             'reviews.*.exercise_mode' => ['required', 'string', 'in:multiple_choice,word_bank,typing,listening,cloze,scramble,dictation,pick_correct'],
@@ -31,6 +33,34 @@ final class SubmitReviewsRequest extends FormRequest
             'reviews.*.is_practice' => ['sometimes', 'boolean'],
             'reviews.*.latency_ms' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'reviews.*.session_id' => ['sometimes', 'nullable', 'string', 'size:26'],
+            // Which rung the card was dealt at. 0 is absent on purpose: rung 0 is the intro, which
+            // produces no answer and therefore cannot arrive here — it belongs in `exposures`.
+            'reviews.*.ladder_step' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
+
+            // Intro cards: shown, not answered. No id, because the PAIR is the identity — the write
+            // is idempotent on (user, term), so a re-uploaded batch needs no client ULID to be safe.
+            'exposures' => ['sometimes', 'array', 'max:200'],
+            'exposures.*.term_id' => ['required', 'string', 'size:26'],
+            'exposures.*.shown_at' => ['required', 'date'],
+            'exposures.*.session_id' => ['sometimes', 'nullable', 'string', 'size:26'],
         ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'reviews.array' => 'The reviews field must be an array.',
+        ];
+    }
+
+    /** A batch that carries neither answers nor intros has nothing to apply. */
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+            if ($this->input('reviews', []) === [] && $this->input('exposures', []) === []) {
+                $validator->errors()->add('reviews', 'A batch must carry at least one review or exposure.');
+            }
+        });
     }
 }

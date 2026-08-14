@@ -5,27 +5,41 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
+use App\Modules\Learning\Domain\ValueObject\ModeRule;
+use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use stdClass;
 
 /**
- * Reads the trainer toggles from `learning_mode_settings`: the global row (`user_id IS NULL`)
- * overridden by the user's own row when there is one.
+ * Reads the trainer policy from `learning_mode_settings`: the global rows (`user_id IS NULL`)
+ * overridden PER MODE by the user's own rows when there are any.
+ *
+ * Two ports, one class, because they are one table and one read. Splitting them would mean two
+ * queries per request returning halves of the same rows, and — worse — two chances for a session
+ * to be dealt under one snapshot of the policy and graded under another.
+ *
+ * The override is per mode, not per scope: a user row replaces that mode's whole rule (enabled,
+ * position and thresholds), and modes they have no row for still inherit. «Inherits» as the panel
+ * means it is still «has no rows at all», so the Inherit/Custom switch keeps its meaning.
  *
  * Memoised per instance, which in practice means per request: a study session asks once per card
- * assembly and the answer cannot change mid-request. The service container holds this as a
- * singleton, so a queued job that runs for a long time would keep a stale set — acceptable, since
- * nothing in a job's lifetime depends on a toggle flipped seconds ago.
+ * and the answer cannot change mid-request. The container holds this as a singleton, so a queued
+ * job that runs for a long time would keep a stale policy — acceptable, since nothing in a job's
+ * lifetime depends on a toggle flipped seconds ago.
  */
-final class EloquentEnabledModesReader implements EnabledModesReader
+final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmissionReader
 {
-    private ?EnabledModes $global = null;
+    private const TABLE = 'learning_mode_settings';
 
-    /** @var array<string, EnabledModes|null> */
-    private array $overrides = [];
+    /** @var array<string, list<stdClass>>|null rows by scope key ('' = global) */
+    private ?array $rows = null;
 
     /**
      * Drop the memo. Called by the writer: within one request the admin panel writes a toggle and
@@ -34,83 +48,153 @@ final class EloquentEnabledModesReader implements EnabledModesReader
      */
     public function forget(): void
     {
-        $this->global = null;
-        $this->overrides = [];
+        $this->rows = null;
     }
+
+    // ── EnabledModesReader ───────────────────────────────────────────────────
 
     public function forUser(UserId $userId): EnabledModes
     {
-        return $this->overrideFor($userId) ?? $this->globalDefault();
+        return $this->toModes($this->effectiveRows($userId->value));
     }
 
     public function globalDefault(): EnabledModes
     {
-        if ($this->global !== null) {
-            return $this->global;
-        }
-
-        $modes = $this->read(null);
-        if ($modes === null) {
-            // The seed row is created by migration, so this means someone deleted it. Falling back
-            // to config keeps trainers working; saying so loudly is what gets the row restored.
-            Log::error('learning_mode_settings has no global row — falling back to config/learning.php');
-            /** @var list<string> $configured */
-            $configured = config('learning.enabled_modes', []);
-            $modes = $this->toModes($configured);
-        }
-
-        return $this->global = $modes;
+        return $this->toModes($this->scope(''));
     }
 
     public function overrideFor(UserId $userId): ?EnabledModes
     {
-        if (array_key_exists($userId->value, $this->overrides)) {
-            return $this->overrides[$userId->value];
-        }
+        $own = $this->scope($userId->value);
 
-        return $this->overrides[$userId->value] = $this->read($userId->value);
+        return $own === [] ? null : $this->toModes($this->effectiveRows($userId->value));
     }
 
-    private function read(?string $userId): ?EnabledModes
+    // ── ModeAdmissionReader ──────────────────────────────────────────────────
+
+    public function matrixFor(UserId $userId): ModeAdmission
     {
-        $row = DB::table('learning_mode_settings')
-            ->when($userId === null,
-                static fn ($q) => $q->whereNull('user_id'),
-                static fn ($q) => $q->where('user_id', $userId),
-            )
-            ->value('modes');
-
-        if (! is_string($row)) {
-            return null;
-        }
-
-        $decoded = json_decode($row, true);
-        if (! is_array($decoded) || $decoded === []) {
-            return null; // a corrupt or empty row inherits rather than breaking every card
-        }
-
-        /** @var list<string> $values */
-        $values = array_values(array_filter($decoded, 'is_string'));
-
-        return $values === [] ? null : $this->toModes($values);
+        return $this->toMatrix($this->effectiveRows($userId->value));
     }
 
-    /** @param list<string> $values */
-    private function toModes(array $values): EnabledModes
+    public function globalMatrix(): ModeAdmission
     {
+        return $this->toMatrix($this->scope(''));
+    }
+
+    // ── reading ──────────────────────────────────────────────────────────────
+
+    /**
+     * The global rows with the user's own rows laid over them, mode by mode.
+     *
+     * @return list<stdClass>
+     */
+    private function effectiveRows(string $userId): array
+    {
+        $merged = [];
+        foreach ($this->scope('') as $row) {
+            $merged[(string) $row->mode] = $row;
+        }
+        foreach ($this->scope($userId) as $row) {
+            $merged[(string) $row->mode] = $row;
+        }
+
+        return array_values($merged);
+    }
+
+    /** @return list<stdClass> */
+    private function scope(string $key): array
+    {
+        if ($this->rows === null) {
+            $this->rows = $this->load();
+        }
+
+        return $this->rows[$key] ?? [];
+    }
+
+    /** @return array<string, list<stdClass>> */
+    private function load(): array
+    {
+        $byScope = [];
+        $rows = DB::table(self::TABLE)->orderBy('position')->orderBy('mode')->get();
+        foreach ($rows as $row) {
+            $byScope[(string) ($row->user_id ?? '')][] = $row;
+        }
+
+        return $byScope;
+    }
+
+    /**
+     * The enabled set, in rotation order. The order is part of the contract — free practice
+     * round-robins by index into it — so it comes from `position`, not from the enum.
+     *
+     * @param  list<stdClass>  $rows
+     */
+    private function toModes(array $rows): EnabledModes
+    {
+        $enabled = array_values(array_filter($rows, static fn (stdClass $r): bool => (bool) $r->enabled));
+        usort($enabled, static fn (stdClass $a, stdClass $b): int => [(int) $a->position, (string) $a->mode] <=> [(int) $b->position, (string) $b->mode]);
+
         $modes = [];
-        foreach ($values as $value) {
-            $mode = ExerciseMode::tryFrom($value);
+        foreach ($enabled as $row) {
+            $mode = ExerciseMode::tryFrom((string) $row->mode);
             // A stored mode this build does not know about (a rollback, or a row written by a newer
             // deploy) is skipped, not fatal: the user trains with the modes that do exist.
             if ($mode === null) {
-                Log::warning('learning_mode_settings holds an unknown exercise mode; skipping it', ['mode' => $value]);
+                Log::warning('learning_mode_settings holds an unknown exercise mode; skipping it', ['mode' => $row->mode]);
 
                 continue;
             }
             $modes[] = $mode;
         }
 
+        if ($modes === []) {
+            // The rows are seeded by migration, so an empty set means someone emptied them. Falling
+            // back keeps trainers working; saying so loudly is what gets the rows restored.
+            Log::error('learning_mode_settings has no enabled modes — falling back to config/learning.php');
+            /** @var list<string> $configured */
+            $configured = config('learning.enabled_modes', []);
+            foreach ($configured as $value) {
+                $mode = ExerciseMode::tryFrom($value);
+                if ($mode !== null) {
+                    $modes[] = $mode;
+                }
+            }
+        }
+
         return new EnabledModes($modes !== [] ? $modes : [ExerciseMode::MultipleChoice]);
+    }
+
+    /**
+     * The admission matrix. Note it is built from ALL rows, enabled or not: whether a trainer is
+     * switched on and where it sits on the ladder are two independent questions, and the selector
+     * asks them separately.
+     *
+     * @param  list<stdClass>  $rows
+     */
+    private function toMatrix(array $rows): ModeAdmission
+    {
+        $rules = [];
+        foreach ($rows as $row) {
+            $mode = ExerciseMode::tryFrom((string) $row->mode);
+            $acquisition = Acquisition::tryFrom((string) $row->min_acquisition);
+            if ($mode === null || $acquisition === null) {
+                continue;
+            }
+            $rules[$mode->value] = new ModeRule(
+                minAcquisition: $acquisition,
+                minLearningStep: $row->min_learning_step !== null ? (int) $row->min_learning_step : null,
+                minReps: $row->min_reps !== null ? (int) $row->min_reps : null,
+                optionsPolicy: OptionsPolicy::tryFrom((string) $row->options_policy) ?? OptionsPolicy::Standard,
+            );
+        }
+
+        if ($rules === []) {
+            Log::error('learning_mode_settings holds no admission rules — falling back to the shipped matrix');
+
+            return ModeAdmission::shipped();
+        }
+
+        return new ModeAdmission($rules);
     }
 }

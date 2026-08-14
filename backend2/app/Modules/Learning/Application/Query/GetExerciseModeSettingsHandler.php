@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Learning\Application\Dto\ExerciseModeSettingsView;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 
@@ -16,7 +17,10 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
  */
 final readonly class GetExerciseModeSettingsHandler
 {
-    public function __construct(private EnabledModesReader $modes) {}
+    public function __construct(
+        private EnabledModesReader $modes,
+        private ModeAdmissionReader $admission,
+    ) {}
 
     public function __invoke(GetExerciseModeSettings $query): ExerciseModeSettingsView
     {
@@ -28,6 +32,8 @@ final readonly class GetExerciseModeSettingsHandler
                 global: $global,
                 override: null,
                 effective: $global,
+                noGrade: $this->noGrade(),
+                admission: $this->admission->globalMatrix()->toWire(),
             );
         }
 
@@ -38,6 +44,8 @@ final readonly class GetExerciseModeSettingsHandler
             global: $global,
             override: $override !== null ? $this->wire($override) : null,
             effective: $this->wire($this->modes->forUser($query->userId)),
+            noGrade: $this->noGrade(),
+            admission: $this->admission->matrixFor($query->userId)->toWire(),
         );
     }
 
@@ -45,6 +53,15 @@ final readonly class GetExerciseModeSettingsHandler
     private function available(): array
     {
         return array_map(static fn (ExerciseMode $m): string => $m->value, ExerciseMode::cases());
+    }
+
+    /** @return list<string> */
+    private function noGrade(): array
+    {
+        return array_values(array_map(
+            static fn (ExerciseMode $m): string => $m->value,
+            array_filter(ExerciseMode::cases(), static fn (ExerciseMode $m): bool => ! $m->isGraded()),
+        ));
     }
 
     /** @return list<string> */

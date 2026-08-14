@@ -98,7 +98,9 @@ final readonly class TermPlayability
                 && $this->hasExampleTranslation
                 && $this->distractorCount >= self::MIN_PICK_CORRECT_DISTRACTORS,
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
-            ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening => true,
+            // `intro` asks for nothing at all, so there is no content it could lack: a term with no
+            // example and no transcription still has a text and a translation to be shown.
+            ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Intro => true,
         };
     }
 

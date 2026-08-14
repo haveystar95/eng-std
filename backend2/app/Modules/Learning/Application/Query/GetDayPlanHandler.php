@@ -13,7 +13,8 @@ use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
-use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
@@ -43,6 +44,7 @@ final readonly class GetDayPlanHandler
         private ExerciseSelector $selector,
         private PlayabilityAssessor $playability,
         private EnabledModesReader $enabledModes,
+        private ModeAdmissionReader $admission,
         private Clock $clock,
     ) {}
 
@@ -50,6 +52,7 @@ final readonly class GetDayPlanHandler
     {
         $size = max(1, min(self::MAX_SESSION_SIZE, $query->sessionSize));
         $enabled = $this->enabledModes->forUser($query->userId);
+        $matrix = $this->admission->matrixFor($query->userId);
         $tz = $this->profile->timezoneFor($query->userId);
 
         $dayStart = ($query->date !== null && $query->date !== ''
@@ -92,10 +95,14 @@ final readonly class GetDayPlanHandler
             $progress = TermProgress::reconstitute(
                 $query->userId, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
                 $view->intervalDays, $view->dueAt, $view->reps, 0, null,
+                acquisition: $view->acquisition, learningStep: $view->learningStep,
             );
-            $mode = $this->selector->select($progress, $enabled, $playable);
+            // The plan simulates the FIRST card each term would arrive as. It deliberately does not
+            // expand a ladder chain into its three cards: the question the simulator answers is
+            // "what does this day look like", and a chain is one word, met once.
+            $mode = $this->selector->select($progress, $enabled, $playable, $matrix);
 
-            $isNew = $view->state === LearningState::New;
+            $isNew = $view->acquisition === Acquisition::New;
             $isNew ? $newIntroduced++ : $dueCount++;
 
             $entries[] = new DayPlanEntryView(

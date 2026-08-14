@@ -29,6 +29,7 @@ final class InMemoryTermProgressRepository implements TermProgressRepository, Pr
             if ($progress !== null) {
                 $out[$termId] = new DueTermView(
                     $progress->termId(), $progress->state(), $progress->intervalDays(), $progress->dueAt(), $progress->reps(),
+                    acquisition: $progress->acquisition(), learningStep: $progress->learningStep(),
                 );
             }
         }

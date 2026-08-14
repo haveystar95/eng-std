@@ -87,16 +87,17 @@ it('drops an override back to inheriting, instead of freezing a copy of today de
     expect(wireModes(modes()->forUser($id)))->toBe(['multiple_choice', 'cloze']);
 });
 
-it('overwrites the same scope row instead of accumulating rows', function () {
+it('rewrites the same rows instead of accumulating them', function () {
     [$user] = learner();
     $id = UserId::fromString($user->id);
+    $perScope = count(ExerciseMode::cases()); // one row per (scope, mode) since the matrix moved in
 
     app(EnabledModesWriter::class)->setOverrideFor($id, new EnabledModes([ExerciseMode::Typing]));
     app(EnabledModesWriter::class)->setOverrideFor($id, new EnabledModes([ExerciseMode::Listening]));
     setGlobal([ExerciseMode::Typing]);
     setGlobal([ExerciseMode::Cloze]);
 
-    expect(DB::table('learning_mode_settings')->count())->toBe(2) // one global, one override
+    expect(DB::table('learning_mode_settings')->count())->toBe($perScope * 2) // one scope global, one override
         ->and(wireModes(modes()->forUser($id)))->toBe(['listening']);
 });
 
@@ -106,9 +107,16 @@ it('skips a stored mode this build does not know, instead of failing every card'
     DB::table('learning_mode_settings')->insert([
         'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
         'user_id' => $user->id,
-        'modes' => json_encode(['typing', 'time_travel', 'listening']),
+        'mode' => 'time_travel',
+        'enabled' => true,
+        'position' => 0,
+        'min_acquisition' => 'graduated',
+        'options_policy' => 'standard',
         'created_at' => now(), 'updated_at' => now(),
     ]);
+    app(EnabledModesWriter::class)->setOverrideFor(UserId::fromString($user->id), new EnabledModes([
+        ExerciseMode::Typing, ExerciseMode::Listening,
+    ]));
 
     expect(wireModes(modes()->forUser(UserId::fromString($user->id))))->toBe(['typing', 'listening']);
 });
@@ -120,5 +128,58 @@ it('erases a user override with the account', function () {
     DB::table('users')->where('id', $user->id)->delete();
 
     expect(DB::table('learning_mode_settings')->where('user_id', $user->id)->count())->toBe(0)
-        ->and(DB::table('learning_mode_settings')->whereNull('user_id')->count())->toBe(1);
+        ->and(DB::table('learning_mode_settings')->whereNull('user_id')->count())->toBe(count(ExerciseMode::cases()));
+});
+
+// ── the admission matrix, now stored beside the toggles ──────────────────────
+
+it('seeds the shipped admission matrix, so moving it into the database changes nothing', function () {
+    $matrix = app(\App\Modules\Learning\Application\Port\ModeAdmissionReader::class)->globalMatrix();
+
+    expect($matrix->toWire())->toBe(\App\Modules\Learning\Domain\ValueObject\ModeAdmission::shipped()->toWire());
+});
+
+it('lets one user be admitted to a trainer earlier than everyone else', function () {
+    [$alice] = learner();
+    [$bob] = learner();
+    $aliceId = UserId::fromString($alice->id);
+    $admission = app(\App\Modules\Learning\Application\Port\ModeAdmissionReader::class);
+
+    // Typing normally waits for four post-graduation reviews; give Alice it on graduation.
+    app(\App\Modules\Learning\Application\Command\SetModeAdmissionHandler::class)(
+        new \App\Modules\Learning\Application\Command\SetModeAdmission(
+            userId: $aliceId, mode: 'typing', minAcquisition: 'graduated', minReps: null,
+        ),
+    );
+
+    expect($admission->matrixFor($aliceId)->allows(ExerciseMode::Typing, 3))->toBeTrue()
+        ->and($admission->matrixFor(UserId::fromString($bob->id))->allows(ExerciseMode::Typing, 3))->toBeFalse()
+        // …and the product default is untouched.
+        ->and($admission->globalMatrix()->allows(ExerciseMode::Typing, 3))->toBeFalse();
+});
+
+it('does not switch a trainer on just because its threshold was written', function () {
+    // The two settings are independent: moving a rung must not turn a mode on for a user who was
+    // not being dealt it, which is how a "make typing earlier" tweak would quietly enable dictation.
+    [$user] = learner();
+    $id = UserId::fromString($user->id);
+    setGlobal([ExerciseMode::MultipleChoice]);
+
+    app(\App\Modules\Learning\Application\Command\SetModeAdmissionHandler::class)(
+        new \App\Modules\Learning\Application\Command\SetModeAdmission(
+            userId: $id, mode: 'dictation', minAcquisition: 'graduated',
+        ),
+    );
+
+    expect(wireModes(modes()->forUser($id)))->toBe(['multiple_choice']);
+});
+
+it('refuses a reps threshold on a rung the pair reaches before graduating', function () {
+    // reps is counted FROM graduation, so it says nothing on a recognition rung; storing one there
+    // would read as a stricter rule than it is.
+    expect(fn () => app(\App\Modules\Learning\Application\Command\SetModeAdmissionHandler::class)(
+        new \App\Modules\Learning\Application\Command\SetModeAdmission(
+            userId: null, mode: 'typing', minAcquisition: 'learning', minLearningStep: 1, minReps: 3,
+        ),
+    ))->toThrow(InvalidArgumentException::class);
 });

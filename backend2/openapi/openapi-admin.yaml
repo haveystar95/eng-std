@@ -278,6 +278,61 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /exercise-modes/admission:
+    put:
+      tags: [Exercise modes]
+      summary: Move one trainer's place on the acquisition ladder, product-wide (audited)
+      description: >
+        The admission matrix says which rung of the acquisition ladder opens which trainer — a
+        second dimension, orthogonal to the SRS scheduler, which never sees it. It is data rather
+        than config because what a mode asks of the learner is a product judgement that should move
+        with evidence and one admin action.
+
+
+        ONE mode per call: a whole-matrix write would silently revert a threshold someone else had
+        just moved. This is also deliberately NOT the same call as the on/off toggle — moving a rung
+        must not switch a trainer on for someone who was not being dealt it.
+
+
+        Its own screen is a separate task; this exists so the matrix is inspectable and movable from
+        the moment it starts deciding what learners are dealt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModeAdmissionRule' }
+      responses:
+        '200':
+          description: Applied — returns the new settings, matrix included
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{id}/exercise-modes/admission:
+    put:
+      tags: [Exercise modes]
+      summary: The same, for one user — their per-mode override (audited)
+      description: >
+        The override is PER MODE: giving a user typing early leaves every other threshold — and the
+        user's on/off set — inheriting the product default, including later changes to it.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModeAdmissionRule' }
+      responses:
+        '200':
+          description: Applied — returns the new settings, matrix included
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /users/{id}/exercise-modes:
     get:
       tags: [Exercise modes]
@@ -808,7 +863,10 @@ components:
   schemas:
     ExerciseMode:
       type: string
-      enum: [multiple_choice, word_bank, typing, listening, cloze, scramble]
+      # Every mode the enum knows, switched on or not — `available` lists them all, which is how a
+      # newly built trainer becomes findable in the panel. `intro` is the rung-0 card: it is here
+      # like any other trainer, and `no_grade` is what marks it as producing no answer.
+      enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro]
 
     ExerciseModes:
       type: object
@@ -833,6 +891,66 @@ components:
         inherits:
           type: boolean
           description: Convenience for the Inherit/Custom switch — true when `override` is null.
+        no_grade:
+          type: array
+          description: >
+            The subset of `available` that produces NO grade — today just `intro`, the rung-0 card
+            that shows a word rather than asking for it. A flag rather than an omission: it is a
+            trainer with a toggle like any other, and the panel needs to know not to offer it
+            settings that mean nothing for a card that asks nothing.
+          items: { $ref: '#/components/schemas/ExerciseMode' }
+        admission:
+          type: array
+          description: >
+            The acquisition-ladder matrix in this scope — which rung opens which trainer. Ordered
+            by rung, then mode.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/ModeAdmissionRule'
+              - type: object
+                properties:
+                  min_step:
+                    type: integer
+                    minimum: 0
+                    maximum: 5
+                    description: The three thresholds resolved to a rung, by the shared ladder function.
+
+    ModeAdmissionRule:
+      type: object
+      required: [mode, min_acquisition]
+      description: >
+        One row of the admission matrix: the EARLIEST point on the acquisition ladder at which a
+        trainer may be dealt, plus where its options come from. Expressed in the ladder's own
+        coordinates rather than as a bare rung number — it is how a person would say it, and it
+        means the threshold and a pair's position are turned into a rung by the same function.
+      properties:
+        mode: { $ref: '#/components/schemas/ExerciseMode' }
+        min_acquisition:
+          type: string
+          enum: [new, learning, graduated]
+        min_learning_step:
+          type: integer
+          minimum: 0
+          maximum: 2
+          nullable: true
+          description: Only meaningful when `min_acquisition` is `learning`.
+        min_reps:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: >-
+            Reviews since GRADUATION, not since the first meeting — the recognition steps never
+            reach the scheduler, so `reps` is 0 the moment a pair graduates. Rejected (422) with a
+            non-graduated `min_acquisition`, where it would read as a stricter rule than it is.
+        options_policy:
+          type: string
+          enum: [distant, standard]
+          default: standard
+          description: >-
+            `distant` = wrong options are the session's own neighbours, unmistakably different,
+            which is what makes a first meeting winnable; `standard` = the enrichment distractors,
+            nearly right, which is the exercise once the word is known. A graduated pair always
+            gets `standard` whatever is stored.
 
     Problem:
       type: object

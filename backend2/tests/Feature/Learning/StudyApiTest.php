@@ -14,6 +14,37 @@ uses(RefreshDatabase::class);
 // learner(), seedWordFor(), seedCollectionWith() live in tests/Pest.php — shared with sibling
 // Learning/Vocabulary Feature tests, and loaded regardless of parallel worker/file order.
 
+/**
+ * Answer a term N times correctly, one answer per «day» ending `now`, and return the client_seq
+ * reached.
+ *
+ * Every pair now starts on the ACQUISITION LADDER: the first two correct answers are its
+ * recognition steps and reach no scheduler at all, so a test that wants an SM-2 state has to walk
+ * the pair off the ladder first. Two extra answers after that put it in `review`, exactly where
+ * two answers used to.
+ */
+function answerTimes(object $ctx, string $token, string $termId, string $response, int $times, int $lastDaysAgo = 0): void
+{
+    $reviews = [];
+    for ($i = 0; $i < $times; $i++) {
+        $reviews[] = [
+            'id' => Ulid::generate(),
+            'term_id' => $termId,
+            'exercise_mode' => 'typing',
+            'response' => $response,
+            'answered_at' => now()->subDays($lastDaysAgo + $times - 1 - $i)->toIso8601String(),
+            'client_seq' => $i + 1,
+        ];
+    }
+
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
+        ->assertOk();
+}
+
+/** How many cards one never-seen term occupies in a session: its remaining ladder chain. */
+const LADDER_CARDS_PER_NEW_TERM = 2; // intro ships switched off, so the chain is rung 1 + rung 2
+
 it('submits reviews, creating progress and daily stats', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user);
@@ -95,15 +126,12 @@ it('lists a due card once it is overdue, with hydrated content', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'withdraw cash', 'снять наличные');
 
-    // Answered 5 days ago: new + good → learning (interval 1 day) → due ~4 days ago.
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'withdraw cash',
-            'answered_at' => now()->subDays(5)->toIso8601String(), 'client_seq' => 1,
-        ]]])
-        ->assertOk();
+    // Two recognition steps walk it off the ladder, then one graded answer 5 days ago enters SM-2:
+    // new + good → learning (interval 1 day) → due ~4 days ago.
+    answerTimes($this, $token, $termId, 'withdraw cash', times: 3, lastDaysAgo: 5);
 
-    // Due, in learning state → word_bank; prompt is the translation, answer the target text.
+    // Due, at rung 3 (graduated, no reviews yet) → the assembly rungs; a two-word answer is a word
+    // bank. Prompt is the translation, answer the target text.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')
         ->assertOk()
@@ -127,16 +155,20 @@ it('offers unreviewed collection terms as new study cards', function () {
     $apple = seedWordFor($user, 'apple', 'яблоко');
     $bank = seedWordFor($user, 'bank', 'банк');
 
-    // New terms → multiple_choice; cards carry the answer so the client can play offline.
+    // A new term is INTRODUCED AND ANSWERED in the same session: each brings its recognition chain,
+    // so two words fill four slots. Both rungs are multiple_choice; the direction differs.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(2, 'data.cards')
+        ->assertJsonCount(2 * LADDER_CARDS_PER_NEW_TERM, 'data.cards')
         ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice')
         ->json('data.cards');
 
-    expect(array_column($cards, 'term_id'))->toEqualCanonicalizing([$apple, $bank]);
-    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
+    expect(array_column($cards, 'term_id'))->toEqualCanonicalizing([$apple, $apple, $bank, $bank]);
+    // Rung 1 is graded by identity, so ITS answer is the term id; rung 2 is the term's own text.
+    expect(array_column($cards, 'ladder_step'))->toEqualCanonicalizing([1, 1, 2, 2]);
+    $reverse = array_values(array_filter($cards, static fn (array $c): bool => $c['ladder_step'] === 2));
+    expect(array_column($reverse, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
 });
 
 it('drops a term from the new pool once it has progress', function () {
@@ -144,20 +176,18 @@ it('drops a term from the new pool once it has progress', function () {
     $apple = seedWordFor($user, 'apple', 'яблоко');
     $bank = seedWordFor($user, 'bank', 'банк');
 
-    // Study "apple" now → it becomes learning (due in the future), no longer new.
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'typing', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
-        ]]])
-        ->assertOk();
+    // Study "apple" through the ladder and one SRS review → scheduled a day out, no longer new and
+    // not yet due. Only "bank" is left, and it brings its own chain.
+    answerTimes($this, $token, $apple, 'apple', times: 3);
 
-    $this->withHeader('Authorization', "Bearer {$token}")
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards')
-        ->assertJsonPath('data.cards.0.term_id', $bank)
-        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
+        ->assertJsonCount(LADDER_CARDS_PER_NEW_TERM, 'data.cards')
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice')
+        ->json('data.cards');
+
+    expect(array_unique(array_column($cards, 'term_id')))->toBe([$bank]);
 });
 
 it('scopes the due session to one collection', function () {
@@ -170,21 +200,17 @@ it('scopes the due session to one collection', function () {
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(1);
-    expect($cards[0]['answer'])->toBe('apple');
+    expect($cards)->toHaveCount(LADDER_CARDS_PER_NEW_TERM);
+    expect(array_unique(array_column($cards, 'term_id')))->toHaveCount(1); // the other collection never leaks in
+    expect($cards[1]['answer'])->toBe('apple');                            // rung 2 asks for the term itself
 });
 
 it('reports per-collection progress (learned once a term graduates)', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'apple', 'яблоко');
 
-    // Two good answers in order: new → learning → review (learned).
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(6)->toIso8601String(), 'client_seq' => 1],
-            ['id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing', 'response' => 'apple', 'answered_at' => now()->subDays(5)->toIso8601String(), 'client_seq' => 2],
-        ]])
-        ->assertOk();
+    // Two recognition steps off the ladder, then two good answers in order: new → learning → review.
+    answerTimes($this, $token, $termId, 'apple', times: 4, lastDaysAgo: 5);
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/v1/study/progress')
@@ -201,11 +227,15 @@ it('caps new cards at the profile daily new-term quota', function () {
     seedWordFor($user, 'apple', 'яблоко');
     seedWordFor($user, 'bank', 'банк');
 
-    // Two new terms are available, but the user's daily quota is 1.
-    $this->withHeader('Authorization', "Bearer {$token}")
+    // Two new terms are available, but the user's daily quota is 1 — so one word, and the cards are
+    // its ladder chain rather than one card each for two words.
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards');
+        ->assertJsonCount(LADDER_CARDS_PER_NEW_TERM, 'data.cards')
+        ->json('data.cards');
+
+    expect(array_unique(array_column($cards, 'term_id')))->toHaveCount(1);
 });
 
 it('introduces no new cards when the daily goal is zero', function () {
@@ -273,7 +303,7 @@ it('does not double the daily new-term quota across two scoped sessions', functi
     $sessionA = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonCount(LADDER_CARDS_PER_NEW_TERM, 'data.cards')
         ->json('data.session_id');
 
     $this->withHeader('Authorization', "Bearer {$token}")
@@ -329,13 +359,10 @@ it('includes a studied-but-not-due term in practice (which the normal session wi
     [$user, $token] = learner();
     [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
 
-    // Study it now → learning, due in the future. A normal session no longer offers it today…
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
-            'id' => Ulid::generate(), 'term_id' => $apple, 'exercise_mode' => 'multiple_choice', 'response' => 'apple',
-            'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
-        ]]])
-        ->assertOk();
+    // Walk it off the ladder and give it one SRS review → scheduled a day out. A normal session no
+    // longer offers it today (a pair mid-ladder WOULD still be offered — being unfinished outranks
+    // being due — which is exactly why this has to graduate the term first)…
+    answerTimes($this, $token, $apple, 'apple', times: 3);
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
@@ -377,7 +404,7 @@ it('does not spend the daily new-term quota during practice', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonCount(LADDER_CARDS_PER_NEW_TERM, 'data.cards')  // still never introduced
         ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 

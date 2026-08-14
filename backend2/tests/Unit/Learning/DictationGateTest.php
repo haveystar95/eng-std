@@ -65,18 +65,22 @@ it('refuses an example that is merely the term — that is listening, twice', fu
 
 // ── ladder ───────────────────────────────────────────────────────────────────
 
-it('is a review rung only — a term still being learned never meets it', function () {
+it('is a rung-5 trainer only — a pair below it never meets it', function () {
     $enabled = new EnabledModes([ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Dictation]);
     $playable = $this->assess->assess('reservation', 'I have a reservation for tonight.', 'Перевод.');
 
-    $learning = fn (int $reps) => $this->selector->select(
-        TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Learning, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+    $below = fn (LearningState $state, int $reps) => $this->selector->select(
+        TermProgress::reconstitute(UserId::generate(), TermId::generate(), $state, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
         $enabled,
         $playable,
+        shippedMatrix(),
     );
 
-    for ($reps = 1; $reps <= 8; $reps++) {
-        expect($learning($reps))->not->toBe(ExerciseMode::Dictation);
+    // Every rung below 5, on both scheduler branches. The rung is what gates it now — not the
+    // SM-2 state, which the admission matrix deliberately cannot see.
+    for ($reps = 0; $reps < \App\Modules\Learning\Domain\Service\LearningLadder::DICTATION_MIN_REPS; $reps++) {
+        expect($below(LearningState::Learning, $reps))->not->toBe(ExerciseMode::Dictation)
+            ->and($below(LearningState::Review, $reps))->not->toBe(ExerciseMode::Dictation);
     }
 });
 
@@ -88,12 +92,13 @@ it('takes its turn in the review rotation, last of the rungs', function () {
         TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
         $enabled,
         $playable,
+        shippedMatrix(),
     );
 
-    // Only typing and dictation are on, so the rotation is those two, in ladder order.
-    expect($review(0))->toBe(ExerciseMode::Typing)
-        ->and($review(1))->toBe(ExerciseMode::Dictation)
-        ->and($review(2))->toBe(ExerciseMode::Typing);
+    // At rung 5 only typing and dictation are on, so the rotation is those two, in ladder order.
+    expect($review(6))->toBe(ExerciseMode::Typing)
+        ->and($review(7))->toBe(ExerciseMode::Dictation)
+        ->and($review(8))->toBe(ExerciseMode::Typing);
 });
 
 it('is never dealt while it is switched off, however well the term fits', function () {
@@ -103,11 +108,12 @@ it('is never dealt while it is switched off, however well the term fits', functi
     $playable = $this->assess->assess('reservation', 'I have a reservation for tonight.', 'Перевод.');
 
     expect($playable->supports(ExerciseMode::Dictation))->toBeTrue();
-    for ($reps = 0; $reps <= 8; $reps++) {
+    for ($reps = 0; $reps <= 12; $reps++) {
         expect($this->selector->select(
             TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
             $off,
             $playable,
+            shippedMatrix(),
         ))->not->toBe(ExerciseMode::Dictation);
     }
 });

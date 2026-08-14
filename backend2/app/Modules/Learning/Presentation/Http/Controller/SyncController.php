@@ -77,7 +77,13 @@ final class SyncController
             'has_more' => $view->hasMore,
             // Settings, not a change stream — see GetSyncDeltaHandler. The client mirrors this into
             // its practice builder, which is how a flipped trainer toggle reaches the device.
-            'settings' => ['exercise_modes' => $view->exerciseModes],
+            'settings' => [
+                'exercise_modes' => $view->exerciseModes,
+                // The acquisition-ladder matrix. `min_step` is the rung the three thresholds work
+                // out to — sent as well as them, because the device filters a ladder by rung and
+                // deriving it there would be a second implementation of LearningLadder.
+                'mode_admission' => $view->modeAdmission,
+            ],
             'changes' => [
                 'collections' => array_map($this->collection(...), $view->collections),
                 'collection_items' => array_map($this->item(...), $view->collectionItems),
@@ -175,6 +181,12 @@ final class SyncController
             'reps' => $r->reps,
             'lapses' => $r->lapses,
             'last_reviewed_at' => $r->lastReviewedAt?->format(DATE_ATOM),
+            // The acquisition ladder, orthogonal to `state` above: `state` says when the pair comes
+            // back, these say what it comes back as. The device mirrors the same pure function the
+            // server uses to turn them into a rung, which is how an offline session knows whether a
+            // word is owed an intro or a dictation.
+            'acquisition' => $r->acquisition,
+            'learning_step' => $r->learningStep,
         ];
     }
 

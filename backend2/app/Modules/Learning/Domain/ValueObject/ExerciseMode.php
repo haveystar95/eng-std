@@ -21,10 +21,38 @@ enum ExerciseMode: string
     case Dictation = 'dictation';
     case PickCorrect = 'pick_correct';
 
+    /**
+     * The zeroth rung: the word is SHOWN, not asked. Term, translation, transcription, example —
+     * the learner reads it and moves on.
+     *
+     * It is a mode rather than a session type or a flag because that is what makes it toggleable
+     * like every other trainer (it appears in the «Тренажёры» registry on its own) and what keeps
+     * "which card next" a single question with a single answer. What makes it different is one
+     * thing only, {@see isGraded()}: it produces no answer, so no {@see Grade}, and NOTHING is
+     * written to `reviews` — the review log holds real retrievals, and an intro asks for nothing.
+     * What it writes instead is a `term_exposures` row.
+     */
+    case Intro = 'intro';
+
+    /**
+     * Does this mode produce an answer to grade at all?
+     *
+     * Everything downstream of an answer — the grader, the latency median, the scheduler, the
+     * review log — is unreachable for `intro`, and the single guard that keeps it that way is this
+     * predicate. Note that `maxGrade()` and friends deliberately THROW for `intro` rather than
+     * inventing a neutral value: a grading path that quietly accepts an intro would fabricate
+     * retrievals that never happened.
+     */
+    public function isGraded(): bool
+    {
+        return $this !== self::Intro;
+    }
+
     /** The best grade this mode is allowed to produce. Recognition caps at `good`. */
     public function maxGrade(): Grade
     {
         return match ($this) {
+            self::Intro => throw new \LogicException('intro produces no answer, so it has no grade.'),
             // `dictation` writes a whole sentence from hearing it alone — nothing is on the screen
             // to lean on, so it is production in the fullest sense the app has.
             self::Typing, self::Listening, self::Dictation => Grade::Easy,
@@ -46,6 +74,7 @@ enum ExerciseMode: string
     public function gradesAgainstExample(): bool
     {
         return match ($this) {
+            self::Intro => throw new \LogicException('intro is never graded, so nothing is graded against.'),
             // `pick_correct` shows three sentences and asks which one is right, so the answer the
             // learner commits IS a sentence — the pinned example, verbatim. Grading it against the
             // term's forms would fail every correct pick.
@@ -78,6 +107,7 @@ enum ExerciseMode: string
         return match ($this) {
             self::Typing, self::Listening, self::Cloze, self::Dictation => true,
             self::MultipleChoice, self::WordBank, self::Scramble, self::PickCorrect => false,
+            self::Intro => throw new \LogicException('intro accepts no answer, so there is no typo to forgive.'),
         };
     }
 }

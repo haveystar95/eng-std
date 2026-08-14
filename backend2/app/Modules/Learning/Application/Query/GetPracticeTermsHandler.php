@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Query;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Port\DueTermsReader;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use Random\Randomizer;
@@ -50,7 +51,11 @@ final readonly class GetPracticeTermsHandler
 
         $views = [];
         foreach ($candidates as $termId) {
-            $views[] = $studied[$termId] ?? new DueTermView(TermId::fromString($termId), LearningState::New, 0, null);
+            // A term with no row is new on both dimensions: unscheduled, and standing at rung 0.
+            $views[] = $studied[$termId] ?? new DueTermView(
+                TermId::fromString($termId), LearningState::New, 0, null,
+                acquisition: Acquisition::New,
+            );
         }
 
         /** @var list<DueTermView> $shuffled */

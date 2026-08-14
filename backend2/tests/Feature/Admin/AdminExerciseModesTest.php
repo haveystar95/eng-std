@@ -17,7 +17,7 @@ it('lists every mode this build can deal, plus the current default', function ()
         ->assertOk()
         // `available` comes from the enum, so a newly built mode shows up in the panel the moment
         // it exists — switched off, per the release rule.
-        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct'])
+        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'intro'])
         ->assertJsonPath('global', config('learning.enabled_modes'))
         ->assertJsonPath('inherits', true);
 
@@ -26,7 +26,61 @@ it('lists every mode this build can deal, plus the current default', function ()
     expect($response->json('available'))->toContain('dictation')
         ->and($response->json('global'))->not->toContain('dictation')
         ->and($response->json('available'))->toContain('pick_correct')
-        ->and($response->json('global'))->not->toContain('pick_correct');
+        ->and($response->json('global'))->not->toContain('pick_correct')
+        ->and($response->json('available'))->toContain('intro')
+        ->and($response->json('global'))->not->toContain('intro')
+        // …and `intro` is flagged as producing no grade, so the panel offers it as a toggle rather
+        // than as a scored trainer.
+        ->and($response->json('no_grade'))->toBe(['intro']);
+});
+
+it('carries the admission matrix, so a threshold is inspectable from the panel', function () {
+    [, $token] = adminActor();
+
+    $matrix = collect($this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/admin/api/exercise-modes')
+        ->assertOk()
+        ->json('admission'))->keyBy('mode');
+
+    expect($matrix['intro']['min_acquisition'])->toBe('new')
+        ->and($matrix['multiple_choice']['min_acquisition'])->toBe('learning')
+        ->and($matrix['multiple_choice']['min_learning_step'])->toBe(1)
+        ->and($matrix['multiple_choice']['options_policy'])->toBe('distant')
+        ->and($matrix['typing']['min_acquisition'])->toBe('graduated')
+        ->and($matrix['typing']['min_reps'])->toBe(4);
+});
+
+it('moves one trainer down the ladder without touching the rest, and logs who did it', function () {
+    [$admin, $token] = adminActor();
+
+    $matrix = collect($this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/exercise-modes/admission', [
+            'mode' => 'dictation', 'min_acquisition' => 'graduated', 'min_reps' => 12,
+        ])
+        ->assertOk()
+        ->json('admission'))->keyBy('mode');
+
+    expect($matrix['dictation']['min_reps'])->toBe(12)
+        ->and($matrix['typing']['min_reps'])->toBe(4); // untouched
+
+    // Moving a threshold changes what learners are asked for weeks and is invisible to them, so it
+    // leaves a trail like every other mutation the panel makes.
+    $this->assertDatabaseHas('admin_audit_log', ['admin_id' => $admin->id, 'action' => 'learning.admission.global']);
+});
+
+it('refuses an admission rule the ladder cannot mean', function () {
+    [, $token] = adminActor();
+
+    // reps is counted from graduation, so it says nothing on a recognition rung.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/exercise-modes/admission', [
+            'mode' => 'typing', 'min_acquisition' => 'learning', 'min_learning_step' => 1, 'min_reps' => 3,
+        ])
+        ->assertStatus(422);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/exercise-modes/admission', ['mode' => 'time_travel', 'min_acquisition' => 'new'])
+        ->assertStatus(422);
 });
 
 it('sets the product default and keeps the order it was given', function () {
@@ -49,7 +103,9 @@ it('refuses to leave the product default empty — there is nothing to inherit f
         ->putJson('/admin/api/exercise-modes', ['modes' => []])
         ->assertStatus(422);
 
-    expect(DB::table('learning_mode_settings')->whereNull('user_id')->count())->toBe(1);
+    // One row per (scope, mode) since the admission matrix moved into this table.
+    expect(DB::table('learning_mode_settings')->whereNull('user_id')->count())
+        ->toBe(count(\App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases()));
 });
 
 it('rejects an unknown mode, naming the offending entry', function () {

@@ -25,9 +25,11 @@ it('projects triage verdicts onto progress and never writes reviews', function (
         ->assertJsonPath('data.accepted', 3)
         ->assertJsonPath('data.unknown', 0);
 
-    $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'known']);
-    $this->assertDatabaseHas('user_term_progress', ['term_id' => $withdraw, 'state' => 'learning']);
-    $this->assertDatabaseMissing('user_term_progress', ['term_id' => $overdraft]);
+    // Each verdict routes the pair onto the acquisition ladder, and only «known» touches the
+    // scheduler (its verification due date).
+    $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'known', 'acquisition' => 'graduated']);
+    $this->assertDatabaseHas('user_term_progress', ['term_id' => $withdraw, 'acquisition' => 'learning', 'learning_step' => 1, 'state' => 'new']);
+    $this->assertDatabaseMissing('user_term_progress', ['term_id' => $overdraft]); // «не знаю» → stays new, no row
     $this->assertDatabaseCount('reviews', 0);
 });
 
@@ -141,18 +143,23 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 
-    // return to learning: resets the row to new → shows up in study again.
+    // Return to learning: the row goes back to rung 0 of the ladder, so it is studied again — and
+    // as a FIRST meeting, chain and all. A «known» mark was a claim, never a taught word, so there
+    // is no recognition step it has ever passed to skip.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
             ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 2],
         ]])->assertOk();
 
-    $this->withHeader('Authorization', "Bearer {$token}")
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards')
+        ->assertJsonCount(2, 'data.cards')
         ->assertJsonPath('data.cards.0.term_id', $money)
-        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
+        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice')
+        ->json('data.cards');
+
+    expect(array_column($cards, 'ladder_step'))->toBe([1, 2]);
 });
 
 it('does not resolve a known-term verification in a practice session', function () {

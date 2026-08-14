@@ -22,7 +22,7 @@ final class EloquentProgressSyncReader implements ProgressSyncReader
         }
 
         return array_values($q->orderBy('updated_at')->orderBy('term_id')
-            ->get(['term_id', 'state', 'ease_factor', 'interval_days', 'due_at', 'reps', 'lapses', 'last_reviewed_at', 'updated_at'])
+            ->get(['term_id', 'state', 'ease_factor', 'interval_days', 'due_at', 'reps', 'lapses', 'last_reviewed_at', 'updated_at', 'acquisition', 'learning_step'])
             ->map(fn ($r): ProgressSyncRow => new ProgressSyncRow(
                 termId: (string) $r->term_id,
                 state: (string) $r->state,
@@ -33,6 +33,8 @@ final class EloquentProgressSyncReader implements ProgressSyncReader
                 lapses: (int) $r->lapses,
                 lastReviewedAt: $r->last_reviewed_at !== null ? new DateTimeImmutable((string) $r->last_reviewed_at) : null,
                 updatedAt: new DateTimeImmutable((string) $r->updated_at),
+                acquisition: (string) $r->acquisition,
+                learningStep: (int) $r->learning_step,
             ))->all());
     }
 }

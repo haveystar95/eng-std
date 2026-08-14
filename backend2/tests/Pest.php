@@ -12,6 +12,7 @@ use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Fuzz;
 use App\Modules\Learning\Domain\Service\Sm2Scheduler;
+use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -24,6 +25,7 @@ use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
 use Tests\Doubles\InMemoryReviewRepository;
 use Tests\Doubles\InMemoryStudySessions;
+use Tests\Doubles\InMemoryTermExposureRepository;
 use Tests\Doubles\InMemoryTermProgressRepository;
 use Tests\Doubles\SpyStatsProjector;
 use Tests\TestCase;
@@ -36,6 +38,15 @@ pest()->extend(TestCase::class)->in('Feature');
 // only happened to be visible to its siblings by the accident of serial load order: under
 // `vendor/bin/pest --parallel`, a worker can run a file that calls it without ever having loaded the
 // file that defines it.
+
+/**
+ * The SHIPPED admission matrix — the same value the migration seeds `learning_mode_settings` with,
+ * so a unit test that never touches the database still asserts the policy that actually runs.
+ */
+function shippedMatrix(): ModeAdmission
+{
+    return ModeAdmission::shipped();
+}
 
 /**
  * Create a back-office admin and return it with a fresh bearer token. Password is fixed so
@@ -132,6 +143,7 @@ function sync(object $ctx, string $token, string $query = ''): array
 function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHandler
 {
     $ctx->reviews = new InMemoryReviewRepository();
+    $ctx->exposures = new InMemoryTermExposureRepository();
     $ctx->progress = new InMemoryTermProgressRepository();
     $ctx->stats = new SpyStatsProjector();
     $ctx->median = new FakeLatencyMedianReader();
@@ -139,6 +151,7 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
 
     return new SubmitReviewsHandler(
         reviews: $ctx->reviews,
+        exposures: $ctx->exposures,
         progress: $ctx->progress,
         scheduler: new Sm2Scheduler(Fuzz::none()),
         terms: $known === null ? FakeTermExistenceReader::knowingAll() : FakeTermExistenceReader::knowing($known),

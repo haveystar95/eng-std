@@ -21,6 +21,15 @@ final readonly class SessionCardView
      * @param  list<string>  $acceptedVariants  other answers that count as correct for THIS card's
      *        `answer`, so the client's instant check matches the server's. Empty on the
      *        sentence-graded modes: a variant of the term is not a variant of the sentence.
+     * @param  int|null  $ladderStep  which rung of the acquisition ladder this card was dealt at.
+     *        The client echoes it back with the answer, because the pair's rung MOVES the moment
+     *        that answer is folded — without it the server could not tell afterwards what the card
+     *        had asked. Null for a `known` verification, which is outside the ladder.
+     * @param  list<string>|null  $optionIds  present ONLY on the forward-recognition card (rung 1),
+     *        aligned index-for-index with `options`: the term each option's translation belongs to.
+     *        That card is graded by IDENTITY — the learner taps, the client uploads the tapped id,
+     *        and `answer` below is this card's own term id. It is the one card whose correct option
+     *        is a translation, and it is exactly why no translation ever enters a text answer key.
      */
     public function __construct(
         public string $termId,
@@ -35,5 +44,7 @@ final readonly class SessionCardView
         public ?array $chips,
         public array $acceptedVariants = [],
         public ?array $optionFeedback = null,
+        public ?int $ladderStep = null,
+        public ?array $optionIds = null,
     ) {}
 }

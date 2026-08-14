@@ -691,23 +691,46 @@ paths:
   /reviews/batch:
     post:
       tags: [Study]
-      summary: Upload a batch of raw answers (server-graded, idempotent by review id)
+      summary: Upload a session's events — answers (server-graded) and intros
       description: >
         Offline-friendly: up to 200 answers with client-generated ULIDs. The client sends the
         RAW answer (response text, mode, latency, hint) — the SERVER grades it, so the grading
         rule lives in one place. Re-sending an id is a duplicate, not an error; an answer for an
         unknown term is skipped. A practice answer (is_practice) is recorded but never schedules.
+
+
+        A batch also carries `exposures`: INTRO cards, which were shown and asked nothing. They
+        are a separate list because they are not answers — they produce no grade and are never
+        written to the review log, which holds real retrievals only. At least one of the two
+        lists must be present; an intro-only batch is the normal shape of a first session with a
+        brand-new collection.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [reviews]
               properties:
+                exposures:
+                  type: array
+                  maxItems: 200
+                  description: >-
+                    Intro cards shown. Identified by the PAIR (user, term), not by an event id:
+                    a term is introduced once, so a re-uploaded exposure is an ignored insert
+                    that keeps the first `shown_at` — no client ULID is needed to make it safe.
+                    Recording one moves the pair from ladder rung 0 to rung 1 and writes no
+                    scheduling field. Naming a session the server has never seen adopts it as an
+                    offline practice run, exactly as an answer does; if it cannot be adopted the
+                    exposure is still recorded, without the session.
+                  items:
+                    type: object
+                    required: [term_id, shown_at]
+                    properties:
+                      term_id: { type: string, minLength: 26, maxLength: 26 }
+                      shown_at: { type: string, format: date-time }
+                      session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
                 reviews:
                   type: array
-                  minItems: 1
                   maxItems: 200
                   items:
                     type: object
@@ -742,6 +765,19 @@ paths:
                           means unmeasured (treated neutrally). Do NOT send 0 for an unmeasured
                           answer — send null.
                       session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                      ladder_step:
+                        type: integer
+                        minimum: 1
+                        maximum: 5
+                        nullable: true
+                        description: >-
+                          The rung of the acquisition ladder the card was dealt at, echoed from
+                          the card. Required for rung 1 (forward recognition), which is graded by
+                          IDENTITY: the learner taps an option and the client uploads that
+                          option's TERM ID as `response`, so the key is an id and no translation
+                          ever enters an answer key. The pair's rung moves as this answer is
+                          folded, which is why the card has to say what it asked. 0 is not valid
+                          here — that is the intro, which belongs in `exposures`.
       responses:
         '200':
           description: Applied
@@ -756,6 +792,11 @@ paths:
                       accepted: { type: integer }
                       duplicates: { type: integer }
                       unknown: { type: integer }
+                      exposures:
+                        type: integer
+                        description: >-
+                          Intro cards newly recorded. Counted apart from `accepted` because they
+                          are not answers; a re-upload reports 0 here and changes nothing.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
@@ -975,7 +1016,44 @@ paths:
                               The trainers this user has switched on, IN ROTATION ORDER (their own
                               override, or the product default). The client mirrors this into its
                               offline practice builder, so a toggle takes effect on the next sync.
-                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro] }
+                          mode_admission:
+                            type: array
+                            description: >
+                              The ACQUISITION LADDER matrix: which rung opens which trainer, and
+                              where that trainer's options come from. Rides along for the same
+                              reason as the toggles — the device builds sessions offline, so it
+                              needs to know not only which trainers exist but which of them this
+                              pair has earned. Stored per user with the same override mechanism
+                              as the toggles.
+                            items:
+                              type: object
+                              properties:
+                                mode: { type: string }
+                                min_acquisition: { type: string, enum: [new, learning, graduated] }
+                                min_learning_step: { type: integer, minimum: 0, maximum: 2, nullable: true }
+                                min_reps:
+                                  type: integer
+                                  minimum: 0
+                                  nullable: true
+                                  description: Reviews since GRADUATION, not since the first meeting.
+                                options_policy:
+                                  type: string
+                                  enum: [distant, standard]
+                                  description: >-
+                                    `distant` = wrong options are the session's own neighbours,
+                                    unmistakably different, which is what makes a first meeting
+                                    winnable. `standard` = the enrichment distractors, which are
+                                    nearly right and are the exercise once the word is known. A
+                                    graduated pair always gets `standard`.
+                                min_step:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 5
+                                  description: >-
+                                    The three thresholds resolved to a rung. Sent as well as them
+                                    so the client filters by rung without re-implementing the
+                                    ladder function.
                       changes:
                         type: object
                         properties:
@@ -1056,13 +1134,39 @@ paths:
                                 term_id: { type: string }
                                 op: { type: string, enum: [upsert] }
                                 updated_at: { type: string, format: date-time }
-                                state: { type: string, enum: [new, learning, review, relearning, known] }
+                                state:
+                                  type: string
+                                  enum: [new, learning, review, relearning, known]
+                                  description: >-
+                                    The SCHEDULER's dimension — WHEN the pair comes back. Says
+                                    nothing about what it comes back as; see `acquisition`.
                                 ease_factor: { type: number }
                                 interval_days: { type: integer }
                                 due_at: { type: string, format: date-time, nullable: true }
                                 reps: { type: integer }
                                 lapses: { type: integer }
                                 last_reviewed_at: { type: string, format: date-time, nullable: true }
+                                acquisition:
+                                  type: string
+                                  enum: [new, learning, graduated]
+                                  description: >-
+                                    The ACQUISITION LADDER's dimension — WHAT the pair comes back
+                                    as. Orthogonal to `state`: the scheduler never reads it and it
+                                    never reads the scheduler. `new` = never shown (its first card
+                                    is the intro); `learning` = working through the two recognition
+                                    steps, which log answers but schedule nothing; `graduated` =
+                                    off the recognition rungs, where ordinary SRS runs and the rung
+                                    widens with `reps`.
+                                learning_step:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 2
+                                  description: >-
+                                    The rung while `acquisition` is `learning`. Not derivable from
+                                    `reps`: a FAILED recognition step is re-queued as the same step
+                                    but is still logged, so anything derived from the log would push
+                                    the pair up a rung it has not earned. Combine with `acquisition`
+                                    and `reps` through the shared ladder function to get the rung.
                           triages:
                             type: array
                             description: >-
@@ -1312,10 +1416,30 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
-        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise" }
-        answer: { type: string, description: "What a correct answer must match. The target-language term, except for the sentence modes (`scramble`, `dictation`), where this is the example sentence itself — the client must not display it before the answer is committed" }
+        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise. On ladder rung 1 the direction is REVERSED: the prompt is the TERM and the options are translations" }
+        answer: { type: string, description: "What a correct answer must match. The target-language term, except for: the sentence modes (`scramble`, `dictation`), where this is the example sentence itself; and ladder rung 1, where the card is graded by identity and this is the card's own TERM ID. The client must not display it before the answer is committed. On `intro` it is the term, and it is never compared against anything" }
+        ladder_step:
+          type: integer
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: >
+            The rung of the acquisition ladder this card was dealt at (0 intro, 1 recognition
+            term→translation, 2 recognition translation→term, 3 assembly/choice, 4 typed
+            production, 5 dictation). NULL for a `known` verification, which is outside the
+            ladder. Echo it back with the answer: the pair's rung moves as that answer is folded,
+            so it is the only thing that can still say what the card asked.
+        option_ids:
+          type: array
+          nullable: true
+          description: >
+            Ladder rung 1 only, aligned index-for-index with `options`: the term each option's
+            translation belongs to. That card is answered by TAPPING, and the client uploads the
+            tapped id as `response` — which is why it is the one card whose correct option is a
+            translation without any translation entering an answer key.
+          items: { type: string }
         transcription: { type: string, nullable: true }
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }

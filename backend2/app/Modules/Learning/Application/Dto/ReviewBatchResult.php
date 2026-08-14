@@ -11,5 +11,11 @@ final readonly class ReviewBatchResult
         public int $accepted,
         public int $duplicates,
         public int $unknown,
+        /**
+         * Intro cards newly recorded. Counted apart from `accepted` because they are not answers:
+         * folding them into one number would tell the client it had uploaded retrievals it never
+         * made, and a re-upload legitimately reports zero here while changing nothing.
+         */
+        public int $exposures = 0,
     ) {}
 }

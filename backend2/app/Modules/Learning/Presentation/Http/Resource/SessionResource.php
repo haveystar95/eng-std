@@ -30,6 +30,14 @@ final class SessionResource extends JsonResource
                 'chips' => $card->chips,
                 'accepted_variants' => $card->acceptedVariants,
                 'option_feedback' => $card->optionFeedback,
+                // The rung this card was dealt at. The client echoes it back with the answer —
+                // the pair's rung moves as that answer is folded, so it is the only thing that can
+                // still say what the card asked.
+                'ladder_step' => $card->ladderStep,
+                // Forward-recognition only: which term each option's translation belongs to. That
+                // card is answered by TAPPING, so the client uploads the tapped id and `answer`
+                // above is this card's own term id.
+                'option_ids' => $card->optionIds,
             ], $this->resource->cards),
         ];
     }

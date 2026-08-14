@@ -24,11 +24,13 @@ function adminFixture(): array
 
     [$collectionId, $termId] = adminSeedTerm($user, 'Fruit', 'apple', 'яблоко');
 
+    // Three answers, not one: the first two are the acquisition ladder's recognition steps, which
+    // reach no scheduler. The third is what actually schedules the term into `learning`.
     test()->withHeader('Authorization', "Bearer {$userToken}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+        ->postJson('/api/v1/reviews/batch', ['reviews' => array_map(static fn (int $seq): array => [
             'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing',
-            'response' => 'apple', 'answered_at' => now()->toIso8601String(), 'client_seq' => 1,
-        ]]])->assertOk();
+            'response' => 'apple', 'answered_at' => now()->addSeconds($seq)->toIso8601String(), 'client_seq' => $seq,
+        ], [1, 2, 3])])->assertOk();
 
     DB::table('generation_requests')->insert([
         'id' => Ulid::generate(), 'user_id' => $user->id, 'prompt' => 'иду в банк',
@@ -94,7 +96,8 @@ it('returns a user detail with progress, counters and costs', function () {
         ->assertJsonPath('email', 'learner@wt.test')
         ->assertJsonPath('tier', 'free')
         ->assertJsonPath('progress.total', 1)
-        ->assertJsonPath('reviews_today', 1)
+        ->assertJsonPath('reviews_today', 3) // the fixture's two ladder steps plus one SRS review
+
         ->assertJsonPath('costs.generation.cost_usd', 0.0075)
         ->assertJsonPath('collections.0.title', 'Fruit');
 });
@@ -126,7 +129,7 @@ it('returns a user review feed', function () {
     $this->withHeader('Authorization', "Bearer {$adminToken}")
         ->getJson("/admin/api/users/{$user->id}/reviews")
         ->assertOk()
-        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.total', 3) // the fixture's two ladder steps plus one SRS review
         ->assertJsonPath('data.0.term_id', $termId)
         ->assertJsonPath('data.0.term_text', 'apple')
         ->assertJsonPath('data.0.exercise_mode', 'typing');

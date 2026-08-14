@@ -135,7 +135,7 @@ final readonly class StartPracticeDialogHandler
         // Priority: learning/due → new → known, capped at the configured max.
         $due = array_map(
             static fn ($v): string => $v->termId->value,
-            $this->dueTerms->dueAmong($command->userId, $now, $termIds, $this->config->maxTargetWords),
+            $this->dueTerms->selectableAmong($command->userId, $now, $termIds, $this->config->maxTargetWords),
         );
         $started = $this->progress->existingTermIds($command->userId, $termIds);
         $selected = $this->prioritizer->select($termIds, $due, $started, $this->config->maxTargetWords);

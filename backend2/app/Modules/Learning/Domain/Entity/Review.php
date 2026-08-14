@@ -33,6 +33,13 @@ final class Review
         public readonly ?string $response = null,
         public readonly ?StudySessionId $sessionId = null,
         public readonly ?int $latencyMs = null,
+        /**
+         * The rung of the acquisition ladder the card was dealt at, or null outside it. Recorded
+         * because the pair's rung MOVES as this very answer is folded, so the log is the only place
+         * that can still say what the card asked — and rungs 1 and 2 ask different questions, not
+         * merely differently-shaped versions of one.
+         */
+        public readonly ?int $ladderStep = null,
     ) {}
 
     /** Correct means anything the user got right, including "right but slow/hinted" (hard). */

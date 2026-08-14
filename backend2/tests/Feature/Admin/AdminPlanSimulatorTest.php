@@ -9,14 +9,25 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-/** Answer a term correctly (as the user) at a given time, so grade is `good` and it schedules. */
+/**
+ * Answer a term correctly (as the user) at a given time so it SCHEDULES — which now takes three
+ * answers, not one: every pair starts on the acquisition ladder and its first two answers are
+ * recognition steps that reach no scheduler at all. The third is the one dated `$answeredAt`, so
+ * the interval it produces is the one the caller meant.
+ */
 function answerTerm(User $user, string $token, string $termId, string $answer, string $answeredAt, int $seq): void
 {
-    test()->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+    $at = new DateTimeImmutable($answeredAt);
+    $reviews = [];
+    foreach ([$at->modify('-2 seconds'), $at->modify('-1 second'), $at] as $i => $moment) {
+        $reviews[] = [
             'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => 'typing',
-            'response' => $answer, 'answered_at' => $answeredAt, 'client_seq' => $seq,
-        ]]])
+            'response' => $answer, 'answered_at' => $moment->format(DATE_ATOM), 'client_seq' => $seq * 10 + $i,
+        ];
+    }
+
+    test()->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
         ->assertOk();
 }
 

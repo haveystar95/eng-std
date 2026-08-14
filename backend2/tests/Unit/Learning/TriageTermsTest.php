@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Dto\TriageInput;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\TriageVerificationPlanner;
 use App\Modules\Learning\Domain\ValueObject\CefrLevel;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\TriageId;
 use App\Modules\Learning\Domain\ValueObject\TriageVerdict;
@@ -54,7 +55,39 @@ it('projects known to a known progress row with a scheduled verification check',
     $p = $this->progress->get($this->user, $term);
     expect($p?->state())->toBe(LearningState::Known)
         // unknown difficulty → not risky → the 90-day check.
-        ->and($p?->dueAt())->toEqual($this->now->modify('+90 days'));
+        ->and($p?->dueAt())->toEqual($this->now->modify('+90 days'))
+        // …and it is OUTSIDE the acquisition ladder: a claim awaiting proof has no rung, so the
+        // admission matrix does not apply to it and its check stays typing.
+        ->and($p?->acquisition())->toBe(Acquisition::Graduated)
+        ->and($p?->ladderStep())->toBeNull();
+});
+
+it('routes all three verdicts onto the ladder, and only «знаю» touches the scheduler', function () {
+    // The whole triage contract in one table: the verdict decides a POSITION, not a schedule.
+    $unknown = TermId::generate();
+    $unsure = TermId::generate();
+    $known = TermId::generate();
+
+    triageHandler($this)(new TriageTerms($this->user, [
+        swipe($unknown, TriageVerdict::Unknown, $this->now),
+        swipe($unsure, TriageVerdict::Unsure, $this->now),
+        swipe($known, TriageVerdict::Known, $this->now),
+    ]));
+
+    // «не знаю» → rung 0. No row at all, which to selection means exactly the same thing.
+    expect($this->progress->get($this->user, $unknown))->toBeNull();
+
+    // «не уверен» → rung 1: past the intro, because the swipe pass already showed them the word.
+    $u = $this->progress->get($this->user, $unsure);
+    expect($u?->acquisition())->toBe(Acquisition::Learning)
+        ->and($u?->ladderStep())->toBe(1)
+        ->and($u?->dueAt())->toBeNull();          // the ladder never schedules
+
+    // «знаю» → off the ladder, and the ONE verdict that writes a scheduling field.
+    $k = $this->progress->get($this->user, $known);
+    expect($k?->ladderStep())->toBeNull()
+        ->and($k?->state())->toBe(LearningState::Known)
+        ->and($k?->dueAt())->not->toBeNull();     // its verification check
 });
 
 it('projects unsure straight into learning, due now', function () {
@@ -62,8 +95,13 @@ it('projects unsure straight into learning, due now', function () {
     triageHandler($this)(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unsure, $this->now)]));
 
     $p = $this->progress->get($this->user, $term);
-    expect($p?->state())->toBe(LearningState::Learning)
-        ->and($p?->dueAt())->toEqual($this->now);
+    // «Не уверен» is a POSITION on the acquisition ladder — first recognition rung, past the intro
+    // — not a scheduler state. The scheduler is untouched: the pair is selected because it is
+    // unfinished, not because it is due, so it has no due date at all.
+    expect($p?->acquisition())->toBe(Acquisition::Learning)
+        ->and($p?->ladderStep())->toBe(1)
+        ->and($p?->state())->toBe(LearningState::New)
+        ->and($p?->dueAt())->toBeNull();
 });
 
 it('leaves an unknown-swiped term new — no progress row', function () {
@@ -88,7 +126,11 @@ it('returns a known term to new when swiped unknown, keeping its history', funct
     expect($p?->state())->toBe(LearningState::New)
         ->and($p?->reps())->toBe(12)
         ->and($p?->lapses())->toBe(3)
-        ->and($p?->dueAt())->toBeNull();
+        ->and($p?->dueAt())->toBeNull()
+        // Back to rung 0, reps notwithstanding: a `known` mark was a claim, never a taught word,
+        // so there is no recognition step it has ever passed.
+        ->and($p?->acquisition())->toBe(Acquisition::New)
+        ->and($p?->ladderStep())->toBe(0);
 });
 
 it('does not clobber real study progress with a stray unknown swipe', function () {

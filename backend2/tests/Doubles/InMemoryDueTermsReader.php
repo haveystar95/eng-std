@@ -11,11 +11,11 @@ use DateTimeImmutable;
 
 final class InMemoryDueTermsReader implements DueTermsReader
 {
-    /** @var list<int> the limit passed to each due() call, for asserting the session cap */
+    /** @var list<int> the limit passed to each selectable() call, for asserting the session cap */
     public array $dueLimits = [];
 
     /**
-     * @param  list<DueTermView>  $dueTerms  the due projection
+     * @param  list<DueTermView>  $dueTerms  the selectable projection (ladder rows + due rows)
      * @param  list<DueTermView>|null  $allTerms  every progress row (any state, ignoring due_at)
      *                                            for {@see allAmong}; defaults to [$dueTerms]
      */
@@ -24,7 +24,7 @@ final class InMemoryDueTermsReader implements DueTermsReader
         private readonly ?array $allTerms = null,
     ) {}
 
-    public function dueAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
+    public function selectableAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
         $this->dueLimits[] = $limit;
         $set = array_flip($termIds);

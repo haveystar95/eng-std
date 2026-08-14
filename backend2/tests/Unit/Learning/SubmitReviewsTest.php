@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Learning\Application\Command\SubmitReviews;
 use App\Modules\Learning\Application\Dto\ReviewInput;
 use App\Modules\Learning\Domain\Entity\TermProgress;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ReviewId;
@@ -31,13 +32,16 @@ beforeEach(function () {
     $this->user = UserId::generate();
 });
 
-it('grades raw answers server-side and folds them into progress in order', function () {
+it('grades raw answers server-side and walks the acquisition ladder, in order', function () {
     $term = TermId::generate();
     $handler = buildSubmitHandler($this);
 
+    // A pair with no row starts on the ladder, so these two answers are its recognition steps:
+    // rung 1 → rung 2 → graduated. They are real retrievals (logged, they keep the streak) but
+    // they do not schedule, so SM-2 has still never touched this pair.
     $result = $handler(new SubmitReviews($this->user, [
-        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1), // new → learning (1)
-        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z', seq: 2), // learning → review (4)
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z', seq: 2),
     ]));
 
     expect($result->accepted)->toBe(2)
@@ -45,8 +49,52 @@ it('grades raw answers server-side and folds them into progress in order', funct
         ->and($result->unknown)->toBe(0);
 
     $progress = $this->progress->get($this->user, $term);
+    expect($progress?->acquisition())->toBe(Acquisition::Graduated)
+        ->and($progress?->ladderStep())->toBe(3)
+        // Not one scheduling field moved: graduation invents no interval.
+        ->and($progress?->state())->toBe(LearningState::New)
+        ->and($progress?->intervalDays())->toBe(0)
+        ->and($progress?->dueAt())->toBeNull()
+        ->and($progress?->reps())->toBe(0);
+});
+
+it('enters SM-2 on the first grade AFTER graduation, exactly as a new word always has', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+
+    $handler(new SubmitReviews($this->user, [
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1),  // rung 1 → 2
+        answer($term, correct: true, answeredAt: '2026-07-27T10:05:00Z', seq: 2),  // rung 2 → graduated
+        answer($term, correct: true, answeredAt: '2026-07-28T10:00:00Z', seq: 3),  // first SRS review
+        answer($term, correct: true, answeredAt: '2026-07-29T10:00:00Z', seq: 4),  // graduates in SM-2
+    ]));
+
+    $progress = $this->progress->get($this->user, $term);
     expect($progress?->state())->toBe(LearningState::Review)
-        ->and($progress?->intervalDays())->toBe(4);
+        ->and($progress?->intervalDays())->toBe(4)     // the historic graduating interval
+        ->and($progress?->reps())->toBe(2);            // counted from graduation, not from meeting 1
+});
+
+it('re-queues a failed recognition step without writing anything to the schedule', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+
+    $handler(new SubmitReviews($this->user, [
+        answer($term, correct: false, answeredAt: '2026-07-27T10:00:00Z', seq: 1),
+        answer($term, correct: false, answeredAt: '2026-07-27T10:02:00Z', seq: 2), // the re-queued card
+    ]));
+
+    $progress = $this->progress->get($this->user, $term);
+    // The pair stays exactly where it was — which is what lets the client put the same card back
+    // into the tail of the session — and no interval, due date or lapse was invented.
+    expect($progress?->acquisition())->toBe(Acquisition::New)
+        ->and($progress?->ladderStep())->toBe(0)
+        ->and($progress?->intervalDays())->toBe(0)
+        ->and($progress?->dueAt())->toBeNull()
+        ->and($progress?->reps())->toBe(0)
+        ->and($progress?->lapses())->toBe(0)
+        // Both failures are still in the log: they were real retrievals, they simply failed.
+        ->and($this->reviews->count())->toBe(2);
 });
 
 it('projects a stats event carrying the introduced term and invalidates the median cache', function () {
@@ -87,14 +135,39 @@ it('folds an out-of-order offline batch by client_seq, not upload or answered_at
 
     // True order is client_seq: correct(1) then wrong(2). It is uploaded reversed AND the device
     // clock even stamped the genuinely-later "wrong" with an EARLIER answered_at — both are red
-    // herrings. Folded by seq (correct→wrong): new→learning(1), then wrong keeps it learning(0).
-    // Folding by answered_at (wrong→correct) would instead graduate it to review.
+    // herrings. Folded by seq (correct→wrong) the pair climbs to rung 2 and then stays there.
+    // Folding by answered_at (wrong→correct) would instead have it at rung 2 from the wrong start
+    // — same rung, different history — so the assertion that separates them is `learningStep`
+    // after a THIRD answer, below.
     $handler(new SubmitReviews($this->user, [
         answer($term, correct: false, answeredAt: '2026-07-27T09:00:00Z', seq: 2),
         answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1),
     ]));
 
     $progress = $this->progress->get($this->user, $term);
+    expect($progress?->acquisition())->toBe(Acquisition::Learning)
+        ->and($progress?->ladderStep())->toBe(2)   // correct advanced it; the later wrong held it
+        ->and($progress?->intervalDays())->toBe(0);
+});
+
+it('folds a graduated pair out of order by client_seq, not by the device clock', function () {
+    $term = TermId::generate();
+    $handler = buildSubmitHandler($this);
+    // Already off the ladder, so these two answers go to SM-2 — where the order genuinely changes
+    // the interval and the invariant has teeth.
+    $this->progress->save(TermProgress::reconstitute(
+        $this->user, $term, LearningState::New, 2.5, 0, null, 0, 0, null,
+        acquisition: Acquisition::Graduated,
+    ));
+
+    $handler(new SubmitReviews($this->user, [
+        answer($term, correct: false, answeredAt: '2026-07-27T09:00:00Z', seq: 2),
+        answer($term, correct: true, answeredAt: '2026-07-27T10:00:00Z', seq: 1),
+    ]));
+
+    $progress = $this->progress->get($this->user, $term);
+    // By seq: new→learning(1), then wrong keeps it learning(0). By answered_at it would have
+    // graduated to review instead.
     expect($progress?->state())->toBe(LearningState::Learning)
         ->and($progress?->intervalDays())->toBe(0);
 });

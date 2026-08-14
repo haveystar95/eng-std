@@ -37,6 +37,11 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::put('/exercise-modes', [ExerciseModeController::class, 'update']);
     Route::get('/users/{id}/exercise-modes', [ExerciseModeController::class, 'showForUser']);
     Route::put('/users/{id}/exercise-modes', [ExerciseModeController::class, 'updateForUser']);
+    // The acquisition ladder: which rung opens which trainer. Its own screen is a separate task;
+    // the API exists so the matrix is inspectable and movable from the moment it starts deciding
+    // what learners are dealt. One mode per call — see ChangeModeAdmission.
+    Route::put('/exercise-modes/admission', [ExerciseModeController::class, 'updateAdmission']);
+    Route::put('/users/{id}/exercise-modes/admission', [ExerciseModeController::class, 'updateAdmissionForUser']);
 
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);

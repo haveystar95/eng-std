@@ -17,6 +17,8 @@ final class EloquentLearningAccountEraser implements LearningAccountEraser
         // reviews.session_id → study_sessions is nullOnDelete, so order doesn't matter here.
         DB::table('reviews')->where('user_id', $id)->delete();
         DB::table('term_triages')->where('user_id', $id)->delete();
+        // term_exposures.session_id → study_sessions is nullOnDelete too, so it can go here.
+        DB::table('term_exposures')->where('user_id', $id)->delete();
         DB::table('user_term_progress')->where('user_id', $id)->delete();
         DB::table('daily_user_stats')->where('user_id', $id)->delete();
         DB::table('study_sessions')->where('user_id', $id)->delete();

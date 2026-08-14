@@ -17,6 +17,12 @@ use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
+use App\Modules\Learning\Domain\Service\LearningLadder;
+use App\Modules\Learning\Domain\Service\SessionLayout;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Domain\ValueObject\SessionSlot;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -53,6 +59,8 @@ final readonly class BuildStudySessionHandler
         private TransactionManager $tx,
         private Clock $clock,
         private EnabledModesReader $enabledModes,
+        private ModeAdmissionReader $admission,
+        private SessionLayout $layout,
     ) {}
 
     public function __invoke(BuildStudySession $command): SessionView
@@ -62,6 +70,9 @@ final readonly class BuildStudySessionHandler
         // Which trainers this learner has switched on — their override, or the product default.
         // Read once per session so every card in it is dealt from the same set.
         $enabled = $this->enabledModes->forUser($command->actorId);
+        // …and which of them each rung of the acquisition ladder admits. Also read once: a card
+        // dealt under one matrix and graded under another is a card nobody can explain.
+        $matrix = $this->admission->matrixFor($command->actorId);
 
         // Practice draws the whole scope (all terms, any state, ignoring due_at) and never spends
         // the daily quota; a normal session takes due-then-new under the remaining new-term quota.
@@ -90,21 +101,65 @@ final readonly class BuildStudySessionHandler
             ? $this->collectionTerms->termIdsForCollection($command->actorId, $command->collectionId, self::POOL_CAP)
             : array_map(static fn (TermId $id): string => $id->value, $termIds);
 
+        // Terms we can actually render, in selection order. Everything below works off this list,
+        // so a term whose content never arrived is out of the session entirely rather than out of
+        // only some of its cards.
+        $renderable = array_values(array_filter(
+            $due,
+            static fn (DueTermView $v): bool => isset($content[$v->termId->value]),
+        ));
+
+        // The far-option pool for the recognition rungs: this session's own terms. Built once,
+        // handed to every card — an option that is another card in the same sitting is a word the
+        // learner has a reason to have in mind, which is what makes a far option fair rather than
+        // arbitrary.
+        $neighbours = array_map(
+            static fn (DueTermView $v): array => [
+                'term_id' => $v->termId->value,
+                'text' => $content[$v->termId->value]->text,
+                'translation' => $content[$v->termId->value]->translation,
+            ],
+            $renderable,
+        );
+
+        // Practice keeps its flat running order (one card per term, already shuffled). The ladder
+        // does not apply: practice schedules nothing and advances nothing, so a word cannot be
+        // introduced by it.
+        $slots = $command->isPractice
+            ? array_map(static fn (DueTermView $v): SessionSlot => new SessionSlot($v->termId->value), $renderable)
+            : $this->arrange(
+                $renderable,
+                $size,
+                // Whether rung 0 exists at all for this learner. With the intro trainer switched
+                // off a first meeting starts at recognition, so its chain is TWO cards, not three —
+                // the layout has to be told, or it would reserve a slot for a card nobody deals and
+                // the pair would be asked its forward recognition twice.
+                introEnabled: $enabled->has(ExerciseMode::Intro) && $matrix->allows(ExerciseMode::Intro, LearningLadder::STEP_INTRO),
+            );
+
+        $byTerm = [];
+        foreach ($renderable as $view) {
+            $byTerm[$view->termId->value] = $view;
+        }
+
         $cards = [];
         /** @var list<TermId> $composition */
         $composition = [];
-        $cardIndex = 0;
-        foreach ($due as $view) {
-            $termContent = $content[$view->termId->value] ?? null;
-            if ($termContent === null) {
-                continue; // nothing to render without content
-            }
+        $seen = [];
+        foreach ($slots as $cardIndex => $slot) {
+            $view = $byTerm[$slot->termId];
             $cards[] = $this->assembler->assemble(
-                $command->actorId, $view, $termContent, $poolIds, $enabled,
+                $command->actorId, $view, $content[$slot->termId], $poolIds, $enabled, $matrix,
                 isPractice: $command->isPractice, cardIndex: $cardIndex,
+                slotStep: $slot->ladderStep, neighbours: $neighbours,
             );
-            $composition[] = $view->termId;
-            $cardIndex++;
+            // The composition is a SET of terms, not of cards: a term now legitimately occupies
+            // several slots, and what the composition guards is «was this term part of the session
+            // at all», which is one fact however many times it was asked.
+            if (! isset($seen[$slot->termId])) {
+                $seen[$slot->termId] = true;
+                $composition[] = $view->termId;
+            }
         }
 
         $sessionId = $command->sessionId ?? StudySessionId::generate();
@@ -120,6 +175,39 @@ final readonly class BuildStudySessionHandler
         });
 
         return new SessionView($sessionId->value, $cards);
+    }
+
+    /**
+     * Hand the selection to the layout, split by what each term costs in slots.
+     *
+     * A term on the acquisition ladder brings a CHAIN of cards — intro, then the two recognitions —
+     * that must all land in this session; a graduated term brings one. The layout decides where
+     * they go and defers, whole, any term whose chain does not fit.
+     *
+     * @param  list<DueTermView>  $renderable
+     * @return list<SessionSlot>
+     */
+    private function arrange(array $renderable, int $size, bool $introEnabled): array
+    {
+        $ladder = [];
+        $repeats = [];
+        foreach ($renderable as $view) {
+            if ($view->acquisition === Acquisition::Graduated) {
+                $repeats[] = $view->termId->value;
+
+                continue;
+            }
+            // Rung 0 for a pair never shown (rung 1 when the intro trainer is off); its stored step
+            // for one already partway up. The layout only needs where the chain STARTS — it walks
+            // the rest itself.
+            $step = $view->acquisition === Acquisition::New
+                ? ($introEnabled ? LearningLadder::STEP_INTRO : LearningLadder::STEP_RECOGNITION_FORWARD)
+                : max(LearningLadder::STEP_RECOGNITION_FORWARD, min(LearningLadder::STEP_RECOGNITION_REVERSE, $view->learningStep));
+
+            $ladder[] = ['term_id' => $view->termId->value, 'step' => $step];
+        }
+
+        return $this->layout->arrange($ladder, $repeats, $size);
     }
 
     /**

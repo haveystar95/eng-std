@@ -24,5 +24,23 @@ final readonly class ExerciseModeSettingsView
         public array $global,
         public ?array $override = null,
         public array $effective = [],
+        /**
+         * @var list<string> the subset of `available` that produces NO grade — today just `intro`.
+         *
+         * A flag rather than an omission: `intro` is a trainer with a toggle like any other, and
+         * hiding it from the registry would mean the one card the ladder starts with could not be
+         * switched on. The panel needs to know it grades nothing so it does not offer it settings
+         * (a difficulty, a share of the session) that mean nothing for a card that asks nothing.
+         */
+        public array $noGrade = [],
+        /**
+         * @var list<array{mode: string, min_acquisition: string, min_learning_step: int|null, min_reps: int|null, options_policy: string, min_step: int}>
+         *
+         * The ADMISSION MATRIX as it applies here: the product default when no user is named, the
+         * user's effective matrix otherwise. Read-only from the panel's point of view until its
+         * screen lands; the write goes through SetModeAdmission, one mode at a time, because
+         * on/off and where-on-the-ladder are independent settings.
+         */
+        public array $admission = [],
     ) {}
 }

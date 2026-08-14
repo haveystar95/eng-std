@@ -64,8 +64,21 @@ it('ships switched off — a fresh install never deals it', function () {
     // seeded, which is what every user without an override trains with.
     expect(config('learning.enabled_modes'))->not->toContain('dictation');
 
-    $global = DB::table('learning_mode_settings')->whereNull('user_id')->value('modes');
-    expect(json_decode((string) $global, true))->not->toContain('dictation');
+    // One row per (scope, mode) since the admission matrix moved into this table: the trainer HAS a
+    // row — it has to, the matrix lives there — and that row is switched off.
+    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'dictation')->first();
+    expect($row)->not->toBeNull()->and((bool) $row->enabled)->toBeFalse();
+});
+
+it('ships the intro switched off too — a new trainer is a data change, not a deploy', function () {
+    // Same release rule, for the rung-0 trainer this ladder introduces. Until someone turns it on,
+    // a never-seen pair simply starts at recognition, which is where it started before the ladder.
+    expect(config('learning.enabled_modes'))->not->toContain('intro');
+
+    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'intro')->first();
+    expect($row)->not->toBeNull()
+        ->and((bool) $row->enabled)->toBeFalse()
+        ->and((string) $row->min_acquisition)->toBe('new');
 });
 
 it('builds a card with no written prompt — the audio IS the task', function () {

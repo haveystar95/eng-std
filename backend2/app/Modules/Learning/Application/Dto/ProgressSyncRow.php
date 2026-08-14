@@ -19,5 +19,12 @@ final readonly class ProgressSyncRow
         public int $lapses,
         public ?DateTimeImmutable $lastReviewedAt,
         public DateTimeImmutable $updatedAt,
+        /**
+         * The acquisition ladder, carried alongside the scheduler's own fields because the device
+         * mirrors `LearningLadder::stepFor` to decide what a card should be while offline. Without
+         * these two the phone would know when a word is due and not what to ask for it.
+         */
+        public string $acquisition = 'graduated',
+        public int $learningStep = 0,
     ) {}
 }

@@ -5,11 +5,14 @@ declare(strict_types=1);
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
+use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\SentenceTokenizer;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\TermPlayability;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -21,6 +24,7 @@ beforeEach(function () {
         ExerciseMode::MultipleChoice, ExerciseMode::WordBank,
         ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Cloze,
     ]);
+    $this->matrix = shippedMatrix();
 });
 
 /** A term's data-applicability, with the shape most cases want (a multi-word, non-clozeable term). */
@@ -29,6 +33,13 @@ function playable(int $answerWordCount = 2, bool $clozeable = false): TermPlayab
     return new TermPlayability(answerWordCount: $answerWordCount, clozeable: $clozeable);
 }
 
+// shippedMatrix() lives in tests/Pest.php — shared with DictationGateTest, and loaded regardless
+// of parallel worker/file order.
+
+/**
+ * A pair on the SCHEDULER's dimension. `acquisition` defaults to graduated — the ladder is a
+ * separate axis, and every one of these cases is about a term that has finished it.
+ */
 function atState(LearningState $state, int $reps = 0): TermProgress
 {
     return TermProgress::reconstitute(
@@ -36,45 +47,90 @@ function atState(LearningState $state, int $reps = 0): TermProgress
     );
 }
 
-it('introduces a new term (reps 0) with multiple choice', function () {
-    expect($this->selector->select(atState(LearningState::New), $this->phase1, playable()))->toBe(ExerciseMode::MultipleChoice);
+/** A pair on the ACQUISITION dimension, at a given rung of the ladder. */
+function onLadder(Acquisition $acquisition, int $learningStep = 0, int $reps = 0): TermProgress
+{
+    return TermProgress::reconstitute(
+        UserId::generate(), TermId::generate(), LearningState::New, 2.5, 0, null,
+        reps: $reps, lapses: 0, lastReviewedAt: null,
+        acquisition: $acquisition, learningStep: $learningStep,
+    );
+}
+
+// ── the acquisition ladder ───────────────────────────────────────────────────
+
+it('shows a never-seen pair the intro when that trainer is on', function () {
+    $withIntro = new EnabledModes([ExerciseMode::Intro, ExerciseMode::MultipleChoice, ExerciseMode::Typing]);
+
+    expect($this->selector->select(onLadder(Acquisition::New), $withIntro, playable(), $this->matrix))
+        ->toBe(ExerciseMode::Intro);
 });
 
-it('recognises any reps-0 card first, whatever the answer shape', function () {
-    // The first meeting is recognition regardless of word count — a multi-word reps-0 card is still MC.
-    expect($this->selector->select(atState(LearningState::Learning, 0), $this->phase1, playable(answerWordCount: 3)))
-        ->toBe(ExerciseMode::MultipleChoice);
+it('starts a never-seen pair at recognition when the intro trainer is off', function () {
+    // The release rule ships a new trainer switched OFF, so this is the DEFAULT path today: the
+    // ladder still runs, the pair simply never gets rung 0.
+    expect($this->selector->select(onLadder(Acquisition::New), $this->phase1, playable(), $this->matrix))
+        ->toBe(ExerciseMode::MultipleChoice)
+        ->and($this->selector->effectiveStep(onLadder(Acquisition::New), $this->phase1, $this->matrix))
+        ->toBe(LearningLadder::STEP_RECOGNITION_FORWARD);
 });
 
-it('produces a multi-word term (reps ≥ 1) from a word bank', function () {
-    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, playable(answerWordCount: 3)))
-        ->toBe(ExerciseMode::WordBank);
+it('deals both recognition rungs as multiple_choice, whatever the answer shape', function () {
+    // A multi-word term at rung 1 is still recognition: the direction differs, the mode does not.
+    foreach ([LearningLadder::STEP_RECOGNITION_FORWARD, LearningLadder::STEP_RECOGNITION_REVERSE] as $step) {
+        expect($this->selector->select(onLadder(Acquisition::Learning, $step), $this->all, playable(answerWordCount: 3, clozeable: true), $this->matrix))
+            ->toBe(ExerciseMode::MultipleChoice);
+    }
 });
 
-it('produces a single-word term (reps ≥ 1) by typing — variety from the second meeting', function () {
-    // Was multiple_choice under the old state-only ladder; now a produced single word is typed.
-    expect($this->selector->select(atState(LearningState::Learning, 1), $this->phase1, playable(answerWordCount: 1)))
-        ->toBe(ExerciseMode::Typing);
+it('never deals the intro to a pair that has left rung 0', function () {
+    $withIntro = new EnabledModes([ExerciseMode::Intro, ExerciseMode::MultipleChoice, ExerciseMode::Typing]);
+
+    expect($this->selector->select(onLadder(Acquisition::Learning, 1), $withIntro, playable(), $this->matrix))
+        ->not->toBe(ExerciseMode::Intro)
+        ->and($this->selector->select(atState(LearningState::Review, 9), $withIntro, playable(), $this->matrix))
+        ->not->toBe(ExerciseMode::Intro);
 });
 
-it('produces a relearning term (reps ≥ 1) rather than recognising it again', function () {
-    // A lapsed term has always been produced before (reps ≥ 1) → production, not recognition.
-    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, playable(answerWordCount: 1)))
-        ->toBe(ExerciseMode::Typing);
-    expect($this->selector->select(atState(LearningState::Relearning, 4), $this->phase1, playable(answerWordCount: 2)))
-        ->toBe(ExerciseMode::WordBank);
+it('holds typed production back until rung 4 and dictation until rung 5', function () {
+    // The single word with no example is the case that used to fall through to typing at any rung;
+    // now it waits for the reps the ladder asks for and gets ordinary multiple_choice meanwhile.
+    $everything = new EnabledModes([
+        ExerciseMode::MultipleChoice, ExerciseMode::WordBank, ExerciseMode::Typing,
+        ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::Dictation,
+    ]);
+    $plain = playable(answerWordCount: 1);
+
+    expect($this->selector->select(atState(LearningState::Review, 0), $everything, $plain, $this->matrix))
+        ->toBe(ExerciseMode::MultipleChoice)                                  // rung 3
+        ->and($this->selector->select(atState(LearningState::Review, LearningLadder::TYPING_MIN_REPS), $everything, $plain, $this->matrix))
+        ->toBe(ExerciseMode::Typing);                                          // rung 4
+
+    // Dictation needs a sentence as well as the rung, so give it one and check both gates.
+    $rich = new TermPlayability(answerWordCount: 3, clozeable: true, exampleTokenCount: 7, hasExampleTranslation: true, distractorCount: 2);
+    $modesBelow = [];
+    for ($reps = 0; $reps < LearningLadder::DICTATION_MIN_REPS; $reps++) {
+        $modesBelow[] = $this->selector->select(atState(LearningState::Review, $reps), $everything, $rich, $this->matrix);
+    }
+    expect($modesBelow)->not->toContain(ExerciseMode::Dictation);
 });
 
-it('always checks a due known term in typing', function () {
-    expect($this->selector->select(atState(LearningState::Known), $this->phase1, playable()))->toBe(ExerciseMode::Typing);
+it('always checks a due known term in typing, ladder or no ladder', function () {
+    // `known` is outside the ladder entirely: the matrix would forbid typing at rung 3, and the
+    // verification is typing anyway, because recognition proves nothing about a claim.
+    expect($this->selector->select(atState(LearningState::Known), $this->phase1, playable(), $this->matrix))
+        ->toBe(ExerciseMode::Typing)
+        ->and($this->selector->effectiveStep(atState(LearningState::Known), $this->phase1, $this->matrix))
+        ->toBeNull();
 });
 
 it('rotates review modes deterministically by the review counter (example-backed)', function () {
-    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable(clozeable: true));
-    expect($rev(0))->toBe(ExerciseMode::Typing)
-        ->and($rev(1))->toBe(ExerciseMode::Listening)
-        ->and($rev(2))->toBe(ExerciseMode::Cloze)
-        ->and($rev(3))->toBe(ExerciseMode::Typing);
+    // Rung 5 (reps ≥ 6), where the whole historic rotation is admitted, so the phase is unchanged.
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable(clozeable: true), $this->matrix);
+    expect($rev(6))->toBe(ExerciseMode::Typing)
+        ->and($rev(7))->toBe(ExerciseMode::Listening)
+        ->and($rev(8))->toBe(ExerciseMode::Cloze)
+        ->and($rev(9))->toBe(ExerciseMode::Typing);
 });
 
 it('puts pick_correct LAST in the review rotation, renumbering nothing before it', function () {
@@ -93,58 +149,128 @@ it('puts pick_correct LAST in the review rotation, renumbering nothing before it
         distractorCount: 2,            // …and pick_correct's gate is met
     );
 
-    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $everything, $rich);
+    // Rung 5, where every mode in the rotation is admitted; the phase is the historic `reps % n`.
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $everything, $rich, $this->matrix);
 
-    expect($rev(0))->toBe(ExerciseMode::Typing)
-        ->and($rev(1))->toBe(ExerciseMode::Listening)
-        ->and($rev(2))->toBe(ExerciseMode::Cloze)
-        ->and($rev(3))->toBe(ExerciseMode::Scramble)
-        ->and($rev(4))->toBe(ExerciseMode::Dictation)
-        ->and($rev(5))->toBe(ExerciseMode::PickCorrect)
-        ->and($rev(6))->toBe(ExerciseMode::Typing);   // wraps
+    expect($rev(6))->toBe(ExerciseMode::Typing)
+        ->and($rev(7))->toBe(ExerciseMode::Listening)
+        ->and($rev(8))->toBe(ExerciseMode::Cloze)
+        ->and($rev(9))->toBe(ExerciseMode::Scramble)
+        ->and($rev(10))->toBe(ExerciseMode::Dictation)
+        ->and($rev(11))->toBe(ExerciseMode::PickCorrect)
+        ->and($rev(12))->toBe(ExerciseMode::Typing);   // wraps
 });
 
-it('leads the reps ≥ 1 production rotation with the base mode, then fans out (offset (reps-1))', function () {
-    // Single word: base is typing. Second meeting (reps 1) is typing (TLv2), then listening, then cloze.
-    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1, clozeable: true));
-    expect($single(1))->toBe(ExerciseMode::Typing)
-        ->and($single(2))->toBe(ExerciseMode::Listening)
-        ->and($single(3))->toBe(ExerciseMode::Cloze)
-        ->and($single(4))->toBe(ExerciseMode::Typing);
+it('leads the production rotation with the base mode once typing is admitted, then fans out', function () {
+    // Rung 4 (reps ≥ 4): typing and listening join, dictation does not.
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1, clozeable: true), $this->matrix);
+    // The offset is (reps - 1), so the FIRST meeting at which typing is admitted (reps 4) lands on
+    // the base mode and later ones fan out — the same "base first" phase the rung 3 rotation had.
+    expect($single(4))->toBe(ExerciseMode::Typing)
+        ->and($single(5))->toBe(ExerciseMode::Listening)
+        ->and($single(6))->toBe(ExerciseMode::Cloze)
+        ->and($single(7))->toBe(ExerciseMode::Typing);
 
     // Multi-word: base is word_bank; the rotation leads with it.
-    $multi = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 3, clozeable: true));
-    expect($multi(1))->toBe(ExerciseMode::WordBank)
-        ->and($multi(2))->toBe(ExerciseMode::Listening)
-        ->and($multi(3))->toBe(ExerciseMode::Cloze);
+    $multi = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 3, clozeable: true), $this->matrix);
+    expect($multi(4))->toBe(ExerciseMode::WordBank)
+        ->and($multi(5))->toBe(ExerciseMode::Listening)
+        ->and($multi(6))->toBe(ExerciseMode::Cloze);
 });
 
 it('never offers cloze when the term has no usable example (falls through to the typed ladder)', function () {
     // clozeable defaults false → cloze is dropped from every rotation.
-    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1));
-    expect($single(1))->toBe(ExerciseMode::Typing)
-        ->and($single(2))->toBe(ExerciseMode::Listening)
-        ->and($single(3))->toBe(ExerciseMode::Typing); // wraps typing/listening — cloze never appears
+    $single = fn (int $reps) => $this->selector->select(atState(LearningState::Learning, $reps), $this->all, playable(answerWordCount: 1), $this->matrix);
+    expect($single(5))->toBe(ExerciseMode::Typing)
+        ->and($single(6))->toBe(ExerciseMode::Listening)
+        ->and($single(7))->toBe(ExerciseMode::Typing); // wraps typing/listening — cloze never appears
 
     // Review with no example: typing/listening only.
-    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable());
-    expect($rev(0))->toBe(ExerciseMode::Typing)
-        ->and($rev(1))->toBe(ExerciseMode::Listening)
-        ->and($rev(2))->toBe(ExerciseMode::Typing);
+    $rev = fn (int $reps) => $this->selector->select(atState(LearningState::Review, $reps), $this->all, playable(), $this->matrix);
+    expect($rev(6))->toBe(ExerciseMode::Typing)
+        ->and($rev(7))->toBe(ExerciseMode::Listening)
+        ->and($rev(8))->toBe(ExerciseMode::Typing);
 });
 
 it('degrades review to the only enabled review mode in phase 1', function () {
-    // Among typing/listening/cloze, only typing is on — every review card is typing.
-    expect($this->selector->select(atState(LearningState::Review, 5), $this->phase1, playable()))->toBe(ExerciseMode::Typing);
+    // Among typing/listening/cloze, only typing is on — every review card is typing (rung 4+).
+    expect($this->selector->select(atState(LearningState::Review, 9), $this->phase1, playable(), $this->matrix))->toBe(ExerciseMode::Typing);
 });
 
 it('falls back to an enabled mode when the preferred one is switched off', function () {
     $onlyMc = new EnabledModes([ExerciseMode::MultipleChoice]);
 
     // A produced single word prefers typing, which is off → fall back to the one enabled mode.
-    expect($this->selector->select(atState(LearningState::Learning, 1), $onlyMc, playable(answerWordCount: 1)))
+    expect($this->selector->select(atState(LearningState::Learning, 5), $onlyMc, playable(answerWordCount: 1), $this->matrix))
         ->toBe(ExerciseMode::MultipleChoice);
 });
+
+// ── the admission matrix, as a table ─────────────────────────────────────────
+//
+// The matrix is product policy that WILL move, so the table asserts the shipped config rather
+// than restating it: what is pinned here is the shape (which rungs admit which trainer), and a
+// config change that contradicts the ladder's intent shows up as a red row.
+
+dataset('admission', [
+    //  mode,                        admitted at rungs
+    'intro is rung 0 and nowhere else' => [ExerciseMode::Intro, [0]],
+    'multiple_choice from rung 1'      => [ExerciseMode::MultipleChoice, [1, 2, 3, 4, 5]],
+    'word_bank from rung 3'            => [ExerciseMode::WordBank, [3, 4, 5]],
+    'cloze from rung 3'                => [ExerciseMode::Cloze, [3, 4, 5]],
+    'scramble from rung 3'             => [ExerciseMode::Scramble, [3, 4, 5]],
+    'pick_correct from rung 3'         => [ExerciseMode::PickCorrect, [3, 4, 5]],
+    'typing from rung 4'               => [ExerciseMode::Typing, [4, 5]],
+    'listening from rung 4'            => [ExerciseMode::Listening, [4, 5]],
+    'dictation only at rung 5'         => [ExerciseMode::Dictation, [5]],
+]);
+
+it('admits each trainer exactly at its rungs', function (ExerciseMode $mode, array $rungs) {
+    $matrix = shippedMatrix();
+
+    foreach (range(0, 5) as $rung) {
+        expect($matrix->allows($mode, $rung))->toBe(
+            in_array($rung, $rungs, true),
+            "{$mode->value} at rung {$rung}",
+        );
+    }
+})->with('admission');
+
+it('admits nothing for a mode the matrix does not mention', function () {
+    // Fail-closed: a trainer someone forgot to place on the ladder is undealable, not universal.
+    $partial = new ModeAdmission(['typing' => ['min' => 0]]);
+
+    foreach (range(0, 5) as $rung) {
+        expect($partial->allows(ExerciseMode::Dictation, $rung))->toBeFalse();
+    }
+});
+
+// ── the ladder function, as a table ──────────────────────────────────────────
+
+dataset('ladder', [
+    'never shown → intro'                    => [Acquisition::New, 0, 0, false, 0],
+    'never shown, reps survived a known undo' => [Acquisition::New, 9, 0, false, 0],
+    'introduced → recognition forward'        => [Acquisition::Learning, 0, 1, false, 1],
+    'forward passed → recognition reverse'    => [Acquisition::Learning, 0, 2, false, 2],
+    'graduated, no SRS review yet'            => [Acquisition::Graduated, 0, 0, false, 3],
+    'graduated, three reviews in'             => [Acquisition::Graduated, 3, 0, false, 3],
+    'graduated, typing unlocked'              => [Acquisition::Graduated, 4, 0, false, 4],
+    'graduated, still rung 4'                 => [Acquisition::Graduated, 5, 0, false, 4],
+    'graduated, dictation unlocked'           => [Acquisition::Graduated, 6, 0, false, 5],
+    'a long-established pair stays at 5'      => [Acquisition::Graduated, 40, 0, false, 5],
+    'known is outside the ladder'             => [Acquisition::Graduated, 0, 0, true, null],
+    'a known pair mid-ladder is still out'    => [Acquisition::Learning, 0, 1, true, null],
+    'a step from a newer build is clamped'    => [Acquisition::Learning, 0, 7, false, 2],
+]);
+
+it('derives the rung from (acquisition, reps, learning_step)', function (
+    Acquisition $acquisition,
+    int $reps,
+    int $learningStep,
+    bool $isKnown,
+    ?int $expected,
+) {
+    expect(LearningLadder::stepFor($acquisition, $reps, $learningStep, $isKnown))->toBe($expected);
+})->with('ladder');
 
 // ── free practice: fan across ALL applicable modes (not the reps ladder) ─────────
 
@@ -307,9 +433,15 @@ it('practice_contract: the committed fixture still matches this selector', funct
             // Every mode this term's DATA supports, whatever is switched on. This is what pins a
             // gate across the two runtimes for a mode nobody has enabled yet — by the time someone
             // does, the client either already agreed or the fixture went red.
+            // Graded modes only. `intro` is applicable to every term by construction (it asks for
+            // nothing, so no content can be missing) and is never dealt in practice, so listing it
+            // here would add a constant to the fixture rather than a fact about the term.
             'supported_modes' => array_values(array_map(
                 static fn (ExerciseMode $m): string => $m->value,
-                array_filter(ExerciseMode::cases(), $playable->supports(...)),
+                array_filter(
+                    ExerciseMode::cases(),
+                    static fn (ExerciseMode $m): bool => $m->isGraded() && $playable->supports($m),
+                ),
             )),
             'rotation' => practiceRotation($case['term_id'], $case['card_index']),
             'expected_mode' => $this->selector->selectForPractice(
