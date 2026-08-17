@@ -261,6 +261,22 @@ abstract final class LocalPracticeSessionBuilder {
       prompt = null;
     }
 
+    // The rung this card is dealt at, echoed back with the answer like a server-built card's.
+    // Never rung 1: practice does not deal the identity-graded direction (see the class doc), so a
+    // recognition card here reports the direction it actually asked.
+    final cardStep =
+        LearningLadder.isRecognitionStep(step) ? LearningLadder.stepRecognitionReverse : position.step;
+
+    if (mode == ExerciseMode.speaking && ExerciseMode.speaking.asksForExample(cardStep) && example != null) {
+      // The late form: the pinned example IS the task, read aloud. Decided from `cardStep` — the
+      // very value this card UPLOADS — so the form the learner was shown and the key the server
+      // grades against cannot come apart. (An offline practice card carries its real rung while a
+      // server-built practice card carries none, so the two may deal different forms of this
+      // trainer; each is graded against what it actually asked, which is the part that matters.)
+      answer = example;
+      prompt = term.exampleTranslation;
+    }
+
     return SessionCard(
       termId: term.id,
       mode: mode,
@@ -274,12 +290,9 @@ abstract final class LocalPracticeSessionBuilder {
       chips: chips,
       // Same rule as the server's StudyCardAssembler: variants belong to the TERM, so they apply
       // only while the answer is the term. On scramble/dictation the answer is the sentence.
-      acceptedVariants: mode.asksForExample ? const [] : _variantsOf(term),
+      acceptedVariants: mode.asksForExample(cardStep) && example != null ? const [] : _variantsOf(term),
       optionFeedback: optionFeedback,
-      // The rung this card was dealt at, echoed back with the answer like a server-built card's.
-      // Never rung 1: practice does not deal the identity-graded direction (see the class doc), so
-      // a recognition card here reports the direction it actually asked.
-      ladderStep: LearningLadder.isRecognitionStep(step) ? LearningLadder.stepRecognitionReverse : position.step,
+      ladderStep: cardStep,
     );
   }
 

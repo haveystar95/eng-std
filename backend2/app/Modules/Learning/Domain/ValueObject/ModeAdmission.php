@@ -143,6 +143,11 @@ final readonly class ModeAdmission
             // harder — so it cannot be admitted earlier than typing is.
             ExerciseMode::Listening->value => new ModeRule(Acquisition::Graduated, minReps: LearningLadder::TYPING_MIN_REPS),
             ExerciseMode::Dictation->value => new ModeRule(Acquisition::Graduated, minReps: LearningLadder::DICTATION_MIN_REPS),
+            // Speaking opens on graduation, with the assembly trainers — its own two forms then
+            // separate themselves by rung inside the mode ({@see ExerciseMode::gradesAgainstExample}),
+            // which is why there is ONE row here and not two. A row per form would put the same
+            // trainer in the registry twice and give the owner two toggles for one thing to switch on.
+            ExerciseMode::Speaking->value => new ModeRule(Acquisition::Graduated),
         ]);
     }
 }

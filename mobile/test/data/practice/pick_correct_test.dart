@@ -180,7 +180,8 @@ void main() {
   });
 
   test('asksForExample is true, so the card grades against the sentence', () {
-    expect(ExerciseMode.pickCorrect.asksForExample, isTrue);
+    // Null rung, deliberately: unlike `speaking`, this mode asks the same question at every rung.
+    expect(ExerciseMode.pickCorrect.asksForExample(null), isTrue);
     expect(ExerciseMode.pickCorrect.isSentenceChoice, isTrue);
     expect(ExerciseMode.pickCorrect.isTyped, isFalse);
   });

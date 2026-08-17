@@ -978,6 +978,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionIntroAlso => 'also:';
 
   @override
+  String get sessionInstrSpeakWord => 'say the word out loud';
+
+  @override
+  String get sessionInstrSpeakExample => 'read the sentence out loud';
+
+  @override
+  String get sessionSpeakStart => 'Speak';
+
+  @override
+  String get sessionSpeakStop => 'Done';
+
+  @override
+  String get sessionSpeakListening => 'Listening…';
+
+  @override
+  String get sessionSpeakNotHeard =>
+      'Didn\'t catch that. Try again — a little closer to the mic.';
+
+  @override
+  String get sessionSpeakNoMic =>
+      'The microphone isn\'t available. You can skip this card.';
+
+  @override
+  String get sessionSpeakSkip => 'Skip';
+
+  @override
+  String get sessionSpeakSkipHint =>
+      'Skipping costs nothing — the word will come back in its own time.';
+
+  @override
+  String get sessionSpeakHint =>
+      'We\'re checking that you remembered the word, not how you pronounce it.';
+
+  @override
+  String get sessionEchoTry => 'Say it back';
+
+  @override
+  String get sessionEchoHeard => 'Heard you';
+
+  @override
+  String get sessionEchoAgain => 'Give it another go';
+
+  @override
   String get sessionHeaderIntro => 'Meeting';
 
   @override

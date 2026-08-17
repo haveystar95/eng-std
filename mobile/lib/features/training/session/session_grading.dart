@@ -24,6 +24,23 @@ enum LocalCheck {
   bool get isAccepted => this != wrong;
 }
 
+/// The rules that apply to an answer that arrived through a SPEECH RECOGNISER rather than through
+/// the keyboard or a tap.
+abstract final class SpokenAnswer {
+  /// The share of a read-aloud sentence's words that must be heard for it to count. Mirror of the
+  /// server's `SpokenCoverage::MIN_COVERAGE` — moving it moves both, or the phone shows a verdict
+  /// the server then contradicts.
+  static const double minCoverage = 0.7;
+
+  /// How many times a card lets the recogniser fail before it offers «Пропустить».
+  ///
+  /// This is the CHANNEL budget, and it is the whole reason speaking can be forgiving without being
+  /// dishonest: three chances for the microphone, and then the card is set aside with nothing
+  /// written anywhere. It is not a budget for wrong answers — a recognised answer that is simply
+  /// wrong is a verdict on the first try, like every other trainer.
+  static const int maxChannelAttempts = 3;
+}
+
 /// Mirror of the server `AnswerGrader`'s correctness stages (grading of the SPEED/hint into
 /// again/hard/good/easy stays server-side — the client never needs it).
 abstract final class SessionGrader {
@@ -62,6 +79,51 @@ abstract final class SessionGrader {
       if (_isTypo(r, a)) return LocalCheck.typo;
     }
     return LocalCheck.wrong;
+  }
+
+  /// The share of [expected]'s words that appear in [response], 0…1. Mirror of the server's
+  /// `SpokenCoverage`.
+  ///
+  /// Why a sentence read aloud is not compared for equality: an on-device recogniser transcribes an
+  /// ordinary reading of «Could you take a photo of us?» as «could you take photo of us» or «…of as»
+  /// — it eats unstressed function words and guesses between homophones. Every one of those is a
+  /// learner who did what the card asked, and holding them to equality would show «Не то» for a
+  /// correct reading while the server (which does NOT hold them to it) счёл бы ответ верным — the
+  /// one direction the client check is forbidden to take.
+  ///
+  /// Order-free and counted by MULTISET, like the server: recognisers drop and substitute words,
+  /// they do not transpose them, and a sentence that says «very» twice needs it twice.
+  static double coverageOf(String response, String expected) {
+    final wanted = _words(expected);
+    if (wanted.isEmpty) return 0; // nothing expected is never a vacuous pass
+
+    final available = <String, int>{};
+    for (final word in _words(response)) {
+      available[word] = (available[word] ?? 0) + 1;
+    }
+
+    var found = 0;
+    for (final word in wanted) {
+      if ((available[word] ?? 0) > 0) {
+        available[word] = available[word]! - 1;
+        found++;
+      }
+    }
+    return found / wanted.length;
+  }
+
+  /// Was enough of [expected] said? [SpokenAnswer.minCoverage] is the shared threshold.
+  static bool covers(String response, String expected) =>
+      coverageOf(response, expected) >= SpokenAnswer.minCoverage;
+
+  /// The comparable words of a string — canonicalised WITHOUT dropping the leading article, which
+  /// here is just another word the recogniser may or may not have caught.
+  static List<String> _words(String value) {
+    var v = value.toLowerCase().trim();
+    v = _expandContractions(v);
+    v = v.replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ');
+    v = v.replaceAll(RegExp(r'\s+', unicode: true), ' ').trim();
+    return v.isEmpty ? const [] : v.split(' ');
   }
 
   static bool _isTypo(String response, String candidate) {
@@ -140,6 +202,9 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
       ExerciseMode.wordBank => SessionPhase.assemble,
       // pick_correct is a LATER rung than word_bank (it reads whole sentences), so the header reads
       // as review rather than as the recognition→production step.
+      // speaking opens on the assembly rung and only gets harder from there, so it reads as review
+      // — never as the recognition→production step the header calls «assemble».
+      ExerciseMode.speaking ||
       ExerciseMode.pickCorrect ||
       ExerciseMode.typing ||
       ExerciseMode.listening ||

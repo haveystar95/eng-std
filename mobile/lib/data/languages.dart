@@ -27,3 +27,10 @@ const Map<String, String> _ttsLocales = {
 };
 
 String ttsLocaleFor(String code) => _ttsLocales[code] ?? 'en-US';
+
+/// The same mapping in the shape `speech_to_text` wants — underscores, not hyphens.
+///
+/// Derived from the TTS table rather than written out a second time: the two answer the same
+/// question («what locale is this language»), and a hand-kept copy is how the app would end up
+/// speaking a word in one locale and listening for it in another.
+String sttLocaleFor(String code) => ttsLocaleFor(code).replaceAll('-', '_');

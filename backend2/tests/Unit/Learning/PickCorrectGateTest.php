@@ -70,7 +70,7 @@ it('can never award easy — a three-way pick is the weakest evidence the app co
 });
 
 it('grades against the example, because the committed answer IS a sentence', function () {
-    expect(ExerciseMode::PickCorrect->gradesAgainstExample())->toBeTrue();
+    expect(ExerciseMode::PickCorrect->gradesAgainstExample(null))->toBeTrue();
 });
 
 it('is never dealt while it is switched off, however well the term fits', function () {

@@ -1,3 +1,9 @@
+// The acquisition ladder's rung numbers. Imported rather than restated because `speaking` asks a
+// different question at a different rung, and a second copy of «which rung is the dictation rung»
+// is exactly the kind of duplication the ladder's parity test exists to prevent. (The import is
+// mutual — `learning_ladder.dart` needs [ExerciseMode] — which Dart resolves without trouble.)
+import 'practice/learning_ladder.dart';
+
 /// Grade sent to the SM-2 scheduler on backend2 (`again|hard|good|easy`).
 enum Rating {
   again('again'),
@@ -157,6 +163,19 @@ enum ExerciseMode {
   dictation('dictation'),
   pickCorrect('pick_correct'),
 
+  /// SPEAKING RECALL: the card is read, the answer is SAID OUT LOUD, and the device recognises the
+  /// speech on-device (nothing is uploaded but the recognised text).
+  ///
+  /// It checks that the word can be retrieved and produced — **not** that it is pronounced well.
+  /// There is no accent scoring here and there must never be one: a recogniser disagreeing is a
+  /// fact about a noisy room at least as often as it is a fact about the learner.
+  ///
+  /// Which is why this trainer forgives the CHANNEL and not the knowledge — the exact inversion of
+  /// [forgivesTypos]. A card the recogniser could not hear is retried and then SKIPPED, and a skip
+  /// uploads nothing at all: no review, no verdict, no schedule. Only «не помню» sends an answer,
+  /// and that one is an honest lapse. See the speaking card in `session_exercise.dart`.
+  speaking('speaking'),
+
   /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked. Term, translation,
   /// transcription, example — the learner reads it and taps «Понятно».
   ///
@@ -192,7 +211,20 @@ enum ExerciseMode {
   /// Does this card ask for the term's EXAMPLE SENTENCE rather than the term itself? Mirrors the
   /// server's `ExerciseMode::gradesAgainstExample()` — on these cards [SessionCard.answer] is the
   /// sentence, so the feedback must not also print it as "the example".
-  bool get asksForExample => this == scramble || this == dictation || this == pickCorrect;
+  ///
+  /// [speaking] is the one mode whose question changes with the RUNG, so the rung is a required
+  /// argument here as it is on the server: early it asks for the word (free recall out loud), from
+  /// the dictation rung it asks the learner to read the pinned example aloud. A null rung — free
+  /// practice, a `known` verification — is the word form, because nothing off the ladder has earned
+  /// the later one.
+  ///
+  /// Content is not consulted here, only the question: use [SessionCard.asksForExample], which also
+  /// checks the term actually HAS the sentence, exactly as the server's assembler does.
+  bool asksForExample(int? ladderStep) => switch (this) {
+        scramble || dictation || pickCorrect => true,
+        speaking => ladderStep != null && ladderStep >= LearningLadder.stepDictation,
+        _ => false,
+      };
 
   /// Does this card ask the learner to TAP one of several given sentences? The body renders options
   /// like multiple_choice, but each option is a whole sentence and a wrong tap gets an explanation.
@@ -271,6 +303,16 @@ class SessionCard {
 
   /// Is this a tapped recognition card whose correct option is identified by id rather than by text?
   bool get isIdentityGraded => optionIds != null && optionIds!.isNotEmpty;
+
+  /// Does THIS card ask for the example sentence — the mode's question at this card's rung, AND a
+  /// term that actually has the sentence to ask for.
+  ///
+  /// Both halves, in one place, mirroring `StudyCardAssembler`'s own `$asksExample`: a speaking
+  /// card dealt at the late rung to a term with no example degrades to the word form, and the
+  /// prompt, the verdict and the feedback all have to agree about which form that was. Asking the
+  /// mode alone would leave the feedback printing an example the card never showed.
+  bool get asksForExample =>
+      mode.asksForExample(ladderStep) && example != null && example!.trim().isNotEmpty;
 
   /// The term id behind the option at [index] — the ANSWER KEY for an identity-graded card, which
   /// is what the client both grades against and uploads. Null on every other card, where the

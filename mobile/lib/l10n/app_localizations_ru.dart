@@ -1015,6 +1015,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionIntroAlso => 'также:';
 
   @override
+  String get sessionInstrSpeakWord => 'скажи слово вслух';
+
+  @override
+  String get sessionInstrSpeakExample => 'прочитай предложение вслух';
+
+  @override
+  String get sessionSpeakStart => 'Сказать';
+
+  @override
+  String get sessionSpeakStop => 'Готово';
+
+  @override
+  String get sessionSpeakListening => 'Слушаю…';
+
+  @override
+  String get sessionSpeakNotHeard =>
+      'Не расслышал. Попробуй ещё раз — ближе к микрофону.';
+
+  @override
+  String get sessionSpeakNoMic =>
+      'Микрофон недоступен. Можно пропустить эту карточку.';
+
+  @override
+  String get sessionSpeakSkip => 'Пропустить';
+
+  @override
+  String get sessionSpeakSkipHint =>
+      'Пропуск ничего не испортит: слово вернётся своим чередом.';
+
+  @override
+  String get sessionSpeakHint =>
+      'Проверяем, вспомнил ли ты слово, а не произношение.';
+
+  @override
+  String get sessionEchoTry => 'Повторить вслух';
+
+  @override
+  String get sessionEchoHeard => 'Услышал тебя';
+
+  @override
+  String get sessionEchoAgain => 'Попробуй ещё';
+
+  @override
   String get sessionHeaderIntro => 'Знакомство';
 
   @override
