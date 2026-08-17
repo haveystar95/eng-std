@@ -14,6 +14,7 @@ use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -61,10 +62,14 @@ final readonly class StudyCardAssembler
 
     /**
      * @param  list<string>  $poolTermIds
-     * @param  list<array{term_id: string, text: string, translation: string|null}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
      *         the other terms in THIS session — the far-option pool for the recognition rungs
      * @param  int|null  $slotStep  the rung this particular card was laid out at; a session gives a
      *                              term up to three cards at different rungs ({@see SessionLayout})
+     * @param  ExerciseMode|null  $modeOverride  the mode this slot must use, already chosen from the
+     *                              same three filters — the single-term practice FAN, which deals one
+     *                              card per applicable mode instead of one card off the round-robin
+     *                              ({@see BuildStudySessionHandler::practiceSlots()}). Null otherwise.
      */
     public function assemble(
         UserId $user,
@@ -77,6 +82,7 @@ final readonly class StudyCardAssembler
         int $cardIndex = 0,
         ?int $slotStep = null,
         array $neighbours = [],
+        ?ExerciseMode $modeOverride = null,
     ): SessionCardView {
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
@@ -103,10 +109,12 @@ final readonly class StudyCardAssembler
             );
         }
         // Practice fans across every applicable mode (round-robin by card + a per-term offset), so a
-        // session shows them all and repeats re-deal; SRS keeps the reps ladder.
-        $mode = $isPractice
-            ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $playable)
-            : $this->selector->select($progress, $enabled, $playable, $admission, $slotStep);
+        // session shows them all and repeats re-deal; SRS keeps the reps ladder. A one-term practice
+        // session fans WITHIN itself instead, and hands each slot its mode outright.
+        $mode = $modeOverride
+            ?? ($isPractice
+                ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $playable)
+                : $this->selector->select($progress, $enabled, $playable, $admission, $slotStep));
 
         // The rung this card is actually being dealt at. Practice is off the ladder entirely — it
         // schedules nothing and advances nothing — so it carries no rung.
@@ -125,9 +133,9 @@ final readonly class StudyCardAssembler
             if ($card !== null) {
                 return $card;
             }
-            // Not enough neighbours with the right side translated to build a far-option card (a
-            // one-term session, or a deck whose translations have not landed yet). Fall through to
-            // the ordinary multiple_choice below rather than deal a two-option card: near options
+            // No neighbour of the same shape with the right side translated (a one-term session, a
+            // deck of a single shape, or one whose translations have not landed yet). Fall through
+            // to the ordinary multiple_choice below rather than deal a one-option card: near options
             // at a first meeting are a worse card, an unanswerable one is not a card at all.
         }
 
@@ -203,6 +211,47 @@ final readonly class StudyCardAssembler
     }
 
     /**
+     * Every mode this pair may be drilled in RIGHT NOW, in the matrix's own order — the fan a
+     * one-term practice session deals ({@see BuildStudySessionHandler::practiceSlots()}).
+     *
+     * The three filters, in the usual order and each doing exactly its own job: switched on
+     * ({@see EnabledModes}, whose order is the `position` column and therefore the product's own),
+     * admitted at this pair's rung ({@see ModeAdmission}), and buildable from this term's data
+     * ({@see PlayabilityAssessor}). `intro` never appears — it is not a trainer and practice
+     * introduces nothing.
+     *
+     * An empty result is «no mode applies», which is the caller's cue to deal one card off the
+     * selector's floor rather than none.
+     *
+     * @return list<ExerciseMode>
+     */
+    public function practiceModesFor(
+        DueTermView $view,
+        TermContentView $content,
+        EnabledModes $enabled,
+        ModeAdmission $admission,
+    ): array {
+        $playable = $this->playability->assess(
+            $content->text,
+            $content->example,
+            $content->exampleTranslation,
+            count($this->spanDistinct($content->exampleDistractors)),
+        );
+        // A `known` pair is OUTSIDE the ladder, not at the bottom of it — its verification is decided
+        // elsewhere — so it reads as the top rung rather than as rung 0. Same rule, same words, as
+        // the client's `LadderPosition.admissionStep`.
+        $step = LearningLadder::stepFor(
+            $view->acquisition,
+            $view->reps,
+            $view->learningStep,
+            isKnown: $view->state === LearningState::Known,
+        ) ?? LearningLadder::STEP_DICTATION;
+        $graded = array_values(array_filter($enabled->modes, static fn (ExerciseMode $m): bool => $m->isGraded()));
+
+        return $playable->only($admission->only($graded, $step));
+    }
+
+    /**
      * Rung 0. The word is SHOWN: term, transcription, translation, example. Nothing is asked, so
      * there is no answer to check and no accepted variants to send — the client's only job is to
      * display it and report that it did, which becomes a `term_exposures` row.
@@ -239,10 +288,20 @@ final readonly class StudyCardAssembler
      *  * rung 2, `translation → term` — the ordinary direction, graded as text against the term's
      *    own forms exactly as multiple_choice always has been.
      *
-     * Returns null when the pool cannot fill at least two options: a one-term session, or a deck
-     * whose translations have not been generated yet.
+     * The options are all of the SAME TERM TYPE as the card's own term, and the card gets FEWER of
+     * them rather than mixed ones. A far option must be far in meaning, not in shape: offering
+     * «Где я могу найти корм для собак?» and «Подходит ли это для мелких пород?» beside «без злаков»
+     * for the word `grain-free` lets the learner discard two options without reading them, turning a
+     * one-in-four card into a coin toss (QA-6, приёмка 17.08). A generated collection mixes words
+     * and sentences by design, so this happens constantly rather than occasionally. Three same-shape
+     * options are the ideal; two are worse and one is worse still, but every one of them asks the
+     * question this card exists to ask, which a padded four does not.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null}>  $neighbours
+     * Returns null when even ONE same-type option cannot be found: a one-term session, a deck of
+     * one shape, or one whose translations have not been generated yet. A single-option card is not
+     * a card, and the caller falls through to ordinary multiple_choice.
+     *
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
      */
     private function recognitionCard(
         DueTermView $view,
@@ -263,6 +322,11 @@ final readonly class StudyCardAssembler
         $pool = [];
         foreach ($this->rotate($neighbours, $cardIndex) as $neighbour) {
             if ($neighbour['term_id'] === $view->termId->value) {
+                continue;
+            }
+            // Same shape or not at all. A neighbour of another type is skipped, never taken as a
+            // filler — see the docblock: the card is allowed to be shorter, not to be guessable.
+            if ($neighbour['type'] !== $content->type) {
                 continue;
             }
             $text = $forward ? $neighbour['translation'] : $neighbour['text'];
@@ -310,8 +374,8 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null}>  $neighbours
-     * @return list<array{term_id: string, text: string, translation: string|null}>
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string}>
      */
     private function rotate(array $neighbours, int $by): array
     {

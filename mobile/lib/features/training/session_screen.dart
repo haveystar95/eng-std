@@ -15,6 +15,7 @@ import '../../data/api_client.dart';
 import '../../data/app_settings.dart';
 import '../../data/models.dart';
 import '../../data/perf_log.dart';
+import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../progress/activity.dart';
 import '../progress/progress_providers.dart';
@@ -206,7 +207,16 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   final List<({SessionCard card, LocalCheck verdict})> _results = [];
 
   List<SessionCard> get _cards => widget.session.cards;
-  SessionCard get _card => _cards[_pos];
+
+  /// A recognition slot is played at the pair's CURRENT rung, so a failed rung 1 is replayed rather
+  /// than followed by rung 2 (QA-9). Resolved at DISPLAY time, which is the only moment that knows
+  /// how the earlier cards went — the session itself was dealt before any of them were answered.
+  late final RecognitionReplay _replay = RecognitionReplay(_cards, enabled: !widget.practice);
+
+  /// The index actually being played at the current position — [_pos] unless the slot is replaying
+  /// a rung the learner has not passed yet.
+  int get _playing => _replay.resolve(_pos);
+  SessionCard get _card => _cards[_playing];
 
   @override
   void initState() {
@@ -286,6 +296,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   }
 
   void _onAnswered(SessionAnswer a) {
+    // Read BEFORE the ladder moves: this is the card that was actually on screen, and after
+    // [RecognitionReplay.record] the same slot may resolve elsewhere.
+    final played = _card;
     // F20: while the user reads the feedback, warm the next TWO cards' photos so an upcoming photo
     // card meets a ready image instead of a cold network load (precache is the main image fix).
     _prepareCard(_pos + 1);
@@ -296,20 +309,24 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       final url = _photoUrl[_pos];
       if (url != null) precacheSessionImage(context, url);
     }
-    _results.add((card: _card, verdict: a.verdict));
+    _results.add((card: played, verdict: a.verdict));
     ref.read(reviewSyncProvider).record(
-          termId: _card.termId,
-          exerciseMode: _card.mode.wire,
+          termId: played.termId,
+          exerciseMode: played.mode.wire,
           response: a.response,
           usedHint: a.usedHint,
           isPractice: widget.practice,
           latencyMs: a.latencyMs,
           sessionId: widget.session.sessionId,
-          // Echo the rung the card was dealt at. The server needs it to know a rung-1 answer is a
+          // Echo the rung the card was dealt at — the rung of the card SHOWN, which after a replay
+          // is not the one the slot was planned at. The server needs it to know a rung-1 answer is a
           // TAP graded by identity; without it the tapped term id is graded as text and a correct
-          // tap becomes a lapse.
-          ladderStep: _card.ladderStep,
+          // tap becomes a lapse. It is also what makes the review log's rung column true.
+          ladderStep: played.ladderStep,
         );
+    // Move the session's own view of the ladder. A failed recognition leaves the pair where it is,
+    // which is what makes the term's next slot replay this rung instead of dealing the next one.
+    _replay.record(played, accepted: a.verdict.isAccepted);
     // Reveal the pinned «Дальше» bar. It lives OUTSIDE the scroll view, so it stays reachable no
     // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
     // button below the fold — device-batch F9).

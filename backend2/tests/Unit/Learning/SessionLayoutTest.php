@@ -132,6 +132,29 @@ it('starts a word already partway up the ladder at ITS rung, not at the intro', 
         ->and(array_map(static fn (int $i): ?int => $slots[$i]->ladderStep, positionsOf($slots, 'b')))->toBe([2]);
 });
 
+it('lays a chain out in ASCENDING rung order, one rung at a time', function () {
+    // The layout is a PLAN made before the first answer, and the device resolves it at deal time: a
+    // recognition slot is played at the rung the pair actually stands on, so a FAILED rung is
+    // replayed instead of the next one being dealt (QA-9, mobile RecognitionReplay). That resolution
+    // reaches BACKWARDS for the term's card at the lower rung, which only works because a chain is
+    // laid out in ascending order and never skips a rung — pinned here, on the side that lays it out,
+    // and mirrored by the client's own test over the ported algorithm.
+    $slots = $this->layout->arrange([
+        ...introducing(['a', 'b']),
+        ['term_id' => 'c', 'step' => LearningLadder::STEP_RECOGNITION_FORWARD],
+    ], ['r1', 'r2', 'r3', 'r4'], 20);
+
+    foreach (['a', 'b', 'c'] as $term) {
+        $steps = array_map(static fn (int $i): ?int => $slots[$i]->ladderStep, positionsOf($slots, $term));
+        expect($steps)->not->toBe([]);
+        foreach ($steps as $index => $step) {
+            if ($index > 0) {
+                expect($step)->toBe($steps[$index - 1] + 1, "{$term} must climb one rung at a time, in order");
+            }
+        }
+    }
+});
+
 it('is deterministic — the same inputs always deal the same order', function () {
     // A retried build must not re-deal a session the learner is halfway through.
     $first = readable($this->layout->arrange(introducing(['a', 'b', 'c']), ['r1', 'r2'], 15));

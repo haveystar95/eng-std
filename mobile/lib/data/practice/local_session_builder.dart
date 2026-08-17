@@ -81,6 +81,25 @@ abstract final class LocalPracticeSessionBuilder {
     ]..shuffle(random);
     final chosen = drillable.take(limit).toList();
 
+    // «Тренировать слово» — one word in the pool — FANS: a card per applicable mode instead of the
+    // single card the round-robin would deal. The button promises the word is run through the
+    // trainers, and «1 of 1» was not that (QA-14). Over many words the round-robin already shows
+    // every mode across the session, so a fan there would only make one word crowd out the others.
+    if (chosen.length == 1) {
+      return StudySession(
+        sessionId: sessionId ?? ApiClient.ulid(),
+        cards: _fan(
+          term: chosen.single,
+          pool: playable,
+          enabled: enabled,
+          random: random,
+          position: ladder[chosen.single.id] ?? LadderPosition.untouched,
+          admission: admission,
+        ),
+        builtLocally: true,
+      );
+    }
+
     final cards = <SessionCard>[];
     for (var index = 0; index < chosen.length; index++) {
       cards.add(_card(
@@ -101,6 +120,57 @@ abstract final class LocalPracticeSessionBuilder {
     );
   }
 
+  /// One card per mode this pair may be drilled in right now, in the matrix's own order.
+  ///
+  /// The order is the enabled set's — which the server sorts by the `position` column of
+  /// `learning_mode_settings` and the sync feed hands over unchanged — so the fan walks the trainers
+  /// in the order the product puts them in, not in whatever order the rotation seed happened to land
+  /// on. Same three filters as every other practice card and in the same order: switched on, admitted
+  /// at this rung, buildable from this term's data.
+  ///
+  /// A pair whose admitted set comes out empty still gets exactly ONE card — [PracticeModeSelector]'s
+  /// floor. «Nothing applies» must not become «nothing to train».
+  static List<SessionCard> _fan({
+    required Term term,
+    required List<Term> pool,
+    required PracticeModes enabled,
+    required Random random,
+    required LadderPosition position,
+    required ModeAdmission admission,
+  }) {
+    final answer = (term.termText ?? '').trim();
+    final playable = TermPlayability.of(
+      answer: answer,
+      example: term.example,
+      exampleTranslation: term.exampleTranslation,
+      distractorCount: _spanDistinct(_distractorsOf(term)).length,
+    );
+    final modes = playable.only(admission.only(
+      [for (final m in enabled.modes) if (m.isGraded) m],
+      position.admissionStep,
+    ));
+
+    if (modes.isEmpty) {
+      return [
+        _card(
+          term: term, cardIndex: 0, pool: pool, enabled: enabled,
+          random: random, position: position, admission: admission,
+        ),
+      ];
+    }
+
+    return [
+      for (var i = 0; i < modes.length; i++)
+        _card(
+          term: term, cardIndex: i, pool: pool, enabled: enabled,
+          random: random, position: position, admission: admission,
+          forcedMode: modes[i],
+        ),
+    ];
+  }
+
+  /// [forcedMode] is the fan's doing ([_fan]): the mode has already been chosen from the same three
+  /// filters, so the round-robin is skipped rather than re-run. Null everywhere else.
   static SessionCard _card({
     required Term term,
     required int cardIndex,
@@ -109,13 +179,14 @@ abstract final class LocalPracticeSessionBuilder {
     required Random random,
     required LadderPosition position,
     required ModeAdmission admission,
+    ExerciseMode? forcedMode,
   }) {
     var answer = (term.termText ?? '').trim();
     final example = term.example;
     // Span-distinct, because that is what a card can actually use — see _spanDistinct.
     final usableDistractors = _spanDistinct(_distractorsOf(term));
     final step = position.admissionStep;
-    final mode = PracticeModeSelector.select(
+    final mode = forcedMode ?? PracticeModeSelector.select(
       // The ladder filter, applied to the enabled set before the term's own data narrows it
       // further. The rung is taken AS IT IS — no substitution: a rung whose admitted set is empty
       // means "not yet", and [PracticeModeSelector.select] floors an empty set to multiple_choice,
@@ -152,12 +223,16 @@ abstract final class LocalPracticeSessionBuilder {
     if (mode == ExerciseMode.multipleChoice) {
       final candidates = [...pool]..shuffle(random);
       final distractors = farOptions
-          // Neighbours, taken as they come — deliberately NOT filtered for similarity, which is the
-          // whole point: at a first meeting the card must be answerable by knowing the word and by
-          // nothing else.
+          // Neighbours, deliberately NOT filtered for MEANING — that is the whole point: at a first
+          // meeting the card must be answerable by knowing the word and by nothing else. They are
+          // filtered for SHAPE, for exactly the same reason: an option of another type is discarded
+          // on sight, without knowing anything, and a word offered beside whole questions is a card
+          // with two real options pretending to have four (QA-6). Too few same-shape neighbours
+          // makes the card SHORTER, never mixed — mirroring the server's StudyCardAssembler.
           ? [
               for (final t in candidates)
-                if (t.id != term.id && (t.termText ?? '').trim().isNotEmpty) (t.termText ?? '').trim(),
+                if (t.id != term.id && t.type == term.type && (t.termText ?? '').trim().isNotEmpty)
+                  (t.termText ?? '').trim(),
             ].take(optionCount - 1).toList()
           : PracticeDistractors.forTarget(
               target: term,

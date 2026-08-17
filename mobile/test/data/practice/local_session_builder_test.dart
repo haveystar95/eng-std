@@ -149,11 +149,13 @@ void main() {
   });
 
   test('the card content comes from the mirror', () {
-    final session = build(from: [terms.first]);
-    final card = session.cards.single;
+    // A one-term pool fans across the modes (see «Тренировать слово» below), so this reads the
+    // first card rather than the only one — the content assertions are the same either way.
+    final card = build(from: [terms.first]).cards.first;
 
     expect(card.termId, terms.first.id);
     expect(card.answer, 'reservation');
+    expect(card.mode, ExerciseMode.multipleChoice, reason: 'the fan opens on the first enabled mode');
     expect(card.prompt, 'бронь', reason: 'the prompt is the translation, in the user\'s language');
     expect(card.type, 'word');
   });
@@ -298,5 +300,104 @@ void main() {
 
       expect(rows.map((t) => t.id), ['t1', 't2'], reason: 'ordered by position, scoped to c1');
     });
+  });
+
+  group('«Тренировать слово» — a one-word pool fans across the trainers (QA-14)', () {
+    // The device saw «1 of 1»: the round-robin walks the circle by CARD INDEX, so one word is one
+    // point on it. Over many words the same rotation already shows every mode, which is why the
+    // promise only ever failed for the single-word case — and why the fan is bounded by pool size.
+    StudySession solo(Term t, {PracticeModes? enabled}) => LocalPracticeSessionBuilder.build(
+          terms: [t],
+          limit: 20,
+          random: Random(4),
+          sessionId: 'S',
+          enabled: enabled ?? PracticeModes.serverDefault,
+          ladder: topOfLadder([t]),
+        );
+
+    test('deals one card per applicable mode, in the matrix order', () {
+      final rich = term('01KZETAAK18AQK14YFSBWW6KRN',
+          text: 'reservation', translation: 'бронь', example: 'I have a reservation for tonight.');
+      final cards = solo(rich).cards;
+
+      expect(cards.length, greaterThan(1), reason: 'this is the «1 of 1» the acceptance saw');
+      expect(cards.map((c) => c.termId).toSet(), {rich.id}, reason: 'one word, several trainers');
+
+      final modes = cards.map((c) => c.mode).toList();
+      expect(modes.toSet(), hasLength(modes.length), reason: 'a fan, not a repeat');
+      expect(modes, isNot(contains(ExerciseMode.intro)), reason: 'practice introduces nothing');
+      // The order is the enabled set's — the server sorts it by `learning_mode_settings.position`
+      // and the sync feed hands it over unchanged — filtered by what the term supports.
+      expect(modes, [
+        for (final m in PracticeModes.serverDefault.modes)
+          if (modes.contains(m)) m,
+      ]);
+    });
+
+    test('every fanned mode is one the term data can actually build', () {
+      final bare = term('01KZETAAM18AQK14YFSBWW6KRP', text: 'towel', translation: 'полотенце');
+      final modes = solo(bare).cards.map((c) => c.mode).toSet();
+
+      // No example and a single word: word_bank, cloze and scramble are all gated out by content.
+      expect(modes, isNot(contains(ExerciseMode.wordBank)));
+      expect(modes, isNot(contains(ExerciseMode.cloze)));
+      expect(modes, isNot(contains(ExerciseMode.scramble)));
+    });
+
+    test('a pair low on the ladder still gets exactly one card', () {
+      // Rung 1 admits multiple_choice and nothing else. «Few modes apply» must not become «no
+      // session», and «none apply» must not either.
+      final t = term('01KZETAAN18AQK14YFSBWW6KRQ', text: 'towel', translation: 'полотенце');
+      final session = LocalPracticeSessionBuilder.build(
+        terms: [t],
+        limit: 20,
+        random: Random(4),
+        sessionId: 'S',
+        ladder: {t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1)},
+      );
+
+      expect(session.cards, hasLength(1));
+      expect(session.cards.single.mode, ExerciseMode.multipleChoice);
+    });
+
+    test('a MANY-word session is untouched — one card per term', () {
+      expect(build().cards, hasLength(terms.length));
+      expect(build().cards.map((c) => c.termId).toSet(), hasLength(terms.length));
+    });
+  });
+
+  test('far options are all of the card own shape (QA-6)', () {
+    // The mixed deck from the acceptance: a word among sentences. An option of another shape is
+    // discarded on sight, so it is not an option — the card gets fewer, never mixed.
+    final mixed = [
+      term('01KZETAAP18AQK14YFSBWW6KRR', text: 'grain-free', translation: 'без злаков'),
+      term('01KZETAAQ18AQK14YFSBWW6KRS', text: 'organic', translation: 'органический'),
+      term('01KZETAAR18AQK14YFSBWW6KRT',
+          text: 'Where can I find dog food?', translation: 'Где я могу найти корм для собак?', type: 'phrase'),
+      term('01KZETAAS18AQK14YFSBWW6KRU',
+          text: 'Is this suitable for small breeds?', translation: 'Подходит ли это для мелких пород?', type: 'phrase'),
+    ];
+    // Rung 2 is where practice deals a recognition card, and the matrix gives it `distant` options.
+    final session = LocalPracticeSessionBuilder.build(
+      terms: mixed,
+      limit: 20,
+      random: Random(6),
+      sessionId: 'S',
+      enabled: const PracticeModes([ExerciseMode.multipleChoice]),
+      ladder: {
+        for (final t in mixed)
+          t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 2),
+      },
+    );
+
+    expect(session.cards, isNotEmpty);
+    for (final card in session.cards) {
+      final own = mixed.firstWhere((t) => t.id == card.termId);
+      for (final option in card.options!) {
+        final source = mixed.firstWhere((t) => t.termText == option, orElse: () => own);
+        expect(source.type, own.type, reason: 'a ${own.type} card was offered «$option»');
+      }
+      expect(card.options!.length, greaterThanOrEqualTo(2), reason: 'fewer options, still a choice');
+    }
   });
 }

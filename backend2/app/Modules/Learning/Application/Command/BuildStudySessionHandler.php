@@ -21,13 +21,16 @@ use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\SessionLayout;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\SessionSlot;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 /**
@@ -112,21 +115,26 @@ final readonly class BuildStudySessionHandler
         // The far-option pool for the recognition rungs: this session's own terms. Built once,
         // handed to every card — an option that is another card in the same sitting is a word the
         // learner has a reason to have in mind, which is what makes a far option fair rather than
-        // arbitrary.
+        // arbitrary. `type` rides along because a far option still has to be a PLAUSIBLE one: an
+        // option of a different shape is answerable by its shape (see StudyCardAssembler).
         $neighbours = array_map(
             static fn (DueTermView $v): array => [
                 'term_id' => $v->termId->value,
                 'text' => $content[$v->termId->value]->text,
                 'translation' => $content[$v->termId->value]->translation,
+                'type' => $content[$v->termId->value]->type,
             ],
             $renderable,
         );
 
-        // Practice keeps its flat running order (one card per term, already shuffled). The ladder
-        // does not apply: practice schedules nothing and advances nothing, so a word cannot be
-        // introduced by it.
+        // Practice keeps its flat running order (one card per term, already shuffled) — except for a
+        // pool of exactly ONE term, which FANS across that term's applicable modes (see
+        // practiceSlots). The ladder does not apply either way: practice schedules nothing and
+        // advances nothing, so a word cannot be introduced by it.
+        /** @var array<int, ExerciseMode> $forcedModes card index => the mode a fanned slot must use */
+        $forcedModes = [];
         $slots = $command->isPractice
-            ? array_map(static fn (DueTermView $v): SessionSlot => new SessionSlot($v->termId->value), $renderable)
+            ? $this->practiceSlots($renderable, $content, $enabled, $matrix, $forcedModes)
             : $this->arrange(
                 $renderable,
                 $size,
@@ -152,6 +160,7 @@ final readonly class BuildStudySessionHandler
                 $command->actorId, $view, $content[$slot->termId], $poolIds, $enabled, $matrix,
                 isPractice: $command->isPractice, cardIndex: $cardIndex,
                 slotStep: $slot->ladderStep, neighbours: $neighbours,
+                modeOverride: $forcedModes[$cardIndex] ?? null,
             );
             // The composition is a SET of terms, not of cards: a term now legitimately occupies
             // several slots, and what the composition guards is «was this term part of the session
@@ -175,6 +184,57 @@ final readonly class BuildStudySessionHandler
         });
 
         return new SessionView($sessionId->value, $cards);
+    }
+
+    /**
+     * The running order of a PRACTICE session: one card per term — except for a pool of exactly one
+     * term, which gets one card per mode that term may be drilled in right now.
+     *
+     * «Тренировать слово» promises the word is run through the trainers; a single card was not that
+     * (QA-14). The round-robin already shows every applicable mode ACROSS a session of many words,
+     * so the promise only failed where the circle had a single point to walk. Fanning a term inside
+     * a many-word session would instead let one word crowd out the rest, so the rule is bounded by
+     * the pool: one term in, the fan; more than one, the flat order it has always had.
+     *
+     * The rule reads off the POOL rather than off a flag, so the device — which builds its own
+     * practice sessions offline — applies the same one without a wire change.
+     *
+     * Order is the enabled set's, i.e. the `position` column of `learning_mode_settings`: the
+     * trainers in the order the product puts them in, not in rotation-seed order. The three filters
+     * are the usual ones and in the usual order — switched on, admitted at this rung, buildable from
+     * this term's data. When none survive, the term still gets exactly one card (the selector's
+     * floor, chosen by the assembler as before): «nothing applies» must not become «nothing to
+     * train».
+     *
+     * @param  list<DueTermView>  $renderable
+     * @param  array<string, TermContentView>  $content
+     * @param  array<int, ExerciseMode>  $forcedModes  out-param: card index => the mode that slot must use
+     * @return list<SessionSlot>
+     */
+    private function practiceSlots(
+        array $renderable,
+        array $content,
+        EnabledModes $enabled,
+        ModeAdmission $matrix,
+        array &$forcedModes,
+    ): array {
+        if (count($renderable) !== 1) {
+            return array_map(static fn (DueTermView $v): SessionSlot => new SessionSlot($v->termId->value), $renderable);
+        }
+
+        $view = $renderable[0];
+        $modes = $this->assembler->practiceModesFor($view, $content[$view->termId->value], $enabled, $matrix);
+        if ($modes === []) {
+            return [new SessionSlot($view->termId->value)];
+        }
+
+        $slots = [];
+        foreach ($modes as $index => $mode) {
+            $forcedModes[$index] = $mode;
+            $slots[] = new SessionSlot($view->termId->value);
+        }
+
+        return $slots;
     }
 
     /**
