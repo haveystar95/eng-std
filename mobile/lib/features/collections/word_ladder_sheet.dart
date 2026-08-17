@@ -6,6 +6,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/models.dart';
+import '../../data/practice/learning_ladder.dart';
 
 /// The expanded word card (кадр 16e): the same five dots the row shows, captioned and joined by a
 /// line, plus the example, the accepted variants and one action.
@@ -36,6 +37,7 @@ class _WordLadderSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final example = word.example;
+    final trainable = LearningLadder.admitsPractice(word.ladderStep);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,10 +81,27 @@ class _WordLadderSheet extends StatelessWidget {
           Text(example, style: AppTextExercise.introExample),
         ],
         const SizedBox(height: AppSpacing.s22),
-        PrimaryButton(label: l.ladderTrainWord, onPressed: () {
-          Navigator.of(context).maybePop();
-          onTrain();
-        }),
+        // A word still at rung 0 has not been introduced, and practice introduces nothing — so the
+        // action is inert rather than absent: an option that vanishes reads as a bug, one that is
+        // greyed out with a reason reads as a rule. Same gate the session builder applies
+        // ([LearningLadder.admitsPractice]) — asked here so the button cannot promise a session
+        // that would come back empty.
+        PrimaryButton(
+          label: l.ladderTrainWord,
+          enabled: trainable,
+          onPressed: () {
+            Navigator.of(context).maybePop();
+            onTrain();
+          },
+        ),
+        if (!trainable) ...[
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            l.ladderTrainLockedIntro,
+            textAlign: TextAlign.center,
+            style: AppText.ladderLockedNote,
+          ),
+        ],
       ],
     );
   }

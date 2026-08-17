@@ -48,6 +48,13 @@ void main() {
     ExerciseMode.intro,
   ]);
 
+  /// The lowest rung practice will actually deal: introduced, working through recognition. Its
+  /// options are still `distant`, because the pair has not graduated.
+  const onLadder = LadderPosition(
+    acquisition: Acquisition.learning,
+    learningStep: LearningLadder.stepRecognitionForward,
+  );
+
   Set<ExerciseMode> modesAt(LadderPosition position, {int seed = 3}) =>
       LocalPracticeSessionBuilder.build(
         terms: terms,
@@ -58,18 +65,70 @@ void main() {
         ladder: {for (final t in terms) t.id: position},
       ).cards.map((c) => c.mode).toSet();
 
-  test('a never-shown word is only ever recognised, whatever is switched on', () {
-    // Every trainer is on and the terms support all of them — the rung is the only thing holding
-    // them back, and at a first meeting that leaves exactly one card.
-    expect(modesAt(LadderPosition.untouched), {ExerciseMode.multipleChoice});
+  List<SessionCard> cardsAt(LadderPosition position, {int seed = 3}) =>
+      LocalPracticeSessionBuilder.build(
+        terms: terms,
+        limit: 20,
+        random: Random(seed),
+        sessionId: 'S',
+        enabled: everyMode,
+        ladder: {for (final t in terms) t.id: position},
+      ).cards;
+
+  test('a never-shown word gets NO practice card at all — the gate is fail-closed', () {
+    // The owner's rule: practice introduces nothing, so a word nobody has introduced has nothing
+    // for practice to drill. Rung 0 used to be handed the rung-1 card as a substitute, which made
+    // the one rung the matrix places a trainer at the one rung the gate ignored.
+    for (final position in [
+      LadderPosition.untouched,
+      // reps survived a `known` undo, but the pair still stands at rung 0.
+      const LadderPosition(acquisition: Acquisition.isNew, reps: 3),
+    ]) {
+      expect(position.step, LearningLadder.stepIntro);
+      expect(position.admitsPractice, isFalse);
+      expect(cardsAt(position), isEmpty);
+    }
+  });
+
+  test('the substitution is gone from the mode filter too, not just from the pool', () {
+    // Belt and braces: PracticeModeSelector floors an EMPTY applicable set to multiple_choice, so a
+    // rung-0 word reaching the card builder would still come back as a rung-1 card. Nothing may
+    // deal it — which the empty session above already shows — and nothing may claim it is dealable.
+    expect(ModeAdmission.shipped.only(
+      [for (final m in everyMode.modes) if (m.isGraded) m],
+      LearningLadder.stepIntro,
+    ), isEmpty);
+  });
+
+  test('one introduced word is drilled while its rung-0 neighbours only lend their text', () {
+    // A half-new collection must still be practisable, and a rung-0 word is allowed to be someone
+    // else's WRONG option: appearing there claims nothing about it. Dropping it from the option
+    // pool as well would leave a one-option multiple choice.
+    final session = LocalPracticeSessionBuilder.build(
+      terms: terms,
+      limit: 20,
+      random: Random(3),
+      sessionId: 'S',
+      enabled: everyMode,
+      ladder: {
+        terms.first.id: const LadderPosition(
+          acquisition: Acquisition.learning,
+          learningStep: LearningLadder.stepRecognitionReverse,
+        ),
+        for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
+      },
+    );
+
+    expect(session.cards.map((c) => c.termId), [terms.first.id]);
+    final card = session.cards.single;
+    expect(card.mode, ExerciseMode.multipleChoice);
+    expect(card.options, hasLength(greaterThan(1)));
   });
 
   test('practice introduces nothing — an intro card is never dealt, even with intro switched on', () {
-    // An intro writes an exposure and spends the daily new-term quota. Practice does neither, so
-    // rung 0 is dealt its rung-1 card instead: something is asked, nothing is claimed.
     for (final position in [
-      LadderPosition.untouched,
-      const LadderPosition(acquisition: Acquisition.isNew, reps: 3),
+      const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
+      const LadderPosition(acquisition: Acquisition.graduated),
     ]) {
       expect(modesAt(position), isNot(contains(ExerciseMode.intro)));
     }
@@ -115,14 +174,14 @@ void main() {
     expect(dealt, isNot({ExerciseMode.multipleChoice}));
   });
 
-  test('a first meeting gets FAR options — the session neighbours, not the near-misses', () {
+  test('a pair still on the ladder gets FAR options — the session neighbours, not the near-misses', () {
     final session = LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: 20,
       random: Random(5),
       sessionId: 'S',
       enabled: everyMode,
-      ladder: {for (final t in terms) t.id: LadderPosition.untouched},
+      ladder: {for (final t in terms) t.id: onLadder},
     );
 
     for (final card in session.cards) {
@@ -148,7 +207,7 @@ void main() {
       random: Random(9),
       sessionId: 'S',
       enabled: everyMode,
-      ladder: {for (final t in terms) t.id: LadderPosition.untouched},
+      ladder: {for (final t in terms) t.id: onLadder},
     );
 
     for (final card in session.cards) {

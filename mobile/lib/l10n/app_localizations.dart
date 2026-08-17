@@ -1646,6 +1646,12 @@ abstract class AppLocalizations {
   /// **'Тренировать слово'**
   String get ladderTrainWord;
 
+  /// Пояснение под неактивной кнопкой «Тренировать слово»: слово на нулевой ступени, практика ничего не знакомит (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово откроется для практики после знакомства с ним в учебной тренировке.'**
+  String get ladderTrainLockedIntro;
+
   /// Кнопка перехода к следующему заданию (кадры 12c, 12d).
   ///
   /// In ru, this message translates to:

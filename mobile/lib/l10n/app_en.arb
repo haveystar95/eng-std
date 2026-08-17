@@ -279,6 +279,7 @@
   "ladderTitle": "WORD LADDER",
   "ladderKnownDash": "known",
   "ladderTrainWord": "Train this word",
+  "ladderTrainLockedIntro": "This word opens for practice once you have met it in a study session.",
 
   "sessionFeedbackCorrect": "Correct",
   "sessionFeedbackAlmost": "Almost:",

@@ -101,6 +101,22 @@ abstract final class LearningLadder {
   /// Is this rung one of the two recognition steps, where an answer must not schedule?
   static bool isRecognitionStep(int? step) =>
       step == stepRecognitionForward || step == stepRecognitionReverse;
+
+  /// May a pair standing on this rung be dealt a FREE PRACTICE card at all?
+  ///
+  /// Rung 0 may not, and this is the owner's call rather than a technical limit. Practice
+  /// introduces nothing — it writes no exposure and spends no daily quota — so a word that has
+  /// never been introduced has nothing for practice to drill. Practice used to substitute the
+  /// rung-1 card for it, which meant the one rung the admission matrix places at 0 was the one
+  /// rung practice ignored: an exception dressed as a fallback. A first meeting happens in a study
+  /// session, or it does not happen.
+  ///
+  /// `null` — a `known` pair — is admitted: it is outside the ladder, not at the bottom of it.
+  ///
+  /// This does not strand a word when the intro trainer is switched off globally: a study session
+  /// then deals rung 0 its recognition card directly and passing it moves the pair up, so the word
+  /// still leaves rung 0 by studying it.
+  static bool admitsPractice(int? step) => step != stepIntro;
 }
 
 /// Where one (user, term) pair stands, as mirrored locally — the inputs [LearningLadder.stepFor]
@@ -134,6 +150,9 @@ class LadderPosition {
   /// The rung to filter modes by. A pair outside the ladder is not held back by it — its
   /// verification is decided elsewhere — so it reads as the top rung rather than as rung 0.
   int get admissionStep => step ?? LearningLadder.stepDictation;
+
+  /// May this pair be dealt a free-practice card? See [LearningLadder.admitsPractice].
+  bool get admitsPractice => LearningLadder.admitsPractice(step);
 }
 
 /// Where a choice card's WRONG options come from. Client port of the server's `OptionsPolicy`.

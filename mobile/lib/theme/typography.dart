@@ -248,6 +248,16 @@ abstract final class AppText {
     color: AppColors.tertiary,
   );
 
+  /// Пояснение под неактивным действием развёрнутой карточки — целое предложение, поэтому крупнее
+  /// подписи ступени (11 — размер ярлыка, не текста) и с интерлиньяжем на две строки.
+  static const ladderLockedNote = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 13,
+    height: 1.35,
+    color: AppColors.tertiary,
+  );
+
   /// Заголовок блока лестницы («ЛЕСТНИЦА СЛОВА»). Гротеск 10 / 700, разрядка — как у бейджа.
   static const ladderTitle = TextStyle(
     fontFamily: AppFonts.inter,

@@ -25,11 +25,15 @@ import 'practice_mode_selector.dart';
 /// server applies — is the trainer on ([PracticeModes]), can this term's data build it
 /// ([TermPlayability]), has this PAIR earned it ([ModeAdmission]).
 ///
-/// Two things practice deliberately does NOT do, both because it moves nothing:
+/// Three things practice deliberately does NOT do, all because it moves nothing:
 ///
 ///  * it never deals an INTRO card. An intro is an introduction — it writes an exposure and spends
-///    the daily new-term quota — and practice introduces nothing. A word still at rung 0 is dealt
-///    its rung-1 card instead, which asks something without claiming the word has been met.
+///    the daily new-term quota — and practice introduces nothing.
+///  * and so it does not deal a word standing at RUNG 0 at all: such a word is dropped from the
+///    pool, not handed the rung-1 card as a substitute. Substituting was a hole in the very gate
+///    this class applies — rung 0 is the one rung the matrix places a trainer at, and it was the one
+///    rung practice overrode. A first meeting belongs to a study session. See
+///    [LearningLadder.admitsPractice] for why that does not strand the word.
 ///  * it never deals the IDENTITY-graded direction (term → translation, tap an option id). The
 ///    server refuses identity grading for practice answers, so a card built that way here would be
 ///    graded as text against the term's forms and marked wrong. Recognition in practice is always
@@ -63,12 +67,19 @@ abstract final class LocalPracticeSessionBuilder {
     Map<String, LadderPosition> ladder = const {},
     ModeAdmission admission = ModeAdmission.shipped,
   }) {
+    // Every term that could appear ON a card — as the question or as a wrong option.
     final playable = [
       for (final term in terms)
         if ((term.termText ?? '').trim().isNotEmpty) term,
     ];
-    final pool = [...playable]..shuffle(random);
-    final chosen = pool.take(limit).toList();
+    // …and the subset practice may actually QUESTION. A rung-0 word is only dropped as a question,
+    // not as a decoy: appearing among someone else's wrong options claims nothing about it, and
+    // dropping it there too would starve the far options in a collection full of new words.
+    final drillable = [
+      for (final term in playable)
+        if ((ladder[term.id] ?? LadderPosition.untouched).admitsPractice) term,
+    ]..shuffle(random);
+    final chosen = drillable.take(limit).toList();
 
     final cards = <SessionCard>[];
     for (var index = 0; index < chosen.length; index++) {
@@ -106,11 +117,14 @@ abstract final class LocalPracticeSessionBuilder {
     final step = position.admissionStep;
     final mode = PracticeModeSelector.select(
       // The ladder filter, applied to the enabled set before the term's own data narrows it
-      // further. `intro` can never survive it here: practice introduces nothing, and rung 0 is the
-      // only rung that admits it — so the pair is dealt whatever rung 1 admits instead.
+      // further. The rung is taken AS IT IS — no substitution: a rung whose admitted set is empty
+      // means "not yet", and [PracticeModeSelector.select] floors an empty set to multiple_choice,
+      // so substituting here (or letting rung 0 through at all) would deal the card the gate just
+      // refused. Rung 0 never reaches this method; `build` leaves it out of the pool.
+      // `intro` is filtered out ahead of the matrix anyway — practice introduces nothing.
       enabled: PracticeModes(admission.only(
         [for (final m in enabled.modes) if (m.isGraded) m],
-        step == LearningLadder.stepIntro ? LearningLadder.stepRecognitionForward : step,
+        step,
       )),
       rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
       playable: TermPlayability.of(
