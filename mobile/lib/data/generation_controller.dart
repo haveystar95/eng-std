@@ -25,11 +25,17 @@ import 'models.dart';
 /// arrives via /sync); failed → keep as an error card with «повторить»; pending/running → resume
 /// polling; a row older than 24h or a 404 → drop with a log note.
 class GenerationController {
-  GenerationController(this._api, this._db, this._sync);
+  GenerationController(this._api, this._db, this._sync, {this.coverResyncDelay = _defaultCoverResync});
 
   final ApiClient _api;
   final AppDatabase _db;
   final SyncFn _sync;
+
+  /// How long after a success to sync ONE more time, for the covers — see [resyncForCovers].
+  /// Injectable so a test doesn't have to wait it out.
+  final Duration coverResyncDelay;
+
+  static const _defaultCoverResync = Duration(seconds: 12);
 
   /// Ids with a live poll loop, so a resume/reconcile can't start a second one for the same id.
   final Set<String> _polling = {};
@@ -203,6 +209,7 @@ class GenerationController {
           updatedAt: Value(now),
         ));
         await _sync(); // pull the new collection + terms (and their images as they land)
+        unawaited(resyncForCovers());
         return;
       }
       if (s.isFailed) {
@@ -219,6 +226,21 @@ class GenerationController {
       }
     }
     // Budget spent while still pending: leave the row as-is; the next app launch reconciles it.
+  }
+
+  /// One more sync a few seconds after a generation succeeds, for the COVERS.
+  ///
+  /// The generation reports done the moment the words exist; the images are searched and attached
+  /// after that, on their own job. The client synced at 17:00:45 and the server was still fetching
+  /// pictures at 17:00:53, so the collection appeared with an empty cover and stayed that way until
+  /// something else happened to sync (QA-4). One extra pull closes the gap without asking the user
+  /// to pull-to-refresh a thing they cannot know is missing.
+  ///
+  /// Fire-and-forget and idempotent: the sync is a delta pull, so a second one that finds nothing
+  /// new costs a round trip and changes nothing.
+  Future<void> resyncForCovers() async {
+    await Future<void>.delayed(coverResyncDelay);
+    await _sync();
   }
 
   Future<bool> _rowExists(String id) async {

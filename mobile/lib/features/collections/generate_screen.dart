@@ -17,6 +17,22 @@ import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
 import 'collection_edit_dialog.dart';
 
+/// Which speech-recognition locale a dictated situation is captured in.
+///
+/// The language SPOKEN into this field is the collection's source language — the learner's own —
+/// because the situation («иду открывать счёт в банке») is written in it and the server reads it as
+/// such. Following the UI locale instead was QA-1: an interface left in English put Russian speech
+/// through `en_US` and returned transliterated nonsense, on a phone whose owner speaks Russian.
+///
+/// Unknown codes fall back to `en_US` — a locale the recogniser always has.
+String sttLocaleFor(String sourceLang) => _sttLocales[sourceLang] ?? 'en_US';
+
+const _sttLocales = {
+  'ru': 'ru_RU', 'en': 'en_US', 'uk': 'uk_UA', 'es': 'es_ES', 'de': 'de_DE',
+  'fr': 'fr_FR', 'it': 'it_IT', 'pt': 'pt_PT', 'pl': 'pl_PL', 'tr': 'tr_TR',
+  'zh': 'zh_CN', 'ja': 'ja_JP',
+};
+
 /// Size presets — the user picks a feel, the system picks the count (decided: no number slider).
 /// 10 / 15 / 22 (маленькая / средняя / большая).
 enum _Size { small(10), medium(15), large(22);
@@ -104,12 +120,6 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
 
   // ── Voice ──
 
-  static const _sttLocales = {
-    'ru': 'ru_RU', 'en': 'en_US', 'uk': 'uk_UA', 'es': 'es_ES', 'de': 'de_DE',
-    'fr': 'fr_FR', 'it': 'it_IT', 'pt': 'pt_PT', 'pl': 'pl_PL', 'tr': 'tr_TR',
-    'zh': 'zh_CN', 'ja': 'ja_JP',
-  };
-
   Future<void> _toggleVoice() async {
     if (_listening) {
       await _stopListening();
@@ -119,9 +129,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
   }
 
   Future<void> _startListening() async {
-    // The recognition locale follows the UI language (rule: recognise what the user speaks).
-    // Captured before any await so no BuildContext is used across an async gap.
-    final uiCode = Localizations.localeOf(context).languageCode;
+    // Recognise the language the situation is WRITTEN in — the collection's source language, which
+    // is the owner's own (see [sttLocaleFor]). Read before any await, like every other field here.
+    final localeId = sttLocaleFor(_sourceLang);
     // Dismiss the keyboard while dictating (кадр 6c — the keyboard returns on stop).
     _topicFocus.unfocus();
     if (!_speechInitDone) {
@@ -174,7 +184,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
         partialResults: true,
         cancelOnError: true,
         listenMode: ListenMode.dictation,
-        localeId: _sttLocales[uiCode] ?? 'en_US',
+        localeId: localeId,
       ),
     );
   }

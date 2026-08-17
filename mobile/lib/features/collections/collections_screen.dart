@@ -107,7 +107,12 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
   Widget _mineList({required bool withHeader}) {
     final l = AppLocalizations.of(context);
     final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
-    final pending = ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[];
+    // A finished generation whose collection has already been mirrored is no longer a card of its
+    // own — the collection below IS it (QA-3, see [visiblePendingGenerations]).
+    final pending = visiblePendingGenerations(
+      ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[],
+      collections,
+    );
     final empty = collections.isEmpty && pending.isEmpty;
 
     return RefreshIndicator(

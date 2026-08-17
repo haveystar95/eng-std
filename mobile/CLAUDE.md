@@ -63,9 +63,17 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 The data layer targets **backend2** (`{API_BASE_URL}/api/v1`, bearer token, responses wrapped
 in `data`, ULID string ids, `/reviews/batch`, `/study/due`, `/generations`). `lib/data/`
 (`models.dart`, `api_client.dart`, `providers.dart`) was hand-adapted to the OpenAPI contract
-(not codegen). **backend2 must be exposed** for on-device use: it has no ngrok service yet —
-run one against host `:8001` and pass `--dart-define=API_BASE_URL=…`. The old-backend ngrok
-default in `config.dart` is stale; override it. `GOOGLE_IOS_CLIENT_ID` unchanged (`../credentials.plist`).
+(not codegen).
+
+**The default in `config.dart` is correct — do not override it.** backend2 owns the ngrok tunnel:
+its compose has a `ngrok` service (`wt_ngrok`) serving the static domain
+`https://greedily-thermos-finer.ngrok-free.dev` straight at the backend2 `app` container, and that
+same URL is `AppConfig.apiBaseUrl`'s compile-time default. So `docker compose up -d` in `backend2/`
+is the whole "expose it" step, and the canonical build command above needs no `--dart-define`.
+(backend2 also publishes `:8001` on the host — that is for a desktop browser/curl, not for the
+phone.) Free ngrok plan = **one tunnel**: the old `backend/` claims the same domain, so don't run
+both stacks' ngrok at once; on `ERR_NGROK_334`, `pkill -f "ngrok http"` and bring
+`backend2`'s back up. `GOOGLE_IOS_CLIENT_ID` unchanged (`../credentials.plist`).
 
 Gaps vs the old app (backend2 doesn't provide): per-item CEFR badge, collection emoji
 (chosen locally, not persisted), word editing (done as remove+add), per-collection progress

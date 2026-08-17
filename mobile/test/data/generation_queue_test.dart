@@ -97,6 +97,39 @@ void main() {
     expect(ids, {'c1'}, reason: 'a pending-referenced collection is never reaped');
   });
 
+  test('a finished generation syncs once more, later, so the cover catches up', () async {
+    // QA-4: the client synced at 17:00:45 and the server was still attaching images at 17:00:53, so
+    // the collection landed with an empty cover and stayed that way until something else synced.
+    var syncs = 0;
+    final ctrl = GenerationController(
+      _OfflineApi(),
+      db,
+      () async => syncs++,
+      coverResyncDelay: const Duration(milliseconds: 20),
+    );
+
+    await ctrl.resyncForCovers();
+
+    expect(syncs, 1, reason: 'one extra pull, unprompted — the user cannot know a cover is missing');
+  });
+
+  test('the extra sync WAITS — an immediate one would race the images again', () async {
+    var syncs = 0;
+    final ctrl = GenerationController(
+      _OfflineApi(),
+      db,
+      () async => syncs++,
+      coverResyncDelay: const Duration(milliseconds: 200),
+    );
+
+    final pending = ctrl.resyncForCovers();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(syncs, 0);
+
+    await pending;
+    expect(syncs, 1);
+  });
+
   test('reconcileCollections still reaps a genuine ghost with no pending reference', () async {
     final t0 = DateTime.utc(2026, 8, 6, 9);
     await db.applyDelta(collectionUpserts: [

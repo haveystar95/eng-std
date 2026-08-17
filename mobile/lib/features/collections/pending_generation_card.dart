@@ -11,6 +11,24 @@ import '../../data/providers.dart';
 import 'collection_cover.dart';
 import 'collection_detail_screen.dart';
 
+/// The pending rows the list should actually draw: every one whose collection is NOT yet visible
+/// among [collections].
+///
+/// A finished generation is mirrored by the sync it triggers, and from that moment the same
+/// collection had two rows on the Collections tab — the ready card and the real collection —
+/// until an app restart, where reconciliation dropped the row (QA-3). Yielding here rather than
+/// deleting the row on success keeps the offline case intact: with the sync still owed the card
+/// stays and reads «почти готово», so the user is never left looking at nothing. The row itself is
+/// still dropped by the launch reconcile, so nothing accumulates.
+List<PendingGeneration> visiblePendingGenerations(
+  List<PendingGeneration> pending,
+  List<WordCollection> collections,
+) {
+  final mirrored = collections.map((c) => c.id).toSet();
+
+  return pending.where((p) => p.collectionId == null || !mirrored.contains(p.collectionId)).toList();
+}
+
 /// One in-flight / finished generation as a flat list row (кадр 2.5 / 7a), driven entirely by its
 /// drift row (survives an app kill AND an offline start; reconciled on launch). Three faces:
 /// generating (shimmer in the cover slot + «обычно 20–30 секунд»), failed («Генерация не потрачена»
