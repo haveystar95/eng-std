@@ -1006,6 +1006,52 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionCheck => 'Проверить';
 
   @override
+  String get sessionIntroBadge => 'новое слово';
+
+  @override
+  String get sessionIntroGot => 'Понятно →';
+
+  @override
+  String get sessionIntroAlso => 'также:';
+
+  @override
+  String get sessionHeaderIntro => 'Знакомство';
+
+  @override
+  String get sessionHeaderRecognition => 'Узнавание';
+
+  @override
+  String get sessionInstrRecogniseTranslation => 'выбери перевод';
+
+  @override
+  String get sessionRecogniseJustMet =>
+      'вы только что познакомились с этим словом';
+
+  @override
+  String get ladderStep0 => 'знакомство';
+
+  @override
+  String get ladderStep1 => 'узнавание';
+
+  @override
+  String get ladderStep3 => 'сборка';
+
+  @override
+  String get ladderStep4 => 'написание';
+
+  @override
+  String get ladderStep5 => 'диктант';
+
+  @override
+  String get ladderTitle => 'ЛЕСТНИЦА СЛОВА';
+
+  @override
+  String get ladderKnownDash => 'знаю';
+
+  @override
+  String get ladderTrainWord => 'Тренировать слово';
+
+  @override
   String get sessionNext => 'Дальше';
 
   @override

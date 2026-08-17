@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/local/sync_service.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,12 +70,19 @@ void main() {
       term('01KZETAAD2EWE2H5ZV7WD8JWKT', 'goals', 'She finally achieved her goals.'),
     ];
 
+    /// Every pair at the TOP of the acquisition ladder: this group is about the TOGGLES, and a
+    /// never-shown pair would be held at rung 1 by the ladder before a toggle could say anything.
+    /// The ladder gate has its own tests (ladder_gate_test.dart).
     Set<ExerciseMode> dealt(PracticeModes enabled) => LocalPracticeSessionBuilder.build(
           terms: terms,
           limit: 20,
           random: Random(3),
           sessionId: 'S',
           enabled: enabled,
+          ladder: {
+            for (final t in terms)
+              t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+          },
         ).cards.map((c) => c.mode).toSet();
 
     test('a narrowed set is the only thing dealt', () async {

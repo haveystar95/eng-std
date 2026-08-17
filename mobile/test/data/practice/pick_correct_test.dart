@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,6 +67,7 @@ void main() {
         random: Random(seed),
         enabled: const PracticeModes([ExerciseMode.pickCorrect]),
         sessionId: 's1',
+        ladder: {term.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12)},
       ).cards.single;
 
   test('sync stores the distractors as JSON on the term', () async {

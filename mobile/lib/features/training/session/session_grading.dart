@@ -132,6 +132,8 @@ abstract final class SessionGrader {
 enum SessionPhase { intro, assemble, review }
 
 SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
+      // The acquisition ladder's rung 0 — literally the introduction the header has always named.
+      ExerciseMode.intro => SessionPhase.intro,
       ExerciseMode.multipleChoice => SessionPhase.intro,
       // scramble assembles too, but a sentence, and it is a LATER rung than word_bank — the header
       // should read as review, not as the recognition→production step.

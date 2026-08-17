@@ -969,6 +969,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionCheck => 'Check';
 
   @override
+  String get sessionIntroBadge => 'new word';
+
+  @override
+  String get sessionIntroGot => 'Got it →';
+
+  @override
+  String get sessionIntroAlso => 'also:';
+
+  @override
+  String get sessionHeaderIntro => 'Meeting';
+
+  @override
+  String get sessionHeaderRecognition => 'Recognition';
+
+  @override
+  String get sessionInstrRecogniseTranslation => 'choose the translation';
+
+  @override
+  String get sessionRecogniseJustMet => 'you have just met this word';
+
+  @override
+  String get ladderStep0 => 'meeting';
+
+  @override
+  String get ladderStep1 => 'recognition';
+
+  @override
+  String get ladderStep3 => 'assembly';
+
+  @override
+  String get ladderStep4 => 'writing';
+
+  @override
+  String get ladderStep5 => 'dictation';
+
+  @override
+  String get ladderTitle => 'WORD LADDER';
+
+  @override
+  String get ladderKnownDash => 'known';
+
+  @override
+  String get ladderTrainWord => 'Train this word';
+
+  @override
   String get sessionNext => 'Next';
 
   @override

@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../practice/learning_ladder.dart';
+
 part 'app_database.g.dart';
 
 // The local mirror of the sync payload. Screens read from here; the background sync writes here.
@@ -76,6 +78,12 @@ class Terms extends Table {
 }
 
 /// (user, term) progress. Single-user app, so no user_id column. Mirrors `changes.progress`.
+///
+/// TWO INDEPENDENT DIMENSIONS live here, exactly as they do server-side, and no local write moves
+/// both: [state] and the SM-2 columns say WHEN the pair comes back; [acquisition] and
+/// [learningStep] say WHAT it comes back as. The scheduler is the server's alone — the client never
+/// writes the first group — while the ladder advances locally the moment an intro is acknowledged,
+/// because the session it belongs to has to keep running in airplane mode.
 class TermProgress extends Table {
   TextColumn get termId => text()();
   TextColumn get state => text().withDefault(const Constant('new'))();
@@ -85,7 +93,34 @@ class TermProgress extends Table {
   IntColumn get reps => integer().withDefault(const Constant(0))();
   IntColumn get lapses => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastReviewedAt => dateTime().nullable()();
+
+  /// The acquisition ladder: `new` (never shown) | `learning` (on the recognition rungs) |
+  /// `graduated`. Defaults to `graduated` for rows that already existed when the ladder landed —
+  /// the safe direction, since the alternative pushes a known word back to an intro card.
+  TextColumn get acquisition => text().withDefault(const Constant('graduated'))();
+
+  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from [reps]: a failed
+  /// recognition step is re-queued as the same step but is still logged.
+  IntColumn get learningStep => integer().withDefault(const Constant(0))();
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {termId};
+}
+
+/// The durable queue of un-uploaded INTRO acknowledgements — «this word was shown».
+///
+/// Separate from [ReviewQueueRows] because an exposure is not an answer: no mode, no response, no
+/// grade, and no `client_seq`. Sequence numbers exist to order events whose ORDER changes the
+/// outcome; an exposure has none — it is idempotent on the pair, it is applied before the batch's
+/// answers, and a second one for the same word is not a later event but the same one re-sent.
+///
+/// The PRIMARY KEY is the TERM, mirroring the server's `(user_id, term_id)`: a term is introduced
+/// once, so idempotency is a property of the table rather than of whoever is draining it.
+class ExposureQueueRows extends Table {
+  TextColumn get termId => text()();
+  TextColumn get shownAt => text()(); // ISO-8601 UTC, reference-only (device clock)
+  TextColumn get sessionId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {termId};
@@ -191,11 +226,25 @@ class DailyActivity extends Table {
 /// One term as shown on the collection view screen: content joined with its live position and
 /// (optional) learning state, so a single reactive query feeds the whole screen.
 class CollectionTermRow {
-  const CollectionTermRow({required this.term, required this.position, this.state, this.triaged = false});
+  const CollectionTermRow({
+    required this.term,
+    required this.position,
+    this.state,
+    this.triaged = false,
+    this.acquisition,
+    this.learningStep = 0,
+    this.reps = 0,
+  });
   final Term term; // generated data class for the Terms table
   final int position;
   final String? state; // null → not started (no progress row)
   final bool triaged; // swiped in triage — lets the UI distinguish "не знаю" (still new) from untouched
+
+  /// The ACQUISITION ladder, alongside [state]'s scheduling one. Null → no progress row at all,
+  /// which the ladder reads as «never shown» (rung 0).
+  final String? acquisition;
+  final int learningStep;
+  final int reps;
 }
 
 /// (collectionId, term progress snapshot) for deriving per-collection progress locally.
@@ -243,6 +292,7 @@ class CachedImages extends Table {
   PendingGenerations,
   DailyActivity,
   ReviewQueueRows,
+  ExposureQueueRows,
   CachedImages,
 ])
 class AppDatabase extends _$AppDatabase {
@@ -250,7 +300,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -297,6 +347,20 @@ class AppDatabase extends _$AppDatabase {
               "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
             );
           }
+          if (from < 11) {
+            // The acquisition ladder. Existing rows take the column default `graduated`, which is
+            // the same backfill the server did and for the same reason: a word already being
+            // reviewed must not be pushed back to an intro card.
+            await m.addColumn(termProgress, termProgress.acquisition);
+            await m.addColumn(termProgress, termProgress.learningStep);
+            await m.createTable(exposureQueueRows);
+            // Full snapshot on the next sync, for the same reason as v10: a delta carries only rows
+            // whose `updated_at` moved, so pairs already mirrored here would keep the default
+            // `graduated` forever — and a word the server has at rung 0 would never get its intro.
+            await m.database.customStatement(
+              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
+            );
+          }
         },
       );
 
@@ -317,14 +381,18 @@ class AppDatabase extends _$AppDatabase {
       ..where(collectionItems.collectionId.equals(collectionId))
       ..orderBy([OrderingTerm(expression: collectionItems.position)]);
 
-    return query.watch().map((rows) => rows
-        .map((r) => CollectionTermRow(
-              term: r.readTable(terms),
-              position: r.readTable(collectionItems).position,
-              state: r.readTableOrNull(termProgress)?.state,
-              triaged: r.readTableOrNull(triagedTerms) != null,
-            ))
-        .toList());
+    return query.watch().map((rows) => rows.map((r) {
+          final progress = r.readTableOrNull(termProgress);
+          return CollectionTermRow(
+            term: r.readTable(terms),
+            position: r.readTable(collectionItems).position,
+            state: progress?.state,
+            triaged: r.readTableOrNull(triagedTerms) != null,
+            acquisition: progress?.acquisition,
+            learningStep: progress?.learningStep ?? 0,
+            reps: progress?.reps ?? 0,
+          );
+        }).toList());
   }
 
   /// Every progress row — the input for the local stats derivation.
@@ -436,6 +504,70 @@ class AppDatabase extends _$AppDatabase {
   Future<void> importReviewQueue(List<ReviewQueueRowsCompanion> rows) async {
     if (rows.isEmpty) return;
     await batch((b) => b.insertAll(reviewQueueRows, rows, mode: InsertMode.insertOrIgnore));
+  }
+
+  /// Where each of these terms stands on the acquisition ladder. Terms with no progress row are
+  /// absent from the result — the caller reads them as [LadderPosition.untouched], which is the
+  /// same thing said once instead of a row seeded for every unseen word.
+  Future<Map<String, LadderPosition>> ladderPositions(List<String> termIds) async {
+    if (termIds.isEmpty) return const {};
+    final rows = await (select(termProgress)..where((p) => p.termId.isIn(termIds))).get();
+    return {
+      for (final r in rows)
+        r.termId: LadderPosition(
+          acquisition: Acquisition.fromWire(r.acquisition),
+          learningStep: r.learningStep,
+          reps: r.reps,
+          isKnown: r.state == 'known',
+        ),
+    };
+  }
+
+  // ---- Durable exposure queue + the local ladder ----------------------------
+
+  /// Un-uploaded intro acknowledgements, oldest first. Order is informational here — the server
+  /// keys them by the pair, so replaying them in any order lands the same rows.
+  Future<List<ExposureQueueRow>> exposureQueue() =>
+      (select(exposureQueueRows)..orderBy([(t) => OrderingTerm(expression: t.shownAt)])).get();
+
+  /// Record that a word was SHOWN. `insertOrIgnore`, not upsert: the pair is the key and the FIRST
+  /// `shown_at` is the one that is true, exactly as on the server.
+  Future<void> enqueueExposure(ExposureQueueRowsCompanion row) =>
+      into(exposureQueueRows).insert(row, mode: InsertMode.insertOrIgnore);
+
+  Future<void> dequeueExposures(Iterable<String> termIds) =>
+      (delete(exposureQueueRows)..where((t) => t.termId.isIn(termIds.toList()))).go();
+
+  /// Step a pair off rung 0 onto the first recognition rung, locally.
+  ///
+  /// Writes the LADDER columns only — never a scheduling field. The server is the only scheduler,
+  /// and an intro produces no grade for it to schedule from; what this buys is a session that keeps
+  /// running in airplane mode, with the same word not offered its intro twice.
+  ///
+  /// Idempotent by the same rule the server uses: a pair that has already left `new` is untouched,
+  /// so a replayed acknowledgement cannot push it back down.
+  Future<void> markIntroduced(String termId, DateTime at) async {
+    final existing = await (select(termProgress)..where((p) => p.termId.equals(termId)))
+        .getSingleOrNull();
+
+    if (existing == null) {
+      await into(termProgress).insert(TermProgressCompanion.insert(
+        termId: termId,
+        updatedAt: at,
+        acquisition: const Value('learning'),
+        learningStep: const Value(1),
+      ));
+      return;
+    }
+    if (existing.acquisition != 'new') return; // already past the intro — leave it alone
+
+    await (update(termProgress)..where((p) => p.termId.equals(termId))).write(
+      TermProgressCompanion(
+        acquisition: const Value('learning'),
+        learningStep: const Value(1),
+        updatedAt: Value(at),
+      ),
+    );
   }
 
   /// Triage-eligible (never-studied AND never-triaged) term count per collection —

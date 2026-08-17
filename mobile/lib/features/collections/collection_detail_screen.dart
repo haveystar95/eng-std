@@ -21,6 +21,7 @@ import '../training/triage_screen.dart';
 import 'collection_cta.dart';
 import 'collection_edit_dialog.dart';
 import 'word_edit_dialog.dart';
+import 'word_ladder_sheet.dart';
 import '../../data/local/cached_image_provider.dart';
 
 /// Collection screen (кадр 2.3): cover photo, three ink-density segments, a
@@ -84,7 +85,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     ));
   }
 
-  void _openSession(bool practice, {bool learn = false}) {
+  void _openSession(bool practice, {bool learn = false, String? onlyTermId}) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => SessionScreen(
         title: widget.title,
@@ -92,6 +93,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         practice: practice,
         learn: learn, // «Учить N»: distinguish an empty session (quota spent) from «nothing here»
         targetLang: _collection?.targetLang, // speak this collection's language (F16)
+        onlyTermId: onlyTermId, // «Тренировать слово» from the expanded card (кадр 16e)
       ),
     ));
   }
@@ -317,6 +319,9 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
                   onEdit: readOnly ? null : () => _edit(items[i]),
                   onDelete: readOnly ? null : () => _confirmDelete(items[i]),
+                  // Practice, narrowed to this word. Practice and not a study session: drilling one
+                  // word on demand must not spend the day's new-term quota on it.
+                  onTrain: () => _openSession(true, onlyTermId: items[i].termId),
                 ),
             // «Добавить слово» — own collections only.
             if (!readOnly)
@@ -687,11 +692,15 @@ class _WordRow extends StatefulWidget {
     required this.onSpeak,
     required this.onEdit,
     required this.onDelete,
+    this.onTrain,
   });
 
   final Word word;
   final bool showDivider;
   final VoidCallback onSpeak;
+
+  /// «Тренировать слово» from the expanded card: a practice session filtered to this term.
+  final VoidCallback? onTrain;
 
   /// Null on a read-only (store-subscribed) collection — the row then has no swipe actions and no
   /// long-press menu, only tap-to-speak.
@@ -717,6 +726,14 @@ class _WordRowState extends State<_WordRow> {
 
   void _close() => setState(() => _offset = 0);
 
+  /// The expanded word card (кадр 16e) — the labelled ladder, the example, and «Тренировать слово».
+  void _openCard() => showWordLadderSheet(
+        context: context,
+        word: widget.word,
+        onSpeak: widget.onSpeak,
+        onTrain: () => widget.onTrain?.call(),
+      );
+
   Future<void> _menu() async {
     AppHaptics.light();
     final l = AppLocalizations.of(context);
@@ -739,9 +756,14 @@ class _WordRowState extends State<_WordRow> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // Read-only store set: plain row, no swipe actions, no long-press menu.
+    // Read-only store set: no swipe actions and no long-press menu — but the row still opens its
+    // expanded card, which is where the ladder is captioned and the word can be pronounced.
     if (widget.onEdit == null && widget.onDelete == null) {
-      return _RowBody(word: widget.word, showDivider: widget.showDivider, onSpeak: widget.onSpeak);
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _openCard,
+        child: _RowBody(word: widget.word, showDivider: widget.showDivider),
+      );
     }
     return ClipRect(
       child: Stack(
@@ -781,8 +803,10 @@ class _WordRowState extends State<_WordRow> {
               onHorizontalDragUpdate: _onDragUpdate,
               onHorizontalDragEnd: _onDragEnd,
               onLongPress: _menu,
-              onTap: _offset != 0 ? _close : null,
-              child: _RowBody(word: widget.word, showDivider: widget.showDivider, onSpeak: widget.onSpeak),
+              // A tap closes the swipe when it is open; otherwise it opens the word's card. The
+              // swipe wins because closing what you just opened is what a tap means there.
+              onTap: _offset != 0 ? _close : _openCard,
+              child: _RowBody(word: widget.word, showDivider: widget.showDivider),
             ),
           ),
         ],
@@ -826,10 +850,9 @@ class _SwipeAction extends StatelessWidget {
 }
 
 class _RowBody extends StatelessWidget {
-  const _RowBody({required this.word, required this.showDivider, required this.onSpeak});
+  const _RowBody({required this.word, required this.showDivider});
   final Word word;
   final bool showDivider;
-  final VoidCallback onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -874,7 +897,17 @@ class _RowBody extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.s8),
-            _SpeakerButton(onTap: onSpeak),
+            // The word's place on the ladder — five dots, no labels and no numbers, so the row stays
+            // a row of the dictionary (кадр 16d). A «знаю» word gets a dash instead: it never walked
+            // the ladder, and five pale dots would have said «at the very beginning».
+            //
+            // The dots take the slot the speaker button used to hold. Speech did not disappear —
+            // it moved into the expanded card, one tap away, where there is room for it beside the
+            // term it pronounces. A row cannot carry both without becoming a control panel.
+            if (word.isKnown)
+              LadderKnownDash(label: AppLocalizations.of(context).ladderKnownDash)
+            else if (word.ladderStep != null)
+              LadderDots(step: word.ladderStep),
           ],
         ),
       ),
@@ -903,32 +936,6 @@ class _Thumb extends StatelessWidget {
               borderRadius: radius,
               child: Image(image: CachedNetworkImage(url), fit: BoxFit.cover, errorBuilder: (_, _, _) => placeholder),
             ),
-    );
-  }
-}
-
-class _SpeakerButton extends StatelessWidget {
-  const _SpeakerButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: InkResponse(
-        onTap: onTap,
-        radius: 24,
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.hairline),
-          ),
-          child: const Icon(LucideIcons.volume2, size: 16, color: AppColors.ink),
-        ),
-      ),
     );
   }
 }

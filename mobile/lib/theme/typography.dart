@@ -222,6 +222,41 @@ abstract final class AppText {
     color: AppColors.secondary,
   );
 
+  // ── лестница слова (кадры 16d/16e) ────────────────────────────────────────
+
+  /// Подпись ступени в развёрнутой карточке. Гротеск 11 / 400 tertiary.
+  static const ladderLabel = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 11,
+    color: AppColors.tertiary,
+  );
+
+  /// Текущая ступень — та же строка полужирным и чернилами: единственное выделение в блоке.
+  static const ladderLabelCurrent = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 11,
+    color: AppColors.ink,
+  );
+
+  /// «— знаю» вместо точек: слово вне лестницы. Тише подписи ступени, но читаемо.
+  static const ladderDash = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 11,
+    color: AppColors.tertiary,
+  );
+
+  /// Заголовок блока лестницы («ЛЕСТНИЦА СЛОВА»). Гротеск 10 / 700, разрядка — как у бейджа.
+  static const ladderTitle = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w700,
+    fontSize: 10,
+    letterSpacing: 0.55,
+    color: AppColors.tertiary,
+  );
+
   /// Таб-бар — активный. 9.5 / 700.
   static const tabActive = TextStyle(
     fontFamily: AppFonts.inter,
@@ -299,6 +334,47 @@ abstract final class AppTextExercise {
     fontWeight: FontWeight.w500,
     fontSize: 26,
     color: AppColors.ink,
+  );
+
+  // ── знакомство со словом (нулевая ступень, кадр 16b) ──────────────────────
+  //
+  // Читающая карточка, а не упражнение: термин встречает читателя ПЕРВЫМ и набран засечками
+  // крупно; всё остальное — тише его. Ни одного цвета вердикта здесь нет и быть не может.
+
+  /// Термин на карточке знакомства. Literata 34 / 500 ink.
+  static const introTerm = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 34,
+    height: 1.1,
+    color: AppColors.ink,
+  );
+
+  /// Перевод под термином. Inter 16 / 400 inkBody — тише термина, но не подпись.
+  static const introTranslation = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
+    color: AppColors.inkBody,
+  );
+
+  /// Пример-предложение. Literata 15.5 / 400 курсивом — цитата, а не задание; сам термин внутри
+  /// набирается полужирным прямым (см. _ExampleLine).
+  static const introExample = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
+    fontSize: 15.5,
+    height: 1.35,
+    color: AppColors.inkBody,
+  );
+
+  /// «также: fill in · complete». Inter 12 / 400 tertiary.
+  static const introAlso = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 12,
+    color: AppColors.tertiary,
   );
 
   /// Вспомогательные кнопки ответа. Inter 13.5 / 600 secondary.

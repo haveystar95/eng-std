@@ -21,6 +21,9 @@ abstract final class SyncKeys {
   static const newGoal = 'new_goal'; // daily new-term quota (F13 home CTA)
   static const newRemaining = 'new_remaining'; // new terms still introducible today (F13)
   static const exerciseModes = 'exercise_modes'; // the trainer toggles this user is on (CSV, in order)
+  // The acquisition-ladder admission matrix, stored as the JSON the server sent. Which rung opens
+  // which trainer: the offline builder needs it to avoid dealing a word a mode it has not earned.
+  static const modeAdmission = 'mode_admission';
 }
 
 const _kCursor = SyncKeys.cursor;
@@ -30,6 +33,7 @@ const _kBestStreak = SyncKeys.bestStreak;
 const _kNewGoal = SyncKeys.newGoal;
 const _kNewRemaining = SyncKeys.newRemaining;
 const _kExerciseModes = SyncKeys.exerciseModes;
+const _kModeAdmission = SyncKeys.modeAdmission;
 
 /// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
 /// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
@@ -229,6 +233,11 @@ class SyncService {
         reps: Value((p['reps'] as int?) ?? 0),
         lapses: Value((p['lapses'] as int?) ?? 0),
         lastReviewedAt: Value(_dtn(p['last_reviewed_at'])),
+        // The acquisition ladder, orthogonal to `state` above. An older server that does not send
+        // it leaves the pair `graduated` — the safe direction: it can never push a word the learner
+        // already knows back to an intro card.
+        acquisition: Value((p['acquisition'] as String?) ?? 'graduated'),
+        learningStep: Value((p['learning_step'] as int?) ?? 0),
       ));
     }
 
@@ -270,8 +279,17 @@ class SyncService {
   Future<void> _applySettings(Map<String, dynamic> page) async {
     final settings = page['settings'] as Map<String, dynamic>?;
     final modes = (settings?['exercise_modes'] as List?)?.cast<String>();
-    if (modes == null || modes.isEmpty) return;
-    await _db.setMeta(_kExerciseModes, modes.join(','));
+    if (modes != null && modes.isNotEmpty) {
+      await _db.setMeta(_kExerciseModes, modes.join(','));
+    }
+    // The admission matrix rides along for the same reason and by the same rule: the device builds
+    // sessions offline, so it has to know not only which trainers are on but which rung opens each.
+    // Stored as JSON — it is a list of rows, not a flat set, and re-encoding keeps the column's
+    // shape ours rather than the wire's.
+    final admission = settings?['mode_admission'] as List?;
+    if (admission != null && admission.isNotEmpty) {
+      await _db.setMeta(_kModeAdmission, jsonEncode(admission));
+    }
   }
 
   /// Streak and reviews-today are server-side daily aggregates that the delta feed doesn't carry.

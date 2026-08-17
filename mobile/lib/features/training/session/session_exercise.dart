@@ -24,7 +24,10 @@ import 'session_grading.dart';
 /// there. Mirrors the server's EnrichmentValidator.spanPosition(), which uses the same rule to decide
 /// whether a distractor's own repair reproduces the example — the two must agree about which
 /// occurrence the span means, or the card underlines one place and was validated about another.
-@visibleForTesting
+///
+/// Also used by the intro card, which bolds the TERM inside its example: same question («where does
+/// this fragment really sit»), same answer required, so the same function rather than a second one
+/// that would drift.
 int spanPositionIn(String sentence, String span) {
   final haystack = sentence.toLowerCase();
   final needle = span.toLowerCase();
@@ -393,6 +396,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 
   String _instructionFor(AppLocalizations l) => switch (_mode) {
+        // Unreachable: an intro is not an exercise and never reaches this widget (the shell renders
+        // SessionIntroCard for it). Named rather than defaulted so the next mode added still has to
+        // answer this question explicitly.
+        ExerciseMode.intro => '',
         ExerciseMode.multipleChoice => l.sessionInstrChoose,
         ExerciseMode.wordBank => l.sessionInstrAssemble,
         ExerciseMode.typing => l.sessionInstrType,

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:eng_std/data/providers.dart';
@@ -209,6 +210,12 @@ void main() {
             random: Random(5),
             sessionId: 'S',
             enabled: enabled,
+            // Dictation is a rung-5 trainer, so the pairs have to BE at rung 5 — this test is about
+            // the TOGGLE, and the ladder is a separate filter with its own tests.
+            ladder: {
+              for (final t in terms)
+                t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+            },
           ).cards.map((c) => c.mode).toSet();
 
       // The shipped default has no dictation in it — the release rule, seen from the device.
@@ -226,6 +233,10 @@ void main() {
         random: Random(1),
         sessionId: 'S',
         enabled: const PracticeModes([ExerciseMode.dictation]),
+        ladder: const {
+          '01KZETAAA50EMHCN6SP80T8DHC':
+              LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+        },
       );
 
       final card = session.cards.single;

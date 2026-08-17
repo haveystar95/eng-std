@@ -87,6 +87,15 @@ class Word {
   final String? imageAuthor;
   final String? imageAuthorUrl;
 
+  /// Where the word stands on the ACQUISITION LADDER, 0–5, or null when it is outside it (a triage
+  /// «знаю»). Derived locally by the shared ladder function from the mirrored progress row, so the
+  /// list renders it offline like everything else on that screen.
+  final int? ladderStep;
+
+  /// True when the word left the deck as «знаю» — the row then reads as a dash rather than as five
+  /// pale dots, which would have said «at the very beginning».
+  final bool isKnown;
+
   Word({
     required this.termId,
     required this.term,
@@ -100,6 +109,8 @@ class Word {
     this.imageUrl,
     this.imageAuthor,
     this.imageAuthorUrl,
+    this.ladderStep,
+    this.isKnown = false,
   });
 
   /// Convenience so existing screens that used `word.id` keep working.
@@ -144,13 +155,27 @@ enum ExerciseMode {
   cloze('cloze'),
   scramble('scramble'),
   dictation('dictation'),
-  pickCorrect('pick_correct');
+  pickCorrect('pick_correct'),
+
+  /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked. Term, translation,
+  /// transcription, example — the learner reads it and taps «Понятно».
+  ///
+  /// It is a mode rather than a screen of its own because that is what makes it toggleable like
+  /// every other trainer and what keeps «which card next» a single question. What makes it different
+  /// is one thing, [isGraded]: it produces no answer, so no verdict, and nothing reaches the review
+  /// queue — it writes an EXPOSURE instead.
+  intro('intro');
 
   const ExerciseMode(this.wire);
   final String wire;
 
   static ExerciseMode fromWire(String? v) =>
       ExerciseMode.values.firstWhere((m) => m.wire == v, orElse: () => ExerciseMode.typing);
+
+  /// Does this card produce an answer to grade at all? Everything downstream of an answer — the
+  /// local check, the verdict, the review queue — is unreachable for `intro`, and this predicate is
+  /// the single guard that keeps it that way.
+  bool get isGraded => this != intro;
 
   /// A production mode reproduces from memory (free recall / assembly), so the answer is TYPED or
   /// assembled rather than picked. Recognition modes (pick one of four) are handled inline.
@@ -232,6 +257,21 @@ class SessionCard {
   /// the option's own sentence so the feedback survives the shuffle.
   final List<OptionFeedback> optionFeedback;
 
+  /// Which rung of the acquisition ladder this card was dealt at, echoed back with the answer: the
+  /// pair's rung MOVES the moment that answer is folded, so without it the server could not tell
+  /// afterwards what the card had asked. Null for a `known` verification, which is off the ladder.
+  final int? ladderStep;
+
+  /// Present ONLY on the forward-recognition card (rung 1), aligned index-for-index with [options]:
+  /// the term each option's translation belongs to. That card is graded by IDENTITY — the learner
+  /// taps, the client uploads the tapped id, and [answer] is this card's own term id. It is the one
+  /// card whose correct option is a translation, and it is exactly why no translation ever enters a
+  /// text answer key.
+  final List<String>? optionIds;
+
+  /// Is this a tapped recognition card whose correct option is identified by id rather than by text?
+  bool get isIdentityGraded => optionIds != null && optionIds!.isNotEmpty;
+
   /// The explanation for a wrong pick, or null when the pick was right (nothing to underline).
   OptionFeedback? feedbackFor(String option) {
     for (final f in optionFeedback) {
@@ -253,6 +293,8 @@ class SessionCard {
     this.chips,
     this.acceptedVariants = const [],
     this.optionFeedback = const [],
+    this.ladderStep,
+    this.optionIds,
   });
 
   bool get isPhrase => type != 'word';
@@ -274,6 +316,8 @@ class SessionCard {
                 ?.map((e) => OptionFeedback.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             const [],
+        ladderStep: (j['ladder_step'] as num?)?.toInt(),
+        optionIds: (j['option_ids'] as List?)?.map((e) => e as String).toList(),
       );
 }
 

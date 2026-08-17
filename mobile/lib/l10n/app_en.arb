@@ -263,6 +263,23 @@
   "sessionNext": "Next",
   "sessionDone": "Done",
 
+  "sessionIntroBadge": "new word",
+  "sessionIntroGot": "Got it →",
+  "sessionIntroAlso": "also:",
+  "sessionHeaderIntro": "Meeting",
+  "sessionHeaderRecognition": "Recognition",
+  "sessionInstrRecogniseTranslation": "choose the translation",
+  "sessionRecogniseJustMet": "you have just met this word",
+
+  "ladderStep0": "meeting",
+  "ladderStep1": "recognition",
+  "ladderStep3": "assembly",
+  "ladderStep4": "writing",
+  "ladderStep5": "dictation",
+  "ladderTitle": "WORD LADDER",
+  "ladderKnownDash": "known",
+  "ladderTrainWord": "Train this word",
+
   "sessionFeedbackCorrect": "Correct",
   "sessionFeedbackAlmost": "Almost:",
   "sessionFeedbackWrong": "Not quite — the correct form is below",

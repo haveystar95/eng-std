@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
@@ -20,6 +21,13 @@ void main() {
   tearDown(() => db.close());
 
   final t0 = DateTime.utc(2026, 8, 12, 9);
+
+  /// The one term these cases build from, at the TOP of the acquisition ladder. This file is about
+  /// the VARIANTS reaching an offline card; a never-shown pair would be held at rung 1, where the
+  /// only trainer admitted is multiple_choice and there is no typed answer to accept a variant for.
+  const topOfLadder = {
+    't1': LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+  };
 
   Future<void> seedTerm({List<String>? variants}) => db.applyDelta(
         collectionUpserts: [
@@ -69,6 +77,7 @@ void main() {
       random: Random(1),
       enabled: const PracticeModes([ExerciseMode.typing]),
       sessionId: 's1',
+      ladder: topOfLadder,
     );
     final card = session.cards.single;
 
@@ -89,6 +98,7 @@ void main() {
       random: Random(1),
       enabled: const PracticeModes([ExerciseMode.dictation]),
       sessionId: 's1',
+      ladder: topOfLadder,
     );
     final card = session.cards.single;
 
@@ -125,6 +135,7 @@ void main() {
       random: Random(1),
       enabled: const PracticeModes([ExerciseMode.typing]),
       sessionId: 's1',
+      ladder: topOfLadder,
     );
 
     // Stricter than the server, never looser — a bad row can't let a wrong answer through.

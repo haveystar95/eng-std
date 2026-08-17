@@ -82,9 +82,12 @@ void main() {
     // applicability itself, which depends on the term's data and not on anyone's toggles.
     for (final c in cases) {
       final p = playabilityOf(c);
+      // Graded modes only, exactly as the fixture is generated. `intro` is applicable to every term
+      // by construction (it asks for nothing, so no content can be missing) and is never dealt in
+      // practice, so listing it would add a constant to both sides rather than a fact about a term.
       final supported = [
         for (final mode in ExerciseMode.values)
-          if (p.supports(mode)) mode.wire,
+          if (mode.isGraded && p.supports(mode)) mode.wire,
       ];
 
       expect(supported, (c['supported_modes'] as List).cast<String>(),

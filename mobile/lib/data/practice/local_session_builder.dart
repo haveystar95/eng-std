@@ -4,6 +4,7 @@ import 'dart:math';
 import '../api_client.dart';
 import '../local/app_database.dart';
 import '../models.dart';
+import 'learning_ladder.dart';
 import 'practice_distractors.dart';
 import 'practice_mode_selector.dart';
 
@@ -18,6 +19,21 @@ import 'practice_mode_selector.dart';
 /// The exercise ladder is [PracticeModeSelector], which is pinned to the server's by a fixture the
 /// server generates. What is NOT pinned, deliberately: which distractors and which chip order —
 /// those are shuffled per session by design, on both sides.
+///
+/// Practice fans across modes, but it is NOT exempt from the acquisition ladder: a word met a
+/// minute ago is not dealt dictation here either. Every card passes the same three filters the
+/// server applies — is the trainer on ([PracticeModes]), can this term's data build it
+/// ([TermPlayability]), has this PAIR earned it ([ModeAdmission]).
+///
+/// Two things practice deliberately does NOT do, both because it moves nothing:
+///
+///  * it never deals an INTRO card. An intro is an introduction — it writes an exposure and spends
+///    the daily new-term quota — and practice introduces nothing. A word still at rung 0 is dealt
+///    its rung-1 card instead, which asks something without claiming the word has been met.
+///  * it never deals the IDENTITY-graded direction (term → translation, tap an option id). The
+///    server refuses identity grading for practice answers, so a card built that way here would be
+///    graded as text against the term's forms and marked wrong. Recognition in practice is always
+///    the text-graded direction, with the same far options.
 abstract final class LocalPracticeSessionBuilder {
   /// pick_correct shows the right sentence plus two wrong ones — three options, mirroring the
   /// server's StudyCardAssembler. A fourth whole sentence turns the card into a reading test.
@@ -35,12 +51,17 @@ abstract final class LocalPracticeSessionBuilder {
   /// Build a session from [terms] (the collection's whole mirror). Terms with no text are dropped —
   /// nothing can be asked about them. Returns a session with no cards when there is nothing
   /// playable, which the screen renders as its empty state.
+  /// [ladder] is where each term stands on the acquisition ladder, keyed by term id, as mirrored by
+  /// `/sync`. A term missing from it has no progress row — never scheduled, never shown.
+  /// [admission] is the matrix the same feed carried.
   static StudySession build({
     required List<Term> terms,
     required int limit,
     required Random random,
     String? sessionId,
     PracticeModes enabled = PracticeModes.serverDefault,
+    Map<String, LadderPosition> ladder = const {},
+    ModeAdmission admission = ModeAdmission.shipped,
   }) {
     final playable = [
       for (final term in terms)
@@ -57,6 +78,8 @@ abstract final class LocalPracticeSessionBuilder {
         pool: playable,
         enabled: enabled,
         random: random,
+        position: ladder[chosen[index].id] ?? LadderPosition.untouched,
+        admission: admission,
       ));
     }
 
@@ -73,13 +96,22 @@ abstract final class LocalPracticeSessionBuilder {
     required List<Term> pool,
     required PracticeModes enabled,
     required Random random,
+    required LadderPosition position,
+    required ModeAdmission admission,
   }) {
     var answer = (term.termText ?? '').trim();
     final example = term.example;
     // Span-distinct, because that is what a card can actually use — see _spanDistinct.
     final usableDistractors = _spanDistinct(_distractorsOf(term));
+    final step = position.admissionStep;
     final mode = PracticeModeSelector.select(
-      enabled: enabled,
+      // The ladder filter, applied to the enabled set before the term's own data narrows it
+      // further. `intro` can never survive it here: practice introduces nothing, and rung 0 is the
+      // only rung that admits it — so the pair is dealt whatever rung 1 admits instead.
+      enabled: PracticeModes(admission.only(
+        [for (final m in enabled.modes) if (m.isGraded) m],
+        step == LearningLadder.stepIntro ? LearningLadder.stepRecognitionForward : step,
+      )),
       rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
       playable: TermPlayability.of(
         answer: answer,
@@ -88,6 +120,12 @@ abstract final class LocalPracticeSessionBuilder {
         distractorCount: usableDistractors.length,
       ),
     );
+
+    // Far options: on the recognition rungs the wrong answers are the session's own NEIGHBOURS,
+    // not the enrichment distractors. Those exist to be nearly right, which is the exercise once
+    // the word is known and an unpassable card before it.
+    final farOptions = mode == ExerciseMode.multipleChoice &&
+        admission.optionsPolicyFor(mode, position.acquisition) == OptionsPolicy.distant;
 
     List<String>? options;
     List<String>? chips;
@@ -99,11 +137,19 @@ abstract final class LocalPracticeSessionBuilder {
 
     if (mode == ExerciseMode.multipleChoice) {
       final candidates = [...pool]..shuffle(random);
-      final distractors = PracticeDistractors.forTarget(
-        target: term,
-        pool: candidates,
-        count: optionCount - 1,
-      );
+      final distractors = farOptions
+          // Neighbours, taken as they come — deliberately NOT filtered for similarity, which is the
+          // whole point: at a first meeting the card must be answerable by knowing the word and by
+          // nothing else.
+          ? [
+              for (final t in candidates)
+                if (t.id != term.id && (t.termText ?? '').trim().isNotEmpty) (t.termText ?? '').trim(),
+            ].take(optionCount - 1).toList()
+          : PracticeDistractors.forTarget(
+              target: term,
+              pool: candidates,
+              count: optionCount - 1,
+            );
       options = [answer, ...distractors]..shuffle(random);
     } else if (mode == ExerciseMode.wordBank) {
       chips = _chips(answer, phrasalVerb: term.type == 'phrasal_verb', random: random);
@@ -141,6 +187,10 @@ abstract final class LocalPracticeSessionBuilder {
       // only while the answer is the term. On scramble/dictation the answer is the sentence.
       acceptedVariants: mode.asksForExample ? const [] : _variantsOf(term),
       optionFeedback: optionFeedback,
+      // The rung this card was dealt at, echoed back with the answer like a server-built card's.
+      // Never rung 1: practice does not deal the identity-graded direction (see the class doc), so
+      // a recognition card here reports the direction it actually asked.
+      ladderStep: LearningLadder.isRecognitionStep(step) ? LearningLadder.stepRecognitionReverse : position.step,
     );
   }
 

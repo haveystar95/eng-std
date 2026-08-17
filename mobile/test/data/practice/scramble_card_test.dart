@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:eng_std/features/training/session/session_grading.dart';
@@ -105,11 +106,19 @@ void main() {
     term('01KZETAAE63W6K93C55NCYXKVA', 'check in', 'Check in starts at three pm.', 'Заселение начинается в три.'),
   ];
 
+  /// Every pair at the TOP of the acquisition ladder: this file is about scramble's own gate (a
+  /// translated example of the right length), and the ladder is a separate filter with its own
+  /// tests. Left out, every term here would be a never-shown one — held at rung 1, where the only
+  /// trainer admitted is multiple_choice and no scramble card can be dealt at all.
   List<SessionCard> scrambleCards() => LocalPracticeSessionBuilder.build(
         terms: scrambleable,
         limit: 20,
         random: Random(8),
         sessionId: 'SESSION',
+        ladder: {
+          for (final t in scrambleable)
+            t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+        },
       ).cards.where((c) => c.mode == ExerciseMode.scramble).toList();
 
   test('offline practice deals scramble cards without a network call', () {

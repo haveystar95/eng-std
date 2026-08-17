@@ -155,7 +155,13 @@ class TermPlayability {
             hasExampleTranslation &&
             distractorCount >= minPickCorrectDistractors,
         // multiple_choice / typing / listening fit any term — they ask for the term itself.
-        ExerciseMode.multipleChoice || ExerciseMode.typing || ExerciseMode.listening => true,
+        // `intro` asks for nothing at all, so there is no content it could lack: a term with no
+        // example and no transcription still has a text and a translation to be SHOWN.
+        ExerciseMode.multipleChoice ||
+        ExerciseMode.typing ||
+        ExerciseMode.listening ||
+        ExerciseMode.intro =>
+          true,
       };
 
   /// The given modes this term can be drilled in, order preserved.

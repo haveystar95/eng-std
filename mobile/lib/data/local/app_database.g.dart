@@ -2049,6 +2049,30 @@ class $TermProgressTable extends TermProgress
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _acquisitionMeta = const VerificationMeta(
+    'acquisition',
+  );
+  @override
+  late final GeneratedColumn<String> acquisition = GeneratedColumn<String>(
+    'acquisition',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('graduated'),
+  );
+  static const VerificationMeta _learningStepMeta = const VerificationMeta(
+    'learningStep',
+  );
+  @override
+  late final GeneratedColumn<int> learningStep = GeneratedColumn<int>(
+    'learning_step',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2070,6 +2094,8 @@ class $TermProgressTable extends TermProgress
     reps,
     lapses,
     lastReviewedAt,
+    acquisition,
+    learningStep,
     updatedAt,
   ];
   @override
@@ -2140,6 +2166,24 @@ class $TermProgressTable extends TermProgress
         ),
       );
     }
+    if (data.containsKey('acquisition')) {
+      context.handle(
+        _acquisitionMeta,
+        acquisition.isAcceptableOrUnknown(
+          data['acquisition']!,
+          _acquisitionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('learning_step')) {
+      context.handle(
+        _learningStepMeta,
+        learningStep.isAcceptableOrUnknown(
+          data['learning_step']!,
+          _learningStepMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -2189,6 +2233,14 @@ class $TermProgressTable extends TermProgress
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_reviewed_at'],
       ),
+      acquisition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}acquisition'],
+      )!,
+      learningStep: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}learning_step'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2212,6 +2264,15 @@ class TermProgressData extends DataClass
   final int reps;
   final int lapses;
   final DateTime? lastReviewedAt;
+
+  /// The acquisition ladder: `new` (never shown) | `learning` (on the recognition rungs) |
+  /// `graduated`. Defaults to `graduated` for rows that already existed when the ladder landed —
+  /// the safe direction, since the alternative pushes a known word back to an intro card.
+  final String acquisition;
+
+  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from [reps]: a failed
+  /// recognition step is re-queued as the same step but is still logged.
+  final int learningStep;
   final DateTime updatedAt;
   const TermProgressData({
     required this.termId,
@@ -2222,6 +2283,8 @@ class TermProgressData extends DataClass
     required this.reps,
     required this.lapses,
     this.lastReviewedAt,
+    required this.acquisition,
+    required this.learningStep,
     required this.updatedAt,
   });
   @override
@@ -2239,6 +2302,8 @@ class TermProgressData extends DataClass
     if (!nullToAbsent || lastReviewedAt != null) {
       map['last_reviewed_at'] = Variable<DateTime>(lastReviewedAt);
     }
+    map['acquisition'] = Variable<String>(acquisition);
+    map['learning_step'] = Variable<int>(learningStep);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -2257,6 +2322,8 @@ class TermProgressData extends DataClass
       lastReviewedAt: lastReviewedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastReviewedAt),
+      acquisition: Value(acquisition),
+      learningStep: Value(learningStep),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2275,6 +2342,8 @@ class TermProgressData extends DataClass
       reps: serializer.fromJson<int>(json['reps']),
       lapses: serializer.fromJson<int>(json['lapses']),
       lastReviewedAt: serializer.fromJson<DateTime?>(json['lastReviewedAt']),
+      acquisition: serializer.fromJson<String>(json['acquisition']),
+      learningStep: serializer.fromJson<int>(json['learningStep']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2290,6 +2359,8 @@ class TermProgressData extends DataClass
       'reps': serializer.toJson<int>(reps),
       'lapses': serializer.toJson<int>(lapses),
       'lastReviewedAt': serializer.toJson<DateTime?>(lastReviewedAt),
+      'acquisition': serializer.toJson<String>(acquisition),
+      'learningStep': serializer.toJson<int>(learningStep),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2303,6 +2374,8 @@ class TermProgressData extends DataClass
     int? reps,
     int? lapses,
     Value<DateTime?> lastReviewedAt = const Value.absent(),
+    String? acquisition,
+    int? learningStep,
     DateTime? updatedAt,
   }) => TermProgressData(
     termId: termId ?? this.termId,
@@ -2315,6 +2388,8 @@ class TermProgressData extends DataClass
     lastReviewedAt: lastReviewedAt.present
         ? lastReviewedAt.value
         : this.lastReviewedAt,
+    acquisition: acquisition ?? this.acquisition,
+    learningStep: learningStep ?? this.learningStep,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TermProgressData copyWithCompanion(TermProgressCompanion data) {
@@ -2333,6 +2408,12 @@ class TermProgressData extends DataClass
       lastReviewedAt: data.lastReviewedAt.present
           ? data.lastReviewedAt.value
           : this.lastReviewedAt,
+      acquisition: data.acquisition.present
+          ? data.acquisition.value
+          : this.acquisition,
+      learningStep: data.learningStep.present
+          ? data.learningStep.value
+          : this.learningStep,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2348,6 +2429,8 @@ class TermProgressData extends DataClass
           ..write('reps: $reps, ')
           ..write('lapses: $lapses, ')
           ..write('lastReviewedAt: $lastReviewedAt, ')
+          ..write('acquisition: $acquisition, ')
+          ..write('learningStep: $learningStep, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2363,6 +2446,8 @@ class TermProgressData extends DataClass
     reps,
     lapses,
     lastReviewedAt,
+    acquisition,
+    learningStep,
     updatedAt,
   );
   @override
@@ -2377,6 +2462,8 @@ class TermProgressData extends DataClass
           other.reps == this.reps &&
           other.lapses == this.lapses &&
           other.lastReviewedAt == this.lastReviewedAt &&
+          other.acquisition == this.acquisition &&
+          other.learningStep == this.learningStep &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2389,6 +2476,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
   final Value<int> reps;
   final Value<int> lapses;
   final Value<DateTime?> lastReviewedAt;
+  final Value<String> acquisition;
+  final Value<int> learningStep;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermProgressCompanion({
@@ -2400,6 +2489,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.reps = const Value.absent(),
     this.lapses = const Value.absent(),
     this.lastReviewedAt = const Value.absent(),
+    this.acquisition = const Value.absent(),
+    this.learningStep = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2412,6 +2503,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.reps = const Value.absent(),
     this.lapses = const Value.absent(),
     this.lastReviewedAt = const Value.absent(),
+    this.acquisition = const Value.absent(),
+    this.learningStep = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : termId = Value(termId),
@@ -2425,6 +2518,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Expression<int>? reps,
     Expression<int>? lapses,
     Expression<DateTime>? lastReviewedAt,
+    Expression<String>? acquisition,
+    Expression<int>? learningStep,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2437,6 +2532,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       if (reps != null) 'reps': reps,
       if (lapses != null) 'lapses': lapses,
       if (lastReviewedAt != null) 'last_reviewed_at': lastReviewedAt,
+      if (acquisition != null) 'acquisition': acquisition,
+      if (learningStep != null) 'learning_step': learningStep,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2451,6 +2548,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Value<int>? reps,
     Value<int>? lapses,
     Value<DateTime?>? lastReviewedAt,
+    Value<String>? acquisition,
+    Value<int>? learningStep,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2463,6 +2562,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       reps: reps ?? this.reps,
       lapses: lapses ?? this.lapses,
       lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
+      acquisition: acquisition ?? this.acquisition,
+      learningStep: learningStep ?? this.learningStep,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2495,6 +2596,12 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     if (lastReviewedAt.present) {
       map['last_reviewed_at'] = Variable<DateTime>(lastReviewedAt.value);
     }
+    if (acquisition.present) {
+      map['acquisition'] = Variable<String>(acquisition.value);
+    }
+    if (learningStep.present) {
+      map['learning_step'] = Variable<int>(learningStep.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2515,6 +2622,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
           ..write('reps: $reps, ')
           ..write('lapses: $lapses, ')
           ..write('lastReviewedAt: $lastReviewedAt, ')
+          ..write('acquisition: $acquisition, ')
+          ..write('learningStep: $learningStep, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4689,6 +4798,275 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
   }
 }
 
+class $ExposureQueueRowsTable extends ExposureQueueRows
+    with TableInfo<$ExposureQueueRowsTable, ExposureQueueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExposureQueueRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+    'term_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shownAtMeta = const VerificationMeta(
+    'shownAt',
+  );
+  @override
+  late final GeneratedColumn<String> shownAt = GeneratedColumn<String>(
+    'shown_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [termId, shownAt, sessionId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'exposure_queue_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExposureQueueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('term_id')) {
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('shown_at')) {
+      context.handle(
+        _shownAtMeta,
+        shownAt.isAcceptableOrUnknown(data['shown_at']!, _shownAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shownAtMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {termId};
+  @override
+  ExposureQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExposureQueueRow(
+      termId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}term_id'],
+      )!,
+      shownAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shown_at'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      ),
+    );
+  }
+
+  @override
+  $ExposureQueueRowsTable createAlias(String alias) {
+    return $ExposureQueueRowsTable(attachedDatabase, alias);
+  }
+}
+
+class ExposureQueueRow extends DataClass
+    implements Insertable<ExposureQueueRow> {
+  final String termId;
+  final String shownAt;
+  final String? sessionId;
+  const ExposureQueueRow({
+    required this.termId,
+    required this.shownAt,
+    this.sessionId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['term_id'] = Variable<String>(termId);
+    map['shown_at'] = Variable<String>(shownAt);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
+    return map;
+  }
+
+  ExposureQueueRowsCompanion toCompanion(bool nullToAbsent) {
+    return ExposureQueueRowsCompanion(
+      termId: Value(termId),
+      shownAt: Value(shownAt),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+    );
+  }
+
+  factory ExposureQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExposureQueueRow(
+      termId: serializer.fromJson<String>(json['termId']),
+      shownAt: serializer.fromJson<String>(json['shownAt']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'termId': serializer.toJson<String>(termId),
+      'shownAt': serializer.toJson<String>(shownAt),
+      'sessionId': serializer.toJson<String?>(sessionId),
+    };
+  }
+
+  ExposureQueueRow copyWith({
+    String? termId,
+    String? shownAt,
+    Value<String?> sessionId = const Value.absent(),
+  }) => ExposureQueueRow(
+    termId: termId ?? this.termId,
+    shownAt: shownAt ?? this.shownAt,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
+  );
+  ExposureQueueRow copyWithCompanion(ExposureQueueRowsCompanion data) {
+    return ExposureQueueRow(
+      termId: data.termId.present ? data.termId.value : this.termId,
+      shownAt: data.shownAt.present ? data.shownAt.value : this.shownAt,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExposureQueueRow(')
+          ..write('termId: $termId, ')
+          ..write('shownAt: $shownAt, ')
+          ..write('sessionId: $sessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(termId, shownAt, sessionId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExposureQueueRow &&
+          other.termId == this.termId &&
+          other.shownAt == this.shownAt &&
+          other.sessionId == this.sessionId);
+}
+
+class ExposureQueueRowsCompanion extends UpdateCompanion<ExposureQueueRow> {
+  final Value<String> termId;
+  final Value<String> shownAt;
+  final Value<String?> sessionId;
+  final Value<int> rowid;
+  const ExposureQueueRowsCompanion({
+    this.termId = const Value.absent(),
+    this.shownAt = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExposureQueueRowsCompanion.insert({
+    required String termId,
+    required String shownAt,
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : termId = Value(termId),
+       shownAt = Value(shownAt);
+  static Insertable<ExposureQueueRow> custom({
+    Expression<String>? termId,
+    Expression<String>? shownAt,
+    Expression<String>? sessionId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (termId != null) 'term_id': termId,
+      if (shownAt != null) 'shown_at': shownAt,
+      if (sessionId != null) 'session_id': sessionId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExposureQueueRowsCompanion copyWith({
+    Value<String>? termId,
+    Value<String>? shownAt,
+    Value<String?>? sessionId,
+    Value<int>? rowid,
+  }) {
+    return ExposureQueueRowsCompanion(
+      termId: termId ?? this.termId,
+      shownAt: shownAt ?? this.shownAt,
+      sessionId: sessionId ?? this.sessionId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (shownAt.present) {
+      map['shown_at'] = Variable<String>(shownAt.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExposureQueueRowsCompanion(')
+          ..write('termId: $termId, ')
+          ..write('shownAt: $shownAt, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedImagesTable extends CachedImages
     with TableInfo<$CachedImagesTable, CachedImage> {
   @override
@@ -5013,6 +5391,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReviewQueueRowsTable reviewQueueRows = $ReviewQueueRowsTable(
     this,
   );
+  late final $ExposureQueueRowsTable exposureQueueRows =
+      $ExposureQueueRowsTable(this);
   late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5028,6 +5408,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     pendingGenerations,
     dailyActivity,
     reviewQueueRows,
+    exposureQueueRows,
     cachedImages,
   ];
 }
@@ -5973,6 +6354,8 @@ typedef $$TermProgressTableCreateCompanionBuilder =
       Value<int> reps,
       Value<int> lapses,
       Value<DateTime?> lastReviewedAt,
+      Value<String> acquisition,
+      Value<int> learningStep,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -5986,6 +6369,8 @@ typedef $$TermProgressTableUpdateCompanionBuilder =
       Value<int> reps,
       Value<int> lapses,
       Value<DateTime?> lastReviewedAt,
+      Value<String> acquisition,
+      Value<int> learningStep,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6036,6 +6421,16 @@ class $$TermProgressTableFilterComposer
 
   ColumnFilters<DateTime> get lastReviewedAt => $composableBuilder(
     column: $table.lastReviewedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6094,6 +6489,16 @@ class $$TermProgressTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6136,6 +6541,16 @@ class $$TermProgressTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastReviewedAt => $composableBuilder(
     column: $table.lastReviewedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
     builder: (column) => column,
   );
 
@@ -6182,6 +6597,8 @@ class $$TermProgressTableTableManager
                 Value<int> reps = const Value.absent(),
                 Value<int> lapses = const Value.absent(),
                 Value<DateTime?> lastReviewedAt = const Value.absent(),
+                Value<String> acquisition = const Value.absent(),
+                Value<int> learningStep = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion(
@@ -6193,6 +6610,8 @@ class $$TermProgressTableTableManager
                 reps: reps,
                 lapses: lapses,
                 lastReviewedAt: lastReviewedAt,
+                acquisition: acquisition,
+                learningStep: learningStep,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6206,6 +6625,8 @@ class $$TermProgressTableTableManager
                 Value<int> reps = const Value.absent(),
                 Value<int> lapses = const Value.absent(),
                 Value<DateTime?> lastReviewedAt = const Value.absent(),
+                Value<String> acquisition = const Value.absent(),
+                Value<int> learningStep = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion.insert(
@@ -6217,6 +6638,8 @@ class $$TermProgressTableTableManager
                 reps: reps,
                 lapses: lapses,
                 lastReviewedAt: lastReviewedAt,
+                acquisition: acquisition,
+                learningStep: learningStep,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -7413,6 +7836,181 @@ typedef $$ReviewQueueRowsTableProcessedTableManager =
       ReviewQueueRow,
       PrefetchHooks Function()
     >;
+typedef $$ExposureQueueRowsTableCreateCompanionBuilder =
+    ExposureQueueRowsCompanion Function({
+      required String termId,
+      required String shownAt,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+typedef $$ExposureQueueRowsTableUpdateCompanionBuilder =
+    ExposureQueueRowsCompanion Function({
+      Value<String> termId,
+      Value<String> shownAt,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+
+class $$ExposureQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $ExposureQueueRowsTable> {
+  $$ExposureQueueRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shownAt => $composableBuilder(
+    column: $table.shownAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ExposureQueueRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExposureQueueRowsTable> {
+  $$ExposureQueueRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shownAt => $composableBuilder(
+    column: $table.shownAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ExposureQueueRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExposureQueueRowsTable> {
+  $$ExposureQueueRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get shownAt =>
+      $composableBuilder(column: $table.shownAt, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+}
+
+class $$ExposureQueueRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ExposureQueueRowsTable,
+          ExposureQueueRow,
+          $$ExposureQueueRowsTableFilterComposer,
+          $$ExposureQueueRowsTableOrderingComposer,
+          $$ExposureQueueRowsTableAnnotationComposer,
+          $$ExposureQueueRowsTableCreateCompanionBuilder,
+          $$ExposureQueueRowsTableUpdateCompanionBuilder,
+          (
+            ExposureQueueRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ExposureQueueRowsTable,
+              ExposureQueueRow
+            >,
+          ),
+          ExposureQueueRow,
+          PrefetchHooks Function()
+        > {
+  $$ExposureQueueRowsTableTableManager(
+    _$AppDatabase db,
+    $ExposureQueueRowsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ExposureQueueRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ExposureQueueRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ExposureQueueRowsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> termId = const Value.absent(),
+                Value<String> shownAt = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExposureQueueRowsCompanion(
+                termId: termId,
+                shownAt: shownAt,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String termId,
+                required String shownAt,
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExposureQueueRowsCompanion.insert(
+                termId: termId,
+                shownAt: shownAt,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ExposureQueueRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ExposureQueueRowsTable,
+      ExposureQueueRow,
+      $$ExposureQueueRowsTableFilterComposer,
+      $$ExposureQueueRowsTableOrderingComposer,
+      $$ExposureQueueRowsTableAnnotationComposer,
+      $$ExposureQueueRowsTableCreateCompanionBuilder,
+      $$ExposureQueueRowsTableUpdateCompanionBuilder,
+      (
+        ExposureQueueRow,
+        BaseReferences<
+          _$AppDatabase,
+          $ExposureQueueRowsTable,
+          ExposureQueueRow
+        >,
+      ),
+      ExposureQueueRow,
+      PrefetchHooks Function()
+    >;
 typedef $$CachedImagesTableCreateCompanionBuilder =
     CachedImagesCompanion Function({
       required String url,
@@ -7616,6 +8214,8 @@ class $AppDatabaseManager {
       $$DailyActivityTableTableManager(_db, _db.dailyActivity);
   $$ReviewQueueRowsTableTableManager get reviewQueueRows =>
       $$ReviewQueueRowsTableTableManager(_db, _db.reviewQueueRows);
+  $$ExposureQueueRowsTableTableManager get exposureQueueRows =>
+      $$ExposureQueueRowsTableTableManager(_db, _db.exposureQueueRows);
   $$CachedImagesTableTableManager get cachedImages =>
       $$CachedImagesTableTableManager(_db, _db.cachedImages);
 }

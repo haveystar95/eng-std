@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
+import 'package:eng_std/data/practice/learning_ladder.dart';
 import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,13 +47,32 @@ void main() {
     term('01KZETAAE63W6K93C55NCYXKVA', text: 'check in', translation: 'заселение'),
   ];
 
-  StudySession build({List<Term>? from, int limit = 20, int seed = 7}) =>
-      LocalPracticeSessionBuilder.build(
-        terms: from ?? terms,
-        limit: limit,
-        random: Random(seed),
-        sessionId: 'SESSION',
-      );
+  /// Every pair sits at the TOP of the acquisition ladder unless a test says otherwise.
+  ///
+  /// The cases below are about the term's DATA and the pool rule — which modes its content can fill,
+  /// which distractors a card may carry — and the ladder is a separate question with its own tests
+  /// further down. Leaving it out would silently make every case a rung-1 case (a term with no
+  /// progress row has never been shown), and every assertion here would then be about one card.
+  Map<String, LadderPosition> topOfLadder(List<Term> from) => {
+        for (final t in from)
+          t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+      };
+
+  StudySession build({
+    List<Term>? from,
+    int limit = 20,
+    int seed = 7,
+    Map<String, LadderPosition>? ladder,
+  }) {
+    final pool = from ?? terms;
+    return LocalPracticeSessionBuilder.build(
+      terms: pool,
+      limit: limit,
+      random: Random(seed),
+      sessionId: 'SESSION',
+      ladder: ladder ?? topOfLadder(pool),
+    );
+  }
 
   test('the pool is the whole collection, capped at the limit', () {
     expect(build().cards, hasLength(terms.length));
@@ -122,6 +142,8 @@ void main() {
         case ExerciseMode.listening:
           expect(card.options, isNull);
           expect(card.chips, isNull);
+        case ExerciseMode.intro:
+          fail('practice introduces nothing — an intro card must never be dealt here');
       }
     }
   });
@@ -179,6 +201,7 @@ void main() {
       random: Random(3),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.multipleChoice]),
+      ladder: topOfLadder(ambiguous),
     );
 
     for (final card in session.cards) {
@@ -200,6 +223,7 @@ void main() {
       random: Random(5),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.multipleChoice]),
+      ladder: topOfLadder([terms.first, terms[3]]),
     );
 
     for (final card in session.cards) {
@@ -215,6 +239,7 @@ void main() {
       random: Random(11),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.wordBank]),
+      ladder: topOfLadder([terms[2]]),
     ).cards.single;
     expect(phrase.chips, containsAll(['front', 'desk']));
 
@@ -229,6 +254,7 @@ void main() {
       random: Random(11),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.wordBank]),
+      ladder: topOfLadder([terms[3]]),
     ).cards.single;
     expect(single.mode, ExerciseMode.multipleChoice, reason: 'the floor, exactly as on the server');
     expect(single.chips, isNull);
@@ -241,6 +267,7 @@ void main() {
       random: Random(13),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.wordBank]),
+      ladder: topOfLadder([terms[1]]),
     ).cards.single;
 
     expect(card.chips!.length, greaterThan(2), reason: 'decoys make it a real choice');

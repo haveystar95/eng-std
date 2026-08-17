@@ -1556,6 +1556,96 @@ abstract class AppLocalizations {
   /// **'Проверить'**
   String get sessionCheck;
 
+  /// Бейдж контуром на карточке знакомства — нулевая ступень лестницы (кадр 16b).
+  ///
+  /// In ru, this message translates to:
+  /// **'новое слово'**
+  String get sessionIntroBadge;
+
+  /// Единственная кнопка карточки знакомства: ни вариантов, ни вердикта (кадр 16b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Понятно →'**
+  String get sessionIntroGot;
+
+  /// Префикс списка принятых вариантов на карточке знакомства (кадр 16b).
+  ///
+  /// In ru, this message translates to:
+  /// **'также:'**
+  String get sessionIntroAlso;
+
+  /// Шапка сессии на карточке знакомства (кадры 16a–16b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Знакомство'**
+  String get sessionHeaderIntro;
+
+  /// Шапка сессии на ступенях узнавания 1–2 (кадры 16c-1, 16c-2).
+  ///
+  /// In ru, this message translates to:
+  /// **'Узнавание'**
+  String get sessionHeaderRecognition;
+
+  /// Инструкция ступени 1: показан термин, выбрать перевод (кадр 16c-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери перевод'**
+  String get sessionInstrRecogniseTranslation;
+
+  /// Подпись на узнавании: слово встречалось в этой же сессии (кадр 16c-2).
+  ///
+  /// In ru, this message translates to:
+  /// **'вы только что познакомились с этим словом'**
+  String get sessionRecogniseJustMet;
+
+  /// Подпись нулевой ступени лестницы в развёрнутой карточке слова (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'знакомство'**
+  String get ladderStep0;
+
+  /// Подпись ступени узнавания (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'узнавание'**
+  String get ladderStep1;
+
+  /// Подпись ступени сборки/выбора (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'сборка'**
+  String get ladderStep3;
+
+  /// Подпись ступени печати (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'написание'**
+  String get ladderStep4;
+
+  /// Подпись верхней ступени — диктант (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'диктант'**
+  String get ladderStep5;
+
+  /// Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'ЛЕСТНИЦА СЛОВА'**
+  String get ladderTitle;
+
+  /// Подпись вместо точек для слова, помеченного «знаю» в триаже — строка вне лестницы (кадр 16d).
+  ///
+  /// In ru, this message translates to:
+  /// **'знаю'**
+  String get ladderKnownDash;
+
+  /// Кнопка развёрнутой карточки: практика, отфильтрованная по этому слову (кадр 16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'Тренировать слово'**
+  String get ladderTrainWord;
+
   /// Кнопка перехода к следующему заданию (кадры 12c, 12d).
   ///
   /// In ru, this message translates to:

@@ -8,11 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import 'auth_repository.dart';
 import 'device_timezone.dart';
+import 'exposure_sync.dart';
 import 'generation_controller.dart';
 import 'local/app_database.dart';
 import 'local/cached_image_provider.dart';
 import 'local/image_disk_cache.dart';
 import 'local/sync_service.dart';
+import 'practice/learning_ladder.dart';
 import 'practice/local_session_builder.dart';
 import 'practice/practice_mode_selector.dart';
 import 'models.dart';
@@ -70,6 +72,17 @@ final reviewSyncProvider = Provider<ReviewSync>((ref) {
     ref.watch(apiClientProvider),
     ref.watch(reviewQueueProvider),
     ref.watch(seqCounterProvider),
+    ref,
+  );
+});
+
+/// Offline-first INTRO pipeline (record the meeting locally + step the ladder → batch flush). Its
+/// own queue, not the review one: an exposure is not an answer, and the review log must never hold
+/// a retrieval that never happened.
+final exposureSyncProvider = Provider<ExposureSync>((ref) {
+  return ExposureSync(
+    ref.watch(apiClientProvider),
+    ref.watch(appDatabaseProvider),
     ref,
   );
 });
@@ -350,6 +363,18 @@ WordCollection _toCollection(Collection r) => WordCollection(
       imageAuthorUrl: r.imageAuthorUrl,
     );
 
+/// The stored admission matrix, decoded. Anything unreadable falls back to the shipped matrix —
+/// the same value a device that has never synced assumes.
+List<dynamic>? _decodeList(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    return decoded is List ? decoded : null;
+  } on FormatException {
+    return null;
+  }
+}
+
 Word _toWord(CollectionTermRow r) {
   final s = r.state;
   // Progress states map to their badge. A term with no progress state that was still swiped in
@@ -369,6 +394,18 @@ Word _toWord(CollectionTermRow r) {
     imageUrl: r.term.imageUrl, // Pexels photo (docks in via sync)
     imageAuthor: r.term.imageAuthor,
     imageAuthorUrl: r.term.imageAuthorUrl,
+    // The ladder, through the one shared function — the same one the session builder asks.
+    //
+    // NO progress row means never shown, which is rung 0 — distinct from a row that merely predates
+    // the ladder, where `fromWire` reads `graduated` so a word already being reviewed is never
+    // pushed back to an intro card. The two nulls mean opposite things and are told apart here.
+    ladderStep: LearningLadder.stepFor(
+      acquisition: r.acquisition == null ? Acquisition.isNew : Acquisition.fromWire(r.acquisition),
+      reps: r.reps,
+      learningStep: r.learningStep,
+      isKnown: s == 'known',
+    ),
+    isKnown: s == 'known',
   );
 }
 
@@ -431,7 +468,15 @@ Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow>
 /// opens, so `POST /study/sessions` is idempotent (a rebuild reuses the same fixed composition);
 /// [collectionId] scopes to one owned collection; [practice] introduces no new terms and never
 /// schedules (the «Свободная тренировка» / practice banner path).
-typedef SessionArgs = ({String sessionId, String? collectionId, bool practice, int limit});
+typedef SessionArgs = ({
+  String sessionId,
+  String? collectionId,
+  bool practice,
+  int limit,
+  /// «Тренировать слово» (кадр 16e): narrow the practice pool to this one term. Practice only —
+  /// a scheduling session's composition is the server's to fix.
+  String? onlyTermId,
+});
 
 /// The exercise cards for one session (`POST /study/sessions`): due then new, one card per
 /// exercise, each with its mode + offline extras. Online-only (sessions build server-side, which
@@ -455,17 +500,30 @@ final studySessionProvider =
       throw StateError('practice needs a collection');
     }
     final db = ref.watch(appDatabaseProvider);
-    final terms = await db.collectionTerms(collectionId);
+    final all = await db.collectionTerms(collectionId);
+    // «Тренировать слово» narrows the pool to one term; everything else about the session — the
+    // ladder gate, the toggles, the shuffle — is unchanged, because nothing about drilling one word
+    // should make it a different kind of session.
+    final terms = args.onlyTermId == null
+        ? all
+        : [for (final t in all) if (t.id == args.onlyTermId) t];
     // The trainer toggles the server last told us about (stored by the sync service). Read from the
     // local DB like everything else on this path, so practice keeps working offline — and so a
     // toggle flipped in the admin panel changes the offline session on the next sync.
     final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
+    // …and the acquisition ladder the same feed carried: where each pair stands, and which rung
+    // opens which trainer. Practice is not exempt from it — a word met a minute ago is not dealt
+    // dictation here either — which is the gate that was deferred when the ladder landed server-side.
+    final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
+    final ladder = await db.ladderPositions([for (final t in terms) t.id]);
     return LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: args.limit,
       random: Random(),
       sessionId: args.sessionId,
       enabled: enabled,
+      ladder: ladder,
+      admission: admission,
     );
   }
 

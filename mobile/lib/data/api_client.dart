@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 
 import 'config.dart';
+import 'exposure_sync.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'token_store.dart';
@@ -299,6 +300,16 @@ class ApiClient {
       duplicates: (d['duplicates'] as int?) ?? 0,
       unknown: (d['unknown'] as int?) ?? 0,
     );
+  }
+
+  /// Upload a batch of INTRO acknowledgements — the same endpoint, a separate list. Idempotent on
+  /// the (user, term) pair rather than on a client id: a term is introduced once, so a re-upload is
+  /// an ignored insert that keeps the first `shown_at`.
+  Future<int> submitExposures(List<PendingExposure> exposures) async {
+    final r = await _dio.post('/reviews/batch', data: {
+      'exposures': exposures.map((e) => e.toBatchJson()).toList(),
+    });
+    return ((_data(r) as Map<String, dynamic>)['exposures'] as int?) ?? 0;
   }
 
   // ---- Triage ---------------------------------------------------------------

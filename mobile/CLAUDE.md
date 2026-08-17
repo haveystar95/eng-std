@@ -73,6 +73,22 @@ on the training home (now shows word counts), and AI open-answer check.
 
 ## Verify without the phone
 
-`flutter analyze` must be clean. `flutter test` runs the widget + unit tests. For visual checks use
-the web preview harness (`tool/preview.dart`) instead of a simulator (no iOS simulator runtime
-is installed; device is the target).
+`flutter analyze` must be clean. `flutter test` runs the widget + unit tests.
+
+For visual checks there are two harnesses under `tool/` (both outside `lib/`, so their Russian
+sample copy is exempt from the cyrillic guard):
+
+- `tool/preview.dart` — the app's own screens with mock providers.
+- `tool/ladder_preview.dart` — the acquisition-ladder surfaces (кадры 16b/16d/16e): the intro card,
+  the word row's five dots, the expanded word card.
+
+Both run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
+otherwise was stale), or in Chrome:
+
+```bash
+PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --debug -d <simulator-udid> --target tool/ladder_preview.dart
+```
+
+**`--debug`, not `--release`, on a simulator** — `flutter run --release` refuses with «Release mode
+is not supported by <device>» (the release build is device-only). The `--release` rule in the
+recipe above is for the PHONE and still stands there.

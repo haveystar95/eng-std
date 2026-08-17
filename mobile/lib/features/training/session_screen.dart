@@ -18,6 +18,7 @@ import '../../data/perf_log.dart';
 import '../../data/providers.dart';
 import '../progress/activity.dart';
 import '../progress/progress_providers.dart';
+import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
 import 'session/session_grading.dart';
 import 'triage_swipe.dart';
@@ -36,11 +37,17 @@ class SessionScreen extends ConsumerStatefulWidget {
     this.learn = false,
     this.limit = 20,
     this.targetLang,
+    this.onlyTermId,
   });
 
   final String title;
   final String? collectionId;
   final bool practice;
+
+  /// «Тренировать слово» from a word's expanded card (кадр 16e): a practice session whose pool is
+  /// this ONE term. Practice-only by construction — a scheduling session's composition is the
+  /// server's to fix, and drilling one word must not spend the daily quota on it.
+  final String? onlyTermId;
 
   /// Opened from the «Учить N» CTA (device-batch F8): the caller knew there were learnable words
   /// (triaged-«не знаю», no progress row). If the built session is still empty, the only cause is
@@ -110,6 +117,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       collectionId: widget.collectionId,
       practice: widget.practice,
       limit: widget.limit,
+      onlyTermId: widget.onlyTermId,
     );
     final session = ref.watch(studySessionProvider(args));
 
@@ -304,6 +312,25 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     setState(() => _answered = true);
   }
 
+  /// «Понятно» on an intro card. Nothing is graded and nothing reaches the review queue: the card
+  /// asked for nothing, so there is no retrieval to log. What it produces is an EXPOSURE — durable,
+  /// idempotent on the pair — plus the local ladder step, so the word's recognition cards later in
+  /// this same session know it has been met even with the network off from start to summary.
+  Future<void> _acknowledgeIntro() async {
+    final termId = _card.termId;
+    // Deliberately NOT added to [_results]: the summary lists answers, and an intro is not one —
+    // a tick beside it would claim the word was got right. The word still reaches the summary,
+    // through the recognition cards it comes back as later in this same session.
+    await ref.read(exposureSyncProvider).record(
+          termId: termId,
+          sessionId: widget.session.sessionId,
+        );
+    if (!mounted) return;
+    _prepareCard(_pos + 1);
+    _prepareCard(_pos + 2);
+    _next();
+  }
+
   void _next() {
     PerfLog.instance.tapHandled('next');
     if (_pos + 1 >= _cards.length) {
@@ -354,19 +381,33 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;
 
     final builtAt = _pos; // the index this card is built for — used to cancel its deferred effects
-    final card = SessionExerciseCard(
-      key: ValueKey(_pos),
-      card: _card,
-      autoPronounce: autoPronounce,
-      onAnswered: _onAnswered,
-      onSpeak: _speak,
-      photoUrl: _photoUrl[_pos],
-      photoResolved: _photoUrl.containsKey(_pos),
-      showDue: !widget.practice,
-      // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's deferred
-      // speak/focus is cancelled instead of firing on the next card.
-      isCurrent: () => mounted && _pos == builtAt,
-    );
+    final isIntro = _card.mode == ExerciseMode.intro;
+    // The intro is not an exercise, so it is not the exercise widget. It has no options, no input
+    // and no verdict — giving it its own widget is what keeps an "answer" with no answer in it out
+    // of the card that owns answering.
+    final card = isIntro
+        ? SessionIntroCard(
+            key: ValueKey(_pos),
+            card: _card,
+            autoPronounce: autoPronounce,
+            onSpeak: _speak,
+            photoUrl: _photoUrl[_pos],
+            photoResolved: _photoUrl.containsKey(_pos),
+            isCurrent: () => mounted && _pos == builtAt,
+          )
+        : SessionExerciseCard(
+            key: ValueKey(_pos),
+            card: _card,
+            autoPronounce: autoPronounce,
+            onAnswered: _onAnswered,
+            onSpeak: _speak,
+            photoUrl: _photoUrl[_pos],
+            photoResolved: _photoUrl.containsKey(_pos),
+            showDue: !widget.practice,
+            // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
+            // deferred speak/focus is cancelled instead of firing on the next card.
+            isCurrent: () => mounted && _pos == builtAt,
+          );
 
     return PopScope(
       canPop: false,
@@ -401,7 +442,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           ),
           // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
           // off-screen (device-batch F9). Appears only once the card is answered.
-          if (_answered) _NextBar(onNext: _next),
+          //
+          // The intro's «Понятно →» sits in the same bar and is there from the start: there is
+          // nothing to answer first, so nothing to wait for. One exit, no verdict.
+          if (isIntro)
+            _NextBar(onNext: _acknowledgeIntro, label: l.sessionIntroGot)
+          else if (_answered)
+            _NextBar(onNext: _next),
         ],
         ),
       ),
@@ -413,8 +460,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 /// the feedback content scrolls. Carries the bottom safe-area inset itself (the shell's SafeArea
 /// has `bottom: false`).
 class _NextBar extends StatelessWidget {
-  const _NextBar({required this.onNext});
+  const _NextBar({required this.onNext, this.label});
   final VoidCallback onNext;
+
+  /// Overridden by the intro card, whose single exit reads «Понятно →» — it acknowledges a word
+  /// that was shown rather than advancing past one that was answered.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +481,11 @@ class _NextBar extends StatelessWidget {
         AppSpacing.screenH,
         12 + MediaQuery.of(context).viewPadding.bottom,
       ),
-      child: PrimaryButton(label: l.sessionNext, trailingIcon: LucideIcons.arrowRight, onPressed: onNext),
+      child: PrimaryButton(
+        label: label ?? l.sessionNext,
+        trailingIcon: LucideIcons.arrowRight,
+        onPressed: onNext,
+      ),
     );
   }
 }
