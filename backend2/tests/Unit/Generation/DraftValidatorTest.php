@@ -180,3 +180,59 @@ it('never drops the ITEM over its example', function () {
     expect($result->items)->toHaveCount(10);
     expect(array_filter($result->items, static fn (GeneratedItem $i): bool => $i->example !== null))->toBe([]);
 });
+
+/**
+ * QA-2: «do you have any discounts?» arrived lowercase among nine correctly capitalised
+ * neighbours of the same response — «Where can I find dog food?», «Is this suitable for small
+ * breeds?». On the card it read as a typo the app had made. The model is inconsistent about
+ * exactly this, which is what makes it a job for validation rather than for the prompt.
+ */
+it('capitalises a sentence-like phrase that came back lowercase', function () {
+    $lower = new GeneratedItem('do you have any discounts?', 'phrase', 'у вас есть скидки?',
+        'Do you have any discounts on dog food?', 'B1');
+    $items = [...manyItems(8), $lower];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $item = $result->items[count($result->items) - 1];
+    expect($item->text)->toBe('Do you have any discounts?')
+        ->and($item->example)->toBe('Do you have any discounts on dog food?', 'only the case moved');
+});
+
+it('leaves a lowercase NOUN phrase alone — that is how it is written', function () {
+    // «aisle seat», «baggage claim», «check-in desk» are all type=phrase and all correctly
+    // lowercase. Capitalising every phrase would disfigure them; the sentence mark is the signal.
+    $noun = new GeneratedItem('aisle seat', 'phrase', 'место у прохода', 'I prefer an aisle seat.', 'B1');
+    $items = [...manyItems(8), $noun];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    expect($result->items[count($result->items) - 1]->text)->toBe('aisle seat');
+});
+
+it('never touches a word or an idiom', function () {
+    // «grain-free» is legal exactly as it stands.
+    $items = [
+        ...manyItems(8),
+        new GeneratedItem('grain-free', 'word', 'беззерновой', 'We buy grain-free food.', 'B1'),
+        new GeneratedItem('tailor to their needs', 'idiom', 'подстроить под нужды', 'We tailor to their needs.', 'B1'),
+    ];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $texts = array_map(static fn (GeneratedItem $i): string => $i->text, $result->items);
+    expect($texts)->toContain('grain-free')->toContain('tailor to their needs');
+});
+
+it('capitalises AFTER deduplication, so casing cannot split one item into two', function () {
+    $items = [
+        ...manyItems(8),
+        new GeneratedItem('do you have any discounts?', 'phrase', 'у вас есть скидки?', null, 'B1'),
+        new GeneratedItem('Do you have any discounts?', 'phrase', 'скидки?', null, 'B1'),
+    ];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $texts = array_map(static fn (GeneratedItem $i): string => $i->text, $result->items);
+    expect(array_count_values($texts)['Do you have any discounts?'])->toBe(1);
+});

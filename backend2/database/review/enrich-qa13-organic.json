@@ -1,0 +1,18 @@
+{
+  "_note": "QA-13 (приёмка 17.08): оба дистрактора термина «organic» несли correction «organic?» — карточка печатала «должно быть: organic?», а подстановка давала «…organic??». Круговая проверка этого не видит: canonicalize() снимает пунктуацию с обеих сторон. С этого наряда такую строку бракует EnrichmentValidator на приёмке; две живые правятся здесь. Правка, а не удаление: сами предложения-дистракторы верны, врал только показанный ремонт.",
+  "generator_version": "v2",
+  "fix_distractors": [
+    {
+      "term": "organic",
+      "sentence": "Is the dog food organics?",
+      "error_span": "organics",
+      "correction": "organic"
+    },
+    {
+      "term": "organic",
+      "sentence": "Is the dog food in organic?",
+      "error_span": "in organic",
+      "correction": "organic"
+    }
+  ]
+}

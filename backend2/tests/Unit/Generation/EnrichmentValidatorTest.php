@@ -259,6 +259,61 @@ it('keeps an article correction, whose whole content is the article normalize() 
     expect($verdict->distractors)->toHaveCount(1);
 });
 
+/**
+ * QA-13: both live distractors of the term «organic» carried the correction «organic?» — the card
+ * printed «должно быть: organic?» and a learner substituting it back gets «…organic??». The
+ * circular check below cannot see it: canonicalize() strips punctuation on both sides, so the
+ * repair matches the example either way.
+ */
+it('scraps a correction that swallowed the sentence-ending mark', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Is the dog food organics?', 'tense', 'organics', 'organic?')],
+        example: 'Is the dog food organic?',
+        acceptedForms: ['organic'],
+        backTranslation: 'organic',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps the same row when the span is a phrase', function () {
+    // The term's other live row: span «in organic», correction «organic?».
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Is the dog food in organic?', 'preposition', 'in organic', 'organic?')],
+        example: 'Is the dog food organic?',
+        acceptedForms: ['organic'],
+        backTranslation: 'organic',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty();
+});
+
+it('keeps the mark when the SPAN has it too — there the correction must carry it', function () {
+    // «cost?» → «costs?»: dropping the mark from the correction would delete the sentence's own
+    // punctuation when the repair is applied.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('How much does this bag costs?', 'tense', 'costs?', 'cost?')],
+        example: 'How much does this bag cost?',
+        acceptedForms: ['How much does this bag cost?'],
+        backTranslation: 'How much does this bag cost?',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1)
+        ->and($verdict->distractors[0]->correction)->toBe('cost?');
+});
+
+it('is indifferent to a correction whose punctuation is not sentence-ending', function () {
+    // A comma or an apostrophe inside the fix is ordinary content, not the sentence's full stop.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('I would like to withdraw money from my accounts.', 'tense', 'accounts', "account's")],
+        example: "I would like to withdraw money from my account's.",
+        acceptedForms: ['withdraw money'],
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
 it('scraps a distractor whose own repair does not give back the example', function () {
     // «online banking»: `at` → `services` turns «Do you offer online banking at services?» into
     // «…online banking services services?». The span was never the error, so the underline and the

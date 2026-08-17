@@ -34,11 +34,12 @@ use App\Modules\Shared\Domain\Service\LexicalNormalizer;
  *      claims about the same sentence is false, so the TERM goes to a human.
  *
  * A distractor's three fields are a claim that can be CHECKED, not just fields to fill: «this is the
- * example with exactly this fragment broken, and that fragment should have read this». Four checks
+ * example with exactly this fragment broken, and that fragment should have read this». Five checks
  * hold it to that claim, all through the same normaliser the grader uses — sentence-equal to the
  * example, sentence-equal to a sibling distractor (stored ones included), a span that equals its own
- * correction, and a repair that does not reproduce the example. Each of the four was found in live
- * store content, and each of them is a card that teaches the learner something false.
+ * correction, a correction that swallowed the sentence's final punctuation, and a repair that does
+ * not reproduce the example. Each of the five was found in live store content, and each of them is a
+ * card that teaches the learner something false.
  */
 final class EnrichmentValidator
 {
@@ -282,6 +283,14 @@ final class EnrichmentValidator
             if ($correction === '') {
                 continue;
             }
+            // A correction that swallowed the sentence's final mark. The card prints it literally —
+            // «должно быть: organic?» — and a learner who substitutes it back gets «…organic??».
+            // Both live rows on the term «organic» read that way: span «organics», correction
+            // «organic?». The circular check below cannot see it, because canonicalize() strips
+            // punctuation on both sides and the repair matches the example either way.
+            if ($this->carriesSentenceEnd($span, $correction)) {
+                continue;
+            }
             // A distractor identical to the pinned example is not a distractor.
             if ($this->sentenceEquals($text, $sentence)) {
                 continue;
@@ -317,6 +326,27 @@ final class EnrichmentValidator
         }
 
         return [$kept, $proposed, $proposed - count($kept), $conflicts];
+    }
+
+    /**
+     * Does the correction carry a sentence-ending mark the span it replaces does not have?
+     *
+     * The span and the correction are the two halves of one substitution: «this fragment should have
+     * read that». A fragment inside a sentence does not own the sentence's final «?» — so a
+     * correction that ends with one is claiming to replace punctuation it was never given, and the
+     * substitution doubles it up.
+     *
+     * The exception is real: when the span itself ends in that mark («cost?» → «costs?») the
+     * correction must carry it too, or the repair would delete the sentence's punctuation.
+     */
+    private function carriesSentenceEnd(string $span, string $correction): bool
+    {
+        $last = mb_substr(rtrim($correction), -1);
+        if (! in_array($last, ['.', '?', '!', '…'], true)) {
+            return false;
+        }
+
+        return mb_substr(rtrim($span), -1) !== $last;
     }
 
     /**

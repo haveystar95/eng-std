@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Infrastructure\Adapter;
 use App\Modules\Generation\Application\Dto\ExampleRegenBrief;
 use App\Modules\Generation\Application\Dto\ExampleRegenResult;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
+use App\Modules\Generation\Domain\Service\TermOccurrence;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -24,7 +25,7 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
-        private readonly string $promptVersion = 'v1',
+        private readonly string $promptVersion = 'v2',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
     ) {}
 
@@ -63,10 +64,23 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
             throw new RuntimeException('OpenAI returned malformed example JSON: ' . $content);
         }
 
+        $example = (string) $decoded['example'];
+        // The one thing an example for THIS term cannot fail to do. «How much does this bag cost?»
+        // came back taught by «How much does that coat cost?» — a well-formed sentence about another
+        // object, in which the term does not appear at all, so the intro card had nothing to show in
+        // bold and the learner was shown a word they had not asked about. As unusable as malformed
+        // JSON, and refused in the same place, so both callers (the «Новый пример» action and the
+        // echo-repair pass, which reports per-term failures) are covered by one rule.
+        if (! TermOccurrence::inExample($example, $brief->text)) {
+            throw new RuntimeException(
+                "OpenAI returned an example without the term «{$brief->text}»: «{$example}»",
+            );
+        }
+
         $translation = $decoded['example_translation'] ?? null;
 
         return new ExampleRegenResult(
-            example: (string) $decoded['example'],
+            example: $example,
             exampleTranslation: is_string($translation) && trim($translation) !== '' ? $translation : null,
             model: $this->model,
             tokensIn: is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null,

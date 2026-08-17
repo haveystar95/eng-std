@@ -60,9 +60,13 @@ final class DraftValidator
             // translation goes with it, because a translation of a sentence that is not there is
             // not a fact about anything.
             $example = $this->teachingExample($item->example, $text);
+            $type = $this->type($item->type, $text);
+            // …and only now the text is settled: a sentence-like item gets its capital back. The
+            // echo check above is case-insensitive, so it does not care which of the two runs first.
+            $text = $this->sentenceCase($text, $type);
             $usable = new GeneratedItem(
                 text: $text,
-                type: $this->type($item->type, $text),
+                type: $type,
                 translation: $translation,
                 example: $example,
                 cefr: $cefr,
@@ -136,6 +140,31 @@ final class DraftValidator
         }
 
         return self::isEcho($trimmed, $text) ? null : $trimmed;
+    }
+
+    /**
+     * A sentence written as a sentence: first letter capital.
+     *
+     * «do you have any discounts?» arrived among nine correctly capitalised neighbours in the same
+     * response — «Where can I find dog food?», «Is this suitable for small breeds?» — so on the card
+     * it read as a typo the app had made (QA-2). The model is inconsistent about exactly this and
+     * about nothing else, which is what makes it a job for validation rather than for the prompt.
+     *
+     * Applied ONLY to an item that ends in sentence-final punctuation, which is the narrowest test
+     * that catches the defect. The rule «capitalise every phrase» is what the finding literally asks
+     * for and it would be wrong: `phrase` is also the type of «aisle seat», «baggage claim»,
+     * «check-in desk» — noun phrases that are correctly lowercase and would be disfigured by a
+     * capital. Words and idioms are never touched at all («grain-free» is legal as it stands).
+     *
+     * The dedup key is taken before this, from the lowercased text, so nothing about matching moves.
+     */
+    private function sentenceCase(string $text, string $type): string
+    {
+        if ($type !== 'phrase' || ! preg_match('/[.?!…]$/u', $text)) {
+            return $text;
+        }
+
+        return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
     }
 
     /**
