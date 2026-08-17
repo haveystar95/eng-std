@@ -202,7 +202,7 @@ final readonly class BuildStudySessionHandler
             // the rest itself.
             $step = $view->acquisition === Acquisition::New
                 ? ($introEnabled ? LearningLadder::STEP_INTRO : LearningLadder::STEP_RECOGNITION_FORWARD)
-                : max(LearningLadder::STEP_RECOGNITION_FORWARD, min(LearningLadder::STEP_RECOGNITION_REVERSE, $view->learningStep));
+                : LearningLadder::clampRecognitionStep($view->learningStep);
 
             $ladder[] = ['term_id' => $view->termId->value, 'step' => $step];
         }

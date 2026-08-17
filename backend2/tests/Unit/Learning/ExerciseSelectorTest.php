@@ -272,6 +272,23 @@ it('derives the rung from (acquisition, reps, learning_step)', function (
     expect(LearningLadder::stepFor($acquisition, $reps, $learningStep, $isKnown))->toBe($expected);
 })->with('ladder');
 
+// The clamp, on its own. `stepFor` applies it, but so does the session assembler, which needs a
+// non-nullable answer — one function, so a future widening of the ladder cannot move one and
+// not the other. Out-of-range values only arrive from a newer build's row (the column is CHECKed
+// to 0…2), and the answer must be a rung, not null and not a throw.
+dataset('clamp', [
+    'the stored default, before the intro has happened' => [0, 1],
+    'forward'                                           => [1, 1],
+    'reverse'                                           => [2, 2],
+    'a rung a newer build added'                        => [3, 2],
+    'the step the client test pins'                     => [7, 2],
+    'nonsense from a hand-edit'                         => [-4, 1],
+]);
+
+it('clamps a stored step into the recognition rungs', function (int $stored, int $expected) {
+    expect(LearningLadder::clampRecognitionStep($stored))->toBe($expected);
+})->with('clamp');
+
 // ── free practice: fan across ALL applicable modes (not the reps ladder) ─────────
 
 /** @return list<ExerciseMode> */

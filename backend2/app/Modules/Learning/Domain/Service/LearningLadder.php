@@ -74,15 +74,31 @@ final class LearningLadder
             // one way to get here with reps > 0 is a `known` mark being undone, which resets the
             // ladder on purpose: the pair was never actually taught, only claimed.
             Acquisition::New => self::STEP_INTRO,
-            // Clamped, so a row written by a newer build (or a hand-edited one) can never point at
-            // a rung this build does not deal.
-            Acquisition::Learning => max(self::STEP_RECOGNITION_FORWARD, min(self::STEP_RECOGNITION_REVERSE, $learningStep)),
+            Acquisition::Learning => self::clampRecognitionStep($learningStep),
             Acquisition::Graduated => match (true) {
                 $reps >= self::DICTATION_MIN_REPS => self::STEP_DICTATION,
                 $reps >= self::TYPING_MIN_REPS => self::STEP_TYPING,
                 default => self::STEP_ASSEMBLY,
             },
         };
+    }
+
+    /**
+     * A stored `learning_step` read as one of the two recognition rungs.
+     *
+     * The column is CHECKed to 0…2, so a value outside the recognition range can only reach here
+     * from a row a NEWER build wrote (or a hand-edited one) — and the forward-compatible answer is
+     * the highest rung THIS build knows how to deal, never null and never a throw: refusing the row
+     * would drop the pair out of the session entirely, and reading 7 literally would ask the layout
+     * for a card that does not exist.
+     *
+     * A named function rather than the expression inline, because the session assembler needs the
+     * same clamp and needs it non-nullable — two copies of a clamp is how the two runtimes started
+     * disagreeing in the first place.
+     */
+    public static function clampRecognitionStep(int $learningStep): int
+    {
+        return max(self::STEP_RECOGNITION_FORWARD, min(self::STEP_RECOGNITION_REVERSE, $learningStep));
     }
 
     /** Is this rung one of the two recognition steps, where an answer must not schedule? */
