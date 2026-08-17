@@ -31,6 +31,13 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Localisation scaffold (A3.0). `flutter_localizations` + gen-l10n from the
+  # ARB files in lib/l10n (source of truth: app_ru.arb). `intl` backs ICU
+  # plurals («12 слов» → слово/слова/слов).
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -38,13 +45,35 @@ dependencies:
   dio: ^5.10.0
   flutter_tts: ^4.2.5
   google_sign_in: ^7.2.0
+  sign_in_with_apple: ^7.0.1 # official Apple button + credential flow (кадр 10a). Needs a backend
+  # /auth/apple exchange + the "Sign in with Apple" capability (paid Apple team) — see A3.7 notes.
   flutter_secure_storage: ^10.3.1
-  google_fonts: ^8.2.0
   flutter_animate: ^4.5.2
+  connectivity_plus: ^6.1.0 # flush the durable queues when the network returns
+  # Local-first store: drift = reactive SQLite. `watch` queries stream, so a screen's
+  # StreamProvider rebuilds when the background sync writes (screen ← local DB ← sync).
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.0 # bundles the SQLite native lib for iOS
+  path_provider: ^2.1.0 # app documents dir for the db file
+  path: ^1.9.0
+  url_launcher: ^6.3.0 # open a Pexels photographer's page (image attribution)
+  speech_to_text: ^7.0.0 # voice fill for the create screen (кадр 6c) — transcription into the field
+  # Icon set for the design system (§4г). NB: the older `lucide_icons` package
+  # caps at Dart <3.0 and cannot resolve here; `lucide_icons_flutter` is the
+  # maintained successor with the same `LucideIcons.*` API and the current set.
+  lucide_icons_flutter: ^3.1.15
+  flutter_webrtc: ^1.6.0
+  record: ^7.1.1
+  flutter_pcm_sound: ^3.3.3
+  flutter_timezone: ^5.1.0 # device IANA zone → sent at login + PUT /profile for calendar-day due rounding (F19)
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # drift codegen
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -59,10 +88,38 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
+  # Generate AppLocalizations from lib/l10n/*.arb (config in l10n.yaml).
+  generate: true
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Bundled fonts — offline-first, no runtime fetch. Instanced from the OFL
+  # variable fonts down to exactly the token-list weights (no extra weights);
+  # opsz optical axis kept. Full glyph coverage (Cyrillic; Inter also IPA).
+  # Licenses live beside the files: assets/fonts/OFL-*.txt.
+  fonts:
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/Literata-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Literata-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/Literata-Medium.ttf
+          weight: 500
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

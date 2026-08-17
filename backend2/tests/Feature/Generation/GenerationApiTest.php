@@ -11,6 +11,7 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -34,13 +35,32 @@ it('accepts a generation and completes it end-to-end on the sync queue', functio
     $id = $created->json('data.id');
 
     $shown = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/generations/{$id}");
-    $shown->assertOk()->assertJsonPath('data.status', 'succeeded');
+    $shown->assertOk()
+        ->assertJsonPath('data.status', 'succeeded')
+        ->assertJsonPath('data.requested', 8)   // honest requested/delivered surfaced for the client
+        ->assertJsonPath('data.delivered', 8);
     expect($shown->json('data.collection_id'))->not->toBeNull();
 
     $this->assertDatabaseHas('generation_requests', ['id' => $id, 'status' => 'succeeded']);
     $this->assertDatabaseHas('collections', ['source' => 'ai', 'source_lang' => 'ru', 'target_lang' => 'en']);
     $this->assertDatabaseCount('collection_items', 8);
     $this->assertDatabaseCount('terms', 8);
+
+    // Generated terms carry pronunciation and a usage example (persisted, not dropped).
+    expect(DB::table('terms')->whereNotNull('ipa')->count())->toBe(8);
+    $this->assertDatabaseCount('term_examples', 8);
+    $this->assertDatabaseHas('term_examples', ['sentence_translation' => 'Это образец предложения номер 1.']);
+});
+
+it('respects the requested term count', function () {
+    $token = bearerToken();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/generations', ['prompt' => 'путешествие', 'size' => 15])
+        ->assertStatus(202);
+
+    // The sync queue runs the job inline, so the terms exist right after the request.
+    $this->assertDatabaseCount('terms', 15);
 });
 
 it('validates that a prompt is required', function () {
@@ -66,7 +86,7 @@ it("hides another user's generation behind 404", function () {
     $owner = User::factory()->create();
     $id = app(RequestCollectionGenerationHandler::class)(new RequestCollectionGeneration(
         UserId::fromString($owner->id), 'секрет', new LanguageCode('ru'), new LanguageCode('en'), ['A2'], 8,
-    ));
+    ))->id;
 
     $this->withHeader('Authorization', 'Bearer ' . bearerToken())
         ->getJson("/api/v1/generations/{$id->value}")

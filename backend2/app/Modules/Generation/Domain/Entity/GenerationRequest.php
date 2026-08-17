@@ -29,6 +29,7 @@ final class GenerationRequest
         private readonly LanguageCode $targetLang,
         private readonly array $levels,
         private readonly int $size,
+        private ?int $deliveredCount,
         private readonly string $promptVersion,
         private GenerationStatus $status,
         private ?string $model,
@@ -37,6 +38,7 @@ final class GenerationRequest
         private ?string $costUsd,
         private ?CollectionId $collectionId,
         private ?string $error,
+        private ?string $rawResponse,
         private readonly DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $finishedAt,
     ) {}
@@ -56,7 +58,7 @@ final class GenerationRequest
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
-            $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, $createdAt, null,
+            null, $promptVersion, GenerationStatus::Pending, null, null, null, null, null, null, null, $createdAt, null,
         );
     }
 
@@ -74,6 +76,7 @@ final class GenerationRequest
         LanguageCode $targetLang,
         array $levels,
         int $size,
+        ?int $deliveredCount,
         string $promptVersion,
         GenerationStatus $status,
         ?string $model,
@@ -82,13 +85,14 @@ final class GenerationRequest
         ?string $costUsd,
         ?CollectionId $collectionId,
         ?string $error,
+        ?string $rawResponse,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $finishedAt,
     ): self {
         return new self(
             $id, $userId, $prompt, $normalizedPrompt, $sourceLang, $targetLang, $levels, $size,
-            $promptVersion, $status, $model, $tokensIn, $tokensOut, $costUsd, $collectionId, $error,
-            $createdAt, $finishedAt,
+            $deliveredCount, $promptVersion, $status, $model, $tokensIn, $tokensOut, $costUsd, $collectionId, $error,
+            $rawResponse, $createdAt, $finishedAt,
         );
     }
 
@@ -100,12 +104,33 @@ final class GenerationRequest
         $this->status = GenerationStatus::Running;
     }
 
+    /**
+     * Persist model usage + the raw response the moment the model answers, before validation runs.
+     * Kept separate from the status transitions so a request that later fails validation still
+     * records what the model cost and returned — the spend must not vanish because the draft was
+     * rejected. Only meaningful while running.
+     */
+    public function recordAttempt(
+        string $model,
+        ?int $tokensIn,
+        ?int $tokensOut,
+        ?string $costUsd,
+        ?string $rawResponse,
+    ): void {
+        $this->model = $model;
+        $this->tokensIn = $tokensIn;
+        $this->tokensOut = $tokensOut;
+        $this->costUsd = $costUsd;
+        $this->rawResponse = $rawResponse;
+    }
+
     public function markSucceeded(
         CollectionId $collectionId,
         string $model,
         ?int $tokensIn,
         ?int $tokensOut,
         ?string $costUsd,
+        int $deliveredCount,
         DateTimeImmutable $finishedAt,
     ): void {
         if ($this->status->isTerminal()) {
@@ -117,6 +142,7 @@ final class GenerationRequest
         $this->tokensIn = $tokensIn;
         $this->tokensOut = $tokensOut;
         $this->costUsd = $costUsd;
+        $this->deliveredCount = $deliveredCount;
         $this->error = null;
         $this->finishedAt = $finishedAt;
     }
@@ -172,6 +198,12 @@ final class GenerationRequest
         return $this->size;
     }
 
+    /** How many items actually landed in the collection; null until the request succeeds. */
+    public function deliveredCount(): ?int
+    {
+        return $this->deliveredCount;
+    }
+
     public function promptVersion(): string
     {
         return $this->promptVersion;
@@ -210,6 +242,11 @@ final class GenerationRequest
     public function error(): ?string
     {
         return $this->error;
+    }
+
+    public function rawResponse(): ?string
+    {
+        return $this->rawResponse;
     }
 
     public function createdAt(): DateTimeImmutable

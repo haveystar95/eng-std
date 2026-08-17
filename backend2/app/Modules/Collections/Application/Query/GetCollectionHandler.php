@@ -6,33 +6,62 @@ namespace App\Modules\Collections\Application\Query;
 
 use App\Modules\Collections\Application\Dto\CollectionItemView;
 use App\Modules\Collections\Application\Dto\CollectionView;
+use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
+use App\Modules\Identity\Application\Port\NativeLangReader;
+use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 final readonly class GetCollectionHandler
 {
-    public function __construct(private CollectionRepository $collections) {}
+    public function __construct(
+        private CollectionRepository $collections,
+        private TermContentReader $termContent,
+        private CollectionSubscriptions $subscriptions,
+        private NativeLangReader $nativeLang,
+    ) {}
 
     public function __invoke(GetCollection $query): ?CollectionView
     {
         $collection = $this->collections->findById($query->collectionId);
-
-        // Owner-only for now; a non-owner (or missing id) gets 404, not existence disclosure.
-        if ($collection === null
-            || $collection->ownerId() === null
-            || ! $collection->ownerId()->equals($query->actorId)
-        ) {
+        if ($collection === null) {
             return null;
         }
 
-        return $this->toView($collection);
+        // READ access = owner ∪ active subscriber (a store deck added to the user's library).
+        // Editing stays owner-only (Collection::assertEditableBy) — a subscriber can't mutate a
+        // store deck. A non-owner without an active subscription gets 404, not existence disclosure.
+        $isOwner = $collection->ownerId() !== null && $collection->ownerId()->equals($query->actorId);
+        if (! $isOwner && ! $this->subscriptions->isActive($query->actorId, $query->collectionId)) {
+            return null;
+        }
+
+        return $this->toView($collection, $query->actorId);
     }
 
-    private function toView(Collection $collection): CollectionView
+    private function toView(Collection $collection, UserId $actorId): CollectionView
     {
+        $termIds = array_map(static fn ($item) => $item->termId, $collection->items());
+        // The READER's language, not the collection's: the same deck is read by whoever subscribed
+        // to it, and the question on the card belongs to the person answering it.
+        $lang = $this->nativeLang->nativeLangFor($actorId)->value ?? NativeLangReader::FALLBACK;
+        $content = $this->termContent->byIds($termIds, $lang);
+
         $items = [];
         foreach ($collection->items() as $item) {
-            $items[] = new CollectionItemView($item->termId->value, $item->position, $item->note);
+            $view = $content[$item->termId->value] ?? null;
+            $items[] = new CollectionItemView(
+                termId: $item->termId->value,
+                position: $item->position,
+                note: $item->note,
+                text: $view?->text,
+                type: $view?->type,
+                transcription: $view?->transcription,
+                translation: $view?->translation,
+                example: $view?->example,
+                exampleTranslation: $view?->exampleTranslation,
+            );
         }
 
         return new CollectionView(

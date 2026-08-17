@@ -20,8 +20,14 @@ final class FakeCollectionGenerator implements CollectionGeneratorPort
         $cefr = $brief->levels[0] ?? 'B1';
         $count = max(8, $brief->size);
 
+        // A top-up passes the already-accepted texts; offset the numbering past them so this batch
+        // is fresh and non-overlapping (the deterministic texts are index-based), exercising the
+        // real top-up fill path instead of returning the same items to be deduped away.
+        $offset = count($brief->excludeTexts);
+
         $items = [];
-        for ($i = 1; $i <= $count; $i++) {
+        for ($n = 1; $n <= $count; $n++) {
+            $i = $offset + $n;
             $isPhrase = $i % 2 === 0;
             $items[] = new GeneratedItem(
                 text: $isPhrase ? "sample phrase {$i}" : "sampleword{$i}",
@@ -29,6 +35,8 @@ final class FakeCollectionGenerator implements CollectionGeneratorPort
                 translation: "образец {$i}",
                 example: "This is sample sentence number {$i}.",
                 cefr: $cefr,
+                transcription: "ˈsæmpəl {$i}",
+                exampleTranslation: "Это образец предложения номер {$i}.",
             );
         }
 

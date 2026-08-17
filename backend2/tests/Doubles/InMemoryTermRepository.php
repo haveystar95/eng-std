@@ -39,6 +39,12 @@ final class InMemoryTermRepository implements TermRepository
         return count($this->byId);
     }
 
+    /** @return list<Term> everything written, for tests that assert on CONTENT and not just the count */
+    public function all(): array
+    {
+        return array_values($this->byId);
+    }
+
     private function key(LanguageCode $lang, string $normalizedText, ?PartOfSpeech $pos): string
     {
         return $lang->value . '|' . $normalizedText . '|' . ($pos?->value ?? '');

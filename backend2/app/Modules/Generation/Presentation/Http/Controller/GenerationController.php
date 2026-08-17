@@ -40,20 +40,26 @@ final class GenerationController
         $data = $request->validated();
         $actor = $this->actorId($request);
 
-        $id = ($this->request)(new RequestCollectionGeneration(
+        $outcome = ($this->request)(new RequestCollectionGeneration(
             userId: $actor,
             prompt: (string) $data['prompt'],
             sourceLang: new LanguageCode(isset($data['source_lang']) ? (string) $data['source_lang'] : 'ru'),
-            targetLang: new LanguageCode(isset($data['target_lang']) ? (string) $data['target_lang'] : 'en'),
+            // Omitted → the handler falls back to the user's default learning language.
+            targetLang: isset($data['target_lang']) ? new LanguageCode((string) $data['target_lang']) : null,
             levels: $this->levels($data),
             size: isset($data['size']) ? (int) $data['size'] : self::DEFAULT_SIZE,
+            id: isset($data['id']) ? GenerationRequestId::fromString((string) $data['id']) : null,
         ));
 
-        $this->dispatcher->dispatch($id);
+        // New request → dispatch the job + 202. A client-id repeat → the existing request + 200.
+        if ($outcome->created) {
+            $this->dispatcher->dispatch($outcome->id);
+        }
 
-        $view = ($this->get)(new GetGenerationRequest($id, $actor));
+        $view = ($this->get)(new GetGenerationRequest($outcome->id, $actor));
+        $status = $outcome->created ? Response::HTTP_ACCEPTED : Response::HTTP_OK;
 
-        return GenerationRequestResource::make($view)->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return GenerationRequestResource::make($view)->response()->setStatusCode($status);
     }
 
     public function show(Request $request, string $id): GenerationRequestResource

@@ -36,6 +36,11 @@ final class CollectionMapper
             source: CollectionSource::from($model->source),
             createdAt: $model->created_at->toDateTimeImmutable(),
             items: $items,
+            imageUrl: $model->image_url,
+            imageApiPrompt: $model->image_api_prompt,
+            imageAuthor: $model->image_author,
+            imageAuthorUrl: $model->image_author_url,
+            isPremium: (bool) $model->is_premium,
         );
     }
 
@@ -53,6 +58,11 @@ final class CollectionMapper
             'visibility' => $collection->visibility()->value,
             'source' => $collection->source()->value,
             'items_count' => $collection->itemsCount(),
+            'image_url' => $collection->imageUrl(),
+            'image_api_prompt' => $collection->imageApiPrompt(),
+            'image_author' => $collection->imageAuthor(),
+            'image_author_url' => $collection->imageAuthorUrl(),
+            'is_premium' => $collection->isPremium(),
             'created_at' => $collection->createdAt(),
         ];
     }

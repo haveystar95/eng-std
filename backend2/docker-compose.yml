@@ -22,6 +22,20 @@ services:
       - redis
     command: php artisan horizon
 
+  # Public tunnel to the app, on the account's reserved static domain (same one the
+  # mobile app defaults to). Free plan = one tunnel: don't run the old backend's ngrok
+  # at the same time. Inspector at http://localhost:4041.
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: wt_ngrok
+    command: http --url=https://greedily-thermos-finer.ngrok-free.dev app:8000 --log=stdout
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4041:4040"
+    depends_on:
+      - app
+
   db:
     image: pgvector/pgvector:pg17
     container_name: wt_db

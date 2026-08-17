@@ -12,9 +12,11 @@
         "laravel/horizon": "^5.48",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "phpseclib/phpseclib": "^3.0",
         "predis/predis": "^3.5"
     },
     "require-dev": {
+        "brianium/paratest": "^7.20",
         "deptrac/deptrac": "^4.7",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.10",
@@ -54,10 +56,19 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
+            "@php vendor/bin/pest --parallel"
+        ],
+        "test-serial": [
+            "@php artisan config:clear --ansi",
             "@php vendor/bin/pest"
         ],
         "arch": "@php vendor/bin/deptrac analyse --config-file=deptrac.yaml --no-progress",
         "stan": "@php vendor/bin/phpstan analyse --memory-limit=512M",
+        "check": [
+            "@arch",
+            "@stan",
+            "@test"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

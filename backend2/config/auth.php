@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Admin\Infrastructure\Eloquent\Admin;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 
 return [
@@ -42,6 +43,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Back-office guard: Sanctum tokens minted against the `admins` table. A token whose
+        // tokenable is an app User fails this guard's provider check, so app users can't reach
+        // the admin panel with their own token.
+        'admin' => [
+            'driver' => 'sanctum',
+            'provider' => 'admins',
+        ],
     ],
 
     /*
@@ -67,10 +76,10 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => Admin::class,
+        ],
     ],
 
     /*

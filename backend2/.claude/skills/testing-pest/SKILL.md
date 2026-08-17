@@ -102,8 +102,19 @@ composer stan   # phpstan level 8
 composer test   # pest, parallel
 ```
 
-Plus a migration check: `migrate:fresh` then `migrate:rollback` on a clean database, so a
-non-reversible migration is caught before production.
+Plus a migration check, so a non-reversible migration is caught before production. It runs
+against the **disposable** database — `wordtrainer_test` — and the database name is part of the
+command, not something you remember:
+
+```
+docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate:fresh
+docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate:rollback
+```
+
+Without that prefix these commands target the dev database `wordtrainer` and destroy the store
+catalogue, the enriched content and the owner's collections — which is exactly what happened on
+2026-08-14. The app now refuses them outside a test database; see `CLAUDE.md`, "The database is
+not disposable".
 
 ## Coverage expectations
 

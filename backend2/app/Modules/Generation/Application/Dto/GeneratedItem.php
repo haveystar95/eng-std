@@ -9,9 +9,12 @@ final readonly class GeneratedItem
 {
     public function __construct(
         public string $text,          // target language (e.g. English)
-        public string $type,          // 'word' | 'phrase'
+        public string $type,          // 'word' | 'phrase' | 'idiom' | 'phrasal_verb'
         public string $translation,   // source language (e.g. Russian)
         public ?string $example,
         public ?string $cefr,
+        public ?string $transcription = null,      // IPA of the target-language text
+        public ?string $exampleTranslation = null, // example rendered in the source language
+        public ?string $imageApiPrompt = null,     // model's short image-search query for this term (v4+)
     ) {}
 }

@@ -39,12 +39,38 @@ it('runs then succeeds, recording collection and usage', function () {
     $collectionId = CollectionId::generate();
 
     $request->markRunning();
-    $request->markSucceeded($collectionId, 'gpt-4o', 100, 200, '0.001500', new DateTimeImmutable('2026-07-27T10:00:05Z'));
+    $request->markSucceeded($collectionId, 'gpt-4o', 100, 200, '0.001500', 11, new DateTimeImmutable('2026-07-27T10:00:05Z'));
 
     expect($request->status())->toBe(GenerationStatus::Succeeded)
         ->and($request->collectionId()?->value)->toBe($collectionId->value)
         ->and($request->model())->toBe('gpt-4o')
-        ->and($request->costUsd())->toBe('0.001500');
+        ->and($request->costUsd())->toBe('0.001500')
+        ->and($request->deliveredCount())->toBe(11);
+});
+
+it('records usage on an attempt before the outcome is known', function () {
+    $request = openRequest();
+    $request->markRunning();
+    $request->recordAttempt('gpt-4o', 700, 1200, '0.014500', '{"raw":true}');
+
+    expect($request->status())->toBe(GenerationStatus::Running)
+        ->and($request->model())->toBe('gpt-4o')
+        ->and($request->tokensIn())->toBe(700)
+        ->and($request->tokensOut())->toBe(1200)
+        ->and($request->rawResponse())->toBe('{"raw":true}');
+});
+
+it('keeps recorded usage after a validation failure', function () {
+    $request = openRequest();
+    $request->markRunning();
+    $request->recordAttempt('gpt-4o', 700, 1200, '0.014500', '{"raw":true}');
+    $request->markFailed('only 3 usable items after validation', new DateTimeImmutable('2026-07-27T10:00:05Z'));
+
+    expect($request->status())->toBe(GenerationStatus::Failed)
+        ->and($request->error())->toBe('only 3 usable items after validation')
+        ->and($request->tokensIn())->toBe(700)
+        ->and($request->costUsd())->toBe('0.014500')
+        ->and($request->rawResponse())->toBe('{"raw":true}');
 });
 
 it('can fail straight from pending', function () {
@@ -68,6 +94,6 @@ it('cannot succeed after failing', function () {
     $request->markFailed('boom', new DateTimeImmutable('2026-07-27T10:00:01Z'));
 
     expect(fn () => $request->markSucceeded(
-        CollectionId::generate(), 'gpt-4o', null, null, null, new DateTimeImmutable('2026-07-27T10:00:02Z'),
+        CollectionId::generate(), 'gpt-4o', null, null, null, 8, new DateTimeImmutable('2026-07-27T10:00:02Z'),
     ))->toThrow(InvalidGenerationTransition::class);
 });

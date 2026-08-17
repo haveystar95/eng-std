@@ -134,6 +134,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Destructive Migration Commands
+    |--------------------------------------------------------------------------
+    |
+    | `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` and `db:wipe` are
+    | refused unless the resolved database is a disposable test database — see
+    | AppServiceProvider::isDisposableDatabase(). Set DB_ALLOW_DESTRUCTIVE=true for a reset you
+    | actually mean; back the database up first (`scripts/db-backup.sh`).
+    |
+    */
+
+    'allow_destructive_commands' => env('DB_ALLOW_DESTRUCTIVE', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
     |

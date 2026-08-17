@@ -22,9 +22,16 @@ final class EloquentProfileUpdater implements ProfileUpdater
             'target_language' => $input->targetLanguage,
             'cefr_level' => $input->cefrLevel,
             'daily_goal' => $input->dailyGoal,
+            'timezone' => $input->timezone,
         ], static fn (mixed $value): bool => $value !== null);
 
-        $user->profile()->firstOrCreate([])->fill($changes)->save();
+        $profile = $user->profile()->firstOrCreate([]);
+        $profile->fill($changes);
+        // Stamp onboarding completion once — never overwrite an earlier onboarding (device-batch F1).
+        if ($input->onboarded === true && $profile->onboarded_at === null) {
+            $profile->onboarded_at = now();
+        }
+        $profile->save();
 
         return $this->mapper->toView($user->refresh());
     }

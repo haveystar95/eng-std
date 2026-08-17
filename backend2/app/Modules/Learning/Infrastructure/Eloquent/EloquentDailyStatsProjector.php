@@ -31,6 +31,25 @@ final class EloquentDailyStatsProjector implements StatsProjector
         $buckets = [];
         $countedNewTerms = [];
 
+        // Intros first, and they touch `new` alone: an exposure is not a review, so it must not
+        // move the review count, the correct count or the study seconds. Counting them first is
+        // also what stops a term met and answered in one batch being counted twice — the review
+        // loop below skips anything already counted here.
+        foreach ($event->exposures as $exposure) {
+            $userId = $exposure->userId->value;
+            $date = $exposure->shownAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
+            $key = $userId . '|' . $date;
+
+            $buckets[$key] ??= ['user_id' => $userId, 'date' => $date, 'reviews' => 0, 'correct' => 0, 'seconds' => 0, 'new' => 0];
+
+            $termId = $exposure->termId->value;
+            if (isset($countedNewTerms[$termId])) {
+                continue;
+            }
+            $countedNewTerms[$termId] = true;
+            $buckets[$key]['new']++;
+        }
+
         foreach ($reviews as $review) {
             $userId = $review->userId->value;
             $date = $review->answeredAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');

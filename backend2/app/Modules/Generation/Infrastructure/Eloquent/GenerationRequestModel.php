@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $target_lang
  * @property list<string> $levels
  * @property int $size
+ * @property int|null $delivered_count
  * @property string $prompt_version
  * @property string $status
  * @property string|null $model
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $cost_usd
  * @property string|null $collection_id
  * @property string|null $error
+ * @property string|null $raw_response
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon|null $finished_at
  */
@@ -41,6 +43,7 @@ final class GenerationRequestModel extends Model
     protected $casts = [
         'levels' => 'array',
         'size' => 'int',
+        'delivered_count' => 'int',
         'tokens_in' => 'int',
         'tokens_out' => 'int',
         'created_at' => 'datetime',

@@ -27,6 +27,7 @@ final readonly class CreateGeneratedCollectionHandler
             createdAt: $this->clock->now(),
             description: $command->description,
             topic: $command->topic,
+            imageApiPrompt: $command->imageApiPrompt,
         );
 
         $this->collections->save($collection);

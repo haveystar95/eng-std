@@ -12,6 +12,7 @@ Route::middleware('throttle:60,1')->group(function (): void {
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::delete('/auth/me', [AuthController::class, 'deleteAccount']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::put('/profile', [ProfileController::class, 'update']);
     });

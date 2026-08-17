@@ -15,5 +15,7 @@ final readonly class GeneratedCollectionDraft
         public string $model,
         public ?int $tokensIn,
         public ?int $tokensOut,
+        public ?string $rawResponse = null,     // truncated model output, kept for failure diagnosis
+        public ?string $imageApiPrompt = null,  // model's cover-image search query for the collection (v4+)
     ) {}
 }

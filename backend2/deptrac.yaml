@@ -54,6 +54,22 @@ deptrac:
     - name: GenerationPresentation
       collectors: [{ type: classLike, value: 'App\\Modules\\Generation\\Presentation\\.*' }]
 
+    - name: ObservabilityDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Domain\\.*' }]
+    - name: ObservabilityApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Application\\.*' }]
+    - name: ObservabilityInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Observability\\Infrastructure\\.*' }]
+
+    - name: AdminDomain
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Domain\\.*' }]
+    - name: AdminApplication
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Application\\.*' }]
+    - name: AdminInfrastructure
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Infrastructure\\.*' }]
+    - name: AdminPresentation
+      collectors: [{ type: classLike, value: 'App\\Modules\\Admin\\Presentation\\.*' }]
+
     - name: Framework
       collectors:
         - { type: classLike, value: 'Illuminate\\.*' }
@@ -73,22 +89,60 @@ deptrac:
     # Application depends on its own Domain, Shared, and other modules' Application only.
     IdentityApplication: [IdentityDomain, SharedDomain]
     VocabularyApplication: [VocabularyDomain, SharedDomain]
-    CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication]
+    # Collections reads the user's tier (Identity) to gate premium store content.
+    CollectionsApplication: [CollectionsDomain, SharedDomain, VocabularyApplication, IdentityApplication]
     LearningApplication:
       [LearningDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+    # Generation reads the user's tier (Identity) for the daily quota limit, and — for the
+    # practice-dialog lesson — the learner's due/started state (Learning) to prioritise which
+    # collection terms become the dialog's target words. Learning does not depend back on
+    # Generation, so this edge adds no cycle.
     GenerationApplication:
-      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication]
+      [GenerationDomain, SharedDomain, VocabularyApplication, CollectionsApplication, IdentityApplication, LearningApplication]
 
     # Infrastructure may use the framework and its own module's inner layers.
     SharedInfra: [SharedDomain, Framework]
-    IdentityInfrastructure: [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework]
+    # Account deletion fans out to every module's own Application eraser (never a raw cross-table
+    # query). This edge lives in Infrastructure, not Application, so no module-graph cycle forms
+    # with Collections/Generation Application → Identity Application.
+    IdentityInfrastructure:
+      [IdentityApplication, IdentityDomain, SharedDomain, SharedInfra, Framework,
+       CollectionsApplication, LearningApplication, GenerationApplication, VocabularyApplication, ObservabilityApplication]
     VocabularyInfrastructure: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     CollectionsInfrastructure: [CollectionsApplication, CollectionsDomain, SharedDomain, SharedInfra, Framework]
-    LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework]
-    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
+    LearningInfrastructure: [LearningApplication, LearningDomain, SharedDomain, SharedInfra, Framework, IdentityApplication]
+    # Generation fulfils Vocabulary's DispatchesTermEnrichment port (the enrich-term dispatcher).
+    # It also labels its own outbound calls (OutboundCallContext) so the request log can say WHY
+    # money was spent and on which collection — the label has to be applied where the vendor call
+    # is made, which is here. Deliberate edge, same shape as IdentityInfrastructure's.
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication]
+
+    # Observability: a thin, cross-cutting technical module (no Presentation layer).
+    ObservabilityDomain: [SharedDomain]
+    ObservabilityApplication: [ObservabilityDomain, SharedDomain]
+    ObservabilityInfrastructure: [ObservabilityApplication, ObservabilityDomain, SharedDomain, SharedInfra, Framework]
+
+    # Admin: a back-office read/report surface. Thin domain. Its Application reaches Learning (the
+    # day-plan simulator reuses GetDueTerms + ExerciseSelector via GetDayPlan, and mastered/stats via
+    # GetUserStats) and Identity (the tier mutation goes through UserTierWriter — the tier's owner).
+    # Its Infrastructure reads other modules' read tables directly as reporting projections (like
+    # Observability, it imports no other module's classes).
+    # Admin READS other modules' tables as projections, but it MUTATES only through their
+    # Application — curating a term goes through Vocabulary, curating a collection through
+    # Collections, exactly as the tier change goes through Identity.
+    AdminDomain: [SharedDomain]
+    AdminApplication:
+      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication]
+    AdminInfrastructure: [AdminApplication, AdminDomain, SharedDomain, SharedInfra, Framework]
+    # Presentation reads the impact ports (Vocabulary/Collections Application) to state the blast
+    # radius of a delete before it happens — a cross-module read through Application, like /me's.
+    AdminPresentation:
+      [AdminApplication, AdminDomain, SharedDomain, Framework, VocabularyApplication, CollectionsApplication]
 
     # Presentation may use the framework, its own Application/Domain — never Infrastructure.
-    IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, Framework]
+    # /me aggregates cross-module facts about the user; the generation quota (to grey the create
+    # button) comes from Generation's Application — a legal cross-module read via Application.
+    IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, GenerationApplication, Framework]
     VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, Framework]
     CollectionsPresentation: [CollectionsApplication, CollectionsDomain, SharedDomain, Framework]
     LearningPresentation: [LearningApplication, LearningDomain, SharedDomain, Framework]

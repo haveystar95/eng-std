@@ -1,0 +1,1136 @@
+{
+  "@@locale": "ru",
+
+  "triageCounter": "{current} из {total}",
+  "@triageCounter": {
+    "description": "Счётчик карточек в шапке триажа (кадр 2.2, «3 из 10»).",
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "triageSwipeHint": "Свайпай или жми кнопки · тап — перевернуть",
+  "@triageSwipeHint": {
+    "description": "Обучающая подсказка на лице первых карточек первой сессии (кадр 2.2 / 3a)."
+  },
+
+  "triageVerdictUnknown": "Не знаю",
+  "@triageVerdictUnknown": { "description": "Кнопка/вердикт: свайп влево." },
+
+  "triageVerdictUnsure": "Не уверен",
+  "@triageVerdictUnsure": { "description": "Кнопка/вердикт: свайп вверх." },
+
+  "triageVerdictKnown": "Знаю",
+  "@triageVerdictKnown": { "description": "Кнопка/вердикт: свайп вправо." },
+
+  "triageUndo": "Отменить последний",
+  "@triageUndo": { "description": "Третичная кнопка отмены последнего вердикта (кадр 2.2)." },
+
+  "triageTermTypeWord": "слово",
+  "@triageTermTypeWord": { "description": "Бейдж типа термина на обороте карточки." },
+
+  "triageTermTypePhrase": "фраза",
+  "@triageTermTypePhrase": { "description": "Бейдж типа термина (фраза; сюда же неизвестные типы)." },
+
+  "triageTermTypeIdiom": "идиома",
+  "@triageTermTypeIdiom": { "description": "Бейдж типа термина." },
+
+  "triageTermTypePhrasalVerb": "фраз. глагол",
+  "@triageTermTypePhrasalVerb": { "description": "Бейдж типа термина: фразовый глагол." },
+
+  "triageAllDoneTitle": "Всё разобрано",
+  "@triageAllDoneTitle": { "description": "Пустое состояние: на сервере не осталось новых терминов." },
+
+  "triageAllDoneBody": "В этом наборе не осталось новых слов для разбора.",
+  "@triageAllDoneBody": { "description": "Пояснение к «Всё разобрано»." },
+
+  "triageMoreLaterTitle": "На сейчас всё",
+  "@triageMoreLaterTitle": { "description": "Пустое состояние: страница пуста, но на сервере ещё есть." },
+
+  "triageMoreLaterBody": "Ещё {count} после синхронизации — зайдите снова, когда будет сеть.",
+  "@triageMoreLaterBody": {
+    "description": "Пояснение к «На сейчас всё».",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "triageDone": "Готово",
+  "@triageDone": { "description": "Кнопка выхода из триажа." },
+
+  "triageSummaryBatchTitle": "Пачка разобрана",
+  "@triageSummaryBatchTitle": { "description": "Итог: разобрана страница, но на сервере ещё осталось." },
+
+  "triageSummaryDoneTitle": "Разбор завершён",
+  "@triageSummaryDoneTitle": { "description": "Итог: на сервере ничего не осталось." },
+
+  "triageTallyKnown": "Знакомо",
+  "@triageTallyKnown": { "description": "Итог сессии: лейбл счётчика «Знаю»." },
+
+  "triageTallyLearning": "Учим",
+  "@triageTallyLearning": { "description": "Итог сессии: лейбл счётчика «Не знаю»." },
+
+  "triageTallyUnsure": "Не уверены",
+  "@triageTallyUnsure": { "description": "Итог сессии: лейбл счётчика «Не уверен»." },
+
+  "triageRemainingAfterSync": "{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}",
+  "@triageRemainingAfterSync": {
+    "description": "Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "triageLoadError": "Не удалось загрузить: {error}",
+  "@triageLoadError": {
+    "description": "Ошибка загрузки колоды триажа.",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "homeDailyGoal": "Дневная цель",
+  "@homeDailyGoal": { "description": "Лейбл блока дневной цели (кадр 2.1)." },
+
+  "homeGoalCount": "{total, plural, one{{done} / {total} слово} few{{done} / {total} слова} many{{done} / {total} слов} other{{done} / {total} слова}}",
+  "@homeGoalCount": {
+    "description": "Прогресс дневной цели, «8 / 20 слов» (ICU plural).",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "homeStreakActive": "{count, plural, one{Стрик — {count} день} few{Стрик — {count} дня} many{Стрик — {count} дней} other{Стрик — {count} дня}}",
+  "@homeStreakActive": {
+    "description": "Строка стрика, «Стрик — 5 дней» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeStreakStartToday": "Стрик начнётся сегодня",
+  "@homeStreakStartToday": { "description": "Строка стрика для нового пользователя (кадр 2b)." },
+
+  "homeReviewButton": "{count, plural, one{Повторить {count} слово} few{Повторить {count} слова} many{Повторить {count} слов} other{Повторить {count} слова}}",
+  "@homeReviewButton": {
+    "description": "Главная кнопка: есть due-повторения (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeLearnButton": "{count, plural, one{Учить {count} слово} few{Учить {count} слова} many{Учить {count} слов} other{Учить {count} слова}}",
+  "@homeLearnButton": {
+    "description": "Главная кнопка: есть отриаженные «не знаю» новые слова к изучению (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeLearnSubtitle": "Новые слова — первый разбор",
+  "@homeLearnSubtitle": { "description": "Подстрока кнопки «Учить N»." },
+
+  "homeTriageButton": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
+  "@homeTriageButton": {
+    "description": "Главная кнопка: есть новые неразобранные термины (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homePracticeButton": "Повторить",
+  "@homePracticeButton": { "description": "Главная кнопка: свободная тренировка (нет due и разбора)." },
+
+  "homePracticeSubtitle": "Учебная тренировка",
+  "@homePracticeSubtitle": { "description": "Подстрока: учебная тренировка (главный экран) — в отличие от свободной тренировки в коллекции." },
+
+  "homeGenerateTitle": "Опиши тему — соберём коллекцию",
+  "@homeGenerateTitle": { "description": "Антиква-заголовок карточки генерации." },
+
+  "homeGenerateSubtitle": "ИИ подберёт слова и фразы, которые реально нужны",
+  "@homeGenerateSubtitle": { "description": "Подзаголовок карточки генерации." },
+
+  "homeGeneratePlaceholder": "Например: визит к врачу",
+  "@homeGeneratePlaceholder": { "description": "Плейсхолдер поля темы на карточке генерации." },
+
+  "homeGenerateChipDoctor": "У врача",
+  "@homeGenerateChipDoctor": { "description": "Чип-пример темы." },
+
+  "homeGenerateChipRent": "Аренда",
+  "@homeGenerateChipRent": { "description": "Чип-пример темы." },
+
+  "homeGenerateChipInterview": "Собеседование",
+  "@homeGenerateChipInterview": { "description": "Чип-пример темы." },
+
+  "homeGenerateFreeTier": "3 генерации в день на бесплатном тарифе",
+  "@homeGenerateFreeTier": { "description": "Заметка о бесплатной квоте (кадр 2b, новый пользователь)." },
+
+  "homeWordOfDay": "Слово дня",
+  "@homeWordOfDay": { "description": "Лейбл блока «Слово дня»." },
+
+  "homeMyCollections": "Мои коллекции",
+  "@homeMyCollections": { "description": "Лейбл ленты коллекций." },
+
+  "homeSeeAll": "Все",
+  "@homeSeeAll": { "description": "Ссылка «Все» рядом с лейблом ленты коллекций." },
+
+  "homeCollectionProgress": "{total, plural, one{{done} из {total} слово} few{{done} из {total} слова} many{{done} из {total} слов} other{{done} из {total} слов}}",
+  "@homeCollectionProgress": {
+    "description": "Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural).",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "tabHome": "Главная",
+  "@tabHome": { "description": "Таб-бар: главная." },
+
+  "tabCollections": "Коллекции",
+  "@tabCollections": { "description": "Таб-бар: коллекции." },
+
+  "tabProfile": "Профиль",
+  "@tabProfile": { "description": "Таб-бар: профиль." },
+
+  "homeSessionTitle": "Занятие",
+  "@homeSessionTitle": { "description": "Заголовок экрана сессии, запущенной с главной (повторение / свободная тренировка)." },
+
+  "collectionWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@collectionWordsCount": {
+    "description": "Количество слов в коллекции, «24 слова» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionDueSuffix": "{count} к повторению сегодня",
+  "@collectionDueSuffix": {
+    "description": "Хвост подзаголовка коллекции про due-слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionDensityConfirmed": "Подтверждено {count}",
+  "@collectionDensityConfirmed": {
+    "description": "Легенда плотности: подтверждено упражнениями.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionDensityFamiliar": "Знакомое {count}",
+  "@collectionDensityFamiliar": {
+    "description": "Легенда плотности: знакомое, не освоено.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionDensityInProgress": "В работе {count}",
+  "@collectionDensityInProgress": {
+    "description": "Легенда плотности: новые / не разобрано.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionTriageButton": "Разобрать {count}",
+  "@collectionTriageButton": {
+    "description": "Главная кнопка коллекции: есть неразобранные слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionTriageSubtitle": "Новые слова этой коллекции",
+  "@collectionTriageSubtitle": { "description": "Подстрока кнопки «Разобрать»." },
+
+  "collectionLearnButton": "Учить {count}",
+  "@collectionLearnButton": {
+    "description": "Кнопка коллекции: выучить новые отриаженные «не знаю» слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionLearnSubtitle": "Новые слова — выучить",
+  "@collectionLearnSubtitle": { "description": "Подстрока кнопки «Учить»." },
+
+  "collectionReviewButton": "Повторить {count}",
+  "@collectionReviewButton": {
+    "description": "Главная кнопка коллекции: подошёл срок повторения.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionReviewSubtitle": "Срок повторения подошёл",
+  "@collectionReviewSubtitle": { "description": "Подстрока кнопки «Повторить»." },
+
+  "collectionPracticeButton": "Свободная тренировка",
+  "@collectionPracticeButton": { "description": "Главная кнопка коллекции: долг закрыт, тихая контурная кнопка." },
+
+  "collectionPracticeSubtitle": "Ничего не горит — можно просто позаниматься",
+  "@collectionPracticeSubtitle": { "description": "Подстрока кнопки свободной тренировки." },
+
+  "collectionWordsLabel": "Слова",
+  "@collectionWordsLabel": { "description": "Лейбл секции списка слов." },
+
+  "collectionAddWord": "Добавить слово",
+  "@collectionAddWord": { "description": "Кнопка добавления слова в коллекцию." },
+
+  "collectionEmptyTitle": "Слов пока нет",
+  "@collectionEmptyTitle": { "description": "Пустая коллекция — заголовок." },
+
+  "collectionEmptyBody": "Нажми «Добавить слово», чтобы добавить",
+  "@collectionEmptyBody": { "description": "Пустая коллекция — пояснение." },
+
+  "collectionTriageBannerTitle": "Разбери коллекцию",
+  "@collectionTriageBannerTitle": { "description": "Баннер первого контакта на свежесгенерированной коллекции." },
+
+  "collectionTriageBannerBody": "Отметь, что уже знаешь — остальное пойдёт в тренировку",
+  "@collectionTriageBannerBody": { "description": "Пояснение баннера разбора." },
+
+  "collectionTriageBannerStart": "Начать",
+  "@collectionTriageBannerStart": { "description": "Кнопка запуска разбора из баннера." },
+
+  "actionEdit": "Изменить",
+  "@actionEdit": { "description": "Действие: изменить (свайп/меню строки слова)." },
+
+  "actionDelete": "Удалить",
+  "@actionDelete": { "description": "Действие: удалить (свайп/меню строки слова, подтверждение)." },
+
+  "collectionDeleteWordTitle": "Удалить «{term}»?",
+  "@collectionDeleteWordTitle": {
+    "description": "Заголовок подтверждения удаления слова (кадр 5d).",
+    "placeholders": { "term": { "type": "String" } }
+  },
+
+  "collectionDeleteWordMessage": "Слово останется в других коллекциях, прогресс сохранится.",
+  "@collectionDeleteWordMessage": { "description": "Текст подтверждения удаления слова (кадр 5d)." },
+
+  "wordSheetAddTitle": "Добавить слово",
+  "@wordSheetAddTitle": { "description": "Заголовок шита добавления слова (кадр 5b)." },
+
+  "wordSheetEditTitle": "Изменить слово",
+  "@wordSheetEditTitle": { "description": "Заголовок шита редактирования слова (кадр 5c)." },
+
+  "wordFieldTerm": "Термин",
+  "@wordFieldTerm": { "description": "Лейбл поля термина." },
+
+  "wordFieldTranslation": "Перевод",
+  "@wordFieldTranslation": { "description": "Лейбл поля перевода." },
+
+  "wordTermHint": "слово или фраза",
+  "@wordTermHint": { "description": "Плейсхолдер поля термина." },
+
+  "wordTranslationHintOptional": "необязательно — подберём сами",
+  "@wordTranslationHintOptional": { "description": "Плейсхолдер необязательного перевода (кадр 5b)." },
+
+  "wordSheetAddHelper": "Транскрипция, пример и фото подберутся автоматически.",
+  "@wordSheetAddHelper": { "description": "Пояснение под полями при добавлении." },
+
+  "wordSheetEditHelper": "Пример и фото останутся прежними, если не менять термин.",
+  "@wordSheetEditHelper": { "description": "Пояснение под полями при редактировании." },
+
+  "wordSheetAddButton": "Добавить в коллекцию",
+  "@wordSheetAddButton": { "description": "Главная кнопка шита добавления." },
+
+  "wordSheetSaveButton": "Сохранить",
+  "@wordSheetSaveButton": { "description": "Главная кнопка шита редактирования." },
+
+  "wordSheetDeleteLink": "Удалить из коллекции",
+  "@wordSheetDeleteLink": { "description": "Деструктивная ссылка внизу шита редактирования (кадр 5c)." },
+
+  "collectionMenuRename": "Переименовать",
+  "@collectionMenuRename": { "description": "Пункт меню коллекции: переименовать." },
+
+  "collectionMenuDelete": "Удалить коллекцию",
+  "@collectionMenuDelete": { "description": "Пункт меню коллекции: удалить (деструктив)." },
+  "collectionMenuRemoveFromMine": "Убрать из моих",
+  "@collectionMenuRemoveFromMine": { "description": "Пункт меню подписанного набора: отписаться (деструктив)." },
+  "collectionUnsubscribeTitle": "Убрать «{title}» из моих?",
+  "@collectionUnsubscribeTitle": {
+    "description": "Заголовок подтверждения отписки от набора стора.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "collectionUnsubscribeMessage": "Набор пропадёт из «Моих». Слова и прогресс по ним сохранятся, набор снова можно добавить из стора.",
+  "@collectionUnsubscribeMessage": { "description": "Текст подтверждения отписки от набора стора." },
+
+  "collectionDeleteTitle": "Удалить «{title}»?",
+  "@collectionDeleteTitle": {
+    "description": "Заголовок подтверждения удаления коллекции.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+
+  "collectionDeleteMessage": "Коллекция удалится. Прогресс по словам сохранится.",
+  "@collectionDeleteMessage": { "description": "Текст подтверждения удаления коллекции." },
+
+  "commonCancel": "Отмена",
+  "@commonCancel": { "description": "Кнопка отмены в подтверждениях." },
+
+  "commonCloseMenu": "Закрыть меню",
+  "@commonCloseMenu": { "description": "A11y-лейбл затемнения плавающего меню." },
+
+  "approxWords": "{count, plural, one{≈{count} слово} few{≈{count} слова} many{≈{count} слов} other{≈{count} слова}}",
+  "@approxWords": {
+    "description": "Приблизительный размер набора, «≈15 слов» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "collectionsTitle": "Коллекции",
+  "@collectionsTitle": { "description": "Заголовок экрана вкладки коллекций (кадр 2.5)." },
+
+  "collectionsEmptyTitle": "Пока нет коллекций",
+  "@collectionsEmptyTitle": { "description": "Пустая вкладка коллекций — заголовок." },
+
+  "collectionsEmptyBody": "Опиши ситуацию — и ИИ соберёт первый набор.",
+  "@collectionsEmptyBody": { "description": "Пустая вкладка коллекций — пояснение." },
+
+  "collectionsNewCollection": "Новая коллекция",
+  "@collectionsNewCollection": { "description": "A11y-лейбл кнопки «+» создания коллекции (кадр 2.5)." },
+
+  "collectionsTileMastered": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}} · освоено {mastered}",
+  "@collectionsTileMastered": {
+    "description": "Подзаголовок плитки коллекции, «24 слова · освоено 18» (ICU plural).",
+    "placeholders": { "count": { "type": "int" }, "mastered": { "type": "int" } }
+  },
+
+  "generationGeneratingTitle": "Собираем коллекцию…",
+  "@generationGeneratingTitle": { "description": "Заголовок карточки идущей генерации (кадр 2.5)." },
+
+  "generationGeneratingMeta": "{topic} · {levels} · {size}",
+  "@generationGeneratingMeta": {
+    "description": "Мета-строка генерации: тема · уровни · размер («Аренда жилья · A2–B1 · ≈15 слов»).",
+    "placeholders": {
+      "topic": { "type": "String" },
+      "levels": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+
+  "generationGeneratingNote": "Подбираем слова и фотографии · обычно 20–30 секунд",
+  "@generationGeneratingNote": { "description": "Пояснение под индикатором идущей генерации (кадр 2.5)." },
+
+  "generationQueuedNote": "Отправим, как только появится сеть",
+  "@generationQueuedNote": { "description": "Пояснение под карточкой генерации, ожидающей сеть (офлайн-очередь)." },
+
+  "generationFailedTitle": "Не получилось",
+  "@generationFailedTitle": { "description": "Заголовок карточки ошибки генерации (кадр 2.5)." },
+
+  "generationFailedBody": "Сервис не ответил на запросе «{topic}». Генерация не потрачена.",
+  "@generationFailedBody": {
+    "description": "Текст ошибки генерации — квота не потрачена (кадр 2.5).",
+    "placeholders": { "topic": { "type": "String" } }
+  },
+
+  "generationRetry": "Повторить",
+  "@generationRetry": { "description": "Кнопка повтора генерации (кадр 2.5)." },
+
+  "generationHide": "Скрыть",
+  "@generationHide": { "description": "Убрать карточку ошибки генерации из списка (кадр 2.5)." },
+
+  "generationReadyLabel": "Готово",
+  "@generationReadyLabel": { "description": "Метка готовой коллекции на карточке генерации." },
+
+  "generationReadyLoading": "Готово — загружаю «{topic}»…",
+  "@generationReadyLoading": {
+    "description": "Коллекция сгенерирована, ждём синхронизации перед открытием.",
+    "placeholders": { "topic": { "type": "String" } }
+  },
+
+  "generationUnderBadge": "{delivered} из {requested}",
+  "@generationUnderBadge": {
+    "description": "Контурный бейдж недобора, «13 из 15» (кадр 2.5).",
+    "placeholders": { "delivered": { "type": "int" }, "requested": { "type": "int" } }
+  },
+
+  "generationReadyUnder": "Готова · собрано меньше",
+  "@generationReadyUnder": { "description": "Строка состояния готовой коллекции с недобором (кадр 2.5)." },
+
+  "generateScreenTitle": "Новая коллекция",
+  "@generateScreenTitle": { "description": "Заголовок экрана создания коллекции (кадр 2.4)." },
+
+  "generateSituationLabel": "Опиши ситуацию",
+  "@generateSituationLabel": { "description": "Лейбл поля ситуации (кадр 2.4)." },
+
+  "generateSituationHelper": "Чем конкретнее ситуация, тем точнее подборка. Например: «первый приём у врача, жалобы и запись на анализы».",
+  "@generateSituationHelper": { "description": "Пояснение под полем ситуации (кадр 6a)." },
+
+  "generatePlaceholder0": "Снимаю квартиру — разговор с агентом",
+  "@generatePlaceholder0": { "description": "Плейсхолдер-ротация поля ситуации." },
+
+  "generatePlaceholder1": "Первый приём у врача — жалобы и анализы",
+  "@generatePlaceholder1": { "description": "Плейсхолдер-ротация поля ситуации." },
+
+  "generatePlaceholder2": "Собеседование в IT — рассказ о проектах",
+  "@generatePlaceholder2": { "description": "Плейсхолдер-ротация поля ситуации." },
+
+  "generatePlaceholder3": "Открываю счёт в банке",
+  "@generatePlaceholder3": { "description": "Плейсхолдер-ротация поля ситуации." },
+
+  "generatePlaceholder4": "Заказываю еду в кафе",
+  "@generatePlaceholder4": { "description": "Плейсхолдер-ротация поля ситуации." },
+
+  "generateSizeLabel": "Размер",
+  "@generateSizeLabel": { "description": "Лейбл выбора размера набора (кадр 2.4)." },
+
+  "generateSizeSmall": "Маленькая",
+  "@generateSizeSmall": { "description": "Размер набора: маленькая." },
+
+  "generateSizeMedium": "Средняя",
+  "@generateSizeMedium": { "description": "Размер набора: средняя." },
+
+  "generateSizeLarge": "Большая",
+  "@generateSizeLarge": { "description": "Размер набора: большая." },
+
+  "generateLevelLabel": "Уровень",
+  "@generateLevelLabel": { "description": "Лейбл выбора уровней (кадр 2.4)." },
+
+  "generateLevelMulti": "можно несколько",
+  "@generateLevelMulti": { "description": "Подсказка «можно несколько» у выбора уровней." },
+
+  "generateLanguageLabel": "Язык изучения",
+  "@generateLanguageLabel": { "description": "Лейбл выбора языка изучения (кадр 6b)." },
+
+  "generateLanguageDefault": "по умолчанию",
+  "@generateLanguageDefault": { "description": "Пометка «по умолчанию» у языка из профиля (кадр 6b)." },
+
+  "generateQuotaRemaining": "{count, plural, one{Осталось {count} генерация сегодня} few{Осталось {count} генерации сегодня} many{Осталось {count} генераций сегодня} other{Осталось {count} генераций сегодня}}",
+  "@generateQuotaRemaining": {
+    "description": "Строка оставшейся квоты генераций (кадр 6a, ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "generateQuotaExhausted": "Генерации на сегодня закончились · обновятся в {time}",
+  "@generateQuotaExhausted": {
+    "description": "Строка исчерпанной квоты с локальным временем сброса (кадр 6b).",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "generateSubmit": "Сгенерировать",
+  "@generateSubmit": { "description": "Кнопка запуска генерации (кадр 2.4)." },
+
+  "generatePremiumUpsell": "Нужно больше? Premium — до 20 в день",
+  "@generatePremiumUpsell": { "description": "Строка перехода на Premium под неактивной кнопкой (кадр 15c)." },
+
+  "generateManual": "Собрать коллекцию вручную",
+  "@generateManual": { "description": "Ссылка на ручное создание коллекции (кадр 6b)." },
+
+  "generateVoiceListening": "Слушаю · {time}",
+  "@generateVoiceListening": {
+    "description": "Индикатор идущей записи с таймером (кадр 6c).",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "generateVoiceStop": "Стоп",
+  "@generateVoiceStop": { "description": "Кнопка остановки голосового ввода (кадр 6c)." },
+
+  "generateVoiceHelper": "Текст появляется в поле по мере распознавания — после остановки его можно править руками.",
+  "@generateVoiceHelper": { "description": "Пояснение под полем при голосовом вводе (кадр 6c)." },
+
+  "generateVoiceRecordingNote": "Говори — клавиатура вернётся, когда остановишь запись",
+  "@generateVoiceRecordingNote": { "description": "Подсказка на месте клавиатуры во время записи (кадр 6c)." },
+
+  "generateVoicePermissionDenied": "Нужен доступ к микрофону и распознаванию речи — включите в Настройках",
+  "@generateVoicePermissionDenied": { "description": "Сообщение при отказе в разрешении на микрофон/распознавание." },
+
+  "collectionSheetCreateTitle": "Новая коллекция",
+  "@collectionSheetCreateTitle": { "description": "Заголовок шита создания коллекции вручную." },
+
+  "collectionSheetEditTitle": "Изменить коллекцию",
+  "@collectionSheetEditTitle": { "description": "Заголовок шита переименования коллекции." },
+
+  "collectionNameLabel": "Название",
+  "@collectionNameLabel": { "description": "Лейбл поля названия коллекции." },
+
+  "collectionNameHint": "напр.: Путешествия",
+  "@collectionNameHint": { "description": "Плейсхолдер поля названия коллекции." },
+
+  "collectionSheetCreateButton": "Создать",
+  "@collectionSheetCreateButton": { "description": "Кнопка создания коллекции." },
+
+  "tabProgress": "Прогресс",
+  "@tabProgress": { "description": "Таб-бар: прогресс (между Коллекциями и Профилем)." },
+
+  "progressTitle": "Прогресс",
+  "@progressTitle": { "description": "Заголовок экрана прогресса (кадр 2.6)." },
+
+  "progressStreakDays": "{count, plural, one{{count} день подряд} few{{count} дня подряд} many{{count} дней подряд} other{{count} дня подряд}}",
+  "@progressStreakDays": {
+    "description": "Крупная антиква-строка стрика на экране прогресса.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "progressBestResult": "{count, plural, one{Лучший результат — {count} день} few{Лучший результат — {count} дня} many{Лучший результат — {count} дней} other{Лучший результат — {count} дня}}",
+  "@progressBestResult": {
+    "description": "Строка «Лучший результат» под стриком.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "progressDayMon": "Пн",
+  "@progressDayMon": { "description": "Календарь-неделя: понедельник." },
+  "progressDayTue": "Вт",
+  "@progressDayTue": { "description": "Календарь-неделя: вторник." },
+  "progressDayWed": "Ср",
+  "@progressDayWed": { "description": "Календарь-неделя: среда." },
+  "progressDayThu": "Чт",
+  "@progressDayThu": { "description": "Календарь-неделя: четверг." },
+  "progressDayFri": "Пт",
+  "@progressDayFri": { "description": "Календарь-неделя: пятница." },
+  "progressDaySat": "Сб",
+  "@progressDaySat": { "description": "Календарь-неделя: суббота." },
+  "progressDaySun": "Вс",
+  "@progressDaySun": { "description": "Календарь-неделя: воскресенье." },
+
+  "progressLearnedTotal": "Выучено всего",
+  "@progressLearnedTotal": { "description": "Лейбл счётчика: усвоено слов всего." },
+
+  "progressThisWeek": "За неделю",
+  "@progressThisWeek": { "description": "Лейбл счётчика: повторений за текущую неделю." },
+
+  "progressToday": "Повторений сегодня",
+  "@progressToday": { "description": "Лейбл счётчика: повторений сегодня." },
+
+  "progressActivityMonth": "Активность за месяц",
+  "@progressActivityMonth": { "description": "Лейбл графика активности за месяц." },
+
+  "progressMonth": "{month, select, 1{январь} 2{февраль} 3{март} 4{апрель} 5{май} 6{июнь} 7{июль} 8{август} 9{сентябрь} 10{октябрь} 11{ноябрь} 12{декабрь} other{}}",
+  "@progressMonth": {
+    "description": "Название текущего месяца рядом с графиком активности.",
+    "placeholders": { "month": { "type": "String" } }
+  },
+
+  "progressAllWords": "{count, plural, one{Все {count} слово} few{Все {count} слова} many{Все {count} слов} other{Все {count} слов}}",
+  "@progressAllWords": {
+    "description": "Лейбл глобальной полосы плотности.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeLimitReachedTitle": "Лимит новых на сегодня",
+  "@homeLimitReachedTitle": { "description": "Неактивная карточка на главном, когда дневная квота новых слов исчерпана (F13)." },
+
+  "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
+  "@homeLimitReachedHint": { "description": "Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту." },
+
+  "homeAllDoneTitle": "На сегодня всё",
+  "@homeAllDoneTitle": { "description": "Заголовок карточки «всё повторено» (кадр 9b)." },
+
+  "homeAllDoneSubtitle": "{count, plural, one{{count} повторение сделано, новых слов в очереди нет.} few{{count} повторения сделано, новых слов в очереди нет.} many{{count} повторений сделано, новых слов в очереди нет.} other{{count} повторений сделано, новых слов в очереди нет.}}",
+  "@homeAllDoneSubtitle": {
+    "description": "Подзаголовок карточки «всё повторено».",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeAllDonePractice": "Свободная тренировка",
+  "@homeAllDonePractice": { "description": "Кнопка свободной тренировки в карточке «всё повторено»." },
+
+  "homeAllDoneGenerate": "Собрать новую коллекцию",
+  "@homeAllDoneGenerate": { "description": "Ссылка на генерацию в карточке «всё повторено»." },
+
+  "homeOfflineBanner": "Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.",
+  "@homeOfflineBanner": { "description": "Тихий офлайн-баннер на главной (кадр 9c)." },
+
+  "homeGenerateOfflineNote": "Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.",
+  "@homeGenerateOfflineNote": { "description": "Пояснение на пунктирной карточке генерации в офлайне (кадр 9c)." },
+
+  "appWordmark": "Слова",
+  "@appWordmark": { "description": "Словесный знак приложения на экране входа (бренд, не переводится)." },
+  "authTagline": "Слова для реальных ситуаций — от банка до собеседования.",
+  "@authTagline": { "description": "Подзаголовок на экране входа (кадр 10a)." },
+  "authContinueGoogle": "Продолжить с Google",
+  "@authContinueGoogle": { "description": "Кнопка входа через Google (кадр 10a)." },
+  "authTerms": "Условия",
+  "@authTerms": { "description": "Ссылка на условия (кадр 10a)." },
+  "authPrivacy": "Конфиденциальность",
+  "@authPrivacy": { "description": "Ссылка на политику конфиденциальности (кадр 10a)." },
+  "authOfflineHint": "Нет сети. Для первого входа нужно подключение.",
+  "@authOfflineHint": { "description": "Подсказка на экране входа в офлайне." },
+  "authAppleUnavailable": "Вход через Apple пока недоступен.",
+  "@authAppleUnavailable": { "description": "Ошибка, если Apple-вход не настроен (нет бэкенда/entitlement)." },
+
+  "onbLangTitle": "Какой язык учим?",
+  "@onbLangTitle": { "description": "Онбординг, шаг 1 — заголовок (кадр 10b)." },
+  "onbLangSubtitle": "Можно поменять в профиле в любой момент.",
+  "@onbLangSubtitle": { "description": "Онбординг, шаг 1 — подзаголовок." },
+  "onbLevelTitle": "Насколько уверенно читаешь?",
+  "@onbLevelTitle": { "description": "Онбординг, шаг 2 — заголовок (кадр 10c)." },
+  "onbLevelSubtitle": "Примерно — потом уточним по твоим ответам в разборе.",
+  "@onbLevelSubtitle": { "description": "Онбординг, шаг 2 — подзаголовок." },
+  "onbLevelExample": "На {level} в коллекции попадают слова вроде «wire transfer» и «make ends meet».",
+  "@onbLevelExample": {
+    "description": "Онбординг, шаг 2 — пример слов для уровня.",
+    "placeholders": { "level": { "type": "String" } }
+  },
+  "onbGoalTitle": "Сколько слов в день?",
+  "@onbGoalTitle": { "description": "Онбординг, шаг 3 — заголовок (кадр 10d)." },
+  "onbGoalSubtitle": "Цель влияет только на напоминания и прогресс.",
+  "@onbGoalSubtitle": { "description": "Онбординг, шаг 3 — подзаголовок." },
+  "onbGoalMinutes": "≈ {count} минут в день",
+  "@onbGoalMinutes": {
+    "description": "Онбординг, шаг 3 — оценка времени.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "onbGoalRecommended": "рекомендуем",
+  "@onbGoalRecommended": { "description": "Метка рекомендованной дневной цели." },
+  "onbFooterNote": "Всё это меняется в профиле — уровень, цель и язык не заперты за онбордингом.",
+  "@onbFooterNote": { "description": "Онбординг — сноска." },
+  "onbNext": "Далее",
+  "@onbNext": { "description": "Кнопка перехода к следующему шагу онбординга." },
+  "onbStart": "Начать",
+  "@onbStart": { "description": "Кнопка завершения онбординга." },
+
+  "cefrHintA1": "начало",
+  "@cefrHintA1": { "description": "Подпись уровня A1." },
+  "cefrHintA2": "базовый",
+  "@cefrHintA2": { "description": "Подпись уровня A2." },
+  "cefrHintB1": "средний",
+  "@cefrHintB1": { "description": "Подпись уровня B1." },
+  "cefrHintB2": "уверенный",
+  "@cefrHintB2": { "description": "Подпись уровня B2." },
+  "cefrHintC1": "свободный",
+  "@cefrHintC1": { "description": "Подпись уровня C1." },
+  "cefrHintC2": "почти носитель",
+  "@cefrHintC2": { "description": "Подпись уровня C2." },
+
+  "profileTitle": "Профиль",
+  "@profileTitle": { "description": "Заголовок экрана профиля (кадр 11a)." },
+  "profileSectionLearning": "Обучение",
+  "@profileSectionLearning": { "description": "Секция профиля: обучение." },
+  "profileSectionApp": "Приложение",
+  "@profileSectionApp": { "description": "Секция профиля: приложение." },
+  "profileSectionSubscription": "Подписка",
+  "@profileSectionSubscription": { "description": "Секция профиля: подписка." },
+  "profileSectionAccount": "Аккаунт",
+  "@profileSectionAccount": { "description": "Секция профиля: аккаунт." },
+  "profileRowLevel": "Уровень",
+  "@profileRowLevel": { "description": "Строка профиля: уровень." },
+  "profileRowGoal": "Дневная цель",
+  "@profileRowGoal": { "description": "Строка профиля: дневная цель." },
+  "profileRowTargetLang": "Язык изучения",
+  "@profileRowTargetLang": { "description": "Строка профиля: язык изучения." },
+  "profileRowUiLang": "Язык интерфейса",
+  "@profileRowUiLang": { "description": "Строка профиля: язык интерфейса." },
+  "profileRowAutoPronounce": "Автопроизношение",
+  "@profileRowAutoPronounce": { "description": "Строка профиля: автопроизношение." },
+  "profileAutoPronounceHint": "Озвучивать слово при показе карточки",
+  "@profileAutoPronounceHint": { "description": "Подпись автопроизношения." },
+  "profileRowReminders": "Напоминания",
+  "@profileRowReminders": { "description": "Строка профиля: напоминания." },
+  "profileRemindersHint": "Одно в день, если есть что повторить",
+  "@profileRemindersHint": { "description": "Подпись напоминаний." },
+  "profileRowReminderTime": "Время",
+  "@profileRowReminderTime": { "description": "Строка профиля: время напоминания." },
+  "profileFreeTier": "Бесплатный тариф",
+  "@profileFreeTier": { "description": "Строка подписки: бесплатный тариф." },
+  "profileFreeTierHint": "3 генерации в день",
+  "@profileFreeTierHint": { "description": "Подпись бесплатного тарифа." },
+  "profileSoon": "Скоро",
+  "@profileSoon": { "description": "Метка «скоро» у подписки." },
+  "profileSignOut": "Выйти",
+  "@profileSignOut": { "description": "Строка профиля: выйти." },
+  "profileDeleteAccount": "Удалить аккаунт",
+  "@profileDeleteAccount": { "description": "Строка профиля: удалить аккаунт." },
+  "profileGoalValue": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
+  "@profileGoalValue": {
+    "description": "Значение дневной цели, «N слов».",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "uiLangSystem": "Системный",
+  "@uiLangSystem": { "description": "Язык интерфейса: системный." },
+  "uiLangRussian": "Русский",
+  "@uiLangRussian": { "description": "Язык интерфейса: русский." },
+  "uiLangEnglish": "English",
+  "@uiLangEnglish": { "description": "Язык интерфейса: английский." },
+  "profileUiLangSheet": "Язык интерфейса",
+  "@profileUiLangSheet": { "description": "Заголовок шита выбора языка интерфейса." },
+  "profileLevelSheet": "Уровень",
+  "@profileLevelSheet": { "description": "Заголовок шита выбора уровня." },
+  "profileGoalSheet": "Дневная цель",
+  "@profileGoalSheet": { "description": "Заголовок шита выбора дневной цели." },
+
+  "reminderSheetTitle": "Когда напомнить",
+  "@reminderSheetTitle": { "description": "Заголовок шита выбора времени напоминания (кадр 13b)." },
+  "reminderSheetSubtitle": "Лучше всего работает время, когда у тебя обычно есть пять свободных минут.",
+  "@reminderSheetSubtitle": { "description": "Подзаголовок шита времени напоминания." },
+  "commonSave": "Сохранить",
+  "@commonSave": { "description": "Кнопка сохранения." },
+
+  "deleteAccountTitle": "Удалить аккаунт?",
+  "@deleteAccountTitle": { "description": "Заголовок подтверждения удаления аккаунта (кадр 11b)." },
+  "deleteAccountBody": "Все данные и прогресс будут удалены безвозвратно: {words}, {streak} и все коллекции.",
+  "@deleteAccountBody": {
+    "description": "Тело подтверждения удаления аккаунта с персональными числами.",
+    "placeholders": { "words": { "type": "String" }, "streak": { "type": "String" } }
+  },
+  "deleteAccountWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слов}}",
+  "@deleteAccountWords": {
+    "description": "Часть «N слов» в подтверждении удаления.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "deleteAccountStreak": "{count, plural, one{{count} день стрика} few{{count} дня стрика} many{{count} дней стрика} other{{count} дней стрика}}",
+  "@deleteAccountStreak": {
+    "description": "Часть «N дней стрика» в подтверждении удаления.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "deleteAccountConfirm": "Удалить",
+  "@deleteAccountConfirm": { "description": "Кнопка подтверждения удаления аккаунта." },
+
+  "sessionPhaseIntro": "Знакомство",
+  "@sessionPhaseIntro": { "description": "Лейбл фазы сессии в шапке (кадр 12a) — новый термин, выбор из четырёх." },
+  "sessionPhaseAssemble": "Сборка",
+  "@sessionPhaseAssemble": { "description": "Лейбл фазы сессии (кадр 12b) — сборка фразы из слов." },
+  "sessionPhaseReview": "Повторение",
+  "@sessionPhaseReview": { "description": "Лейбл фазы сессии (кадры 12c–12i) — ввод/аудирование/пропуск." },
+  "sessionPhasePractice": "Свободная тренировка",
+  "@sessionPhasePractice": { "description": "Лейбл шапки в тренировочной сессии (кадр 12f)." },
+
+  "sessionInstrChoose": "выбери английский эквивалент",
+  "@sessionInstrChoose": { "description": "Инструкция под промптом, выбор из четырёх (кадр 12a)." },
+  "sessionInstrAssemble": "собери из слов",
+  "@sessionInstrAssemble": { "description": "Инструкция под промптом, сборка фразы (кадр 12b)." },
+  "sessionAssemblyEmptyHint": "Собери из слов ниже",
+  "@sessionAssemblyEmptyHint": { "description": "Плейсхолдер в пустой строке сборки (word_bank и scramble) — куда кладутся слова." },
+  "sessionInstrAssembleSentence": "собери предложение из слов",
+  "@sessionInstrAssembleSentence": { "description": "Инструкция под промптом, сборка предложения-примера из чипов (scramble)." },
+  "sessionInstrType": "напиши по-английски",
+  "@sessionInstrType": { "description": "Инструкция под промптом, ввод с клавиатуры (кадр 12c)." },
+  "sessionInstrListenChoose": "прослушай и выбери перевод · можно повторить",
+  "@sessionInstrListenChoose": { "description": "Инструкция аудирования-узнавания (кадр 12g)." },
+  "sessionInstrListenType": "прослушай и напиши по-английски",
+  "@sessionInstrListenType": { "description": "Инструкция аудирования-воспроизведения (кадр 12h)." },
+  "sessionInstrDictation": "прослушай и запиши предложение",
+  "sessionInstrPickCorrect": "выбери верное предложение",
+  "@sessionInstrPickCorrect": { "description": "Инструкция pick_correct: три предложения, одно верное." },
+  "sessionPickCorrectShouldBe": "должно быть: {correction}",
+  "@sessionPickCorrectShouldBe": { "description": "Под неверным выбором в pick_correct: чем должен был быть подчёркнутый фрагмент.", "placeholders": { "correction": { "type": "String" } } },
+  "@sessionInstrDictation": { "description": "Инструкция диктанта: звучит предложение-пример целиком (dictation)." },
+  "sessionClozeInsert": "Вставь слово",
+  "@sessionClozeInsert": { "description": "Лейбл над примером с пропуском (кадр 12i)." },
+  "sessionChipReturnHint": "Тап по слову в строке возвращает его вниз",
+  "@sessionChipReturnHint": { "description": "Подсказка под строкой сборки (кадр 12b)." },
+
+  "sessionHintFirstLetter": "Подсказка: первая буква",
+  "@sessionHintFirstLetter": { "description": "Кнопка подсказки первой буквы в ввод/аудирование/пропуск (кадры 12c, 12h, 12i)." },
+  "sessionDontRemember": "Не помню",
+  "@sessionDontRemember": { "description": "Кнопка честного провала — показывает ответ, слово вернётся (кадры 12c, 12h, 12i)." },
+  "sessionCheck": "Проверить",
+  "@sessionCheck": { "description": "Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека." },
+
+  "sessionIntroBadge": "новое слово",
+  "@sessionIntroBadge": { "description": "Бейдж контуром на карточке знакомства — нулевая ступень лестницы (кадр 16b)." },
+  "sessionIntroGot": "Понятно →",
+  "@sessionIntroGot": { "description": "Единственная кнопка карточки знакомства: ни вариантов, ни вердикта (кадр 16b)." },
+  "sessionIntroAlso": "также:",
+  "@sessionIntroAlso": { "description": "Префикс списка принятых вариантов на карточке знакомства (кадр 16b)." },
+  "sessionHeaderIntro": "Знакомство",
+  "@sessionHeaderIntro": { "description": "Шапка сессии на карточке знакомства (кадры 16a–16b)." },
+  "sessionHeaderRecognition": "Узнавание",
+  "@sessionHeaderRecognition": { "description": "Шапка сессии на ступенях узнавания 1–2 (кадры 16c-1, 16c-2)." },
+  "sessionInstrRecogniseTranslation": "выбери перевод",
+  "@sessionInstrRecogniseTranslation": { "description": "Инструкция ступени 1: показан термин, выбрать перевод (кадр 16c-1)." },
+  "sessionRecogniseJustMet": "вы только что познакомились с этим словом",
+  "@sessionRecogniseJustMet": { "description": "Подпись на узнавании: слово встречалось в этой же сессии (кадр 16c-2)." },
+
+  "ladderStep0": "знакомство",
+  "@ladderStep0": { "description": "Подпись нулевой ступени лестницы в развёрнутой карточке слова (кадр 16e)." },
+  "ladderStep1": "узнавание",
+  "@ladderStep1": { "description": "Подпись ступени узнавания (кадр 16e)." },
+  "ladderStep3": "сборка",
+  "@ladderStep3": { "description": "Подпись ступени сборки/выбора (кадр 16e)." },
+  "ladderStep4": "написание",
+  "@ladderStep4": { "description": "Подпись ступени печати (кадр 16e)." },
+  "ladderStep5": "диктант",
+  "@ladderStep5": { "description": "Подпись верхней ступени — диктант (кадр 16e)." },
+  "ladderTitle": "ЛЕСТНИЦА СЛОВА",
+  "@ladderTitle": { "description": "Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e)." },
+  "ladderKnownDash": "знаю",
+  "@ladderKnownDash": { "description": "Подпись вместо точек для слова, помеченного «знаю» в триаже — строка вне лестницы (кадр 16d)." },
+  "ladderTrainWord": "Тренировать слово",
+  "@ladderTrainWord": { "description": "Кнопка развёрнутой карточки: практика, отфильтрованная по этому слову (кадр 16e)." },
+  "ladderTrainLockedIntro": "Слово откроется для практики после знакомства с ним в учебной тренировке.",
+  "@ladderTrainLockedIntro": { "description": "Пояснение под неактивной кнопкой «Тренировать слово»: слово на нулевой ступени, практика ничего не знакомит (кадр 16e)." },
+  "sessionNext": "Дальше",
+  "@sessionNext": { "description": "Кнопка перехода к следующему заданию (кадры 12c, 12d)." },
+  "sessionDone": "Готово",
+  "@sessionDone": { "description": "Кнопка выхода с экрана итога сессии (кадр 12e)." },
+
+  "sessionFeedbackCorrect": "Верно",
+  "@sessionFeedbackCorrect": { "description": "Вердикт фидбека — верный ответ (кадр 12a/12j)." },
+  "sessionFeedbackAlmost": "Почти:",
+  "@sessionFeedbackAlmost": { "description": "Вердикт фидбека — принятая опечатка; следом правильная форма (кадр 12c)." },
+  "sessionFeedbackWrong": "Не то — правильная форма ниже",
+  "@sessionFeedbackWrong": { "description": "Вердикт фидбека — ошибка (кадр 12d)." },
+
+  "sessionDueToday": "сегодня",
+  "@sessionDueToday": { "description": "Относительный срок — сегодня (итог/фидбек)." },
+  "sessionDueTomorrow": "завтра",
+  "@sessionDueTomorrow": { "description": "Относительный срок — завтра (итог/фидбек)." },
+  "sessionDueInDays": "{days, plural, one{через {days} день} few{через {days} дня} many{через {days} дней} other{через {days} дней}}",
+  "@sessionDueInDays": {
+    "description": "Относительный срок ≥2 дней (кадр 12e, «через 2 дня»). Вызывается только для days≥2.",
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "sessionSeeAgain": "Увидишь снова {when}",
+  "@sessionSeeAgain": {
+    "description": "Строка фидбека с реальным серверным сроком показа (кадр 12d); {when} — относительный срок.",
+    "placeholders": { "when": { "type": "String" } }
+  },
+
+  "sessionSummaryTitle": "Сессия закончена",
+  "@sessionSummaryTitle": { "description": "Заголовок экрана итога (кадр 12e)." },
+  "sessionStatReviewed": "Повторено",
+  "@sessionStatReviewed": { "description": "Счётчик итога — сколько карточек пройдено." },
+  "sessionStatNew": "Новых",
+  "@sessionStatNew": { "description": "Счётчик итога — сколько новых слов." },
+  "sessionStatErrors": "Ошибки",
+  "@sessionStatErrors": { "description": "Счётчик итога — сколько ошибок." },
+  "sessionPracticeStatDone": "Пройдено",
+  "@sessionPracticeStatDone": { "description": "Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17)." },
+  "sessionPracticeAgain": "Ещё раз",
+  "@sessionPracticeAgain": { "description": "Кнопка на итоге свободной тренировки — начать новую тренировочную сессию сразу (F17)." },
+  "sessionDailyGoal": "Дневная цель",
+  "@sessionDailyGoal": { "description": "Лейбл блока дневной цели в итоге, когда цель ещё не закрыта." },
+  "sessionGoalClosed": "Дневная цель закрыта",
+  "@sessionGoalClosed": { "description": "Лейбл блока дневной цели в итоге, когда цель закрыта (кадр 12e)." },
+  "sessionStreak": "{days, plural, one{Стрик — {days} день} few{Стрик — {days} дня} many{Стрик — {days} дней} other{Стрик — {days} дней}}",
+  "@sessionStreak": {
+    "description": "Строка стрика в блоке дневной цели (кадр 12e).",
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "sessionSessionWords": "Слова этой сессии",
+  "@sessionSessionWords": { "description": "Лейбл списка слов в итоге (кадр 12e)." },
+  "sessionStrugglingTitle": "Проседает: {term}",
+  "@sessionStrugglingTitle": {
+    "description": "Заголовок блока проседающего слова в итоге (кадр 12e).",
+    "placeholders": { "term": { "type": "String" } }
+  },
+  "sessionStrugglingBody": "Даётся тяжело. Можно собрать другой пример — иногда дело в контексте, а не в слове.",
+  "@sessionStrugglingBody": { "description": "Пояснение блока проседающего слова (кадр 12e)." },
+  "sessionNewExample": "Новый пример",
+  "@sessionNewExample": { "description": "Кнопка перегенерации примера в итоге (кадр 12e, B6)." },
+  "sessionNewExampleExhausted": "Лимит примеров на сегодня исчерпан",
+  "@sessionNewExampleExhausted": { "description": "Сообщение при 429 на «Новый пример» (квота исчерпана)." },
+
+  "sessionPracticeBanner": "Свободная тренировка — прогресс не меняется",
+  "@sessionPracticeBanner": { "description": "Тихая плашка сверху в тренировочной сессии (кадр 12f)." },
+
+  "sessionExitTitle": "Прервать сессию?",
+  "@sessionExitTitle": { "description": "Заголовок алерта выхода из сессии (кадр 12k)." },
+  "sessionExitBody": "Отвеченные слова сохранятся — вернуться можно в любой момент.",
+  "@sessionExitBody": { "description": "Тело алерта выхода из сессии (кадр 12k)." },
+  "sessionExitConfirm": "Выйти",
+  "@sessionExitConfirm": { "description": "Кнопка подтверждения выхода (кадр 12k, терракотовый текст)." },
+  "sessionExitCancel": "Продолжить",
+  "@sessionExitCancel": { "description": "Кнопка отмены выхода — остаётся дефолтом (кадр 12k)." },
+  "sessionClose": "Закрыть",
+  "@sessionClose": { "description": "Метка доступности крестика выхода из сессии." },
+  "sessionListenReplay": "Повторить озвучку",
+  "@sessionListenReplay": { "description": "Метка доступности кнопки повтора аудио (кадры 12g–12h)." },
+  "sessionListenReplaySlow": "Замедленно",
+  "@sessionListenReplaySlow": { "description": "Кнопка замедленного повтора озвучки в аудировании (кадры 12g–12h)." },
+
+  "sessionEmpty": "Здесь пока нечего повторять",
+  "@sessionEmpty": { "description": "Пустое состояние сессии — нет карточек." },
+  "sessionDailyNewLimit": "Дневной лимит новых слов достигнут. Возвращайся завтра",
+  "@sessionDailyNewLimit": { "description": "Пустая сессия «Учить N»: новые слова есть, но дневная квота новых исчерпана." },
+  "sessionLoadError": "Не удалось загрузить сессию: {error}",
+  "@sessionLoadError": {
+    "description": "Ошибка загрузки сессии (сессии строятся на сервере, офлайн недоступны).",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "authErrorOffline": "Нет подключения к интернету. Для входа нужна сеть.",
+  "@authErrorOffline": { "description": "Ошибка входа: нет сети (кадр 10a)." },
+  "authErrorGoogleUnsupported": "Вход через Google не поддерживается на этой платформе.",
+  "@authErrorGoogleUnsupported": { "description": "Ошибка входа: Google Sign-In недоступен на платформе." },
+  "authErrorCancelled": "Вход отменён.",
+  "@authErrorCancelled": { "description": "Ошибка входа: пользователь отменил вход." },
+  "authErrorGoogle": "Не удалось войти через Google. Попробуй ещё раз.",
+  "@authErrorGoogle": { "description": "Ошибка входа: сбой Google Sign-In." },
+  "authErrorGoogleToken": "Не удалось получить токен Google.",
+  "@authErrorGoogleToken": { "description": "Ошибка входа: нет ID-токена от Google." },
+  "authErrorLoginFailed": "Не удалось войти. Попробуй ещё раз.",
+  "@authErrorLoginFailed": { "description": "Ошибка входа: бэкенд отклонил обмен токена." },
+  "authErrorApple": "Вход через Apple пока недоступен.",
+  "@authErrorApple": { "description": "Ошибка входа: Apple-вход недоступен (нет бэкенда/платной команды)." },
+  "authErrorAppleToken": "Не удалось получить токен Apple.",
+  "@authErrorAppleToken": { "description": "Ошибка входа: нет identity-токена от Apple." },
+
+  "practiceDialogEntry": "Разговор · 3 мин",
+  "@practiceDialogEntry": { "description": "Кнопка входа в голосовой разговор на экране коллекции (только Premium)." },
+  "practiceDialogEntrySubtitle": "Голосовая практика с ИИ",
+  "@practiceDialogEntrySubtitle": { "description": "Подстрока кнопки разговора." },
+  "practiceDialogOfflineHint": "Нужен интернет",
+  "@practiceDialogOfflineHint": { "description": "Подсказка на неактивной кнопке разговора в офлайне." },
+
+  "practiceDialogPrestartTitle": "Разговор с ИИ",
+  "@practiceDialogPrestartTitle": { "description": "Заголовок пре-стартового листа разговора." },
+  "practiceDialogPrestartBody": "ИИ будет говорить с тобой на языке коллекции — {lang}. Отвечай вслух и старайся использовать эти слова.",
+  "@practiceDialogPrestartBody": {
+    "description": "Пояснение на пре-старте: язык разговора = язык коллекции.",
+    "placeholders": { "lang": { "type": "String" } }
+  },
+  "practiceDialogPrestartWordsLabel": "Слова для разговора",
+  "@practiceDialogPrestartWordsLabel": { "description": "Лейбл над полосой target_words на пре-старте." },
+  "practiceDialogStart": "Начать разговор",
+  "@practiceDialogStart": { "description": "Кнопка старта разговора на пре-стартовом листе." },
+
+  "practiceDialogStateConnecting": "соединяемся…",
+  "@practiceDialogStateConnecting": { "description": "Индикатор состояния: устанавливаем соединение." },
+  "practiceDialogStateSpeaking": "говорит",
+  "@practiceDialogStateSpeaking": { "description": "Индикатор состояния: бот говорит." },
+  "practiceDialogStateListening": "слушаю тебя",
+  "@practiceDialogStateListening": { "description": "Индикатор состояния: бот слушает пользователя." },
+  "practiceDialogCoverageLabel": "{used} / {total}",
+  "@practiceDialogCoverageLabel": {
+    "description": "Счётчик прозвучавших слов над полосой coverage.",
+    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "practiceDialogExitTitle": "Завершить разговор?",
+  "@practiceDialogExitTitle": { "description": "Заголовок алерта выхода из разговора (крестик)." },
+  "practiceDialogExitMessage": "Разговор закончится, и ты увидишь итог.",
+  "@practiceDialogExitMessage": { "description": "Пояснение в алерте выхода из разговора." },
+  "practiceDialogExitConfirm": "Завершить",
+  "@practiceDialogExitConfirm": { "description": "Кнопка подтверждения выхода из разговора." },
+  "practiceDialogExitCancel": "Продолжить",
+  "@practiceDialogExitCancel": { "description": "Кнопка отмены выхода — продолжить разговор." },
+
+  "practiceDialogFinaleTitle": "Разговор окончен",
+  "@practiceDialogFinaleTitle": { "description": "Заголовок карточки итога разговора (антиква)." },
+  "practiceDialogFinaleWords": "Слов прозвучало: {used} из {total}",
+  "@practiceDialogFinaleWords": {
+    "description": "Итог разговора: сколько target-слов прозвучало.",
+    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "practiceDialogFinaleDone": "Готово",
+  "@practiceDialogFinaleDone": { "description": "Кнопка закрытия итога разговора." },
+
+  "practiceDialogErrorSubscription": "Разговоры доступны в Premium.",
+  "@practiceDialogErrorSubscription": { "description": "Ошибка: разговор недоступен без Premium (403)." },
+  "practiceDialogErrorRateLimited": "На сегодня разговоры закончились. Новые — после {time}.",
+  "@practiceDialogErrorRateLimited": {
+    "description": "Ошибка: исчерпан дневной лимит разговоров (429), время сброса в локальном времени.",
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "practiceDialogErrorRateLimitedNoTime": "На сегодня разговоры закончились. Попробуй завтра.",
+  "@practiceDialogErrorRateLimitedNoTime": { "description": "Ошибка лимита разговоров без известного времени сброса." },
+  "practiceDialogErrorOffline": "Нет сети. Для разговора нужен интернет.",
+  "@practiceDialogErrorOffline": { "description": "Ошибка: нет сети для старта разговора." },
+  "practiceDialogErrorGeneric": "Не удалось начать разговор. Попробуй ещё раз.",
+  "@practiceDialogErrorGeneric": { "description": "Общая ошибка старта разговора." },
+  "practiceDialogClose": "Закрыть",
+  "@practiceDialogClose": { "description": "Кнопка закрытия экрана разговора при ошибке." },
+
+  "practiceDialogRepeat": "Пройти ещё раз",
+  "@practiceDialogRepeat": { "description": "Кнопка запуска разговора, когда у коллекции уже есть результат прошлого." },
+  "practiceDialogResultWords": "слов: {used} из {total}",
+  "@practiceDialogResultWords": {
+    "description": "Строка результата последнего разговора на экране коллекции.",
+    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "storeSegmentMine": "Мои",
+  "@storeSegmentMine": { "description": "Сегмент таба «Коллекции»: свои коллекции (кадр 2.8)." },
+  "storeSegmentReady": "Готовые",
+  "@storeSegmentReady": { "description": "Сегмент таба «Коллекции»: стор готовых наборов (кадр 2.8)." },
+  "storeSectionOther": "Разное",
+  "@storeSectionOther": { "description": "Заголовок секции стора для наборов без темы." },
+  "storeWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@storeWordsCount": {
+    "description": "Размер набора в сторе, «16 слов».",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "storeInLibrary": "В моих",
+  "@storeInLibrary": { "description": "Бейдж на карточке стора: набор уже добавлен (кадр 2.8)." },
+  "storeAddToMine": "Добавить в мои",
+  "@storeAddToMine": { "description": "Кнопка добавления бесплатного набора из стора (кадр 8c)." },
+  "storeAvailableWithPremium": "Доступно с Premium",
+  "@storeAvailableWithPremium": { "description": "Кнопка премиум-набора в сторе — ведёт на пейволл (кадр 15d)." },
+  "storeAllSetsUnlock": "Открываются все {count} наборов сразу",
+  "@storeAllSetsUnlock": {
+    "description": "Подпись под кнопкой премиум-набора: подписка открывает все наборы сразу (кадр 15d).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "storeInsideLabel": "Что внутри",
+  "@storeInsideLabel": { "description": "Заголовок списка терминов в превью-шите набора (кадр 8c)." },
+  "storeMoreWords": "и ещё {count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@storeMoreWords": {
+    "description": "Строка под превью-списком: сколько слов ещё в наборе (кадр 8c).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "storeLangPairSheetTitle": "Языковая пара",
+  "@storeLangPairSheetTitle": { "description": "Заголовок шита выбора языковой пары стора (кадр 2.8)." },
+  "storeEmptyTitle": "Скоро здесь появятся наборы",
+  "@storeEmptyTitle": { "description": "Пустой стор — контент ещё не опубликован." },
+  "storeEmptyBody": "Готовые коллекции по ситуациям добавим в ближайшее время.",
+  "@storeEmptyBody": { "description": "Подпись пустого стора." },
+  "storePreviewAdded": "Набор добавлен в «Мои»",
+  "@storePreviewAdded": { "description": "Тост после добавления бесплатного набора из стора." },
+  "storeSubscribeError": "Не удалось добавить набор. Попробуйте ещё раз.",
+  "@storeSubscribeError": { "description": "Ошибка подписки на набор стора." },
+
+  "paywallClose": "Закрыть",
+  "@paywallClose": { "description": "Кнопка-крестик закрытия пейволла (кадр 2.13)." },
+  "paywallTitleQuota": "Больше коллекций за один вечер",
+  "@paywallTitleQuota": { "description": "Заголовок пейволла при входе из исчерпанной квоты (кадр 14a)." },
+  "paywallTitleGeneric": "Premium без ограничений",
+  "@paywallTitleGeneric": { "description": "Заголовок пейволла при входе из профиля." },
+  "paywallTitleStore": "{title} и ещё {count} наборов",
+  "@paywallTitleStore": {
+    "description": "Заголовок пейволла при входе из премиум-набора: имя набора + остальные (кадр 14b).",
+    "placeholders": { "title": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "paywallSubtitleQuota": "Premium поднимает дневной лимит до двадцати генераций.",
+  "@paywallSubtitleQuota": { "description": "Строка ценности пейволла для входа из квоты (кадр 14a)." },
+  "paywallSubtitleStore": "Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.",
+  "@paywallSubtitleStore": { "description": "Строка ценности пейволла для входа из стора (кадр 14b)." },
+  "paywallSubtitleGeneric": "Один тариф открывает всё, что делает изучение быстрее.",
+  "@paywallSubtitleGeneric": { "description": "Строка ценности пейволла для входа из профиля." },
+  "paywallBenefitGenerations": "До 20 генераций в день",
+  "@paywallBenefitGenerations": { "description": "Пункт Premium: лимит генераций (кадр 14a)." },
+  "paywallBenefitStore": "Все премиум-коллекции в сторе",
+  "@paywallBenefitStore": { "description": "Пункт Premium: премиум-наборы стора (кадр 14a)." },
+  "paywallBenefitModes": "Будущие режимы тренировок",
+  "@paywallBenefitModes": { "description": "Пункт Premium: будущие режимы (кадр 14a)." },
+  "paywallFreeForever": "Повторения, разбор и офлайн — бесплатно всегда.",
+  "@paywallFreeForever": { "description": "Строка «бесплатно всегда» на пейволле (кадр 14a, правило 22)." },
+  "paywallPeriodYear": "Год",
+  "@paywallPeriodYear": { "description": "Ценовая карточка: годовой период (кадр 4ж)." },
+  "paywallPeriodMonth": "Месяц",
+  "@paywallPeriodMonth": { "description": "Ценовая карточка: месячный период (кадр 4ж)." },
+  "paywallPriceYear": "$29.99",
+  "@paywallPriceYear": { "description": "Плейсхолдер годовой цены (реальная приходит из StoreKit, кадр 4ж)." },
+  "paywallPriceMonth": "$4.99",
+  "@paywallPriceMonth": { "description": "Плейсхолдер месячной цены (реальная приходит из StoreKit, кадр 4ж)." },
+  "paywallYearPerMonth": "$2.50 в месяц",
+  "@paywallYearPerMonth": { "description": "Подстрока годовой карточки: цена за месяц (плейсхолдер, кадр 4ж)." },
+  "paywallPerMonth": "в месяц",
+  "@paywallPerMonth": { "description": "Подстрока месячной карточки (кадр 4ж)." },
+  "paywallDiscountBadge": "−50%",
+  "@paywallDiscountBadge": { "description": "Бейдж скидки на годовой карточке (кадр 4ж)." },
+  "paywallContinue": "Продолжить",
+  "@paywallContinue": { "description": "Главная кнопка пейволла (кадр 14a)." },
+  "paywallLegalYear": "Подписка продлевается автоматически. {price} за год списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "@paywallLegalYear": {
+    "description": "Юридическая строка авто-продления для годового периода (кадр 14a).",
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "paywallLegalMonth": "Подписка продлевается автоматически. {price} в месяц списываются с Apple ID; отменить можно в настройках App Store не позднее чем за 24 часа до конца периода.",
+  "@paywallLegalMonth": {
+    "description": "Юридическая строка авто-продления для месячного периода (кадр 14b).",
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "paywallRestore": "Восстановить покупки",
+  "@paywallRestore": { "description": "Ссылка восстановления покупок на пейволле (кадр 14a)." },
+  "paywallTerms": "Условия",
+  "@paywallTerms": { "description": "Ссылка на условия на пейволле." },
+  "paywallPrivacy": "Конфиденциальность",
+  "@paywallPrivacy": { "description": "Ссылка на политику конфиденциальности на пейволле." },
+  "paywallDevPurchased": "Premium активирован (dev-режим)",
+  "@paywallDevPurchased": { "description": "Тост после фейковой покупки в dev-режиме (StoreKit — отдельный блок)." },
+  "paywallNeedsRealPremium": "Нужен настоящий Premium (StoreKit — отдельный блок)",
+  "@paywallNeedsRealPremium": { "description": "Сообщение, когда сервер отклоняет подписку без реального premium." },
+
+  "profileTryPremium": "Попробовать Premium",
+  "@profileTryPremium": { "description": "Строка профиля (free): переход на пейволл (кадр 15a)." },
+  "profileFreeTierReset": "3 генерации в день · сбрасываются в {time}",
+  "@profileFreeTierReset": {
+    "description": "Подпись бесплатного тарифа с временем сброса (кадр 15a).",
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "profilePremiumActive": "Premium",
+  "@profilePremiumActive": { "description": "Строка профиля (premium): название тарифа (кадр 15b)." },
+  "profilePremiumBadge": "активна",
+  "@profilePremiumBadge": { "description": "Бейдж «активна» у строки Premium (кадр 15b)." },
+  "profilePremiumHint": "Подписка активна",
+  "@profilePremiumHint": { "description": "Подпись активной подписки Premium (кадр 15b)." },
+  "profileManageSubscription": "Управлять подпиской",
+  "@profileManageSubscription": { "description": "Строка профиля (premium): управление в App Store (кадр 15b)." },
+  "profileRestorePurchases": "Восстановить покупки",
+  "@profileRestorePurchases": { "description": "Строка профиля (premium): восстановление покупок (кадр 15b)." },
+
+  "profileSectionDev": "Разработка",
+  "@profileSectionDev": { "description": "Dev-секция профиля (только при DEV_MENU)." },
+  "devFlagStore": "Стор коллекций",
+  "@devFlagStore": { "description": "Dev-переключатель: витрина стора." },
+  "devFlagPaywall": "Пейволл",
+  "@devFlagPaywall": { "description": "Dev-переключатель: пейволл и его входы." },
+  "devFlagPremium": "Premium (dev)",
+  "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." },
+  "sessionOffline": "Нет соединения",
+  "@sessionOffline": { "description": "Сессия не построилась из-за отсутствия сети. Сессии строятся на сервере (пока — см. офлайн-практику)." },
+  "sessionLoadFailed": "Не удалось загрузить сессию",
+  "@sessionLoadFailed": { "description": "Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран." },
+  "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
+  "@syncStuckBanner": { "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)." }
+}

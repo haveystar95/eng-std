@@ -8,18 +8,29 @@ use App\Modules\Collections\Application\Command\AddTermToCollection;
 use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollection;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
+use App\Modules\Collections\Application\Dto\CollectionTermSetView;
+use App\Modules\Collections\Application\Query\GetCollectionTermSet;
+use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
+use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Port\DispatchesEnrichment;
+use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
 use App\Modules\Generation\Application\Service\DraftValidator;
+use App\Modules\Generation\Application\Service\GenerationPipeline;
+use App\Modules\Generation\Application\Service\LanguageBarrier;
 use App\Modules\Generation\Domain\Entity\GenerationRequest;
 use App\Modules\Generation\Domain\Exception\GenerationRequestNotFound;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
+use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 
 /**
@@ -32,22 +43,30 @@ use App\Modules\Vocabulary\Application\Dto\TranslationInput;
  */
 final readonly class ProcessGenerationHandler
 {
-    /** Rough USD per 1K tokens (input, output), for the spend read model. */
-    private const PRICING = [
-        'gpt-4o' => [0.0025, 0.01],
-        'gpt-4o-mini' => [0.00015, 0.0006],
-    ];
+    /**
+     * The overshoot + top-up + summed-spend logic lives in {@see GenerationPipeline} so the eval tool
+     * measures the exact same behaviour. Built from the injected generator + validator, keeping this
+     * handler's constructor stable for callers and tests.
+     */
+    private GenerationPipeline $pipeline;
 
     public function __construct(
         private GenerationRequestRepository $requests,
-        private CollectionGeneratorPort $generator,
-        private DraftValidator $validator,
+        CollectionGeneratorPort $generator,
+        DraftValidator $validator,
+        LanguageBarrier $barrier,
+        private RecordsGenerationRejections $rejections,
         private ImportTermHandler $importTerm,
         private CreateGeneratedCollectionHandler $createCollection,
         private AddTermToCollectionHandler $addTerm,
+        private GetCollectionTermSetHandler $cachedTermSet,
+        private DispatchesImageAttachment $attachImages,
+        private DispatchesEnrichment $enrich,
         private TransactionManager $tx,
         private Clock $clock,
-    ) {}
+    ) {
+        $this->pipeline = new GenerationPipeline($generator, $validator, $barrier);
+    }
 
     public function __invoke(ProcessGeneration $command): void
     {
@@ -61,28 +80,110 @@ final readonly class ProcessGenerationHandler
         $request->markRunning();
         $this->requests->save($request);
 
-        $brief = new GenerationBrief(
+        // Prompt cache: an identical prompt (same normalized text, language pair, prompt version)
+        // already produced a term set — reuse it and skip the model entirely. Collections are
+        // personal, terms are shared, so we clone the terms into a fresh collection for this user.
+        // A prompt_version bump misses on purpose, forcing a regeneration.
+        $cachedCollectionId = $this->requests->findCacheableCollection(
+            $request->normalizedPrompt(),
+            $request->sourceLang(),
+            $request->targetLang(),
+            $request->promptVersion(),
+        );
+        if ($cachedCollectionId !== null) {
+            $termSet = ($this->cachedTermSet)(new GetCollectionTermSet($cachedCollectionId));
+            if ($termSet !== null && $termSet->termIds !== []) {
+                $collectionId = $this->tx->run(fn (): CollectionId => $this->materializeFromCache($request, $termSet));
+                $request->markSucceeded(
+                    collectionId: $collectionId,
+                    model: 'cache',
+                    tokensIn: 0,
+                    tokensOut: 0,
+                    costUsd: '0.000000',
+                    deliveredCount: count($termSet->termIds),
+                    finishedAt: $this->clock->now(),
+                );
+                $this->requests->save($request);
+
+                // Reused terms already carry photos (globally shared); only the fresh personal
+                // collection needs its cover searched — the job's readers skip everything else.
+                $this->attachImages->dispatch($collectionId);
+                // Cheap on this path: the terms are reused, so the version mark usually makes it a
+                // no-op. Chained anyway, because "reused" does not guarantee "already enriched".
+                $this->chainEnrichment($collectionId);
+
+                return;
+            }
+        }
+
+        // Generate → validate → (optional) top-up, all in the shared pipeline. The callback persists
+        // spend the instant each model call answers, before validation can reject the draft: a rejected
+        // draft still cost tokens, and a top-up's spend is summed onto the primary's, never overwritten.
+        // A broken primary draft throws InvalidGeneratedDraft here — terminal, no retry (the queue job
+        // turns it into `failed`), with the recorded spend intact.
+        $assembled = $this->pipeline->assemble(
+            $this->requestedBrief($request),
+            function (AttemptUsage $usage) use ($request): void {
+                $request->recordAttempt(
+                    model: $usage->model,
+                    tokensIn: $usage->tokensIn,
+                    tokensOut: $usage->tokensOut,
+                    costUsd: $usage->costUsd,
+                    rawResponse: $usage->rawResponse,
+                );
+                $this->requests->save($request);
+            },
+        );
+
+        // What the language barrier refused, written before the collection so a crash between the
+        // two loses the collection (recoverable — the user regenerates) rather than the evidence of
+        // WHY it was short (not recoverable — the model output is gone). No-op when nothing was
+        // refused, which is the normal case.
+        $this->rejections->record($request->id()->value, $assembled->rejections);
+
+        // Materialize the *final accepted* set (after filter + top-up). This is also what the prompt
+        // cache stores, so the next identical prompt reuses the fixed-up set, not the raw under-delivery.
+        $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $assembled->draft));
+
+        $request->markSucceeded(
+            collectionId: $collectionId,
+            model: $assembled->model,
+            tokensIn: $assembled->tokensIn,
+            tokensOut: $assembled->tokensOut,
+            costUsd: $assembled->costUsd,
+            deliveredCount: $assembled->delivered,
+            finishedAt: $this->clock->now(),
+        );
+        $this->requests->save($request);
+
+        // Fire-and-forget: attach photos to the new terms + cover, off the generation thread.
+        $this->attachImages->dispatch($collectionId);
+        $this->chainEnrichment($collectionId);
+    }
+
+    /**
+     * Queue the enrichment станок for the finished collection — accepted variants (which offline
+     * grading needs) and distractors. Same shape as the image chain and for the same reason: it runs
+     * AFTER the generation the user is waiting on, on its own job, so it can neither slow that down
+     * nor fail it. A collection without variants is still a complete, playable collection.
+     *
+     * Whether the chain is switched on at all is the adapter's business (it reads the config) — this
+     * layer only says that a finished generation is the moment to enrich.
+     */
+    private function chainEnrichment(CollectionId $collectionId): void
+    {
+        $this->enrich->enrichCollection($collectionId->value, BuildTermEnrichmentsHandler::VERSION);
+    }
+
+    private function requestedBrief(GenerationRequest $request): GenerationBrief
+    {
+        return new GenerationBrief(
             prompt: $request->prompt(),
             sourceLang: $request->sourceLang(),
             targetLang: $request->targetLang(),
             levels: $request->levels(),
             size: $request->size(),
         );
-
-        // Slow model call — deliberately outside any transaction.
-        $draft = $this->validator->validate($this->generator->generate($brief), $brief);
-
-        $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $draft));
-
-        $request->markSucceeded(
-            collectionId: $collectionId,
-            model: $draft->model,
-            tokensIn: $draft->tokensIn,
-            tokensOut: $draft->tokensOut,
-            costUsd: $this->estimateCost($draft->model, $draft->tokensIn, $draft->tokensOut),
-            finishedAt: $this->clock->now(),
-        );
-        $this->requests->save($request);
     }
 
     private function materialize(GenerationRequest $request, GeneratedCollectionDraft $draft): CollectionId
@@ -94,6 +195,7 @@ final readonly class ProcessGenerationHandler
             targetLang: $request->targetLang(),
             description: $draft->description,
             topic: $request->prompt(),
+            imageApiPrompt: $draft->imageApiPrompt,   // cover-image query for AttachImagesJob
         ));
 
         foreach ($draft->items as $item) {
@@ -104,6 +206,12 @@ final readonly class ProcessGenerationHandler
                 pos: null,
                 source: 'ai',
                 translations: [new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true)],
+                ipa: $item->transcription,
+                examples: $item->example !== null
+                    ? [new ExampleInput($item->example, $item->exampleTranslation)]
+                    : [],
+                cefr: $item->cefr,
+                imageApiPrompt: $item->imageApiPrompt,   // per-term image query for AttachImagesJob
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));
@@ -112,15 +220,24 @@ final readonly class ProcessGenerationHandler
         return $collectionId;
     }
 
-    private function estimateCost(string $model, ?int $tokensIn, ?int $tokensOut): ?string
+    private function materializeFromCache(GenerationRequest $request, CollectionTermSetView $termSet): CollectionId
     {
-        if (! isset(self::PRICING[$model]) || $tokensIn === null || $tokensOut === null) {
-            return null;
+        $collectionId = ($this->createCollection)(new CreateGeneratedCollection(
+            ownerId: $request->userId(),
+            title: $termSet->title,
+            sourceLang: $request->sourceLang(),
+            targetLang: $request->targetLang(),
+            description: $termSet->description,
+            topic: $request->prompt(),
+            imageApiPrompt: $termSet->imageApiPrompt,   // copied so the cache-hit collection can search its own cover
+        ));
+
+        // Terms already exist globally (they were created by the original generation) — just link
+        // them into this user's fresh collection. No ImportTerm, no model call.
+        foreach ($termSet->termIds as $termIdValue) {
+            ($this->addTerm)(new AddTermToCollection($collectionId, TermId::fromString($termIdValue), $request->userId()));
         }
 
-        [$inRate, $outRate] = self::PRICING[$model];
-        $cost = ($tokensIn / 1000) * $inRate + ($tokensOut / 1000) * $outRate;
-
-        return number_format($cost, 6, '.', '');
+        return $collectionId;
     }
 }

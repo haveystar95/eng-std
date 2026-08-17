@@ -16,6 +16,9 @@ final class PromptNormalizer
         $collapsed = preg_replace('/\s+/u', ' ', trim($prompt)) ?? '';
         $lower = mb_strtolower($collapsed);
 
-        return rtrim($lower, " \t\n\r.!?…,;:");
+        // Strip trailing whitespace/punctuation as CHARACTERS. `rtrim` with a multibyte char
+        // (…) in its mask works byte-wise and can shear the last byte off a multibyte letter
+        // (e.g. Cyrillic "р" = D1 80, and 0x80 is a byte of "…"), producing invalid UTF-8.
+        return preg_replace('/[\s.!?…,;:]+$/u', '', $lower) ?? $lower;
     }
 }

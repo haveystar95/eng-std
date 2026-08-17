@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Collections\Infrastructure\Eloquent;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property string $id
@@ -12,9 +13,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $term_id
  * @property int $position
  * @property string|null $note
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  */
 final class CollectionItemModel extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'collection_items';
 
     public $incrementing = false;

@@ -14,6 +14,12 @@ use App\Modules\Identity\Domain\Exception\InvalidGoogleToken;
  */
 interface GoogleSignIn
 {
-    /** @throws InvalidGoogleToken when the id token cannot be verified */
-    public function authenticate(string $idToken, string $deviceName): AuthResult;
+    /**
+     * @param  string|null  $timezone  the device's IANA timezone; on first sign-in it seeds the new
+     *                                  profile so calendar-day due rounding (F19) works before the
+     *                                  client's first `PUT /profile`. Null leaves the UTC fallback.
+     *
+     * @throws InvalidGoogleToken when the id token cannot be verified
+     */
+    public function authenticate(string $idToken, string $deviceName, ?string $timezone = null): AuthResult;
 }

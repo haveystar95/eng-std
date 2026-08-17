@@ -36,6 +36,8 @@ final class EloquentCollectionRepository implements CollectionRepository
                 $collection->items(),
             );
 
+            // Items no longer in the aggregate are soft-deleted (SoftDeletes → sets deleted_at),
+            // so GET /sync ships them as tombstones instead of hard-deleting to a ghost.
             $removeQuery = CollectionItemModel::query()->where('collection_id', $collectionId);
             if ($keepTermIds !== []) {
                 $removeQuery->whereNotIn('term_id', $keepTermIds);
@@ -43,14 +45,16 @@ final class EloquentCollectionRepository implements CollectionRepository
             $removeQuery->delete();
 
             foreach ($collection->items() as $item) {
-                $model = CollectionItemModel::query()->firstOrCreate(
+                // withTrashed so re-adding a previously removed term RESTORES its row (one row per
+                // (collection, term)) rather than piling up a second — deleted_at is cleared below.
+                $model = CollectionItemModel::withTrashed()->firstOrNew(
                     ['collection_id' => $collectionId, 'term_id' => $item->termId->value],
-                    ['id' => Ulid::generate(), 'position' => $item->position, 'note' => $item->note],
                 );
-
-                if (! $model->wasRecentlyCreated) {
-                    $model->update(['position' => $item->position, 'note' => $item->note]);
-                }
+                $model->id ??= Ulid::generate();
+                $model->position = $item->position;
+                $model->note = $item->note;
+                $model->deleted_at = null;
+                $model->save();
             }
         });
     }

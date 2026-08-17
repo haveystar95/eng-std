@@ -1,0 +1,16 @@
+{
+  "_": [
+    "Follow-up to database/review/enrich-v2-backfill-review.json: B.3 named the wrong term. The row",
+    "the review meant lives under term 'sign a lease' (not 'sign the lease'), collection 'Discussing",
+    "Long-term House Rental', pinned example 'You need to sign a lease before moving in.' — the",
+    "distractor swaps the article the same legal way every other B-class row does ('the lease' vs 'a",
+    "lease'), translation does not anchor the choice. See docs/backfill-review.md.",
+    "",
+    "Applied by: php artisan enrich:apply-review database/review/enrich-v2-backfill-review-b3.json"
+  ],
+  "generator_version": "enrich-v1",
+
+  "remove_distractors": [
+    { "term": "sign a lease", "sentence": "You need to sign the lease before moving in." }
+  ]
+}

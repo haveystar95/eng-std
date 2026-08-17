@@ -19,6 +19,7 @@ final class GoogleLoginRequest extends FormRequest
         return [
             'id_token' => ['required', 'string'],
             'device_name' => ['sometimes', 'string', 'max:100'],
+            'timezone' => ['sometimes', 'timezone'], // device IANA zone → seeds the profile for F19 due rounding
         ];
     }
 }

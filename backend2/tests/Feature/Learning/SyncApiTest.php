@@ -1,0 +1,272 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Modules\Shared\Domain\ValueObject\Ulid;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
+
+// learner() / seedCollectionWith() / addWordTo() / sync() live in tests/Pest.php.
+
+it('returns a full snapshot when since is omitted', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $data = sync($this, $token);
+
+    expect($data['has_more'])->toBeFalse()
+        ->and($data['server_time'])->not->toBeNull()
+        ->and(array_column($data['changes']['collections'], 'id'))->toContain($col)
+        ->and(array_column($data['changes']['collection_items'], 'term_id'))->toContain($money)
+        ->and(array_column($data['changes']['terms'], 'id'))->toContain($money);
+
+    // The metro view needs text + translation offline.
+    $term = collect($data['changes']['terms'])->firstWhere('id', $money);
+    expect($term['op'])->toBe('upsert')
+        ->and($term['text'])->toBe('money')
+        ->and($term['translation'])->toBe('деньги');
+
+    // source/type ride along so the client can render the origin badge (ИИ / my / store).
+    $collection = collect($data['changes']['collections'])->firstWhere('id', $col);
+    expect($collection['source'])->toBe('user')
+        ->and($collection['type'])->toBe('custom');
+});
+
+it('ships image url + attribution on terms and collections when present', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    DB::table('terms')->where('id', $money)->update([
+        'image_url' => 'https://img/money.jpg',
+        'image_author' => 'Jane Doe',
+        'image_author_url' => 'https://pexels.com/@jane',
+    ]);
+    DB::table('collections')->where('id', $col)->update([
+        'image_url' => 'https://img/cover.jpg',
+        'image_author' => 'Cover Photographer',
+        'image_author_url' => 'https://pexels.com/@cover',
+    ]);
+
+    $data = sync($this, $token);
+
+    $term = collect($data['changes']['terms'])->firstWhere('id', $money);
+    expect($term['image_url'])->toBe('https://img/money.jpg')
+        ->and($term['image_author'])->toBe('Jane Doe')
+        ->and($term['image_author_url'])->toBe('https://pexels.com/@jane')
+        ->and($term)->not->toHaveKey('image_api_prompt');   // server-internal, never shipped
+
+    $collection = collect($data['changes']['collections'])->firstWhere('id', $col);
+    expect($collection['image_url'])->toBe('https://img/cover.jpg')
+        ->and($collection['image_author'])->toBe('Cover Photographer')
+        ->and($collection['image_author_url'])->toBe('https://pexels.com/@cover');
+});
+
+it('leaves image fields null when a term has no photo', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $data = sync($this, $token);
+    $term = collect($data['changes']['terms'])->firstWhere('id', $money);
+
+    expect($term['image_url'])->toBeNull()
+        ->and($term['image_author'])->toBeNull();
+});
+
+it('returns only changes after since', function () {
+    [$user, $token] = learner();
+    [$colA] = seedCollectionWith($user, 'apple', 'яблоко');
+    // Push colA clearly before the cursor (a caught-up client already has it). `since` is inclusive
+    // (second precision → the boundary second is re-sent), so separate the seconds deterministically.
+    DB::table('collections')->where('id', $colA)->update(['updated_at' => now()->subDay()]);
+
+    $t1 = sync($this, $token)['server_time'];
+
+    [$colB] = seedCollectionWith($user, 'bank', 'банк');       // the change after t1
+    $data = sync($this, $token, 'since=' . urlencode($t1));
+
+    expect(array_column($data['changes']['collections'], 'id'))
+        ->toContain($colB)
+        ->not->toContain($colA);
+});
+
+it('returns an empty delta when the client is caught up', function () {
+    [$user, $token] = learner();
+    [$col, $term] = seedCollectionWith($user, 'apple', 'яблоко');
+    // Everything is in the past relative to the cursor → nothing at/after `since`.
+    DB::table('collections')->where('id', $col)->update(['updated_at' => now()->subDay()]);
+    DB::table('collection_items')->where('collection_id', $col)->update(['updated_at' => now()->subDay()]);
+    DB::table('terms')->where('id', $term)->update(['updated_at' => now()->subDay()]);
+
+    $data = sync($this, $token, 'since=' . urlencode(now()->toIso8601String()));
+
+    expect($data['has_more'])->toBeFalse()
+        ->and($data['changes']['collections'])->toBe([])
+        ->and($data['changes']['collection_items'])->toBe([])
+        ->and($data['changes']['terms'])->toBe([])
+        ->and($data['changes']['progress'])->toBe([])
+        ->and($data['changes']['triages'])->toBe([]);
+});
+
+it('ships a tombstone when a collection is deleted', function () {
+    [$user, $token] = learner();
+    [$col] = seedCollectionWith($user, 'apple', 'яблоко');
+    $t1 = sync($this, $token)['server_time'];
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$col}")->assertSuccessful();
+
+    $data = sync($this, $token, 'since=' . urlencode($t1));
+    $row = collect($data['changes']['collections'])->firstWhere('id', $col);
+    expect($row)->not->toBeNull()->and($row['op'])->toBe('delete');
+});
+
+it('ships a tombstone when a term is removed from a collection', function () {
+    [$user, $token] = learner();
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    $t1 = sync($this, $token)['server_time'];
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$col}/items/{$apple}")->assertSuccessful();
+
+    $data = sync($this, $token, 'since=' . urlencode($t1));
+    $row = collect($data['changes']['collection_items'])->firstWhere('term_id', $apple);
+    expect($row)->not->toBeNull()->and($row['op'])->toBe('delete');
+});
+
+it('includes progress rows in the delta', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    // "unsure" triage → a progress row on the ACQUISITION ladder, past the intro.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unsure',
+            'decided_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])->assertOk();
+
+    $data = sync($this, $token);
+    $p = collect($data['changes']['progress'])->firstWhere('term_id', $money);
+    // Both dimensions ride the delta: the device mirrors LearningLadder to decide what a card
+    // should be while offline, and `state` alone would only tell it WHEN the word is due.
+    expect($p)->not->toBeNull()
+        ->and($p['op'])->toBe('upsert')
+        ->and($p['state'])->toBe('new')            // the scheduler has never seen it
+        ->and($p['acquisition'])->toBe('learning') // …but the ladder has: rung 1, intro skipped
+        ->and($p['learning_step'])->toBe(1);
+});
+
+it('carries the trainer toggles and the admission matrix as settings on every page', function () {
+    [, $token] = learner();
+
+    $data = sync($this, $token);
+
+    expect($data['settings']['exercise_modes'])->toBe(config('learning.enabled_modes'));
+
+    $byMode = collect($data['settings']['mode_admission'])->keyBy('mode');
+    // The rungs the device needs to build a session offline: which trainer opens where.
+    expect($byMode->has('intro'))->toBeTrue()
+        ->and($byMode['intro']['min_step'])->toBe(0)
+        ->and($byMode['multiple_choice']['min_step'])->toBe(1)
+        ->and($byMode['multiple_choice']['options_policy'])->toBe('distant')
+        ->and($byMode['word_bank']['min_step'])->toBe(3)
+        ->and($byMode['typing']['min_step'])->toBe(4)
+        ->and($byMode['dictation']['min_step'])->toBe(5);
+});
+
+it('carries triage verdicts so a re-login cannot resurrect an unknown swipe', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    // `unknown` writes NO progress row — only a term_triages log entry. The delta feed must still
+    // carry it, or the client (which wiped its local marker on sign-out) re-offers it in the deck.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown',
+            'collection_id' => $col,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => 1,
+        ]]])->assertOk();
+
+    $data = sync($this, $token);
+
+    expect(collect($data['changes']['progress'])->firstWhere('term_id', $money))->toBeNull();
+    $t = collect($data['changes']['triages'])->firstWhere('term_id', $money);
+    expect($t)->not->toBeNull()
+        ->and($t['op'])->toBe('upsert')
+        ->and($t['verdict'])->toBe('unknown')
+        ->and($t['client_seq'])->toBe(1)
+        ->and($t['collection_id'])->toBe($col);
+});
+
+it('ships only the governing (greatest client_seq) triage verdict per term', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $swipe = fn (string $verdict, int $seq) => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => $verdict,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => $seq,
+        ]]])->assertOk();
+
+    $swipe('unknown', 1);
+    $swipe('unsure', 2);   // later swipe governs
+
+    $rows = collect(sync($this, $token)['changes']['triages'])->where('term_id', $money)->values();
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['verdict'])->toBe('unsure')
+        ->and($rows[0]['client_seq'])->toBe(2);
+});
+
+it('windows triages by since — a past swipe is skipped, a re-triage after the cursor reappears', function () {
+    [$user, $token] = learner();
+    [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+
+    $swipe = fn (string $verdict, int $seq) => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [[
+            'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => $verdict,
+            'decided_at' => now()->toIso8601String(), 'client_seq' => $seq,
+        ]]])->assertOk();
+
+    $swipe('unknown', 1);
+    // Push the governing row clearly before the cursor (a caught-up client already has it).
+    DB::table('term_triages')->where('term_id', $money)->update(['created_at' => now()->subDay()]);
+
+    $t1 = sync($this, $token)['server_time'];
+
+    // Caught up → nothing at/after t1.
+    expect(sync($this, $token, 'since=' . urlencode($t1))['changes']['triages'])->toBe([]);
+
+    // Re-triage now → the governing row's receipt time is after t1, so it reappears with the new verdict.
+    $swipe('known', 2);
+    $t = collect(sync($this, $token, 'since=' . urlencode($t1))['changes']['triages'])->firstWhere('term_id', $money);
+    expect($t)->not->toBeNull()->and($t['verdict'])->toBe('known')->and($t['client_seq'])->toBe(2);
+});
+
+it('paginates with next_cursor until has_more is false', function () {
+    [$user, $token] = learner();
+    [$col] = seedCollectionWith($user, 'w0', 'п0');
+    for ($i = 1; $i <= 5; $i++) {
+        addWordTo($col, $user->id, "w{$i}", "п{$i}");        // 6 items + 6 terms + 1 collection = 13 changes
+    }
+
+    $collections = [];
+    $items = [];
+    $terms = [];
+    $query = 'limit=3';
+    $pages = 0;
+    do {
+        $data = sync($this, $token, $query);
+        $collections = array_merge($collections, array_column($data['changes']['collections'], 'id'));
+        $items = array_merge($items, array_column($data['changes']['collection_items'], 'term_id'));
+        $terms = array_merge($terms, array_column($data['changes']['terms'], 'id'));
+        $query = 'limit=3&cursor=' . urlencode((string) $data['next_cursor']);
+        $pages++;
+    } while ($data['has_more'] && $pages < 20);
+
+    expect($data['has_more'])->toBeFalse()
+        ->and($pages)->toBeGreaterThan(1)                    // actually paged
+        ->and($collections)->toContain($col)
+        ->and(count($terms))->toBe(6)
+        ->and(count($items))->toBe(6);
+});

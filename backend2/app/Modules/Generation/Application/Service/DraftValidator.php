@@ -16,29 +16,37 @@ use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
  */
 final class DraftValidator
 {
-    private const MIN_ITEMS = 8;
-    private const MAX_ITEMS = 25;
+    public const MIN_ITEMS = 8;
+    public const MAX_ITEMS = 25;
     private const CEFR_ORDER = ['A1' => 1, 'A2' => 2, 'B1' => 3, 'B2' => 4, 'C1' => 5, 'C2' => 6];
 
-    public function validate(GeneratedCollectionDraft $draft, GenerationBrief $brief): GeneratedCollectionDraft
-    {
+    /**
+     * @param  int|null  $targetCount  how many items to keep (the requested size). Explicit because the
+     *                                 model brief now carries an *overshoot* count, not the requested one;
+     *                                 defaults to the brief size for callers that don't over-ask.
+     * @param  bool  $supplemental     a top-up batch: skip the MIN_ITEMS floor. A top-up returning 2 fresh
+     *                                 items is valid, not a truncated-response failure — the primary pass
+     *                                 already guaranteed a non-broken set.
+     */
+    public function validate(
+        GeneratedCollectionDraft $draft,
+        GenerationBrief $brief,
+        ?int $targetCount = null,
+        bool $supplemental = false,
+    ): GeneratedCollectionDraft {
+        $targetCount ??= $brief->size;
         [$min, $max] = $this->levelRange($brief->levels);
 
         $seen = [];
-        $clean = [];
+        /** @var list<GeneratedItem> $all every valid, de-duplicated item */
+        $all = [];
+        /** @var list<GeneratedItem> $inLevel the subset within the requested CEFR band */
+        $inLevel = [];
         foreach ($draft->items as $item) {
             $text = trim($item->text);
             $translation = trim($item->translation);
             if ($text === '' || $translation === '') {
                 continue;
-            }
-
-            $cefr = $this->cefr($item->cefr);
-            if ($min !== null && $max !== null && $cefr !== null && isset(self::CEFR_ORDER[$cefr])) {
-                $rank = self::CEFR_ORDER[$cefr];
-                if ($rank < $min || $rank > $max) {
-                    continue;
-                }
             }
 
             $key = mb_strtolower($text);
@@ -47,20 +55,43 @@ final class DraftValidator
             }
             $seen[$key] = true;
 
-            $clean[] = new GeneratedItem(
+            $cefr = $this->cefr($item->cefr);
+            $usable = new GeneratedItem(
                 text: $text,
                 type: $this->type($item->type, $text),
                 translation: $translation,
                 example: $this->nullableText($item->example),
                 cefr: $cefr,
+                transcription: $this->nullableText($item->transcription),
+                exampleTranslation: $this->nullableText($item->exampleTranslation),
+                imageApiPrompt: $this->nullableText($item->imageApiPrompt), // "" (un-illustratable) → null
             );
+            $all[] = $usable;
+            if ($this->withinLevel($cefr, $min, $max)) {
+                $inLevel[] = $usable;
+            }
         }
 
-        if (count($clean) > self::MAX_ITEMS) {
-            $clean = array_slice($clean, 0, self::MAX_ITEMS);
-        }
-        if (count($clean) < self::MIN_ITEMS) {
+        // The CEFR band is a PREFERENCE, not a hard gate. Keep in-level items when there are enough
+        // of them; but if the topic simply doesn't yield MIN_ITEMS at the requested level — a basic
+        // topic like "ordering at a restaurant" under a single high level (B2) — fall back to all
+        // valid items rather than reject the whole draft (device-batch F14). A genuinely short or
+        // truncated response (too few valid items even unfiltered) still fails below.
+        $clean = count($inLevel) >= self::MIN_ITEMS ? $inLevel : $all;
+
+        if (! $supplemental && count($clean) < self::MIN_ITEMS) {
             throw InvalidGeneratedDraft::because('only ' . count($clean) . ' usable items after validation');
+        }
+
+        // Trim over-generation down to the requested count (bounded by the hard ceiling). The floor
+        // only applies to a primary pass; a top-up may legitimately land below MIN_ITEMS.
+        // Under-generation is kept as-is — the caller decides whether to top up.
+        $target = min(self::MAX_ITEMS, $targetCount);
+        if (! $supplemental) {
+            $target = max(self::MIN_ITEMS, $target);
+        }
+        if (count($clean) > $target) {
+            $clean = array_slice($clean, 0, $target);
         }
 
         return new GeneratedCollectionDraft(
@@ -70,12 +101,27 @@ final class DraftValidator
             model: $draft->model,
             tokensIn: $draft->tokensIn,
             tokensOut: $draft->tokensOut,
+            rawResponse: $draft->rawResponse,
+            imageApiPrompt: $this->nullableText($draft->imageApiPrompt),
         );
+    }
+
+    /** Whether an item sits inside the requested CEFR band. No band, or no/unknown item level, is neutral (in). */
+    private function withinLevel(?string $cefr, ?int $min, ?int $max): bool
+    {
+        if ($min === null || $max === null || $cefr === null || ! isset(self::CEFR_ORDER[$cefr])) {
+            return true;
+        }
+        $rank = self::CEFR_ORDER[$cefr];
+
+        return $rank >= $min && $rank <= $max;
     }
 
     private function type(string $type, string $text): string
     {
-        if ($type === 'word' || $type === 'phrase') {
+        // The known taxonomy (mirrors Vocabulary's TermType; inlined to avoid a cross-module Domain
+        // import). Anything else falls back to the whitespace heuristic — never trust a stray label.
+        if (in_array($type, ['word', 'phrase', 'idiom', 'phrasal_verb'], true)) {
             return $type;
         }
 

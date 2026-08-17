@@ -1,0 +1,97 @@
+@import './fonts.css';
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'tnum' 1; /* tabular figures for aligned columns/money */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+::placeholder {
+  color: var(--tertiary);
+}
+
+/* Serif is reserved for the target language: term & collection names. */
+.serif {
+  font-family: var(--font-serif);
+}
+
+/* Uppercase section label (design §2). */
+.section-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+/* Tabular money/counter helper. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--secondary);
+}
+
+.faint {
+  color: var(--tertiary);
+}
+
+/* Thin custom scrollbars to stay in the quiet paper aesthetic. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--track) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--track);
+  border-radius: 8px;
+}

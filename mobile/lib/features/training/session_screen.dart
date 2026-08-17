@@ -1,509 +1,1006 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/design.dart';
+import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../data/pronouncer.dart';
+import '../../data/api_client.dart';
+import '../../data/app_settings.dart';
 import '../../data/models.dart';
+import '../../data/perf_log.dart';
 import '../../data/providers.dart';
+import '../progress/activity.dart';
+import '../progress/progress_providers.dart';
+import 'session/intro_card.dart';
+import 'session/session_exercise.dart';
+import 'session/session_grading.dart';
+import 'triage_swipe.dart';
 
-/// One training session — mixed (shuffled due) or a specific collection.
-class SessionScreen extends ConsumerWidget {
-  const SessionScreen({super.key, required this.title, this.collectionId, this.shuffle = false});
+/// One exercise session (кадры 12a–12k): due then new cards from `/study/sessions`, one card per
+/// exercise, played offline-capable per card. The paper/ink «Слова» design (A3.8). Behaviour: the
+/// client sends the RAW answer + a `client_seq`; the SERVER grades and schedules (the local check
+/// is feedback-only and never stricter than the server). A [practice] session introduces no new
+/// terms and never schedules — «Свободная тренировка».
+class SessionScreen extends ConsumerStatefulWidget {
+  const SessionScreen({
+    super.key,
+    required this.title,
+    this.collectionId,
+    this.practice = false,
+    this.learn = false,
+    this.limit = 20,
+    this.targetLang,
+    this.onlyTermId,
+  });
 
   final String title;
-  final int? collectionId;
-  final bool shuffle;
+  final String? collectionId;
+  final bool practice;
+
+  /// «Тренировать слово» from a word's expanded card (кадр 16e): a practice session whose pool is
+  /// this ONE term. Practice-only by construction — a scheduling session's composition is the
+  /// server's to fix, and drilling one word must not spend the daily quota on it.
+  final String? onlyTermId;
+
+  /// Opened from the «Учить N» CTA (device-batch F8): the caller knew there were learnable words
+  /// (triaged-«не знаю», no progress row). If the built session is still empty, the only cause is
+  /// the daily new-words quota being spent — so the empty state says «come back tomorrow», not the
+  /// misleading «nothing here yet». (The CTA itself is not gated on the quota — that's F13/F17.)
+  final bool learn;
+
+  final int limit;
+
+  /// The language to pronounce answers in — the scoped collection's language (F16). Null for a
+  /// cross-collection session, which falls back to the profile's target language.
+  final String? targetLang;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final args = (collectionId: collectionId, shuffle: shuffle);
-    final cards = ref.watch(sessionCardsProvider(args));
-
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: SafeArea(
-        top: false,
-        child: cards.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
-          data: (list) => list.isEmpty
-              ? const _EmptySession()
-              : _Deck(cards: list, args: args),
-        ),
-      ),
-    );
-  }
+  ConsumerState<SessionScreen> createState() => _SessionScreenState();
 }
 
-class _Deck extends ConsumerStatefulWidget {
-  const _Deck({required this.cards, required this.args});
-  final List<ReviewCard> cards;
-  final SessionArgs args;
+class _SessionScreenState extends ConsumerState<SessionScreen> {
+  // Minted once so `POST /study/sessions` is idempotent — a rebuild reuses the fixed composition.
+  final String _sessionId = ApiClient.ulid();
 
-  @override
-  ConsumerState<_Deck> createState() => _DeckState();
-}
-
-class _DeckState extends ConsumerState<_Deck> with SingleTickerProviderStateMixin {
-  final _tts = FlutterTts();
-  int _pos = 0;
-  bool _revealed = false;
-  int _know = 0, _review = 0, _dontKnow = 0;
-  bool _finished = false;
-
-  // Swipe state
-  late final AnimationController _anim =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 240));
-  Offset _drag = Offset.zero;
-  Offset _from = Offset.zero, _to = Offset.zero;
-  Rating? _pending;
-  static const _threshold = 90.0;
+  // F20: pre-warm the iOS keyboard while the session is still loading (behind the spinner), so the
+  // ~600 ms first-keyboard-init doesn't freeze the first typing/cloze card. We briefly focus a hidden
+  // field to spin the keyboard process up, then unfocus before any card needs it.
+  final FocusNode _kbWarm = FocusNode(skipTraversal: true, canRequestFocus: true);
 
   @override
   void initState() {
     super.initState();
-    _anim
-      ..addListener(() {
-        setState(() => _drag = Offset.lerp(_from, _to, Curves.easeOut.transform(_anim.value))!);
-      })
-      ..addStatusListener((s) {
-        if (s == AnimationStatus.completed) {
-          final r = _pending;
-          _pending = null;
-          // Zero the tween BEFORE reset so the listener can't snap the card
-          // back to the swipe's mid-point.
-          _from = Offset.zero;
-          _to = Offset.zero;
-          _drag = Offset.zero;
-          _anim.reset();
-          if (r != null) {
-            _answer(r);
-          } else {
-            setState(() {});
-          }
-        }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _kbWarm.requestFocus();
+      // Drop focus next frame — the keyboard engine stays warm after this, but nothing is shown.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _kbWarm.unfocus();
       });
+    });
   }
 
   @override
   void dispose() {
-    _anim.dispose();
+    _kbWarm.dispose();
     super.dispose();
   }
 
-  Word get _word => widget.cards[_pos].word;
-
-  Future<void> _speak() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.45);
-    await _tts.speak(_word.term);
-  }
-
-  void _answer(Rating rating) {
-    final wordId = _word.id;
-    final isLast = _pos + 1 >= widget.cards.length;
-
-    // Advance the UI immediately; reset any swipe offset for the next card.
-    setState(() {
-      if (rating == Rating.easy) {
-        _know++;
-      } else if (rating == Rating.hard) {
-        _review++;
-      } else {
-        _dontKnow++;
-      }
-      _drag = Offset.zero;
-      _from = Offset.zero;
-      _to = Offset.zero;
-      if (isLast) {
-        _finished = true;
-      } else {
-        _pos++;
-        _revealed = false;
-      }
-    });
-
-    // Persist in the background so the card flow stays snappy.
-    ref.read(apiClientProvider).answer(wordId, rating).whenComplete(() {
-      ref.invalidate(statsProvider);
-      ref.invalidate(dueCardsProvider);
-    });
-  }
-
-  /// Which rating a given drag maps to (null = not past threshold).
-  Rating? _ratingFor(Offset d) {
-    if (d.dy < -_threshold && d.dy.abs() > d.dx.abs()) return Rating.hard; // up = повторить
-    if (d.dx > _threshold) return Rating.easy; // right = знаю
-    if (d.dx < -_threshold) return Rating.again; // left = не знаю
-    return null;
-  }
-
-  void _onPanUpdate(DragUpdateDetails d) {
-    if (!_revealed || _anim.isAnimating) return;
-    setState(() => _drag += d.delta);
-  }
-
-  void _onPanEnd(DragEndDetails _) {
-    if (!_revealed) return;
-    final r = _ratingFor(_drag);
-    _from = _drag;
-    _pending = r;
-    if (r == Rating.hard) {
-      _to = const Offset(0, -1200);
-    } else if (r == Rating.easy) {
-      _to = Offset(1200, _drag.dy);
-    } else if (r == Rating.again) {
-      _to = Offset(-1200, _drag.dy);
-    } else {
-      _to = Offset.zero; // snap back
-    }
-    _anim.forward(from: 0);
+  /// «Ещё раз» on a practice summary: start a brand-new practice session immediately (a fresh
+  /// SessionScreen mints a new id → the server reshuffles the whole-collection pool). Replaces the
+  /// route so the back stack doesn't fill up with finished sessions.
+  void _again() {
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => SessionScreen(
+        title: widget.title,
+        collectionId: widget.collectionId,
+        practice: widget.practice,
+        learn: widget.learn,
+        limit: widget.limit,
+        targetLang: widget.targetLang,
+      ),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final args = (
+      sessionId: _sessionId,
+      collectionId: widget.collectionId,
+      practice: widget.practice,
+      limit: widget.limit,
+      onlyTermId: widget.onlyTermId,
+    );
+    final session = ref.watch(studySessionProvider(args));
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              session.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+                // Sessions are still built server-side, so no network means no session. Say that
+                // in words instead of printing a DioException at the user; the detail goes to the
+                // log. Retry re-runs the provider — the session id is minted once, and the build
+                // is idempotent under it, so a retry returns the same composition.
+                error: (e, st) {
+                  debugPrint('[session] build failed: $e\n$st');
+                  return _CenteredMessage(
+                    text: isOffline(e) ? l.sessionOffline : l.sessionLoadFailed,
+                    icon: isOffline(e) ? LucideIcons.cloudOff : LucideIcons.triangleAlert,
+                    actionLabel: l.generationRetry,
+                    onAction: () => ref.invalidate(studySessionProvider(args)),
+                  );
+                },
+                data: (s) => s.cards.isEmpty
+                    ? _CenteredMessage(
+                        text: widget.learn ? l.sessionDailyNewLimit : l.sessionEmpty,
+                        icon: widget.learn ? LucideIcons.clock : LucideIcons.check,
+                      )
+                    : _SessionShell(
+                        session: s,
+                        practice: widget.practice,
+                        targetLang: widget.targetLang,
+                        onAgain: _again,
+                      ),
+              ),
+              // Invisible keyboard-warmup field (F20). 1×1, transparent, non-interactive.
+              Positioned(
+                left: 0,
+                top: 0,
+                width: 1,
+                height: 1,
+                child: Opacity(
+                  opacity: 0,
+                  child: IgnorePointer(
+                    child: TextField(focusNode: _kbWarm, autofocus: false),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionShell extends ConsumerStatefulWidget {
+  const _SessionShell({
+    required this.session,
+    required this.practice,
+    required this.onAgain,
+    this.targetLang,
+  });
+
+  final StudySession session;
+  final bool practice;
+  final String? targetLang;
+
+  /// Start another practice session (used by the practice summary's «Ещё раз»).
+  final VoidCallback onAgain;
+
+  @override
+  ConsumerState<_SessionShell> createState() => _SessionShellState();
+}
+
+class _SessionShellState extends ConsumerState<_SessionShell> {
+  final _pronouncer = Pronouncer();
+  final _scroll = ScrollController();
+  int _pos = 0;
+  bool _finished = false;
+  bool _answered = false; // current card answered → the pinned «Дальше» bar shows
+  bool _bannerDismissed = false;
+  final List<({SessionCard card, LocalCheck verdict})> _results = [];
+
+  List<SessionCard> get _cards => widget.session.cards;
+  SessionCard get _card => _cards[_pos];
+
+  @override
+  void initState() {
+    super.initState();
+    PerfLog.instance.screen = 'session'; // stall monitor: which screen a hitch belongs to
+    // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
+    // never on the first listening card, whose whole content is the sound (F20-r).
+    unawaited(_pronouncer.warmUp(targetLang: _targetLang));
+    // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
+    // loads (the lag the user saw was photo cards fetching + decoding late).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prepareCard(0);
+      _prepareCard(1);
+      _prepareCard(2);
+    });
+  }
+
+  /// The resolved photo url per card index. A present KEY means the lookup finished, which is what
+  /// lets the card size its banner on the first frame instead of reserving 150 px and collapsing a
+  /// moment later — that collapse was a 164 px jump right after the slide (F20-r).
+  final Map<int, String?> _photoUrl = {};
+
+  /// Indices already prepared. Each card used to be prepared TWICE (once as `+1`, once as `+2`),
+  /// so a 20-card session paid 40 lookups and 40 decodes.
+  final Set<int> _prepared = {};
+
+  /// Only `multiple_choice` renders the banner in its prompt, so only those are worth decoding up
+  /// front. Everything else pays a ~2.7 MB decode for a picture it never shows.
+  bool _showsPhoto(int index) =>
+      _photoUrl[index] != null && _cards[index].mode == ExerciseMode.multipleChoice;
+
+  /// Resolve the card's photo (always — the layout needs to know) and warm it (only when the card
+  /// actually shows one). No-op for an out-of-range or already-prepared index.
+  void _prepareCard(int index) {
+    if (index < 0 || index >= _cards.length || !mounted) return;
+    if (!_prepared.add(index)) return;
+    final card = _cards[index];
+    ref.read(appDatabaseProvider).termById(card.termId).then((term) async {
+      if (!mounted) return;
+      final raw = term?.imageUrl ?? '';
+      final url = raw.isEmpty ? null : raw;
+      // Only the on-screen card needs a rebuild; a card resolved ahead of time is simply recorded.
+      if (index <= _pos) {
+        setState(() => _photoUrl[index] = url);
+      } else {
+        _photoUrl[index] = url;
+      }
+      if (url != null && card.mode == ExerciseMode.multipleChoice) {
+        await precacheSessionImage(context, url);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    PerfLog.instance.screen = 'app';
+    // Hands the iOS audio session back (and un-ducks other audio) exactly once, here — not after
+    // every spoken word, which is what froze the trainer for ~600 ms per utterance (F20-r).
+    unawaited(_pronouncer.release());
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// The scoped collection's language wins (F16); a cross-collection session has none and falls
+  /// back to the profile's target language.
+  String get _targetLang =>
+      widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+
+  Future<void> _speak(String text, {bool slow = false}) async {
+    // Reuse the Pronouncer, which speaks a Word — wrap the raw target text. [slow] backs the
+    // listening card's «замедленно» replay.
+    await _pronouncer.speak(
+      Word(termId: '', term: text, translation: '', type: 'word'),
+      targetLang: _targetLang,
+      slow: slow,
+    );
+  }
+
+  void _onAnswered(SessionAnswer a) {
+    // F20: while the user reads the feedback, warm the next TWO cards' photos so an upcoming photo
+    // card meets a ready image instead of a cold network load (precache is the main image fix).
+    _prepareCard(_pos + 1);
+    _prepareCard(_pos + 2);
+    // A wrong answer shows the photo in the feedback whatever the mode, and only `multiple_choice`
+    // was warmed up front — so warm this one now. It lands on a static screen, never on a slide.
+    if (a.verdict == LocalCheck.wrong && !_showsPhoto(_pos)) {
+      final url = _photoUrl[_pos];
+      if (url != null) precacheSessionImage(context, url);
+    }
+    _results.add((card: _card, verdict: a.verdict));
+    ref.read(reviewSyncProvider).record(
+          termId: _card.termId,
+          exerciseMode: _card.mode.wire,
+          response: a.response,
+          usedHint: a.usedHint,
+          isPractice: widget.practice,
+          latencyMs: a.latencyMs,
+          sessionId: widget.session.sessionId,
+          // Echo the rung the card was dealt at. The server needs it to know a rung-1 answer is a
+          // TAP graded by identity; without it the tapped term id is graded as text and a correct
+          // tap becomes a lapse.
+          ladderStep: _card.ladderStep,
+        );
+    // Reveal the pinned «Дальше» bar. It lives OUTSIDE the scroll view, so it stays reachable no
+    // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll
+    // button below the fold — device-batch F9).
+    setState(() => _answered = true);
+  }
+
+  /// «Понятно» on an intro card. Nothing is graded and nothing reaches the review queue: the card
+  /// asked for nothing, so there is no retrieval to log. What it produces is an EXPOSURE — durable,
+  /// idempotent on the pair — plus the local ladder step, so the word's recognition cards later in
+  /// this same session know it has been met even with the network off from start to summary.
+  Future<void> _acknowledgeIntro() async {
+    final termId = _card.termId;
+    // Deliberately NOT added to [_results]: the summary lists answers, and an intro is not one —
+    // a tick beside it would claim the word was got right. The word still reaches the summary,
+    // through the recognition cards it comes back as later in this same session.
+    await ref.read(exposureSyncProvider).record(
+          termId: termId,
+          sessionId: widget.session.sessionId,
+        );
+    if (!mounted) return;
+    _prepareCard(_pos + 1);
+    _prepareCard(_pos + 2);
+    _next();
+  }
+
+  void _next() {
+    PerfLog.instance.tapHandled('next');
+    if (_pos + 1 >= _cards.length) {
+      setState(() => _finished = true);
+    } else {
+      setState(() {
+        _pos++;
+        _answered = false;
+      });
+      // Release the photo of a card three back: it is off-screen, out of the outgoing animation,
+      // and nothing can navigate to it again. Keeps the session's decoded-image footprint flat
+      // instead of climbing pass after pass within one app launch (F20-r).
+      unawaited(evictSessionImage(context, _photoUrl[_pos - 3]));
+      // New card starts at the top (the previous one may have been scrolled to its feedback).
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+    }
+  }
+
+  Future<bool> _confirmExit() async {
+    final l = AppLocalizations.of(context);
+    final leave = await showCenterAlert(
+      context: context,
+      title: l.sessionExitTitle,
+      message: l.sessionExitBody,
+      confirmLabel: l.sessionExitConfirm, // «Выйти» — destructive
+      cancelLabel: l.sessionExitCancel, // «Продолжить» — default
+    );
+    return leave ?? false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     if (_finished) {
-      return _Summary(know: _know, review: _review, dontKnow: _dontKnow);
+      return _SessionSummary(results: _results, practice: widget.practice, onAgain: widget.onAgain);
     }
 
-    final total = widget.cards.length;
-    final hint = _ratingFor(_drag);
+    final total = _cards.length;
+    final phaseLabel = widget.practice
+        ? l.sessionPhasePractice
+        : switch (phaseFor(_card.mode)) {
+            SessionPhase.intro => l.sessionPhaseIntro,
+            SessionPhase.assemble => l.sessionPhaseAssemble,
+            SessionPhase.review => l.sessionPhaseReview,
+          };
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.lg),
-      child: Column(
+    final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;
+
+    final builtAt = _pos; // the index this card is built for — used to cancel its deferred effects
+    final isIntro = _card.mode == ExerciseMode.intro;
+    // The intro is not an exercise, so it is not the exercise widget. It has no options, no input
+    // and no verdict — giving it its own widget is what keeps an "answer" with no answer in it out
+    // of the card that owns answering.
+    final card = isIntro
+        ? SessionIntroCard(
+            key: ValueKey(_pos),
+            card: _card,
+            autoPronounce: autoPronounce,
+            onSpeak: _speak,
+            photoUrl: _photoUrl[_pos],
+            photoResolved: _photoUrl.containsKey(_pos),
+            isCurrent: () => mounted && _pos == builtAt,
+          )
+        : SessionExerciseCard(
+            key: ValueKey(_pos),
+            card: _card,
+            autoPronounce: autoPronounce,
+            onAnswered: _onAnswered,
+            onSpeak: _speak,
+            photoUrl: _photoUrl[_pos],
+            photoResolved: _photoUrl.containsKey(_pos),
+            showDue: !widget.practice,
+            // F20: still the on-screen card? A fast «Дальше» moves _pos on, so the outgoing card's
+            // deferred speak/focus is cancelled instead of firing on the next card.
+            isCurrent: () => mounted && _pos == builtAt,
+          );
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (await _confirmExit() && context.mounted) Navigator.of(context).pop();
+      },
+      // Stamps every touch so a handler can report how long the tap waited (see [PerfLog]).
+      child: Listener(
+        onPointerDown: (_) => PerfLog.instance.pointerDown(),
+        child: Column(
         children: [
-          _Monitor(position: _pos, total: total, know: _know, review: _review, dontKnow: _dontKnow),
-          const SizedBox(height: AppSpacing.md),
-          Expanded(
-            child: GestureDetector(
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Transform.translate(
-                    offset: _drag,
-                    child: Transform.rotate(
-                      angle: _drag.dx / 1600,
-                      child: _Flashcard(
-                        word: _word,
-                        revealed: _revealed,
-                        onTap: () => setState(() => _revealed = !_revealed),
-                        onSpeak: _speak,
-                      ),
-                    ),
-                  ),
-                  if (_revealed && _drag.distance > 24) _SwipeHint(rating: hint),
-                ],
-              ),
+          if (widget.practice && !_bannerDismissed)
+            _PracticeBanner(onClose: () => setState(() => _bannerDismissed = true)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
+            child: _SessionHeader(
+              phaseLabel: phaseLabel,
+              current: _pos + 1,
+              total: total,
+              onClose: () async {
+                if (await _confirmExit() && context.mounted) Navigator.of(context).pop();
+              },
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          if (_revealed)
-            _Answers(onAnswer: _answer)
-          else
-            FilledButton.icon(
-              onPressed: () => setState(() => _revealed = true),
-              icon: const Icon(Icons.visibility_outlined),
-              label: const Text('Показать перевод'),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scroll,
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, AppSpacing.s26),
+              child: _SlideSwitcher(index: _pos, child: card),
             ),
+          ),
+          // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
+          // off-screen (device-batch F9). Appears only once the card is answered.
+          //
+          // The intro's «Понятно →» sits in the same bar and is there from the start: there is
+          // nothing to answer first, so nothing to wait for. One exit, no verdict.
+          if (isIntro)
+            _NextBar(onNext: _acknowledgeIntro, label: l.sessionIntroGot)
+          else if (_answered)
+            _NextBar(onNext: _next),
         ],
+        ),
       ),
     );
   }
 }
 
-/// Floating badge that previews the answer the current swipe would give.
-class _SwipeHint extends StatelessWidget {
-  const _SwipeHint({required this.rating});
-  final Rating? rating;
+/// The pinned bottom action bar — the session's «Дальше», always reachable regardless of how far
+/// the feedback content scrolls. Carries the bottom safe-area inset itself (the shell's SafeArea
+/// has `bottom: false`).
+class _NextBar extends StatelessWidget {
+  const _NextBar({required this.onNext, this.label});
+  final VoidCallback onNext;
+
+  /// Overridden by the intro card, whose single exit reads «Понятно →» — it acknowledges a word
+  /// that was shown rather than advancing past one that was answered.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = switch (rating) {
-      Rating.easy => ('Знаю', AppColors.know),
-      Rating.hard => ('Повторить', AppColors.review),
-      Rating.again => ('Не знаю', AppColors.dontKnow),
-      _ => ('', AppColors.textMuted),
-    };
-    if (label.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        boxShadow: AppShadows.glow(color),
+      decoration: const BoxDecoration(
+        color: AppColors.paper,
+        border: Border(top: BorderSide(color: AppColors.hairline)),
       ),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        12,
+        AppSpacing.screenH,
+        12 + MediaQuery.of(context).viewPadding.bottom,
+      ),
+      child: PrimaryButton(
+        label: label ?? l.sessionNext,
+        trailingIcon: LucideIcons.arrowRight,
+        onPressed: onNext,
+      ),
     );
   }
 }
 
-class _Monitor extends StatelessWidget {
-  const _Monitor({required this.position, required this.total, required this.know, required this.review, required this.dontKnow});
-  final int position, total, know, review, dontKnow;
+/// Header: close (×) · phase label · «N из M» · session segments (§2б). The segment bar reuses
+/// [SessionSegments] — the same one the triage header uses.
+class _SessionHeader extends StatelessWidget {
+  const _SessionHeader({
+    required this.phaseLabel,
+    required this.current,
+    required this.total,
+    required this.onClose,
+  });
+
+  final String phaseLabel;
+  final int current;
+  final int total;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    final progress = total == 0 ? 0.0 : position / total;
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
         Row(
           children: [
-            Text('${position + 1} / $total',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.textSecondary, fontWeight: FontWeight.w700,
-                    )),
-            const Spacer(),
-            _tally(AppColors.know, know),
-            const SizedBox(width: 10),
-            _tally(AppColors.review, review),
-            const SizedBox(width: 10),
-            _tally(AppColors.dontKnow, dontKnow),
-          ],
-        ),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadii.pill),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor: AppColors.surfaceAlt,
-            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _tally(Color c, int n) {
-    return Row(children: [
-      Container(width: 9, height: 9, decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
-      const SizedBox(width: 5),
-      Text('$n', style: TextStyle(color: c, fontWeight: FontWeight.w700, fontSize: 14)),
-    ]);
-  }
-}
-
-class _Flashcard extends StatelessWidget {
-  const _Flashcard({required this.word, required this.revealed, required this.onTap, required this.onSpeak});
-  final Word word;
-  final bool revealed;
-  final VoidCallback onTap, onSpeak;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          boxShadow: AppShadows.card,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            Container(height: 6, decoration: const BoxDecoration(gradient: AppGradients.brand)),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (word.cefrLevel != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(AppRadii.sm)),
-                        child: Text(word.cefrLevel!,
-                            style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 12)),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(word.term,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800, height: 1.1)),
-                    if (word.transcription != null) ...[
-                      const SizedBox(height: 8),
-                      Text('/${word.transcription}/',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textMuted)),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    _SpeakButton(onTap: onSpeak),
-                    const SizedBox(height: AppSpacing.lg),
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 200),
-                      crossFadeState: revealed ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                      firstChild: Text('Нажми, чтобы увидеть перевод',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
-                      secondChild: Column(children: [
-                        const Divider(height: 1),
-                        const SizedBox(height: AppSpacing.md),
-                        ShaderMask(
-                          shaderCallback: (r) => AppGradients.brand.createShader(r),
-                          child: Text(word.translation,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.w800, color: Colors.white,
-                                  )),
-                        ),
-                        if (word.example != null) ...[
-                          const SizedBox(height: 12),
-                          Text('“${word.example}”',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontStyle: FontStyle.italic, color: AppColors.textSecondary, height: 1.4,
-                                  )),
-                        ],
-                      ]),
-                    ),
-                  ],
+            Semantics(
+              button: true,
+              label: l.sessionClose,
+              child: InkResponse(
+                onTap: onClose,
+                radius: 22,
+                child: const SizedBox(
+                  width: AppSpacing.minTap,
+                  height: AppSpacing.minTap,
+                  child: Icon(LucideIcons.x, size: 20, color: AppColors.secondary),
                 ),
               ),
             ),
+            Expanded(
+              child: Text(phaseLabel, textAlign: TextAlign.center, style: AppTextExercise.sessionHeader),
+            ),
+            SizedBox(
+              width: AppSpacing.minTap,
+              child: Text(
+                l.triageCounter(current, total),
+                textAlign: TextAlign.right,
+                style: AppTextExercise.sessionHeader,
+              ),
+            ),
           ],
         ),
-      ),
-    ).animate(key: ValueKey(word.id)).fadeIn(duration: 200.ms).slideY(begin: 0.05, end: 0);
-  }
-}
-
-class _SpeakButton extends StatelessWidget {
-  const _SpeakButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceAlt,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: const Padding(
-          padding: EdgeInsets.all(14),
-          child: Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 26),
-        ),
-      ),
+        const SizedBox(height: 10),
+        SessionSegments(done: current - 1, total: total),
+      ],
     );
   }
 }
 
-class _Answers extends StatelessWidget {
-  const _Answers({required this.onAnswer});
-  final ValueChanged<Rating> onAnswer;
+/// The quiet practice plaque (кадр 12f): 6 % ink, no colour, closes with an × and doesn't
+/// return until the next session.
+class _PracticeBanner extends StatelessWidget {
+  const _PracticeBanner({required this.onClose});
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      _btn('Не знаю', Icons.close_rounded, AppColors.dontKnow, Rating.again),
-      const SizedBox(width: 10),
-      _btn('Повторить', Icons.autorenew_rounded, AppColors.review, Rating.hard),
-      const SizedBox(width: 10),
-      _btn('Знаю', Icons.check_rounded, AppColors.know, Rating.easy),
-    ]).animate().fadeIn(duration: 180.ms).slideY(begin: 0.15, end: 0);
-  }
-
-  Widget _btn(String label, IconData icon, Color color, Rating rating) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onAnswer(rating),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(AppRadii.md),
-            border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
-          ),
-          child: Column(children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-class _Summary extends StatelessWidget {
-  const _Summary({required this.know, required this.review, required this.dontKnow});
-  final int know, review, dontKnow;
-
-  @override
-  Widget build(BuildContext context) {
-    final total = know + review + dontKnow;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 10, AppSpacing.screenH, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(color: AppColors.faintInk, borderRadius: BorderRadius.circular(14)),
+        child: Row(
           children: [
             Container(
-              width: 96, height: 96,
-              decoration: const BoxDecoration(gradient: AppGradients.brand, shape: BoxShape.circle),
-              child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 50),
-            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Сессия завершена',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text('$total карточек повторено',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary)),
-            const SizedBox(height: AppSpacing.lg),
-            Row(children: [
-              _stat('Знаю', know, AppColors.know),
-              const SizedBox(width: 10),
-              _stat('Повторить', review, AppColors.review),
-              const SizedBox(width: 10),
-              _stat('Не знаю', dontKnow, AppColors.dontKnow),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Готово'),
-              ),
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(color: AppColors.tertiary, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(l.sessionPracticeBanner, style: AppText.translation.copyWith(color: AppColors.inkBody)),
+            ),
+            InkResponse(
+              onTap: onClose,
+              radius: 18,
+              child: const Icon(LucideIcons.x, size: 16, color: AppColors.tertiary),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _stat(String label, int value, Color c) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadii.md)),
-        child: Column(children: [
-          Text('$value', style: TextStyle(color: c, fontSize: 24, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-        ]),
+/// Card-to-card transition (§4е «Переход к следующему заданию»): the outgoing card fades and
+/// slides left, the incoming one arrives from the right. Reduce-motion → an instant swap.
+class _SlideSwitcher extends StatelessWidget {
+  const _SlideSwitcher({required this.index, required this.child});
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).disableAnimations) return KeyedSubtree(key: ValueKey(index), child: child);
+    return AnimatedSwitcher(
+      duration: AppMotion.nextTaskEnter,
+      switchInCurve: AppMotion.easeOut,
+      switchOutCurve: AppMotion.easeIn,
+      transitionBuilder: (child, anim) {
+        final incoming = child.key == ValueKey(index);
+        final offset = Tween<Offset>(
+          begin: Offset(incoming ? 0.06 : -0.06, 0),
+          end: Offset.zero,
+        ).animate(anim);
+        return FadeTransition(opacity: anim, child: SlideTransition(position: offset, child: child));
+      },
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.topCenter,
+        children: [...previous, ?current],
+      ),
+      child: KeyedSubtree(key: ValueKey(index), child: child),
+    );
+  }
+}
+
+// ── summary (кадр 12e) ────────────────────────────────────────────────────────
+
+class _SessionSummary extends ConsumerStatefulWidget {
+  const _SessionSummary({required this.results, required this.practice, required this.onAgain});
+
+  final List<({SessionCard card, LocalCheck verdict})> results;
+  final bool practice;
+
+  /// «Ещё раз» (practice only): start a fresh practice session right away.
+  final VoidCallback onAgain;
+
+  @override
+  ConsumerState<_SessionSummary> createState() => _SessionSummaryState();
+}
+
+class _SessionSummaryState extends ConsumerState<_SessionSummary> {
+  @override
+  void initState() {
+    super.initState();
+    // Push the session's answers now rather than waiting for the next trigger, then a gentle
+    // success — no confetti (§4е).
+    WidgetsBinding.instance.addPostFrameCallback((_) => AppHaptics.success());
+    ref.read(reviewSyncProvider).flush();
+  }
+
+  int get _total => widget.results.length;
+  int get _errors => widget.results.where((r) => r.verdict == LocalCheck.wrong).length;
+  // "New" ≈ intro cards (multiple_choice) — the session card carries the mode, not the state, so
+  // this is a proxy for freshly-introduced terms (new/relearning), documented in session_grading.
+  int get _new => widget.results.where((r) => phaseFor(r.card.mode) == SessionPhase.intro).length;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final struggling = widget.results.where((r) => r.verdict == LocalCheck.wrong).toList();
+    final practice = widget.practice;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, AppSpacing.s26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.sessionSummaryTitle, style: AppTextExercise.summaryTitle),
+          const SizedBox(height: 18),
+          // IntrinsicHeight bounds the row's height so the vertical dividers can stretch to it.
+          // Without it, `CrossAxisAlignment.stretch` under the scroll view's unbounded height blew
+          // the row up in RELEASE (asserts off), pushing the goal card, word list and Done button
+          // off-screen — the whole summary looked like just three counters (device-batch F11).
+          //
+          // Practice gets a COMPACT two-stat tally («прошёл N, ошибки M») — there's no «New» (it
+          // introduces nothing) and no daily-goal block (it moves nothing), per Training Loop v2/F17.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: practice
+                  ? [
+                      _Stat(value: _total, label: l.sessionPracticeStatDone),
+                      const _StatDivider(),
+                      _Stat(value: _errors, label: l.sessionStatErrors),
+                    ]
+                  : [
+                      _Stat(value: _total, label: l.sessionStatReviewed),
+                      const _StatDivider(),
+                      _Stat(value: _new, label: l.sessionStatNew),
+                      const _StatDivider(),
+                      _Stat(value: _errors, label: l.sessionStatErrors),
+                    ],
+            ),
+          ),
+          if (!practice) ...[
+            const SizedBox(height: 18),
+            const _GoalCard(),
+          ],
+          const SizedBox(height: 20),
+          Text(l.sessionSessionWords.toUpperCase(), style: AppText.sectionLabel),
+          const SizedBox(height: 6),
+          // Practice never schedules, so a «увидишь через N дней» line would be a lie — hide it.
+          for (final r in widget.results)
+            _SummaryWordRow(card: r.card, verdict: r.verdict, showDue: !practice),
+          // «Проседает → Новый пример» regenerates content, which is about progress-bearing study —
+          // omit it in practice (compact итог).
+          if (!practice && struggling.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _StrugglingCard(termId: struggling.first.card.termId, term: struggling.first.card.answerText),
+          ],
+          const SizedBox(height: 20),
+          if (practice) ...[
+            // «Ещё раз» → a fresh practice session immediately; «Готово» exits.
+            PrimaryButton(
+              label: l.sessionPracticeAgain,
+              trailingIcon: LucideIcons.rotateCw,
+              onPressed: widget.onAgain,
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: QuietButton(
+                label: l.sessionDone,
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+          ] else
+            PrimaryButton(
+              label: l.sessionDone,
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+        ],
       ),
     );
   }
 }
 
-class _EmptySession extends StatelessWidget {
-  const _EmptySession();
+class _Stat extends StatelessWidget {
+  const _Stat({required this.value, required this.label});
+  final int value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Expanded(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_outline_rounded, size: 56, color: AppColors.success),
-          const SizedBox(height: 12),
-          Text('Здесь пока нечего повторять',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text('$value', style: AppTextExercise.summaryNumber),
+          const SizedBox(height: 5),
+          Text(label.toUpperCase(), style: AppTextExercise.summaryLabel),
         ],
       ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 1,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        color: AppColors.hairline,
+      );
+}
+
+/// Daily-goal card: today's cumulative reviews vs the profile goal, plus the streak. Filled and
+/// labelled «закрыта» once the goal is met (кадр 12e). Reads the same local `daily_activity` the
+/// Progress screen does, so the numbers agree.
+class _GoalCard extends ConsumerWidget {
+  const _GoalCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final goal = ref.watch(authControllerProvider).value?.profile?.dailyGoal ?? 20;
+    final activity = ref.watch(dailyActivityProvider).value ?? const {};
+    final today = todayReviewCount(DateTime.now(), activity);
+    final streak = ref.watch(statsProvider).value?.streakDays ?? 0;
+    final done = today >= goal;
+
+    return PaperCard(
+      radius: AppRadii.alert,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  done ? l.sessionGoalClosed : l.sessionDailyGoal,
+                  style: AppText.sheetButton.copyWith(fontSize: 14),
+                ),
+              ),
+              Text('$today / $goal', style: AppText.counterHeader.copyWith(fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ProgressLine(value: goal == 0 ? 1 : today / goal, height: 4),
+          if (streak > 0) ...[
+            const SizedBox(height: 9),
+            Text(l.sessionStreak(streak), style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryWordRow extends ConsumerWidget {
+  const _SummaryWordRow({required this.card, required this.verdict, this.showDue = true});
+  final SessionCard card;
+  final LocalCheck verdict;
+
+  /// Practice sessions move no schedule → hide the «увидишь через N дней» line (it would be a lie).
+  final bool showDue;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final prog = showDue ? ref.watch(termProgressForProvider(card.termId)) : null;
+    final due = prog?.value?.dueAt;
+    final relative = due == null
+        ? null
+        : () {
+            final days = daysUntil(due.toLocal(), DateTime.now());
+            return days == 0
+                ? l.sessionDueToday
+                : days == 1
+                    ? l.sessionDueTomorrow
+                    : l.sessionDueInDays(days);
+          }();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.hairline)),
+      ),
+      child: Row(
+        children: [
+          _VerdictMark(verdict: verdict),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // The reviewed word, as words — a rung-1 card's [answer] is its term id (see
+                // SessionCard.answerText), and the mistakes list is exactly where it would show.
+                Text(card.answerText, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(card.prompt ?? '', style: AppText.translation.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+          if (relative != null) ...[
+            const SizedBox(width: 10),
+            Text(relative, style: AppText.counterSmall.copyWith(color: AppColors.tertiary)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _VerdictMark extends StatelessWidget {
+  const _VerdictMark({required this.verdict});
+  final LocalCheck verdict;
+
+  @override
+  Widget build(BuildContext context) {
+    // Correct → sage check; typo → amber dash (accepted but shaky); wrong → terracotta cross.
+    return switch (verdict) {
+      LocalCheck.correct => const Icon(LucideIcons.check, size: 18, color: AppColors.verdictKnown),
+      LocalCheck.typo => Container(width: 18, height: 2, color: AppColors.verdictUnsure),
+      LocalCheck.wrong => const Icon(LucideIcons.x, size: 18, color: AppColors.destructiveText),
+    };
+  }
+}
+
+/// «Проседает» block (кадр 12e): for a word missed this session, offer a fresh example
+/// (B6 `POST /terms/{id}/regenerate-example`) — sometimes it's the context, not the word. Counts
+/// against the daily quota (429 → «лимит исчерпан»).
+class _StrugglingCard extends ConsumerStatefulWidget {
+  const _StrugglingCard({required this.termId, required this.term});
+  final String termId;
+  final String term;
+
+  @override
+  ConsumerState<_StrugglingCard> createState() => _StrugglingCardState();
+}
+
+class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
+  bool _busy = false;
+  bool _done = false;
+  String? _error;
+
+  Future<void> _regenerate() async {
+    if (_busy || _done) return;
+    final l = AppLocalizations.of(context);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(apiClientProvider).regenerateExample(widget.termId);
+      // The new example replaces the stored one server-side; it arrives on the next sync/study.
+      ref.read(syncServiceProvider).sync();
+      if (mounted) setState(() => _done = true);
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() => _error =
+            e.response?.statusCode == 429 ? l.sessionNewExampleExhausted : e.message ?? '');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PaperCard(
+      radius: AppRadii.alert,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.sessionStrugglingTitle(widget.term), style: AppText.sheetButton.copyWith(fontSize: 14)),
+          const SizedBox(height: 6),
+          Text(l.sessionStrugglingBody, style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody, height: 1.45)),
+          const SizedBox(height: 12),
+          if (_error != null) ...[
+            Text(_error!, style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.destructiveText)),
+            const SizedBox(height: 10),
+          ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _done
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.check, size: 17, color: AppColors.verdictKnown),
+                      const SizedBox(width: 8),
+                      Text(l.sessionNewExample, style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.verdictKnown)),
+                    ],
+                  )
+                : QuietButton(
+                    label: l.sessionNewExample,
+                    icon: _busy ? null : LucideIcons.sparkles,
+                    foreground: AppColors.ink,
+                    onPressed: _busy ? null : _regenerate,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CenteredMessage extends StatelessWidget {
+  const _CenteredMessage({required this.text, this.icon, this.actionLabel, this.onAction});
+  final String text;
+  final IconData? icon;
+
+  /// Optional recovery action — «Повторить» on a failed session build. Absent for the empty
+  /// states, where there is nothing to retry.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned(
+          top: 8,
+          left: 8,
+          child: Semantics(
+            button: true,
+            label: AppLocalizations.of(context).sessionClose,
+            child: InkResponse(
+              onTap: () => Navigator.of(context).maybePop(),
+              radius: 22,
+              child: const SizedBox(
+                width: AppSpacing.minTap,
+                height: AppSpacing.minTap,
+                child: Icon(LucideIcons.x, size: 20, color: AppColors.secondary),
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.s26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 48, color: AppColors.verdictKnown),
+                  const SizedBox(height: 12),
+                ],
+                Text(text, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 20)),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: AppSpacing.s16),
+                  QuietButton(label: actionLabel!, icon: LucideIcons.rotateCw, onPressed: onAction),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

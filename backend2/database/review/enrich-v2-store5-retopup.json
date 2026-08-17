@@ -1,0 +1,59 @@
+{
+  "_": [
+    "Express review of the enrich-v1-topup2 run (d158440, 'store5 топап №2 по покрытию — 19",
+    "терминов, 80→89/99'). Not a station export — a review handed over in chat and committed as",
+    "DATA for the same reason every prior review was (database/review/enrich-v1-store5.json,",
+    "enrich-v1-store5-after-topup.json): a review that lives only in a terminal/chat history is",
+    "lost exactly once. Source write-up: docs/enrich-v2-store5-retopup.md.",
+    "",
+    "Same two classes the store5-after-topup review found (A: distractor is correct English, two",
+    "right answers; B: determiner swapped for another legal one, translation does not anchor the",
+    "choice) — found again in rows the topup2 run wrote fresh, not the same rows store5 already",
+    "removed.",
+    "",
+    "generator_version is enrich-v1-topup2 and that IS the scope of the acknowledgement: the flag",
+    "acknowledges every open finding of the named version.",
+    "",
+    "Applied by: php artisan enrich:apply-review database/review/enrich-v2-store5-retopup.json"
+  ],
+  "generator_version": "enrich-v1-topup2",
+
+  "_remove_distractors": [
+    "Same shape as store5-after-topup's A/B classes, on topup2's own rows: 4 double-correct-answer",
+    "sentences, 1 determiner swap the translation does not anchor, 1 double-correct-answer where",
+    "the term sits in two collections but the row is written once."
+  ],
+  "remove_distractors": [
+    { "term": "debit card", "sentence": "I prefer using the debit card for everyday purchases." },
+    { "term": "financial advisor", "sentence": "I scheduled a meeting with the financial advisor to discuss investments." },
+    { "term": "move-in date", "sentence": "What's the preferred move-in date?" },
+    { "term": "lease agreement", "sentence": "Please read a lease agreement carefully before signing." },
+    { "term": "notice period", "sentence": "You have to give the one-month notice period before moving out." },
+    { "term": "medicine", "sentence": "Did the doctor give you a medicine?" }
+  ],
+
+  "_remove_variants": [
+    "G-class (store5-after-topup): a variant feeds the answer KEY, so a wrong one makes the grader",
+    "accept a wrong answer, or the variant is simply a duplicate of an existing accepted form under",
+    "a different surface reading."
+  ],
+  "remove_variants": [
+    { "term": "bank account", "text": "savings account" },
+    { "term": "bank account", "text": "checking account" },
+    { "term": "Can I get this to go?", "text": "Can I have this taken away?" },
+    { "term": "Can I get this to go?", "text": "Can I get this for take away?" },
+    { "term": "gratuity", "text": "service charge" },
+    { "term": "direct debit", "text": "direct withdrawal" }
+  ],
+
+  "_acknowledge": [
+    "Expected 10 open enrich-v1-topup2 findings. The database holds 12 at apply time: 10",
+    "kind=ambiguity ('переформулировать', back-translation trivia — the same class store5-after-",
+    "topup's H section found useless in 31 of 41 cases) + 2 kind=misspelled_or_nonword ('Can I get",
+    "this to go?' — detail is 'Нет ошибок.', an empty finding; 'comfortable with' — the proposed",
+    "fix is a rewording, not a spelling correction). Discrepancy reported, not guessed away: all 12",
+    "acknowledged, because the flag acknowledges the whole open worklist of the named version, not",
+    "a hand-picked count."
+  ],
+  "acknowledge_all_remaining_findings": true
+}

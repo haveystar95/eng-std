@@ -27,4 +27,10 @@ final class InMemoryReviewRepository implements ReviewRepository
     {
         return count($this->byId);
     }
+
+    /** @return list<Review> */
+    public function all(): array
+    {
+        return array_values($this->byId);
+    }
 }

@@ -1,22 +1,25 @@
 # mobile — Flutter/iOS app
 
-The product: a personal English vocabulary trainer. Talks to the **old `../backend`** API
-(via ngrok) today. Auto-loads for sessions in `mobile/`. See root `../CLAUDE.md` for the
-whole project.
+The product: a personal English vocabulary trainer. **Cut over to `../backend2`** (modular
+API, `/api/v1`, ULID ids, RFC 7807 errors) — see `../backend2/openapi/openapi.yaml` for the
+contract. Auto-loads for sessions in `mobile/`. See root `../CLAUDE.md` for the whole project.
 
 ## Stack
 
 Flutter 3.44 / Dart 3.12. Packages: `flutter_riverpod` (state), `dio` (HTTP),
 `flutter_tts` (pronunciation), `google_sign_in` **v7** (new API: `GoogleSignIn.instance`,
-`initialize()`, `authenticate()`), `flutter_secure_storage` (token in Keychain),
-`google_fonts` (Inter), `flutter_animate`.
+`initialize()`, `authenticate()`), `sign_in_with_apple`, `flutter_secure_storage` (token in
+Keychain), `flutter_animate`. Fonts (Literata + Inter) are **bundled** in `assets/fonts/`
+(offline-first) — `google_fonts` was removed at the A3 close. `lib/core/` is **gone** (the old dark
+theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `lib/ui/` (components).
 
 ## Structure (`lib/`)
 
-- `core/` — `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`, with dev defaults), `design.dart` (dark tokens + gradients), `theme.dart`.
-- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token + `ngrok-skip-browser-warning`), `auth_repository.dart` (Google → backend token exchange), `token_store.dart`, `providers.dart` (Riverpod: auth, stats, collections, sessionCards).
-- `features/` — `auth/` (Google login), `home/` (bottom nav: Тренировка/Коллекции/Профиль), `training/` (`training_home_screen.dart` dashboard + progress monitor + "Перемешать всё"; `session_screen.dart` = swipe deck), `collections/` (emoji tiles, CRUD, `generate_dialog.dart`, `collection_edit_dialog.dart`, `word_edit_dialog.dart`), `profile/`.
-- `preview.dart` — design preview harness with mock data: `flutter run -d chrome --target lib/preview.dart` (no backend/login needed).
+- `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
+- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
+- `features/` — `auth/`, `home/`, `training/` (`training_home_screen.dart` dashboard, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/`, `progress/`, `onboarding/`, `profile/`.
+- `l10n/` — `app_ru.arb` (source of truth) + `app_en.arb` (complete); both `ru` and `en` are in `kSupportedLocales`. All UI copy routes through `AppLocalizations` (guarded by `test/l10n/no_cyrillic_outside_l10n_test.dart`, allowlist now **empty**).
+- `tool/preview.dart` — design preview harness with mock data: `flutter run -d chrome --target tool/preview.dart` (no backend/login needed). Lives outside `lib/` so its sample Russian data is exempt from the cyrillic guard.
 
 ## Design
 
@@ -28,12 +31,23 @@ Training session: tap card to reveal; **swipe right = Знаю, left = Не зн
 
 Device: **iPhone (Denis)**, id `00008110-000A7CCC3492801E`, iOS 27 beta.
 
+**Canonical build command — use this verbatim, every session.** No `--dart-define` needed: every
+compile-time default in `lib/data/config.dart` is already correct for a dev build — `API_BASE_URL`
+→ the stable backend2 ngrok, the Google client id is set, and the store/paywall/dev-menu flags
+default **true**. Do NOT drop the flags with a bare rebuild — that is exactly how the store once
+"disappeared" from a build.
+
 ```bash
-cd mobile && flutter run --release -d 00008110-000A7CCC3492801E
+cd mobile && PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d 00008110-000A7CCC3492801E
 ```
+
+Override a single setting only when you must, e.g. `--dart-define=STORE_ENABLED=false` or
+`--dart-define=API_BASE_URL=https://…`. (Release defaults for the flags are a `TODO(release)` — see
+ROADMAP «релиз: решить дефолты флагов».)
 
 **Use `--release`.** In debug the app shows a white screen / "Dart VM Service not discovered"
 because the debug VM service needs the phone's Local Network permission; release sidesteps it.
+The `PATH`/`LANG` prefix is required (Homebrew pod/toolchain first, UTF-8 locale) — see the pod gotcha below.
 
 Hard-won gotchas (all already resolved once — needed again on a fresh machine/checkout):
 - **Xcode 27 beta required** — host is macOS 27 beta; App Store Xcode 26.x won't launch (error -10664). Xcode 27 beta 3 is installed.
@@ -46,13 +60,35 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 
 ## API config
 
-`lib/core/config.dart` defaults `API_BASE_URL` to the ngrok URL of the **old backend**
-(`https://greedily-thermos-finer.ngrok-free.dev`) and `GOOGLE_IOS_CLIENT_ID` to the value in
-`../credentials.plist`. Override at run time: `flutter run --dart-define=API_BASE_URL=…`.
-When backend2 is ready (ROADMAP Phase 4), repoint this / regenerate the client from OpenAPI.
+The data layer targets **backend2** (`{API_BASE_URL}/api/v1`, bearer token, responses wrapped
+in `data`, ULID string ids, `/reviews/batch`, `/study/due`, `/generations`). `lib/data/`
+(`models.dart`, `api_client.dart`, `providers.dart`) was hand-adapted to the OpenAPI contract
+(not codegen). **backend2 must be exposed** for on-device use: it has no ngrok service yet —
+run one against host `:8001` and pass `--dart-define=API_BASE_URL=…`. The old-backend ngrok
+default in `config.dart` is stale; override it. `GOOGLE_IOS_CLIENT_ID` unchanged (`../credentials.plist`).
+
+Gaps vs the old app (backend2 doesn't provide): per-item CEFR badge, collection emoji
+(chosen locally, not persisted), word editing (done as remove+add), per-collection progress
+on the training home (now shows word counts), and AI open-answer check.
 
 ## Verify without the phone
 
-`flutter analyze` must be clean. `flutter test` runs the widget test. For visual checks use
-the web preview harness (`lib/preview.dart`) instead of a simulator (no iOS simulator runtime
-is installed; device is the target).
+`flutter analyze` must be clean. `flutter test` runs the widget + unit tests.
+
+For visual checks there are two harnesses under `tool/` (both outside `lib/`, so their Russian
+sample copy is exempt from the cyrillic guard):
+
+- `tool/preview.dart` — the app's own screens with mock providers.
+- `tool/ladder_preview.dart` — the acquisition-ladder surfaces (кадры 16b/16d/16e): the intro card,
+  the word row's five dots, the expanded word card.
+
+Both run on the **iOS simulator** (runtimes 26.5 and 27.0 ARE installed — the old note claiming
+otherwise was stale), or in Chrome:
+
+```bash
+PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --debug -d <simulator-udid> --target tool/ladder_preview.dart
+```
+
+**`--debug`, not `--release`, on a simulator** — `flutter run --release` refuses with «Release mode
+is not supported by <device>» (the release build is device-only). The `--release` rule in the
+recipe above is for the PHONE and still stands there.

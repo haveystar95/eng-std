@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Domain\Entity\TermProgress;
+use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -30,6 +31,8 @@ final class TermProgressMapper
             reps: (int) $row['reps'],
             lapses: (int) $row['lapses'],
             lastReviewedAt: $this->toDate($row['last_reviewed_at']),
+            acquisition: Acquisition::from((string) $row['acquisition']),
+            learningStep: (int) $row['learning_step'],
         );
     }
 
@@ -42,6 +45,11 @@ final class TermProgressMapper
     {
         return [
             'state' => $progress->state()->value,
+            // The ladder dimension travels in the same row but is never written by the scheduler:
+            // every transition that moves one of these two leaves the SM-2 columns untouched, and
+            // vice versa (see TermProgress).
+            'acquisition' => $progress->acquisition()->value,
+            'learning_step' => $progress->learningStep(),
             'ease_factor' => $progress->easeFactor(),
             'interval_days' => $progress->intervalDays(),
             'due_at' => $progress->dueAt(),

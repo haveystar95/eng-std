@@ -11,27 +11,34 @@ use DateTimeImmutable;
 
 final class InMemoryDueTermsReader implements DueTermsReader
 {
-    /** @var list<int> the limit passed to each due() call, for asserting the session cap */
+    /** @var list<int> the limit passed to each selectable() call, for asserting the session cap */
     public array $dueLimits = [];
 
     /**
-     * @param list<DueTermView> $dueTerms
-     * @param list<DueTermView> $newTerms
+     * @param  list<DueTermView>  $dueTerms  the selectable projection (ladder rows + due rows)
+     * @param  list<DueTermView>|null  $allTerms  every progress row (any state, ignoring due_at)
+     *                                            for {@see allAmong}; defaults to [$dueTerms]
      */
     public function __construct(
         private readonly array $dueTerms = [],
-        private readonly array $newTerms = [],
+        private readonly ?array $allTerms = null,
     ) {}
 
-    public function due(UserId $userId, DateTimeImmutable $now, int $limit): array
+    public function selectableAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
         $this->dueLimits[] = $limit;
+        $set = array_flip($termIds);
+        $filtered = array_values(array_filter($this->dueTerms, static fn ($v): bool => isset($set[$v->termId->value])));
 
-        return array_slice($this->dueTerms, 0, $limit);
+        return array_slice($filtered, 0, $limit);
     }
 
-    public function newTerms(UserId $userId, int $limit): array
+    public function allAmong(UserId $userId, array $termIds, int $limit): array
     {
-        return array_slice($this->newTerms, 0, $limit);
+        $set = array_flip($termIds);
+        $pool = $this->allTerms ?? $this->dueTerms;
+        $filtered = array_values(array_filter($pool, static fn ($v): bool => isset($set[$v->termId->value])));
+
+        return array_slice($filtered, 0, $limit);
     }
 }

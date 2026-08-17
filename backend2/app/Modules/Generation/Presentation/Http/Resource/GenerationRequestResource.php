@@ -19,6 +19,8 @@ final class GenerationRequestResource extends JsonResource
             'id' => $this->resource->id,
             'status' => $this->resource->status,
             'prompt' => $this->resource->prompt,
+            'requested' => $this->resource->requested,
+            'delivered' => $this->resource->delivered,
             'collection_id' => $this->resource->collectionId,
             'error' => $this->resource->error,
             'model' => $this->resource->model,

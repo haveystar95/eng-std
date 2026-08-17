@@ -24,6 +24,7 @@ final class GenerationRequestMapper
             targetLang: new LanguageCode($model->target_lang),
             levels: array_map('strval', $model->levels),
             size: $model->size,
+            deliveredCount: $model->delivered_count,
             promptVersion: $model->prompt_version,
             status: GenerationStatus::from($model->status),
             model: $model->model,
@@ -32,6 +33,7 @@ final class GenerationRequestMapper
             costUsd: $model->cost_usd,
             collectionId: $model->collection_id !== null ? CollectionId::fromString($model->collection_id) : null,
             error: $model->error,
+            rawResponse: $model->raw_response,
             createdAt: $model->created_at->toDateTimeImmutable(),
             finishedAt: $model->finished_at?->toDateTimeImmutable(),
         );
@@ -48,6 +50,7 @@ final class GenerationRequestMapper
             'target_lang' => $request->targetLang()->value,
             'levels' => $request->levels(),
             'size' => $request->size(),
+            'delivered_count' => $request->deliveredCount(),
             'prompt_version' => $request->promptVersion(),
             'status' => $request->status()->value,
             'model' => $request->model(),
@@ -56,6 +59,7 @@ final class GenerationRequestMapper
             'cost_usd' => $request->costUsd(),
             'collection_id' => $request->collectionId()?->value,
             'error' => $request->error(),
+            'raw_response' => $request->rawResponse(),
             'created_at' => $request->createdAt(),
             'finished_at' => $request->finishedAt(),
         ];

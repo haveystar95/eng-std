@@ -1,244 +1,408 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/design.dart';
+import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
+import 'package:eng_std/l10n/app_localizations.dart';
+
+import '../../data/feature_flags.dart';
+import '../../data/local/app_database.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../../data/store_providers.dart';
+import '../home/home_cta.dart';
+import 'collection_cover.dart';
+import 'collection_cta.dart';
 import 'collection_detail_screen.dart';
 import 'collection_edit_dialog.dart';
-import 'generate_dialog.dart';
+import 'generate_screen.dart';
+import 'pending_generation_card.dart';
+import 'store_view.dart';
 
-class CollectionsScreen extends ConsumerWidget {
-  const CollectionsScreen({super.key});
+/// The Collections tab (кадр 2.5): a paper screen with a title + «+» that opens the create flow, the
+/// in-flight generation states (shimmer / error / undelivered) at the top of the list, then the
+/// collection rows — 96px cover, Literata title, «N слов · освоено M», three ink-density segments,
+/// and a state-dependent action hint. Everything reads the local DB (renders offline). Pull-to-
+/// refresh does a full resync (ghost cleanup).
+///
+/// When the store flag is on (A3.9), a «Мои»/«Готовые» segment (кадр 2.8) pins under the header and
+/// switches the body to the store. With the flag off the screen is exactly as before — no segment.
+class CollectionsScreen extends ConsumerStatefulWidget {
+  const CollectionsScreen({super.key, this.initialSegment = 0});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final collections = ref.watch(collectionsProvider);
-
-    return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showGenerateDialog(context, ref),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.auto_awesome_rounded),
-        label: const Text('Сгенерировать', style: TextStyle(fontWeight: FontWeight.w600)),
-      ),
-      body: SafeArea(
-        child: collections.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Ошибка: $e', style: const TextStyle(color: AppColors.textSecondary))),
-          data: (items) => RefreshIndicator(
-            onRefresh: () async => ref.invalidate(collectionsProvider),
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _Header(items: items)),
-                if (items.isEmpty)
-                  const SliverFillRemaining(hasScrollBody: false, child: _EmptyState())
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 96),
-                    sliver: SliverList.separated(
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _CollectionTile(collection: items[i], index: i)
-                          .animate()
-                          .fadeIn(delay: (40 * i).ms)
-                          .slideY(begin: 0.06, end: 0),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends ConsumerWidget {
-  const _Header({required this.items});
-  final List<WordCollection> items;
+  /// Which segment opens first — 0 = «Мои», 1 = «Готовые». Defaults to «Мои» (production); the store
+  /// preview harness passes 1 to land straight on the showcase. Ignored when the store flag is off.
+  final int initialSegment;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final totalWords = items.fold<int>(0, (s, c) => s + c.wordsCount);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Коллекции',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-              const Spacer(),
-              IconButton.filledTonal(
-                onPressed: () => showCollectionEditor(context, ref),
-                icon: const Icon(Icons.add_rounded),
-                style: IconButton.styleFrom(backgroundColor: AppColors.surfaceAlt, foregroundColor: AppColors.textPrimary),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              _stat(context, '${items.length}', 'наборов', Icons.style_rounded),
-              const SizedBox(width: 12),
-              _stat(context, '$totalWords', 'слов', Icons.translate_rounded),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _stat(BuildContext context, String value, String label, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadii.md), boxShadow: AppShadows.card),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 22),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  ConsumerState<CollectionsScreen> createState() => _CollectionsScreenState();
 }
 
-class _CollectionTile extends ConsumerWidget {
-  const _CollectionTile({required this.collection, required this.index});
-  final WordCollection collection;
-  final int index;
+class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
+  late int _segment = widget.initialSegment; // 0 = Мои, 1 = Готовые (store)
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удалить коллекцию?'),
-        content: Text('«${collection.title}» и её слова будут удалены.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await ref.read(apiClientProvider).deleteCollection(collection.id);
-      ref.invalidate(collectionsProvider);
-      ref.invalidate(statsProvider);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isAi = collection.source == 'ai';
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadii.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => CollectionDetailScreen(collectionId: collection.id, title: collection.title),
-        )),
-        child: Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadii.lg), boxShadow: AppShadows.card),
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              Container(
-                width: 52, height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(gradient: AppGradients.tileFor(index), borderRadius: BorderRadius.circular(AppRadii.md)),
-                child: collection.emoji != null
-                    ? Text(collection.emoji!, style: const TextStyle(fontSize: 26))
-                    : Icon(isAi ? Icons.auto_awesome_rounded : Icons.style_rounded, color: Colors.white, size: 26),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(collection.title,
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text('${collection.wordsCount} слов',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-                        if (isAi) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(AppRadii.sm)),
-                            child: Text('ИИ', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.accent, fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
-                color: AppColors.surfaceHi,
-                onSelected: (v) {
-                  if (v == 'edit') showCollectionEditor(context, ref, existing: collection);
-                  if (v == 'delete') _confirmDelete(context, ref);
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Изменить')),
-                  PopupMenuItem(value: 'delete', child: Text('Удалить')),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  double get _bottomInset =>
+      AppTabBarMetrics.height +
+      AppTabBarMetrics.bottomInset +
+      MediaQuery.viewPaddingOf(context).bottom +
+      AppSpacing.s8;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 88, height: 88,
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.14), shape: BoxShape.circle),
-              child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 40),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text('Пока нет коллекций',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            Text('Нажми «Сгенерировать» или «+», чтобы создать набор слов',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary)),
-          ],
+    final storeOn = ref.watch(featureFlagsProvider).storeEnabled;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
+          bottom: false,
+          child: storeOn ? _withStore() : _mineList(withHeader: true),
         ),
+      ),
+    );
+  }
+
+  /// Store on: pinned header + segment, then the selected body fills the rest.
+  Widget _withStore() {
+    final l = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s12),
+          child: _Header(),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.s12),
+          child: _Segmented(
+            labels: [l.storeSegmentMine, l.storeSegmentReady],
+            index: _segment,
+            onChanged: (i) {
+              AppHaptics.light();
+              setState(() => _segment = i);
+            },
+          ),
+        ),
+        Expanded(
+          child: _segment == 0
+              ? _mineList(withHeader: false)
+              : RefreshIndicator(
+                  color: AppColors.ink,
+                  backgroundColor: AppColors.surfaceRaised,
+                  onRefresh: () async {
+                    final pair = ref.read(storeLangPairProvider);
+                    if (pair != null) ref.invalidate(storeCollectionsProvider(pair));
+                  },
+                  child: StoreView(bottomInset: _bottomInset),
+                ),
+        ),
+      ],
+    );
+  }
+
+  /// «Мои» — the collection list. [withHeader] includes the scrolling title (store off); when the
+  /// store segment is shown the header is pinned above, so it's omitted here.
+  Widget _mineList({required bool withHeader}) {
+    final l = AppLocalizations.of(context);
+    final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
+    final pending = ref.watch(pendingGenerationsProvider).value ?? const <PendingGeneration>[];
+    final empty = collections.isEmpty && pending.isEmpty;
+
+    return RefreshIndicator(
+      color: AppColors.ink,
+      backgroundColor: AppColors.surfaceRaised,
+      onRefresh: () => ref.read(syncServiceProvider).resync(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(bottom: _bottomInset),
+        children: [
+          if (withHeader)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s16),
+              child: _Header(),
+            ),
+          if (empty)
+            _Empty(l: l)
+          else ...[
+            for (var i = 0; i < pending.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+                child: PendingGenerationCard(
+                  row: pending[i],
+                  showDivider: i < pending.length - 1 || collections.isNotEmpty,
+                ),
+              ),
+            for (var i = 0; i < collections.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+                child: _CollectionRow(
+                  collection: collections[i],
+                  showDivider: i < collections.length - 1,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// «Мои»/«Готовые» pill segment (кадр 2.8): a faint ink track with a raised paper thumb on the
+/// selected side.
+class _Segmented extends StatelessWidget {
+  const _Segmented({required this.labels, required this.index, required this.onChanged});
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.ink.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == index,
+                label: labels[i],
+                child: GestureDetector(
+                  onTap: i == index ? null : () => onChanged(i),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: i == index
+                        ? BoxDecoration(
+                            color: AppColors.surfaceRaised,
+                            borderRadius: BorderRadius.circular(11),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: AppColors.ink.withValues(alpha: 0.10),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1)),
+                            ],
+                          )
+                        : null,
+                    child: Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 13.5,
+                        fontWeight: i == index ? FontWeight.w700 : FontWeight.w600,
+                        color: i == index ? AppColors.ink : AppColors.secondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(child: Text(l.collectionsTitle, style: AppText.screenTitle)),
+        Semantics(
+          button: true,
+          label: l.collectionsNewCollection,
+          child: InkResponse(
+            radius: 26,
+            onTap: () {
+              AppHaptics.light();
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GenerateScreen()));
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: AppColors.ink, shape: BoxShape.circle),
+              child: const Icon(LucideIcons.plus, size: 18, color: AppColors.paper),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One collection as a flat list row (кадр 7a): cover, title, «N слов · освоено M», ink-density
+/// segments, and a review/triage action hint. Tap → detail; long-press → own-collection menu.
+class _CollectionRow extends ConsumerWidget {
+  const _CollectionRow({required this.collection, required this.showDivider});
+  final WordCollection collection;
+  final bool showDivider;
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionDeleteTitle(collection.title),
+      message: l.collectionDeleteMessage,
+      confirmLabel: l.actionDelete,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok != true) return;
+    AppHaptics.warning();
+    try {
+      await ref.read(apiClientProvider).deleteCollection(collection.id);
+      // Drop it locally right away — the delta feed doesn't reliably carry a collection tombstone.
+      await ref.read(appDatabaseProvider).deleteCollectionLocal(collection.id);
+      ref.read(syncServiceProvider).sync();
+    } catch (_) {
+      AppHaptics.warning(); // network/5xx: keep the row, the user can retry
+    }
+  }
+
+  Future<void> _confirmUnsubscribe(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.collectionUnsubscribeTitle(collection.title),
+      message: l.collectionUnsubscribeMessage,
+      confirmLabel: l.collectionMenuRemoveFromMine,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok != true) return;
+    AppHaptics.warning();
+    await unsubscribeCollectionById(ref, collection.id);
+  }
+
+  Future<void> _menu(BuildContext anchor, WidgetRef ref) async {
+    AppHaptics.light();
+    final l = AppLocalizations.of(anchor);
+    // Read-only store set: «Убрать из моих» (unsubscribe) only; own collections keep rename + delete.
+    await showFloatingContextMenu(
+      context: anchor,
+      anchorContext: anchor,
+      barrierLabel: l.commonCloseMenu,
+      actions: collection.readOnly
+          ? [
+              ContextMenuAction(
+                icon: LucideIcons.circleMinus,
+                label: l.collectionMenuRemoveFromMine,
+                destructive: true,
+                onSelected: () => _confirmUnsubscribe(anchor, ref),
+              ),
+            ]
+          : [
+              ContextMenuAction(
+                icon: LucideIcons.pencil,
+                label: l.collectionMenuRename,
+                onSelected: () => showCollectionEditor(anchor, ref, existing: collection),
+              ),
+              ContextMenuAction(
+                icon: LucideIcons.trash2,
+                label: l.collectionMenuDelete,
+                destructive: true,
+                onSelected: () => _confirmDelete(anchor, ref),
+              ),
+            ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final prog = ref.watch(collectionsProgressProvider).value?[collection.id];
+    final density = ref.watch(collectionDensityProvider(collection.id)).value ??
+        const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
+    final untriaged = ref.watch(untriagedByCollectionProvider).value?[collection.id] ?? 0;
+    final learnable = ref.watch(learnableByCollectionProvider).value?[collection.id] ?? 0;
+    final total = prog?.total ?? collection.wordsCount;
+    final mastered = prog?.mastered ?? 0;
+    final remainingNewQuota = ref.watch(statsProvider).value?.newRemaining ?? 0;
+    final cta = computeCollectionCta(
+        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0, remainingNewQuota: remainingNewQuota);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: showDivider ? const Border(bottom: BorderSide(color: AppColors.hairline)) : null,
+      ),
+      child: Builder(
+        builder: (anchor) => InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => CollectionDetailScreen(collectionId: collection.id, title: collection.title),
+          )),
+          onLongPress: () => _menu(anchor, ref),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CollectionCover(collection: collection, size: 96),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(collection.title,
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.collectionNameCard),
+                      const SizedBox(height: 5),
+                      Text(l.collectionsTileMastered(total, mastered),
+                          style: AppText.translation.copyWith(fontSize: 12.5)),
+                      const SizedBox(height: 11),
+                      InkSegments.fromCounts(
+                        confirmed: density.confirmed,
+                        familiar: density.familiar,
+                        inProgress: density.inProgress,
+                        height: 6,
+                      ),
+                      if (_hint(l, cta) case final hint?) ...[
+                        const SizedBox(height: 8),
+                        Text(hint, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _hint(AppLocalizations l, HomeCta cta) => switch (cta.kind) {
+        HomeCtaKind.triage => l.collectionTriageButton(cta.count),
+        HomeCtaKind.learn => l.collectionLearnButton(cta.count),
+        HomeCtaKind.review => l.collectionReviewButton(cta.count),
+        _ => null,
+      };
+}
+
+class _Empty extends StatelessWidget {
+  const _Empty({required this.l});
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 60, AppSpacing.screenH, 24),
+      child: Column(
+        children: [
+          const Icon(LucideIcons.layoutGrid, size: 40, color: AppColors.tertiary),
+          const SizedBox(height: AppSpacing.s16),
+          Text(l.collectionsEmptyTitle, style: AppText.stepTitle.copyWith(fontSize: 22), textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(l.collectionsEmptyBody,
+              textAlign: TextAlign.center, style: AppText.translation.copyWith(color: AppColors.secondary)),
+        ],
       ),
     );
   }

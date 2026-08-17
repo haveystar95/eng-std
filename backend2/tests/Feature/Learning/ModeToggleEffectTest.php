@@ -1,0 +1,95 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Modules\Learning\Application\Port\EnabledModesWriter;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Shared\Domain\ValueObject\UserId;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
+
+uses(RefreshDatabase::class);
+
+/** Build a study session over HTTP and return the modes it dealt. */
+function dealtModes(object $ctx, string $token, bool $practice = false): array
+{
+    $cards = $ctx->withHeader('Authorization', "Bearer {$token}")
+        // The wire names are `limit` and `practice` (BuildSessionRequest). Sending anything else
+        // is silently ignored — the rules are `sometimes` — so a typo here would quietly test the
+        // scheduling path while claiming to test practice.
+        ->postJson('/api/v1/study/sessions', ['limit' => 10, 'practice' => $practice])
+        ->assertOk()
+        ->json('data.cards');
+
+    return array_values(array_unique(array_column($cards, 'exercise_mode')));
+}
+
+it('deals only the modes the toggles leave on', function () {
+    [$user, $token] = learner();
+    seedWordFor($user, 'reservation', 'бронь');
+    seedWordFor($user, 'towel', 'полотенце');
+    seedWordFor($user, 'front desk', 'стойка');
+
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::Typing]),
+    );
+
+    expect(dealtModes($this, $token, practice: true))->toBe(['typing']);
+});
+
+it('falls back to multiple_choice — loudly — when no enabled mode fits the term', function () {
+    [$user, $token] = learner();
+    // A single word with no example: word_bank needs two words, cloze and scramble need an example.
+    seedWordFor($user, 'towel', 'полотенце');
+
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::WordBank, ExerciseMode::Cloze, ExerciseMode::Scramble]),
+    );
+
+    Log::spy();
+
+    // The card is still playable — an empty session is a worse answer to a bad toggle.
+    expect(dealtModes($this, $token, practice: true))->toBe(['multiple_choice']);
+
+    // …and the misconfiguration left a trace, because nothing else about it is visible.
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context): bool => str_contains($message, 'multiple_choice')
+            && $context['term_id'] !== null)
+        ->atLeast()->once();
+});
+
+it('applies a toggle to the SRS ladder too, not just to practice', function () {
+    [$user, $token] = learner();
+    seedWordFor($user, 'reservation', 'бронь');
+
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::Typing]),
+    );
+
+    // A brand-new term would normally be introduced with multiple_choice; with only typing on,
+    // the rung degrades inside the enabled set instead of handing out a mode that is off.
+    expect(dealtModes($this, $token))->toBe(['typing']);
+});
+
+it('ships the user own mode set on every /sync page', function () {
+    [$user, $token] = learner();
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::Typing, ExerciseMode::Scramble]),
+    );
+    $data = sync($this, $token);
+
+    // The device rebuilds free practice locally, so it needs the SET, not just the cards the
+    // server dealt — this is how a flipped toggle reaches the phone without a reinstall.
+    expect($data['settings']['exercise_modes'])->toBe(['typing', 'scramble']);
+});
+
+it('ships the global default to a user with no override', function () {
+    [, $token] = learner();
+
+    expect(sync($this, $token)['settings']['exercise_modes'])->toBe(config('learning.enabled_modes'));
+});

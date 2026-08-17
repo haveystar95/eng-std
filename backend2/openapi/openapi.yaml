@@ -21,6 +21,7 @@ security:
 tags:
   - name: Auth
   - name: Collections
+  - name: Study
   - name: Generation
 
 paths:
@@ -39,6 +40,7 @@ paths:
               properties:
                 id_token: { type: string }
                 device_name: { type: string, maxLength: 100 }
+                timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv). On first sign-in it seeds profiles.timezone so calendar-day due rounding (F19) works before the first PUT /profile. Refreshed on later logins; validated as an IANA zone." }
       responses:
         '200':
           description: Signed in
@@ -66,6 +68,16 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/User' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Auth]
+      summary: Delete the account and all of the user's data (App Store requirement)
+      description: >
+        Irreversible. Cascades across every module (collections, subscriptions, progress, reviews,
+        triages, sessions, stats, generations), revokes all tokens, and nulls the user's authorship
+        on global terms — the terms themselves stay. Runs in one transaction.
+      responses:
+        '204': { description: Account deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /auth/logout:
     post:
@@ -89,7 +101,9 @@ paths:
                 native_language: { type: string, minLength: 2, maxLength: 5 }
                 target_language: { type: string, minLength: 2, maxLength: 5 }
                 cefr_level: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
-                daily_goal: { type: integer, minimum: 1, maximum: 100 }
+                daily_goal: { type: integer, minimum: 0, maximum: 100 }
+                timezone: { type: string, description: "Device IANA timezone (e.g. Europe/Kyiv); the scheduler floors day-scale due dates to the start of the user's day in it (F19). Send it at login and whenever the device zone changes. Validated as an IANA zone." }
+                onboarded: { type: boolean, description: "Send true on the onboarding-finish call to stamp profiles.onboarded_at once (never overwritten). Regular edits omit it." }
       responses:
         '200':
           description: OK
@@ -106,7 +120,10 @@ paths:
     post:
       tags: [Generation]
       summary: Request an AI-generated collection (async)
-      description: Returns 202 with a pending request; poll GET /generations/{id} until succeeded|failed.
+      description: >
+        Returns 202 with a pending request; poll GET /generations/{id} until succeeded|failed.
+        Accepts an optional client-generated `id` (ULID) for offline idempotency: re-sending the same
+        id returns the existing request with 200 (no new job, no quota spent) instead of 202.
       requestBody:
         required: true
         content:
@@ -115,16 +132,31 @@ paths:
               type: object
               required: [prompt]
               properties:
+                id: { type: string, minLength: 26, maxLength: 26, description: Client-generated ULID for idempotent retries. }
                 prompt: { type: string, minLength: 2, maxLength: 500 }
                 levels:
                   type: array
                   items: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
                 size: { type: integer, minimum: 8, maximum: 25 }
                 source_lang: { type: string, minLength: 2, maxLength: 5 }
-                target_lang: { type: string, minLength: 2, maxLength: 5 }
+                target_lang:
+                  type: string
+                  minLength: 2
+                  maxLength: 5
+                  description: >
+                    Optional. When omitted, the server uses the caller's default learning language
+                    (profiles.target_language, as returned in /auth/me), then English if unset.
       responses:
         '202':
-          description: Accepted
+          description: Accepted — a new pending request was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GenerationRequest' }
+        '200':
+          description: The request already existed for this client id (idempotent repeat)
           content:
             application/json:
               schema:
@@ -132,6 +164,11 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/GenerationRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: The client id is already in use by another user (code `generation_id_conflict`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429':
           description: Daily generation quota reached (code `generation_quota_exceeded`)
@@ -156,6 +193,257 @@ paths:
                   data: { $ref: '#/components/schemas/GenerationRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Not found (or not the owner) }
+
+  /terms/{id}/regenerate-example:
+    post:
+      tags: [Generation]
+      summary: Generate a fresh example for a term ("New example")
+      description: >
+        The LLM produces a new example (different from the current one) and its translation, which
+        replace the term's stored example. Counts as one generation against the daily quota (429 when
+        exhausted). Returns the new example so the client can update the card in place.
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      example: { type: string }
+                      example_translation: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Unknown term }
+        '429': { $ref: '#/components/responses/Problem' }
+
+  /practice/dialogs:
+    post:
+      tags: [Practice]
+      summary: Start a realtime conversation-practice dialog (premium)
+      description: >
+        Premium-only. Assembles a lesson from the collection (topic, CEFR level, the collection's
+        source/target languages, up to 8 prioritised target words) and mints an ephemeral OpenAI
+        realtime token. The app then streams audio directly to OpenAI over WebRTC — audio never
+        transits this server. The session duration equals the token TTL (default 200s). This is
+        practice: it never writes reviews or progress. Send a client-generated ULID (`client_id`)
+        so a retry of a still-live dialog is idempotent (re-mints a token, no extra quota).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [collection_id, client_id]
+              properties:
+                collection_id: { type: string, minLength: 26, maxLength: 26 }
+                client_id: { type: string, minLength: 26, maxLength: 26, description: Client-generated ULID — the dialog id. }
+      responses:
+        '201':
+          description: Dialog started
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StartedPracticeDialog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Premium subscription required (code `subscription_required`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404': { description: Collection not found (or not the owner) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: >
+            Daily practice-dialog limit reached (code `practice_dialogs_quota_exceeded`);
+            `meta.resets_at` is the absolute reset instant, `meta.limit` the daily cap.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /practice/dialogs/{id}/transcripts:
+    post:
+      tags: [Practice]
+      summary: Append transcript events and get target-word coverage
+      description: >
+        Append-only and idempotent by (role, ts): re-uploading a batch stores only new lines. Returns
+        the up-to-date coverage of the dialog's target words (`used` is monotonic).
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [role, text, ts]
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      text: { type: string, maxLength: 4000 }
+                      ts: { type: integer, minimum: 0, description: Client line timestamp (ms). }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  target_words:
+                    type: array
+                    items: { $ref: '#/components/schemas/PracticeTargetWord' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Dialog not found (or not the owner) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /practice/dialogs/{id}/finish:
+    post:
+      tags: [Practice]
+      summary: Finish a dialog and get a native-language recap
+      description: >
+        Records the estimated realtime spend and returns a short recap written in the collection's
+        source (native) language, plus how many target words were used. Idempotent.
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+                  words_used: { type: integer }
+                  words_total: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Dialog not found (or not the owner) }
+
+  /practice/collections/{collectionId}/last-dialog:
+    get:
+      tags: [Practice]
+      summary: The result of the collection's most recent concluded practice dialog
+      description: >
+        Returns the last finished OR expired dialog for the collection (an early exit is still a
+        result). 404 when the user has never had one. Owner-scoped. `summary` is null for a dialog
+        that only expired (no recap was generated); `finished_at` is null only for legacy rows.
+      parameters:
+        - { name: collectionId, in: path, required: true, schema: { type: string, minLength: 26, maxLength: 26 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  finished_at: { type: string, format: date-time, nullable: true }
+                  words_used: { type: integer }
+                  words_total: { type: integer }
+                  summary: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No concluded dialog for this collection (or not the owner) }
+
+  /store/collections:
+    get:
+      tags: [Store]
+      summary: Browse the store — public + system collections for a language pair
+      description: >
+        Ordered by `topic` so the client can render sections, keyset-paginated on `(topic, id)`.
+        Each row carries `is_premium` (badge + subscribe gate) and `is_subscribed`.
+      parameters:
+        - { name: source_lang, in: query, required: false, schema: { type: string, default: ru } }
+        - { name: target_lang, in: query, required: false, schema: { type: string, default: en } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StoreCollection' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /store/collections/{id}/preview:
+    get:
+      tags: [Store]
+      summary: Preview a store collection — first few terms + total
+      description: >
+        A free taster shown before subscribing: up to 5 terms (learned form + native translation)
+        and the collection's total item count. Available to everyone, including free users looking at
+        a premium collection — the premium gate is only on adding. A private/non-store id 404s.
+      parameters:
+        - { $ref: '#/components/parameters/UlidId' }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StoreCollectionPreview' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not a store collection (private/custom or unknown) }
+
+  /store/collections/{id}/subscribe:
+    post:
+      tags: [Store]
+      summary: Add a store collection to the library (idempotent)
+      description: >
+        Idempotent — a repeat subscribe returns 200 and adds no duplicate. A premium collection
+        requires a premium tier, otherwise 403 `subscription_required`. A private/non-store id 404s.
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      collection_id: { type: string }
+                      subscribed: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Store]
+      summary: Remove a store collection from the library (idempotent)
+      parameters: [{ $ref: '#/components/parameters/UlidId' }]
+      responses:
+        '200':
+          description: Unsubscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      collection_id: { type: string }
+                      subscribed: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /collections:
     get:
@@ -275,6 +563,629 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  /collections/{id}/items:
+    post:
+      tags: [Collections]
+      summary: Add a word to a collection (owner only)
+      description: >
+        Found-or-creates the term in Vocabulary, then attaches it. Idempotent — adding the same word
+        twice is a no-op. Returns the refreshed collection. `translation` is optional: when omitted,
+        the term is created bare and enriched asynchronously (translation, transcription, example and
+        a stock photo are filled in from the LLM + Pexels), so images/translation appear via a later
+        `/sync`.
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 200 }
+                translation: { type: string, maxLength: 500, nullable: true, description: Optional; omit to have it auto-enriched. }
+                type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
+      responses:
+        '201':
+          description: Word added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Collection' }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /collections/{id}/items/{termId}:
+    delete:
+      tags: [Collections]
+      summary: Remove a term from a collection (owner only)
+      parameters:
+        - $ref: '#/components/parameters/UlidId'
+        - { name: termId, in: path, required: true, schema: { type: string, minLength: 26, maxLength: 26 } }
+      responses:
+        '204': { description: Removed }
+        '403':
+          description: Not the owner (code `collection_not_editable`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /study/sessions:
+    post:
+      tags: [Study]
+      summary: Build a self-contained study session (due then new cards, one card per exercise)
+      description: >-
+        Assembles a ready-to-play session: due cards first (state <> new, by due date), then new
+        cards up to the day's remaining new-term quota (one global quota — a scoped session does
+        not multiply it). Each card carries its exercise mode, chosen from the term's reps and answer
+        shape: reps 0 → multiple_choice; reps ≥ 1 → a production rotation that leads with the base
+        (word_bank for multi-word / typing for single-word) then fans out to listening (hear it, type
+        it) and cloze (fill the blank in the term's own example); review rotates typing/listening/cloze;
+        known → typing. cloze is only offered when the example contains the answer (the client blanks
+        that span from `example`). The card also carries the prompt (user's language), the answer
+        (target language) and mode-specific extras — shuffled options for multiple_choice, shuffled
+        chips for word_bank — so the client runs it offline.
+        The session's composition is fixed server-side under the returned session_id. A practice
+        session (practice=true) instead draws EVERY term in scope — a collection, or all the user's
+        collections — ignoring due_at, state and the daily quota (device-batch F17): free training on
+        demand. It introduces nothing and never schedules; its answers are recorded with is_practice
+        but do not move progress. The exercise mode still follows the reps ladder (never-studied →
+        multiple_choice, produced-before → word_bank/typing).
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true, description: Scope to one owned collection }
+                limit: { type: integer, minimum: 1, maximum: 100, default: 20 }
+                practice: { type: boolean, default: false }
+                session_id: { type: string, minLength: 26, maxLength: 26, nullable: true, description: Client-generated ULID (idempotent) }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      session_id: { type: string }
+                      cards:
+                        type: array
+                        items: { $ref: '#/components/schemas/SessionCard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /study/progress:
+    get:
+      tags: [Study]
+      summary: Per-collection learning progress (derived, not stored)
+      description: >-
+        For each of the user's own collections: total, new, due, and mastered counts, with
+        mastered broken into confirmed (proven by exercises) vs familiar (marked known) and the
+        rest in progress. Computed by folding the (user, term) progress over collection membership.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/CollectionProgress' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /reviews/batch:
+    post:
+      tags: [Study]
+      summary: Upload a session's events — answers (server-graded) and intros
+      description: >
+        Offline-friendly: up to 200 answers with client-generated ULIDs. The client sends the
+        RAW answer (response text, mode, latency, hint) — the SERVER grades it, so the grading
+        rule lives in one place. Re-sending an id is a duplicate, not an error; an answer for an
+        unknown term is skipped. A practice answer (is_practice) is recorded but never schedules.
+
+
+        A batch also carries `exposures`: INTRO cards, which were shown and asked nothing. They
+        are a separate list because they are not answers — they produce no grade and are never
+        written to the review log, which holds real retrievals only. At least one of the two
+        lists must be present; an intro-only batch is the normal shape of a first session with a
+        brand-new collection.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exposures:
+                  type: array
+                  maxItems: 200
+                  description: >-
+                    Intro cards shown. Identified by the PAIR (user, term), not by an event id:
+                    a term is introduced once, so a re-uploaded exposure is an ignored insert
+                    that keeps the first `shown_at` — no client ULID is needed to make it safe.
+                    Recording one moves the pair from ladder rung 0 to rung 1 and writes no
+                    scheduling field. Naming a session the server has never seen adopts it as an
+                    offline practice run, exactly as an answer does; if it cannot be adopted the
+                    exposure is still recorded, without the session.
+                  items:
+                    type: object
+                    required: [term_id, shown_at]
+                    properties:
+                      term_id: { type: string, minLength: 26, maxLength: 26 }
+                      shown_at: { type: string, format: date-time }
+                      session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                reviews:
+                  type: array
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [id, term_id, exercise_mode, response, answered_at, client_seq]
+                    properties:
+                      id: { type: string, minLength: 26, maxLength: 26 }
+                      term_id: { type: string, minLength: 26, maxLength: 26 }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct] }
+                      response: { type: string, description: The user's raw answer text }
+                      answered_at:
+                        type: string
+                        format: date-time
+                        description: >-
+                          Reference-only (device clock). NOT used to order the fold — see client_seq.
+                      client_seq:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Per-user monotonic sequence assigned by the client at answer time,
+                          surviving queue clears. The server folds answers into progress in
+                          client_seq order (not answered_at, a device clock that can lag). Must
+                          be strictly increasing per user across the whole history; initialise
+                          from GET /auth/me `max_review_seq` after a reinstall.
+                      used_hint: { type: boolean, default: false }
+                      is_practice: { type: boolean, default: false }
+                      latency_ms:
+                        type: integer
+                        minimum: 0
+                        nullable: true
+                        description: >-
+                          Client-measured, from the card's paint to the answer. Optional: null
+                          means unmeasured (treated neutrally). Do NOT send 0 for an unmeasured
+                          answer — send null.
+                      session_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                      ladder_step:
+                        type: integer
+                        minimum: 1
+                        maximum: 5
+                        nullable: true
+                        description: >-
+                          The rung of the acquisition ladder the card was dealt at, echoed from
+                          the card. Required for rung 1 (forward recognition), which is graded by
+                          IDENTITY: the learner taps an option and the client uploads that
+                          option's TERM ID as `response`, so the key is an id and no translation
+                          ever enters an answer key. The pair's rung moves as this answer is
+                          folded, which is why the card has to say what it asked. 0 is not valid
+                          here — that is the intro, which belongs in `exposures`.
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted: { type: integer }
+                      duplicates: { type: integer }
+                      unknown: { type: integer }
+                      exposures:
+                        type: integer
+                        description: >-
+                          Intro cards newly recorded. Counted apart from `accepted` because they
+                          are not answers; a re-upload reports 0 here and changes nothing.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /stats:
+    get:
+      tags: [Study]
+      summary: Training dashboard stats
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Stats' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /triage/queue:
+    get:
+      tags: [Study]
+      summary: The first-pass swipe queue for one collection (not-yet-triaged, not-yet-studied terms)
+      description: >-
+        A collection's terms that have neither a progress row nor a triage record, capped at
+        limit. Content is included so the whole batch can be swiped offline. Excluding
+        already-triaged terms is what stops a term from being asked twice, even when an
+        "unknown" swipe leaves it new. The response is an envelope: `cards` plus `remaining`,
+        the count of eligible terms beyond this page.
+      parameters:
+        - name: collection_id
+          in: query
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 40, default: 40 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [cards, remaining]
+                    properties:
+                      cards:
+                        type: array
+                        items: { $ref: '#/components/schemas/TriageCard' }
+                      remaining:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Eligible (not-yet-triaged, not-yet-studied) terms left AFTER this page —
+                          i.e. what subsequent GETs will still serve, NOT the collection's total
+                          new-term count. Lets the client show honest progress ("N more after
+                          sync") without diverging from the real queue. 0 means this is the last page.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /triage/batch:
+    post:
+      tags: [Study]
+      summary: Upload a batch of triage swipes (idempotent by triage id)
+      description: >-
+        A swipe is a self-assessment, kept out of the review log. Projects onto (user, term)
+        progress: known → a known row, unsure → learning (due now), unknown → stays new (and,
+        for a term currently known, drops the row to return it to learning). Re-sending an id
+        is a duplicate, not an error; a swipe for an unknown term is skipped.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [triages]
+              properties:
+                triages:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [id, term_id, verdict, decided_at, client_seq]
+                    properties:
+                      id: { type: string, minLength: 26, maxLength: 26 }
+                      term_id: { type: string, minLength: 26, maxLength: 26 }
+                      verdict: { type: string, enum: [known, unknown, unsure] }
+                      decided_at:
+                        type: string
+                        format: date-time
+                        description: >-
+                          Reference-only (device clock). NOT used to decide the current verdict —
+                          see client_seq.
+                      client_seq:
+                        type: integer
+                        minimum: 0
+                        description: >-
+                          Per-user monotonic sequence assigned by the client at swipe time,
+                          surviving queue clears. The current verdict for a (user, term) is the
+                          one with the greatest client_seq (not the latest decided_at, a device
+                          clock that can lag and roll back a genuinely-later verdict). Must be
+                          strictly increasing per user across the whole history; initialise from
+                          GET /auth/me `max_triage_seq` after a reinstall.
+                      collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                      latency_ms:
+                        type: integer
+                        minimum: 0
+                        nullable: true
+                        description: >-
+                          Client-measured, from the card's paint to the FIRST event (flip or swipe,
+                          whichever comes first). Optional: null means unmeasured (treated neutrally
+                          — never risky). Do NOT send 0 for an unmeasured swipe — send null.
+                          (Risk-by-latency applies to phrases only.)
+                      revealed:
+                        type: boolean
+                        nullable: true
+                        description: >-
+                          Whether the learner flipped the card (revealing the translation/example)
+                          before deciding. A `known` verdict reached after peeking is a weaker
+                          signal — recognition of a hint, not recall — so it drives an early
+                          verification check, on par with a too-fast swipe. Null/false = no peek
+                          (neutral); applies to words and phrases alike.
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted: { type: integer }
+                      duplicates: { type: integer }
+                      unknown: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /sync/cursor:
+    get:
+      tags: [Study]
+      summary: The client_seq high-water mark per log
+      description: >-
+        Greatest client_seq the server holds for this user, per append-only log. Clients seed
+        their monotonic client_seq counter from here on login, so a reinstall (counter reset) or
+        a second device does not emit sequences that would lose to already-stored rows. Values
+        are 0 when a log is empty. (Delta sync, GET /sync?since=, will grow alongside this.)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      max_triage_seq: { type: integer, minimum: 0 }
+                      max_review_seq: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /sync:
+    get:
+      tags: [Study]
+      summary: Delta sync — changes to mirror into the client's local database
+      description: >-
+        The offline feed. The client mirrors collections, items, terms (with content) and progress
+        into a local DB and reads every screen from there; this endpoint only refreshes it.
+
+
+        Send `since` = the `server_time` from your last completed sync (NOT the device clock — it
+        drifts). Omit `since` for the first, full snapshot after install. Page with `next_cursor`
+        (opaque) until `has_more` is false, then store the new `server_time` as your next `since`.
+
+
+        `since` is INCLUSIVE: timestamps are second-precision, so the boundary second is re-sent
+        to guarantee no change is ever missed. Apply changes idempotently by id (last-write-wins by
+        `updated_at`) — re-applying a row you already have is a no-op. Deletions arrive as
+        `op: "delete"` tombstones (collection soft-delete, item soft-delete) so ghosts don't linger;
+        a full snapshot (no `since`) omits deletes. Only terms in the user's own collections are
+        synced — never the global dictionary.
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+          description: A prior response's server_time. Inclusive. Omit for a full snapshot.
+        - { name: cursor, in: query, required: false, schema: { type: string }, description: "Opaque, from a previous page's next_cursor." }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [server_time, has_more, changes]
+                    properties:
+                      server_time: { type: string, format: date-time, description: Store as the next `since` once has_more is false. }
+                      next_cursor: { type: string, nullable: true, description: Pass back verbatim while has_more is true. }
+                      has_more: { type: boolean }
+                      settings:
+                        type: object
+                        description: >
+                          The user's settings, sent whole on every page rather than diffed — they are
+                          tiny, and a missed delta would strand a client on stale settings.
+                        properties:
+                          exercise_modes:
+                            type: array
+                            description: >
+                              The trainers this user has switched on, IN ROTATION ORDER (their own
+                              override, or the product default). The client mirrors this into its
+                              offline practice builder, so a toggle takes effect on the next sync.
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro] }
+                          mode_admission:
+                            type: array
+                            description: >
+                              The ACQUISITION LADDER matrix: which rung opens which trainer, and
+                              where that trainer's options come from. Rides along for the same
+                              reason as the toggles — the device builds sessions offline, so it
+                              needs to know not only which trainers exist but which of them this
+                              pair has earned. Stored per user with the same override mechanism
+                              as the toggles.
+                            items:
+                              type: object
+                              properties:
+                                mode: { type: string }
+                                min_acquisition: { type: string, enum: [new, learning, graduated] }
+                                min_learning_step: { type: integer, minimum: 0, maximum: 2, nullable: true }
+                                min_reps:
+                                  type: integer
+                                  minimum: 0
+                                  nullable: true
+                                  description: Reviews since GRADUATION, not since the first meeting.
+                                options_policy:
+                                  type: string
+                                  enum: [distant, standard]
+                                  description: >-
+                                    `distant` = wrong options are the session's own neighbours,
+                                    unmistakably different, which is what makes a first meeting
+                                    winnable. `standard` = the enrichment distractors, which are
+                                    nearly right and are the exercise once the word is known. A
+                                    graduated pair always gets `standard`.
+                                min_step:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 5
+                                  description: >-
+                                    The three thresholds resolved to a rung. Sent as well as them
+                                    so the client filters by rung without re-implementing the
+                                    ladder function.
+                      changes:
+                        type: object
+                        properties:
+                          collections:
+                            type: array
+                            items:
+                              type: object
+                              description: 'op=upsert carries the fields; op=delete carries id + updated_at only.'
+                              properties:
+                                id: { type: string }
+                                op: { type: string, enum: [upsert, delete] }
+                                updated_at: { type: string, format: date-time }
+                                title: { type: string, nullable: true }
+                                description: { type: string, nullable: true }
+                                topic: { type: string, nullable: true }
+                                source_lang: { type: string, nullable: true }
+                                target_lang: { type: string, nullable: true }
+                                items_count: { type: integer }
+                                source: { type: string, nullable: true, enum: [curated, ai, user], description: 'origin; drives the client badge' }
+                                type: { type: string, nullable: true, enum: [system, shared, custom], description: 'my / store / generated distinction' }
+                                image_url: { type: string, nullable: true, description: 'Pexels cover; null = none, show a placeholder' }
+                                image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
+                                image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
+                          collection_items:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                collection_id: { type: string }
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert, delete] }
+                                updated_at: { type: string, format: date-time }
+                                position: { type: integer }
+                                note: { type: string, nullable: true }
+                          terms:
+                            type: array
+                            items:
+                              type: object
+                              description: Content for the offline card; audio is optional (system TTS works offline).
+                              properties:
+                                id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time }
+                                text: { type: string, nullable: true }
+                                type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
+                                transcription: { type: string, nullable: true }
+                                translation: { type: string, nullable: true }
+                                example: { type: string, nullable: true }
+                                example_translation: { type: string, nullable: true }
+                                image_url: { type: string, nullable: true, description: 'Pexels photo; null = none, show a placeholder' }
+                                image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
+                                image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
+                                accepted_variants:
+                                  type: array
+                                  description: >
+                                    Extra CORRECT answers for this term, beyond `text` (e.g. this/that, may/can,
+                                    colour/color). The client grades typed answers offline against
+                                    `{text} ∪ accepted_variants` — the same set the server grades against, so the
+                                    device is never stricter than the server. Empty when the term has none.
+                                  items: { type: string }
+                                example_distractors:
+                                  type: array
+                                  description: >
+                                    Deliberately WRONG versions of `example`, each with its error typed and located.
+                                    Mirrored ahead of the trainer that consumes them; no client feature reads these yet.
+                                  items:
+                                    type: object
+                                    properties:
+                                      sentence: { type: string }
+                                      error_type: { type: string, enum: [article, preposition, tense, word_order, false_friend, modal_to] }
+                                      error_span: { type: string, description: 'the wrong fragment, verbatim from `sentence`' }
+                                      correction: { type: string }
+                          progress:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time }
+                                state:
+                                  type: string
+                                  enum: [new, learning, review, relearning, known]
+                                  description: >-
+                                    The SCHEDULER's dimension — WHEN the pair comes back. Says
+                                    nothing about what it comes back as; see `acquisition`.
+                                ease_factor: { type: number }
+                                interval_days: { type: integer }
+                                due_at: { type: string, format: date-time, nullable: true }
+                                reps: { type: integer }
+                                lapses: { type: integer }
+                                last_reviewed_at: { type: string, format: date-time, nullable: true }
+                                acquisition:
+                                  type: string
+                                  enum: [new, learning, graduated]
+                                  description: >-
+                                    The ACQUISITION LADDER's dimension — WHAT the pair comes back
+                                    as. Orthogonal to `state`: the scheduler never reads it and it
+                                    never reads the scheduler. `new` = never shown (its first card
+                                    is the intro); `learning` = working through the two recognition
+                                    steps, which log answers but schedule nothing; `graduated` =
+                                    off the recognition rungs, where ordinary SRS runs and the rung
+                                    widens with `reps`.
+                                learning_step:
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 2
+                                  description: >-
+                                    The rung while `acquisition` is `learning`. Not derivable from
+                                    `reps`: a FAILED recognition step is re-queued as the same step
+                                    but is still logged, so anything derived from the log would push
+                                    the pair up a rung it has not earned. Combine with `acquisition`
+                                    and `reps` through the shared ladder function to get the rung.
+                          triages:
+                            type: array
+                            description: >-
+                              Governing triage verdict per term (greatest client_seq). Append-only,
+                              so always op=upsert (no tombstone). The client upserts these into its
+                              local triage marker so a sign-out wipe + re-login can't resurrect an
+                              `unknown` swipe (which writes no progress row) in the deck.
+                            items:
+                              type: object
+                              properties:
+                                term_id: { type: string }
+                                op: { type: string, enum: [upsert] }
+                                updated_at: { type: string, format: date-time, description: 'server receipt time of the governing swipe' }
+                                verdict: { type: string, enum: [known, unknown, unsure] }
+                                client_seq: { type: integer }
+                                collection_id: { type: string, nullable: true, description: 'where the swipe came from (informational)' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -330,6 +1241,39 @@ components:
         has_more: { type: boolean }
       required: [has_more]
 
+    PracticeTargetWord:
+      type: object
+      description: A word the learner should use during the dialog, and whether they have yet.
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        used: { type: boolean, description: "Monotonic — once used, stays used." }
+      required: [term_id, text, used]
+
+    StartedPracticeDialog:
+      type: object
+      description: The started dialog — the provider, ephemeral token, endpoint, model, and target words.
+      properties:
+        dialog_id: { type: string }
+        provider: { type: string, enum: [openai, gemini], description: Which realtime provider to connect to. }
+        endpoint: { type: string, description: "Connection endpoint (OpenAI: realtime base URL; Gemini: v1alpha BidiGenerateContentConstrained WS URL — append ?access_token=<realtime_token>)." }
+        realtime_token: { type: string, description: "Ephemeral credential for the session (OpenAI client secret / Gemini auth token). Short-lived." }
+        expires_at: { type: string, format: date-time, description: Absolute instant the token expires. }
+        model: { type: string, description: Realtime model the session is bound to. }
+        target_words:
+          type: array
+          items: { $ref: '#/components/schemas/PracticeTargetWord' }
+        duration_seconds: { type: integer, description: Session length — the token TTL. }
+        session_setup:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: >
+            Gemini bare-token path: the pre-rendered BidiGenerateContentSetup (system instruction,
+            model, transcription, VAD) the client applies verbatim as its first WebSocket message —
+            it renders nothing itself. Null when the session is baked into the token (OpenAI).
+      required: [dialog_id, provider, endpoint, realtime_token, expires_at, model, target_words, duration_seconds]
+
     Profile:
       type: object
       properties:
@@ -337,6 +1281,44 @@ components:
         target_language: { type: string }
         cefr_level: { type: string }
         daily_goal: { type: integer }
+        tier: { type: string, enum: [free, premium], description: Subscription tier; drives the generation quota and premium-store access. }
+        timezone: { type: string, description: "The user's IANA timezone; UTC until the client sends one. Drives calendar-day due rounding (F19)." }
+        onboarded_at: { type: string, format: date-time, nullable: true, description: "Instant first-run onboarding finished, or null if never. The client's onboarding gate keys on this (server truth, survives reinstall)." }
+
+    StoreCollection:
+      type: object
+      description: A subscribable store collection (public or system) for a language pair.
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        topic: { type: string, nullable: true, description: Section key the client groups by. }
+        source_lang: { type: string }
+        target_lang: { type: string }
+        is_premium: { type: boolean, description: Subscribing requires a premium tier; otherwise 403 subscription_required. }
+        is_subscribed: { type: boolean, description: Whether the caller already has it in their library. }
+        level: { type: string, nullable: true, description: 'CEFR range for the card, e.g. "A2–B1" or "B2" (min–max of the terms'' levels); null when none carry a level.' }
+        items_count: { type: integer }
+        image_url: { type: string, nullable: true }
+        image_author: { type: string, nullable: true }
+        image_author_url: { type: string, nullable: true }
+
+    StoreCollectionPreview:
+      type: object
+      description: A free taster of a store collection — its first terms and the total item count.
+      properties:
+        collection_id: { type: string }
+        total: { type: integer, description: Total number of terms in the collection. }
+        terms:
+          type: array
+          description: Up to `limit` terms (default 5), in collection order.
+          items:
+            type: object
+            properties:
+              text: { type: string, description: The learned-language term. }
+              translation: { type: string, nullable: true, description: Native-language translation (collection source_lang). }
+              type: { type: string, description: word | phrase | idiom | phrasal_verb }
+              cefr: { type: string, nullable: true, description: CEFR level, e.g. A2. }
 
     User:
       type: object
@@ -349,6 +1331,17 @@ components:
           oneOf:
             - { $ref: '#/components/schemas/Profile' }
             - { type: 'null' }
+        generation:
+          description: >
+            The caller's generation allowance, so the client can grey the create button before
+            submit instead of failing on a 429. `resets_at` is an absolute instant (next UTC-day
+            boundary); render it in device-local time.
+          type: object
+          properties:
+            limit: { type: integer }
+            used: { type: integer }
+            remaining: { type: integer }
+            resets_at: { type: string, format: date-time }
 
     GenerationRequest:
       type: object
@@ -356,6 +1349,8 @@ components:
         id: { type: string }
         status: { type: string, enum: [pending, running, succeeded, failed] }
         prompt: { type: string }
+        requested: { type: integer, description: Items the user asked for }
+        delivered: { type: integer, nullable: true, description: Items actually produced; may be fewer than requested; null until succeeded }
         collection_id: { type: string, nullable: true }
         error: { type: string, nullable: true }
         model: { type: string, nullable: true }
@@ -381,10 +1376,17 @@ components:
 
     CollectionItem:
       type: object
+      description: A collection membership with its term content hydrated from Vocabulary.
       properties:
         term_id: { type: string }
         position: { type: integer }
         note: { type: string, nullable: true }
+        text: { type: string, nullable: true }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
+        transcription: { type: string, nullable: true }
+        translation: { type: string, nullable: true }
+        example: { type: string, nullable: true }
+        example_translation: { type: string, nullable: true }
 
     Collection:
       allOf:
@@ -394,3 +1396,140 @@ components:
             items:
               type: array
               items: { $ref: '#/components/schemas/CollectionItem' }
+
+    CollectionProgress:
+      type: object
+      description: >-
+        Derived from (user, term) progress. mastered_count is the single "mastered" figure;
+        confirmed + familiar + in_progress + new_count sum to terms_total.
+      properties:
+        collection_id: { type: string }
+        terms_total: { type: integer }
+        new_count: { type: integer, description: "Not started (no progress, or returned to new)" }
+        due_count: { type: integer }
+        mastered_count: { type: integer, description: confirmed + familiar }
+        confirmed_count: { type: integer, description: "Proven by exercises (review, interval >= 21)" }
+        familiar_count: { type: integer, description: Marked known (self-assessed) }
+        in_progress_count: { type: integer, description: Started but not yet mastered }
+
+    SessionCard:
+      type: object
+      properties:
+        term_id: { type: string }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro] }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
+        prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise. On ladder rung 1 the direction is REVERSED: the prompt is the TERM and the options are translations" }
+        answer: { type: string, description: "What a correct answer must match. The target-language term, except for: the sentence modes (`scramble`, `dictation`), where this is the example sentence itself; and ladder rung 1, where the card is graded by identity and this is the card's own TERM ID. The client must not display it before the answer is committed. On `intro` it is the term, and it is never compared against anything" }
+        ladder_step:
+          type: integer
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: >
+            The rung of the acquisition ladder this card was dealt at (0 intro, 1 recognition
+            term→translation, 2 recognition translation→term, 3 assembly/choice, 4 typed
+            production, 5 dictation). NULL for a `known` verification, which is outside the
+            ladder. Echo it back with the answer: the pair's rung moves as that answer is folded,
+            so it is the only thing that can still say what the card asked.
+        option_ids:
+          type: array
+          nullable: true
+          description: >
+            Ladder rung 1 only, aligned index-for-index with `options`: the term each option's
+            translation belongs to. That card is answered by TAPPING, and the client uploads the
+            tapped id as `response` — which is why it is the one card whose correct option is a
+            translation without any translation entering an answer key.
+          items: { type: string }
+        transcription: { type: string, nullable: true }
+        example: { type: string, nullable: true }
+        example_translation: { type: string, nullable: true }
+        options:
+          type: array
+          nullable: true
+          description: multiple_choice — the answer plus distractors, shuffled
+          items: { type: string }
+        chips:
+          type: array
+          nullable: true
+          description: "Tiles to assemble the answer from, shuffled (never in the answer's own order). word_bank — the term's words, or its letters when it is a single word; scramble — the example sentence's words (final `.`/`!`/`?` dropped, inner punctuation kept on its word)"
+          items: { type: string }
+        option_feedback:
+          type: array
+          nullable: true
+          description: >
+            `pick_correct` only. For each WRONG option: which fragment is broken and what it should
+            have been. This is why the mode exists over `multiple_choice` — a wrong pick is explained
+            (underline the span, show the correction) instead of merely marked. Rides with the card so
+            the explanation works offline. The correct option never appears here.
+          items:
+            type: object
+            properties:
+              sentence: { type: string, description: 'the wrong option this feedback belongs to' }
+              error_span: { type: string, description: 'the broken fragment, verbatim from `sentence`' }
+              correction: { type: string }
+        accepted_variants:
+          type: array
+          description: >
+            Other answers that also count as correct for THIS card's `answer` (e.g. this/that,
+            may/can). The client's instant check tests `{answer} ∪ accepted_variants` so it is never
+            stricter than the server. Always an empty list on the sentence-graded modes
+            (`scramble`, `dictation`): a variant of the term is not a variant of the sentence, and
+            the server's expected set there is the sentence alone.
+          items: { type: string }
+
+    TriageCard:
+      type: object
+      description: >-
+        A minimal triage card. The triage screen only renders text + translation (and, for
+        phrases, an example). `transcription` and `example`/`example_translation` are optional
+        and may be absent; they are carried for FUTURE exercise modes — `transcription` as a
+        typing hint, examples for cloze — not used by triage itself. Kept deliberately rather
+        than trimmed, so those modes don't have to re-add them later.
+      required: [term_id]
+      properties:
+        term_id: { type: string }
+        text: { type: string, nullable: true }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
+        transcription:
+          type: string
+          nullable: true
+          description: IPA. Optional; unused by triage — reserved as a future `typing` hint.
+        translation: { type: string, nullable: true }
+        example:
+          type: string
+          nullable: true
+          description: Optional; triage shows it only for phrases — reserved for `cloze` (phase 2).
+        example_translation:
+          type: string
+          nullable: true
+          description: Optional; pairs with `example`. Reserved for future exercise modes.
+
+    Stats:
+      type: object
+      properties:
+        total_terms: { type: integer }
+        learned: { type: integer }
+        mastered: { type: integer }
+        due_today: { type: integer }
+        reviews_today: { type: integer }
+        streak_days: { type: integer }
+        active_days:
+          type: array
+          items: { type: string, format: date }
+          description: >
+            Local (user-timezone) calendar dates with ≥1 review of ANY kind — study OR practice —
+            within the last ~year, oldest first. The server-truth source for the activity calendar
+            and the streak (device-batch F18): the client renders these and lights today
+            optimistically, and a relogin/reinstall restores the full calendar from here.
+        new_goal:
+          type: integer
+          description: The user's daily NEW-term quota (clamped), as the session builder applies it.
+        new_today:
+          type: integer
+          description: New terms already introduced today, on the accounting the quota uses.
+        new_remaining:
+          type: integer
+          description: >
+            max(0, new_goal - new_today) — how many new terms a "Learn N" home CTA may still
+            introduce today (device-batch F13). 0 means the new-term limit is reached; reviews are
+            never gated by this (they don't spend the new quota).

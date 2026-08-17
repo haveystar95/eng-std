@@ -24,6 +24,43 @@ is the clean rebuild. The app is cut over to `backend2` only in ROADMAP Phase 4.
 4. Old backend + mobile knowledge (gotchas, run commands) is in `mobile/CLAUDE.md` and the
    "Old backend" section below.
 
+## Process tooling (`.claude/`) — what exists and when to use it
+
+Our working rituals are encoded in `.claude/` so they don't depend on a session remembering them.
+
+| Tool | Kind | When |
+|---|---|---|
+| commit gate | PreToolUse hook (`.claude/hooks/pre-commit-gate.sh` + `settings.json`) | **Automatic** on `git commit`: runs `composer check` (arch+stan+test, Docker) for backend2 changes and `flutter analyze` for mobile changes; red **blocks** the commit. Bypass a WIP commit with `SKIP_GATES=1` (it warns). Don't run the gates by hand before committing — the hook owns them. |
+| `/handoff` | command | Rewrite `backend2/docs/session-handoff.md` as a fresh snapshot (done-with-hashes, device-verified-vs-code-only table, non-negotiable decisions, what's next, known limits). |
+| `/audit <area>` | command | Read-only Stage-1 audit of a module: code vs skills vs invariants, ending with questions, then **stops** for confirmation. No edits. |
+| `/close-task` | command | Definition-of-done checklist with ✅/❌ (gates, `migrate:fresh` on the test DB, OpenAPI, findings-doc, handoff, device-unverified, findings→ROADMAP). |
+| `invariant-reviewer` | subagent | **Manual**, run before `/close-task`: checks the diff against the project invariants (Domain purity, progress on (user,term), append-only logs, client_seq order, one «усвоено», cross-module via Application, client reads-from-DB + cursor-in-DB). Reports violations or CLEAN — invariants only, no style. |
+
+New process rules change **here** (a skill/command/hook/agent file), never silently in one commit.
+
+**Gate tiering for a multi-commit наряд (task/work order):** промежуточные коммиты одного наряда
+гоняются вручную и легко — `composer arch && composer stan && composer test -- --filter=<модуль>`
+(deptrac + PHPStan + **целевой** Pest-сьют затронутого модуля, не весь backend2). Только
+**финальный** коммит наряда обязан пройти полные ворота — `composer check` для backend2 **и**
+`flutter analyze` для mobile, даже если сам наряд не трогал mobile-файлы (обе стороны, по
+умолчанию). backend2 `composer test` с 2026-08-13 запускает Pest через `brianium/paratest`
+(`vendor/bin/pest --parallel`, изолированная Postgres-БД на процесс через
+`Illuminate\Testing\ParallelTesting` в `AppServiceProvider`) — полный сьют ~40с вместо ~110с
+серийно, поэтому «финальные ворота» перестали быть дорогими и не повод их пропускать.
+`composer test-serial` остаётся для отладки, если параллельный прогон когда-нибудь начнёт мигать.
+Промежуточный коммит **не обязан** запускать commit-gate хук в полном объёме — если ручной
+arch+stan+целевой-сьют уже зелёный, `SKIP_GATES=1` для него легитимен (хук всё равно предупредит).
+
+**Новый тренажёр выкатывается ВЫКЛЮЧЕННЫМ глобально** (`learning_mode_settings`, админка →
+«Тренажёры»): включить себе → бете → всем. Код в main ≠ режим у пользователей.
+Note: a newly added command/subagent or an edited `settings.json` may need a fresh Claude Code
+session to register.
+
+Читая файлы из shell, используй `cat путь1 путь2 путь3` литерально (или Read по списку) — только
+буквальные пути, без echo-заголовков. НИКАКИХ подстановок: не `find -exec`, не циклы `for` с
+переменными (`$f`), не `$(...)`, не `${VAR}`, не пайпы с исполнением — подстановочные формы не
+покрываются allow-правилами и дёргают подтверждение на каждый вызов.
+
 ## Old backend (`backend/`) — the live API
 
 - Laravel 13, PHP 8.4, **SQLite**, all in Docker: `engstd_app` (:8000), `engstd_queue`, `engstd_ngrok`.

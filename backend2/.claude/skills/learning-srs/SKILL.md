@@ -19,16 +19,108 @@ future `due_at`. Never store per-collection progress rows.
 
 ```
 new ──first review──► learning ──graduates──► review
-                          ▲                     │
-                          │                  grade=again
-                          └── relearning ◄──────┘
+ │  ▲                     ▲                     │
+ │  │(triage: unsure)     │                  grade=again
+ │  └─────────────────────┴── relearning ◄──────┘
+ │
+ └──(triage: known)──► known ──verification failed──► learning
+                          ▲                                │
+                          └──(returned to learning)────────┘
 ```
 
-- `new` — never answered. Introduced at a capped rate (`new_terms_per_day`, default 10,
-  user-configurable) so a session doesn't drown the user.
-- `learning` — short intra-day steps (1m, 10m). Not scheduled by ease yet.
+- `new` — never answered. Introduced at a capped rate from the user's profile
+  (`daily_goal`, clamped `[0, 100]`; `0` means "reviews only"). "New" is derived: a term
+  with no progress row **or** a `new` row (one returned from `known`) — both are eligible.
+- `learning` — short steps until it graduates. (Intra-day 1m/10m steps are
+  `> Not implemented yet` — `interval_days` is whole days, so steps are 0 = "again this
+  session" or 1 day.)
 - `review` — long intervals driven by the scheduler.
 - `relearning` — lapsed; short steps again, then returns with a reduced interval.
+- `known` — a triage self-assessment ("I know this"), **not** an SRS state: the scheduler
+  refuses it. Its `due_at` is a verification check, not an interval. See Triage below.
+
+## Acquisition ladder — a second dimension, orthogonal to the scheduler
+
+`state` above answers **WHEN** a pair comes back. A separate column, `acquisition`
+(`new | learning | graduated`) plus `learning_step`, answers **WHAT** it comes back as. The two
+never read each other's fields:
+
+- The **scheduler never sees `acquisition`.** SM-2 keeps every one of its own fields —
+  `state`, `ease_factor`, `interval_days`, `due_at`, `reps`, `lapses`, `last_reviewed_at` — and
+  nothing on the ladder writes them. This is why the ladder could be added without re-deriving a
+  single interval: existing pairs were backfilled to `graduated` and their SM-2 fields were not
+  touched at all.
+- The **mode admission matrix never sees `state`.** Which trainers a pair is allowed to be shown
+  in is a function of its ladder step alone (`ModeAdmission`), so a mode gated off at step 1 is
+  gated off whatever the scheduler thinks.
+
+The step is derived by ONE pure function, `LearningLadder::stepFor(acquisition, reps, learningStep)`
+— mirrored by the client, so it is table-tested on both runtimes:
+
+```
+acquisition=new                    → 0  intro (no grading)
+acquisition=learning, step 1       → 1  recognition, term → translation   (identity-graded)
+acquisition=learning, step 2       → 2  recognition, translation → term
+acquisition=graduated, reps 0–3    → 3  assembly / choice
+acquisition=graduated, reps 4–5    → 4  + typed production
+acquisition=graduated, reps ≥ 6    → 5  + dictation
+```
+
+- **A ladder answer never schedules.** While `acquisition` is `new`/`learning`, a graded answer
+  is appended to `reviews` (it is a real retrieval and keeps the streak) and moves `learning_step`
+  only. A failed step leaves the step where it was — the client re-queues the same card into the
+  tail of the session, which is why a failure must not write a schedule.
+- **Graduation is only the flip to `graduated`.** No interval is invented at graduation; the
+  first real `Grade` afterwards enters SM-2 from `new` exactly as the first success of any new
+  word does today.
+- **`intro` is a mode with no grade.** It is in the mode registry (so it has a toggle like every
+  other trainer) and is dealt only at step 0. It writes an append-only `term_exposures` row
+  (unique per `(user, term)`, so re-upload is an ignored insert), never a `reviews` row — the
+  review log holds real retrievals only, and an intro asks for nothing.
+- A `known` pair is **outside the ladder**: `stepFor` returns `null` and its verification stays
+  typing, as below.
+
+## Triage — the first-pass sweep of a collection
+
+AI generation mixes basic vocabulary (`money`, `hello`) into the useful set. Triage is a
+swipe pass that filters out what the user already knows, so the trainer doesn't waste their
+time. Its invariants:
+
+- **A triage marks a term globally, on `(user, term)`** — never inside a collection. Sifting
+  out `money` in "Bank" removes it from "Shop" too. Direct consequence of progress living on
+  the term.
+- **Three verdicts, not two** — a binary choice makes people lie toward "known". Each routes the
+  pair onto the acquisition ladder, and only `known` touches the scheduler:
+  `known` → SM-2 `state=known` with a verification `due_at`, `acquisition=graduated` (outside the
+  ladder); `unknown` → `acquisition=new`, so it starts at the intro step; `unsure` →
+  `acquisition=learning, learning_step=1`, i.e. straight past the intro — the skip is a
+  *position on the ladder*, not a flag.
+- **Triage is never written to `reviews`.** A swipe is a self-assessment, not an exercise
+  answer; in the review log it would inflate retention with unproven words. It lives in an
+  append-only `term_triages` log (client ULID, no `unique(user, term)` — re-triage and
+  "return to learning" are new rows; the current verdict is the latest by `decided_at`).
+  Progress state is a projection of this log, like it is of `reviews`.
+- **The triage queue excludes already-triaged terms**, distinct from the study "new" pool
+  which only cares whether a progress row exists — so an `unknown`-swiped term stays new
+  (studyable) but is never asked again.
+- **Returning a `known` term to learning keeps its history.** Reset state to `new`, but keep
+  `reps`/`lapses` — a term the user manually marked known then undid must not restart from
+  zero. (A `new` row and a missing row mean the same thing to selection.)
+
+### Verifying a "known" swipe
+
+A swipe is a claim, not proof. A pure `TriageVerificationPlanner` schedules a check: risky
+verdict → soon (~7 days), obvious verdict → far out (~90 days). **Risky** = the term's cefr
+is above the user's level, OR the swipe was too fast to have been read (a lower latency floor
+for single words than for phrases). A `null` (unknown) cefr is neutral — never treated as
+risk, or every curated term without a level would be dragged into early checks. Thresholds
+are provisional constants in one place, moved by the real share of failed checks.
+
+The check always runs in **typing** (recognition would just let them recognise it again and
+prove nothing) — enforced by the `ExerciseSelector`, not stored as a flag. A known term with a
+due `due_at` rides the normal due selection. Failing the check is an **explicit** transition
+`known → learning` (not routed through the scheduler, whose lapse path assumes an ease/interval
+a known term never had); passing keeps it known with the next check ~90 days out.
 
 ## Scheduler as a domain service
 
@@ -92,8 +184,83 @@ Selection rules:
 - Never show two forms of the same term in one session.
 - Session size default 20, capped at 100.
 
-Modes: `flashcard`, `typing`, `multiple_choice`, `listening`. Mode affects grading input,
-not scheduling — a grade is a grade.
+More session rules:
+- **The daily new-term quota is global, one per user** — a scoped session draws from the same
+  remaining quota; five open collections don't grant five times the norm.
+- **Dedupe the package by `term_id`** — a term in two collections is counted once, at the
+  input, not only in statistics.
+- The session is self-contained (offline) and its **composition is fixed server-side** under a
+  `session_id`; an answer for a term outside that session is rejected.
+- **Never a dead end.** Nothing to review → offer free practice (below), not an empty screen.
+
+## Exercises and grading
+
+The exercise modes are `multiple_choice`, `word_bank`, `typing`, `listening`, `cloze`
+(`listening`/`cloze` are `> Not implemented yet` — they need TTS and good examples). Which
+mode a card gets is chosen by state (`ExerciseSelector`), rotating review modes deterministically
+on the term's `reps` (never `rand()`), degrading within the config-enabled set. The mode affects
+**grading only, never scheduling** — the scheduler takes a `Grade` and never learns which mode
+produced it.
+
+- **The server grades, not the client.** A grading rule that lives in two runtimes drifts —
+  the same disease as two definitions of "mastered". The client sends the raw answer; the
+  server grades it (`AnswerGrader`). The client still checks locally for instant offline
+  feedback, but that local check **must be no stricter than the server's** and does only a
+  binary correct/incorrect for the animation — never a grade, never the median, never hints.
+  (Client shows green, server says `hard` → invisible to the user. The reverse — client red,
+  server correct — reads as a broken app and is not allowed.)
+- **Recognition modes can never award `easy`.** `multiple_choice`/`word_bank`/`cloze` cap at
+  `good`; only production (`typing`/`listening`) reaches `easy`. A four-way guess sent to a
+  month-long interval is a word quietly forgotten.
+- **Grade:** wrong → `again`; correct with a hint / typo / slow → `hard`; correct at normal
+  pace → `good`; correct, fast, no hint, production mode → `easy`. "Slow"/"fast" are relative
+  to the user's **personal median for that mode** (typing is far slower than multiple choice),
+  computed over **correct answers only** (wrong ones carry deliberation and skew it); until
+  there are enough samples, an absolute default split by word/phrase.
+- **Lenient checking, in explicit stages** (order matters — merging them lets a typo pass as
+  `good`): normalise (case, spacing, punctuation, contractions, article optional both ways) →
+  full grade; an accepted synonym → full grade; a single-character typo on a ≥ 5-char answer →
+  capped at `hard`; else `again`.
+- **The answer key of a TEXT-graded card is TARGET-language text the term owns — never a
+  translation.** This rule governs every card whose answer is compared as text: typed, assembled
+  from chips, or picked as a sentence. Production is always into the language being learned:
+  prompt in the user's language, answer in the target. `term_translations` are the prompt side and
+  are **never** in a text answer key — accepting the translation where the target was asked is a
+  wrong answer scored correct.
+  What counts as the key depends on what the mode ASKED for, and that is decided in exactly one
+  place, `ExerciseMode::gradesAgainstExample()`:
+  - a word-level mode asks for the term → `terms.text` + alternative forms of the term;
+  - a sentence-level mode (`scramble`; `dictation`/`pick_correct` when they land) asks the learner
+    to reproduce the term's **pinned example sentence**, so the key is that sentence — the same one
+    the card was built from (`term_examples`, ordered by `id`; both readers order identically so a
+    term with several examples cannot be graded against one it never showed).
+
+  Both branches stay inside the rule: the key is target-language text belonging to the term. A
+  translation is not an accepted answer in either.
+- **A reverse-recognition card is graded by IDENTITY, not by text, and that is the only card whose
+  correct option is a translation.** Ladder step 1 (`term → translation`, see «Acquisition ladder»)
+  shows the term and offers translations to tap. There is no text grading to protect: the learner
+  taps an option, the client uploads that option's **id**, and the key is an id — the card's own
+  `term_id`, because every option is identified by the term whose translation it is. So no
+  translation string ever enters an answer key, and the rule above is untouched: the direction of
+  the question is declared by the card (`ladder_step`), and identity-graded cards are a disjoint
+  set from text-graded ones. Do NOT extend this to typed or assembled answers — there the previous
+  rule is absolute.
+- **Distractors** (`multiple_choice`) are other terms' target text, never a translation (mixing
+  languages gives it away), and exclude any candidate whose translations overlap the target's
+  (the near-duplicate that reads as correct for the same prompt).
+
+## Free practice
+
+When a collection has nothing due, offer a practice session rather than an empty screen.
+Practice answers **are written to `reviews`** (with `is_practice = true`) but never affect
+`user_term_progress` — not intervals, not state, not lapses. Reasons to write, not drop:
+
+- the streak is "days with ≥ 1 review", and an hour of practice must not lose it;
+- the "stats are rebuildable from `reviews`" invariant holds.
+
+Practice is excluded from the latency median and from retention, and never spends the daily
+new-term quota or introduces new terms.
 
 ## Statistics
 
@@ -102,8 +269,11 @@ All stats are projections of the `reviews` log:
 - **Streak** — consecutive days with ≥1 review, computed in the user's timezone
   (store `timezone` on the user; a streak computed in UTC breaks for everyone not on UTC).
 - **Retention** — `good+easy` share of reviews on cards in `review` state, windowed.
-- **Known terms** — count of `state='review' AND interval_days >= 21`. Define "known" once
-  and reuse it; don't invent a second definition in a new endpoint.
+- **Mastered ("усвоено")** — `(state='review' AND interval_days >= 21) OR state='known'`.
+  This is the single definition; it lives in one place (`Mastery::isMastered`) and every
+  screen asks there — a second definition elsewhere guarantees two figures that disagree.
+  Screens may *break it down* (confirmed by exercises vs `known` self-assessment vs in
+  progress), but that is a breakdown of the one definition, never a second one.
 - **Daily aggregates** — `daily_user_stats`, updated by a queued projector, rebuildable by
   replaying `reviews`. Any stats bug is a replay, not a data-loss incident.
 

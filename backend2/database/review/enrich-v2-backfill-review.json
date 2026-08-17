@@ -1,0 +1,96 @@
+{
+  "_": [
+    "Architect's proofreading of docs/enrich-v2-backfill.md (392-term backfill run, 9e428fb) plus a",
+    "targeted re-check of open items from prior sessions. Not a station export — a review handed",
+    "over in chat and committed as DATA for the same reason every prior review was: a review that",
+    "lives only in chat history is lost exactly once. Full text: docs/backfill-review.md.",
+    "",
+    "Same two classes store5-after-topup and store5-topup2 found (A: distractor is correct English,",
+    "two right answers; B: determiner/modal swap the translation does not anchor) plus a new class",
+    "(C: an accepted VARIANT that feeds the answer key with something the grader should not accept).",
+    "",
+    "Applied by: php artisan enrich:apply-review database/review/enrich-v2-backfill-review.json"
+  ],
+  "generator_version": "enrich-v1",
+
+  "_remove_distractors": [
+    "A (17): the 'wrong' sentence is actually correct English — phrasal-verb particle order, stretched",
+    "contractions, prefer+to/-ing, register variants. B (15): a legal determiner/modal swap the",
+    "translation does not anchor as wrong."
+  ],
+  "remove_distractors": [
+    { "term": "uppercut", "sentence": "He knocked out his opponent with a quick uppercut." },
+    { "term": "self-checkout", "sentence": "I prefer to use the self-checkout for small purchases." },
+    { "term": "What do you like to do in your free time?", "sentence": "What do you like doing in your free time?" },
+    { "term": "How's it going?", "sentence": "Hey, Tom! How is it going?" },
+    { "term": "a little bit about me", "sentence": "Here is a little bit about me." },
+    { "term": "try on", "sentence": "You should try the jacket on before buying it." },
+    { "term": "It's a pleasure to meet you", "sentence": "It's a pleasure meeting you, Karen." },
+    { "term": "introduce yourself", "sentence": "On your first day, you introduce yourself to your new coworkers." },
+    { "term": "colleague", "sentence": "You'll find your colleagues to be very helpful." },
+    { "term": "log in", "sentence": "Please log on to access your account." },
+    { "term": "reset your password", "sentence": "If you've forgotten your password, reset it by email." },
+    { "term": "join a gym", "sentence": "I want to join the gym to improve my fitness." },
+    { "term": "feel energized", "sentence": "After the workout, I always feel energized." },
+    { "term": "cash register", "sentence": "The cash register was down, so we had to wait for a while." },
+    { "term": "try out", "sentence": "I'm going to try the new software out today." },
+    { "term": "in good shape", "sentence": "He is in good shape because he is exercising regularly." },
+    { "term": "roll back", "sentence": "If the update fails, we'll roll back the previous version." },
+
+    { "term": "Can I help you with that?", "sentence": "Can I help you with the heavy bag?" },
+    { "term": "salary", "sentence": "What are the salary expectations?" },
+    { "term": "sign the lease", "sentence": "You need to sign the lease before moving in." },
+    { "term": "extension", "sentence": "We would like to discuss the extension of the lease." },
+    { "term": "pay a fee", "sentence": "You have to pay the fee for early termination of the lease." },
+    { "term": "maintenance", "sentence": "Who is responsible for the maintenance?" },
+    { "term": "run a program", "sentence": "Click this icon to run a program." },
+    { "term": "back up data", "sentence": "Don't forget to back up the data before the update." },
+    { "term": "back up", "sentence": "You should back up the files regularly." },
+    { "term": "rental application", "sentence": "Fill out a rental application before the viewing." },
+    { "term": "scooting", "sentence": "The vet noticed a dog scooting and recommended a check-up." },
+    { "term": "unscramble", "sentence": "He tried to unscramble mixed-up letters." },
+    { "term": "fitness level", "sentence": "Your fitness level affects how you must train." },
+    { "term": "baggage claim", "sentence": "After landing, proceed to the baggage claim to collect your luggage." },
+    { "term": "window seat", "sentence": "Would you like a window seat or aisle seat?" }
+  ],
+
+  "_remove_variants": [
+    "C (9): an accepted variant that feeds the answer key with a wrong or unused form. bank",
+    "account/savings account and bank account/checking account (C.1, C.2) were checked against the",
+    "live database FIRST per E.1 of the review — see docs/backfill-review.md; both are already gone,",
+    "so these two rows are expected to report unmatched."
+  ],
+  "remove_variants": [
+    { "term": "bank account", "text": "savings account" },
+    { "term": "bank account", "text": "checking account" },
+    { "term": "boarding pass", "text": "flight ticket" },
+    { "term": "locksmith", "text": "locksmith for locks" },
+    { "term": "jab", "text": "straight hit" },
+    { "term": "sparring session", "text": "practice sparring" },
+    { "term": "sparring session", "text": "training sparring" },
+    { "term": "healthy lifestyle", "text": "fit lifestyle" },
+    { "term": "pencil", "text": "colored pencil" }
+  ],
+
+  "_fix_distractors": [
+    "D.2: stray trailing period on the correction field. Not applied via string replace — the applier",
+    "re-checks the circular repair before writing, same as a model-proposed row."
+  ],
+  "fix_distractors": [
+    {
+      "term": "corner",
+      "sentence": "Return to your corner and listen to your coachs.",
+      "error_span": "coachs",
+      "correction": "coach"
+    }
+  ],
+
+  "_set_translations": [
+    "D.1: 'колледка' is not a Russian word; the correct translation is 'коллега'. Same nonword the",
+    "first EnrichmentValidator language-note test was built from. Checked for every occurrence of the",
+    "term colleague across the database — one term row, one collection (First Day at a New Company)."
+  ],
+  "set_translations": [
+    { "term": "colleague", "translation": "коллега" }
+  ]
+}

@@ -9,6 +9,7 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -136,4 +137,78 @@ it('validates that a title is required', function () {
 
 it('requires authentication', function () {
     $this->getJson('/api/v1/collections')->assertUnauthorized();
+});
+
+it('adds a word to a collection and hydrates its content', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user, 'Bank');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", [
+            'text' => 'withdraw cash', 'translation' => 'снять наличные', 'type' => 'phrase',
+        ])
+        ->assertStatus(201)
+        ->assertJsonPath('data.items_count', 1)
+        ->assertJsonPath('data.items.0.text', 'withdraw cash')
+        ->assertJsonPath('data.items.0.translation', 'снять наличные')
+        ->assertJsonPath('data.items.0.type', 'phrase');
+
+    $this->assertDatabaseHas('terms', ['text' => 'withdraw cash', 'source' => 'user']);
+    $this->assertDatabaseCount('collection_items', 1);
+});
+
+it('removes a term from a collection', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user);
+    $termId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", ['text' => 'apple', 'translation' => 'яблоко'])
+        ->json('data.items.0.term_id');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$id}/items/{$termId}")
+        ->assertNoContent();
+
+    // Soft-deleted, not gone: the row stays as a tombstone for /sync, but no longer counts.
+    $this->assertDatabaseHas('collection_items', ['term_id' => $termId]);
+    expect(DB::table('collection_items')->where('term_id', $termId)->whereNull('deleted_at')->count())->toBe(0);
+    $this->assertDatabaseHas('collections', ['id' => $id, 'items_count' => 0]);
+});
+
+it('re-adds a previously removed term (restores the soft-deleted row)', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user);
+    $add = fn () => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", ['text' => 'apple', 'translation' => 'яблоко']);
+
+    $termId = $add()->json('data.items.0.term_id');
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$id}/items/{$termId}")->assertNoContent();
+
+    // The partial unique index is on live rows only, so re-adding must succeed and restore.
+    $add()->assertCreated();
+
+    expect(DB::table('collection_items')->where('term_id', $termId)->count())->toBe(1)         // one row, restored
+        ->and(DB::table('collection_items')->where('term_id', $termId)->whereNull('deleted_at')->count())->toBe(1);
+    $this->assertDatabaseHas('collections', ['id' => $id, 'items_count' => 1]);
+});
+
+it("refuses to add a word to another user's collection", function () {
+    $owner = User::factory()->create();
+    $id = seedCollection($owner);
+
+    [, $token] = userWithToken();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", ['text' => 'x', 'translation' => 'y'])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'collection_not_editable');
+});
+
+it('validates the word input', function () {
+    [$user, $token] = userWithToken();
+    $id = seedCollection($user);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$id}/items", [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['text']);   // translation is optional (enrichment fills it)
 });

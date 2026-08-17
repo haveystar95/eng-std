@@ -14,6 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $normalized_text
  * @property string $type
  * @property string|null $pos
+ * @property string|null $ipa
+ * @property string|null $cefr
+ * @property string|null $audio_url
+ * @property string|null $image_url
+ * @property string|null $image_api_prompt
+ * @property string|null $image_author
+ * @property string|null $image_author_url
  * @property string $source
  * @property string|null $created_by
  * @property \Illuminate\Support\Carbon $created_at

@@ -29,8 +29,21 @@ Then, depending on the task:
 | `Collections` | collections (system/shared/custom), items, subscriptions, forks |
 | `Learning` | progress, SRS scheduling, sessions, reviews, statistics |
 | `Generation` | AI collection generation: requests, prompts, quotas, cost |
+| `Observability` | API request/response log — inbound requests + outbound (external) calls, with secret redaction |
+| `Admin` | back-office panel API (`/admin/api/*`): separate admin auth, read-only projections across all data, the day-plan simulator, and the tier mutation with an audit log. Reads other modules as reporting projections; owns only `admins` + `admin_audit_log` |
 
 Details per module: `app/Modules/<Context>/README.md`. Boundaries: `deptrac.yaml`.
+
+## Glossary — practice vs study (device-batch F18)
+
+- **Practice** (free practice): entered from a collection, unlimited, every review flagged
+  `is_practice`. Counts as **activity = yes**; touches the **daily goal / SRS = no** (never
+  schedules, never spends quota, never resolves a `known` verification).
+- **Study** (учебная тренировка): the main-screen session, server-assembled, under the daily
+  new-term quota. **Activity = yes**, **daily goal / SRS = yes**.
+- **Activity** = any review of either kind. Source of truth is the **server**, derived live from
+  the append-only review log in the user's timezone (`profiles.timezone`, like F19) — the client
+  only displays it (see `active_days` on `/stats`). "Любая тренировка — это активность."
 
 ## Where information lives (don't duplicate it)
 
@@ -46,6 +59,23 @@ When adding a module: create the four layers + ServiceProvider, add a `deptrac.y
 ruleset entry, add a row to the table above, and write the module `README.md` from
 `docs/module-README.template.md`. Skills are not touched — they describe rules, not contents.
 
+## The database is not disposable
+
+- **Before ANY operation that touches the dev database** — a migration, a seeder, a content
+  backfill, a manual UPDATE — take a backup: `scripts/db-backup.sh` (dumps to the gitignored
+  `storage/db-backups/`). It takes a second and it is the only copy that exists.
+- **`migrate:fresh` / `migrate:refresh` / `migrate:reset` / `migrate:rollback` / `db:wipe` on the
+  main database (`wordtrainer`) are forbidden. Always.** Not "unless you're careful" — the store
+  catalogue, the enriched content and the owner's collections live only there, and re-creating them
+  costs a paid станок run. The rollback check that every migration needs runs on a **disposable**
+  database: `docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate:fresh`.
+- The commands above are refused by the app itself when the resolved database is not a test
+  database (`AppServiceProvider::shouldProtectDatabase`). If you see "This command is prohibited
+  from running in this environment", the guard just saved the dev data — re-run it against
+  `wordtrainer_test`, do **not** reach for `DB_ALLOW_DESTRUCTIVE=true`. That escape hatch exists for
+  a reset the owner asked for out loud, after a backup.
+- Schema changes reach the dev database with plain `migrate` (forward only), never with a re-fresh.
+
 ## Stack
 
 PHP 8.4 · Laravel 12 · PostgreSQL 17 (+pgvector) · Redis/Horizon · Sanctum · Pest 3 ·
@@ -53,7 +83,7 @@ PHPStan level 8 · Deptrac · OpenAPI 3.1 → generated Dart client.
 
 ## Non-negotiables (short version)
 
-- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation}`, four layers each.
+- `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation,Observability}`, four layers each (Shared and Observability are thin — they omit layers they don't need).
 - `Domain/` imports nothing from Laravel. Cross-module calls go through `Application` only.
 - Commands mutate and return ids; Queries read and return DTOs. Controllers translate, nothing more.
 - ULIDs everywhere; clients may generate ids for reviews and custom collections.

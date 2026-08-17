@@ -65,3 +65,40 @@ it('removes a term', function () {
 
     expect($c->itemsCount())->toBe(0);
 });
+
+it('publishes a collection to the store: ownerless, system, public, curated', function () {
+    $c = newCustomCollection(UserId::generate());
+    $term = TermId::generate();
+    $c->addTerm($term);
+
+    $c->publishToStore(false);
+
+    expect($c->ownerId())->toBeNull()
+        ->and($c->type())->toBe(CollectionType::System)
+        ->and($c->visibility())->toBe(Visibility::Public)
+        ->and($c->source())->toBe(CollectionSource::Curated)
+        ->and($c->isPremium())->toBeFalse()
+        ->and($c->title())->toBe('Travel')      // preserved
+        ->and($c->itemsCount())->toBe(1);        // items preserved
+});
+
+it('publishes a premium store collection', function () {
+    $c = newCustomCollection(UserId::generate());
+
+    $c->publishToStore(true);
+
+    expect($c->isPremium())->toBeTrue()
+        ->and($c->type())->toBe(CollectionType::System);
+});
+
+it('re-publishing only re-affirms fields and flips the premium flag (idempotent)', function () {
+    $c = newCustomCollection(UserId::generate());
+
+    $c->publishToStore(true);
+    $c->publishToStore(false);
+
+    expect($c->isPremium())->toBeFalse()
+        ->and($c->ownerId())->toBeNull()
+        ->and($c->type())->toBe(CollectionType::System)
+        ->and($c->visibility())->toBe(Visibility::Public);
+});

@@ -1,0 +1,127 @@
+{
+  "_": [
+    "Architect's review of the enrich-v1-topup run over the five store collections.",
+    "Source: docs/store5-after-topup-review.md. Committed as DATA for the same reason the first",
+    "review was (database/review/enrich-v1-store5.json): the database is rebuilt before the app cuts",
+    "over, and a review that lives only in a terminal history is lost exactly once.",
+    "",
+    "Two sections of the document are NOT here, on purpose:",
+    "  · E (эмфазис) — cancelled. The three rows are clean in the database; the reviewed export was",
+    "    generated at 16:10 and the sweep of 46f9076 ran at 17:32, so the finding is an artefact of a",
+    "    stale document, not of the data.",
+    "  · F.1 (ладити з) — cancelled. Already applied by 00b2609; the row reads «ладить с», lang=ru.",
+    "",
+    "generator_version is enrich-v1-topup and that IS the scope of the acknowledgement: the flag",
+    "acknowledges every open finding of the named version. The 58 open enrich-v1 findings all belong",
+    "to collections this review never looked at (Phrasal Verbs, Travel, Body) and must keep waiting",
+    "for their own read.",
+    "",
+    "Applied by: php artisan enrich:apply-review database/review/enrich-v1-store5-after-topup.json"
+  ],
+  "generator_version": "enrich-v1-topup",
+
+  "_remove_distractors": [
+    "A (14) — the distractor is correct English, so the card has two right answers.",
+    "B (16) — a determiner swapped for another legal one: grammatical, and the translation does not",
+    "         anchor the choice, so the card is solvable only by comparing against an example the",
+    "         learner cannot see.",
+    "D (2)  — the same sentence twice, differing only in a contraction or the apostrophe glyph.",
+    "F.2 (3) — Russian inside an English sentence. The review named `serve`; the isWrongScript sweep",
+    "         it asked for found two more, both in the IT collections."
+  ],
+  "remove_distractors": [
+    { "term": "debit card", "sentence": "I prefer to use my debit card for everyday purchases." },
+    { "term": "ATM", "sentence": "I withdrew cash at the ATM last night." },
+    { "term": "direct debit", "sentence": "I pay my utility bills through direct debit." },
+    { "term": "lease agreement", "sentence": "Please read the lease agreement carefully before signing it." },
+    { "term": "move-in date", "sentence": "What is your preferred move-in date?" },
+    { "term": "run a temperature", "sentence": "He has been running a temperature since last night." },
+    { "term": "Could you tell me more about the team?", "sentence": "Could you tell me more about the team with which I would be working?" },
+    { "term": "medicine", "sentence": "Did the doctor give you any medicines?" },
+    { "term": "menu", "sentence": "Could you bring me a menu, please?" },
+    { "term": "Can I have some water, please?", "sentence": "Can I have water, please?" },
+    { "term": "minimize fees", "sentence": "I want to minimize the fees on my account." },
+    { "term": "transfer money", "sentence": "I need to transfer the money to my sister's account today." },
+    { "term": "utilities included", "sentence": "Are the utilities included in the rent?" },
+    { "term": "financial advisor", "sentence": "I scheduled a meeting with my financial advisors to discuss investments." },
+
+    { "term": "I'd like to open an account.", "sentence": "I'd like to open an account in your bank." },
+    { "term": "credit card", "sentence": "She got a new credit card for a higher limit." },
+    { "term": "standing order", "sentence": "I set up the standing order to pay my rent each month." },
+    { "term": "savings account", "sentence": "I opened the savings account for future expenses." },
+    { "term": "savings account", "sentence": "I opened a savings account for the future expenses." },
+    { "term": "online banking", "sentence": "Do you offer the online banking services?" },
+    { "term": "Could you explain the fees?", "sentence": "Could you explain fees for maintaining this account?" },
+    { "term": "monthly statement", "sentence": "I review my monthly statement for the discrepancies." },
+    { "term": "shared accommodation", "sentence": "I'm looking for the shared accommodation in the city center." },
+    { "term": "tenant", "sentence": "The tenant is responsible for the minor repairs." },
+    { "term": "sublet", "sentence": "Do you have the permission to sublet the apartment?" },
+    { "term": "What are your strengths and weaknesses?", "sentence": "During the interview, they asked me about the strengths and weaknesses." },
+    { "term": "long-term goals", "sentence": "In the interview, I discussed the long-term goals in the IT industry." },
+    { "term": "get along with", "sentence": "I get along with the team well, making collaboration effective." },
+    { "term": "tip", "sentence": "It's customary to leave the tip in restaurants here." },
+    { "term": "comfortable with", "sentence": "I'm comfortable with the fast-paced environments and enjoy challenges." },
+
+    { "term": "I'll have the chicken salad.", "sentence": "I will have the chicken salads, please." },
+    { "term": "Can I get this to go?", "sentence": "I’d like the pasta for go, please." },
+
+    { "term": "serve", "sentence": "The waiter will serve your meal в скором времени." },
+    { "term": "set up a server", "sentence": "I'll set up a server for новый project." },
+    { "term": "clean code", "sentence": "Writing clean code is essential for поддерживаемости." }
+  ],
+
+  "_fix_distractors": [
+    "C (8) — the wrong sentence is fine, its EXPLANATION is not: the span underlines the wrong",
+    "fragment, or the correction contradicts the example. Every one of these is checked against the",
+    "circular rule before it is written — substitute the correction for the span and the example has",
+    "to come back — so a fix that does not close the loop is reported instead of applied.",
+    "",
+    "C.2 is written differently from the document. The document proposed `What today are` → `What",
+    "are`, which yields «What are your symptoms?» and loses «today»: the loop stays open and the next",
+    "validation pass would scrap the row. The span is widened to cover the whole re-ordering."
+  ],
+  "fix_distractors": [
+    { "term": "online banking", "sentence": "Do you offer online banking at services?", "error_span": "at services", "correction": "services" },
+    { "term": "What are your symptoms?", "sentence": "What today are your symptoms?", "error_span": "What today are your symptoms", "correction": "What are your symptoms today" },
+    { "term": "Can I have some water, please?", "sentence": "Can I have some water for, please?", "error_span": "water for", "correction": "water" },
+    { "term": "What are your strengths and weaknesses?", "sentence": "During the interview, they asked about my strengths and weaknesses me.", "error_span": "asked about my strengths and weaknesses me", "correction": "asked me about my strengths and weaknesses" },
+    { "term": "Please take a seat.", "sentence": "Please take a seat, the doctor will see on you shortly.", "error_span": "see on you", "correction": "see you" },
+    { "term": "Could you help me with this form?", "sentence": "Could you help me with form? I'm not sure how to fill it out.", "error_span": "with form", "correction": "with this form" },
+    { "term": "fill out", "sentence": "Please fill out a application to proceed.", "error_span": "a application", "correction": "this application" },
+    { "term": "What are the main responsibilities of this role?", "sentence": "What is the main responsibilities of this role?", "error_span": "What is", "correction": "What are" }
+  ],
+
+  "_remove_variants": [
+    "G (3) — a variant feeds the answer KEY, so a wrong one makes the grader accept a wrong answer.",
+    "F.2 (2) — the same isWrongScript sweep: two accepted variants of the English term `hotfix` are",
+    "         written entirely in Russian, i.e. «горячее исправление» is currently a correct answer",
+    "         to an English card."
+  ],
+  "remove_variants": [
+    { "term": "monthly statement", "text": "monthly invoice" },
+    { "term": "pay the rent", "text": "pay for the rent" },
+    { "term": "take medicine", "text": "take your drugs" },
+    { "term": "hotfix", "text": "горячее исправление" },
+    { "term": "hotfix", "text": "хотфикс" }
+  ],
+
+  "_set_variant_notes": [
+    "F.3 — the variant is fine; its note carries the model's own JSON punctuation («Синонимы.\"},{»),",
+    "which is legal JSON and garbage on screen. The note is prose a person reads, so it is cleaned",
+    "and the variant stays."
+  ],
+  "set_variant_notes": [
+    { "term": "I'm confident in my problem-solving skills.", "text": "I am confident in my problem-solving abilities.", "note": "Синонимы." }
+  ],
+
+  "_acknowledge": [
+    "H — 41 flags, of which the review found none useful: «переформулировать» (31) is back-translation",
+    "trivia, the 🌐 flags are false («Фраза написана на английском» on an English term), the ✍️ flags",
+    "are noise and one hallucination («слоник instead of столик»). All acknowledged.",
+    "",
+    "The database holds 40, not 41. Nothing was closed in between: the term `notice period` belongs to",
+    "two collections, and the export prints a term once per collection, so its single finding was",
+    "counted twice by a reader counting lines."
+  ],
+  "acknowledge_all_remaining_findings": true
+}

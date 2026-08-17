@@ -114,5 +114,9 @@ final class EloquentCollectionRepository implements CollectionRepository
 
 1. Does the change respect the two rules at the top?
 2. Are the indexes for the new access path created in the same migration?
-3. Rollback tested locally (`migrate:fresh` and `migrate:rollback`)?
+3. Rollback tested locally **on the disposable test database** — never on `wordtrainer`:
+   `docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate:fresh`
+   then `... -e DB_DATABASE=wordtrainer_test app php artisan migrate:rollback`.
+   A bare `migrate:fresh` drops the dev data (it did, on 2026-08-14) and the app now refuses it.
+   The dev database only ever moves forward: plain `migrate`.
 4. Is a read model involved, and if so is it rebuildable from `reviews`?

@@ -9,6 +9,7 @@ use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeZone;
 
 /**
  * SM-2 with sane guards, expressed as a pure function of the current state.
@@ -16,6 +17,12 @@ use DateTimeImmutable;
  * All intervals are whole days (the schema stores `interval_days INT`). Intra-state steps
  * use a 0-day interval, meaning "due immediately, try again this session". Ease is only
  * touched in the `review` state; `learning`/`relearning` steps are fixed and ease-free.
+ *
+ * Day-scale due dates land at the START of the user's calendar day (device-batch F19): a review
+ * at 19:00 with a 1-day interval comes back at 00:00 the next day (in the user's zone), not 19:00 —
+ * so a card scheduled "tomorrow" is available all of tomorrow, not only after the evening. Only
+ * intervals ≥ 1 day are floored; a 0-day learning/relearning step stays exact ("again this
+ * session"). The zone is handed in (UTC fallback) — the scheduler keeps no clock of its own.
  */
 final readonly class Sm2Scheduler implements Scheduler
 {
@@ -41,18 +48,25 @@ final readonly class Sm2Scheduler implements Scheduler
 
     public function __construct(private Fuzz $fuzz) {}
 
-    public function schedule(TermProgress $progress, Grade $grade, DateTimeImmutable $now): TermProgress
+    public function schedule(TermProgress $progress, Grade $grade, DateTimeImmutable $now, ?DateTimeZone $userZone = null): TermProgress
     {
+        $zone = $userZone ?? new DateTimeZone('UTC');
+
         return match ($progress->state()) {
-            LearningState::New => $this->fromNew($progress, $grade, $now),
-            LearningState::Learning => $this->fromLearning($progress, $grade, $now),
-            LearningState::Review => $this->fromReview($progress, $grade, $now),
-            LearningState::Relearning => $this->fromRelearning($progress, $grade, $now),
+            LearningState::New => $this->fromNew($progress, $grade, $now, $zone),
+            LearningState::Learning => $this->fromLearning($progress, $grade, $now, $zone),
+            LearningState::Review => $this->fromReview($progress, $grade, $now, $zone),
+            LearningState::Relearning => $this->fromRelearning($progress, $grade, $now, $zone),
+            // `known` is a triage self-assessment, not an SRS state: it is verified and
+            // transitioned by TriageVerificationPlanner, never fed through SM-2.
+            LearningState::Known => throw new \LogicException(
+                'A known term is scheduled by TriageVerificationPlanner, not the SM-2 scheduler.',
+            ),
         };
     }
 
     /** First-ever review: always enters `learning`, regardless of grade. */
-    private function fromNew(TermProgress $p, Grade $grade, DateTimeImmutable $now): TermProgress
+    private function fromNew(TermProgress $p, Grade $grade, DateTimeImmutable $now, DateTimeZone $zone): TermProgress
     {
         $interval = match ($grade) {
             Grade::Again => 0,
@@ -60,11 +74,11 @@ final readonly class Sm2Scheduler implements Scheduler
             Grade::Easy => self::NEW_EASY_STEP,
         };
 
-        return $this->next($p, LearningState::Learning, $p->easeFactor(), $interval, $now, $p->lapses());
+        return $this->next($p, LearningState::Learning, $p->easeFactor(), $interval, $now, $p->lapses(), $zone);
     }
 
     /** Short intra-day steps until `good`/`easy` graduates the term to `review`. */
-    private function fromLearning(TermProgress $p, Grade $grade, DateTimeImmutable $now): TermProgress
+    private function fromLearning(TermProgress $p, Grade $grade, DateTimeImmutable $now, DateTimeZone $zone): TermProgress
     {
         [$state, $interval] = match ($grade) {
             Grade::Again => [LearningState::Learning, 0],
@@ -73,42 +87,42 @@ final readonly class Sm2Scheduler implements Scheduler
             Grade::Easy => [LearningState::Review, self::EASY_GRADUATING_INTERVAL],
         };
 
-        return $this->next($p, $state, $p->easeFactor(), $interval, $now, $p->lapses());
+        return $this->next($p, $state, $p->easeFactor(), $interval, $now, $p->lapses(), $zone);
     }
 
     /** Long, ease-driven intervals. A lapse drops the term into `relearning`. */
-    private function fromReview(TermProgress $p, Grade $grade, DateTimeImmutable $now): TermProgress
+    private function fromReview(TermProgress $p, Grade $grade, DateTimeImmutable $now, DateTimeZone $zone): TermProgress
     {
         $interval = $p->intervalDays();
 
         return match ($grade) {
             Grade::Again => $this->next(
-                $p, LearningState::Relearning, $p->easeFactor() + self::EASE_DELTA_AGAIN, 0, $now, $p->lapses() + 1,
+                $p, LearningState::Relearning, $p->easeFactor() + self::EASE_DELTA_AGAIN, 0, $now, $p->lapses() + 1, $zone,
             ),
             Grade::Hard => $this->next(
                 $p, LearningState::Review, $p->easeFactor() + self::EASE_DELTA_HARD,
-                (int) round($interval * self::HARD_INTERVAL_FACTOR), $now, $p->lapses(),
+                (int) round($interval * self::HARD_INTERVAL_FACTOR), $now, $p->lapses(), $zone,
             ),
             Grade::Good => $this->next(
                 $p, LearningState::Review, $p->easeFactor(),
-                (int) round($interval * $p->easeFactor()), $now, $p->lapses(),
+                (int) round($interval * $p->easeFactor()), $now, $p->lapses(), $zone,
             ),
-            Grade::Easy => $this->reviewEasy($p, $interval, $now),
+            Grade::Easy => $this->reviewEasy($p, $interval, $now, $zone),
         };
     }
 
-    private function reviewEasy(TermProgress $p, int $interval, DateTimeImmutable $now): TermProgress
+    private function reviewEasy(TermProgress $p, int $interval, DateTimeImmutable $now, DateTimeZone $zone): TermProgress
     {
         $ease = $this->clampEase($p->easeFactor() + self::EASE_DELTA_EASY);
 
         return $this->next(
             $p, LearningState::Review, $ease,
-            (int) round($interval * $ease * self::EASY_INTERVAL_BONUS), $now, $p->lapses(),
+            (int) round($interval * $ease * self::EASY_INTERVAL_BONUS), $now, $p->lapses(), $zone,
         );
     }
 
     /** Lapsed term working its way back; `good`/`easy` returns it to `review`. */
-    private function fromRelearning(TermProgress $p, Grade $grade, DateTimeImmutable $now): TermProgress
+    private function fromRelearning(TermProgress $p, Grade $grade, DateTimeImmutable $now, DateTimeZone $zone): TermProgress
     {
         [$state, $interval] = match ($grade) {
             Grade::Again => [LearningState::Relearning, 0],
@@ -117,12 +131,13 @@ final readonly class Sm2Scheduler implements Scheduler
             Grade::Easy => [LearningState::Review, self::RELEARN_EASY_INTERVAL],
         };
 
-        return $this->next($p, $state, $p->easeFactor(), $interval, $now, $p->lapses());
+        return $this->next($p, $state, $p->easeFactor(), $interval, $now, $p->lapses(), $zone);
     }
 
     /**
      * Assemble the next progress state: clamp ease and interval, fuzz multi-day intervals,
-     * compute `due_at`, and advance the review counter. A 0-day interval is due immediately.
+     * compute `due_at`, and advance the review counter. A 0-day interval is due immediately; a
+     * day-scale interval is floored to the start of the user's day in [$zone] (F19).
      */
     private function next(
         TermProgress $p,
@@ -131,11 +146,16 @@ final readonly class Sm2Scheduler implements Scheduler
         int $intervalDays,
         DateTimeImmutable $now,
         int $lapses,
+        DateTimeZone $zone,
     ): TermProgress {
         $interval = $this->clampInterval($intervalDays);
         $interval = $interval === 0 ? 0 : $this->fuzz->apply($interval);
 
-        $dueAt = $interval === 0 ? $now : $now->add(new DateInterval('P' . $interval . 'D'));
+        // 0-day step is due now (intra-session). Day-scale due lands at 00:00 of the user's calendar
+        // day so an evening review returns the next morning, not the next evening (F19).
+        $dueAt = $interval === 0
+            ? $now
+            : $now->add(new DateInterval('P' . $interval . 'D'))->setTimezone($zone)->setTime(0, 0, 0);
 
         return TermProgress::reconstitute(
             userId: $p->userId(),
