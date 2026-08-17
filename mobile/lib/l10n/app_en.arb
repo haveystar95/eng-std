@@ -264,7 +264,7 @@
   "sessionDone": "Done",
 
   "sessionIntroBadge": "new word",
-  "sessionIntroGot": "Got it →",
+  "sessionIntroGot": "Got it",
   "sessionIntroAlso": "also:",
   "sessionHeaderIntro": "Meeting",
   "sessionHeaderRecognition": "Recognition",
@@ -284,6 +284,7 @@
   "sessionFeedbackCorrect": "Correct",
   "sessionFeedbackAlmost": "Almost:",
   "sessionFeedbackWrong": "Not quite — the correct form is below",
+  "sessionFeedbackWrongAbove": "Not quite — the correct answer is marked above",
 
   "sessionDueToday": "today",
   "sessionDueTomorrow": "tomorrow",

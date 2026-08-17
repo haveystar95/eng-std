@@ -22,8 +22,9 @@ import 'session_exercise.dart';
 ///
 /// The order is the mock's: TERM first, so typography meets the reader before anything else; then
 /// the translation; then the example with the term set in bold inside it; then the photo, which
-/// CONFIRMS the meaning rather than announcing it; then «также:». The badge is an outline, not a
-/// fill — nothing here is a verdict, so nothing here is coloured.
+/// CONFIRMS the meaning rather than announcing it; then «также:»; and the «новое слово» badge last,
+/// just above «Понятно» — it says what kind of card this is, which is a footnote and not an opening
+/// line. The badge is an outline, not a fill — nothing here is a verdict, so nothing here is coloured.
 class SessionIntroCard extends ConsumerStatefulWidget {
   const SessionIntroCard({
     super.key,
@@ -90,8 +91,6 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _IntroBadge(label: l.sessionIntroBadge),
-              const SizedBox(height: AppSpacing.s12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -130,6 +129,11 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
                   style: AppTextExercise.introAlso,
                 ),
               ],
+              // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
+              // what KIND of card this is, and at the top it was the first thing read — a label
+              // where the word itself should have met the reader.
+              const SizedBox(height: AppSpacing.s16),
+              _IntroBadge(label: l.sessionIntroBadge),
             ],
           ),
         ),
@@ -170,7 +174,10 @@ class _ExampleLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final at = spanPositionIn(example, term);
+    // The term's own trailing punctuation is not part of what to look for: «I have a fever.» is
+    // taught by «I have a fever and feel very weak.», where the full stop sits nowhere near it.
+    final needle = termSearchForm(term);
+    final at = spanPositionIn(example, needle);
     if (at < 0) {
       return Text(example, style: AppTextExercise.introExample);
     }
@@ -180,10 +187,10 @@ class _ExampleLine extends StatelessWidget {
         children: [
           TextSpan(text: example.substring(0, at)),
           TextSpan(
-            text: example.substring(at, at + term.length),
+            text: example.substring(at, at + needle.length),
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-          TextSpan(text: example.substring(at + term.length)),
+          TextSpan(text: example.substring(at + needle.length)),
         ],
       ),
     );

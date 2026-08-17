@@ -392,6 +392,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
         practice: widget.practice,
         onAgain: widget.onAgain,
         sessionId: widget.session.sessionId,
+        // Counted from the session's own cards, not from the answers: an intro produces no answer,
+        // so it is not in [_results] at all — and the summary is reached only by playing every card,
+        // which is what makes «dealt an intro» and «met the word» the same fact here.
+        newWords: newWordCount(widget.session.cards),
       );
     }
 
@@ -647,10 +651,15 @@ class _SessionSummary extends ConsumerStatefulWidget {
     required this.practice,
     required this.onAgain,
     required this.sessionId,
+    this.newWords = 0,
   });
 
   final List<({SessionCard card, LocalCheck verdict})> results;
   final bool practice;
+
+  /// Words INTRODUCED in this run — see [newWordCount]. Practice introduces nothing and never
+  /// shows this stat.
+  final int newWords;
 
   /// The run being closed. Reaching this screen IS the definition of «played to the end», which is
   /// what `study_sessions.ended_at` records (QA-12).
@@ -679,9 +688,9 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
 
   int get _total => widget.results.length;
   int get _errors => widget.results.where((r) => r.verdict == LocalCheck.wrong).length;
-  // "New" ≈ intro cards (multiple_choice) — the session card carries the mode, not the state, so
-  // this is a proxy for freshly-introduced terms (new/relearning), documented in session_grading.
-  int get _new => widget.results.where((r) => phaseFor(r.card.mode) == SessionPhase.intro).length;
+  // Words met for the first time in this run, counted by the shell from the session's own cards
+  // (see [newWordCount]) — the answers alone cannot tell, since an intro produces none.
+  int get _new => widget.newWords;
 
   @override
   Widget build(BuildContext context) {
@@ -885,7 +894,10 @@ class _SummaryWordRow extends ConsumerWidget {
                 // SessionCard.answerText), and the mistakes list is exactly where it would show.
                 Text(card.answerText, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
-                Text(card.prompt ?? '', style: AppText.translation.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                // The TRANSLATION, never the prompt: on a rung-1 card the prompt is the term itself,
+                // and printing it under the headline gave «cold / cold» — a word explained by itself
+                // (see [SessionCard.translationText]).
+                Text(card.translationText, style: AppText.translation.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),

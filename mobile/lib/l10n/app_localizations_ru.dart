@@ -1009,7 +1009,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionIntroBadge => 'новое слово';
 
   @override
-  String get sessionIntroGot => 'Понятно →';
+  String get sessionIntroGot => 'Понятно';
 
   @override
   String get sessionIntroAlso => 'также:';
@@ -1069,6 +1069,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionFeedbackWrong => 'Не то — правильная форма ниже';
+
+  @override
+  String get sessionFeedbackWrongAbove => 'Не то — верный ответ отмечен выше';
 
   @override
   String get sessionDueToday => 'сегодня';

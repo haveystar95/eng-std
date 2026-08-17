@@ -47,6 +47,26 @@ int spanPositionIn(String sentence, String span) {
   return haystack.indexOf(needle);
 }
 
+/// The term as it is SEARCHED FOR inside its own example: trailing sentence punctuation dropped.
+///
+/// A sentence-like term carries its own final mark — «I have a fever.» — and the example that
+/// teaches it embeds the sentence in a bigger one: «I have a fever and feel very weak.» The term
+/// with its full stop occurs nowhere in that string, so the search failed and the intro card fell
+/// back to plain text. Single-word terms never showed it, because a word has no trailing mark;
+/// that is why the bolding looked like it worked.
+///
+/// Only the TAIL is normalised, and only for the search: the term is still drawn on the card
+/// exactly as it is stored. The server's regenerate-example validation asks the same question with
+/// the same normalisation, so «does the example contain the term» has ONE answer on both sides.
+String termSearchForm(String term) {
+  final trimmed = term.trim();
+  final stripped = trimmed.replaceFirst(RegExp(r'[.?!,…]+$'), '').trimRight();
+
+  // A term that is nothing but punctuation would normalise to nothing findable — keep it as it is
+  // rather than searching for the empty string, which matches at position 0 and bolds nothing.
+  return stripped.isEmpty ? trimmed : stripped;
+}
+
 /// One committed answer, handed up to the shell so it can record the RAW review (the server
 /// grades it) and tally the summary. [verdict] is the client's instant read — feedback only.
 class SessionAnswer {
@@ -409,7 +429,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // SessionIntroCard for it). Named rather than defaulted so the next mode added still has to
         // answer this question explicitly.
         ExerciseMode.intro => '',
-        ExerciseMode.multipleChoice => l.sessionInstrChoose,
+        // The instruction has to know which WAY the card asks. Rung 1 shows the English term and
+        // offers translations (it is graded by identity, which is what makes it recognisable here);
+        // rung 2 is the reverse. «Выбери английский эквивалент» printed under an English prompt with
+        // Russian options told the learner to do the opposite of what the card wanted.
+        ExerciseMode.multipleChoice =>
+          _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose,
         ExerciseMode.wordBank => l.sessionInstrAssemble,
         ExerciseMode.typing => l.sessionInstrType,
         ExerciseMode.cloze => l.sessionInstrType,
@@ -1202,7 +1227,13 @@ class _FeedbackBlock extends ConsumerWidget {
     final (color, icon, text) = switch (verdict) {
       LocalCheck.correct => (AppColors.verdictKnown, LucideIcons.check, l.sessionFeedbackCorrect),
       LocalCheck.typo => (AppColors.verdictKnown, LucideIcons.check, l.sessionFeedbackAlmost),
-      LocalCheck.wrong => (AppColors.destructiveText, LucideIcons.x, l.sessionFeedbackWrong),
+      // Where the correct answer actually IS decides which sentence this is. A tapped card marks it
+      // in the option list above; a typed or assembled one has it right below, in this very block.
+      LocalCheck.wrong => (
+          AppColors.destructiveText,
+          LucideIcons.x,
+          card.answeredByTapping ? l.sessionFeedbackWrongAbove : l.sessionFeedbackWrong,
+        ),
     };
     return Row(
       children: [

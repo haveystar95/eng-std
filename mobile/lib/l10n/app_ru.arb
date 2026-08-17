@@ -787,8 +787,8 @@
 
   "sessionIntroBadge": "новое слово",
   "@sessionIntroBadge": { "description": "Бейдж контуром на карточке знакомства — нулевая ступень лестницы (кадр 16b)." },
-  "sessionIntroGot": "Понятно →",
-  "@sessionIntroGot": { "description": "Единственная кнопка карточки знакомства: ни вариантов, ни вердикта (кадр 16b)." },
+  "sessionIntroGot": "Понятно",
+  "@sessionIntroGot": { "description": "Единственная кнопка карточки знакомства: ни вариантов, ни вердикта (кадр 16b). Без стрелки в тексте — стрелку рисует сама кнопка." },
   "sessionIntroAlso": "также:",
   "@sessionIntroAlso": { "description": "Префикс списка принятых вариантов на карточке знакомства (кадр 16b)." },
   "sessionHeaderIntro": "Знакомство",
@@ -828,7 +828,9 @@
   "sessionFeedbackAlmost": "Почти:",
   "@sessionFeedbackAlmost": { "description": "Вердикт фидбека — принятая опечатка; следом правильная форма (кадр 12c)." },
   "sessionFeedbackWrong": "Не то — правильная форма ниже",
-  "@sessionFeedbackWrong": { "description": "Вердикт фидбека — ошибка (кадр 12d)." },
+  "@sessionFeedbackWrong": { "description": "Вердикт фидбека — ошибка на вводимом/собираемом ответе: правильная форма стоит ниже, в самом фидбеке (кадр 12d)." },
+  "sessionFeedbackWrongAbove": "Не то — верный ответ отмечен выше",
+  "@sessionFeedbackWrongAbove": { "description": "Вердикт фидбека — ошибка на карточке узнавания: верный вариант подсвечен ВЫШЕ в списке вариантов, а ниже лишь напоминание термина (QA-8)." },
 
   "sessionDueToday": "сегодня",
   "@sessionDueToday": { "description": "Относительный срок — сегодня (итог/фидбек)." },

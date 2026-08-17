@@ -972,7 +972,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionIntroBadge => 'new word';
 
   @override
-  String get sessionIntroGot => 'Got it →';
+  String get sessionIntroGot => 'Got it';
 
   @override
   String get sessionIntroAlso => 'also:';
@@ -1031,6 +1031,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionFeedbackWrong => 'Not quite — the correct form is below';
+
+  @override
+  String get sessionFeedbackWrongAbove =>
+      'Not quite — the correct answer is marked above';
 
   @override
   String get sessionDueToday => 'today';

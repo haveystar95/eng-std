@@ -272,6 +272,29 @@ class SessionCard {
   /// Is this a tapped recognition card whose correct option is identified by id rather than by text?
   bool get isIdentityGraded => optionIds != null && optionIds!.isNotEmpty;
 
+  /// Is the answer TAPPED from options printed above the feedback (multiple_choice, pick_correct,
+  /// listening-recognition), rather than typed or assembled?
+  ///
+  /// The feedback's wrong-verdict line points somewhere, and on these cards it must point UP: the
+  /// correct option is marked in the list the learner just read, while what sits below is a reminder
+  /// of the term. «Правильная форма ниже» sent them past the answer to the reminder (QA-8).
+  bool get answeredByTapping => options != null && options!.isNotEmpty;
+
+  /// The term's translation as HUMAN TEXT — the counterpart of [answerText].
+  ///
+  /// On every ordinary card the prompt IS the translation. On the identity-graded rung-1 card the
+  /// prompt is the term (that card asks term→translation), and the translation is the text of the
+  /// correct OPTION — which is why this has to be looked up through the answer key rather than read
+  /// off a field. Without it the session summary printed «cold / cold»: headline and caption both
+  /// resolving to the same prompt.
+  String get translationText {
+    if (!isIdentityGraded) return prompt ?? '';
+    final ids = optionIds!;
+    final opts = options ?? const <String>[];
+    final at = ids.indexOf(answer);
+    return at >= 0 && at < opts.length ? opts[at] : '';
+  }
+
   /// The term id behind the option at [index] — the ANSWER KEY for an identity-graded card, which
   /// is what the client both grades against and uploads. Null on every other card, where the
   /// option's own text is the key. Index-aligned with [options] by contract, so the pair can never

@@ -149,6 +149,18 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
         SessionPhase.review,
     };
 
+/// How many WORDS this session introduced — unique terms that were dealt an intro card.
+///
+/// The summary's «НОВЫХ» is about words, not cards. Counting cards read 12 for the six words the
+/// device actually met, because a freshly introduced word gets an intro card AND its recognition
+/// cards in the same run, and every one of them sits in the intro PHASE. Unique term ids on the
+/// `intro` mode alone is the only reading that answers the question the label asks.
+int newWordCount(Iterable<SessionCard> cards) => cards
+    .where((c) => c.mode == ExerciseMode.intro)
+    .map((c) => c.termId)
+    .toSet()
+    .length;
+
 /// Whole calendar days from [now] to [due], in LOCAL time (0 = today, 1 = tomorrow, …). Negative
 /// (already overdue) is clamped to 0. Pure formatting of a REAL server `due_at`; the l10n layer
 /// turns the number into «сегодня» / «завтра» / «через N дней».
