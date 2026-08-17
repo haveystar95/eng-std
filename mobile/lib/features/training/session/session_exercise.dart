@@ -195,7 +195,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       // the transition's first, heaviest frame. Dictation joins listening here unchanged: the only
       // difference is the length of what is spoken.
       _afterTransition(
-        () => widget.onSpeak(_card.answer),
+        () => widget.onSpeak(_card.answerText),
         delay: const Duration(milliseconds: 100),
       );
     } else if (_mode == ExerciseMode.typing || _isCloze) {
@@ -267,7 +267,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (widget.autoPronounce) {
       _speakTimer?.cancel();
       _speakTimer = Timer(const Duration(milliseconds: 420), () {
-        if (mounted && widget.isCurrent()) widget.onSpeak(_card.answer);
+        if (mounted && widget.isCurrent()) widget.onSpeak(_card.answerText);
       });
     }
     widget.onAnswered(SessionAnswer(
@@ -314,7 +314,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   void _useFirstLetter() {
     if (_answered || _usedHint) return;
-    final first = _card.answer.characters.isEmpty ? '' : _card.answer.characters.first;
+    final first = _card.answerText.characters.isEmpty ? '' : _card.answerText.characters.first;
     setState(() {
       _usedHint = true;
       if (_input.text.isEmpty) {
@@ -533,11 +533,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           Text(l.sessionClozeInsert.toUpperCase(), style: AppText.sectionLabel),
           const SizedBox(height: AppSpacing.s12),
           _ClozeSentence(
-            example: _card.example ?? _card.answer,
-            answer: _card.answer,
+            example: _card.example ?? _card.answerText,
+            answer: _card.answerText,
             // Answered → the correct word fills the blank (verdict-coloured). While typing → the live
             // input fills it (plain), so the user sees what they write right in the sentence (12j).
-            filled: _answered ? _card.answer : (_input.text.trim().isEmpty ? null : _input.text),
+            filled: _answered ? _card.answerText : (_input.text.trim().isEmpty ? null : _input.text),
             answered: _answered,
             correct: _verdict?.isAccepted ?? false,
           ),
@@ -561,13 +561,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: _PlayCircle(onTap: () => widget.onSpeak(_card.answer), label: l.sessionListenReplay)),
+          Center(child: _PlayCircle(onTap: () => widget.onSpeak(_card.answerText), label: l.sessionListenReplay)),
           const SizedBox(height: AppSpacing.s12),
           Center(
             child: QuietButton(
               label: l.sessionListenReplaySlow,
               icon: LucideIcons.gauge,
-              onPressed: () => widget.onSpeak(_card.answer, slow: true),
+              onPressed: () => widget.onSpeak(_card.answerText, slow: true),
             ),
           ),
           const SizedBox(height: AppSpacing.s16),
@@ -1155,8 +1155,10 @@ class _FeedbackBlock extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(child: _WritesItself(text: card.answer, style: AppTextExercise.feedbackTerm)),
-            _SpeakDot(onTap: () => onSpeak(card.answer)),
+            // [answerText], never [answer]: on the identity-graded card the key is a term id, and
+            // printing it here is what put a raw ULID where «over the counter» belonged.
+            Expanded(child: _WritesItself(text: card.answerText, style: AppTextExercise.feedbackTerm)),
+            _SpeakDot(onTap: () => onSpeak(card.answerText)),
           ],
         ),
         // The transcription belongs to the TERM; under a whole sentence it reads as nonsense.
@@ -1202,7 +1204,7 @@ class _FeedbackBlock extends ConsumerWidget {
                 TextSpan(text: text),
                 // A typo shows the corrected form right after «Почти:».
                 if (verdict == LocalCheck.typo)
-                  TextSpan(text: ' ${card.answer}', style: AppTextExercise.feedbackCorrectForm),
+                  TextSpan(text: ' ${card.answerText}', style: AppTextExercise.feedbackCorrectForm),
               ],
             ),
           ),

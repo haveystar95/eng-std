@@ -64,7 +64,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
       // After the slide, like every other deferred effect on this screen — a channel call on the
       // transition's first frame is what F20 measured as a stall.
       _speakTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 60), () {
-        if (mounted && widget.isCurrent()) widget.onSpeak(widget.card.answer);
+        if (mounted && widget.isCurrent()) widget.onSpeak(widget.card.answerText);
       });
     }
   }
@@ -95,9 +95,9 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Flexible(child: Text(card.answer, style: AppTextExercise.introTerm)),
+                  Flexible(child: Text(card.answerText, style: AppTextExercise.introTerm)),
                   const SizedBox(width: AppSpacing.s8),
-                  _SpeakButton(onTap: () => widget.onSpeak(card.answer)),
+                  _SpeakButton(onTap: () => widget.onSpeak(card.answerText)),
                 ],
               ),
               if ((card.transcription ?? '').isNotEmpty) ...[
@@ -108,7 +108,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
               Text(card.prompt ?? '', style: AppTextExercise.introTranslation),
               if (example != null && example.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s16),
-                _ExampleLine(example: example, term: card.answer),
+                _ExampleLine(example: example, term: card.answerText),
                 const SizedBox(height: AppSpacing.s12),
                 _PromptPhotoPlate(
                   termId: card.termId,

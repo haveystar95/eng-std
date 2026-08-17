@@ -272,6 +272,23 @@ class SessionCard {
   /// Is this a tapped recognition card whose correct option is identified by id rather than by text?
   bool get isIdentityGraded => optionIds != null && optionIds!.isNotEmpty;
 
+  /// The correct answer as HUMAN TEXT — the only thing the UI may print or speak.
+  ///
+  /// [answer] is the GRADING KEY, and on the identity-graded forward-recognition card that key is a
+  /// term id (a ULID), not words. Printing the key was the bug: the verdict card's headline read
+  /// «01M00WHZFYJSYW76Z4B4BBASXC» instead of «over the counter», and the speak button read the ULID
+  /// out loud. The transcription and the example looked right in the same card precisely because
+  /// they come from their own fields and never went through the key.
+  ///
+  /// On that card the term is the PROMPT: rung 1 asks term→translation, so the English term is the
+  /// cue and the options are translations (see the server's StudyCardAssembler.recognitionCard and
+  /// `option_ids` in the OpenAPI contract). Every other card — including rung 2's reversed
+  /// translation→term, whose key really is the term's text — returns [answer] unchanged.
+  ///
+  /// Falls back to the empty string rather than to [answer]: showing nothing is a blemish, showing
+  /// an id is the bug this getter exists to make unrepresentable.
+  String get answerText => isIdentityGraded ? (prompt ?? '') : answer;
+
   /// The explanation for a wrong pick, or null when the pick was right (nothing to underline).
   OptionFeedback? feedbackFor(String option) {
     for (final f in optionFeedback) {

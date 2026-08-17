@@ -696,7 +696,7 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
           // omit it in practice (compact итог).
           if (!practice && struggling.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _StrugglingCard(termId: struggling.first.card.termId, term: struggling.first.card.answer),
+            _StrugglingCard(termId: struggling.first.card.termId, term: struggling.first.card.answerText),
           ],
           const SizedBox(height: 20),
           if (practice) ...[
@@ -834,7 +834,9 @@ class _SummaryWordRow extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(card.answer, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
+                // The reviewed word, as words — a rung-1 card's [answer] is its term id (see
+                // SessionCard.answerText), and the mistakes list is exactly where it would show.
+                Text(card.answerText, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text(card.prompt ?? '', style: AppText.translation.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
