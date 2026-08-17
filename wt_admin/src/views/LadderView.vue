@@ -154,7 +154,7 @@ function eventVerdict(e: LadderEvent): 'known' | 'unknown' | 'neutral' {
 const columns: Column[] = [
   { key: 'word', label: 'Слово', width: '30%' },
   { key: 'ladder', label: 'Ступень', width: '110px' },
-  { key: 'state', label: 'Состояние' },
+  { key: 'state', label: 'SM-2' },
   { key: 'reps', label: 'Повт.', align: 'right', tnum: true },
   { key: 'due', label: 'Срок', align: 'right' },
   { key: 'intro', label: 'Интро', align: 'center' },
@@ -241,7 +241,16 @@ const columns: Column[] = [
             </template>
             <template #cell-ladder="{ row }"><LadderDots :step="row.ladderStep" /></template>
             <template #cell-state="{ row }">
-              <Badge :tone="stateTone(row.state)">{{ STATE_LABEL[row.state] }}</Badge>
+              <!-- The scheduler's state, NOT the ladder — the two are orthogonal and this is the one
+                   place they sit side by side, so a pair reading «изучается» here while standing on
+                   rung 3 is correct, not a bug. Spelled out in the tooltip rather than in a second
+                   column, which would double the width of the table to say it. -->
+              <Badge
+                :tone="stateTone(row.state)"
+                :title="`планировщик SM-2: ${STATE_LABEL[row.state]} · лестница: ${row.acquisition}`"
+              >
+                {{ STATE_LABEL[row.state] }}
+              </Badge>
             </template>
             <template #cell-reps="{ row }">{{ row.reps }}</template>
             <template #cell-due="{ row }">
