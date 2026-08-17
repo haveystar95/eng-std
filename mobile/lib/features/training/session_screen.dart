@@ -387,7 +387,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final l = AppLocalizations.of(context);
 
     if (_finished) {
-      return _SessionSummary(results: _results, practice: widget.practice, onAgain: widget.onAgain);
+      return _SessionSummary(
+        results: _results,
+        practice: widget.practice,
+        onAgain: widget.onAgain,
+        sessionId: widget.session.sessionId,
+      );
     }
 
     final total = _cards.length;
@@ -637,10 +642,19 @@ class _SlideSwitcher extends StatelessWidget {
 // ── summary (кадр 12e) ────────────────────────────────────────────────────────
 
 class _SessionSummary extends ConsumerStatefulWidget {
-  const _SessionSummary({required this.results, required this.practice, required this.onAgain});
+  const _SessionSummary({
+    required this.results,
+    required this.practice,
+    required this.onAgain,
+    required this.sessionId,
+  });
 
   final List<({SessionCard card, LocalCheck verdict})> results;
   final bool practice;
+
+  /// The run being closed. Reaching this screen IS the definition of «played to the end», which is
+  /// what `study_sessions.ended_at` records (QA-12).
+  final String sessionId;
 
   /// «Ещё раз» (practice only): start a fresh practice session right away.
   final VoidCallback onAgain;
@@ -657,6 +671,10 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
     // success — no confetti (§4е).
     WidgetsBinding.instance.addPostFrameCallback((_) => AppHaptics.success());
     ref.read(reviewSyncProvider).flush();
+    // …and close the run. Recorded in its own durable queue first, so a session finished in
+    // airplane mode still reaches `ended_at` when the network returns; the server takes only the
+    // time from it and recomputes the rest from the run's own logs (QA-12).
+    ref.read(sessionCompletionSyncProvider).record(sessionId: widget.sessionId);
   }
 
   int get _total => widget.results.length;
@@ -786,8 +804,16 @@ class _GoalCard extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final goal = ref.watch(authControllerProvider).value?.profile?.dailyGoal ?? 20;
     final activity = ref.watch(dailyActivityProvider).value ?? const {};
-    final today = todayReviewCount(DateTime.now(), activity);
-    final streak = ref.watch(statsProvider).value?.streakDays ?? 0;
+    final stats = ref.watch(statsProvider).value;
+    // The larger of the two truths, never the smaller. The local tally counts optimistically and
+    // works offline; the server's `reviews_today` survives a reinstall and knows about answers this
+    // device did not make. Taking the max means neither source can DROP the count — which is what
+    // the phone showed as `Daily goal 0 / 20` after twelve answers the server had already counted
+    // (QA-10). Both are the same definition of an answer, so the larger is simply the better-informed
+    // one.
+    final today = [todayReviewCount(DateTime.now(), activity), stats?.reviewsTotal ?? 0]
+        .reduce((a, b) => a > b ? a : b);
+    final streak = stats?.streakDays ?? 0;
     final done = today >= goal;
 
     return PaperCard(

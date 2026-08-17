@@ -312,6 +312,15 @@ class ApiClient {
     return ((_data(r) as Map<String, dynamic>)['exposures'] as int?) ?? 0;
   }
 
+  /// Close a study run the learner played to its summary. Sends only WHEN it ended — what happened
+  /// during it, the server recomputes from the run's own logs. Idempotent server-side (the write is
+  /// conditional on the session still being open) and never an error, so the offline queue can drop
+  /// the row on any 2xx.
+  Future<bool> completeSession({required String sessionId, required String endedAt}) async {
+    final r = await _dio.post('/study/sessions/$sessionId/complete', data: {'ended_at': endedAt});
+    return ((_data(r) as Map<String, dynamic>)['completed'] as bool?) ?? false;
+  }
+
   // ---- Triage ---------------------------------------------------------------
   //
   // The deck is now built from the local DB (see triageDeckProvider) so it opens offline; the

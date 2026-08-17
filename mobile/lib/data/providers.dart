@@ -21,6 +21,7 @@ import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'seq_counter.dart';
+import 'session_completion_sync.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 import 'triage_sync.dart';
@@ -84,6 +85,15 @@ final exposureSyncProvider = Provider<ExposureSync>((ref) {
     ref.watch(apiClientProvider),
     ref.watch(appDatabaseProvider),
     ref,
+  );
+});
+
+/// Offline-first pipeline for «this run was played to its end» (QA-12). Its own queue, keyed by
+/// session, for the same reason the exposure one is separate: a completion is not an answer.
+final sessionCompletionSyncProvider = Provider<SessionCompletionSync>((ref) {
+  return SessionCompletionSync(
+    ref.watch(apiClientProvider),
+    ref.watch(appDatabaseProvider),
   );
 });
 
@@ -232,10 +242,17 @@ final collectionWordsProvider = StreamProvider.family<List<Word>, String>((ref, 
 
 /// Local stats: total/learned/mastered/due are counted from the synced progress rows; streak and
 /// reviews-today are read from the cache the SyncService refreshes while online (not in the delta
-/// feed). Re-derived on every progress change.
+/// feed).
+///
+/// Re-derived whenever EITHER source changes. It used to watch the progress rows alone and read the
+/// cached aggregates inside that loop — so the first emission happened before `_refreshStatsCache()`
+/// had written them and nothing ever emitted again, because neither a triage nor a fresh `/stats`
+/// creates a progress row. The defaults (`?? 0`) were then read as «0 of 20 done today» and «no new
+/// words left», and only an app restart cleared it (QA-10).
 final statsProvider = StreamProvider<Stats>((ref) async* {
   final db = ref.watch(appDatabaseProvider);
-  await for (final rows in db.watchAllProgress()) {
+  await for (final _ in db.watchStatsSources()) {
+    final rows = await db.allProgress();
     final streak = int.tryParse(await db.getMeta(SyncKeys.streak) ?? '') ?? 0;
     final reviews = int.tryParse(await db.getMeta(SyncKeys.reviewsToday) ?? '') ?? 0;
     final newGoal = int.tryParse(await db.getMeta(SyncKeys.newGoal) ?? '') ?? 0;

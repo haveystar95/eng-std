@@ -38,6 +38,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       // Import the legacy Keychain queue once (F20-r2), THEN drain — otherwise the first flush of a
       // freshly-updated install would miss answers still sitting in the old store.
       ref.read(reviewSyncProvider).migrate().then((_) => ref.read(reviewSyncProvider).flush());
+      // …and any session closings left over from an offline run (QA-12).
+      ref.read(sessionCompletionSyncProvider).flush();
       // Reconcile generations that were in flight when the app was last killed (poll / drop / retry).
       ref.read(generationControllerProvider).reconcile();
     });
@@ -47,6 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       if (results.any((r) => r != ConnectivityResult.none)) {
         ref.read(syncServiceProvider).sync();
         ref.read(reviewSyncProvider).flush();
+        ref.read(sessionCompletionSyncProvider).flush();
         ref.read(generationControllerProvider).flushQueue();
       }
     });
@@ -64,6 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     if (state == AppLifecycleState.resumed) {
       ref.read(syncServiceProvider).sync();
       ref.read(reviewSyncProvider).flush();
+      ref.read(sessionCompletionSyncProvider).flush();
       ref.read(generationControllerProvider).reconcile();
     }
   }

@@ -8,7 +8,10 @@ use App\Modules\Learning\Application\Dto\SessionContext;
 use App\Modules\Learning\Application\Port\SessionContextReader;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
+use App\Modules\Learning\Domain\ValueObject\SessionOutcome;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 
 /**
@@ -51,6 +54,35 @@ final class InMemoryStudySessions implements SessionContextReader, StudySessionR
             $composition,
         );
         $this->startedAt[$id] = $session->startedAt();
+    }
+
+    /**
+     * Mirrors the Eloquent repository's conditional update: this user's session, still open, closed
+     * exactly once.
+     *
+     * @var array<string, array{endedAt: DateTimeImmutable, outcome: SessionOutcome}>
+     */
+    private array $completions = [];
+
+    public function complete(
+        StudySessionId $id,
+        UserId $userId,
+        DateTimeImmutable $endedAt,
+        SessionOutcome $outcome,
+    ): bool {
+        $context = $this->contexts[$id->value] ?? null;
+        if ($context === null || $context->userId !== $userId->value || isset($this->completions[$id->value])) {
+            return false;
+        }
+        $this->completions[$id->value] = ['endedAt' => $endedAt, 'outcome' => $outcome];
+
+        return true;
+    }
+
+    /** @return array{endedAt: DateTimeImmutable, outcome: SessionOutcome}|null */
+    public function completion(string $sessionId): ?array
+    {
+        return $this->completions[$sessionId] ?? null;
     }
 
     public function byIds(array $sessionIds): array

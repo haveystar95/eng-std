@@ -6,7 +6,11 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
+use App\Modules\Learning\Domain\ValueObject\SessionOutcome;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
+use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentStudySessionRepository implements StudySessionRepository
@@ -26,5 +30,27 @@ final class EloquentStudySessionRepository implements StudySessionRepository
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+    }
+
+    public function complete(
+        StudySessionId $id,
+        UserId $userId,
+        DateTimeImmutable $endedAt,
+        SessionOutcome $outcome,
+    ): bool {
+        // One conditional statement carries all three rules: it is this user's session, it is still
+        // open, and whoever gets there first is the one that closes it. Reading then writing would
+        // let a re-sent completion overwrite the real finishing time with the retry's.
+        $updated = DB::table('study_sessions')
+            ->where('id', $id->value)
+            ->where('user_id', $userId->value)
+            ->whereNull('ended_at')
+            ->update([
+                'ended_at' => $endedAt,
+                'stats' => json_encode($outcome->toArray()),
+                'updated_at' => now(),
+            ]);
+
+        return $updated > 0;
     }
 }

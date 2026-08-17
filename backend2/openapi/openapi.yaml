@@ -667,6 +667,57 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /study/sessions/{sessionId}/complete:
+    post:
+      tags: [Study]
+      summary: Close a study run the learner played to its summary screen
+      description: >-
+        Stamps `ended_at` and a compact `stats` summary on the session, which is what makes a played
+        run distinguishable from an abandoned one (before this there was no writer for the column at
+        all, so every row looked abandoned). The summary — cards answered, of those correct
+        (`reviews.is_correct`, i.e. anything but `again`), and intros shown — is RECOMPUTED from the
+        session's own append-only logs, never taken from the client: the only thing the client
+        supplies is when the learner finished, because the run may well have ended offline.
+        Nothing here touches progress or scheduling; the answers were folded when they were uploaded.
+        Idempotent and never an error: the client sends this through the same offline queue its
+        answers ride, so a re-send, another user's session, an unknown id and a run that answered
+        nothing all return 200 with `completed: false`. An abandoned run is deliberately left open
+        rather than closed with a row of zeroes — `ended_at IS NULL` is then the true statement
+        about it.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ended_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: When the learner finished. Omitted means now.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      completed:
+                        type: boolean
+                        description: Whether THIS call is the one that closed the session.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /study/progress:
     get:
       tags: [Study]

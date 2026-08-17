@@ -58,7 +58,13 @@ final class EloquentDailyStatsProjector implements StatsProjector
             $buckets[$key] ??= ['user_id' => $userId, 'date' => $date, 'reviews' => 0, 'correct' => 0, 'seconds' => 0, 'new' => 0];
 
             $buckets[$key]['reviews']++;
-            if ($review->grade->isCorrect()) {
+            // What the ROW says, not what the grade implies. `Review::isCorrect()` is «anything but
+            // again» — the same fact the `is_correct` column carries and the same one the learner
+            // was shown when they answered. Counting `good || easy` here instead (the grade's own
+            // stricter question, now named isConfidentRecall) put 4 in this column on a day with 11
+            // right answers out of 12: `hard` is generous on the recognition rungs, where it largely
+            // measures the pause between two taps. See QA-11.
+            if ($review->isCorrect()) {
                 $buckets[$key]['correct']++;
             }
             $buckets[$key]['seconds'] += intdiv(max(0, $review->latencyMs ?? 0), 1000);

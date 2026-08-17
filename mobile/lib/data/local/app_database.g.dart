@@ -5124,6 +5124,235 @@ class ExposureQueueRowsCompanion extends UpdateCompanion<ExposureQueueRow> {
   }
 }
 
+class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
+    with
+        TableInfo<$SessionCompletionQueueRowsTable, SessionCompletionQueueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionCompletionQueueRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
+  @override
+  late final GeneratedColumn<String> endedAt = GeneratedColumn<String>(
+    'ended_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [sessionId, endedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_completion_queue_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionCompletionQueueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('ended_at')) {
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionId};
+  @override
+  SessionCompletionQueueRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionCompletionQueueRow(
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      endedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ended_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SessionCompletionQueueRowsTable createAlias(String alias) {
+    return $SessionCompletionQueueRowsTable(attachedDatabase, alias);
+  }
+}
+
+class SessionCompletionQueueRow extends DataClass
+    implements Insertable<SessionCompletionQueueRow> {
+  final String sessionId;
+  final String endedAt;
+  const SessionCompletionQueueRow({
+    required this.sessionId,
+    required this.endedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_id'] = Variable<String>(sessionId);
+    map['ended_at'] = Variable<String>(endedAt);
+    return map;
+  }
+
+  SessionCompletionQueueRowsCompanion toCompanion(bool nullToAbsent) {
+    return SessionCompletionQueueRowsCompanion(
+      sessionId: Value(sessionId),
+      endedAt: Value(endedAt),
+    );
+  }
+
+  factory SessionCompletionQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionCompletionQueueRow(
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      endedAt: serializer.fromJson<String>(json['endedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionId': serializer.toJson<String>(sessionId),
+      'endedAt': serializer.toJson<String>(endedAt),
+    };
+  }
+
+  SessionCompletionQueueRow copyWith({String? sessionId, String? endedAt}) =>
+      SessionCompletionQueueRow(
+        sessionId: sessionId ?? this.sessionId,
+        endedAt: endedAt ?? this.endedAt,
+      );
+  SessionCompletionQueueRow copyWithCompanion(
+    SessionCompletionQueueRowsCompanion data,
+  ) {
+    return SessionCompletionQueueRow(
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionCompletionQueueRow(')
+          ..write('sessionId: $sessionId, ')
+          ..write('endedAt: $endedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(sessionId, endedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionCompletionQueueRow &&
+          other.sessionId == this.sessionId &&
+          other.endedAt == this.endedAt);
+}
+
+class SessionCompletionQueueRowsCompanion
+    extends UpdateCompanion<SessionCompletionQueueRow> {
+  final Value<String> sessionId;
+  final Value<String> endedAt;
+  final Value<int> rowid;
+  const SessionCompletionQueueRowsCompanion({
+    this.sessionId = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SessionCompletionQueueRowsCompanion.insert({
+    required String sessionId,
+    required String endedAt,
+    this.rowid = const Value.absent(),
+  }) : sessionId = Value(sessionId),
+       endedAt = Value(endedAt);
+  static Insertable<SessionCompletionQueueRow> custom({
+    Expression<String>? sessionId,
+    Expression<String>? endedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionId != null) 'session_id': sessionId,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SessionCompletionQueueRowsCompanion copyWith({
+    Value<String>? sessionId,
+    Value<String>? endedAt,
+    Value<int>? rowid,
+  }) {
+    return SessionCompletionQueueRowsCompanion(
+      sessionId: sessionId ?? this.sessionId,
+      endedAt: endedAt ?? this.endedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<String>(endedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionCompletionQueueRowsCompanion(')
+          ..write('sessionId: $sessionId, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedImagesTable extends CachedImages
     with TableInfo<$CachedImagesTable, CachedImage> {
   @override
@@ -5450,6 +5679,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ExposureQueueRowsTable exposureQueueRows =
       $ExposureQueueRowsTable(this);
+  late final $SessionCompletionQueueRowsTable sessionCompletionQueueRows =
+      $SessionCompletionQueueRowsTable(this);
   late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5466,6 +5697,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     dailyActivity,
     reviewQueueRows,
     exposureQueueRows,
+    sessionCompletionQueueRows,
     cachedImages,
   ];
 }
@@ -8089,6 +8321,168 @@ typedef $$ExposureQueueRowsTableProcessedTableManager =
       ExposureQueueRow,
       PrefetchHooks Function()
     >;
+typedef $$SessionCompletionQueueRowsTableCreateCompanionBuilder =
+    SessionCompletionQueueRowsCompanion Function({
+      required String sessionId,
+      required String endedAt,
+      Value<int> rowid,
+    });
+typedef $$SessionCompletionQueueRowsTableUpdateCompanionBuilder =
+    SessionCompletionQueueRowsCompanion Function({
+      Value<String> sessionId,
+      Value<String> endedAt,
+      Value<int> rowid,
+    });
+
+class $$SessionCompletionQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $SessionCompletionQueueRowsTable> {
+  $$SessionCompletionQueueRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SessionCompletionQueueRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SessionCompletionQueueRowsTable> {
+  $$SessionCompletionQueueRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SessionCompletionQueueRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SessionCompletionQueueRowsTable> {
+  $$SessionCompletionQueueRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<String> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+}
+
+class $$SessionCompletionQueueRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SessionCompletionQueueRowsTable,
+          SessionCompletionQueueRow,
+          $$SessionCompletionQueueRowsTableFilterComposer,
+          $$SessionCompletionQueueRowsTableOrderingComposer,
+          $$SessionCompletionQueueRowsTableAnnotationComposer,
+          $$SessionCompletionQueueRowsTableCreateCompanionBuilder,
+          $$SessionCompletionQueueRowsTableUpdateCompanionBuilder,
+          (
+            SessionCompletionQueueRow,
+            BaseReferences<
+              _$AppDatabase,
+              $SessionCompletionQueueRowsTable,
+              SessionCompletionQueueRow
+            >,
+          ),
+          SessionCompletionQueueRow,
+          PrefetchHooks Function()
+        > {
+  $$SessionCompletionQueueRowsTableTableManager(
+    _$AppDatabase db,
+    $SessionCompletionQueueRowsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionCompletionQueueRowsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SessionCompletionQueueRowsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SessionCompletionQueueRowsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> sessionId = const Value.absent(),
+                Value<String> endedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionCompletionQueueRowsCompanion(
+                sessionId: sessionId,
+                endedAt: endedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String sessionId,
+                required String endedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SessionCompletionQueueRowsCompanion.insert(
+                sessionId: sessionId,
+                endedAt: endedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SessionCompletionQueueRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SessionCompletionQueueRowsTable,
+      SessionCompletionQueueRow,
+      $$SessionCompletionQueueRowsTableFilterComposer,
+      $$SessionCompletionQueueRowsTableOrderingComposer,
+      $$SessionCompletionQueueRowsTableAnnotationComposer,
+      $$SessionCompletionQueueRowsTableCreateCompanionBuilder,
+      $$SessionCompletionQueueRowsTableUpdateCompanionBuilder,
+      (
+        SessionCompletionQueueRow,
+        BaseReferences<
+          _$AppDatabase,
+          $SessionCompletionQueueRowsTable,
+          SessionCompletionQueueRow
+        >,
+      ),
+      SessionCompletionQueueRow,
+      PrefetchHooks Function()
+    >;
 typedef $$CachedImagesTableCreateCompanionBuilder =
     CachedImagesCompanion Function({
       required String url,
@@ -8294,6 +8688,12 @@ class $AppDatabaseManager {
       $$ReviewQueueRowsTableTableManager(_db, _db.reviewQueueRows);
   $$ExposureQueueRowsTableTableManager get exposureQueueRows =>
       $$ExposureQueueRowsTableTableManager(_db, _db.exposureQueueRows);
+  $$SessionCompletionQueueRowsTableTableManager
+  get sessionCompletionQueueRows =>
+      $$SessionCompletionQueueRowsTableTableManager(
+        _db,
+        _db.sessionCompletionQueueRows,
+      );
   $$CachedImagesTableTableManager get cachedImages =>
       $$CachedImagesTableTableManager(_db, _db.cachedImages);
 }

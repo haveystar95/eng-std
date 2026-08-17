@@ -126,6 +126,23 @@ class ExposureQueueRows extends Table {
   Set<Column<Object>> get primaryKey => {termId};
 }
 
+/// The durable queue of un-uploaded session COMPLETIONS — «this run was played to its end».
+///
+/// Its own table for the same reason exposures have one: a completion is not an answer. It carries
+/// no term, no mode and no response, and the server takes nothing from it but the time — what
+/// happened during the run it recomputes from the run's own logs.
+///
+/// The PRIMARY KEY is the SESSION, which is what makes the queue idempotent by construction: a run
+/// finishes once, so a re-queued completion is the same event rather than a later one. The server's
+/// write is conditional on the row still being open, so the two idempotencies agree.
+class SessionCompletionQueueRows extends Table {
+  TextColumn get sessionId => text()();
+  TextColumn get endedAt => text()(); // ISO-8601 UTC, the moment the learner actually stopped
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionId};
+}
+
 /// Small key/value store for sync bookkeeping: the sync cursor (`server_time`) and cached
 /// stats numbers that aren't in the delta feed (streak, reviews-today). Lives in the DB — NOT
 /// the keychain — so a reinstall wipes the cursor with the data and the next sync is a full snapshot.
@@ -300,6 +317,7 @@ class CachedImages extends Table {
   DailyActivity,
   ReviewQueueRows,
   ExposureQueueRows,
+  SessionCompletionQueueRows,
   CachedImages,
 ])
 class AppDatabase extends _$AppDatabase {
@@ -307,7 +325,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -374,6 +392,11 @@ class AppDatabase extends _$AppDatabase {
             // rung on them now would tell the server to read that text as a term id. They upload
             // exactly as they would have before this version — see the ladder_step contract note.
             await m.addColumn(reviewQueueRows, reviewQueueRows.ladderStep);
+          }
+          if (from < 13) {
+            // Session completions ride their own durable queue, so a run finished in airplane mode
+            // still reaches `study_sessions.ended_at` when the network returns (QA-12).
+            await m.createTable(sessionCompletionQueueRows);
           }
         },
       );
@@ -459,10 +482,16 @@ class AppDatabase extends _$AppDatabase {
 
   /// Increment today's review tally by one (atomic upsert). Called once per graded answer from
   /// [ReviewSync.record] — session reviews and free practice, never triage (see [DailyActivity]).
-  Future<void> bumpDailyActivity(String day) => customStatement(
+  ///
+  /// `customInsert` with an explicit `updates`, NOT `customStatement`: drift cannot see which tables
+  /// a raw statement writes, so the bumps landed in the table without waking [watchDailyActivity].
+  /// The goal card read whatever the count had been when the screen first subscribed — zero — and
+  /// stayed there for the whole run however many answers went in (QA-10).
+  Future<void> bumpDailyActivity(String day) => customInsert(
         'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) '
         'ON CONFLICT(day) DO UPDATE SET reviews = reviews + 1',
-        [day],
+        variables: [Variable<String>(day)],
+        updates: {dailyActivity},
       );
 
   /// Merge the server's activity calendar (F18) into the local map: a day the client hasn't
@@ -471,9 +500,10 @@ class AppDatabase extends _$AppDatabase {
   /// calendar from `/stats` without clobbering today's live count.
   Future<void> mergeActiveDays(List<String> days) => transaction(() async {
         for (final day in days) {
-          await customStatement(
+          await customInsert(
             'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) ON CONFLICT(day) DO NOTHING',
-            [day],
+            variables: [Variable<String>(day)],
+            updates: {dailyActivity}, // same reason as bumpDailyActivity: raw SQL wakes no stream
           );
         }
       });
@@ -551,6 +581,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> dequeueExposures(Iterable<String> termIds) =>
       (delete(exposureQueueRows)..where((t) => t.termId.isIn(termIds.toList()))).go();
+
+  // ---- Durable session-completion queue (client-only, not synced) -----------
+
+  Future<List<SessionCompletionQueueRow>> completionQueue() =>
+      (select(sessionCompletionQueueRows)..orderBy([(t) => OrderingTerm(expression: t.endedAt)])).get();
+
+  /// Record that a run was played to its end. `insertOrIgnore`, not upsert: the session is the key
+  /// and the FIRST `ended_at` is the one that is true — a run finishes once.
+  Future<void> enqueueCompletion(SessionCompletionQueueRowsCompanion row) =>
+      into(sessionCompletionQueueRows).insert(row, mode: InsertMode.insertOrIgnore);
+
+  Future<void> dequeueCompletions(Iterable<String> sessionIds) =>
+      (delete(sessionCompletionQueueRows)..where((t) => t.sessionId.isIn(sessionIds.toList()))).go();
 
   /// Step a pair off rung 0 onto the first recognition rung, locally.
   ///
@@ -692,6 +735,21 @@ class AppDatabase extends _$AppDatabase {
       (delete(pendingGenerations)..where((t) => t.id.equals(id))).go();
 
   // ---- Meta -----------------------------------------------------------------
+
+  /// Ticks whenever anything the dashboard stats are derived from changes: the synced progress rows
+  /// OR the cached daily aggregates the sync service writes into [syncMeta] (streak, reviews today,
+  /// the new-word quota).
+  ///
+  /// The meta half is the point. Those numbers are not in the delta feed — they are refreshed from
+  /// `/stats` AFTER the sync has applied its pages — so a stream watching progress alone emitted
+  /// once, before the refresh, and then never again: nothing about a triage or a fresh `/stats`
+  /// creates a progress row. The screen kept the pre-sync snapshot, which is how the daily goal read
+  /// `0 / 20` and the new-word gate read «limit reached» on an untouched quota, both curable only by
+  /// restarting the app (QA-10).
+  Stream<void> watchStatsSources() =>
+      customSelect('SELECT 1', readsFrom: {termProgress, syncMeta}).watch();
+
+  Future<List<TermProgressData>> allProgress() => select(termProgress).get();
 
   Future<String?> getMeta(String key) async {
     final row = await (select(syncMeta)..where((t) => t.key.equals(key))).getSingleOrNull();

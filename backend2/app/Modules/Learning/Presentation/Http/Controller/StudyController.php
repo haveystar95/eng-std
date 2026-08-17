@@ -6,17 +6,21 @@ namespace App\Modules\Learning\Presentation\Http\Controller;
 
 use App\Modules\Learning\Application\Command\BuildStudySession;
 use App\Modules\Learning\Application\Command\BuildStudySessionHandler;
+use App\Modules\Learning\Application\Command\CompleteStudySession;
+use App\Modules\Learning\Application\Command\CompleteStudySessionHandler;
 use App\Modules\Learning\Application\Query\GetCollectionsProgress;
 use App\Modules\Learning\Application\Query\GetCollectionsProgressHandler;
 use App\Modules\Learning\Application\Query\GetUserStats;
 use App\Modules\Learning\Application\Query\GetUserStatsHandler;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\BuildSessionRequest;
+use App\Modules\Learning\Presentation\Http\Request\CompleteSessionRequest;
 use App\Modules\Learning\Presentation\Http\Resource\CollectionProgressResource;
 use App\Modules\Learning\Presentation\Http\Resource\SessionResource;
 use App\Modules\Learning\Presentation\Http\Resource\StatsResource;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -25,6 +29,7 @@ final class StudyController
 {
     public function __construct(
         private readonly BuildStudySessionHandler $buildSession,
+        private readonly CompleteStudySessionHandler $completeSession,
         private readonly GetUserStatsHandler $userStats,
         private readonly GetCollectionsProgressHandler $collectionsProgress,
     ) {}
@@ -43,6 +48,25 @@ final class StudyController
         ));
 
         return new SessionResource($session);
+    }
+
+    /**
+     * Close a run the learner played to its summary. Always 200: this arrives through the client's
+     * offline queue, so «already closed», «never started here» and «nothing was answered» are all
+     * ordinary outcomes rather than errors — a 4xx would only teach the queue to retry forever.
+     * `completed` says whether THIS call was the one that closed it.
+     */
+    public function complete(CompleteSessionRequest $request, string $sessionId): JsonResponse
+    {
+        $endedAt = $request->string('ended_at')->toString();
+
+        $completed = ($this->completeSession)(new CompleteStudySession(
+            actorId: $this->actorId($request),
+            sessionId: StudySessionId::fromString($sessionId),
+            endedAt: $endedAt !== '' ? new DateTimeImmutable($endedAt) : new DateTimeImmutable(),
+        ));
+
+        return new JsonResponse(['data' => ['completed' => $completed]]);
     }
 
     public function stats(Request $request): StatsResource
