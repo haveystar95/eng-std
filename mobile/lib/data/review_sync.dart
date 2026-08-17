@@ -75,6 +75,7 @@ class ReviewSync {
     bool isPractice = false,
     int? latencyMs,
     String? sessionId,
+    int? ladderStep,
   }) async {
     await _enforceCap();
     // One insert on the background isolate. Awaited, so the answer is durable before this returns.
@@ -89,6 +90,7 @@ class ReviewSync {
       isPractice: isPractice,
       latencyMs: latencyMs,
       sessionId: sessionId,
+      ladderStep: ladderStep,
     ));
     // Count this review toward today's local activity tally (Progress screen / session-summary goal
     // card). Real session reviews only — free practice is excluded (Training Loop v2 / F17: practice

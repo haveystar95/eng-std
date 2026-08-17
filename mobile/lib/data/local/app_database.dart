@@ -205,6 +205,13 @@ class ReviewQueueRows extends Table {
   IntColumn get latencyMs => integer().nullable()();
   TextColumn get sessionId => text().nullable()();
 
+  /// The rung the card was dealt at, echoed back with the answer (1–5; null off the ladder).
+  /// Rung 1 is graded by IDENTITY server-side, and the server only takes that path when this says
+  /// so — without it a tapped term id is graded as text against the term's own forms and a correct
+  /// tap is folded as a lapse. Queued with the answer because the pair's rung MOVES as the answer
+  /// is folded, so nothing else can still say what the card asked.
+  IntColumn get ladderStep => integer().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -300,7 +307,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -360,6 +367,13 @@ class AppDatabase extends _$AppDatabase {
             await m.database.customStatement(
               "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
             );
+          }
+          if (from < 12) {
+            // The rung a queued answer was dealt at, so rung-1 taps upload as identity answers.
+            // Rows already queued stay null on purpose: they were recorded as TEXT, and stamping a
+            // rung on them now would tell the server to read that text as a term id. They upload
+            // exactly as they would have before this version — see the ladder_step contract note.
+            await m.addColumn(reviewQueueRows, reviewQueueRows.ladderStep);
           }
         },
       );

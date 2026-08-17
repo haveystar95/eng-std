@@ -272,6 +272,16 @@ class SessionCard {
   /// Is this a tapped recognition card whose correct option is identified by id rather than by text?
   bool get isIdentityGraded => optionIds != null && optionIds!.isNotEmpty;
 
+  /// The term id behind the option at [index] — the ANSWER KEY for an identity-graded card, which
+  /// is what the client both grades against and uploads. Null on every other card, where the
+  /// option's own text is the key. Index-aligned with [options] by contract, so the pair can never
+  /// be shuffled apart.
+  String? optionIdAt(int index) {
+    final ids = optionIds;
+    if (ids == null || index < 0 || index >= ids.length) return null;
+    return ids[index];
+  }
+
   /// The correct answer as HUMAN TEXT — the only thing the UI may print or speak.
   ///
   /// [answer] is the GRADING KEY, and on the identity-graded forward-recognition card that key is a

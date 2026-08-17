@@ -4299,6 +4299,17 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _ladderStepMeta = const VerificationMeta(
+    'ladderStep',
+  );
+  @override
+  late final GeneratedColumn<int> ladderStep = GeneratedColumn<int>(
+    'ladder_step',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4311,6 +4322,7 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     isPractice,
     latencyMs,
     sessionId,
+    ladderStep,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4396,6 +4408,12 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
         sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
       );
     }
+    if (data.containsKey('ladder_step')) {
+      context.handle(
+        _ladderStepMeta,
+        ladderStep.isAcceptableOrUnknown(data['ladder_step']!, _ladderStepMeta),
+      );
+    }
     return context;
   }
 
@@ -4445,6 +4463,10 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
       ),
+      ladderStep: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ladder_step'],
+      ),
     );
   }
 
@@ -4465,6 +4487,13 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
   final bool isPractice;
   final int? latencyMs;
   final String? sessionId;
+
+  /// The rung the card was dealt at, echoed back with the answer (1–5; null off the ladder).
+  /// Rung 1 is graded by IDENTITY server-side, and the server only takes that path when this says
+  /// so — without it a tapped term id is graded as text against the term's own forms and a correct
+  /// tap is folded as a lapse. Queued with the answer because the pair's rung MOVES as the answer
+  /// is folded, so nothing else can still say what the card asked.
+  final int? ladderStep;
   const ReviewQueueRow({
     required this.id,
     required this.termId,
@@ -4476,6 +4505,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     required this.isPractice,
     this.latencyMs,
     this.sessionId,
+    this.ladderStep,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4493,6 +4523,9 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     }
     if (!nullToAbsent || sessionId != null) {
       map['session_id'] = Variable<String>(sessionId);
+    }
+    if (!nullToAbsent || ladderStep != null) {
+      map['ladder_step'] = Variable<int>(ladderStep);
     }
     return map;
   }
@@ -4513,6 +4546,9 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
       sessionId: sessionId == null && nullToAbsent
           ? const Value.absent()
           : Value(sessionId),
+      ladderStep: ladderStep == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ladderStep),
     );
   }
 
@@ -4532,6 +4568,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
       isPractice: serializer.fromJson<bool>(json['isPractice']),
       latencyMs: serializer.fromJson<int?>(json['latencyMs']),
       sessionId: serializer.fromJson<String?>(json['sessionId']),
+      ladderStep: serializer.fromJson<int?>(json['ladderStep']),
     );
   }
   @override
@@ -4548,6 +4585,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
       'isPractice': serializer.toJson<bool>(isPractice),
       'latencyMs': serializer.toJson<int?>(latencyMs),
       'sessionId': serializer.toJson<String?>(sessionId),
+      'ladderStep': serializer.toJson<int?>(ladderStep),
     };
   }
 
@@ -4562,6 +4600,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     bool? isPractice,
     Value<int?> latencyMs = const Value.absent(),
     Value<String?> sessionId = const Value.absent(),
+    Value<int?> ladderStep = const Value.absent(),
   }) => ReviewQueueRow(
     id: id ?? this.id,
     termId: termId ?? this.termId,
@@ -4573,6 +4612,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     isPractice: isPractice ?? this.isPractice,
     latencyMs: latencyMs.present ? latencyMs.value : this.latencyMs,
     sessionId: sessionId.present ? sessionId.value : this.sessionId,
+    ladderStep: ladderStep.present ? ladderStep.value : this.ladderStep,
   );
   ReviewQueueRow copyWithCompanion(ReviewQueueRowsCompanion data) {
     return ReviewQueueRow(
@@ -4592,6 +4632,9 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
           : this.isPractice,
       latencyMs: data.latencyMs.present ? data.latencyMs.value : this.latencyMs,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      ladderStep: data.ladderStep.present
+          ? data.ladderStep.value
+          : this.ladderStep,
     );
   }
 
@@ -4607,7 +4650,8 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
           ..write('usedHint: $usedHint, ')
           ..write('isPractice: $isPractice, ')
           ..write('latencyMs: $latencyMs, ')
-          ..write('sessionId: $sessionId')
+          ..write('sessionId: $sessionId, ')
+          ..write('ladderStep: $ladderStep')
           ..write(')'))
         .toString();
   }
@@ -4624,6 +4668,7 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     isPractice,
     latencyMs,
     sessionId,
+    ladderStep,
   );
   @override
   bool operator ==(Object other) =>
@@ -4638,7 +4683,8 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
           other.usedHint == this.usedHint &&
           other.isPractice == this.isPractice &&
           other.latencyMs == this.latencyMs &&
-          other.sessionId == this.sessionId);
+          other.sessionId == this.sessionId &&
+          other.ladderStep == this.ladderStep);
 }
 
 class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
@@ -4652,6 +4698,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
   final Value<bool> isPractice;
   final Value<int?> latencyMs;
   final Value<String?> sessionId;
+  final Value<int?> ladderStep;
   final Value<int> rowid;
   const ReviewQueueRowsCompanion({
     this.id = const Value.absent(),
@@ -4664,6 +4711,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
     this.isPractice = const Value.absent(),
     this.latencyMs = const Value.absent(),
     this.sessionId = const Value.absent(),
+    this.ladderStep = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReviewQueueRowsCompanion.insert({
@@ -4677,6 +4725,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
     this.isPractice = const Value.absent(),
     this.latencyMs = const Value.absent(),
     this.sessionId = const Value.absent(),
+    this.ladderStep = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        termId = Value(termId),
@@ -4695,6 +4744,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
     Expression<bool>? isPractice,
     Expression<int>? latencyMs,
     Expression<String>? sessionId,
+    Expression<int>? ladderStep,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4708,6 +4758,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
       if (isPractice != null) 'is_practice': isPractice,
       if (latencyMs != null) 'latency_ms': latencyMs,
       if (sessionId != null) 'session_id': sessionId,
+      if (ladderStep != null) 'ladder_step': ladderStep,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4723,6 +4774,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
     Value<bool>? isPractice,
     Value<int?>? latencyMs,
     Value<String?>? sessionId,
+    Value<int?>? ladderStep,
     Value<int>? rowid,
   }) {
     return ReviewQueueRowsCompanion(
@@ -4736,6 +4788,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
       isPractice: isPractice ?? this.isPractice,
       latencyMs: latencyMs ?? this.latencyMs,
       sessionId: sessionId ?? this.sessionId,
+      ladderStep: ladderStep ?? this.ladderStep,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4773,6 +4826,9 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
     }
+    if (ladderStep.present) {
+      map['ladder_step'] = Variable<int>(ladderStep.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4792,6 +4848,7 @@ class ReviewQueueRowsCompanion extends UpdateCompanion<ReviewQueueRow> {
           ..write('isPractice: $isPractice, ')
           ..write('latencyMs: $latencyMs, ')
           ..write('sessionId: $sessionId, ')
+          ..write('ladderStep: $ladderStep, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7541,6 +7598,7 @@ typedef $$ReviewQueueRowsTableCreateCompanionBuilder =
       Value<bool> isPractice,
       Value<int?> latencyMs,
       Value<String?> sessionId,
+      Value<int?> ladderStep,
       Value<int> rowid,
     });
 typedef $$ReviewQueueRowsTableUpdateCompanionBuilder =
@@ -7555,6 +7613,7 @@ typedef $$ReviewQueueRowsTableUpdateCompanionBuilder =
       Value<bool> isPractice,
       Value<int?> latencyMs,
       Value<String?> sessionId,
+      Value<int?> ladderStep,
       Value<int> rowid,
     });
 
@@ -7614,6 +7673,11 @@ class $$ReviewQueueRowsTableFilterComposer
 
   ColumnFilters<String> get sessionId => $composableBuilder(
     column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7676,6 +7740,11 @@ class $$ReviewQueueRowsTableOrderingComposer
     column: $table.sessionId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReviewQueueRowsTableAnnotationComposer
@@ -7722,6 +7791,11 @@ class $$ReviewQueueRowsTableAnnotationComposer
 
   GeneratedColumn<String> get sessionId =>
       $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
+    builder: (column) => column,
+  );
 }
 
 class $$ReviewQueueRowsTableTableManager
@@ -7771,6 +7845,7 @@ class $$ReviewQueueRowsTableTableManager
                 Value<bool> isPractice = const Value.absent(),
                 Value<int?> latencyMs = const Value.absent(),
                 Value<String?> sessionId = const Value.absent(),
+                Value<int?> ladderStep = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReviewQueueRowsCompanion(
                 id: id,
@@ -7783,6 +7858,7 @@ class $$ReviewQueueRowsTableTableManager
                 isPractice: isPractice,
                 latencyMs: latencyMs,
                 sessionId: sessionId,
+                ladderStep: ladderStep,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7797,6 +7873,7 @@ class $$ReviewQueueRowsTableTableManager
                 Value<bool> isPractice = const Value.absent(),
                 Value<int?> latencyMs = const Value.absent(),
                 Value<String?> sessionId = const Value.absent(),
+                Value<int?> ladderStep = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReviewQueueRowsCompanion.insert(
                 id: id,
@@ -7809,6 +7886,7 @@ class $$ReviewQueueRowsTableTableManager
                 isPractice: isPractice,
                 latencyMs: latencyMs,
                 sessionId: sessionId,
+                ladderStep: ladderStep,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

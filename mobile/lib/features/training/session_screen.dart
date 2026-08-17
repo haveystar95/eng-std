@@ -305,6 +305,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
           isPractice: widget.practice,
           latencyMs: a.latencyMs,
           sessionId: widget.session.sessionId,
+          // Echo the rung the card was dealt at. The server needs it to know a rung-1 answer is a
+          // TAP graded by identity; without it the tapped term id is graded as text and a correct
+          // tap becomes a lapse.
+          ladderStep: _card.ladderStep,
         );
     // Reveal the pinned «Дальше» bar. It lives OUTSIDE the scroll view, so it stays reachable no
     // matter how tall the feedback grows (the photo loads async and kept pushing an in-scroll

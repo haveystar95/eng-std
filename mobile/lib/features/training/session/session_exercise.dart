@@ -242,12 +242,18 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   void _commit(String response, {bool usedHint = false}) {
     if (_answered) return;
-    final verdict = SessionGrader.check(
-      response,
-      _card.answer,
-      variants: _card.acceptedVariants,
-      forgiveTypos: _mode.forgivesTypos,
-    );
+    // Two grading paths, exactly as the server has: an identity card's key is a term id, so the
+    // check is id equality — running a ULID through the text grader's normalisation and typo
+    // tolerance would be meaningless (and, before this, marked every correct tap wrong). Every
+    // other card grades its text against the accepted set.
+    final verdict = _card.isIdentityGraded
+        ? (response == _card.answer ? LocalCheck.correct : LocalCheck.wrong)
+        : SessionGrader.check(
+            response,
+            _card.answer,
+            variants: _card.acceptedVariants,
+            forgiveTypos: _mode.forgivesTypos,
+          );
     switch (verdict) {
       case LocalCheck.correct:
       case LocalCheck.typo:
@@ -280,11 +286,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   // ── interactions ──────────────────────────────────────────────────────────
 
-  void _pick(String option) {
+  /// [index] is the option's position, which is how an identity card's key is found: `option_ids`
+  /// is aligned with `options`, so the tapped option's TERM ID is what gets graded and uploaded.
+  /// The text is kept only for the UI ([_picked] marks which row the learner touched).
+  void _pick(String option, int index) {
     PerfLog.instance.tapHandled('option');
     if (_answered) return;
     setState(() => _picked = option);
-    _commit(option);
+    _commit(_card.optionIdAt(index) ?? option);
   }
 
   void _placeChip(int i) {
@@ -615,24 +624,27 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final o in opts) ...[
+        for (var i = 0; i < opts.length; i++) ...[
           _SessionOption(
-            text: o,
+            text: opts[i],
             answered: _answered,
-            // Same accepted set AND the same typo policy as _commit, so the option ticked as correct
-            // is exactly the one that would be graded correct. Getting the policy wrong here is what
-            // put a green check on "Could you takes a photo…" — one character from the answer.
-            isAnswer: SessionGrader.check(
-              o,
-              _card.answer,
-              variants: _card.acceptedVariants,
-              forgiveTypos: _mode.forgivesTypos,
-            ).isAccepted,
-            isPicked: _picked == o,
-            onTap: () => _pick(o),
-            errorSpan: _card.feedbackFor(o)?.errorSpan,
+            // Marked by the SAME key _commit grades against, or the check would disagree with the
+            // verdict on the very card it explains: an identity card matches the option's term id,
+            // everything else the accepted set under the same typo policy. Getting that policy wrong
+            // is what once put a green check on "Could you takes a photo…" — one character off.
+            isAnswer: _card.isIdentityGraded
+                ? _card.optionIdAt(i) == _card.answer
+                : SessionGrader.check(
+                    opts[i],
+                    _card.answer,
+                    variants: _card.acceptedVariants,
+                    forgiveTypos: _mode.forgivesTypos,
+                  ).isAccepted,
+            isPicked: _picked == opts[i],
+            onTap: () => _pick(opts[i], i),
+            errorSpan: _card.feedbackFor(opts[i])?.errorSpan,
           ),
-          if (o != opts.last) const SizedBox(height: AppSpacing.s12),
+          if (i != opts.length - 1) const SizedBox(height: AppSpacing.s12),
         ],
         if (_wrongPickCorrection(l) case final line?) ...[
           const SizedBox(height: AppSpacing.s12),

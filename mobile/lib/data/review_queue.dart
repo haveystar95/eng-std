@@ -24,6 +24,13 @@ class PendingReview {
   final int? latencyMs;
   final String? sessionId;
 
+  /// The acquisition rung the card was dealt at (1–5), echoed back with the answer; null off the
+  /// ladder. It is what tells the server this answer was a rung-1 TAP, which is graded by identity:
+  /// [response] then carries the tapped option's TERM ID, not its text. Without it the server falls
+  /// back to text grading, compares a translation against the term's own forms, and folds a correct
+  /// tap as a lapse. 0 is never sent — that is the intro, which is an exposure, not an answer.
+  final int? ladderStep;
+
   const PendingReview({
     required this.id,
     required this.termId,
@@ -35,6 +42,7 @@ class PendingReview {
     this.isPractice = false,
     this.latencyMs,
     this.sessionId,
+    this.ladderStep,
   });
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +56,7 @@ class PendingReview {
         'is_practice': isPractice,
         'latency_ms': latencyMs,
         'session_id': sessionId,
+        'ladder_step': ladderStep,
       };
 
   /// The exact shape `/reviews/batch` expects (optional keys omitted when null/default).
@@ -62,6 +71,9 @@ class PendingReview {
         if (isPractice) 'is_practice': isPractice,
         if (latencyMs != null) 'latency_ms': latencyMs,
         if (sessionId != null) 'session_id': sessionId,
+        // The contract accepts 1–5 only; 0 (intro) is an exposure, not an answer, and a queue row
+        // written before this field existed has none — both are simply omitted.
+        if (ladderStep != null && ladderStep! >= 1 && ladderStep! <= 5) 'ladder_step': ladderStep,
       };
 
   factory PendingReview.fromJson(Map<String, dynamic> j) => PendingReview(
@@ -75,6 +87,7 @@ class PendingReview {
         isPractice: (j['is_practice'] as bool?) ?? false,
         latencyMs: j['latency_ms'] as int?,
         sessionId: j['session_id'] as String?,
+        ladderStep: (j['ladder_step'] as num?)?.toInt(),
       );
 }
 
@@ -167,6 +180,7 @@ class ReviewQueue {
         isPractice: Value(r.isPractice),
         latencyMs: Value(r.latencyMs),
         sessionId: Value(r.sessionId),
+        ladderStep: Value(r.ladderStep),
       );
 
   static PendingReview _fromRow(ReviewQueueRow r) => PendingReview(
@@ -180,5 +194,6 @@ class ReviewQueue {
         isPractice: r.isPractice,
         latencyMs: r.latencyMs,
         sessionId: r.sessionId,
+        ladderStep: r.ladderStep,
       );
 }
