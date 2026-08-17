@@ -56,14 +56,18 @@ final class DraftValidator
             $seen[$key] = true;
 
             $cefr = $this->cefr($item->cefr);
+            // An example that merely repeats the term teaches nothing and is dropped; its
+            // translation goes with it, because a translation of a sentence that is not there is
+            // not a fact about anything.
+            $example = $this->teachingExample($item->example, $text);
             $usable = new GeneratedItem(
                 text: $text,
                 type: $this->type($item->type, $text),
                 translation: $translation,
-                example: $this->nullableText($item->example),
+                example: $example,
                 cefr: $cefr,
                 transcription: $this->nullableText($item->transcription),
-                exampleTranslation: $this->nullableText($item->exampleTranslation),
+                exampleTranslation: $example !== null ? $this->nullableText($item->exampleTranslation) : null,
                 imageApiPrompt: $this->nullableText($item->imageApiPrompt), // "" (un-illustratable) → null
             );
             $all[] = $usable;
@@ -104,6 +108,44 @@ final class DraftValidator
             rawResponse: $draft->rawResponse,
             imageApiPrompt: $this->nullableText($draft->imageApiPrompt),
         );
+    }
+
+    /**
+     * The example, unless it is the term back again — in which case there is no example.
+     *
+     * An example exists to show the term IN USE. Three of ten items in the acceptance collection came
+     * back with `example` character-for-character equal to `text` («Where can I find dog food?»
+     * taught by «Where can I find dog food?»), so the intro card showed the same sentence twice and
+     * offered no context at all (QA-7). It is not a property of sentence-like terms — two other
+     * phrases and an idiom in the very same response got proper contextual examples — it is the
+     * model being inconsistent, which is exactly what validation is for.
+     *
+     * The test is EQUALITY after trimming and case-folding, and deliberately no looser. An example
+     * that CONTAINS the term is the normal, correct case — that is what using a word in a sentence
+     * means — and a similarity threshold would start throwing those away.
+     *
+     * Rejected here rather than repaired: the term keeps everything else and goes in without an
+     * example, and {@see RepairEchoExamplesHandler} generates a real one afterwards, on its own job,
+     * off the path the learner is waiting on.
+     */
+    private function teachingExample(?string $example, string $text): ?string
+    {
+        $trimmed = $this->nullableText($example);
+        if ($trimmed === null) {
+            return null;
+        }
+
+        return self::isEcho($trimmed, $text) ? null : $trimmed;
+    }
+
+    /**
+     * Does this example merely repeat the term? Shared with the repair pass, so «what counts as an
+     * echo» is asked once — the pass that finds them and the pass that rejects them must agree, or
+     * the repair would either miss rows or churn on rows the validator considers fine.
+     */
+    public static function isEcho(string $example, string $text): bool
+    {
+        return mb_strtolower(trim($example)) === mb_strtolower(trim($text));
     }
 
     /** Whether an item sits inside the requested CEFR band. No band, or no/unknown item level, is neutral (in). */

@@ -16,6 +16,7 @@ use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
+use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
 use App\Modules\Generation\Application\Service\DraftValidator;
@@ -62,6 +63,7 @@ final readonly class ProcessGenerationHandler
         private GetCollectionTermSetHandler $cachedTermSet,
         private DispatchesImageAttachment $attachImages,
         private DispatchesEnrichment $enrich,
+        private DispatchesExampleRepair $repairExamples,
         private TransactionManager $tx,
         private Clock $clock,
     ) {
@@ -159,6 +161,10 @@ final readonly class ProcessGenerationHandler
         // Fire-and-forget: attach photos to the new terms + cover, off the generation thread.
         $this->attachImages->dispatch($collectionId);
         $this->chainEnrichment($collectionId);
+        // …and give a real example to whatever the validator refused for merely repeating its term
+        // (QA-7). Same shape as the two chains above: it must not be able to slow this down or fail
+        // it, and a collection missing an example or two is still a complete collection.
+        $this->repairExamples->repairCollection($collectionId, $request->userId());
     }
 
     /**

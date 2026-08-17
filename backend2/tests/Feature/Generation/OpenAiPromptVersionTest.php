@@ -137,8 +137,46 @@ it('keeps the v6 rules out of the frozen v5 prompt', function () {
     });
 });
 
-it('generates on v6 by default', function () {
-    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v6');
+/**
+ * v7 is the answer to an example that repeats its own term (QA-7, приёмка 17.08). Three of ten
+ * items came back with `example` identical to `text`, so the intro card showed the same sentence
+ * twice. The validator now refuses those; the prompt is where we ask for them not to happen.
+ */
+it('adds the v7 rule: the example must expand the term, never repeat it', function () {
+    fakeOpenAi();
+    generateWith('v7');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, 'must EXPAND the term, never repeat it')
+            // Worked through on the very item that failed, and stated for the case that tempts it:
+            // a term that is already a whole sentence.
+            && str_contains($system, 'Where can I find dog food?')
+            && str_contains($system, 'The example teaches')
+            // …and the licence NOT to over-correct: an example containing the term is the point.
+            && str_contains($system, 'CONTAINING `text` is correct and expected')
+            // v6's content is inherited, not replaced.
+            && str_contains($system, 'The two languages, fixed before you start')
+            && str_contains($system, 'Final self-check')
+            && str_contains($system, 'determine its own answer')
+            && str_contains($system, 'image_api_prompt');
+    });
+});
+
+it('keeps the v7 rule out of the frozen v6 prompt', function () {
+    fakeOpenAi();
+    generateWith('v6');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return ! str_contains($system, 'must EXPAND the term, never repeat it');
+    });
+});
+
+it('generates on v7 by default', function () {
+    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v7');
 });
 
 it('keeps the v5 rules out of the frozen v4 prompt', function () {

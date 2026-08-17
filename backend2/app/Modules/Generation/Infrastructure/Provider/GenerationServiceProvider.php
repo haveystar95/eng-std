@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Infrastructure\Provider;
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
+use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationAccountEraser;
@@ -44,6 +45,7 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedExampleRepairDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedTermEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\FakeDialogSummarizer;
@@ -80,6 +82,7 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(RecordsGenerationRejections::class, EloquentGenerationRejectionJournal::class);
         $this->app->bind(DispatchesGeneration::class, QueuedGenerationDispatcher::class);
         $this->app->bind(DispatchesImageAttachment::class, QueuedImageAttachmentDispatcher::class);
+        $this->app->bind(DispatchesExampleRepair::class, QueuedExampleRepairDispatcher::class);
         // Fulfils Vocabulary's enrichment-dispatch port with the Generation queue job.
         $this->app->bind(DispatchesTermEnrichment::class, QueuedTermEnrichmentDispatcher::class);
         // The enrichment станок: its own bookkeeping (marks + findings) and its own queue entry.

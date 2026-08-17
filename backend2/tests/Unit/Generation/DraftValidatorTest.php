@@ -119,3 +119,64 @@ it('infers phrase type from whitespace when omitted', function () {
     $phrase = $result->items[count($result->items) - 1];
     expect($phrase->type)->toBe('phrase');
 });
+
+/**
+ * QA-7: an example that IS the term teaches nothing — the intro card shows the same sentence twice.
+ * Three of ten items in the acceptance collection came back that way, while two other phrases and an
+ * idiom in the very same response got proper contextual examples: the model being inconsistent,
+ * which is what validation is for.
+ */
+it('refuses an example that merely repeats the term', function () {
+    $echo = new GeneratedItem(
+        'Where can I find dog food?', 'phrase', 'Где я могу найти корм для собак?',
+        'Where can I find dog food?', 'B1', null, 'Где я могу найти корм для собак?',
+    );
+    $items = [...manyItems(8), $echo];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $item = $result->items[count($result->items) - 1];
+    expect($item->text)->toBe('Where can I find dog food?', 'the TERM is kept — only its example was bad');
+    expect($item->example)->toBeNull();
+    expect($item->exampleTranslation)->toBeNull('a translation of a sentence that is not there');
+});
+
+it('ignores case and surrounding space when deciding what an echo is', function () {
+    $echo = new GeneratedItem('do you have any discounts?', 'phrase', 'у вас есть скидки?',
+        '  Do you have any discounts?  ', 'B1');
+    $items = [...manyItems(8), $echo];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    expect($result->items[count($result->items) - 1]->example)->toBeNull();
+});
+
+it('KEEPS an example that contains the term — that is what using a word in a sentence means', function () {
+    // The rule is equality, never similarity: «Do you have any discounts on dog food?» is exactly
+    // the example the term wants, and a threshold-based check would throw it away.
+    $good = new GeneratedItem('do you have any discounts?', 'phrase', 'у вас есть скидки?',
+        'Do you have any discounts on dog food?', 'B1', null, 'У вас есть скидки на корм для собак?');
+    $items = [...manyItems(8), $good];
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    $item = $result->items[count($result->items) - 1];
+    expect($item->example)->toBe('Do you have any discounts on dog food?');
+    expect($item->exampleTranslation)->toBe('У вас есть скидки на корм для собак?');
+});
+
+it('never drops the ITEM over its example', function () {
+    // The term, translation and level are all fine; only the example was refused. Dropping the item
+    // would silently shorten the collection the learner asked for.
+    $items = array_map(
+        static fn (GeneratedItem $i): GeneratedItem => new GeneratedItem(
+            $i->text, $i->type, $i->translation, $i->text, $i->cefr,
+        ),
+        manyItems(10),
+    );
+
+    $result = (new DraftValidator())->validate(draftOf($items), brief());
+
+    expect($result->items)->toHaveCount(10);
+    expect(array_filter($result->items, static fn (GeneratedItem $i): bool => $i->example !== null))->toBe([]);
+});

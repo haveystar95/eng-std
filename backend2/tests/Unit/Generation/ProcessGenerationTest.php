@@ -40,6 +40,7 @@ use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
 use Tests\Doubles\RecordingEnrichmentDispatcher;
+use Tests\Doubles\RecordingExampleRepairDispatcher;
 use Tests\Doubles\RecordingImageAttachmentDispatcher;
 use Tests\Doubles\RecordingRejectionJournal;
 use Tests\Doubles\ScriptedTranslationRepairer;
@@ -51,6 +52,7 @@ beforeEach(function () {
     $this->collections = new InMemoryCollectionRepository();
     $this->attach = new RecordingImageAttachmentDispatcher();
     $this->enrich = new RecordingEnrichmentDispatcher();
+    $this->repairExamples = new RecordingExampleRepairDispatcher();
     $this->user = UserId::generate();
 
     $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
@@ -66,6 +68,7 @@ beforeEach(function () {
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: $this->attach,
         enrich: $this->enrich,
+        repairExamples: $this->repairExamples,
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -100,6 +103,7 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
+        repairExamples: new RecordingExampleRepairDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );
@@ -161,6 +165,12 @@ it('materializes a collection with deduplicated terms from a pending request', f
         ->and($this->enrich->collections)->toBe([[
             'collection_id' => $request->collectionId()->value,
             'version' => BuildTermEnrichmentsHandler::VERSION,
+        ]])
+        // …and the third follow-up, same shape and same reason: give a real example to whatever the
+        // validator refused for merely repeating its term (QA-7).
+        ->and($this->repairExamples->collections)->toBe([[
+            'collection_id' => $request->collectionId()->value,
+            'owner_id' => $this->user->value,
         ]]);
 });
 
@@ -255,6 +265,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
+        repairExamples: new RecordingExampleRepairDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -300,6 +311,7 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
+        repairExamples: new RecordingExampleRepairDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -362,6 +374,7 @@ function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, Lan
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
+        repairExamples: new RecordingExampleRepairDispatcher(),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );

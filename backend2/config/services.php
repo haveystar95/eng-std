@@ -79,6 +79,11 @@ return [
         // by roughly one model call per term: if the scrap rate turns out bad, this is how the bleed
         // stops without a deploy. Off makes generation behave exactly as before.
         'auto_enrich' => (bool) env('GENERATION_AUTO_ENRICH', true),
+        // Chain the echo-example repair onto a finished generation (QA-7): give a real example to
+        // the terms whose example was refused for merely repeating the term. One model call per bad
+        // example — rare under the v7 prompt, but the prompt is a request and this is the guarantee.
+        // Same switch shape as auto_enrich, so the bleed stops without a deploy.
+        'auto_repair_examples' => (bool) env('GENERATION_AUTO_REPAIR_EXAMPLES', true),
         // The commit a proofreading export was produced by, stamped into its first line. Set it at
         // deploy: the app image mounts backend2 and `.git` lives one directory above, so asking git
         // in-container finds nothing. Empty falls back to a git call (a local checkout) and then to

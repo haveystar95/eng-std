@@ -7,6 +7,7 @@ use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
 use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
 use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
+use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         GenerateCollectionCommand::class,
         EvalGenerationCommand::class,
         EnrichBackfillCommand::class,
+        RepairEchoExamplesCommand::class,
         ApplyEnrichmentReviewCommand::class,
         AuditDistractorsCommand::class,
         BackfillEnrichmentSuppressionsCommand::class,
