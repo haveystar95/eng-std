@@ -172,6 +172,91 @@ export interface Review {
   answeredAt: string | null
 }
 
+// ── Acquisition ladder (the live progress screen) ──
+/**
+ * The ladder dimension, orthogonal to `ProgressState`: `state` says WHEN a word comes back,
+ * `acquisition` says WHAT it comes back as. `known` is a state, not an acquisition — but it is the
+ * fourth bucket the screen counts, because a self-assessed word is outside the ladder entirely.
+ */
+export type Acquisition = 'new' | 'learning' | 'graduated'
+export type LadderPhase = Acquisition | 'known'
+
+export interface LadderLearner {
+  id: string
+  name: string
+  email: string | null
+  /** The later of the last answer and the last intro. Null = has never used the app. */
+  lastActivityAt: string | null
+  pairsCount: number
+}
+
+/** The four phases partition the pairs: total = new + learning + graduated + known. */
+export interface LadderCounts {
+  total: number
+  new: number
+  learning: number
+  graduated: number
+  known: number
+  due: number
+}
+
+export interface LadderReview {
+  id: string
+  exerciseMode: ExerciseMode | null
+  grade: Grade
+  isCorrect: boolean | null
+  isPractice: boolean
+  /** The rung the CARD was dealt at — not the pair's rung now, which this answer may have moved. */
+  ladderStep: number | null
+  response: string | null
+  clientSeq: number
+  answeredAt: string | null
+}
+
+export interface LadderPair {
+  termId: string
+  text: string
+  translation: string | null
+  collections: { id: string; title: string; type: CollectionType }[]
+  state: ProgressState
+  acquisition: Acquisition
+  learningStep: number
+  /**
+   * The rung, 0–5, derived server-side by the Learning module. **null means OUTSIDE the ladder**
+   * (a triage «знаю») and is drawn as a dash — never as rung 0. See LadderDots.
+   */
+  ladderStep: number | null
+  reps: number
+  lapses: number
+  intervalDays: number
+  dueAt: string | null
+  lastReviewedAt: string | null
+  /** When the intro card was shown. Null = the word has never been introduced. */
+  exposedAt: string | null
+  lastReview: LadderReview | null
+}
+
+/** One entry of the live feed: an answer, or a word being introduced. */
+export interface LadderEvent {
+  id: string
+  kind: 'review' | 'exposure'
+  termId: string
+  termText: string | null
+  occurredAt: string | null
+  exerciseMode: ExerciseMode | null
+  grade: Grade | null
+  isCorrect: boolean | null
+  isPractice: boolean
+  ladderStep: number | null
+  response: string | null
+  clientSeq: number | null
+}
+
+/** The pairs page carries its counters, so a polled table and its header agree on one moment. */
+export interface LadderProgress extends Paginated<LadderPair> {
+  counts: LadderCounts
+}
+
 // ── Collections ──
 export type CollectionType = 'system' | 'shared' | 'custom'
 export type CollectionSource = 'curated' | 'ai' | 'user'
@@ -430,6 +515,12 @@ export interface UserListQuery extends PageQuery {
 export interface ReviewsQuery extends PageQuery {
   from?: string
   to?: string
+}
+/** Every field is also a URL query parameter of the ladder screen — the view is shareable. */
+export interface LadderQuery extends PageQuery {
+  collectionId?: string
+  phase?: LadderPhase
+  due?: boolean
 }
 export interface CollectionsQuery extends PageQuery {
   type?: CollectionType

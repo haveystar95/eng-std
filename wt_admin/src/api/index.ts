@@ -19,6 +19,12 @@ import type {
   DialogRow,
   Generation,
   GenerationsQuery,
+  LadderCounts,
+  LadderEvent,
+  LadderLearner,
+  LadderPair,
+  LadderProgress,
+  LadderQuery,
   LoginResponse,
   Paginated,
   PageQuery,
@@ -62,6 +68,37 @@ export const api = {
     useMocks ? mock.getUserReviews(id, q) : httpGetPage(`/users/${id}/reviews`, q),
   setTier: (id: string, tier: Tier): Promise<{ id: string; tier: Tier }> =>
     useMocks ? mock.setTier(id, tier) : httpPost(`/users/${id}/tier`, { tier }),
+
+  // ── Acquisition ladder (live observation; read-only, polled) ──
+  listLadderLearners: async (): Promise<LadderLearner[]> =>
+    useMocks ? mock.listLadderLearners() : (await httpGet<{ data: LadderLearner[] }>('/ladder/learners')).data,
+  // Not httpGetPage: this envelope carries `counts` beside `data`/`meta`, so the page is assembled
+  // here rather than by the generic mapper.
+  getLadderProgress: async (id: string, q: LadderQuery = {}): Promise<LadderProgress> => {
+    if (useMocks) return mock.getLadderProgress(id, q)
+    const raw = await httpGet<{
+      data: LadderPair[]
+      meta: { total: number; page: number; perPage: number; nextCursor?: string | null }
+      counts: LadderCounts
+    }>(`/users/${id}/ladder`, q)
+    const perPage = raw.meta?.perPage || 25
+    const total = raw.meta?.total || 0
+    return {
+      data: raw.data ?? [],
+      meta: {
+        total,
+        page: raw.meta?.page || 1,
+        perPage,
+        totalPages: Math.max(1, Math.ceil(total / perPage)),
+        nextCursor: raw.meta?.nextCursor ?? null,
+      },
+      counts: raw.counts,
+    }
+  },
+  getLadderEvents: async (id: string, limit = 50): Promise<LadderEvent[]> =>
+    useMocks
+      ? mock.getLadderEvents(id, limit)
+      : (await httpGet<{ data: LadderEvent[] }>(`/users/${id}/ladder/events`, { limit })).data,
 
   // ── Exercise modes (trainer toggles) ──
   // The ORDER of `modes` is the contract: free practice round-robins by index into it, on the

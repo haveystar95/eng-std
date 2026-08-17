@@ -45,6 +45,10 @@ export const router = createRouter({
           props: true,
         },
 
+        // The live ladder. Its whole state (learner, filters, page) lives in the query string, so a
+        // view of one session is a link like any other page here.
+        { path: 'ladder', name: 'ladder', component: () => import('@/views/LadderView.vue') },
+
         { path: 'collections', name: 'collections', component: () => import('@/views/CollectionsView.vue') },
         {
           path: 'collections/:id',

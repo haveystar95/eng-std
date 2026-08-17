@@ -2,6 +2,7 @@
 // contract (see src/api/types.ts). No time/random dependence beyond a fixed epoch, so
 // tests and the standalone SPA are reproducible.
 import type {
+  Acquisition,
   CollectionRow,
   CollectionSource,
   CollectionTerm,
@@ -11,6 +12,8 @@ import type {
   Generation,
   GenerationStatus,
   Grade,
+  LadderEvent,
+  LadderPair,
   PlanEntry,
   ProgressState,
   RequestLog,
@@ -96,9 +99,98 @@ export interface MockUser {
   detail: UserDetail
   plan: { entries: PlanEntry[] }
   reviews: Review[]
+  ladder: LadderPair[]
+  ladderEvents: LadderEvent[]
   dialogs: DialogDetail[]
   generations: Generation[]
   logIds: string[]
+}
+
+/**
+ * One word on the ladder, dealt a rung by its index so the seed covers the whole track: the intro,
+ * both recognition rungs, assembly, typing, dictation — and a «знаю» with no rung at all, which is
+ * the only case that draws the dash instead of dots.
+ */
+function buildLadderPair(i: number, k: number, collections: UserCollection[]): LadderPair {
+  const [text, translation] = EN_TERMS[(i + k) % EN_TERMS.length]
+  const isKnown = k % 7 === 6
+  const step = isKnown ? null : [0, 1, 2, 3, 4, 5][k % 6]
+  const acquisition: Acquisition = step === null ? 'graduated' : step === 0 ? 'new' : step <= 2 ? 'learning' : 'graduated'
+  const graduated = acquisition === 'graduated' && !isKnown
+  const reps = step === null ? 0 : step === 4 ? 4 : step === 5 ? 7 : graduated ? 1 : 0
+  const answeredMsAgo = k * 47_000 + 20_000
+  const source = collections[k % collections.length]
+
+  return {
+    termId: ulid(20000 + i * 100 + k),
+    text,
+    translation,
+    collections: source ? [{ id: source.id, title: source.title, type: source.type as CollectionType }] : [],
+    state: isKnown ? 'known' : graduated ? 'review' : step === 0 ? 'new' : 'learning',
+    acquisition,
+    learningStep: step !== null && step <= 2 ? step : 0,
+    ladderStep: step,
+    reps,
+    lapses: k % 5 === 0 ? 1 : 0,
+    intervalDays: graduated ? [1, 3, 7, 21][k % 4] : 0,
+    dueAt: graduated ? iso(-(k % 4) * DAY) : null,
+    lastReviewedAt: step !== null && step > 0 ? iso(answeredMsAgo) : null,
+    exposedAt: isKnown ? null : iso(answeredMsAgo + 90_000),
+    lastReview:
+      step !== null && step > 0
+        ? {
+            id: ulid(70000 + i * 100 + k),
+            exerciseMode: step <= 2 ? 'multiple_choice' : step === 4 ? 'typing' : step === 5 ? 'dictation' : 'word_bank',
+            grade: k % 4 === 3 ? 'again' : 'good',
+            isCorrect: k % 4 !== 3,
+            isPractice: k % 9 === 8,
+            ladderStep: step,
+            response: text,
+            clientSeq: 100 + k,
+            answeredAt: iso(answeredMsAgo),
+          }
+        : null,
+  }
+}
+
+/** The feed: every answer that exists, plus the intros, newest first. */
+function buildLadderEvents(pairs: LadderPair[]): LadderEvent[] {
+  const events: LadderEvent[] = []
+  for (const p of pairs) {
+    if (p.lastReview) {
+      events.push({
+        id: p.lastReview.id,
+        kind: 'review',
+        termId: p.termId,
+        termText: p.text,
+        occurredAt: p.lastReview.answeredAt,
+        exerciseMode: p.lastReview.exerciseMode,
+        grade: p.lastReview.grade,
+        isCorrect: p.lastReview.isCorrect,
+        isPractice: p.lastReview.isPractice,
+        ladderStep: p.lastReview.ladderStep,
+        response: p.lastReview.response,
+        clientSeq: p.lastReview.clientSeq,
+      })
+    }
+    if (p.exposedAt) {
+      events.push({
+        id: `exposure:${p.termId}`,
+        kind: 'exposure',
+        termId: p.termId,
+        termText: p.text,
+        occurredAt: p.exposedAt,
+        exerciseMode: null,
+        grade: null,
+        isCorrect: null,
+        isPractice: false,
+        ladderStep: null,
+        response: null,
+        clientSeq: null,
+      })
+    }
+  }
+  return events.sort((a, b) => (b.occurredAt ?? '').localeCompare(a.occurredAt ?? ''))
 }
 
 function buildPlanEntry(i: number, k: number): PlanEntry {
@@ -234,7 +326,18 @@ function buildUser(i: number): MockUser {
     }
   })
 
-  return { detail, plan: { entries: planEntries }, reviews, dialogs, generations, logIds: [] }
+  const ladder = Array.from({ length: 14 }, (_, k) => buildLadderPair(i, k, collections))
+
+  return {
+    detail,
+    plan: { entries: planEntries },
+    reviews,
+    ladder,
+    ladderEvents: buildLadderEvents(ladder),
+    dialogs,
+    generations,
+    logIds: [],
+  }
 }
 
 export const users: MockUser[] = NAMES.map((_, i) => buildUser(i))

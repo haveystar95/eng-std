@@ -16,6 +16,10 @@ import type {
   DialogRow,
   Generation,
   GenerationsQuery,
+  LadderEvent,
+  LadderLearner,
+  LadderProgress,
+  LadderQuery,
   LoginResponse,
   LogsQuery,
   PageQuery,
@@ -224,6 +228,58 @@ export const mock = {
     if (q.from) rows = rows.filter((r) => (r.answeredAt ?? '') >= q.from!)
     if (q.to) rows = rows.filter((r) => (r.answeredAt ?? '') <= q.to! + 'T23:59:59.999Z')
     return paginate(rows, q)
+  },
+
+  async listLadderLearners(): Promise<LadderLearner[]> {
+    return users
+      .map((u) => ({
+        id: u.detail.id,
+        name: u.detail.name,
+        email: u.detail.email,
+        lastActivityAt: u.ladderEvents[0]?.occurredAt ?? null,
+        pairsCount: u.ladder.length,
+      }))
+      .sort((a, b) => (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? ''))
+  },
+
+  async getLadderProgress(id: string, q: LadderQuery = {}): Promise<LadderProgress> {
+    const all = findUser(id).ladder
+    // The counters follow the collection filter but NOT phase/due — same as the real endpoint, so
+    // the split above the table stays whole while the table is narrowed.
+    const scoped = q.collectionId ? all.filter((p) => p.collections.some((c) => c.id === q.collectionId)) : all
+
+    let rows = scoped
+    if (q.phase === 'known') rows = rows.filter((p) => p.state === 'known')
+    else if (q.phase) rows = rows.filter((p) => p.acquisition === q.phase && p.state !== 'known')
+    if (q.due) rows = rows.filter((p) => p.dueAt !== null && new Date(p.dueAt).getTime() <= MOCK_NOW)
+
+    // Offset paging only, like the real endpoint: the order is "most recently answered", which is
+    // not a unique key, so the shared id-keyset paginator does not apply here.
+    const ordered = [...rows].sort((a, b) => (b.lastReviewedAt ?? '').localeCompare(a.lastReviewedAt ?? ''))
+    const perPage = q.perPage ?? 25
+    const current = q.page ?? 1
+    return {
+      data: ordered.slice((current - 1) * perPage, current * perPage),
+      meta: {
+        page: current,
+        perPage,
+        total: ordered.length,
+        totalPages: Math.max(1, Math.ceil(ordered.length / perPage)),
+        nextCursor: null,
+      },
+      counts: {
+        total: scoped.length,
+        new: scoped.filter((p) => p.state !== 'known' && p.acquisition === 'new').length,
+        learning: scoped.filter((p) => p.state !== 'known' && p.acquisition === 'learning').length,
+        graduated: scoped.filter((p) => p.state !== 'known' && p.acquisition === 'graduated').length,
+        known: scoped.filter((p) => p.state === 'known').length,
+        due: scoped.filter((p) => p.dueAt !== null && new Date(p.dueAt).getTime() <= MOCK_NOW).length,
+      },
+    }
+  },
+
+  async getLadderEvents(id: string, limit = 50): Promise<LadderEvent[]> {
+    return findUser(id).ladderEvents.slice(0, limit)
   },
 
   async getExerciseModes(): Promise<ExerciseModes> {
