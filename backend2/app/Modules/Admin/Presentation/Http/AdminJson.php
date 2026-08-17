@@ -7,10 +7,17 @@ namespace App\Modules\Admin\Presentation\Http;
 use App\Modules\Admin\Application\Dto\AdminCollectionProgress;
 use App\Modules\Admin\Application\Dto\AdminDayPlanEntry;
 use App\Modules\Admin\Application\Dto\AdminDayPlanView;
+use App\Modules\Admin\Application\Dto\AdminLadderCounts;
+use App\Modules\Admin\Application\Dto\AdminLadderEvent;
+use App\Modules\Admin\Application\Dto\AdminLadderLearner;
+use App\Modules\Admin\Application\Dto\AdminLadderPair;
+use App\Modules\Admin\Application\Dto\AdminLadderProgressView;
+use App\Modules\Admin\Application\Dto\AdminLadderReview;
 use App\Modules\Admin\Application\Dto\AdminUserCollectionRow;
 use App\Modules\Admin\Application\Dto\AdminUserDetail;
 use App\Modules\Admin\Application\Dto\AdminUserRow;
 use App\Modules\Admin\Application\Dto\CollectionDetail;
+use App\Modules\Admin\Application\Dto\CollectionRefRow;
 use App\Modules\Admin\Application\Dto\CollectionRow;
 use App\Modules\Admin\Application\Dto\CollectionTermRow;
 use App\Modules\Admin\Application\Dto\CostByPurposeView;
@@ -219,6 +226,104 @@ final class AdminJson
             'is_practice' => $r->isPractice,
             'client_seq' => $r->clientSeq,
             'answered_at' => $r->answeredAt,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function ladderLearner(AdminLadderLearner $l): array
+    {
+        return [
+            'id' => $l->id,
+            'name' => $l->name,
+            'email' => $l->email,
+            'last_activity_at' => $l->lastActivityAt,
+            'pairs_count' => $l->pairsCount,
+        ];
+    }
+
+    /**
+     * The pairs page carries its counters, so the table and the header above it always describe the
+     * same moment even though the screen re-reads every few seconds.
+     *
+     * @return array<string, mixed>
+     */
+    public static function ladderProgress(AdminLadderProgressView $v): array
+    {
+        return self::page($v->page, self::ladderPair(...)) + ['counts' => self::ladderCounts($v->counts)];
+    }
+
+    /** @return array<string, int> */
+    public static function ladderCounts(AdminLadderCounts $c): array
+    {
+        return [
+            'total' => $c->total,
+            'new' => $c->new,
+            'learning' => $c->learning,
+            'graduated' => $c->graduated,
+            'known' => $c->known,
+            'due' => $c->due,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function ladderPair(AdminLadderPair $p): array
+    {
+        $f = $p->facts;
+
+        return [
+            'term_id' => $f->termId,
+            'text' => $f->text,
+            'translation' => $f->translation,
+            'collections' => array_map(static fn (CollectionRefRow $c): array => [
+                'id' => $c->id, 'title' => $c->title, 'type' => $c->type,
+            ], $f->collections),
+            'state' => $f->state,
+            'acquisition' => $f->acquisition,
+            'learning_step' => $f->learningStep,
+            // null = outside the ladder (a triage «знаю»). Never conflate it with step 0.
+            'ladder_step' => $p->step,
+            'reps' => $f->reps,
+            'lapses' => $f->lapses,
+            'interval_days' => $f->intervalDays,
+            'due_at' => $f->dueAt,
+            'last_reviewed_at' => $f->lastReviewedAt,
+            'exposed_at' => $f->exposedAt,
+            'last_review' => $f->lastReview !== null ? self::ladderReview($f->lastReview) : null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function ladderReview(AdminLadderReview $r): array
+    {
+        return [
+            'id' => $r->id,
+            'exercise_mode' => $r->exerciseMode,
+            'grade' => $r->grade,
+            'is_correct' => $r->isCorrect,
+            'is_practice' => $r->isPractice,
+            'ladder_step' => $r->ladderStep,
+            'response' => $r->response,
+            'client_seq' => $r->clientSeq,
+            'answered_at' => $r->answeredAt,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function ladderEvent(AdminLadderEvent $e): array
+    {
+        return [
+            'id' => $e->id,
+            'kind' => $e->kind,
+            'term_id' => $e->termId,
+            'term_text' => $e->termText,
+            'occurred_at' => $e->occurredAt,
+            'exercise_mode' => $e->exerciseMode,
+            'grade' => $e->grade,
+            'is_correct' => $e->isCorrect,
+            'is_practice' => $e->isPractice,
+            'ladder_step' => $e->ladderStep,
+            'response' => $e->response,
+            'client_seq' => $e->clientSeq,
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Modules\Admin\Presentation\Http\Controller\CostController;
 use App\Modules\Admin\Presentation\Http\Controller\DashboardController;
 use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
+use App\Modules\Admin\Presentation\Http\Controller\LadderController;
 use App\Modules\Admin\Presentation\Http\Controller\PracticeDialogController;
 use App\Modules\Admin\Presentation\Http\Controller\RequestLogController;
 use App\Modules\Admin\Presentation\Http\Controller\TermController;
@@ -31,6 +32,12 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/users/{id}/collections', [UserController::class, 'collections']);
     Route::get('/users/{id}/reviews', [UserController::class, 'reviews']);
     Route::post('/users/{id}/tier', [TierController::class, 'update']);
+
+    // The acquisition ladder, watched live while a device is being used. Read-only, and polled by
+    // the panel every few seconds — the ladder's CONTROLS (the admission matrix) are elsewhere.
+    Route::get('/ladder/learners', [LadderController::class, 'learners']);
+    Route::get('/users/{id}/ladder', [LadderController::class, 'progress']);
+    Route::get('/users/{id}/ladder/events', [LadderController::class, 'events']);
 
     // Trainer toggles: the product default, and a per-user override (audited, like the tier).
     Route::get('/exercise-modes', [ExerciseModeController::class, 'index']);

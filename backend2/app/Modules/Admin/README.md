@@ -33,13 +33,14 @@ scoped to `admin/api/*` for the `ADMIN_ORIGIN` browser origin (config/cors.php).
 |---|---|---|
 | `Learning` | Query `GetDayPlan` | the day-plan simulator — the real GetDueTerms + ExerciseSelector, dry-run, no writes |
 | `Learning` | Query `GetUserStats` | mastered/learned/due/streak (Mastery is the single source of «усвоено») |
+| `Learning` | Service `LadderStepResolver` | the ladder rung on the live progress screen — derived by `LearningLadder`, never re-expressed in SQL |
 | `Identity` | Port `UserTierWriter` / `UserTierReader` | the tier mutation goes through the tier's owner (same path as `practice:grant-premium`) |
 
 ## Ports (outbound interfaces)
 
 Reader ports (implemented by `Eloquent*` projections in Infrastructure): `AdminMetricsReader`,
 `AdminCostReader`, `AdminUserReader`, `AdminReviewReader`, `AdminCollectionReader`, `AdminTermReader`,
-`AdminRequestLogReader`, `AdminDialogReader`, `AdminGenerationReader`. Auth/audit ports: `AdminLogin`,
+`AdminRequestLogReader`, `AdminDialogReader`, `AdminGenerationReader`, `AdminLadderReader`. Auth/audit ports: `AdminLogin`,
 `AdminRegistrar`, `AdminReader`, `AdminSignOut`, `AdminAuditRecorder`.
 
 ## Notes / deliberate decisions
@@ -52,6 +53,12 @@ Reader ports (implemented by `Eloquent*` projections in Infrastructure): `AdminM
   Application; the tier write goes through Identity's.
 - **The day-plan simulator writes nothing** — no StudySession, no progress, no reviews (covered by a
   test that asserts the row counts are unchanged).
+- **The ladder screen (`/ladder/learners`, `/users/{id}/ladder[/events]`) only OBSERVES.** It is
+  polled every few seconds while a device is being used, which is only safe because no route on it
+  writes. The rung it shows is asked of Learning; the SQL never re-derives it. Note the shape of the
+  data it reports: a progress row exists only once a word has been met (intro, answer or triage), so
+  a word the learner has never seen has no pair and never appears — the `new` bucket counts pairs
+  caught mid-introduction, not the untouched backlog.
 - **Audit trail.** Every mutation appends to `admin_audit_log` in the same command as the write. v1
   has one mutation (tier); future mutations go through the same table.
 - `term_enrichments` has no `user_id`, so enrichment spend appears in the fleet dashboard but not in

@@ -31,6 +31,7 @@ tags:
   - name: Auth
   - name: Dashboard
   - name: Users
+  - name: Ladder
   - name: Collections
   - name: Terms
   - name: Logs
@@ -206,6 +207,91 @@ paths:
                     properties:
                       data: { type: array, items: { $ref: '#/components/schemas/Review' } }
         '401': { $ref: '#/components/responses/Problem' }
+
+  /ladder/learners:
+    get:
+      tags: [Ladder]
+      summary: Who to watch on the acquisition-ladder screen
+      description: >
+        The learner selector, most recently active first. "Active" is the later of the last answered
+        review and the last intro shown — a learner who has only been introduced to new words has
+        still been using the app.
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 200 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/LadderLearner' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}/ladder:
+    get:
+      tags: [Ladder]
+      summary: Where every one of a learner's words stands on the ladder
+      description: >
+        Read-only observation, polled by the panel every few seconds while a device is being used.
+        `ladder_step` is DERIVED by the Learning module's own LearningLadder from the stored
+        `acquisition` / `learning_step` / `reps`, never re-expressed here; null means the pair is
+        outside the ladder (a triage «знаю») and must not be read as rung 0.
+        The `counts` block follows the `collection_id` filter but NOT `phase` / `due`, so the split
+        above the table stays whole while the table itself is narrowed. It travels with the page so
+        a polled screen never shows a header and a table from two different moments.
+        Offset paging only: rows are ordered by last answer (most recent first), which is not a
+        unique key, so the id-keyset walk the other listings use does not apply.
+      parameters:
+        - { $ref: '#/components/parameters/UserId' }
+        - { name: collection_id, in: query, schema: { type: string }, description: only terms in this collection }
+        - { name: phase, in: query, schema: { type: string, enum: [new, learning, graduated, known] } }
+        - { name: due, in: query, schema: { type: boolean }, description: only pairs scheduled and ripe now }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PerPage' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [counts]
+                    properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/LadderPair' } }
+                      counts: { $ref: '#/components/schemas/LadderCounts' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /users/{id}/ladder/events:
+    get:
+      tags: [Ladder]
+      summary: A learner's answers and intros as one live feed
+      description: >
+        The append-only review log and the intro log merged, newest first — what a session looks
+        like from outside. Ordered by TIME, which is the only thing the two logs share; nothing is
+        derived from that order, and `client_seq` (the real ordering truth for reviews) is carried
+        on every answer so a feed and a verdict can be reconciled.
+      parameters:
+        - { $ref: '#/components/parameters/UserId' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/LadderEvent' } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 
   /users/{id}/tier:
     post:
@@ -1145,6 +1231,102 @@ components:
         is_practice: { type: boolean }
         client_seq: { type: integer }
         answered_at: { type: [string, 'null'], format: date-time }
+
+    LadderLearner:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: [string, 'null'] }
+        last_activity_at:
+          type: [string, 'null']
+          format: date-time
+          description: the later of the last answer and the last intro; null = never used the app
+        pairs_count: { type: integer, description: 'rows in user_term_progress — words already met' }
+
+    LadderCounts:
+      type: object
+      description: >
+        The four phases partition the pairs. `known` is a STATE and wins over the acquisition value
+        the same row also carries, so total = new + learning + graduated + known exactly.
+      properties:
+        total: { type: integer }
+        new: { type: integer }
+        learning: { type: integer }
+        graduated: { type: integer }
+        known: { type: integer }
+        due: { type: integer, description: 'scheduled and ripe now; ladder pairs have no due date at all' }
+
+    LadderReview:
+      type: object
+      description: The governing (greatest client_seq) review of a pair.
+      properties:
+        id: { type: string }
+        exercise_mode: { type: [string, 'null'] }
+        grade: { type: string, enum: [again, hard, good, easy] }
+        is_correct: { type: [boolean, 'null'] }
+        is_practice: { type: boolean }
+        ladder_step:
+          type: [integer, 'null']
+          description: the rung the CARD was dealt at — not the pair's rung now, which the answer may have moved
+        response: { type: [string, 'null'] }
+        client_seq: { type: integer }
+        answered_at: { type: [string, 'null'], format: date-time }
+
+    LadderPair:
+      type: object
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        translation: { type: [string, 'null'] }
+        collections:
+          type: array
+          description: the LEARNER'S OWN collections this term came from (not every collection containing it)
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string, enum: [system, shared, custom] }
+        state: { type: string, enum: [new, learning, review, relearning, known] }
+        acquisition: { type: string, enum: [new, learning, graduated] }
+        learning_step: { type: integer, description: 'the stored rung while on the recognition steps (0–2)' }
+        ladder_step:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 5
+          description: >
+            The rung, derived by LearningLadder. null = OUTSIDE the ladder (a triage «знаю»), drawn
+            as a dash — never as rung 0.
+        reps: { type: integer }
+        lapses: { type: integer }
+        interval_days: { type: integer }
+        due_at: { type: [string, 'null'], format: date-time }
+        last_reviewed_at: { type: [string, 'null'], format: date-time }
+        exposed_at:
+          type: [string, 'null']
+          format: date-time
+          description: when the intro card was shown; null = the word has never been introduced
+        last_review:
+          oneOf:
+            - $ref: '#/components/schemas/LadderReview'
+            - type: 'null'
+
+    LadderEvent:
+      type: object
+      properties:
+        id: { type: string, description: 'the review id, or `exposure:<term_id>` — an intro''s identity IS the pair' }
+        kind: { type: string, enum: [review, exposure] }
+        term_id: { type: string }
+        term_text: { type: [string, 'null'] }
+        occurred_at: { type: [string, 'null'], format: date-time }
+        exercise_mode: { type: [string, 'null'] }
+        grade: { type: [string, 'null'], enum: [again, hard, good, easy, null] }
+        is_correct: { type: [boolean, 'null'] }
+        is_practice: { type: boolean }
+        ladder_step: { type: [integer, 'null'], description: 'always null for an intro — an intro is rung 0 by nature' }
+        response: { type: [string, 'null'] }
+        client_seq: { type: [integer, 'null'] }
 
     CollectionRow:
       type: object
