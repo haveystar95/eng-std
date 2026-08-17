@@ -59,6 +59,23 @@ When adding a module: create the four layers + ServiceProvider, add a `deptrac.y
 ruleset entry, add a row to the table above, and write the module `README.md` from
 `docs/module-README.template.md`. Skills are not touched — they describe rules, not contents.
 
+## The database is not disposable
+
+- **Before ANY operation that touches the dev database** — a migration, a seeder, a content
+  backfill, a manual UPDATE — take a backup: `scripts/db-backup.sh` (dumps to the gitignored
+  `storage/db-backups/`). It takes a second and it is the only copy that exists.
+- **`migrate:fresh` / `migrate:refresh` / `migrate:reset` / `migrate:rollback` / `db:wipe` on the
+  main database (`wordtrainer`) are forbidden. Always.** Not "unless you're careful" — the store
+  catalogue, the enriched content and the owner's collections live only there, and re-creating them
+  costs a paid станок run. The rollback check that every migration needs runs on a **disposable**
+  database: `docker compose exec -T -e DB_DATABASE=wordtrainer_test app php artisan migrate:fresh`.
+- The commands above are refused by the app itself when the resolved database is not a test
+  database (`AppServiceProvider::shouldProtectDatabase`). If you see "This command is prohibited
+  from running in this environment", the guard just saved the dev data — re-run it against
+  `wordtrainer_test`, do **not** reach for `DB_ALLOW_DESTRUCTIVE=true`. That escape hatch exists for
+  a reset the owner asked for out loud, after a backup.
+- Schema changes reach the dev database with plain `migrate` (forward only), never with a re-fresh.
+
 ## Stack
 
 PHP 8.4 · Laravel 12 · PostgreSQL 17 (+pgvector) · Redis/Horizon · Sanctum · Pest 3 ·
