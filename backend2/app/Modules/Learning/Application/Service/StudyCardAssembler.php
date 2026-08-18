@@ -88,6 +88,7 @@ final readonly class StudyCardAssembler
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
             acquisition: $view->acquisition, learningStep: $view->learningStep,
+            successfulReviews: $view->successfulReviews,
         );
         $answer = $content->text;
         // Span-distinct, because that is what a card can actually use — see spanDistinct().

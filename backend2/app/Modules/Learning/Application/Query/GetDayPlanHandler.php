@@ -96,6 +96,7 @@ final readonly class GetDayPlanHandler
                 $query->userId, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
                 $view->intervalDays, $view->dueAt, $view->reps, 0, null,
                 acquisition: $view->acquisition, learningStep: $view->learningStep,
+                successfulReviews: $view->successfulReviews,
             );
             // The plan simulates the FIRST card each term would arrive as. It deliberately does not
             // expand a ladder chain into its three cards: the question the simulator answers is

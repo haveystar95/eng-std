@@ -238,6 +238,10 @@ class SyncService {
         // already knows back to an intro card.
         acquisition: Value((p['acquisition'] as String?) ?? 'graduated'),
         learningStep: Value((p['learning_step'] as int?) ?? 0),
+        // The ladder's counter for the rungs above assembly. An older server that does not send it
+        // leaves the pair at 0 — assembly — which is the safe direction here: it withholds the
+        // harder trainers rather than dealing dictation to a word that has not earned it.
+        successfulReviews: Value((p['successful_reviews'] as int?) ?? 0),
       ));
     }
 

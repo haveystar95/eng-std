@@ -69,7 +69,7 @@ return new class extends Migration
                 'position' => $position,
                 'min_acquisition' => $rule?->minAcquisition->value ?? Acquisition::Graduated->value,
                 'min_learning_step' => $rule?->minLearningStep,
-                'min_reps' => $rule?->minReps,
+                'min_reps' => $rule?->minSuccessfulReviews,
                 'options_policy' => $rule?->optionsPolicy->value ?? OptionsPolicy::Standard->value,
                 'created_at' => now(),
                 'updated_at' => now(),

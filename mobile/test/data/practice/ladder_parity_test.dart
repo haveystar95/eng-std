@@ -10,19 +10,20 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// So the whole table is walked, not a sample of it. The expectations below are transcribed from
 /// `backend2/tests/Unit/Learning/ExerciseSelectorTest.php` («derives the rung from (acquisition,
-/// reps, learning_step)») — same rows, same order, same answers — plus the admission matrix from
+/// successful_reviews, learning_step)») — same rows, same order, same answers — plus the admission matrix from
 /// `ModeAdmission::shipped()`, which the server seeds `learning_mode_settings` with and sends down
 /// `/sync`.
 void main() {
   group('the rung, for every row of the server table', () {
-    // (acquisition, reps, learning_step, isKnown) → rung. The server's dataset, verbatim.
+    // (acquisition, successful_reviews, learning_step, isKnown) → rung. The server's dataset,
+    // verbatim. The counter is SUCCESSES, not the scheduler's `reps` — see QA-18 in the ladder.
     const rows = <(String, Acquisition, int, int, bool, int?)>[
       ('never shown → intro', Acquisition.isNew, 0, 0, false, 0),
-      ('never shown, reps survived a known undo', Acquisition.isNew, 9, 0, false, 0),
+      ('never shown, a counter survived a known undo', Acquisition.isNew, 9, 0, false, 0),
       ('introduced → recognition forward', Acquisition.learning, 0, 1, false, 1),
       ('forward passed → recognition reverse', Acquisition.learning, 0, 2, false, 2),
       ('graduated, no SRS review yet', Acquisition.graduated, 0, 0, false, 3),
-      ('graduated, three reviews in', Acquisition.graduated, 3, 0, false, 3),
+      ('graduated, three successes in', Acquisition.graduated, 3, 0, false, 3),
       ('graduated, typing unlocked', Acquisition.graduated, 4, 0, false, 4),
       ('graduated, still rung 4', Acquisition.graduated, 5, 0, false, 4),
       ('graduated, dictation unlocked', Acquisition.graduated, 6, 0, false, 5),
@@ -32,12 +33,12 @@ void main() {
       ('a step from a newer build is clamped', Acquisition.learning, 0, 7, false, 2),
     ];
 
-    for (final (name, acquisition, reps, learningStep, isKnown, expected) in rows) {
+    for (final (name, acquisition, successes, learningStep, isKnown, expected) in rows) {
       test(name, () {
         expect(
           LearningLadder.stepFor(
             acquisition: acquisition,
-            reps: reps,
+            successfulReviews: successes,
             learningStep: learningStep,
             isKnown: isKnown,
           ),
@@ -47,12 +48,28 @@ void main() {
     }
   });
 
+  test('the rung counts SUCCESSES — the `antipyretic` case, on both runtimes', () {
+    // The live bug (QA-18): four misses and two hits. The scheduler was called six times, so the
+    // old ladder read 6 and dealt dictation. The pair has been recalled twice, and stands at
+    // assembly. The phone must reach the same verdict as the server's SuccessfulReviewsTest.
+    expect(
+      LearningLadder.stepFor(
+        acquisition: Acquisition.graduated,
+        successfulReviews: 2,
+        learningStep: 0,
+      ),
+      LearningLadder.stepAssembly,
+    );
+  });
+
   test('the rung is a pure function — the same inputs always answer the same', () {
-    for (var reps = 0; reps <= 12; reps++) {
+    for (var successes = 0; successes <= 12; successes++) {
       for (final a in Acquisition.values) {
         for (var s = 0; s <= 2; s++) {
-          final first = LearningLadder.stepFor(acquisition: a, reps: reps, learningStep: s);
-          final second = LearningLadder.stepFor(acquisition: a, reps: reps, learningStep: s);
+          final first =
+              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
+          final second =
+              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
           expect(first, second);
         }
       }
@@ -62,10 +79,11 @@ void main() {
   test('every rung the ladder can produce is one this build knows how to deal', () {
     // A rung with no admitted trainer would be a card nobody can play. `known` (null) is the one
     // legitimate answer with no rung, and it is handled before the matrix is ever consulted.
-    for (var reps = 0; reps <= 40; reps++) {
+    for (var successes = 0; successes <= 40; successes++) {
       for (final a in Acquisition.values) {
         for (var s = 0; s <= 2; s++) {
-          final step = LearningLadder.stepFor(acquisition: a, reps: reps, learningStep: s);
+          final step =
+              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
           expect(step, isNotNull);
           expect(step, inInclusiveRange(LearningLadder.stepIntro, LearningLadder.stepDictation));
         }

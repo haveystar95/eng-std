@@ -1207,17 +1207,30 @@ paths:
                                     is the intro); `learning` = working through the two recognition
                                     steps, which log answers but schedule nothing; `graduated` =
                                     off the recognition rungs, where ordinary SRS runs and the rung
-                                    widens with `reps`.
+                                    widens with `successful_reviews`.
                                 learning_step:
                                   type: integer
                                   minimum: 0
                                   maximum: 2
                                   description: >-
                                     The rung while `acquisition` is `learning`. Not derivable from
-                                    `reps`: a FAILED recognition step is re-queued as the same step
-                                    but is still logged, so anything derived from the log would push
-                                    the pair up a rung it has not earned. Combine with `acquisition`
-                                    and `reps` through the shared ladder function to get the rung.
+                                    any counter: a FAILED recognition step is re-queued as the same
+                                    step but is still logged, so anything derived from the log would
+                                    push the pair up a rung it has not earned. Combine with
+                                    `acquisition` and `successful_reviews` through the shared ladder
+                                    function to get the rung.
+                                successful_reviews:
+                                  type: integer
+                                  minimum: 0
+                                  description: >-
+                                    Correct non-practice reviews since the pair graduated — what the
+                                    ladder's rungs above assembly (typing, dictation) are counted in.
+                                    Deliberately NOT `reps`, which counts how many times the
+                                    scheduler was CALLED, `again` included: reading the rung off
+                                    `reps` promoted words the learner had only ever got wrong, since
+                                    a miss re-schedules the pair immediately. Grows on a correct
+                                    answer (`hard` included) and never decreases — a rung, once
+                                    earned, is not taken back.
                           triages:
                             type: array
                             description: >-

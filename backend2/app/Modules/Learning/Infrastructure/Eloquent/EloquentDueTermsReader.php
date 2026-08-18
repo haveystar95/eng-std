@@ -20,7 +20,7 @@ final class EloquentDueTermsReader implements DueTermsReader
     private const TABLE = 'user_term_progress';
 
     /** @var list<string> */
-    private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at', 'reps', 'acquisition', 'learning_step'];
+    private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at', 'reps', 'acquisition', 'learning_step', 'successful_reviews'];
 
     public function selectableAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
     {
@@ -79,6 +79,7 @@ final class EloquentDueTermsReader implements DueTermsReader
             reps: (int) $row->reps,
             acquisition: Acquisition::from((string) $row->acquisition),
             learningStep: (int) $row->learning_step,
+            successfulReviews: (int) $row->successful_reviews,
         );
     }
 }

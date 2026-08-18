@@ -70,7 +70,7 @@ it('is a rung-5 trainer only — a pair below it never meets it', function () {
     $playable = $this->assess->assess('reservation', 'I have a reservation for tonight.', 'Перевод.');
 
     $below = fn (LearningState $state, int $reps) => $this->selector->select(
-        TermProgress::reconstitute(UserId::generate(), TermId::generate(), $state, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+        TermProgress::reconstitute(UserId::generate(), TermId::generate(), $state, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null, successfulReviews: $reps),
         $enabled,
         $playable,
         shippedMatrix(),
@@ -78,7 +78,7 @@ it('is a rung-5 trainer only — a pair below it never meets it', function () {
 
     // Every rung below 5, on both scheduler branches. The rung is what gates it now — not the
     // SM-2 state, which the admission matrix deliberately cannot see.
-    for ($reps = 0; $reps < \App\Modules\Learning\Domain\Service\LearningLadder::DICTATION_MIN_REPS; $reps++) {
+    for ($reps = 0; $reps < \App\Modules\Learning\Domain\Service\LearningLadder::DICTATION_MIN_SUCCESSES; $reps++) {
         expect($below(LearningState::Learning, $reps))->not->toBe(ExerciseMode::Dictation)
             ->and($below(LearningState::Review, $reps))->not->toBe(ExerciseMode::Dictation);
     }
@@ -89,7 +89,10 @@ it('takes its turn in the review rotation, last of the rungs', function () {
     $playable = $this->assess->assess('reservation', 'I have a reservation for tonight.', 'Перевод.');
 
     $review = fn (int $reps) => $this->selector->select(
-        TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+        TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null,
+            // The rotation reads `reps`, the rung reads the successes. A pair that has never
+            // got one wrong has them equal, which is the case this rotation is written for.
+            successfulReviews: $reps),
         $enabled,
         $playable,
         shippedMatrix(),
@@ -110,7 +113,10 @@ it('is never dealt while it is switched off, however well the term fits', functi
     expect($playable->supports(ExerciseMode::Dictation))->toBeTrue();
     for ($reps = 0; $reps <= 12; $reps++) {
         expect($this->selector->select(
-            TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+            TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null,
+            // The rotation reads `reps`, the rung reads the successes. A pair that has never
+            // got one wrong has them equal, which is the case this rotation is written for.
+            successfulReviews: $reps),
             $off,
             $playable,
             shippedMatrix(),

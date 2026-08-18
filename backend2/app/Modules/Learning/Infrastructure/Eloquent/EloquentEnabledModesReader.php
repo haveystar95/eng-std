@@ -184,7 +184,7 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
             $rules[$mode->value] = new ModeRule(
                 minAcquisition: $acquisition,
                 minLearningStep: $row->min_learning_step !== null ? (int) $row->min_learning_step : null,
-                minReps: $row->min_reps !== null ? (int) $row->min_reps : null,
+                minSuccessfulReviews: $row->min_reps !== null ? (int) $row->min_reps : null,
                 optionsPolicy: OptionsPolicy::tryFrom((string) $row->options_policy) ?? OptionsPolicy::Standard,
             );
         }

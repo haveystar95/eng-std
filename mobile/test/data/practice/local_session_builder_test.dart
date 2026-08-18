@@ -55,7 +55,7 @@ void main() {
   /// progress row has never been shown), and every assertion here would then be about one card.
   Map<String, LadderPosition> topOfLadder(List<Term> from) => {
         for (final t in from)
-          t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+          t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
       };
 
   StudySession build({

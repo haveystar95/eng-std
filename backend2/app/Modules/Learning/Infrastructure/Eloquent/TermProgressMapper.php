@@ -33,6 +33,7 @@ final class TermProgressMapper
             lastReviewedAt: $this->toDate($row['last_reviewed_at']),
             acquisition: Acquisition::from((string) $row['acquisition']),
             learningStep: (int) $row['learning_step'],
+            successfulReviews: (int) $row['successful_reviews'],
         );
     }
 
@@ -50,6 +51,7 @@ final class TermProgressMapper
             // vice versa (see TermProgress).
             'acquisition' => $progress->acquisition()->value,
             'learning_step' => $progress->learningStep(),
+            'successful_reviews' => $progress->successfulReviews(),
             'ease_factor' => $progress->easeFactor(),
             'interval_days' => $progress->intervalDays(),
             'due_at' => $progress->dueAt(),

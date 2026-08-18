@@ -128,7 +128,7 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
         return [
             'min_acquisition' => $rule->minAcquisition->value,
             'min_learning_step' => $rule->minLearningStep,
-            'min_reps' => $rule->minReps,
+            'min_reps' => $rule->minSuccessfulReviews,
             'options_policy' => $rule->optionsPolicy->value,
         ];
     }

@@ -37,6 +37,9 @@ function graduate(string $userId, string $termId, int $reps = 12): void
             'acquisition' => Acquisition::Graduated->value,
             'learning_step' => 0,
             'reps' => $reps,
+            // The RUNG is read off this, not off `reps` (QA-18). "Well-reviewed" means recalled
+            // that many times; a pair with those reps and no successes stands at assembly.
+            'successful_reviews' => $reps,
             'lapses' => 0,
             'ease_factor' => 2.5,
             'interval_days' => 10,

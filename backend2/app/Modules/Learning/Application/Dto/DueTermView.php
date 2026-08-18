@@ -27,5 +27,8 @@ final readonly class DueTermView
         // — never shown, so it stands at the intro.
         public Acquisition $acquisition = Acquisition::New,
         public int $learningStep = 0,
+        // The ladder's own counter — correct non-practice reviews since graduation. Rungs 3–5 are
+        // read off THIS, not off `reps` above.
+        public int $successfulReviews = 0,
     ) {}
 }

@@ -23,8 +23,9 @@ use DateTimeImmutable;
  *   SCHEDULING  `state`, `easeFactor`, `intervalDays`, `dueAt`, `reps`, `lapses`,
  *               `lastReviewedAt` — written only by the Scheduler and by the two explicit
  *               `known` verification transitions.
- *   ACQUISITION `acquisition`, `learningStep` — the ladder ({@see LearningLadder}). Written only
- *               by `introduce()`, `advanceLadder()` and the triage entry points.
+ *   ACQUISITION `acquisition`, `learningStep`, `successfulReviews` — the ladder
+ *               ({@see LearningLadder}). Written only by `introduce()`, `advanceLadder()`,
+ *               `recordSuccessfulReview()` and the triage entry points.
  *
  * No method writes both. That is the whole reason the ladder could be introduced over live data
  * without recomputing an interval: `graduate` moves a pair off the recognition rungs and leaves
@@ -47,6 +48,7 @@ final class TermProgress
         private readonly ?DateTimeImmutable $lastReviewedAt,
         private readonly Acquisition $acquisition = Acquisition::Graduated,
         private readonly int $learningStep = 0,
+        private readonly int $successfulReviews = 0,
     ) {}
 
     /** A term the user has never answered: unscheduled, and standing at the intro rung. */
@@ -141,13 +143,31 @@ final class TermProgress
         return $this;
     }
 
+    /**
+     * A correct, non-practice review of a GRADUATED pair — the one event that widens the rungs
+     * above assembly ({@see LearningLadder}).
+     *
+     * A ladder move and nothing else: not one scheduling field is touched here, so the counter can
+     * be incremented before the scheduler runs and the two dimensions stay independent. `hard`
+     * counts, `again` does not, and `again` does not reset either — see the ladder's docblock for
+     * why a rung is not taken back.
+     */
+    public function recordSuccessfulReview(): self
+    {
+        return new self(
+            $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
+            $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
+            $this->acquisition, $this->learningStep, $this->successfulReviews + 1,
+        );
+    }
+
     /** @return self */
     private function withLadder(Acquisition $acquisition, int $learningStep): self
     {
         return new self(
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
-            $acquisition, $learningStep,
+            $acquisition, $learningStep, $this->successfulReviews,
         );
     }
 
@@ -160,14 +180,15 @@ final class TermProgress
      *
      * On the ladder it returns to rung 0 — the pair is re-introduced from the intro. That is not a
      * demotion of anything earned: a `known` mark was a claim, never a taught word, so there is no
-     * recognition step it has ever passed. `reps` survives and is simply not read at rung 0.
+     * recognition step it has ever passed. `reps` survives, and so does `successfulReviews`;
+     * neither is read at rung 0, and the pair will climb back through them honestly.
      */
     public function returnToNew(): self
     {
         return new self(
             $this->userId, $this->termId, LearningState::New, self::DEFAULT_EASE, 0, null,
             $this->reps, $this->lapses, $this->lastReviewedAt,
-            Acquisition::New, LearningLadder::STEP_INTRO,
+            Acquisition::New, LearningLadder::STEP_INTRO, $this->successfulReviews,
         );
     }
 
@@ -185,7 +206,7 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now,
             $this->reps, $this->lapses, $now,
-            $this->acquisition, $this->learningStep,
+            $this->acquisition, $this->learningStep, $this->successfulReviews,
         );
     }
 
@@ -196,7 +217,7 @@ final class TermProgress
             $this->userId, $this->termId, LearningState::Known, self::DEFAULT_EASE, 0,
             $now->add(new DateInterval('P' . $days . 'D')),
             $this->reps, $this->lapses, $now,
-            $this->acquisition, $this->learningStep,
+            $this->acquisition, $this->learningStep, $this->successfulReviews,
         );
     }
 
@@ -213,11 +234,12 @@ final class TermProgress
         ?DateTimeImmutable $lastReviewedAt,
         Acquisition $acquisition = Acquisition::Graduated,
         int $learningStep = 0,
+        int $successfulReviews = 0,
     ): self {
         return new self(
             $userId, $termId, $state, $easeFactor, $intervalDays,
             $dueAt, $reps, $lapses, $lastReviewedAt,
-            $acquisition, $learningStep,
+            $acquisition, $learningStep, $successfulReviews,
         );
     }
 
@@ -232,6 +254,15 @@ final class TermProgress
     }
 
     /**
+     * Correct non-practice reviews of this pair since it graduated — the ladder's own counter,
+     * deliberately NOT {@see reps()}, which counts scheduler calls of every grade.
+     */
+    public function successfulReviews(): int
+    {
+        return $this->successfulReviews;
+    }
+
+    /**
      * Which rung of the acquisition ladder this pair stands on, or null when it is outside it
      * (a `known` self-assessment). One derivation, {@see LearningLadder}, mirrored by the client.
      */
@@ -239,7 +270,7 @@ final class TermProgress
     {
         return LearningLadder::stepFor(
             $this->acquisition,
-            $this->reps,
+            $this->successfulReviews,
             $this->learningStep,
             isKnown: $this->state === LearningState::Known,
         );

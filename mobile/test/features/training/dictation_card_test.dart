@@ -214,7 +214,7 @@ void main() {
             // the TOGGLE, and the ladder is a separate filter with its own tests.
             ladder: {
               for (final t in terms)
-                t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+                t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
             },
           ).cards.map((c) => c.mode).toSet();
 
@@ -235,7 +235,7 @@ void main() {
         enabled: const PracticeModes([ExerciseMode.dictation]),
         ladder: const {
           '01KZETAAA50EMHCN6SP80T8DHC':
-              LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+              LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
         },
       );
 

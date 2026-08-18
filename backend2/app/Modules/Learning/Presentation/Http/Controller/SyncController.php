@@ -187,6 +187,10 @@ final class SyncController
             // word is owed an intro or a dictation.
             'acquisition' => $r->acquisition,
             'learning_step' => $r->learningStep,
+            // The rungs above assembly are counted in THIS, not in `reps` above: `reps` counts
+            // scheduler calls of every grade, so a device deriving the rung from it would deal
+            // dictation to a word its owner has only ever got wrong (QA-18).
+            'successful_reviews' => $r->successfulReviews,
         ];
     }
 

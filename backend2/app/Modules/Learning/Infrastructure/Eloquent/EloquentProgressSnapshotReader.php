@@ -24,7 +24,7 @@ final class EloquentProgressSnapshotReader implements ProgressSnapshotReader
         $rows = DB::table('user_term_progress')
             ->where('user_id', $userId->value)
             ->whereIn('term_id', $termIds)
-            ->get(['term_id', 'state', 'interval_days', 'due_at', 'reps', 'acquisition', 'learning_step']);
+            ->get(['term_id', 'state', 'interval_days', 'due_at', 'reps', 'acquisition', 'learning_step', 'successful_reviews']);
 
         $out = [];
         foreach ($rows as $row) {
@@ -40,6 +40,7 @@ final class EloquentProgressSnapshotReader implements ProgressSnapshotReader
                 // know what the card it is grading actually asked.
                 acquisition: Acquisition::from((string) $row->acquisition),
                 learningStep: (int) $row->learning_step,
+                successfulReviews: (int) $row->successful_reviews,
             );
         }
 

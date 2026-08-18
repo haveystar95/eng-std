@@ -85,7 +85,10 @@ it('takes its turn in the review rotation, last of the rungs', function () {
     $playable = $this->assess->assess('reservation', 'I have a reservation for tonight.', 'Перевод.');
 
     $review = fn (int $reps) => $this->selector->select(
-        TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+        TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null,
+            // The rotation reads `reps`, the rung reads the successes. A pair that has never
+            // got one wrong has them equal, which is the case this rotation is written for.
+            successfulReviews: $reps),
         $enabled,
         $playable,
         shippedMatrix(),
@@ -103,7 +106,10 @@ it('is never dealt while it is switched off — the release rule, in one asserti
     expect($playable->supports(ExerciseMode::Speaking))->toBeTrue();
     for ($reps = 0; $reps <= 12; $reps++) {
         expect($this->selector->select(
-            TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null),
+            TermProgress::reconstitute(UserId::generate(), TermId::generate(), LearningState::Review, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null,
+            // The rotation reads `reps`, the rung reads the successes. A pair that has never
+            // got one wrong has them equal, which is the case this rotation is written for.
+            successfulReviews: $reps),
             $off,
             $playable,
             shippedMatrix(),

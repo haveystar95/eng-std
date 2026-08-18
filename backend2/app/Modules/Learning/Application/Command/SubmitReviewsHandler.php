@@ -502,6 +502,25 @@ final readonly class SubmitReviewsHandler
             }
 
             foreach ($termReviews as $review) {
+                // THE LADDER'S COUNTER, and the only place it is written.
+                //
+                // One rule, applied before the branches below split, because the three of them
+                // agree about it: a correct answer to a pair that is already GRADUATED is a
+                // successful review. On the recognition rungs the pair is not graduated, so a
+                // passed step does not count — it moves `learning_step` instead, which is the
+                // honest measure there. `again` does not count and does not reset.
+                //
+                // A `known` verification passes through here too, and deliberately: it is a
+                // correct, non-practice retrieval of a graduated pair, so it is exactly what the
+                // counter is for — and it is the same population the migration's backfill counts,
+                // which is what keeps a replayed history and a live batch in agreement.
+                //
+                // Practice never reaches this loop: it was filtered out above, where the reason
+                // is written down.
+                if ($review->grade !== Grade::Again && $termProgress->acquisition() === Acquisition::Graduated) {
+                    $termProgress = $termProgress->recordSuccessfulReview();
+                }
+
                 // An answer to a `known` term is its verification check, not an SRS review — the
                 // scheduler refuses `known`, so resolve pass/fail explicitly here.
                 if ($termProgress->state() === LearningState::Known) {

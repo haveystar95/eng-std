@@ -81,7 +81,7 @@ void main() {
           enabled: enabled,
           ladder: {
             for (final t in terms)
-              t.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12),
+              t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
           },
         ).cards.map((c) => c.mode).toSet();
 

@@ -431,7 +431,7 @@ Word _toWord(CollectionTermRow r) {
     // pushed back to an intro card. The two nulls mean opposite things and are told apart here.
     ladderStep: LearningLadder.stepFor(
       acquisition: r.acquisition == null ? Acquisition.isNew : Acquisition.fromWire(r.acquisition),
-      reps: r.reps,
+      successfulReviews: r.successfulReviews,
       learningStep: r.learningStep,
       isKnown: s == 'known',
     ),

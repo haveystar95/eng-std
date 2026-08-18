@@ -26,5 +26,12 @@ final readonly class ProgressSyncRow
          */
         public string $acquisition = 'graduated',
         public int $learningStep = 0,
+        /**
+         * Correct non-practice reviews since graduation — what the ladder's rungs 3–5 are counted
+         * in. Sent alongside `reps` and NOT derivable from it: `reps` counts scheduler calls of
+         * every grade, so a device deriving the rung from it would deal dictation to a word its
+         * owner has only ever got wrong.
+         */
+        public int $successfulReviews = 0,
     ) {}
 }

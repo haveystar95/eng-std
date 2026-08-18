@@ -136,7 +136,9 @@ final readonly class Sm2Scheduler implements Scheduler
 
     /**
      * Assemble the next progress state: clamp ease and interval, fuzz multi-day intervals,
-     * compute `due_at`, and advance the review counter. A 0-day interval is due immediately; a
+     * compute `due_at`, and advance the scheduler's own `reps` counter — which counts CALLS, every
+     * grade included, and is what drives the mode rotation in {@see ExerciseSelector}. The ladder
+     * counts something else and has its own column; see {@see LearningLadder}. A 0-day interval is due immediately; a
      * day-scale interval is floored to the start of the user's day in [$zone] (F19).
      */
     private function next(
@@ -167,6 +169,13 @@ final readonly class Sm2Scheduler implements Scheduler
             reps: $p->reps() + 1,
             lapses: $lapses,
             lastReviewedAt: $now,
+            acquisition: $p->acquisition(),
+            learningStep: $p->learningStep(),
+            // Carried, never written. The ladder's two dimensions ride the same row and the
+            // scheduler is not allowed to move them — reconstitute() defaults them to
+            // «graduated, rung 0, no successes», which for a pair mid-ladder would be a silent
+            // demotion the moment it was saved.
+            successfulReviews: $p->successfulReviews(),
         );
     }
 

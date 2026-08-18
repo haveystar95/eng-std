@@ -110,7 +110,8 @@ final readonly class ModeAdmission
                 'mode' => $mode,
                 'min_acquisition' => $rule->minAcquisition->value,
                 'min_learning_step' => $rule->minLearningStep,
-                'min_reps' => $rule->minReps,
+                // The wire keeps the historical name; the number is a SUCCESS count — see ModeRule.
+                'min_reps' => $rule->minSuccessfulReviews,
                 'options_policy' => $rule->optionsPolicy->value,
                 // Derived, and sent as well as the three thresholds: the client needs the rung to
                 // filter a ladder, and deriving it there is one more place the two runtimes could
@@ -138,11 +139,11 @@ final readonly class ModeAdmission
             ExerciseMode::Cloze->value => new ModeRule(Acquisition::Graduated),
             ExerciseMode::PickCorrect->value => new ModeRule(Acquisition::Graduated),
             ExerciseMode::Scramble->value => new ModeRule(Acquisition::Graduated),
-            ExerciseMode::Typing->value => new ModeRule(Acquisition::Graduated, minReps: LearningLadder::TYPING_MIN_REPS),
+            ExerciseMode::Typing->value => new ModeRule(Acquisition::Graduated, minSuccessfulReviews: LearningLadder::TYPING_MIN_SUCCESSES),
             // Typed production with the prompt taken away — the same act as typing, strictly
             // harder — so it cannot be admitted earlier than typing is.
-            ExerciseMode::Listening->value => new ModeRule(Acquisition::Graduated, minReps: LearningLadder::TYPING_MIN_REPS),
-            ExerciseMode::Dictation->value => new ModeRule(Acquisition::Graduated, minReps: LearningLadder::DICTATION_MIN_REPS),
+            ExerciseMode::Listening->value => new ModeRule(Acquisition::Graduated, minSuccessfulReviews: LearningLadder::TYPING_MIN_SUCCESSES),
+            ExerciseMode::Dictation->value => new ModeRule(Acquisition::Graduated, minSuccessfulReviews: LearningLadder::DICTATION_MIN_SUCCESSES),
             // Speaking opens on graduation, with the assembly trainers — its own two forms then
             // separate themselves by rung inside the mode ({@see ExerciseMode::gradesAgainstExample}),
             // which is why there is ONE row here and not two. A row per form would put the same

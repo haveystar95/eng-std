@@ -67,7 +67,7 @@ void main() {
         random: Random(seed),
         enabled: const PracticeModes([ExerciseMode.pickCorrect]),
         sessionId: 's1',
-        ladder: {term.id: const LadderPosition(acquisition: Acquisition.graduated, reps: 12)},
+        ladder: {term.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12)},
       ).cards.single;
 
   test('sync stores the distractors as JSON on the term', () async {

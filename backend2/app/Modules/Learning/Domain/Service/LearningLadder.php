@@ -23,14 +23,24 @@ use App\Modules\Learning\Domain\ValueObject\Acquisition;
  *   4  + typed production    typing, listening
  *   5  + dictation           the whole sentence from hearing it alone
  *
- * Rungs 0–2 live in `learning_step`, not in `reps`, and that is not redundancy. A FAILED
+ * Rungs 0–2 live in `learning_step`, not in a counter, and that is not redundancy. A FAILED
  * recognition step is re-queued as the same step — but it is still a real retrieval, so it is
  * logged, and anything derived from the log alone would count it and push the pair up a rung it
  * has not earned. `learning_step` moves on success and only on success.
  *
- * Rungs 3–5 come from `reps`, which after graduation is exactly "how many times SM-2 has scheduled
- * this pair" — the ladder answers here reach the scheduler, so its own counter is the honest
- * measure and no third column is needed.
+ * Rungs 3–5 come from `successful_reviews`, and for exactly the same reason. They used to come
+ * from the scheduler's `reps`, which counts how many times SM-2 has been CALLED — every branch of
+ * it, `again` included. So four misses and two hits read as six, and because an `again` in learning
+ * schedules the pair back immediately, a word nobody could remember rode its own failures up to
+ * dictation. `reps` is an honest measure of one thing (it drives the mode rotation in
+ * {@see ExerciseSelector}, and still does) and a dishonest measure of another; the ladder needed
+ * the other, so it got its own column.
+ *
+ * The counter grows on a non-practice review of a GRADUATED pair that was answered correctly —
+ * `hard` included, because «recalled it with a stumble» is a recall. On `again` it does not grow
+ * and does not RESET: a rung, once earned, is not lost. That is a deliberate simplification next to
+ * FSRS, which would model the decay; here the admission matrix only decides which trainers a word
+ * may appear in, and demoting a word out of typing because of one bad evening buys nothing.
  */
 final class LearningLadder
 {
@@ -42,12 +52,14 @@ final class LearningLadder
     public const STEP_DICTATION = 5;
 
     /**
-     * `reps` thresholds for the graduated rungs. Deliberately counted from graduation, not from
-     * the first ever answer: the recognition steps never reach the scheduler, so `reps` is still 0
-     * the moment a pair graduates, and these numbers mean "successful SRS reviews since".
+     * Thresholds for the graduated rungs, counted in SUCCESSFUL reviews since graduation.
+     *
+     * Counted from graduation rather than from the first ever answer, and that needs no arithmetic
+     * to arrange: the recognition rungs are not graduated, so nothing on them increments the
+     * counter, and it is still 0 the moment a pair graduates.
      */
-    public const TYPING_MIN_REPS = 4;
-    public const DICTATION_MIN_REPS = 6;
+    public const TYPING_MIN_SUCCESSES = 4;
+    public const DICTATION_MIN_SUCCESSES = 6;
 
     /** The first `learning_step` a pair holds once it has been introduced. */
     public const FIRST_LADDER_STEP = self::STEP_RECOGNITION_FORWARD;
@@ -59,11 +71,12 @@ final class LearningLadder
      * check, which is always typing regardless of any rung ({@see ExerciseSelector}). Callers must
      * treat null as "the matrix does not apply", never as step 0.
      *
-     * @param  Acquisition  $acquisition  the ladder dimension (NOT the scheduler's LearningState)
-     * @param  int  $reps                 the scheduler's own counter; only read once graduated
-     * @param  int  $learningStep         the stored rung while still on the recognition steps
+     * @param  Acquisition  $acquisition       the ladder dimension (NOT the scheduler's LearningState)
+     * @param  int  $successfulReviews          correct non-practice reviews since graduation; only
+     *                                          read once graduated, and NOT the scheduler's `reps`
+     * @param  int  $learningStep               the stored rung while still on the recognition steps
      */
-    public static function stepFor(Acquisition $acquisition, int $reps, int $learningStep, bool $isKnown = false): ?int
+    public static function stepFor(Acquisition $acquisition, int $successfulReviews, int $learningStep, bool $isKnown = false): ?int
     {
         if ($isKnown) {
             return null;
@@ -71,13 +84,13 @@ final class LearningLadder
 
         return match ($acquisition) {
             // A pair that has never been shown starts at the intro whatever its counters say. The
-            // one way to get here with reps > 0 is a `known` mark being undone, which resets the
-            // ladder on purpose: the pair was never actually taught, only claimed.
+            // one way to get here with a counter above 0 is a `known` mark being undone, which
+            // resets the ladder on purpose: the pair was never actually taught, only claimed.
             Acquisition::New => self::STEP_INTRO,
             Acquisition::Learning => self::clampRecognitionStep($learningStep),
             Acquisition::Graduated => match (true) {
-                $reps >= self::DICTATION_MIN_REPS => self::STEP_DICTATION,
-                $reps >= self::TYPING_MIN_REPS => self::STEP_TYPING,
+                $successfulReviews >= self::DICTATION_MIN_SUCCESSES => self::STEP_DICTATION,
+                $successfulReviews >= self::TYPING_MIN_SUCCESSES => self::STEP_TYPING,
                 default => self::STEP_ASSEMBLY,
             },
         };

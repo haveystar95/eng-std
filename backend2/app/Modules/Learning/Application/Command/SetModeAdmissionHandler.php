@@ -46,7 +46,7 @@ final readonly class SetModeAdmissionHandler
         $this->writer->setRule($command->userId, $mode, new ModeRule(
             minAcquisition: $acquisition,
             minLearningStep: $command->minLearningStep,
-            minReps: $command->minReps,
+            minSuccessfulReviews: $command->minReps,
             optionsPolicy: $policy,
         ));
     }

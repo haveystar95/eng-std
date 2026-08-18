@@ -82,7 +82,7 @@ void main() {
     for (final position in [
       LadderPosition.untouched,
       // reps survived a `known` undo, but the pair still stands at rung 0.
-      const LadderPosition(acquisition: Acquisition.isNew, reps: 3),
+      const LadderPosition(acquisition: Acquisition.isNew, successfulReviews: 3),
     ]) {
       expect(position.step, LearningLadder.stepIntro);
       expect(position.admitsPractice, isFalse);
@@ -150,7 +150,7 @@ void main() {
 
   test('typing opens at rung 4 and dictation only at rung 5', () {
     final atFour = modesAt(
-      const LadderPosition(acquisition: Acquisition.graduated, reps: LearningLadder.typingMinReps),
+      const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.typingMinSuccesses),
       seed: 11,
     );
     expect(atFour, isNot(contains(ExerciseMode.dictation)));
@@ -159,7 +159,7 @@ void main() {
     final atFive = <ExerciseMode>{};
     for (var seed = 0; seed < 8; seed++) {
       atFive.addAll(modesAt(
-        const LadderPosition(acquisition: Acquisition.graduated, reps: LearningLadder.dictationMinReps),
+        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.dictationMinSuccesses),
         seed: seed,
       ));
     }

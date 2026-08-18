@@ -108,7 +108,7 @@ return new class extends Migration
                     'position' => $position !== false ? $position : count($enabled) + $index,
                     'min_acquisition' => $rule?->minAcquisition->value ?? 'graduated',
                     'min_learning_step' => $rule?->minLearningStep,
-                    'min_reps' => $rule?->minReps,
+                    'min_reps' => $rule?->minSuccessfulReviews,
                     'options_policy' => $rule?->optionsPolicy->value ?? 'standard',
                     'created_at' => now(),
                     'updated_at' => now(),

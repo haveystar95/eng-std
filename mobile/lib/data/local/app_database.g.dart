@@ -2073,6 +2073,18 @@ class $TermProgressTable extends TermProgress
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _successfulReviewsMeta = const VerificationMeta(
+    'successfulReviews',
+  );
+  @override
+  late final GeneratedColumn<int> successfulReviews = GeneratedColumn<int>(
+    'successful_reviews',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2096,6 +2108,7 @@ class $TermProgressTable extends TermProgress
     lastReviewedAt,
     acquisition,
     learningStep,
+    successfulReviews,
     updatedAt,
   ];
   @override
@@ -2184,6 +2197,15 @@ class $TermProgressTable extends TermProgress
         ),
       );
     }
+    if (data.containsKey('successful_reviews')) {
+      context.handle(
+        _successfulReviewsMeta,
+        successfulReviews.isAcceptableOrUnknown(
+          data['successful_reviews']!,
+          _successfulReviewsMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -2241,6 +2263,10 @@ class $TermProgressTable extends TermProgress
         DriftSqlType.int,
         data['${effectivePrefix}learning_step'],
       )!,
+      successfulReviews: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}successful_reviews'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2270,9 +2296,15 @@ class TermProgressData extends DataClass
   /// the safe direction, since the alternative pushes a known word back to an intro card.
   final String acquisition;
 
-  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from [reps]: a failed
+  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from any counter: a failed
   /// recognition step is re-queued as the same step but is still logged.
   final int learningStep;
+
+  /// Correct non-practice reviews since the pair graduated — what the rungs ABOVE assembly are
+  /// counted in. Deliberately not [reps], which counts how many times the server's scheduler was
+  /// CALLED, `again` included: reading the rung off that promoted words the learner had only ever
+  /// got wrong, because a miss re-schedules the pair immediately (QA-18).
+  final int successfulReviews;
   final DateTime updatedAt;
   const TermProgressData({
     required this.termId,
@@ -2285,6 +2317,7 @@ class TermProgressData extends DataClass
     this.lastReviewedAt,
     required this.acquisition,
     required this.learningStep,
+    required this.successfulReviews,
     required this.updatedAt,
   });
   @override
@@ -2304,6 +2337,7 @@ class TermProgressData extends DataClass
     }
     map['acquisition'] = Variable<String>(acquisition);
     map['learning_step'] = Variable<int>(learningStep);
+    map['successful_reviews'] = Variable<int>(successfulReviews);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -2324,6 +2358,7 @@ class TermProgressData extends DataClass
           : Value(lastReviewedAt),
       acquisition: Value(acquisition),
       learningStep: Value(learningStep),
+      successfulReviews: Value(successfulReviews),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2344,6 +2379,7 @@ class TermProgressData extends DataClass
       lastReviewedAt: serializer.fromJson<DateTime?>(json['lastReviewedAt']),
       acquisition: serializer.fromJson<String>(json['acquisition']),
       learningStep: serializer.fromJson<int>(json['learningStep']),
+      successfulReviews: serializer.fromJson<int>(json['successfulReviews']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2361,6 +2397,7 @@ class TermProgressData extends DataClass
       'lastReviewedAt': serializer.toJson<DateTime?>(lastReviewedAt),
       'acquisition': serializer.toJson<String>(acquisition),
       'learningStep': serializer.toJson<int>(learningStep),
+      'successfulReviews': serializer.toJson<int>(successfulReviews),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2376,6 +2413,7 @@ class TermProgressData extends DataClass
     Value<DateTime?> lastReviewedAt = const Value.absent(),
     String? acquisition,
     int? learningStep,
+    int? successfulReviews,
     DateTime? updatedAt,
   }) => TermProgressData(
     termId: termId ?? this.termId,
@@ -2390,6 +2428,7 @@ class TermProgressData extends DataClass
         : this.lastReviewedAt,
     acquisition: acquisition ?? this.acquisition,
     learningStep: learningStep ?? this.learningStep,
+    successfulReviews: successfulReviews ?? this.successfulReviews,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TermProgressData copyWithCompanion(TermProgressCompanion data) {
@@ -2414,6 +2453,9 @@ class TermProgressData extends DataClass
       learningStep: data.learningStep.present
           ? data.learningStep.value
           : this.learningStep,
+      successfulReviews: data.successfulReviews.present
+          ? data.successfulReviews.value
+          : this.successfulReviews,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2431,6 +2473,7 @@ class TermProgressData extends DataClass
           ..write('lastReviewedAt: $lastReviewedAt, ')
           ..write('acquisition: $acquisition, ')
           ..write('learningStep: $learningStep, ')
+          ..write('successfulReviews: $successfulReviews, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2448,6 +2491,7 @@ class TermProgressData extends DataClass
     lastReviewedAt,
     acquisition,
     learningStep,
+    successfulReviews,
     updatedAt,
   );
   @override
@@ -2464,6 +2508,7 @@ class TermProgressData extends DataClass
           other.lastReviewedAt == this.lastReviewedAt &&
           other.acquisition == this.acquisition &&
           other.learningStep == this.learningStep &&
+          other.successfulReviews == this.successfulReviews &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2478,6 +2523,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
   final Value<DateTime?> lastReviewedAt;
   final Value<String> acquisition;
   final Value<int> learningStep;
+  final Value<int> successfulReviews;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermProgressCompanion({
@@ -2491,6 +2537,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.lastReviewedAt = const Value.absent(),
     this.acquisition = const Value.absent(),
     this.learningStep = const Value.absent(),
+    this.successfulReviews = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2505,6 +2552,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.lastReviewedAt = const Value.absent(),
     this.acquisition = const Value.absent(),
     this.learningStep = const Value.absent(),
+    this.successfulReviews = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : termId = Value(termId),
@@ -2520,6 +2568,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Expression<DateTime>? lastReviewedAt,
     Expression<String>? acquisition,
     Expression<int>? learningStep,
+    Expression<int>? successfulReviews,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2534,6 +2583,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       if (lastReviewedAt != null) 'last_reviewed_at': lastReviewedAt,
       if (acquisition != null) 'acquisition': acquisition,
       if (learningStep != null) 'learning_step': learningStep,
+      if (successfulReviews != null) 'successful_reviews': successfulReviews,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2550,6 +2600,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Value<DateTime?>? lastReviewedAt,
     Value<String>? acquisition,
     Value<int>? learningStep,
+    Value<int>? successfulReviews,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2564,6 +2615,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
       acquisition: acquisition ?? this.acquisition,
       learningStep: learningStep ?? this.learningStep,
+      successfulReviews: successfulReviews ?? this.successfulReviews,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2602,6 +2654,9 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     if (learningStep.present) {
       map['learning_step'] = Variable<int>(learningStep.value);
     }
+    if (successfulReviews.present) {
+      map['successful_reviews'] = Variable<int>(successfulReviews.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2624,6 +2679,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
           ..write('lastReviewedAt: $lastReviewedAt, ')
           ..write('acquisition: $acquisition, ')
           ..write('learningStep: $learningStep, ')
+          ..write('successfulReviews: $successfulReviews, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6645,6 +6701,7 @@ typedef $$TermProgressTableCreateCompanionBuilder =
       Value<DateTime?> lastReviewedAt,
       Value<String> acquisition,
       Value<int> learningStep,
+      Value<int> successfulReviews,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -6660,6 +6717,7 @@ typedef $$TermProgressTableUpdateCompanionBuilder =
       Value<DateTime?> lastReviewedAt,
       Value<String> acquisition,
       Value<int> learningStep,
+      Value<int> successfulReviews,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6720,6 +6778,11 @@ class $$TermProgressTableFilterComposer
 
   ColumnFilters<int> get learningStep => $composableBuilder(
     column: $table.learningStep,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get successfulReviews => $composableBuilder(
+    column: $table.successfulReviews,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6788,6 +6851,11 @@ class $$TermProgressTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get successfulReviews => $composableBuilder(
+    column: $table.successfulReviews,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6843,6 +6911,11 @@ class $$TermProgressTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get successfulReviews => $composableBuilder(
+    column: $table.successfulReviews,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -6888,6 +6961,7 @@ class $$TermProgressTableTableManager
                 Value<DateTime?> lastReviewedAt = const Value.absent(),
                 Value<String> acquisition = const Value.absent(),
                 Value<int> learningStep = const Value.absent(),
+                Value<int> successfulReviews = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion(
@@ -6901,6 +6975,7 @@ class $$TermProgressTableTableManager
                 lastReviewedAt: lastReviewedAt,
                 acquisition: acquisition,
                 learningStep: learningStep,
+                successfulReviews: successfulReviews,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6916,6 +6991,7 @@ class $$TermProgressTableTableManager
                 Value<DateTime?> lastReviewedAt = const Value.absent(),
                 Value<String> acquisition = const Value.absent(),
                 Value<int> learningStep = const Value.absent(),
+                Value<int> successfulReviews = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion.insert(
@@ -6929,6 +7005,7 @@ class $$TermProgressTableTableManager
                 lastReviewedAt: lastReviewedAt,
                 acquisition: acquisition,
                 learningStep: learningStep,
+                successfulReviews: successfulReviews,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

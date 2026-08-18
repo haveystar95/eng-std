@@ -40,20 +40,30 @@ function playable(int $answerWordCount = 2, bool $clozeable = false): TermPlayab
  * A pair on the SCHEDULER's dimension. `acquisition` defaults to graduated — the ladder is a
  * separate axis, and every one of these cases is about a term that has finished it.
  */
-function atState(LearningState $state, int $reps = 0): TermProgress
+/**
+ * A pair on the SCHEDULING dimension.
+ *
+ * Two counters, because the selector reads two different things from them: `reps` drives the mode
+ * ROTATION (it counts scheduler calls, every grade), while `successes` decides the RUNG and so
+ * which modes are admitted at all. They default to moving together, which is what a pair that has
+ * never got one wrong looks like; the rows that need them apart pass both.
+ */
+function atState(LearningState $state, int $reps = 0, ?int $successes = null): TermProgress
 {
     return TermProgress::reconstitute(
         UserId::generate(), TermId::generate(), $state, 2.5, 10, null, reps: $reps, lapses: 0, lastReviewedAt: null,
+        successfulReviews: $successes ?? $reps,
     );
 }
 
 /** A pair on the ACQUISITION dimension, at a given rung of the ladder. */
-function onLadder(Acquisition $acquisition, int $learningStep = 0, int $reps = 0): TermProgress
+function onLadder(Acquisition $acquisition, int $learningStep = 0, int $reps = 0, ?int $successes = null): TermProgress
 {
     return TermProgress::reconstitute(
         UserId::generate(), TermId::generate(), LearningState::New, 2.5, 0, null,
         reps: $reps, lapses: 0, lastReviewedAt: null,
         acquisition: $acquisition, learningStep: $learningStep,
+        successfulReviews: $successes ?? $reps,
     );
 }
 
@@ -103,13 +113,13 @@ it('holds typed production back until rung 4 and dictation until rung 5', functi
 
     expect($this->selector->select(atState(LearningState::Review, 0), $everything, $plain, $this->matrix))
         ->toBe(ExerciseMode::MultipleChoice)                                  // rung 3
-        ->and($this->selector->select(atState(LearningState::Review, LearningLadder::TYPING_MIN_REPS), $everything, $plain, $this->matrix))
+        ->and($this->selector->select(atState(LearningState::Review, LearningLadder::TYPING_MIN_SUCCESSES), $everything, $plain, $this->matrix))
         ->toBe(ExerciseMode::Typing);                                          // rung 4
 
     // Dictation needs a sentence as well as the rung, so give it one and check both gates.
     $rich = new TermPlayability(answerWordCount: 3, clozeable: true, exampleTokenCount: 7, hasExampleTranslation: true, distractorCount: 2);
     $modesBelow = [];
-    for ($reps = 0; $reps < LearningLadder::DICTATION_MIN_REPS; $reps++) {
+    for ($reps = 0; $reps < LearningLadder::DICTATION_MIN_SUCCESSES; $reps++) {
         $modesBelow[] = $this->selector->select(atState(LearningState::Review, $reps), $everything, $rich, $this->matrix);
     }
     expect($modesBelow)->not->toContain(ExerciseMode::Dictation);

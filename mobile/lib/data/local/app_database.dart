@@ -99,9 +99,15 @@ class TermProgress extends Table {
   /// the safe direction, since the alternative pushes a known word back to an intro card.
   TextColumn get acquisition => text().withDefault(const Constant('graduated'))();
 
-  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from [reps]: a failed
+  /// The rung while [acquisition] is `learning` (1 or 2). Not derivable from any counter: a failed
   /// recognition step is re-queued as the same step but is still logged.
   IntColumn get learningStep => integer().withDefault(const Constant(0))();
+
+  /// Correct non-practice reviews since the pair graduated — what the rungs ABOVE assembly are
+  /// counted in. Deliberately not [reps], which counts how many times the server's scheduler was
+  /// CALLED, `again` included: reading the rung off that promoted words the learner had only ever
+  /// got wrong, because a miss re-schedules the pair immediately (QA-18).
+  IntColumn get successfulReviews => integer().withDefault(const Constant(0))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -257,7 +263,7 @@ class CollectionTermRow {
     this.triaged = false,
     this.acquisition,
     this.learningStep = 0,
-    this.reps = 0,
+    this.successfulReviews = 0,
   });
   final Term term; // generated data class for the Terms table
   final int position;
@@ -268,7 +274,11 @@ class CollectionTermRow {
   /// which the ladder reads as «never shown» (rung 0).
   final String? acquisition;
   final int learningStep;
-  final int reps;
+
+  /// The ladder's counter — what the rungs above assembly are read off. The scheduler's `reps` is
+  /// deliberately NOT carried here: nothing on this screen has a use for it, and it is the counter
+  /// the rung used to be read off by mistake (QA-18).
+  final int successfulReviews;
 }
 
 /// (collectionId, term progress snapshot) for deriving per-collection progress locally.
@@ -325,7 +335,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -398,6 +408,19 @@ class AppDatabase extends _$AppDatabase {
             // still reaches `study_sessions.ended_at` when the network returns (QA-12).
             await m.createTable(sessionCompletionQueueRows);
           }
+          if (from < 14) {
+            // The ladder's own counter (QA-18). Rungs 4 and 5 used to be read off `reps`, which
+            // counts scheduler calls of every grade, so misses carried words upward.
+            await m.addColumn(termProgress, termProgress.successfulReviews);
+            // Full snapshot on the next sync, for the same reason as v10 and v11: a delta carries
+            // only rows whose `updated_at` moved, so every pair already mirrored here would keep
+            // the column default 0 — and a word the owner HAS earned typing on would sit back at
+            // assembly until it happened to be answered again. The server has the honest number
+            // for all of them; the cheapest way to get it is to ask for everything once.
+            await m.database.customStatement(
+              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
+            );
+          }
         },
       );
 
@@ -427,7 +450,7 @@ class AppDatabase extends _$AppDatabase {
             triaged: r.readTableOrNull(triagedTerms) != null,
             acquisition: progress?.acquisition,
             learningStep: progress?.learningStep ?? 0,
-            reps: progress?.reps ?? 0,
+            successfulReviews: progress?.successfulReviews ?? 0,
           );
         }).toList());
   }
@@ -561,7 +584,7 @@ class AppDatabase extends _$AppDatabase {
         r.termId: LadderPosition(
           acquisition: Acquisition.fromWire(r.acquisition),
           learningStep: r.learningStep,
-          reps: r.reps,
+          successfulReviews: r.successfulReviews,
           isKnown: r.state == 'known',
         ),
     };
