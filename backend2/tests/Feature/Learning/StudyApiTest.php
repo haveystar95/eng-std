@@ -167,7 +167,10 @@ it('drops a term from the new pool once it has progress', function () {
 
 it('scopes the due session to one collection', function () {
     [$user, $token] = learner();
-    [$collectionA] = seedCollectionWith($user, 'apple');
+    // Two words in A, because a recognition card needs a neighbour to offer beside the answer and a
+    // deck of one is refused now (QA-15). Both must be A's, which is the point of the case.
+    [$collectionA, $apple] = seedCollectionWith($user, 'apple');
+    addWordTo($collectionA, $user->id, 'pear', 'груша');
     seedCollectionWith($user, 'bank'); // a second collection, must not leak in
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
@@ -175,9 +178,11 @@ it('scopes the due session to one collection', function () {
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(LADDER_CARDS_PER_NEW_TERM);
-    expect(array_unique(array_column($cards, 'term_id')))->toHaveCount(1); // the other collection never leaks in
-    expect($cards[1]['answer'])->toBe('apple');                            // rung 2 asks for the term itself
+    expect($cards)->toHaveCount(2 * LADDER_CARDS_PER_NEW_TERM);
+    expect(array_unique(array_column($cards, 'term_id')))->toHaveCount(2); // the other collection never leaks in
+
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $apple));
+    expect($own[1]['answer'])->toBe('apple'); // rung 2 asks for the term itself
 });
 
 it('reports per-collection progress (learned once a term graduates)', function () {
@@ -333,33 +338,39 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
 it('includes a studied-but-not-due term in practice (which the normal session withholds)', function () {
     [$user, $token] = learner();
     [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    // A neighbour, so a choice card can be built at all (QA-15). It stays NEW, so it is what the
+    // normal session below still offers — the assertion is about `apple` either way.
+    addWordTo($colA, $user->id, 'pear', 'груша');
 
     // Walk it off the ladder and give it one SRS review → scheduled a day out. A normal session no
     // longer offers it today (a pair mid-ladder WOULD still be offered — being unfinished outranks
     // being due — which is exactly why this has to graduate the term first)…
     answerTimes($this, $token, $apple, 'apple', times: 3);
 
-    $this->withHeader('Authorization', "Bearer {$token}")
+    $due = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
         ->assertOk()
-        ->assertJsonPath('data.cards', []); // not due, already studied → nothing
+        ->json('data.cards');
+    expect(array_column($due, 'term_id'))->not->toContain($apple); // not due, already studied
 
     // …but practice drills it regardless of due_at. The mode is fanned (not the ladder); for a
     // single word with no example that's one of multiple_choice / typing / listening.
-    $card = $this->withHeader('Authorization', "Bearer {$token}")
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
-        ->assertJsonCount(1, 'data.cards')
-        ->assertJsonPath('data.cards.0.term_id', $apple)
-        ->json('data.cards.0');
+        ->json('data.cards');
 
-    expect($card['exercise_mode'])->toBeIn(['multiple_choice', 'typing', 'listening']);
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $apple));
+    expect($own)->toHaveCount(1)
+        ->and($own[0]['exercise_mode'])->toBeIn(['multiple_choice', 'typing', 'listening']);
 });
 
 it('does not spend the daily new-term quota during practice', function () {
     [$user, $token] = learner();
     Profile::create(['user_id' => $user->id, 'daily_goal' => 5]);
     [$colA, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    // A neighbour, so a choice card can be built at all (QA-15).
+    addWordTo($colA, $user->id, 'pear', 'груша');
 
     // Answer the practice card…
     $sessionId = $this->withHeader('Authorization', "Bearer {$token}")
@@ -379,7 +390,7 @@ it('does not spend the daily new-term quota during practice', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
         ->assertOk()
-        ->assertJsonCount(LADDER_CARDS_PER_NEW_TERM, 'data.cards')  // still never introduced
+        ->assertJsonCount(2 * LADDER_CARDS_PER_NEW_TERM, 'data.cards')  // still never introduced
         ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice');
 });
 

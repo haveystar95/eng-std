@@ -158,7 +158,20 @@ void main() {
   test('the card content comes from the mirror', () {
     // A one-term pool fans across the modes (see «Тренировать слово» below), so this reads the
     // first card rather than the only one — the content assertions are the same either way.
-    final card = build(from: [terms.first]).cards.first;
+    //
+    // The second term is a DECOY: at rung 0 it is not drillable, so the pool is still one word and
+    // the fan still happens, but it can be a wrong option. Without it multiple_choice has nothing
+    // to offer beside the answer and the card is refused (QA-15).
+    final card = LocalPracticeSessionBuilder.build(
+      terms: [terms.first, terms[3]],
+      limit: 20,
+      random: Random(7),
+      sessionId: 'SESSION',
+      ladder: {
+        terms.first.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+        terms[3].id: const LadderPosition(),
+      },
+    ).cards.first;
 
     expect(card.termId, terms.first.id);
     expect(card.answer, 'reservation');
@@ -257,14 +270,17 @@ void main() {
     // with letter chips, but only because the floor returned `enabled.first` and skipped the gate;
     // the server has always answered multiple_choice here. ChipShuffler keeps its letter branch for a
     // future policy that lowers the floor — nothing selects it today.
+    // The neighbour is here so the floor's multiple_choice can be BUILT — a deck of one leaves it
+    // with a single option and the card is refused (QA-15).
+    final pool = [terms[3], terms.first]; // "towel", + something to offer beside it
     final single = LocalPracticeSessionBuilder.build(
-      terms: [terms[3]], // "towel"
-      limit: 1,
+      terms: pool,
+      limit: 2,
       random: Random(11),
       sessionId: 'S',
       enabled: const PracticeModes([ExerciseMode.wordBank]),
-      ladder: topOfLadder([terms[3]]),
-    ).cards.single;
+      ladder: topOfLadder(pool),
+    ).cards.firstWhere((c) => c.termId == terms[3].id);
     expect(single.mode, ExerciseMode.multipleChoice, reason: 'the floor, exactly as on the server');
     expect(single.chips, isNull);
   });
@@ -351,20 +367,32 @@ void main() {
       expect(modes, isNot(contains(ExerciseMode.scramble)));
     });
 
-    test('a pair low on the ladder still gets exactly one card', () {
-      // Rung 1 admits multiple_choice and nothing else. «Few modes apply» must not become «no
-      // session», and «none apply» must not either.
+    test('a pair low on the ladder gets its one card — once there is a second option to offer', () {
+      // Rung 1 admits multiple_choice and nothing else, so the fan is a fan of one. In a deck of ONE
+      // that card has nothing beside the answer and is refused (QA-15); with a neighbour it is dealt,
+      // and «few modes apply» still does not become «no session».
       final t = term('01KZETAAN18AQK14YFSBWW6KRQ', text: 'towel', translation: 'полотенце');
-      final session = LocalPracticeSessionBuilder.build(
-        terms: [t],
-        limit: 20,
-        random: Random(4),
-        sessionId: 'S',
-        ladder: {t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1)},
+      final other = term('01KZETAAP2C0MG5J6ZV1S4XQD7', text: 'sheets', translation: 'простыни');
+      final ladder = {
+        t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
+        other.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
+      };
+
+      expect(
+        LocalPracticeSessionBuilder.build(
+          terms: [t], limit: 20, random: Random(4), sessionId: 'S',
+          ladder: {t.id: ladder[t.id]!},
+        ).cards,
+        isEmpty,
+        reason: 'nothing to offer beside the answer — the card is not a question',
       );
 
-      expect(session.cards, hasLength(1));
-      expect(session.cards.single.mode, ExerciseMode.multipleChoice);
+      final session = LocalPracticeSessionBuilder.build(
+        terms: [t, other], limit: 20, random: Random(4), sessionId: 'S', ladder: ladder,
+      );
+      final own = session.cards.where((c) => c.termId == t.id).toList();
+      expect(own, hasLength(1));
+      expect(own.single.mode, ExerciseMode.multipleChoice);
     });
 
     test('a MANY-word session is untouched — one card per term', () {

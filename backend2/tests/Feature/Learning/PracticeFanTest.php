@@ -139,11 +139,17 @@ it('never fans a MANY-word practice session — one card per term, as before', f
     expect(array_column($cards, 'term_id'))->toEqualCanonicalizing($ids);
 });
 
-it('still deals ONE card when the pair is admitted to nothing yet', function () {
+it('deals nothing at rung 1 in a deck of one — there is no second option to offer', function () {
     [$user, $token] = learner();
     [$collectionId, $termId] = soloDeck($user);
-    // Rung 1: the matrix admits multiple_choice and nothing else, so the fan is a fan of one. The
-    // point of the assertion is that «few modes apply» never becomes «no session».
+    // Rung 1: the matrix admits multiple_choice and nothing else, so the fan is a fan of one — and
+    // in a deck of ONE there is nothing to put beside the answer. The card used to be dealt with a
+    // single option, which is a tap that proves nothing and is logged as if it did (QA-15), so it
+    // is now refused and the fan comes back empty.
+    //
+    // This is the one place «few modes apply» DOES become «no session», and it is the honest
+    // reading: the word cannot be asked a recognition question until the deck has a second word.
+    // Every other shape of the same case is covered by the fan tests above.
     DB::table('user_term_progress')->updateOrInsert(
         ['user_id' => $user->id, 'term_id' => $termId],
         [
@@ -160,7 +166,40 @@ it('still deals ONE card when the pair is admitted to nothing yet', function () 
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(1);
-    expect($cards[0]['exercise_mode'])->toBe('multiple_choice');
-    expect($cards[0]['ladder_step'])->toBeNull('practice is off the ladder, whatever rung the pair is on');
+    expect($cards)->toBe([]);
+});
+
+it('deals the fan again as soon as the deck has a second word', function () {
+    [$user, $token] = learner();
+    [$collectionId, $termId] = soloDeck($user);
+    addWordTo($collectionId, $user->id, 'front desk', 'стойка регистрации');
+    DB::table('user_term_progress')->updateOrInsert(
+        ['user_id' => $user->id, 'term_id' => $termId],
+        [
+            'state' => LearningState::Learning->value,
+            'acquisition' => Acquisition::Learning->value,
+            'learning_step' => 1,
+            'reps' => 0, 'successful_reviews' => 0, 'lapses' => 0, 'ease_factor' => 2.5,
+            'interval_days' => 0, 'due_at' => null,
+            'created_at' => now(), 'updated_at' => now(),
+        ],
+    );
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionId, 'practice' => true])
+        ->assertOk()
+        ->json('data.cards');
+
+    // Two words now, so the pool is no longer a fan and practice picks the mode off its own
+    // round-robin (which is off the ladder entirely). Which mode that is is not the point — the
+    // point is that the word is dealt a card again, and that whatever it got is answerable.
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $termId));
+    expect($own)->not->toBe([])
+        ->and($own[0]['ladder_step'])->toBeNull('practice is off the ladder, whatever rung the pair is on');
+
+    foreach ($cards as $card) {
+        if ($card['options'] !== null) {
+            expect(count($card['options']))->toBeGreaterThanOrEqual(2);
+        }
+    }
 });

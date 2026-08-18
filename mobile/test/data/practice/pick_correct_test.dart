@@ -61,14 +61,34 @@ void main() {
     return (await db.watchCollectionTerms('c1').first).single.term;
   }
 
+  /// A neighbour that exists only to be a wrong option. When pick_correct is gated out the card
+  /// falls to the floor — multiple_choice — and a pool of one leaves that with a single option, so
+  /// the card would be refused (QA-15) and the gate assertions would have nothing to read.
+  final decoy = Term(
+    id: 'decoy',
+    termText: 'front desk',
+    type: 'word',
+    transcription: null,
+    translation: 'стойка регистрации',
+    example: null,
+    exampleTranslation: null,
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 10),
+  );
+
   SessionCard cardFor(Term term, {int seed = 1}) => LocalPracticeSessionBuilder.build(
-        terms: [term],
-        limit: 1,
+        terms: [term, decoy],
+        limit: 2,
         random: Random(seed),
         enabled: const PracticeModes([ExerciseMode.pickCorrect]),
         sessionId: 's1',
-        ladder: {term.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12)},
-      ).cards.single;
+        ladder: {
+          for (final t in [term, decoy])
+            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+        },
+      ).cards.firstWhere((c) => c.termId == term.id);
 
   test('sync stores the distractors as JSON on the term', () async {
     final term = await seed();

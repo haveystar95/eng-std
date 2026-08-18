@@ -156,12 +156,21 @@ final readonly class BuildStudySessionHandler
         $seen = [];
         foreach ($slots as $cardIndex => $slot) {
             $view = $byTerm[$slot->termId];
-            $cards[] = $this->assembler->assemble(
+            $card = $this->assembler->assemble(
                 $command->actorId, $view, $content[$slot->termId], $poolIds, $enabled, $matrix,
                 isPractice: $command->isPractice, cardIndex: $cardIndex,
                 slotStep: $slot->ladderStep, neighbours: $neighbours,
                 modeOverride: $forcedModes[$cardIndex] ?? null,
             );
+            // A slot the assembler refused: the only card this term's data could produce here would
+            // have had fewer than two options, which is not a question (QA-15). The slot is dropped
+            // rather than filled with something else — and the term is left out of the composition
+            // too, unless another slot did produce a card for it, because the composition is the
+            // guard on «was this term actually part of the session».
+            if ($card === null) {
+                continue;
+            }
+            $cards[] = $card;
             // The composition is a SET of terms, not of cards: a term now legitimately occupies
             // several slots, and what the composition guards is «was this term part of the session
             // at all», which is one fact however many times it was asked.

@@ -49,12 +49,15 @@ void main() {
     setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
     tearDown(() => db.close());
 
-    Term term(String id, String text, String example) => Term(
+    // Distinct translations, and that matters: two terms that MEAN the same thing cannot be each
+    // other's wrong option, so a deck of synonyms leaves multiple_choice with nothing to offer and
+    // the card is refused (QA-15). This group is about the TOGGLES.
+    Term term(String id, String text, String example, String translation) => Term(
           id: id,
           termText: text,
           type: 'word',
           transcription: null,
-          translation: 'перевод',
+          translation: translation,
           example: example,
           exampleTranslation: 'перевод примера',
           imageUrl: null,
@@ -64,10 +67,10 @@ void main() {
         );
 
     final terms = [
-      term('01KZETAAA50EMHCN6SP80T8DHC', 'reservation', 'I have a reservation for tonight.'),
-      term('01KZETAAB4AW6M9ZFRB3X02CVW', 'towel', 'I need a clean towel, please.'),
-      term('01KZETAAC103WZ24WQ7H087ZJ3', 'sheets', 'Could I have extra sheets, please?'),
-      term('01KZETAAD2EWE2H5ZV7WD8JWKT', 'goals', 'She finally achieved her goals.'),
+      term('01KZETAAA50EMHCN6SP80T8DHC', 'reservation', 'I have a reservation for tonight.', 'бронь'),
+      term('01KZETAAB4AW6M9ZFRB3X02CVW', 'towel', 'I need a clean towel, please.', 'полотенце'),
+      term('01KZETAAC103WZ24WQ7H087ZJ3', 'sheets', 'Could I have extra sheets, please?', 'простыни'),
+      term('01KZETAAD2EWE2H5ZV7WD8JWKT', 'goals', 'She finally achieved her goals.', 'цели'),
     ];
 
     /// Every pair at the TOP of the acquisition ladder: this group is about the TOGGLES, and a

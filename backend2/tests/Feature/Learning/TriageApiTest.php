@@ -131,10 +131,14 @@ it('caps the queue page and reports the eligible remainder', function () {
 it('keeps a known term out of study and returns it to new when triaged unknown', function () {
     [$user, $token] = learner();
     [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
+    // A neighbour, so the recognition chain can be built at all (QA-15). It is triaged known too,
+    // so the «nothing to study» assertion below still means what it says.
+    $overdraft = addWordTo($col, $user->id, 'overdraft', 'овердрафт');
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
             ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $overdraft, 'verdict' => 'known', 'decided_at' => now()->toIso8601String(), 'client_seq' => 2],
         ]])->assertOk();
 
     // known → no due, not new → nothing to study.
@@ -148,18 +152,19 @@ it('keeps a known term out of study and returns it to new when triaged unknown',
     // is no recognition step it has ever passed to skip.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [
-            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 2],
+            ['id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 3],
+            ['id' => Ulid::generate(), 'term_id' => $overdraft, 'verdict' => 'unknown', 'decided_at' => now()->addSecond()->toIso8601String(), 'client_seq' => 4],
         ]])->assertOk();
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
         ->assertOk()
-        ->assertJsonCount(2, 'data.cards')
-        ->assertJsonPath('data.cards.0.term_id', $money)
-        ->assertJsonPath('data.cards.0.exercise_mode', 'multiple_choice')
         ->json('data.cards');
 
-    expect(array_column($cards, 'ladder_step'))->toBe([1, 2]);
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $money));
+    expect($own)->toHaveCount(2)
+        ->and($own[0]['exercise_mode'])->toBe('multiple_choice')
+        ->and(array_column($own, 'ladder_step'))->toBe([1, 2]);
 });
 
 it('does not resolve a known-term verification in a practice session', function () {

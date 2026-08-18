@@ -21,20 +21,24 @@ function f24Deck(string $text = 'passport', string $translation = 'паспор�
     DB::table('collections')->insert([
         'id' => $cid, 'owner_id' => null, 'type' => 'system', 'title' => 'Airport', 'description' => null,
         'topic' => 'travel', 'source_lang' => 'ru', 'target_lang' => 'en', 'visibility' => 'public',
-        'source' => 'curated', 'items_count' => 1, 'is_premium' => false, 'created_at' => now(), 'updated_at' => now(),
+        'source' => 'curated', 'items_count' => 2, 'is_premium' => false, 'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('terms')->insert([
-        'id' => $tid, 'lang' => 'en', 'text' => $text, 'normalized_text' => $text, 'type' => 'word',
-        'source' => 'curated', 'cefr' => 'A2', 'created_at' => now(), 'updated_at' => now(),
-    ]);
-    DB::table('term_translations')->insert([
-        'id' => Ulid::generate(), 'term_id' => $tid, 'lang' => 'ru', 'text' => $translation, 'is_primary' => true,
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
-    DB::table('collection_items')->insert([
-        'id' => Ulid::generate(), 'collection_id' => $cid, 'term_id' => $tid, 'position' => 0,
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
+    // Two terms, not one: a choice card needs something to offer beside its answer, and a deck of
+    // one is refused now (QA-15). Every case below is about `$tid`, and reads its own cards.
+    foreach ([[$tid, $text, $translation, 0], [Ulid::generate(), 'boarding pass', 'посадочный талон', 1]] as [$id, $word, $ru, $pos]) {
+        DB::table('terms')->insert([
+            'id' => $id, 'lang' => 'en', 'text' => $word, 'normalized_text' => $word, 'type' => 'word',
+            'source' => 'curated', 'cefr' => 'A2', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('term_translations')->insert([
+            'id' => Ulid::generate(), 'term_id' => $id, 'lang' => 'ru', 'text' => $ru, 'is_primary' => true,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('collection_items')->insert([
+            'id' => Ulid::generate(), 'collection_id' => $cid, 'term_id' => $id, 'position' => $pos,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
 
     return [$cid, $tid];
 }
@@ -69,9 +73,9 @@ it('offers a subscribed store collection term as a practice card (F24)', functio
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(1);
-    expect($cards[0]['term_id'])->toBe($tid);
-    expect($cards[0]['answer'])->toBe('passport');
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $tid));
+    expect($own)->toHaveCount(1);
+    expect($own[0]['answer'])->toBe('passport');
 });
 
 it('offers a subscribed store collection term as a normal study (new) card too', function () {
@@ -85,10 +89,10 @@ it('offers a subscribed store collection term as a normal study (new) card too',
         ->json('data.cards');
 
     // A new term brings its whole recognition chain — introduced and answered in one session.
-    expect($cards)->toHaveCount(2);
-    expect(array_unique(array_column($cards, 'term_id')))->toBe([$tid]);
-    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice'); // both rungs are recognition
-    expect(array_column($cards, 'ladder_step'))->toBe([1, 2]);
+    $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $tid));
+    expect($own)->toHaveCount(2);
+    expect(array_column($own, 'exercise_mode'))->each->toBe('multiple_choice'); // both rungs are recognition
+    expect(array_column($own, 'ladder_step'))->toBe([1, 2]);
 });
 
 it('includes a subscribed store term in the all-collections practice pool', function () {

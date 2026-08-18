@@ -31,13 +31,18 @@ function exposure(string $termId, ?string $sessionId = null, string $shownAt = '
 
 it('deals the intro as the first card of a never-seen word, and asks nothing on it', function () {
     [$user, $token] = learner();
-    seedWordFor($user, 'apple', 'яблоко');
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    // A neighbour, because the two recognition cards need something to offer beside the answer and
+    // a deck of one is refused now (QA-15). The chain below is read off `apple`'s own cards.
+    seedWordFor($user, 'bank', 'банк');
     enableIntro();
 
-    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+    $all = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')
         ->assertOk()
         ->json('data.cards');
+
+    $cards = array_values(array_filter($all, static fn (array $c): bool => $c['term_id'] === $apple));
 
     // The whole chain lands in one session: shown, then asked twice.
     expect(array_column($cards, 'ladder_step'))->toBe([0, 1, 2])

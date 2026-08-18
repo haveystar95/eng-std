@@ -110,6 +110,8 @@ it('never deals the mode to a term with fewer than two distractors', function ()
     pickCorrectContent($termId);
     // The review deleted one as grammatical — the term loses the mode again.
     DB::table('example_distractors')->limit(1)->delete();
+    // …and falls back to multiple_choice, which needs a neighbour to be buildable at all (QA-15).
+    addWordTo($collectionId, $user->id, 'front desk', 'стойка регистрации');
     enablePickCorrectFor($user->id);
 
     $card = pickCorrectCard($this, $token, $collectionId);
@@ -153,6 +155,8 @@ it('does not deal the mode when the second distractor only repeats the first spa
     // Two rows, one usable span: the gate has to count what a card can actually use, or it passes the
     // ≥2 check and then hands the assembler one wrong option — a two-option coin flip.
     DB::table('example_distractors')->where('error_span', 'of')->update(['error_span' => 'are', 'correction' => 'is']);
+    // …and falls back to multiple_choice, which needs a neighbour to be buildable at all (QA-15).
+    addWordTo($collectionId, $user->id, 'front desk', 'стойка регистрации');
     enablePickCorrectFor($user->id);
 
     $card = pickCorrectCard($this, $token, $collectionId);

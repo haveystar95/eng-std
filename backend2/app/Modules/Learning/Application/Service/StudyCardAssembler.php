@@ -42,6 +42,12 @@ final readonly class StudyCardAssembler
     private const OPTION_COUNT = 4;
 
     /**
+     * Below this, a choice card is not a card. One option is not a question — the learner taps the
+     * only thing on screen and the log records a correct answer nobody gave. {@see assemble()}.
+     */
+    private const MIN_OPTIONS = 2;
+
+    /**
      * `pick_correct` shows three sentences: the example plus two wrong ones. Three rather than
      * multiple_choice's four because each option is a whole sentence to read — a fourth turns the card
      * into a reading comprehension test.
@@ -83,7 +89,7 @@ final readonly class StudyCardAssembler
         ?int $slotStep = null,
         array $neighbours = [],
         ?ExerciseMode $modeOverride = null,
-    ): SessionCardView {
+    ): ?SessionCardView {
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
@@ -215,6 +221,31 @@ final readonly class StudyCardAssembler
             // easier one. The gate guarantees the example is there to be spoken.
             $answer = (string) $content->example;
             $prompt = null;
+        }
+
+        // THE OPTION FLOOR (QA-15), deliberately here — after every fallback branch above, not
+        // inside one of them.
+        //
+        // Each branch that builds options has its own reason to come up short, and each was covered
+        // in isolation: the recognition card returns null when it cannot find same-shape neighbours,
+        // and pick_correct is gated on the term having distractors. What nobody covered was where
+        // those fallbacks LAND — the ordinary multiple_choice below, which asks the distractor
+        // reader for three wrong answers and takes however many it gets. For a phrase whose only
+        // same-language neighbours all share its translation, that is none, and the learner was
+        // shown «Как вы справляетесь с конфликтами?» above a single option: the answer.
+        //
+        // So the floor sits at the one place every path passes through, and it is a REFUSAL rather
+        // than a repair. There is nothing honest to repair it with — padding the card means inventing
+        // options, and dropping to another mode means asking a question this term's data cannot
+        // support either. A missing card costs the learner one repetition; a card with one option
+        // writes a correct answer into an append-only log for a retrieval that never happened.
+        if ($options !== null && count($options) < self::MIN_OPTIONS) {
+            // Refused, and REPORTED: a session that is quietly one card shorter is the kind of thing
+            // nobody notices for months, and the cause here is the term's content — no neighbour, no
+            // distractor — which no toggle the learner owns can fix.
+            $this->fallbacks->tooFewOptions($user, $view->termId, $mode->value, count($options));
+
+            return null;
         }
 
         return new SessionCardView(

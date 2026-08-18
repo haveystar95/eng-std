@@ -18,6 +18,9 @@ uses(RefreshDatabase::class);
 function playedSession(object $ctx, object $user, string $token): array
 {
     $termId = seedWordFor($user, 'withdraw cash', 'снять наличные');
+    // A companion word, because a recognition card needs something to offer beside the answer and a
+    // deck of one is refused outright now (QA-15). Nothing here is about the deck's size.
+    seedWordFor($user, 'overdraft', 'овердрафт');
 
     $session = $ctx->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions')

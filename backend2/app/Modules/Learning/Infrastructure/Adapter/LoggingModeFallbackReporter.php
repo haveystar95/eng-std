@@ -21,4 +21,16 @@ final class LoggingModeFallbackReporter implements ModeFallbackReporter
             'enabled_modes' => $enabledModes,
         ]);
     }
+
+    public function tooFewOptions(UserId $userId, TermId $termId, string $mode, int $options): void
+    {
+        // warning for the same reason: the learner cannot see this and cannot fix it. The term needs
+        // a neighbour or a distractor, which is content work, not a setting.
+        Log::warning('A choice card was refused: too few options to be answerable', [
+            'user_id' => $userId->value,
+            'term_id' => $termId->value,
+            'mode' => $mode,
+            'options' => $options,
+        ]);
+    }
 }

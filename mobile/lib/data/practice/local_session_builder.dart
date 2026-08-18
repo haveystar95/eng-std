@@ -46,6 +46,10 @@ abstract final class LocalPracticeSessionBuilder {
   /// Options on a multiple-choice card: the answer plus up to three distractors, as the server does.
   static const int optionCount = 4;
 
+  /// Below this, a choice card is not a card: one option is not a question — the learner taps the
+  /// only thing on screen and the queue records a correct answer nobody gave. See [_card].
+  static const int minOptions = 2;
+
   /// Common phrasal-verb particles used as decoy chips, so assembling "give up" is a real choice
   /// and not just re-ordering the only two tiles on screen. Mirrors the server's ChipShuffler.
   static const List<String> _particles = [
@@ -100,18 +104,19 @@ abstract final class LocalPracticeSessionBuilder {
       );
     }
 
-    final cards = <SessionCard>[];
-    for (var index = 0; index < chosen.length; index++) {
-      cards.add(_card(
-        term: chosen[index],
-        cardIndex: index,
-        pool: playable,
-        enabled: enabled,
-        random: random,
-        position: ladder[chosen[index].id] ?? LadderPosition.untouched,
-        admission: admission,
-      ));
-    }
+    // A refused card is skipped, not replaced: see the option floor in [_card].
+    final cards = <SessionCard>[
+      for (var index = 0; index < chosen.length; index++)
+        ?_card(
+          term: chosen[index],
+          cardIndex: index,
+          pool: playable,
+          enabled: enabled,
+          random: random,
+          position: ladder[chosen[index].id] ?? LadderPosition.untouched,
+          admission: admission,
+        ),
+    ];
 
     return StudySession(
       sessionId: sessionId ?? ApiClient.ulid(),
@@ -151,17 +156,19 @@ abstract final class LocalPracticeSessionBuilder {
     ));
 
     if (modes.isEmpty) {
-      return [
-        _card(
-          term: term, cardIndex: 0, pool: pool, enabled: enabled,
-          random: random, position: position, admission: admission,
-        ),
-      ];
+      final floor = _card(
+        term: term, cardIndex: 0, pool: pool, enabled: enabled,
+        random: random, position: position, admission: admission,
+      );
+      return floor == null ? const [] : [floor];
     }
 
+    // A mode the term's data cannot furnish with enough options drops out of the fan rather than
+    // shortening it to a card nobody can answer. A fan of nothing is an empty session, which the
+    // screen already renders as its empty state.
     return [
       for (var i = 0; i < modes.length; i++)
-        _card(
+        ?_card(
           term: term, cardIndex: i, pool: pool, enabled: enabled,
           random: random, position: position, admission: admission,
           forcedMode: modes[i],
@@ -171,7 +178,7 @@ abstract final class LocalPracticeSessionBuilder {
 
   /// [forcedMode] is the fan's doing ([_fan]): the mode has already been chosen from the same three
   /// filters, so the round-robin is skipped rather than re-run. Null everywhere else.
-  static SessionCard _card({
+  static SessionCard? _card({
     required Term term,
     required int cardIndex,
     required List<Term> pool,
@@ -276,6 +283,14 @@ abstract final class LocalPracticeSessionBuilder {
       answer = example;
       prompt = term.exampleTranslation;
     }
+
+    // THE OPTION FLOOR (QA-15), deliberately here — after every fallback branch above, not inside
+    // one of them. The far-option branch shortens the card when there are too few same-shape
+    // neighbours, and the ordinary branch takes however many distractors it is given; for a phrase
+    // whose only neighbours share its translation that is none, and the card came out with the
+    // answer alone on screen. Mirrors the server's StudyCardAssembler, and it has to: a card the
+    // server would refuse must not appear just because the phone built the session offline.
+    if (options != null && options.length < minOptions) return null;
 
     return SessionCard(
       termId: term.id,

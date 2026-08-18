@@ -43,6 +43,10 @@ it('falls back to multiple_choice — loudly — when no enabled mode fits the t
     [$user, $token] = learner();
     // A single word with no example: word_bank needs two words, cloze and scramble need an example.
     seedWordFor($user, 'towel', 'полотенце');
+    // A second word so the fallback card can actually be BUILT — a lone term has nothing to offer
+    // beside its answer and the option floor refuses the card (QA-15). What is under test is the
+    // toggle fallback, not the deck.
+    seedWordFor($user, 'pillow', 'подушка');
 
     app(EnabledModesWriter::class)->setOverrideFor(
         UserId::fromString($user->id),
