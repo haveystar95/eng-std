@@ -383,8 +383,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '≈$count words',
-      one: '≈$count word',
+      other: 'approximately $count words',
+      one: 'approximately $count word',
     );
     return '$_temp0';
   }

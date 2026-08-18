@@ -61,7 +61,7 @@ it('relaxes the CEFR band rather than rejecting when too few items are in-level 
 
     $result = (new DraftValidator())->validate(draftOf($items), brief());
 
-    // 10 valid items, only 3 in-level (< MIN_ITEMS) → band relaxed, all kept (target 12 > 10).
+    // 10 valid items, only 3 in-level (< MIN_ITEMS) → band relaxed, all 10 kept (well under MAX_ITEMS).
     expect($result->items)->toHaveCount(10)
         ->and(array_filter($result->items, fn (GeneratedItem $i): bool => $i->cefr === 'C1'))->not->toBe([]);
 });
@@ -74,24 +74,36 @@ it('deduplicates by text within the draft', function () {
     expect($result->items)->toHaveCount(8);
 });
 
-it('trims over-generation down to the requested size', function () {
-    // brief() asks for 12; the model over-produced 30.
+/**
+ * Size is approximate (owner decision, 2026-08-18): the validator no longer trims a valid,
+ * over-generated batch down toward the requested count — it only caps at the hard ceiling.
+ */
+it('ships every valid item up to MAX_ITEMS, not just the requested size', function () {
+    // brief() asks for 12; the model over-produced 30 valid items — all should ship, capped at 25.
     $result = (new DraftValidator())->validate(draftOf(manyItems(30)), brief());
 
-    expect($result->items)->toHaveCount(12);
+    expect($result->items)->toHaveCount(DraftValidator::MAX_ITEMS);
 });
 
-it('trims to an explicit target count independent of the brief size', function () {
-    // The model brief now carries an overshoot count, so the validator must trim to the target
-    // it is handed (9), not to brief()->size (12). 9 is above the MIN_ITEMS floor, so it survives.
-    $result = (new DraftValidator())->validate(draftOf(manyItems(30)), brief(), targetCount: 9);
+it('ships all valid items when the count sits between the requested size and MAX_ITEMS', function () {
+    // Small(10) asked, 13 valid items survive validation → all 13 ship (10-13 range from the naряд).
+    $small = new GenerationBrief('иду в банк', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 10);
+    $result = (new DraftValidator())->validate(draftOf(manyItems(13)), $small);
 
-    expect($result->items)->toHaveCount(9);
+    expect($result->items)->toHaveCount(13);
+});
+
+it('caps at exactly MAX_ITEMS when the requested size is already the ceiling', function () {
+    // Large(25) asked — MAX_ITEMS is the ceiling either way, so even 30 valid items cap at 25.
+    $large = new GenerationBrief('иду в банк', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 25);
+    $result = (new DraftValidator())->validate(draftOf(manyItems(30)), $large);
+
+    expect($result->items)->toHaveCount(25);
 });
 
 it('accepts a below-floor batch in supplemental mode without throwing', function () {
     // A top-up returning 2 fresh items is valid, not a truncated-response failure.
-    $result = (new DraftValidator())->validate(draftOf(manyItems(2)), brief(), targetCount: 5, supplemental: true);
+    $result = (new DraftValidator())->validate(draftOf(manyItems(2)), brief(), supplemental: true);
 
     expect($result->items)->toHaveCount(2);
 });

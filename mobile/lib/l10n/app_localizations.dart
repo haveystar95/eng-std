@@ -644,10 +644,10 @@ abstract class AppLocalizations {
   /// **'Закрыть меню'**
   String get commonCloseMenu;
 
-  /// Приблизительный размер набора, «≈15 слов» (ICU plural).
+  /// Приблизительный размер набора, «примерно 15 слов» (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{≈{count} слово} few{≈{count} слова} many{≈{count} слов} other{≈{count} слова}}'**
+  /// **'{count, plural, one{примерно {count} слово} few{примерно {count} слова} many{примерно {count} слов} other{примерно {count} слова}}'**
   String approxWords(int count);
 
   /// Заголовок экрана вкладки коллекций (кадр 2.5).

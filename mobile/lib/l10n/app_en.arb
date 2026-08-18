@@ -95,7 +95,7 @@
   "commonCancel": "Cancel",
   "commonCloseMenu": "Close menu",
 
-  "approxWords": "{count, plural, one{≈{count} word} other{≈{count} words}}",
+  "approxWords": "{count, plural, one{approximately {count} word} other{approximately {count} words}}",
   "collectionsTitle": "Collections",
   "collectionsEmptyTitle": "No collections yet",
   "collectionsEmptyBody": "Describe a situation — AI will build your first set.",

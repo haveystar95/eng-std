@@ -401,10 +401,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '≈$count слова',
-      many: '≈$count слов',
-      few: '≈$count слова',
-      one: '≈$count слово',
+      other: 'примерно $count слова',
+      many: 'примерно $count слов',
+      few: 'примерно $count слова',
+      one: 'примерно $count слово',
     );
     return '$_temp0';
   }

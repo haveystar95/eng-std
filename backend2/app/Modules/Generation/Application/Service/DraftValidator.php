@@ -21,20 +21,15 @@ final class DraftValidator
     private const CEFR_ORDER = ['A1' => 1, 'A2' => 2, 'B1' => 3, 'B2' => 4, 'C1' => 5, 'C2' => 6];
 
     /**
-     * @param  int|null  $targetCount  how many items to keep (the requested size). Explicit because the
-     *                                 model brief now carries an *overshoot* count, not the requested one;
-     *                                 defaults to the brief size for callers that don't over-ask.
-     * @param  bool  $supplemental     a top-up batch: skip the MIN_ITEMS floor. A top-up returning 2 fresh
-     *                                 items is valid, not a truncated-response failure — the primary pass
-     *                                 already guaranteed a non-broken set.
+     * @param  bool  $supplemental  a top-up batch: skip the MIN_ITEMS floor. A top-up returning 2 fresh
+     *                              items is valid, not a truncated-response failure — the primary pass
+     *                              already guaranteed a non-broken set.
      */
     public function validate(
         GeneratedCollectionDraft $draft,
         GenerationBrief $brief,
-        ?int $targetCount = null,
         bool $supplemental = false,
     ): GeneratedCollectionDraft {
-        $targetCount ??= $brief->size;
         [$min, $max] = $this->levelRange($brief->levels);
 
         $seen = [];
@@ -91,15 +86,13 @@ final class DraftValidator
             throw InvalidGeneratedDraft::because('only ' . count($clean) . ' usable items after validation');
         }
 
-        // Trim over-generation down to the requested count (bounded by the hard ceiling). The floor
-        // only applies to a primary pass; a top-up may legitimately land below MIN_ITEMS.
-        // Under-generation is kept as-is — the caller decides whether to top up.
-        $target = min(self::MAX_ITEMS, $targetCount);
-        if (! $supplemental) {
-            $target = max(self::MIN_ITEMS, $target);
-        }
-        if (count($clean) > $target) {
-            $clean = array_slice($clean, 0, $target);
+        // Size is approximate (owner decision, 2026-08-18): every valid item ships. The only cap
+        // left is the hard ceiling MAX_ITEMS — trimming down toward the requested count used to
+        // throw away valid items (array_slice is positional, so it discarded whichever items
+        // happened to land late in the model's response, not the worst ones) for no reason beyond
+        // matching a count nobody promised exactly.
+        if (count($clean) > self::MAX_ITEMS) {
+            $clean = array_slice($clean, 0, self::MAX_ITEMS);
         }
 
         return new GeneratedCollectionDraft(

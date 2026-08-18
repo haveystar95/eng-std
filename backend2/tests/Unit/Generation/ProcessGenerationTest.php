@@ -151,13 +151,15 @@ it('materializes a collection with deduplicated terms from a pending request', f
     $request = $this->requests->findById($id);
     expect($request?->status())->toBe(GenerationStatus::Succeeded)
         ->and($request?->collectionId())->not->toBeNull()
-        ->and($this->terms->count())->toBe(12)
+        ->and($this->terms->count())->toBe(16)
         ->and($this->collections->count())->toBe(1);
 
     $collection = $this->collections->findById($request->collectionId());
-    expect($collection?->itemsCount())->toBe(12)
+    expect($collection?->itemsCount())->toBe(16)
         ->and($collection?->ownerId()?->value)->toBe($this->user->value)
-        ->and($request?->deliveredCount())->toBe(12) // asked 12, over-generated, trimmed back to 12
+        // Asked 12; overshoot generates 16 (ceil(12*1.3)); size is approximate, so all 16 valid
+        // items ship — no trim back toward the requested count (owner decision, 2026-08-18).
+        ->and($request?->deliveredCount())->toBe(16)
         // Image attachment is kicked off once, for the new collection, after success.
         ->and($this->attach->dispatched)->toBe([$request->collectionId()->value])
         // …and so is the enrichment станок, on its own job, AFTER the generation the user waited
@@ -185,10 +187,10 @@ it('tops up a shortfall and sums tokens and cost across both model calls', funct
     (processWith($this, $generator))(new ProcessGeneration($id));
 
     $request = $this->requests->findById($id);
-    // 10 primary + fresh top-up, trimmed to the requested 12.
+    // 10 primary + fresh top-up (5), all 15 ship — size is approximate, no trim back to 12.
     expect($request?->status())->toBe(GenerationStatus::Succeeded)
         ->and($generator->calls)->toBe(2)                 // one primary + one top-up, never a loop
-        ->and($request?->deliveredCount())->toBe(12)
+        ->and($request?->deliveredCount())->toBe(15)
         // Spend is the SUM of both calls, not the second overwriting the first:
         ->and($request?->tokensIn())->toBe(1000)          // 700 + 300
         ->and($request?->tokensOut())->toBe(1600)         // 1200 + 400
@@ -426,7 +428,8 @@ it('drops an unfixable item, tops up the hole, and records the rejection', funct
 
     expect($repairer->calls)->toBe(LanguageBarrier::MAX_ATTEMPTS)
         ->and($generator->calls)->toBe(2)                       // the hole triggered a top-up
-        ->and($this->requests->findById($id)?->deliveredCount())->toBe(12);
+        // 11 primary survivors (1 dropped, unfixable) + 2 fresh top-up = 13, all ship uncapped.
+        ->and($this->requests->findById($id)?->deliveredCount())->toBe(13);
 
     $rejections = $journal->all();
     expect($rejections)->toHaveCount(1)

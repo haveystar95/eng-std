@@ -339,9 +339,9 @@
   "commonCloseMenu": "Закрыть меню",
   "@commonCloseMenu": { "description": "A11y-лейбл затемнения плавающего меню." },
 
-  "approxWords": "{count, plural, one{≈{count} слово} few{≈{count} слова} many{≈{count} слов} other{≈{count} слова}}",
+  "approxWords": "{count, plural, one{примерно {count} слово} few{примерно {count} слова} many{примерно {count} слов} other{примерно {count} слова}}",
   "@approxWords": {
-    "description": "Приблизительный размер набора, «≈15 слов» (ICU plural).",
+    "description": "Приблизительный размер набора, «примерно 15 слов» (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
 

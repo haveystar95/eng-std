@@ -16,10 +16,11 @@ use App\Modules\Shared\Domain\Service\ModelCost;
 /**
  * The generate → validate → screen → top-up pipeline, in one place so every caller measures the
  * same thing. Models routinely under-deliver ("asked 15, got 13"), so this overshoots the ask by
- * ~30%, trims back to the requested size, and — if still short — does ONE more call with an avoid
- * list, never a loop. Tokens/cost are summed across every call, repairs included. Owned here (not
- * in the command handler) so the eval tool exercises the exact production behaviour rather than a
- * drifting copy.
+ * ~30%, and — if still short — does ONE more call with an avoid list, never a loop. Size is
+ * approximate (owner decision, 2026-08-18): every valid item ships, capped only at the hard
+ * ceiling `DraftValidator::MAX_ITEMS`, never trimmed down toward the requested count. Tokens/cost
+ * are summed across every call, repairs included. Owned here (not in the command handler) so the
+ * eval tool exercises the exact production behaviour rather than a drifting copy.
  *
  * The language barrier sits between validation and the caller: nothing leaves this class in the
  * wrong language, and what it refused travels alongside the draft rather than disappearing into a
@@ -59,9 +60,9 @@ final readonly class GenerationPipeline
         $costUsd = $this->estimateCost($raw->model, $raw->tokensIn, $raw->tokensOut);
         $onAttempt(new AttemptUsage($model, $tokensIn, $tokensOut, $costUsd, $raw->rawResponse));
 
-        // Primary pass: filter/dedup and trim to the requested count. The MIN_ITEMS floor still applies
-        // here — a genuinely broken/truncated first response throws (terminal failure, no retry).
-        $draft = $this->validator->validate($raw, $this->resize($brief, $overshoot), targetCount: $requested);
+        // Primary pass: filter/dedup, cap at MAX_ITEMS. The MIN_ITEMS floor still applies here — a
+        // genuinely broken/truncated first response throws (terminal failure, no retry).
+        $draft = $this->validator->validate($raw, $this->resize($brief, $overshoot));
 
         // Screen BEFORE the shortfall check, so an item dropped for language leaves a hole the
         // top-up fills like any other under-delivery. A collection that quietly came back two items
@@ -89,9 +90,9 @@ final readonly class GenerationPipeline
             $costUsd = $this->sumCost($costUsd, $this->estimateCost($topUpRaw->model, $topUpRaw->tokensIn, $topUpRaw->tokensOut));
             $onAttempt(new AttemptUsage($model, $tokensIn, $tokensOut, $costUsd, $topUpRaw->rawResponse));
 
-            // Supplemental: no floor — a top-up of a couple of items is valid. Cross-dedup + trim to
-            // the requested size happens in the merge.
-            $topUp = $this->validator->validate($topUpRaw, $topUpBrief, targetCount: $topUpSize, supplemental: true);
+            // Supplemental: no floor — a top-up of a couple of items is valid. Cross-dedup + the
+            // MAX_ITEMS cap happens in the merge.
+            $topUp = $this->validator->validate($topUpRaw, $topUpBrief, supplemental: true);
 
             // The top-up is model output like any other and gets the same barrier. There is no
             // third pass: a top-up that also comes back tainted under-delivers, honestly logged.
@@ -104,7 +105,7 @@ final readonly class GenerationPipeline
                 $onAttempt(new AttemptUsage($model, $tokensIn, $tokensOut, $costUsd, $topUpRaw->rawResponse));
             }
 
-            $draft = $this->merge($draft, $this->withItems($topUp, $screenedTopUp->items), $requested);
+            $draft = $this->merge($draft, $this->withItems($topUp, $screenedTopUp->items));
         }
 
         return new AssembledDraft(
@@ -170,10 +171,10 @@ final readonly class GenerationPipeline
     }
 
     /**
-     * Primary items first, then the fresh top-up items, deduped by lowercased text and trimmed to
-     * the requested count. Keeps the primary pass's title/description.
+     * Primary items first, then the fresh top-up items, deduped by lowercased text and capped at
+     * MAX_ITEMS. Keeps the primary pass's title/description.
      */
-    private function merge(GeneratedCollectionDraft $primary, GeneratedCollectionDraft $topUp, int $requested): GeneratedCollectionDraft
+    private function merge(GeneratedCollectionDraft $primary, GeneratedCollectionDraft $topUp): GeneratedCollectionDraft
     {
         $seen = [];
         $items = [];
@@ -189,7 +190,7 @@ final readonly class GenerationPipeline
         return new GeneratedCollectionDraft(
             title: $primary->title,
             description: $primary->description,
-            items: array_slice($items, 0, $requested),
+            items: array_slice($items, 0, DraftValidator::MAX_ITEMS),
             model: $primary->model,
             tokensIn: $primary->tokensIn,
             tokensOut: $primary->tokensOut,
