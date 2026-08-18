@@ -39,6 +39,17 @@ abstract final class SpokenAnswer {
   /// written anywhere. It is not a budget for wrong answers — a recognised answer that is simply
   /// wrong is a verdict on the first try, like every other trainer.
   static const int maxChannelAttempts = 3;
+
+  /// The recording window, split by form (QA-20 — live device findings): the phone's old defaults
+  /// (8s listen / 2s pause, still what the WORD form uses) were tuned for a single word and too
+  /// tight for a whole sentence — a learner mid-sentence hesitation past 2s of silence, or still
+  /// reading past 8s, got cut off mid-answer, which then read as a wrong answer instead of an
+  /// unfinished one. The EXAMPLE form gets more of both: a real pause (thinking of the next word)
+  /// must not look like the end of the answer, and a full sentence needs time to say.
+  static const Duration wordFormListenFor = Duration(seconds: 8);
+  static const Duration wordFormPauseFor = Duration(seconds: 2);
+  static const Duration exampleFormListenFor = Duration(seconds: 15);
+  static const Duration exampleFormPauseFor = Duration(seconds: 3);
 }
 
 /// Mirror of the server `AnswerGrader`'s correctness stages (grading of the SPEED/hint into

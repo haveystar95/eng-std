@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,19 +21,29 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// three things directly. What CANNOT be tested here is whether a real SFSpeechRecognizer hears a
 /// real person say «reservation» — that is the owner's device pass.
 class _FakeRecognizer implements SpeechRecognizer {
-  _FakeRecognizer(this._script, {this.isReady = true});
+  _FakeRecognizer(this._script, {this.isReady = true, this.completeOnStop = false});
 
   final List<SpeechAttempt> _script;
 
   @override
   final bool isReady;
 
+  /// When true, `listenOnce` does not settle on its own — only [stop] resolves it, mirroring the
+  /// real plugin (a stop() call is what delivers the final transcript). Needed to test the manual
+  /// «Готово» path, where the test must be able to tap it WHILE the card still thinks it is
+  /// listening; the default (false) matches every other test's "the mic just heard it" shape.
+  final bool completeOnStop;
+  Completer<SpeechAttempt>? _pending;
+
   int calls = 0;
   int cancels = 0;
+  int stops = 0;
 
   /// The words the card handed over as the accuracy hint, per call.
   final List<List<String>> expectedPerCall = [];
   final List<String> locales = [];
+  final List<Duration> timeoutsPerCall = [];
+  final List<Duration> pauseForsPerCall = [];
 
   @override
   Future<bool> prepare() async => isReady;
@@ -41,19 +53,36 @@ class _FakeRecognizer implements SpeechRecognizer {
     required List<String> expected,
     required String localeId,
     Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
     ValueChanged<String>? onPartial,
   }) async {
     expectedPerCall.add(expected);
     locales.add(localeId);
+    timeoutsPerCall.add(timeout);
+    pauseForsPerCall.add(pauseFor);
     final attempt = _script[calls.clamp(0, _script.length - 1)];
     calls++;
     if (attempt.isHeard) onPartial?.call(attempt.text);
+
+    if (completeOnStop) {
+      final completer = Completer<SpeechAttempt>();
+      _pending = completer;
+
+      return completer.future;
+    }
 
     return attempt;
   }
 
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    stops++;
+    final pending = _pending;
+    _pending = null;
+    if (pending != null && !pending.isCompleted) {
+      pending.complete(_script[(calls - 1).clamp(0, _script.length - 1)]);
+    }
+  }
 
   @override
   Future<void> cancel() async => cancels++;
@@ -312,6 +341,94 @@ void main() {
       await record(tester);
 
       expect(promptPhotos(), findsNothing);
+    });
+  });
+
+  group('recording window (QA-20)', () {
+    testWidgets('the word form uses the shorter window', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('reservation')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.wordFormListenFor);
+      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.wordFormPauseFor);
+    });
+
+    testWidgets('the example form uses the longer window', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Could you take a photo of us?')]);
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.exampleFormListenFor);
+      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
+    });
+  });
+
+  group('a pause cutoff on the example form (QA-20 finding iii)', () {
+    testWidgets('a low-coverage reading is retried, not finalized as wrong', (tester) async {
+      // The recogniser's own window closed on it (no manual «Готово»), and it only caught half the
+      // sentence — a stumble or a channel cutoff, not a wrong answer.
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('could you take'), // 3 of 7 words: well under 70%
+        const SpeechAttempt.heard('Could you take a photo of us?'),
+      ]);
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      // No verdict spent — the card is still open, offering another try, exactly like a channel
+      // failure (the same budget, the same "Не расслышал" line).
+      expect(answers, isEmpty);
+      expect(find.textContaining('Не расслышал'), findsOneWidget);
+      expect(recordButton(), findsWidgets);
+
+      // The retry succeeds normally and commits like any other attempt.
+      await record(tester);
+      expect(answers, hasLength(1));
+      expect(answers.single.verdict, LocalCheck.correct);
+    });
+
+    testWidgets('a deliberate «Готово» on a short reading is graded as the final answer', (tester) async {
+      // Same low-coverage transcript as above, but this time the learner tapped «Готово»
+      // themselves — their own choice to stop, not the recogniser cutting them off, so it is
+      // graded as-is like every other trainer's honest wrong answer. `completeOnStop` holds the
+      // attempt open until stop() fires, exactly like the real plugin, so the tap lands while the
+      // card still thinks it is listening.
+      final recognizer = _FakeRecognizer(
+        [const SpeechAttempt.heard('could you take')],
+        completeOnStop: true,
+      );
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first); // start
+      await tester.pump();
+      expect(recognizer.calls, 1, reason: 'listening has begun, but the attempt has not settled');
+
+      await tester.tap(recordButton().first); // «Готово» — manual stop
+      await tester.pumpAndSettle();
+
+      expect(recognizer.stops, 1);
+      expect(answers, hasLength(1));
+      expect(answers.single.verdict, LocalCheck.wrong);
+    });
+
+    testWidgets('does not apply to the word form — no coverage concept there', (tester) async {
+      // A one-character-off word is graded (wrong) on the first try, exactly as before — the
+      // cutoff guard is scoped to the sentence form, which is the only one with a coverage bar.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers, hasLength(1));
+      expect(answers.single.verdict, LocalCheck.wrong);
     });
   });
 

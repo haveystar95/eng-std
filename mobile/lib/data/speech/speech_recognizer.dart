@@ -77,6 +77,7 @@ abstract class SpeechRecognizer {
     required List<String> expected,
     required String localeId,
     Duration timeout,
+    Duration pauseFor,
     ValueChanged<String>? onPartial,
   });
 
@@ -121,6 +122,7 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
     required List<String> expected,
     required String localeId,
     Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
     ValueChanged<String>? onPartial,
   }) async {
     if (!await prepare()) return const SpeechAttempt.unavailable();
@@ -139,8 +141,10 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
           // forever looks like the app has hung, which is worse than a retry.
           listenFor: timeout,
           // …and settle once the speaker has clearly stopped, instead of waiting the window out. A
-          // one-word answer followed by four seconds of silence reads as the app not responding.
-          pauseFor: const Duration(seconds: 2),
+          // one-word answer followed by silence reads as the app not responding — but too short a
+          // pause cuts off a mid-sentence hesitation instead (QA-20); the caller picks the window
+          // that fits what is being read (see SpokenAnswer's word/example-form constants).
+          pauseFor: pauseFor,
           // On-device, always. The audio of someone practising vocabulary alone in a room is not
           // something to send anywhere, and the trainer has to work in the metro with no signal.
           onDevice: true,

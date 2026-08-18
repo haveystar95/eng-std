@@ -36,6 +36,7 @@ class _FakeRecognizer implements SpeechRecognizer {
     required List<String> expected,
     required String localeId,
     Duration timeout = const Duration(seconds: 8),
+    Duration pauseFor = const Duration(seconds: 2),
     ValueChanged<String>? onPartial,
   }) async {
     calls++;

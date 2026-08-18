@@ -222,6 +222,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// is heard, so a successful retry clears the apology.
   SpeechOutcome? _channelFailure;
 
+  /// Set only by [_stopListening] (the learner tapped «Готово»). Read once, right after the
+  /// attempt settles, to tell a DELIBERATE stop from the recogniser's own pauseFor/listenFor window
+  /// closing on its own — see the low-coverage guard in [_listenOnce] (QA-20).
+  bool _manualStop = false;
+
   /// Resolved once, in [initState], and never through `ref` again — `dispose` has to close the
   /// microphone, and reading a provider from a widget that is already coming down is not allowed.
   SpeechRecognizer? _recognizer;
@@ -443,10 +448,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       _partial = '';
       _channelFailure = null;
     });
+    _manualStop = false;
 
     final attempt = await _recognizer!.listenOnce(
           expected: _spokenTargets,
           localeId: widget.speechLocaleId,
+          timeout: _card.asksForExample ? SpokenAnswer.exampleFormListenFor : SpokenAnswer.wordFormListenFor,
+          pauseFor: _card.asksForExample ? SpokenAnswer.exampleFormPauseFor : SpokenAnswer.wordFormPauseFor,
           onPartial: (text) {
             if (mounted && _listeningNow) setState(() => _partial = text);
           },
@@ -456,6 +464,25 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     setState(() => _listeningNow = false);
 
     if (attempt.isHeard) {
+      // The recogniser's OWN pauseFor/listenFor window closed on it mid-answer (not a deliberate
+      // «Готово»), and what it caught covers under 70% of the sentence — a stumble or a channel
+      // cutoff, not a wrong answer (QA-20 finding iii: "correct reading sometimes fails to
+      // register"). Retried like a channel failure, spending an attempt but no verdict, rather than
+      // handing the scheduler a lapse for a room that cut the recording short. Word-form has no
+      // coverage concept (MatchPolicy::Exact), so this only ever applies to the sentence form.
+      if (!_manualStop &&
+          _card.asksForExample &&
+          SessionGrader.coverageOf(attempt.text, _card.answer) < SpokenAnswer.minCoverage) {
+        setState(() {
+          _attempts++;
+          _partial = '';
+          _channelFailure = SpeechOutcome.silent;
+        });
+        AppHaptics.warning();
+
+        return;
+      }
+
       _commit(attempt.text);
 
       return;
@@ -473,6 +500,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   Future<void> _stopListening() async {
     if (!_listeningNow) return;
+    // A deliberate «Готово» — whatever was heard is the learner's own final answer, graded as-is
+    // even if short, never retried behind their back (see the guard in [_listenOnce]).
+    _manualStop = true;
     await _recognizer?.stop();
   }
 
