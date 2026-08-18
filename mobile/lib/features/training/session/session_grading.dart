@@ -126,6 +126,56 @@ abstract final class SessionGrader {
     return v.isEmpty ? const [] : v.split(' ');
   }
 
+  /// Which of the learner's OWN words do not belong, as indices into [given].
+  ///
+  /// This is what a wrong verdict has to be able to point at. Showing the CORRECT form in place of
+  /// what was typed — which cloze used to do — erases the one thing the learner needs to compare
+  /// against: their own answer (QA-16). Marking it is the same move pick_correct already makes with
+  /// an `error_span`, and the same wavy terracotta says it.
+  ///
+  /// The rule is a longest-common-subsequence over normalised words: everything that survives the
+  /// LCS is a word that IS in the expected answer, in the right order, so what is left over is
+  /// exactly «this word is wrong or does not belong here». Order matters, unlike [coverageOf] —
+  /// this is typing and assembly, where the learner chose the order, not a recogniser transcript.
+  ///
+  /// Returns an empty set when the answer matches, and when nothing can be compared: a mark on
+  /// every word says nothing more than the verdict already did.
+  static Set<int> misplacedWords(List<String> given, String expected) {
+    final wanted = _words(expected);
+    final mine = given.map((w) => _words(w).join(' ')).toList();
+    if (wanted.isEmpty || mine.every((w) => w.isEmpty)) return const {};
+
+    // LCS by table, over word lists that are a sentence long at most.
+    final n = mine.length, m = wanted.length;
+    final table = List.generate(n + 1, (_) => List<int>.filled(m + 1, 0));
+    for (var i = n - 1; i >= 0; i--) {
+      for (var j = m - 1; j >= 0; j--) {
+        table[i][j] = mine[i] == wanted[j]
+            ? table[i + 1][j + 1] + 1
+            : (table[i + 1][j] > table[i][j + 1] ? table[i + 1][j] : table[i][j + 1]);
+      }
+    }
+
+    final wrong = <int>{};
+    var i = 0, j = 0;
+    while (i < n) {
+      if (j < m && mine[i] == wanted[j]) {
+        i++;
+        j++;
+      } else if (j < m && table[i + 1][j] >= table[i][j + 1]) {
+        wrong.add(i);
+        i++;
+      } else if (j < m) {
+        j++;
+      } else {
+        wrong.add(i); // trailing extras: nothing left to match them against
+        i++;
+      }
+    }
+
+    return wrong;
+  }
+
   static bool _isTypo(String response, String candidate) {
     if (candidate.length < _minTypoLength) return false;
     return response != candidate && _levenshtein(response, candidate) == 1;

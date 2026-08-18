@@ -107,6 +107,27 @@ void main() {
       expect(boldRuns(tester, example), ['I have a fever']);
     });
 
+    testWidgets('the bolded run is the EXAMPLE own letters, not the term as stored', (tester) async {
+      // «Tell me about yourself» is stored capitalised, because that is how the phrase is written on
+      // its own — and the example embeds it mid-question, lowercase. Drawing the term's own text in
+      // the sentence produced «Could you Tell me about yourself…»: a capital in the middle of a
+      // sentence, which reads as a typo in the content the learner is being taught from.
+      const example = 'Could you tell me about yourself and your career background?';
+      await tester.pumpWidget(host(card(term: 'Tell me about yourself', example: example)));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(boldRuns(tester, example), ['tell me about yourself']);
+      // The whole line, reassembled, is still the example verbatim — the bold changes the WEIGHT of
+      // those letters and never the letters themselves.
+      expect(
+        tester
+            .widgetList<Text>(find.byType(Text))
+            .map((t) => t.textSpan?.toPlainText() ?? '')
+            .where((t) => t.contains('tell me about yourself')),
+        contains(example),
+      );
+    });
+
     testWidgets('the «новое слово» badge sits BELOW the term and the example', (tester) async {
       const example = 'I have a fever and feel very weak.';
       await tester.pumpWidget(host(card(term: 'I have a fever.', example: example)));

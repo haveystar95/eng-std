@@ -190,6 +190,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   bool _answered = false;
   LocalCheck? _verdict;
+
+  /// What the learner actually answered, kept so a WRONG verdict can show it back to them. Cloze
+  /// used to replace it with the correct form, which erased the one thing there was to compare
+  /// against (QA-16).
+  String? _response;
   bool _usedHint = false;
   String? _picked; // multiple_choice / listening-recognition
   late final List<String> _chips = List.of(widget.card.chips ?? const []);
@@ -307,6 +312,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     super.dispose();
   }
 
+  /// Which of the learner's own [words] to mark, once a WRONG verdict is in. Empty while the answer
+  /// is still open and whenever it was accepted — a mark on an accepted answer would be a correction
+  /// where there was no mistake, and `typo` is accepted.
+  Set<int> _mistakes(List<String> words) {
+    if (!_answered || (_verdict?.isAccepted ?? true)) return const {};
+
+    return SessionGrader.misplacedWords(words, _card.answer);
+  }
+
   int? _latency() {
     final ms = DateTime.now().difference(_shownAt).inMilliseconds;
     return ms > 0 ? ms : null;
@@ -342,6 +356,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     setState(() {
       _answered = true;
       _verdict = verdict;
+      _response = response;
       _usedHint = usedHint;
     });
     _focus.unfocus();
@@ -647,6 +662,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             words: _placed.map((i) => _chips[i]).toList(),
             answered: _answered,
             correct: _verdict?.isAccepted ?? false,
+            mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
             onTapWord: (idx) => _unplaceChip(_placed[idx]),
           ),
         ],
@@ -671,6 +687,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             words: _placed.map((i) => _chips[i]).toList(),
             answered: _answered,
             correct: _verdict?.isAccepted ?? false,
+            mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
             onTapWord: (idx) => _unplaceChip(_placed[idx]),
           ),
         ],
@@ -779,11 +796,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           _ClozeSentence(
             example: _card.example ?? _card.answerText,
             answer: _card.answerText,
-            // Answered → the correct word fills the blank (verdict-coloured). While typing → the live
-            // input fills it (plain), so the user sees what they write right in the sentence (12j).
-            filled: _answered ? _card.answerText : (_input.text.trim().isEmpty ? null : _input.text),
+            // The blank always holds the LEARNER'S OWN word — while typing, and after the verdict.
+            // It used to be swapped for the correct form on answering, which read as though they had
+            // typed the right thing and left nothing to compare the correction below against
+            // (QA-16). The correct form still appears, as its own card underneath.
+            filled: _answered
+                ? ((_response ?? '').trim().isEmpty ? null : _response!.trim())
+                : (_input.text.trim().isEmpty ? null : _input.text),
             answered: _answered,
             correct: _verdict?.isAccepted ?? false,
+            mistakes: _mistakes([(_response ?? '').trim()]),
           ),
           if (_card.exampleTranslation != null) ...[
             const SizedBox(height: AppSpacing.s12),
@@ -1084,12 +1106,18 @@ class _AssemblyLine extends StatelessWidget {
     required this.answered,
     required this.correct,
     required this.onTapWord,
+    this.mistakes = const {},
   });
 
   final List<String> words;
   final bool answered;
   final bool correct;
   final ValueChanged<int> onTapWord;
+
+  /// Indices of [words] that do not belong in the answer — marked once a WRONG verdict is in. The
+  /// line already kept the learner's own sentence; what it did not do was say WHERE it went wrong,
+  /// so a wrong answer was a terracotta rule under a sentence that looked fine (QA-16).
+  final Set<int> mistakes;
 
   @override
   Widget build(BuildContext context) {
@@ -1128,7 +1156,20 @@ class _AssemblyLine extends StatelessWidget {
                 for (var i = 0; i < words.length; i++)
                   GestureDetector(
                     onTap: answered ? null : () => onTapWord(i),
-                    child: Text(words[i], style: AppTextExercise.assemblyLine),
+                    child: Text(
+                      words[i],
+                      style: mistakes.contains(i)
+                          // Marked, not recoloured away — the same wavy terracotta pick_correct
+                          // draws under a broken fragment, and for the same reason: the wrong word
+                          // stays readable, which is what makes the correction below mean anything.
+                          ? AppTextExercise.assemblyLine.copyWith(
+                              color: AppColors.destructiveText,
+                              decoration: TextDecoration.underline,
+                              decorationStyle: TextDecorationStyle.wavy,
+                              decorationColor: AppColors.destructiveText,
+                            )
+                          : AppTextExercise.assemblyLine,
+                    ),
                   ),
               ],
             ),
@@ -1145,16 +1186,21 @@ class _ClozeSentence extends StatelessWidget {
     required this.filled,
     required this.answered,
     required this.correct,
+    this.mistakes = const {},
   });
 
   final String example;
   final String answer;
 
-  /// The word to show in the blank: the live typed text while answering, or the correct word once
-  /// answered; null when the blank is still empty.
+  /// The word to show in the blank — the learner's OWN text throughout, live while they type and
+  /// still theirs after the verdict; null when they typed nothing («Не помню»). It used to become
+  /// the correct form on answering, which showed them an answer they had not given (QA-16).
   final String? filled;
   final bool answered;
   final bool correct;
+
+  /// Indices of [filled]'s words that do not belong — marked when the verdict is wrong.
+  final Set<int> mistakes;
 
   @override
   Widget build(BuildContext context) {
@@ -1182,17 +1228,21 @@ class _ClozeSentence extends StatelessWidget {
       );
     } else {
       // Answered → verdict-coloured underline; while typing → a plain ink underline (no verdict yet).
+      // A marked word carries the wavy terracotta instead, the same mark pick_correct puts under a
+      // broken fragment: the word stays readable and is plainly named as the thing that was wrong.
+      final marked = mistakes.isNotEmpty;
       blank = TextSpan(
         text: filled,
         style: AppTextExercise.clozeExample.copyWith(
           fontStyle: FontStyle.normal,
           fontWeight: FontWeight.w500,
-          color: AppColors.ink,
+          color: marked ? AppColors.destructiveText : AppColors.ink,
           decoration: TextDecoration.underline,
+          decorationStyle: marked ? TextDecorationStyle.wavy : TextDecorationStyle.solid,
           decorationColor: answered
               ? (correct ? AppColors.verdictKnown : AppColors.destructiveText)
               : AppColors.tertiary,
-          decorationThickness: answered ? 2 : 1.5,
+          decorationThickness: answered && !marked ? 2 : 1.5,
         ),
       );
     }

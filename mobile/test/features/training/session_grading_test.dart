@@ -203,6 +203,48 @@ void main() {
     });
   });
 
+  group('misplacedWords — which of the learner own words to mark (QA-16)', () {
+    test('marks the one word that does not belong', () {
+      expect(
+        SessionGrader.misplacedWords(['withdraw', 'money'], 'withdraw cash'),
+        {1},
+      );
+    });
+
+    test('marks an extra word rather than shifting the blame onto the right ones', () {
+      // «withdraw the cash» — everything expected is there, in order, plus one word that is not.
+      expect(
+        SessionGrader.misplacedWords(['withdraw', 'some', 'cash'], 'withdraw cash'),
+        {1},
+      );
+    });
+
+    test('marks nothing when the words are all there in order', () {
+      expect(SessionGrader.misplacedWords(['withdraw', 'cash'], 'withdraw cash'), isEmpty);
+    });
+
+    test('normalises like the grader — case and punctuation are not mistakes', () {
+      expect(SessionGrader.misplacedWords(['Withdraw', 'cash!'], 'withdraw cash'), isEmpty);
+    });
+
+    test('marks a whole typed phrase that is simply the wrong answer', () {
+      // The cloze shape: ONE entry holding everything the learner typed.
+      expect(SessionGrader.misplacedWords(['withdraw money'], 'withdraw cash'), {0});
+    });
+
+    test('marks nothing when there is nothing to compare', () {
+      // «Не помню» is already said by the verdict; marking an empty answer says it twice.
+      expect(SessionGrader.misplacedWords([''], 'withdraw cash'), isEmpty);
+      expect(SessionGrader.misplacedWords(['anything'], ''), isEmpty);
+    });
+
+    test('order counts — this is typing, not a recogniser transcript', () {
+      // coverageOf() is order-free because a recogniser drops words; here the learner chose the
+      // order, so a swapped sentence has words in the wrong place and must be told so.
+      expect(SessionGrader.misplacedWords(['cash', 'withdraw'], 'withdraw cash'), isNotEmpty);
+    });
+  });
+
   group('ExerciseMode.fromWire — forward-compatible', () {
     test('known wires map', () {
       expect(ExerciseMode.fromWire('word_bank'), ExerciseMode.wordBank);
