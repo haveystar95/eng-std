@@ -32,6 +32,7 @@ tags:
   - name: Dashboard
   - name: Users
   - name: Ladder
+  - name: Exercise modes
   - name: Collections
   - name: Terms
   - name: Logs
@@ -461,6 +462,102 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ExerciseModes' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /mode-settings:
+    get:
+      tags: [Exercise modes]
+      summary: The «Матрица режимов» screen — every product-default row
+      description: >
+        One row per trainer: on/off, rotation position AND the acquisition-ladder threshold
+        together — the full stored `learning_mode_settings` row, unlike `/exercise-modes` and
+        `/exercise-modes/admission`, which edit the toggles and the threshold as two separate
+        writes. Every row's `source` is `global` here — there is nothing to inherit from at this
+        scope.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModeSettingsMatrix' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Exercise modes]
+      summary: Save one product-default row (audited)
+      description: >
+        ONE (scope, mode) row per call — the same reason as `/exercise-modes/admission`: a
+        whole-matrix write would silently revert a cell someone else had just moved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModeSettingsRow' }
+      responses:
+        '200':
+          description: Applied — returns the new matrix
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModeSettingsMatrix' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{id}/mode-settings:
+    get:
+      tags: [Exercise modes]
+      summary: This user's matrix — global rows overlaid by their own overrides
+      description: >
+        Every mode is present, whichever scope it comes from — `source` says which: `override`
+        for a row this user owns directly, `global` for one they inherit.
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModeSettingsMatrix' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      tags: [Exercise modes]
+      summary: Save one row of this user's override (audited)
+      parameters: [{ $ref: '#/components/parameters/UserId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModeSettingsRow' }
+      responses:
+        '200':
+          description: Applied — returns the user's new matrix
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModeSettingsMatrix' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{id}/mode-settings/{mode}:
+    delete:
+      tags: [Exercise modes]
+      summary: Reset one override cell back to the product default (audited)
+      description: >
+        Deletes this user's row for this one mode, so it inherits the global row again — the
+        row's «Сбросить» button. Unlike `PUT /users/{id}/exercise-modes` with a cleared set, this
+        touches a single cell, not the whole override.
+      parameters:
+        - { $ref: '#/components/parameters/UserId' }
+        - name: mode
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/ExerciseMode' }
+      responses:
+        '200':
+          description: Reset — returns the user's new matrix
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ModeSettingsMatrix' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
@@ -952,7 +1049,7 @@ components:
       # Every mode the enum knows, switched on or not — `available` lists them all, which is how a
       # newly built trainer becomes findable in the panel. `intro` is the rung-0 card: it is here
       # like any other trainer, and `no_grade` is what marks it as producing no answer.
-      enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, intro]
+      enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, intro]
 
     ExerciseModes:
       type: object
@@ -1037,6 +1134,66 @@ components:
             which is what makes a first meeting winnable; `standard` = the enrichment distractors,
             nearly right, which is the exercise once the word is known. A graduated pair always
             gets `standard` whatever is stored.
+
+    ModeSettingsMatrix:
+      type: object
+      properties:
+        rows:
+          type: array
+          description: One row per mode this build knows, ordered by rotation position then mode.
+          items: { $ref: '#/components/schemas/ModeSettingsRow' }
+
+    ModeSettingsRow:
+      type: object
+      required: [mode, enabled, position, min_acquisition]
+      description: >
+        One row of the «Матрица режимов» screen: the full stored `learning_mode_settings` row —
+        on/off, rotation position, and the acquisition-ladder threshold together. Distinct from
+        `ModeAdmissionRule` in its one field name: the reviews threshold is
+        `min_successful_reviews` here, matching the renamed database column, while
+        `ModeAdmissionRule` (used by the older `/exercise-modes/admission`) and the mobile `/sync`
+        wire both keep the historical `min_reps` — that rename is deliberately deferred to a
+        contract version bump, since the Flutter client reads it today.
+      properties:
+        mode: { $ref: '#/components/schemas/ExerciseMode' }
+        enabled:
+          type: boolean
+          description: Whether this trainer is switched on in this scope.
+        position:
+          type: integer
+          minimum: 0
+          description: Rotation order — free practice round-robins by index into the enabled set.
+        min_acquisition:
+          type: string
+          enum: [new, learning, graduated]
+        min_learning_step:
+          type: integer
+          minimum: 0
+          maximum: 2
+          nullable: true
+          description: Only meaningful when `min_acquisition` is `learning`.
+        min_successful_reviews:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: >-
+            Reviews since GRADUATION, not since the first meeting. Rejected (422) with a
+            non-graduated `min_acquisition`, where it would read as a stricter rule than it is.
+        options_policy:
+          type: string
+          enum: [distant, standard]
+          default: standard
+          description: >-
+            `distant` = wrong options are the session's own neighbours; `standard` = the
+            enrichment distractors. A graduated pair always gets `standard` whatever is stored.
+        source:
+          type: string
+          enum: [global, override]
+          readOnly: true
+          description: >-
+            Where this row comes from in the scope that was read: `override` when the requested
+            user owns this mode's row directly, `global` when they inherit it from the product
+            default. Present on responses only; ignored if sent in a request body.
 
     Problem:
       type: object

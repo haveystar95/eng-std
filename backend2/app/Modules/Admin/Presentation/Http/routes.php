@@ -9,6 +9,7 @@ use App\Modules\Admin\Presentation\Http\Controller\DashboardController;
 use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
 use App\Modules\Admin\Presentation\Http\Controller\LadderController;
+use App\Modules\Admin\Presentation\Http\Controller\ModeSettingsController;
 use App\Modules\Admin\Presentation\Http\Controller\PracticeDialogController;
 use App\Modules\Admin\Presentation\Http\Controller\RequestLogController;
 use App\Modules\Admin\Presentation\Http\Controller\TermController;
@@ -49,6 +50,15 @@ Route::middleware('auth:admin')->group(function (): void {
     // what learners are dealt. One mode per call — see ChangeModeAdmission.
     Route::put('/exercise-modes/admission', [ExerciseModeController::class, 'updateAdmission']);
     Route::put('/users/{id}/exercise-modes/admission', [ExerciseModeController::class, 'updateAdmissionForUser']);
+
+    // «Матрица режимов»: the whole row (on/off, position and threshold) as one editable unit, keyed
+    // by (scope, mode). Separate from /exercise-modes* above, which stays as the toggles screen's
+    // API and is untouched by this наряд.
+    Route::get('/mode-settings', [ModeSettingsController::class, 'index']);
+    Route::put('/mode-settings', [ModeSettingsController::class, 'update']);
+    Route::get('/users/{id}/mode-settings', [ModeSettingsController::class, 'showForUser']);
+    Route::put('/users/{id}/mode-settings', [ModeSettingsController::class, 'updateForUser']);
+    Route::delete('/users/{id}/mode-settings/{mode}', [ModeSettingsController::class, 'resetForUser']);
 
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);

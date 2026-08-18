@@ -29,4 +29,19 @@ interface EnabledModesWriter
      * default again. "Inherit" is the absence of a row, never an empty set.
      */
     public function setOverrideFor(UserId $userId, ?EnabledModes $modes): void;
+
+    /**
+     * Write one full row of the matrix — on/off, rotation position AND the admission threshold — in
+     * one upsert. For the dedicated «Матрица режимов» screen, where a save touches exactly one
+     * (scope, mode) row; `setRule`/`setGlobalDefault`/`setOverrideFor` stay as they are for the
+     * toggles screen, which writes a whole ordered set at once.
+     */
+    public function setRow(?UserId $userId, ExerciseMode $mode, bool $enabled, int $position, ModeRule $rule): void;
+
+    /**
+     * Delete this user's override row for ONE mode, so that mode inherits the global row again.
+     * Unlike `setOverrideFor($userId, null)`, which drops the user's whole override set, this
+     * touches a single cell — the matrix screen's «Сбросить» button on one row.
+     */
+    public function clearOverride(UserId $userId, ExerciseMode $mode): void;
 }

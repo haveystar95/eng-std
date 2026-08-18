@@ -22,4 +22,16 @@ interface ModeAdmissionReader
 
     /** The product default — what a user with no overrides inherits. */
     public function globalMatrix(): ModeAdmission;
+
+    /**
+     * Every row of the matrix in this scope, each tagged with where it comes from — 'global' for a
+     * row inherited from the product default, 'override' for one this user owns directly (or, when
+     * `$userId` is null, every global row, which is definitionally its own scope). The matrix screen
+     * needs this distinction to show which cells are already customized versus merely inherited; the
+     * `ModeAdmission`/`ModeRule` VOs above don't carry it because "where did this rule come from" is
+     * a reporting concern, not a ladder one.
+     *
+     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string}>
+     */
+    public function rowsFor(?UserId $userId): array;
 }

@@ -81,9 +81,9 @@ it('ships switched off, with a row on the assembly rung', function () {
         ->and((bool) $row->enabled)->toBeFalse()
         ->and((string) $row->min_acquisition)->toBe('graduated')
         ->and($row->min_learning_step)->toBeNull()
-        // No reps threshold: the trainer opens WITH the assembly rung. Its late form is a form,
+        // No reviews threshold: the trainer opens WITH the assembly rung. Its late form is a form,
         // not a second admission — which is exactly why there is one row here and not two.
-        ->and($row->min_reps)->toBeNull();
+        ->and($row->min_successful_reviews)->toBeNull();
 });
 
 it('sits at the END of the rotation, so switching it on renumbers nothing', function () {

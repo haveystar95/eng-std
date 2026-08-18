@@ -82,6 +82,53 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
         return $this->toMatrix($this->scope(''));
     }
 
+    /**
+     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string}>
+     */
+    public function rowsFor(?UserId $userId): array
+    {
+        $globalByMode = [];
+        foreach ($this->scope('') as $row) {
+            $globalByMode[(string) $row->mode] = $row;
+        }
+
+        $ownByMode = [];
+        if ($userId !== null) {
+            foreach ($this->scope($userId->value) as $row) {
+                $ownByMode[(string) $row->mode] = $row;
+            }
+        }
+
+        $rows = [];
+        foreach (ExerciseMode::cases() as $mode) {
+            $own = $ownByMode[$mode->value] ?? null;
+            $row = $own ?? $globalByMode[$mode->value] ?? null;
+            if ($row === null) {
+                continue;
+            }
+            $rows[] = $this->toMatrixRow($row, $own !== null ? 'override' : 'global');
+        }
+
+        usort($rows, static fn (array $a, array $b): int => [(int) $a['position'], $a['mode']] <=> [(int) $b['position'], $b['mode']]);
+
+        return $rows;
+    }
+
+    /** @return array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string} */
+    private function toMatrixRow(stdClass $row, string $source): array
+    {
+        return [
+            'mode' => (string) $row->mode,
+            'enabled' => (bool) $row->enabled,
+            'position' => (int) $row->position,
+            'min_acquisition' => (string) $row->min_acquisition,
+            'min_learning_step' => $row->min_learning_step !== null ? (int) $row->min_learning_step : null,
+            'min_successful_reviews' => $row->min_successful_reviews !== null ? (int) $row->min_successful_reviews : null,
+            'options_policy' => (string) $row->options_policy,
+            'source' => $source,
+        ];
+    }
+
     // ── reading ──────────────────────────────────────────────────────────────
 
     /**
@@ -184,7 +231,7 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
             $rules[$mode->value] = new ModeRule(
                 minAcquisition: $acquisition,
                 minLearningStep: $row->min_learning_step !== null ? (int) $row->min_learning_step : null,
-                minSuccessfulReviews: $row->min_reps !== null ? (int) $row->min_reps : null,
+                minSuccessfulReviews: $row->min_successful_reviews !== null ? (int) $row->min_successful_reviews : null,
                 optionsPolicy: OptionsPolicy::tryFrom((string) $row->options_policy) ?? OptionsPolicy::Standard,
             );
         }

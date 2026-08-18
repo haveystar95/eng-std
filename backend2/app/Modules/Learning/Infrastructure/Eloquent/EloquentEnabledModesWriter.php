@@ -122,13 +122,49 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
         $this->reader->forget();
     }
 
+    public function setRow(?UserId $userId, ExerciseMode $mode, bool $enabled, int $position, ModeRule $rule): void
+    {
+        $scope = $userId?->value;
+        $existing = $this->row($scope, $mode);
+
+        if ($existing !== null) {
+            DB::table(self::TABLE)->where('id', $existing->id)->update([
+                'enabled' => $enabled,
+                'position' => $position,
+                ...$this->ruleColumns($rule),
+                'updated_at' => now(),
+            ]);
+            $this->reader->forget();
+
+            return;
+        }
+
+        DB::table(self::TABLE)->insert([
+            'id' => (string) Ulid::generate(),
+            'user_id' => $scope,
+            'mode' => $mode->value,
+            'enabled' => $enabled,
+            'position' => $position,
+            ...$this->ruleColumns($rule),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->reader->forget();
+    }
+
+    public function clearOverride(UserId $userId, ExerciseMode $mode): void
+    {
+        DB::table(self::TABLE)->where('user_id', $userId->value)->where('mode', $mode->value)->delete();
+        $this->reader->forget();
+    }
+
     /** @return array<string, mixed> */
     private function ruleColumns(ModeRule $rule): array
     {
         return [
             'min_acquisition' => $rule->minAcquisition->value,
             'min_learning_step' => $rule->minLearningStep,
-            'min_reps' => $rule->minSuccessfulReviews,
+            'min_successful_reviews' => $rule->minSuccessfulReviews,
             'options_policy' => $rule->optionsPolicy->value,
         ];
     }

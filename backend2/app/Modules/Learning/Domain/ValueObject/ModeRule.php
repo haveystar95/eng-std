@@ -17,11 +17,12 @@ use App\Modules\Learning\Domain\Service\LearningLadder;
  * threshold and a pair's position are turned into a rung by the SAME pure function, so the two
  * cannot drift apart.
  *
- * The stored column and the wire key are still named `min_reps`. That name is historical — it was
- * written when the ladder read the scheduler's `reps` — and it is kept because the admin console
- * that edits it lives in another repository; the number it holds is a count of SUCCESSFUL reviews
- * ({@see LearningLadder}), and the rename stops at this boundary on purpose. Application DTOs
- * carrying the wire value keep the wire's name; Domain uses the honest one.
+ * The stored column is `min_successful_reviews` (renamed from `min_reps` — QA-20's «честная
+ * лестница» наряд); the number it holds is a count of SUCCESSFUL reviews since graduation
+ * ({@see LearningLadder}), never the scheduler's `reps`. The /sync WIRE key is still `min_reps` —
+ * that boundary is deliberate, marked RENAME-DEFERRED at {@see ModeAdmission::toWire()}, because the
+ * Flutter client reads it today and is out of scope for the rename. Application DTOs crossing that
+ * boundary keep the wire's name; everything on this side of it uses the honest one.
  */
 final readonly class ModeRule
 {

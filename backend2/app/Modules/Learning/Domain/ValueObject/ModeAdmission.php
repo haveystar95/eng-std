@@ -110,7 +110,10 @@ final readonly class ModeAdmission
                 'mode' => $mode,
                 'min_acquisition' => $rule->minAcquisition->value,
                 'min_learning_step' => $rule->minLearningStep,
-                // The wire keeps the historical name; the number is a SUCCESS count — see ModeRule.
+                // RENAME-DEFERRED: the DB column is `min_successful_reviews` (honest name, since
+                // QA-20's «честная лестница» наряд), but the /sync wire key stays `min_reps` — the
+                // Flutter client is out of scope here and reads this key today. Move both together
+                // at the next contract version bump (FSRS), not silently in one backend change.
                 'min_reps' => $rule->minSuccessfulReviews,
                 'options_policy' => $rule->optionsPolicy->value,
                 // Derived, and sent as well as the three thresholds: the client needs the rung to
