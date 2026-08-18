@@ -131,6 +131,34 @@ abstract final class SessionGrader {
     return found / wanted.length;
   }
 
+  /// Which of [expected]'s own DISPLAYED words (raw, whitespace-split, in reading order) have no
+  /// pair anywhere in [response] — same multiset/suffix-tolerant matching as [coverageOf], for the
+  /// speaking verdict's highlight (QA-20): a wrong sentence-form reading shows the target with the
+  /// unmatched part marked, so «did I mis-speak this, or did the recording just cut off?» has an
+  /// answer to look at instead of a bare «Не то».
+  ///
+  /// Grouped by DISPLAYED word, not by canonicalised token: a contraction like "don't" canonicalises
+  /// to two tokens ("don", "t") but must highlight (or not) as the one word on screen, never split
+  /// into a fragment. It counts as covered only when every one of its sub-tokens was found.
+  static Set<int> uncoveredWords(String response, String expected) {
+    final raw = expected.trim();
+    if (raw.isEmpty) return const {};
+    final rawWords = raw.split(RegExp(r'\s+'));
+
+    final available = <String, int>{};
+    for (final word in _words(response)) {
+      available[word] = (available[word] ?? 0) + 1;
+    }
+
+    final uncovered = <int>{};
+    for (var i = 0; i < rawWords.length; i++) {
+      final subTokens = _words(rawWords[i]);
+      final covered = subTokens.isNotEmpty && subTokens.every((t) => _consume(available, t));
+      if (!covered) uncovered.add(i);
+    }
+    return uncovered;
+  }
+
   /// Marks one occurrence of [word] as used in [available] and returns true — exact first, then a
   /// suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it invents
   /// or swaps a whole word). [available] is one sentence's worth of words, so a linear scan for the

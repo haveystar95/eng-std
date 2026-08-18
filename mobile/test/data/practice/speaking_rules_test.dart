@@ -150,4 +150,33 @@ void main() {
       expect(SessionGrader.covers('Salary expectation rise', 'Salary expectations rise'), isTrue);
     });
   });
+
+  group('uncovered words — the verdict highlight (QA-20)', () {
+    const sentence = 'Could you take a photo of us?';
+
+    test('marks the tail a cut-off reading never reached', () {
+      expect(SessionGrader.uncoveredWords('could you take a photo', sentence), {5, 6});
+    });
+
+    test('marks just the one word a recogniser typically eats, not the whole sentence', () {
+      // The dropped article — exactly the kind of miss `covers()` still forgives at the ratio
+      // level (6 of 7 = 86%), but the highlight is about WHICH word, not the pass/fail bar.
+      expect(SessionGrader.uncoveredWords('could you take photo of us', sentence), {3});
+    });
+
+    test('marks nothing when every word was heard', () {
+      expect(SessionGrader.uncoveredWords('could you take a photo of us', sentence), isEmpty);
+    });
+
+    test('is suffix-tolerant, like coverage itself', () {
+      expect(
+        SessionGrader.uncoveredWords('salary expectation rise', 'Salary expectations rise'),
+        isEmpty,
+      );
+    });
+
+    test('marks every word when nothing was heard', () {
+      expect(SessionGrader.uncoveredWords('', sentence), {0, 1, 2, 3, 4, 5, 6});
+    });
+  });
 }

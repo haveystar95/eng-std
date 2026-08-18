@@ -1552,6 +1552,16 @@ class _FeedbackBlock extends ConsumerWidget {
 
   bool get _isSpeaking => card.mode == ExerciseMode.speaking;
 
+  /// Indices into the target sentence's own displayed words with no pair in what was recognised —
+  /// empty off the speaking example form, where there is neither a sentence to mark nor a
+  /// transcript to mark it against.
+  Set<int> get _uncoveredWords {
+    final heard = recognizedText;
+    if (!_isSpeaking || !card.asksForExample || heard == null || heard.trim().isEmpty) return const {};
+
+    return SessionGrader.uncoveredWords(heard, card.answerText);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
@@ -1577,7 +1587,16 @@ class _FeedbackBlock extends ConsumerWidget {
           children: [
             // [answerText], never [answer]: on the identity-graded card the key is a term id, and
             // printing it here is what put a raw ULID where «over the counter» belonged.
-            Expanded(child: _WritesItself(text: card.answerText, style: AppTextExercise.feedbackTerm)),
+            //
+            // The speaking example form marks its own unmatched words instead of the plain
+            // typewriter reveal (QA-20) — a wrong sentence-form reading is exactly the case where
+            // WHICH part failed to register is worth showing, and the write-on animation has
+            // nothing to say about that.
+            Expanded(
+              child: (_isSpeaking && card.asksForExample)
+                  ? _SpokenSentence(sentence: card.answerText, uncovered: _uncoveredWords)
+                  : _WritesItself(text: card.answerText, style: AppTextExercise.feedbackTerm),
+            ),
             _SpeakDot(onTap: () => onSpeak(card.answerText)),
           ],
         ),
@@ -1662,6 +1681,44 @@ class _NextDue extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.s16),
       child: Text(l.sessionSeeAgain(when), style: AppTextExercise.feedbackNextDue),
+    );
+  }
+}
+
+/// The target sentence of a wrong speaking example-form verdict, with the words that had no pair
+/// in what was recognised marked — the same wavy terracotta [_WordBankLine]/[_ClozeSentence] put
+/// under a broken fragment, here naming the part of the CORRECT sentence that seems to have been
+/// skipped or cut off, rather than a mistake in the learner's own words (QA-20).
+class _SpokenSentence extends StatelessWidget {
+  const _SpokenSentence({required this.sentence, required this.uncovered});
+
+  final String sentence;
+  final Set<int> uncovered;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = sentence.trim().isEmpty ? const <String>[] : sentence.trim().split(RegExp(r'\s+'));
+
+    return Text.rich(
+      TextSpan(
+        style: AppTextExercise.feedbackTerm,
+        children: [
+          for (var i = 0; i < words.length; i++) ...[
+            if (i > 0) const TextSpan(text: ' '),
+            TextSpan(
+              text: words[i],
+              style: uncovered.contains(i)
+                  ? const TextStyle(
+                      color: AppColors.destructiveText,
+                      decoration: TextDecoration.underline,
+                      decorationStyle: TextDecorationStyle.wavy,
+                      decorationColor: AppColors.destructiveText,
+                    )
+                  : null,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -157,6 +157,25 @@ void main() {
   // privacy — the standard way to count instances of a private widget from an external test file.
   Finder promptPhotos() => find.byWidgetPredicate((w) => w.runtimeType.toString() == '_PromptPhoto');
 
+  /// The style of the span carrying [word], wherever in the tree it is drawn — same pattern as
+  /// own_answer_verdict_test.dart's helper of the same name.
+  TextStyle? styleOf(WidgetTester tester, String word) {
+    for (final text in tester.widgetList<Text>(find.byType(Text))) {
+      final span = text.textSpan;
+      if (span == null) continue;
+      TextStyle? found;
+      span.visitChildren((child) {
+        if (child is TextSpan && (child.text ?? '') == word) {
+          found = child.style;
+          return false;
+        }
+        return true;
+      });
+      if (found != null) return found;
+    }
+    return null;
+  }
+
   Future<void> record(WidgetTester tester) async {
     await tester.tap(recordButton().first);
     await tester.pumpAndSettle();
@@ -429,6 +448,32 @@ void main() {
 
       expect(answers, hasLength(1));
       expect(answers.single.verdict, LocalCheck.wrong);
+    });
+  });
+
+  group('the uncovered-word highlight (QA-20)', () {
+    testWidgets('marks the tail of the target sentence a short reading never reached', (tester) async {
+      // A deliberate «Готово» on a short reading — graded wrong (Part 4.4's cutoff guard does not
+      // apply, since this is not an automatic timeout) and short by its own tail.
+      final recognizer = _FakeRecognizer(
+        [const SpeechAttempt.heard('could you take')],
+        completeOnStop: true,
+      );
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first); // start
+      await tester.pump();
+      await tester.tap(recordButton().first); // «Готово»
+      await tester.pumpAndSettle();
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+      // "Could you take a photo of us?" — "could you take" heard, "a photo of us?" is the tail.
+      expect(styleOf(tester, 'us?')?.decorationStyle, TextDecorationStyle.wavy);
+      expect(styleOf(tester, 'photo')?.decorationStyle, TextDecorationStyle.wavy);
+      // The part that WAS heard stays unmarked.
+      expect(styleOf(tester, 'Could')?.decorationStyle, isNot(TextDecorationStyle.wavy));
+      expect(styleOf(tester, 'take')?.decorationStyle, isNot(TextDecorationStyle.wavy));
     });
   });
 
