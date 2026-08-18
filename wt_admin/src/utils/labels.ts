@@ -58,6 +58,21 @@ export const ACQUISITION_LABEL: Record<Acquisition, string> = {
   graduated: 'выпущено',
 }
 
+/** Order matters here: it's the rank used to compare thresholds against a mode's passport floor. */
+export const ACQUISITION_RANK: Record<Acquisition, number> = { new: 0, learning: 1, graduated: 2 }
+
+/** Section headings for the «Матрица режимов» screen, grouped by EFFECTIVE opening phase. */
+export const PHASE_SECTION_LABEL: Record<Acquisition, string> = {
+  new: 'Новые слова',
+  learning: 'Узнавание',
+  graduated: 'Выпущенные',
+}
+export const PHASE_SECTION_HINT: Record<Acquisition, string> = {
+  new: 'Новые слова — интро на первом знакомстве, без оценки.',
+  learning: 'Узнавание — сравнение термина с переводом на первых шагах лестницы.',
+  graduated: 'Выпущенные — вся практика; тонкая настройка порогами повторов.',
+}
+
 export const MODE_SETTINGS_SOURCE_LABEL: Record<ModeSettingsSource, string> = {
   global: 'общее',
   override: 'своё',

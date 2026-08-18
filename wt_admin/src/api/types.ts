@@ -538,9 +538,16 @@ export interface ModeSettingsRow {
   minSuccessfulReviews: number | null
   optionsPolicy: 'distant' | 'standard'
   source: ModeSettingsSource
+  /**
+   * This trainer's constructive minimum — the earliest phase its question can honestly be asked
+   * at (QA-20 «честная лестница»/passport наряд). Independent of `minAcquisition`, which is the
+   * admin's OWN setting and may (legacy data, a rollback) read below its own floor; the backend
+   * rejects a write below it with 422. Server-derived, never written.
+   */
+  floor: Acquisition
 }
-/** The row shape a PUT sends — `source` is server-derived, never written. */
-export type ModeSettingsRowInput = Omit<ModeSettingsRow, 'source'>
+/** The row shape a PUT sends — `source`/`floor` are server-derived, never written. */
+export type ModeSettingsRowInput = Omit<ModeSettingsRow, 'source' | 'floor'>
 export interface ModeSettingsMatrix {
   rows: ModeSettingsRow[]
 }

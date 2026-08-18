@@ -20,11 +20,20 @@ async function mountView() {
   return { w, router }
 }
 
-/** The row whose wire name (`.wire`) matches, from a mounted table. */
+/** The row whose wire name (`.wire`) matches, from a mounted table. Re-locate after any edit
+ *  that can move a row between sections — each section is a separate `<table>`, so the row's DOM
+ *  node is a fresh one once it relocates, not a re-keyed match of the old one. */
 function rowFor(w: ReturnType<typeof mount>, wire: string) {
   const row = w.findAll('tbody tr').find((r) => r.find('.wire').text() === wire)
   if (!row) throw new Error(`no row for ${wire}`)
   return row
+}
+
+/** The heading of the `.phase-section` a row currently renders inside. */
+function sectionTitleFor(w: ReturnType<typeof mount>, wire: string): string {
+  const el = rowFor(w, wire).element.closest('.phase-section')
+  if (!el) throw new Error(`row for ${wire} is not inside a .phase-section`)
+  return el.querySelector('h3')?.textContent?.trim() ?? ''
 }
 
 async function someUserId(): Promise<string> {
@@ -79,6 +88,81 @@ describe('ModeSettingsMatrixView (global scope)', () => {
     const [, introStep, introReviews] = introRow.findAll('input[type="number"]')
     expect((introStep.element as HTMLInputElement).disabled).toBe(true)
     expect((introReviews.element as HTMLInputElement).disabled).toBe(true)
+  })
+})
+
+describe('ModeSettingsMatrixView (sectioning by effective opening phase)', () => {
+  it('groups rows under their effective-phase section heading', async () => {
+    const { w } = await mountView()
+
+    // Shipped defaults: intro floors at `new`, multiple_choice at `learning`, everything else
+    // (cloze here) at `graduated` — see ModePassport on the backend, mirrored in the mock.
+    expect(sectionTitleFor(w, 'intro')).toBe('Новые слова')
+    expect(sectionTitleFor(w, 'multiple_choice')).toBe('Узнавание')
+    expect(sectionTitleFor(w, 'cloze')).toBe('Выпущенные')
+  })
+
+  it('disables "Открывается с" options below a mode\'s passport floor, offers the rest', async () => {
+    const { w } = await mountView()
+
+    // speaking's floor is `graduated` — nothing below it is a real choice.
+    const speaking = rowFor(w, 'speaking').find('select')
+    const speakingOptions = Object.fromEntries(
+      speaking.findAll('option').map((o) => [(o.element as HTMLOptionElement).value, (o.element as HTMLOptionElement).disabled]),
+    )
+    expect(speakingOptions).toEqual({ new: true, learning: true, graduated: false })
+
+    // multiple_choice's floor is `learning` — `new` is unreachable, `learning`/`graduated` are not.
+    const mc = rowFor(w, 'multiple_choice').find('select')
+    const mcOptions = Object.fromEntries(
+      mc.findAll('option').map((o) => [(o.element as HTMLOptionElement).value, (o.element as HTMLOptionElement).disabled]),
+    )
+    expect(mcOptions).toEqual({ new: true, learning: false, graduated: false })
+  })
+
+  it('shows a legacy row below its floor under its effective phase, flagged "фактически"', async () => {
+    // Simulates data written before the passport floor existed (or by a rolled-back build) — the
+    // mock, like the real backend before this наряд, does not itself refuse the write; only the
+    // admin screen has to make sense of what is already on disk.
+    await mock.saveModeSettingsRow({
+      mode: 'listening',
+      enabled: true,
+      position: 5,
+      minAcquisition: 'new',
+      minLearningStep: null,
+      minSuccessfulReviews: null,
+      optionsPolicy: 'standard',
+    })
+
+    const { w } = await mountView()
+
+    // listening's floor is `graduated`, so a `new` reading opens it nowhere — it renders under
+    // the section it ACTUALLY opens in, not the one its stored value names.
+    expect(sectionTitleFor(w, 'listening')).toBe('Выпущенные')
+    expect(rowFor(w, 'listening').text()).toContain('фактически: выпущено')
+  })
+
+  it('moving a row to a new phase and saving relocates it there', async () => {
+    const { w } = await mountView()
+
+    // multiple_choice ships at `learning` (its own floor); graduated is above its floor, so
+    // moving it there is a legitimate change, not one the floor guard would refuse.
+    expect(sectionTitleFor(w, 'multiple_choice')).toBe('Узнавание')
+    const before = rowFor(w, 'multiple_choice')
+    await before.find('select').setValue('graduated')
+    await flushPromises()
+
+    // Live move: the section reflects the edited draft before Save is even clicked.
+    expect(sectionTitleFor(w, 'multiple_choice')).toBe('Выпущенные')
+
+    // The row is now inside a different <table> — re-locate before interacting with it further.
+    const moved = rowFor(w, 'multiple_choice')
+    await moved.findAll('button').find((b) => b.text() === 'Сохранить')!.trigger('click')
+    await flushPromises()
+
+    expect(sectionTitleFor(w, 'multiple_choice')).toBe('Выпущенные')
+    const saved = (await mock.getModeSettingsMatrix()).rows.find((r) => r.mode === 'multiple_choice')!
+    expect(saved.minAcquisition).toBe('graduated')
   })
 })
 

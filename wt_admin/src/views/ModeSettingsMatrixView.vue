@@ -10,10 +10,17 @@
  * is asked for weeks afterwards, and an accidental autosave here is not the kind of mistake that
  * should be one keystroke away from shipping.
  */
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api'
-import { ACQUISITION_LABEL, MODE_SETTINGS_SOURCE_LABEL, modeLabel } from '@/utils/labels'
+import {
+  ACQUISITION_LABEL,
+  ACQUISITION_RANK,
+  MODE_SETTINGS_SOURCE_LABEL,
+  PHASE_SECTION_HINT,
+  PHASE_SECTION_LABEL,
+  modeLabel,
+} from '@/utils/labels'
 import type { Acquisition, ExerciseMode, ModeSettingsRow, UserRow } from '@/api/types'
 import Badge from '@/components/Badge.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
@@ -167,13 +174,64 @@ const columns: Column[] = [
   { key: 'mode', label: 'Режим', width: '18%' },
   { key: 'enabled', label: 'Вкл', align: 'center', width: '54px' },
   { key: 'position', label: 'Позиция', align: 'right', width: '84px' },
-  { key: 'min_acquisition', label: 'Рубеж', width: '150px' },
+  { key: 'min_acquisition', label: 'Открывается с', width: '170px' },
   { key: 'min_learning_step', label: 'Шаг', align: 'right', width: '76px' },
   { key: 'min_successful_reviews', label: 'Повторы', align: 'right', width: '90px' },
   { key: 'options_policy', label: 'Опции', width: '130px' },
   { key: 'source', label: 'Источник', width: '84px' },
   { key: 'actions', label: '' },
 ]
+
+// ── Sectioning by EFFECTIVE opening phase (max(passport floor, configured threshold)) ──────────
+
+/** What the row is CONFIGURED to right now — the live draft while it's being edited, else the
+ *  saved value. Reading through the draft is what makes changing the selector move the row
+ *  between sections immediately, before the row is saved. */
+function configuredPhase(row: ModeSettingsRow): Acquisition {
+  return drafts[row.mode]?.minAcquisition ?? row.minAcquisition
+}
+
+/** A legacy row (written before the passport floor existed, or by a rolled-back build) can still
+ *  read below its own mode's floor — the backend refuses new writes below it, but never rewrites
+ *  data behind an admin's back. Such a row is asked for by a phase it cannot actually open in. */
+function isBelowFloor(row: ModeSettingsRow): boolean {
+  return ACQUISITION_RANK[configuredPhase(row)] < ACQUISITION_RANK[row.floor]
+}
+
+/** The phase this row ACTUALLY opens in — the configured threshold, floored at the passport. */
+function effectivePhase(row: ModeSettingsRow): Acquisition {
+  return isBelowFloor(row) ? row.floor : configuredPhase(row)
+}
+
+/** Is this "Открывается с" option unreachable for this row — below its mode's passport floor? */
+function optionBelowFloor(row: ModeSettingsRow, option: Acquisition): boolean {
+  return ACQUISITION_RANK[option] < ACQUISITION_RANK[row.floor]
+}
+
+function floorTooltip(row: ModeSettingsRow, option: Acquisition): string {
+  return `«${ACQUISITION_LABEL[option]}» недоступно для «${modeLabel(row.mode)}»: минимум — «${ACQUISITION_LABEL[row.floor]}».`
+}
+
+const PHASE_ORDER: Acquisition[] = ['new', 'learning', 'graduated']
+
+interface Section {
+  phase: Acquisition
+  title: string
+  hint: string
+  rows: ModeSettingsRow[]
+}
+
+/** Rows keep the server's position-then-mode order within each section — `filter` preserves it.
+ *  An empty phase (no row opens there, in this scope) drops out rather than rendering an empty
+ *  card. */
+const sections = computed<Section[]>(() =>
+  PHASE_ORDER.map((phase) => ({
+    phase,
+    title: PHASE_SECTION_LABEL[phase],
+    hint: PHASE_SECTION_HINT[phase],
+    rows: rows.value.filter((row) => effectivePhase(row) === phase),
+  })).filter((section) => section.rows.length > 0),
+)
 </script>
 
 <template>
@@ -201,113 +259,132 @@ const columns: Column[] = [
     <StateBlock v-if="loading && rows.length === 0" kind="loading" />
     <StateBlock v-else-if="error && rows.length === 0" kind="error" :message="error" retryable @retry="load" />
 
-    <PaperCard v-else :pad="false">
-      <DataTable :columns="columns" :rows="rows" :row-key="(r) => r.mode">
-        <template #cell-mode="{ row }">
-          <div class="mode-cell">
-            <span class="name">{{ modeLabel(row.mode) }}</span>
-            <span class="wire faint tnum">{{ row.mode }}</span>
-          </div>
-        </template>
-        <template #cell-enabled="{ row }">
-          <input
-            v-if="drafts[row.mode]"
-            v-model="drafts[row.mode].enabled"
-            type="checkbox"
-            :disabled="rowSaving[row.mode]"
-          />
-        </template>
-        <template #cell-position="{ row }">
-          <input
-            v-if="drafts[row.mode]"
-            v-model.number="drafts[row.mode].position"
-            type="number"
-            min="0"
-            step="1"
-            class="num"
-            :disabled="rowSaving[row.mode]"
-          />
-        </template>
-        <template #cell-min_acquisition="{ row }">
-          <select
-            v-if="drafts[row.mode]"
-            v-model="drafts[row.mode].minAcquisition"
-            class="field"
-            :disabled="rowSaving[row.mode]"
-            @change="onAcquisitionChange(row.mode)"
-          >
-            <option v-for="(label, key) in ACQUISITION_LABEL" :key="key" :value="key">{{ label }}</option>
-          </select>
-        </template>
-        <template #cell-min_learning_step="{ row }">
-          <input
-            v-if="drafts[row.mode]"
-            v-model.number="drafts[row.mode].minLearningStep"
-            type="number"
-            min="0"
-            max="2"
-            step="1"
-            class="num"
-            :disabled="rowSaving[row.mode] || drafts[row.mode].minAcquisition !== 'learning'"
-            :placeholder="drafts[row.mode].minAcquisition === 'learning' ? '0–2' : '—'"
-          />
-        </template>
-        <template #cell-min_successful_reviews="{ row }">
-          <input
-            v-if="drafts[row.mode]"
-            v-model.number="drafts[row.mode].minSuccessfulReviews"
-            type="number"
-            min="0"
-            step="1"
-            class="num"
-            :disabled="rowSaving[row.mode] || drafts[row.mode].minAcquisition !== 'graduated'"
-            :placeholder="drafts[row.mode].minAcquisition === 'graduated' ? 'нет' : '—'"
-          />
-        </template>
-        <template #cell-options_policy="{ row }">
-          <select
-            v-if="drafts[row.mode]"
-            v-model="drafts[row.mode].optionsPolicy"
-            class="field"
-            :disabled="rowSaving[row.mode]"
-          >
-            <option value="standard">обычные</option>
-            <option value="distant">далёкие</option>
-          </select>
-        </template>
-        <template #cell-source="{ row }">
-          <Badge v-if="drafts[row.mode]" :tone="drafts[row.mode].source === 'override' ? 'unsure' : 'neutral'">
-            {{ MODE_SETTINGS_SOURCE_LABEL[drafts[row.mode].source] }}
-          </Badge>
-        </template>
-        <template #cell-actions="{ row }">
-          <div class="row-actions">
-            <PaperButton small :disabled="!isDirty(row) || rowSaving[row.mode]" @click="saveRow(row.mode)">
-              {{ rowSaving[row.mode] ? '…' : 'Сохранить' }}
-            </PaperButton>
-            <PaperButton
-              v-if="isDirty(row)"
-              variant="ghost"
-              small
-              :disabled="rowSaving[row.mode]"
-              @click="resetDraft(row)"
-            >
-              Отменить
-            </PaperButton>
-            <PaperButton
-              v-if="userId && drafts[row.mode]?.source === 'override'"
-              variant="ghost"
-              small
-              :disabled="rowResetting[row.mode]"
-              @click="resetOverride(row.mode)"
-            >
-              {{ rowResetting[row.mode] ? '…' : 'Сбросить' }}
-            </PaperButton>
-          </div>
-          <p v-if="rowError[row.mode]" class="row-err">{{ rowError[row.mode] }}</p>
-        </template>
-      </DataTable>
-    </PaperCard>
+    <template v-else>
+      <section v-for="section in sections" :key="section.phase" class="phase-section">
+        <div class="section-head">
+          <h3 class="serif">{{ section.title }}</h3>
+          <p class="faint sub">{{ section.hint }}</p>
+        </div>
+        <PaperCard :pad="false">
+          <DataTable :columns="columns" :rows="section.rows" :row-key="(r) => r.mode">
+            <template #cell-mode="{ row }">
+              <div class="mode-cell">
+                <span class="name">{{ modeLabel(row.mode) }}</span>
+                <span class="wire faint tnum">{{ row.mode }}</span>
+              </div>
+            </template>
+            <template #cell-enabled="{ row }">
+              <input
+                v-if="drafts[row.mode]"
+                v-model="drafts[row.mode].enabled"
+                type="checkbox"
+                :disabled="rowSaving[row.mode]"
+              />
+            </template>
+            <template #cell-position="{ row }">
+              <input
+                v-if="drafts[row.mode]"
+                v-model.number="drafts[row.mode].position"
+                type="number"
+                min="0"
+                step="1"
+                class="num"
+                :disabled="rowSaving[row.mode]"
+              />
+            </template>
+            <template #cell-min_acquisition="{ row }">
+              <select
+                v-if="drafts[row.mode]"
+                v-model="drafts[row.mode].minAcquisition"
+                class="field"
+                :disabled="rowSaving[row.mode]"
+                @change="onAcquisitionChange(row.mode)"
+              >
+                <option
+                  v-for="(label, key) in ACQUISITION_LABEL"
+                  :key="key"
+                  :value="key"
+                  :disabled="optionBelowFloor(row, key)"
+                  :title="optionBelowFloor(row, key) ? floorTooltip(row, key) : undefined"
+                >
+                  {{ label }}
+                </option>
+              </select>
+              <p v-if="isBelowFloor(row)" class="legacy-note" :title="floorTooltip(row, configuredPhase(row))">
+                фактически: {{ ACQUISITION_LABEL[row.floor] }}
+              </p>
+            </template>
+            <template #cell-min_learning_step="{ row }">
+              <input
+                v-if="drafts[row.mode]"
+                v-model.number="drafts[row.mode].minLearningStep"
+                type="number"
+                min="0"
+                max="2"
+                step="1"
+                class="num"
+                :disabled="rowSaving[row.mode] || drafts[row.mode].minAcquisition !== 'learning'"
+                :placeholder="drafts[row.mode].minAcquisition === 'learning' ? '0–2' : '—'"
+              />
+            </template>
+            <template #cell-min_successful_reviews="{ row }">
+              <input
+                v-if="drafts[row.mode]"
+                v-model.number="drafts[row.mode].minSuccessfulReviews"
+                type="number"
+                min="0"
+                step="1"
+                class="num"
+                :disabled="rowSaving[row.mode] || drafts[row.mode].minAcquisition !== 'graduated'"
+                :placeholder="drafts[row.mode].minAcquisition === 'graduated' ? 'нет' : '—'"
+              />
+            </template>
+            <template #cell-options_policy="{ row }">
+              <select
+                v-if="drafts[row.mode]"
+                v-model="drafts[row.mode].optionsPolicy"
+                class="field"
+                :disabled="rowSaving[row.mode]"
+              >
+                <option value="standard">обычные</option>
+                <option value="distant">далёкие</option>
+              </select>
+            </template>
+            <template #cell-source="{ row }">
+              <Badge v-if="drafts[row.mode]" :tone="drafts[row.mode].source === 'override' ? 'unsure' : 'neutral'">
+                {{ MODE_SETTINGS_SOURCE_LABEL[drafts[row.mode].source] }}
+              </Badge>
+            </template>
+            <template #cell-actions="{ row }">
+              <div class="row-actions">
+                <PaperButton small :disabled="!isDirty(row) || rowSaving[row.mode]" @click="saveRow(row.mode)">
+                  {{ rowSaving[row.mode] ? '…' : 'Сохранить' }}
+                </PaperButton>
+                <PaperButton
+                  v-if="isDirty(row)"
+                  variant="ghost"
+                  small
+                  :disabled="rowSaving[row.mode]"
+                  @click="resetDraft(row)"
+                >
+                  Отменить
+                </PaperButton>
+                <PaperButton
+                  v-if="userId && drafts[row.mode]?.source === 'override'"
+                  variant="ghost"
+                  small
+                  :disabled="rowResetting[row.mode]"
+                  @click="resetOverride(row.mode)"
+                >
+                  {{ rowResetting[row.mode] ? '…' : 'Сбросить' }}
+                </PaperButton>
+              </div>
+              <p v-if="rowError[row.mode]" class="row-err">{{ rowError[row.mode] }}</p>
+            </template>
+          </DataTable>
+        </PaperCard>
+      </section>
+    </template>
   </div>
 </template>
 
@@ -337,6 +414,29 @@ const columns: Column[] = [
   font-size: 12.5px;
   padding-bottom: 9px;
   max-width: 420px;
+}
+.phase-section {
+  margin-bottom: var(--s16);
+}
+.phase-section:last-child {
+  margin-bottom: 0;
+}
+.section-head {
+  margin-bottom: var(--s12);
+}
+.section-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.section-head .sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+.legacy-note {
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: var(--destructive-text, #9a4b3f);
+  cursor: help;
 }
 .mode-cell {
   display: flex;

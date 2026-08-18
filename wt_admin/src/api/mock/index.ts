@@ -1,6 +1,7 @@
 // Mock adapter: implements the camelCased admin contract over the seed data.
 // endpoints route here when `useMocks` is true (no backend configured).
 import type {
+  Acquisition,
   Admin,
   CallPurpose,
   CollectionDetail,
@@ -95,17 +96,32 @@ const MODE_SETTINGS_ORDER: ExerciseMode[] = [
   'pick_correct',
   'intro',
 ]
+// Mirrors the backend's ModePassport::floorFor — the constructive minimum phase a trainer's
+// question can honestly be asked at. Kept here, not derived, for the same reason the mock has no
+// database: this file has nothing to read the real passport from.
+const MODE_FLOOR: Record<ExerciseMode, Acquisition> = {
+  intro: 'new',
+  multiple_choice: 'learning',
+  word_bank: 'graduated',
+  cloze: 'graduated',
+  scramble: 'graduated',
+  pick_correct: 'graduated',
+  typing: 'graduated',
+  listening: 'graduated',
+  dictation: 'graduated',
+  speaking: 'graduated',
+}
 const SHIPPED_MODE_SETTINGS: Record<ExerciseMode, ModeSettingsRowData> = {
-  intro: { enabled: false, position: 9, minAcquisition: 'new', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
-  multiple_choice: { enabled: true, position: 0, minAcquisition: 'learning', minLearningStep: 1, minSuccessfulReviews: null, optionsPolicy: 'distant' },
-  word_bank: { enabled: true, position: 1, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
-  cloze: { enabled: true, position: 2, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
-  scramble: { enabled: true, position: 3, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
-  typing: { enabled: true, position: 4, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard' },
-  listening: { enabled: true, position: 5, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard' },
-  speaking: { enabled: false, position: 6, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
-  dictation: { enabled: false, position: 7, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 20, optionsPolicy: 'standard' },
-  pick_correct: { enabled: false, position: 8, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  intro: { enabled: false, position: 9, minAcquisition: 'new', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.intro },
+  multiple_choice: { enabled: true, position: 0, minAcquisition: 'learning', minLearningStep: 1, minSuccessfulReviews: null, optionsPolicy: 'distant', floor: MODE_FLOOR.multiple_choice },
+  word_bank: { enabled: true, position: 1, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.word_bank },
+  cloze: { enabled: true, position: 2, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.cloze },
+  scramble: { enabled: true, position: 3, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.scramble },
+  typing: { enabled: true, position: 4, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard', floor: MODE_FLOOR.typing },
+  listening: { enabled: true, position: 5, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard', floor: MODE_FLOOR.listening },
+  speaking: { enabled: false, position: 6, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.speaking },
+  dictation: { enabled: false, position: 7, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 20, optionsPolicy: 'standard', floor: MODE_FLOOR.dictation },
+  pick_correct: { enabled: false, position: 8, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard', floor: MODE_FLOOR.pick_correct },
 }
 const globalModeSettings: Record<ExerciseMode, ModeSettingsRowData> = structuredClone(SHIPPED_MODE_SETTINGS)
 const modeSettingsOverrides = new Map<string, Partial<Record<ExerciseMode, ModeSettingsRowData>>>()
@@ -352,7 +368,9 @@ export const mock = {
   },
   async saveModeSettingsRow(row: ModeSettingsRowInput): Promise<ModeSettingsMatrix> {
     const { mode, ...data } = row
-    globalModeSettings[mode] = data
+    // `floor` is server-derived and never arrives in the write payload — the mock stands in for
+    // the backend's ModePassport here, exactly as the real write handler would re-derive it.
+    globalModeSettings[mode] = { ...data, floor: MODE_FLOOR[mode] }
     return modeSettingsMatrixFor()
   },
   async getUserModeSettingsMatrix(id: string): Promise<ModeSettingsMatrix> {
@@ -363,7 +381,7 @@ export const mock = {
     findUser(id)
     const { mode, ...data } = row
     const own = modeSettingsOverrides.get(id) ?? {}
-    own[mode] = data
+    own[mode] = { ...data, floor: MODE_FLOOR[mode] }
     modeSettingsOverrides.set(id, own)
     return modeSettingsMatrixFor(id)
   },
