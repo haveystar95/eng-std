@@ -13,6 +13,7 @@ use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
+use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
@@ -31,6 +32,7 @@ use App\Modules\Generation\Domain\Repository\PracticeDialogMessageRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
+use App\Modules\Generation\Infrastructure\Adapter\ObservabilityLoggedResponseReader;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCollectionGenerator;
@@ -74,6 +76,7 @@ final class GenerationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(GenerationRequestRepository::class, EloquentGenerationRequestRepository::class);
+        $this->app->bind(LoggedResponseReader::class, ObservabilityLoggedResponseReader::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
         $this->app->bind(RecordsTermEnrichment::class, EloquentTermEnrichmentLog::class);

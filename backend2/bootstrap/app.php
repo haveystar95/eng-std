@@ -12,6 +12,7 @@ use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
 use App\Modules\Generation\Presentation\Console\ExpireStaleDialogsCommand;
 use App\Modules\Generation\Presentation\Console\GenerateCollectionCommand;
+use App\Modules\Generation\Presentation\Console\RecoverLostTermsCommand;
 use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
@@ -42,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         AuditTranslationKeysCommand::class,
         BackfillEnrichmentSuppressionsCommand::class,
         RepairContentLanguageCommand::class,
+        RecoverLostTermsCommand::class,
         SmokePracticeDialogCommand::class,
         ExpireStaleDialogsCommand::class,
         GrantPremiumCommand::class,
