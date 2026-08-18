@@ -211,3 +211,65 @@ it('routes the coverage key through the grader instead of the equality stages', 
 it('keeps the exact policy as the default, so no existing key changes meaning', function () {
     expect((new ExpectedAnswer(['reservation']))->policy)->toBe(MatchPolicy::Exact);
 });
+
+// ── suffix tolerance (QA-20) ──────────────────────────────────────────────────
+//
+// Live device finding: target "salary expectations" spoken correctly, but the on-device
+// recogniser transcribed "salary expectation" — the channel ate the trailing -s — and the app
+// showed a false "Not quite" for an answer the learner actually got right. Forgiving the CHANNEL
+// is exactly this trainer's frame (see the `Speaking` case docblock); this is one more instance
+// of it, narrow enough that it does not become the typo leniency this mode deliberately lacks
+// (the "forgives no typos" test above, «bear» for «bare», must keep failing).
+
+it('forgives a dropped trailing -s on the word form, in either direction', function () {
+    $grade = fn (string $said, string $target) => $this->grader->grade(
+        new Answer($said, usedHint: false, latencyMs: 3000),
+        ExerciseMode::Speaking,
+        new ExpectedAnswer([$target]),
+        LatencyBaseline::insufficient(),
+    );
+
+    expect($grade('salary expectation', 'salary expectations'))->toBe(Grade::Good)
+        ->and($grade('expectations', 'expectation'))->toBe(Grade::Good);
+});
+
+it('does not stretch the tolerance past one tolerated tail, or to a same-length word', function () {
+    $grade = fn (string $said, string $target) => $this->grader->grade(
+        new Answer($said, usedHint: false, latencyMs: 3000),
+        ExerciseMode::Speaking,
+        new ExpectedAnswer([$target]),
+        LatencyBaseline::insufficient(),
+    );
+
+    // "expect" vs "expectations" differs by "ations", not by -s/-es/-'s.
+    expect($grade('expect', 'expectations'))->toBe(Grade::Again)
+        // Same length, not a suffix relation at all — the existing no-typos test, restated here
+        // to keep both facts about "bear"/"bare" next to each other.
+        ->and($grade('bear', 'bare'))->toBe(Grade::Again);
+});
+
+it('caps at hard, never good, on a mode that has its own (typo) leniency for the same input', function () {
+    // Typing/Listening forgive "expectation" for "expectations" too, but via stage-3 typo
+    // leniency, which caps at `hard` — the speaking-only suffix tolerance must not leak the full
+    // `good` grade into a mode that never asked for it.
+    $key = new ExpectedAnswer(['salary expectations']);
+
+    expect($this->grader->grade(new Answer('salary expectation'), ExerciseMode::Typing, $key, LatencyBaseline::insufficient()))
+        ->toBe(Grade::Hard)
+        ->and($this->grader->grade(new Answer('salary expectation'), ExerciseMode::MultipleChoice, $key, LatencyBaseline::insufficient()))
+        ->toBe(Grade::Again);
+});
+
+it('forgives the same dropped -s inside a spoken example sentence too', function () {
+    // Short sentence on purpose: without the per-word tolerance, "expectation" for "expectations"
+    // is a plain miss and 2 of 3 words covered (67%) already falls under the 70% floor — this only
+    // passes because the tolerant match keeps the word "found".
+    $grade = $this->grader->grade(
+        new Answer('Salary expectation rise', usedHint: false, latencyMs: 6000),
+        ExerciseMode::Speaking,
+        new ExpectedAnswer(['Salary expectations rise'], isPhrase: true, policy: MatchPolicy::Coverage),
+        LatencyBaseline::insufficient(),
+    );
+
+    expect($grade)->toBe(Grade::Good);
+});

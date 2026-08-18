@@ -44,6 +44,7 @@ final class AnswerGrader
     public function __construct(
         private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private readonly SpokenCoverage $coverage = new SpokenCoverage(),
+        private readonly SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
     ) {}
 
     public function grade(Answer $answer, ExerciseMode $mode, ExpectedAnswer $expected, LatencyBaseline $baseline): Grade
@@ -64,8 +65,17 @@ final class AnswerGrader
         $response = $this->normalizer->normalize($answer->response);
 
         // Stages 1 & 2: exact after normalisation, against the target OR any accepted synonym.
+        // Speaking additionally forgives a dropped trailing -s/-es/-'s (QA-20): a recogniser eats
+        // that sound far more than it invents a whole different word, so "salary expectation" for
+        // "salary expectations" is the channel, not a lapse — see SpokenSuffixTolerance. No other
+        // mode gets this: everywhere else a one-character difference is typed by the learner, not
+        // heard by a microphone, and stage 3 already has its own (stricter) leniency for that.
         foreach ($expected->accepted as $candidate) {
-            if ($response === $this->normalizer->normalize($candidate)) {
+            $normalizedCandidate = $this->normalizer->normalize($candidate);
+            if ($response === $normalizedCandidate) {
+                return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
+            }
+            if ($mode === ExerciseMode::Speaking && $this->suffixTolerance->equal($response, $normalizedCandidate)) {
                 return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
             }
         }

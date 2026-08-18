@@ -43,7 +43,10 @@ final readonly class SpokenCoverage
      */
     public const MIN_COVERAGE = 0.7;
 
-    public function __construct(private LexicalNormalizer $normalizer = new LexicalNormalizer()) {}
+    public function __construct(
+        private LexicalNormalizer $normalizer = new LexicalNormalizer(),
+        private SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
+    ) {}
 
     /** Was enough of [$expected] present in [$response]? */
     public function covers(string $response, string $expected): bool
@@ -67,13 +70,38 @@ final readonly class SpokenCoverage
 
         $found = 0;
         foreach ($wanted as $word) {
-            if (($available[$word] ?? 0) > 0) {
-                $available[$word]--;
+            if ($this->consume($available, $word)) {
                 $found++;
             }
         }
 
         return $found / count($wanted);
+    }
+
+    /**
+     * Marks one occurrence of $word as used in $available and returns true — exact first, then a
+     * suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it
+     * invents or swaps a whole word). $available is small (one sentence), so a linear scan for the
+     * tolerant match costs nothing that matters here.
+     *
+     * @param  array<string, int>  $available
+     */
+    private function consume(array &$available, string $word): bool
+    {
+        if (($available[$word] ?? 0) > 0) {
+            $available[$word]--;
+
+            return true;
+        }
+        foreach ($available as $candidate => $count) {
+            if ($count > 0 && $this->suffixTolerance->equal($word, $candidate)) {
+                $available[$candidate]--;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

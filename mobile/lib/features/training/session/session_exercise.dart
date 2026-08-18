@@ -345,6 +345,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
                 _card.answer,
                 variants: _card.acceptedVariants,
                 forgiveTypos: _mode.forgivesTypos,
+                spokenSuffixTolerance: _isSpeaking,
               );
     switch (verdict) {
       case LocalCheck.correct:

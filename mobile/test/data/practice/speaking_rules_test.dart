@@ -102,4 +102,52 @@ void main() {
       expect(SpokenAnswer.minCoverage, 0.7);
     });
   });
+
+  group('suffix tolerance (QA-20)', () {
+    // Live device finding: target "salary expectations" spoken correctly, but the on-device
+    // recogniser transcribed "salary expectation" — the channel ate the trailing -s — and the app
+    // showed a false "Not quite" for an answer the learner actually got right. Mirror of
+    // `SpeakingGateTest.php`'s "suffix tolerance (QA-20)" group; every case here has a twin there.
+
+    test('forgives a dropped trailing -s on the word form, in either direction', () {
+      expect(
+        SessionGrader.check('salary expectation', 'salary expectations', spokenSuffixTolerance: true),
+        LocalCheck.correct,
+      );
+      expect(
+        SessionGrader.check('expectations', 'expectation', spokenSuffixTolerance: true),
+        LocalCheck.correct,
+      );
+    });
+
+    test('does not stretch the tolerance past one tolerated tail, or to a same-length word', () {
+      // "expect" vs "expectations" differs by "ations", not by -s/-es/-'s.
+      expect(
+        SessionGrader.check('expect', 'expectations', spokenSuffixTolerance: true),
+        LocalCheck.wrong,
+      );
+      // Same length, not a suffix relation at all — the existing no-typos behaviour for speaking.
+      expect(
+        SessionGrader.check('bear', 'bare', spokenSuffixTolerance: true, forgiveTypos: false),
+        LocalCheck.wrong,
+      );
+    });
+
+    test('is off by default — every non-speaking call site keeps its own (typo) leniency only', () {
+      // Same input as the first case, but without the flag speaking passes: it still gets the
+      // ordinary typo leniency (capped at «Почти»), never the full «Верно» the flag grants.
+      expect(SessionGrader.check('salary expectation', 'salary expectations'), LocalCheck.typo);
+      expect(
+        SessionGrader.check('salary expectation', 'salary expectations', forgiveTypos: false),
+        LocalCheck.wrong,
+      );
+    });
+
+    test('forgives the same dropped -s inside a spoken example sentence too', () {
+      // Short sentence on purpose: without the per-word tolerance, "expectation" for
+      // "expectations" is a plain miss and 2 of 3 words covered (67%) already falls under the 70%
+      // floor — this only passes because the tolerant match keeps the word "found".
+      expect(SessionGrader.covers('Salary expectation rise', 'Salary expectations rise'), isTrue);
+    });
+  });
 }

@@ -53,19 +53,25 @@ abstract final class SessionGrader {
   /// also grades every mode through one grader.
   ///
   /// Staged exactly like the server's [AnswerGrader]: an exact match on ANY accepted form first,
-  /// then a one-character typo against any of them. Doing it in that order matters — checking typos
-  /// per-candidate before exhausting the exact matches could report «Почти» for something that is
-  /// simply a correct variant.
+  /// then (speaking only) a suffix-tolerant match, then a one-character typo against any of them.
+  /// Doing it in that order matters — checking typos per-candidate before exhausting the exact
+  /// matches could report «Почти» for something that is simply a correct variant.
   /// [forgiveTypos] mirrors the server's `ExerciseMode::forgivesTypos()`. Pass false whenever the
   /// answer was TAPPED or ASSEMBLED rather than typed: there is no slipped key to forgive, and on
   /// pick_correct a one-character difference is usually the exact thing the card tests ("Could you
   /// takes a photo…" against "Could you take a photo…"). Forgiving it there ticks the broken sentence
   /// as correct — which is what the device caught.
+  /// [spokenSuffixTolerance] mirrors the server's speaking-only leniency for a dropped trailing
+  /// -s/-es/-'s (QA-20: "salary expectation" heard for "salary expectations" is the recogniser
+  /// eating a sound, not the learner not knowing the word). Pass true ONLY for a speaking word-form
+  /// answer — every other mode keeps its existing [forgiveTypos] leniency (capped at «Почти», never
+  /// «Верно») and must not additionally accept this at full grade.
   static LocalCheck check(
     String response,
     String answer, {
     List<String> variants = const [],
     bool forgiveTypos = true,
+    bool spokenSuffixTolerance = false,
   }) {
     final r = _normalize(response);
     if (r.isEmpty) return LocalCheck.wrong; // «Не помню» / blank
@@ -73,6 +79,11 @@ abstract final class SessionGrader {
     final accepted = [answer, ...variants].map(_normalize).where((a) => a.isNotEmpty);
     for (final a in accepted) {
       if (r == a) return LocalCheck.correct;
+    }
+    if (spokenSuffixTolerance) {
+      for (final a in accepted) {
+        if (_suffixTolerantEqual(r, a)) return LocalCheck.correct;
+      }
     }
     if (!forgiveTypos) return LocalCheck.wrong;
     for (final a in accepted) {
@@ -104,12 +115,27 @@ abstract final class SessionGrader {
 
     var found = 0;
     for (final word in wanted) {
-      if ((available[word] ?? 0) > 0) {
-        available[word] = available[word]! - 1;
-        found++;
-      }
+      if (_consume(available, word)) found++;
     }
     return found / wanted.length;
+  }
+
+  /// Marks one occurrence of [word] as used in [available] and returns true — exact first, then a
+  /// suffix-tolerant match (QA-20: a recogniser drops a trailing sibilant far more than it invents
+  /// or swaps a whole word). [available] is one sentence's worth of words, so a linear scan for the
+  /// tolerant match costs nothing that matters here.
+  static bool _consume(Map<String, int> available, String word) {
+    if ((available[word] ?? 0) > 0) {
+      available[word] = available[word]! - 1;
+      return true;
+    }
+    for (final candidate in available.keys.toList()) {
+      if ((available[candidate] ?? 0) > 0 && _suffixTolerantEqual(word, candidate)) {
+        available[candidate] = available[candidate]! - 1;
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Was enough of [expected] said? [SpokenAnswer.minCoverage] is the shared threshold.
@@ -179,6 +205,23 @@ abstract final class SessionGrader {
   static bool _isTypo(String response, String candidate) {
     if (candidate.length < _minTypoLength) return false;
     return response != candidate && _levenshtein(response, candidate) == 1;
+  }
+
+  /// The three ASR-channel tails this trainer forgives (QA-20), mirror of the server's
+  /// `SpokenSuffixTolerance`. `'s` is spelled ` s` (a separate trailing word) because by the time
+  /// either side reaches this check it has already been through [_normalize]/[_words], which turn
+  /// the apostrophe itself into a space.
+  static const List<String> _suffixTails = ['s', 'es', ' s'];
+
+  /// Same word (or phrase), once exactly one of the tolerated ASR tails is allowed for, in EITHER
+  /// direction. Deliberately narrow: "expect" vs "expectations" differs by "ations", not by one of
+  /// these, and stays a miss.
+  static bool _suffixTolerantEqual(String a, String b) {
+    if (a == b) return true;
+    for (final tail in _suffixTails) {
+      if ('$a$tail' == b || '$b$tail' == a) return true;
+    }
+    return false;
   }
 
   /// Lowercase, expand contractions, punctuation → space, whitespace collapsed, leading article
