@@ -145,11 +145,11 @@ deptrac:
     IdentityPresentation: [IdentityApplication, IdentityDomain, SharedDomain, GenerationApplication, Framework]
     CollectionsPresentation: [CollectionsApplication, CollectionsDomain, SharedDomain, Framework]
     LearningPresentation: [LearningApplication, LearningDomain, SharedDomain, Framework]
+    VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, Framework]
     # SharedInfra here is the EXPORT HEADER and nothing else (Shared\Infrastructure\Support): every
     # file we hand a human for proof-reading has to date itself, and a rule that must be re-typed per
     # command is one the second command gets wrong. Deliberate edge, added when the second exporting
     # command landed — the alternative was a copy of the rule, which is how it drifts.
-    VocabularyPresentation: [VocabularyApplication, VocabularyDomain, SharedDomain, SharedInfra, Framework]
     GenerationPresentation: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework]
 
 # Adding a module = add its four layers above and one ruleset entry.

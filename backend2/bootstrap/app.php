@@ -5,6 +5,7 @@ use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
+use App\Modules\Generation\Presentation\Console\AuditTranslationKeysCommand;
 use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
 use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
 use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
@@ -15,7 +16,6 @@ use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
-use App\Modules\Vocabulary\Presentation\Console\AuditTranslationKeysCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Auth\AuthenticationException;
@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         RepairEchoExamplesCommand::class,
         ApplyEnrichmentReviewCommand::class,
         AuditDistractorsCommand::class,
+        AuditTranslationKeysCommand::class,
         BackfillEnrichmentSuppressionsCommand::class,
         RepairContentLanguageCommand::class,
         SmokePracticeDialogCommand::class,
@@ -48,7 +49,6 @@ return Application::configure(basePath: dirname(__DIR__))
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,
         AdminCreateCommand::class,
-        AuditTranslationKeysCommand::class,
         RelabelRepairedTranslationsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {

@@ -12,6 +12,7 @@ use App\Modules\Collections\Application\Port\StorePreviewReader;
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Query\PendingCollectionImageReader;
+use App\Modules\Collections\Application\Query\TermDeckTitleReader;
 use App\Modules\Collections\Application\Port\CollectionCurator;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionCurator;
@@ -22,6 +23,7 @@ use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSyncReader
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentPendingCollectionImageReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentStoreCollectionsReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentStorePreviewReader;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentTermDeckTitleReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionsReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentUserCollectionTermsReader;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +38,7 @@ final class CollectionsServiceProvider extends ServiceProvider
         $this->app->bind(UserCollectionsReader::class, EloquentUserCollectionsReader::class);
         $this->app->bind(UserCollectionTermsReader::class, EloquentUserCollectionTermsReader::class);
         $this->app->bind(CollectionSyncReader::class, EloquentCollectionSyncReader::class);
+        $this->app->bind(TermDeckTitleReader::class, EloquentTermDeckTitleReader::class);
         $this->app->bind(PendingCollectionImageReader::class, EloquentPendingCollectionImageReader::class);
         $this->app->bind(StoreCollectionsReader::class, EloquentStoreCollectionsReader::class);
         $this->app->bind(StorePreviewReader::class, EloquentStorePreviewReader::class);

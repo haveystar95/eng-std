@@ -12,7 +12,8 @@ use App\Modules\Vocabulary\Application\Dto\TranslationKeyRow;
  *
  * It returns rows and judges nothing. What counts as a defective key is
  * {@see \App\Modules\Vocabulary\Domain\Service\AddresseeIsomorphism}'s to say, in one place; a
- * reader that filtered here would be a second copy of the rule, drifting from the first.
+ * reader that filtered here would be a second copy of the rule, drifting from the first. Where a
+ * term is USED is not here either — that is Collections' fact, read through its own port.
  */
 interface TranslationKeyReader
 {

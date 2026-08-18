@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Vocabulary\Presentation\Console;
+namespace App\Modules\Generation\Presentation\Console;
 
+use App\Modules\Generation\Application\Query\GetTranslationKeyAudit;
+use App\Modules\Generation\Application\Query\GetTranslationKeyAuditHandler;
 use App\Modules\Shared\Infrastructure\Support\ExportHeader;
-use App\Modules\Vocabulary\Application\Dto\TranslationKeyRow;
-use App\Modules\Vocabulary\Application\Query\TranslationKeyReader;
-use App\Modules\Vocabulary\Domain\Service\AddresseeIsomorphism;
 use Illuminate\Console\Command;
 
 /**
@@ -21,10 +20,16 @@ use Illuminate\Console\Command;
  * command is what finds the content that already shipped.
  *
  * It writes an export and NOTHING ELSE — no `--apply`, deliberately. The detector is coarse by
- * design ({@see AddresseeIsomorphism}): Russian carries a person in ways it cannot see, so a hit is
- * a candidate for the owner to read, never a verdict. A heuristic this rough with a write path would
- * quietly rewrite the very content it was asked to audit; the accepted corrections go back through
- * the existing apply mechanism, as a separate, deliberate pass.
+ * design (Vocabulary's `AddresseeIsomorphism`): Russian carries a person in ways it cannot see, so a
+ * hit is a candidate for the owner to read, never a verdict. A heuristic this rough with a write
+ * path would quietly rewrite the very content it was asked to audit; the accepted corrections go
+ * back through the existing apply mechanism, as a separate, deliberate pass.
+ *
+ * It lives in Generation with the other content audits because the report needs facts from TWO
+ * modules — Vocabulary judges the key, Collections says which decks ask it — and Generation's
+ * Application is the layer allowed to hold both. Vocabulary reaching into `collection_items` to
+ * fetch a deck title would have been the shorter route and a boundary violation deptrac cannot see,
+ * because the coupling would have been raw table names.
  */
 final class AuditTranslationKeysCommand extends Command
 {
@@ -35,31 +40,22 @@ final class AuditTranslationKeysCommand extends Command
 
     protected $description = 'Аудит переводов-ключей: термин адресует кого-то, а перевод — нет. Только выгрузка.';
 
-    public function handle(TranslationKeyReader $keys, AddresseeIsomorphism $rule): int
+    public function handle(GetTranslationKeyAuditHandler $audit): int
     {
         $termLang = $this->stringOption('term-lang') ?? 'en';
         $sourceLang = $this->stringOption('source-lang') ?? 'ru';
         $path = $this->stringOption('out') ?? storage_path('app/translation-keys-audit.md');
 
-        $rows = $keys->primaryKeys($termLang, $sourceLang);
+        $view = $audit(new GetTranslationKeyAudit($termLang, $sourceLang));
 
-        /** @var list<array{row: TranslationKeyRow, groups: list<string>}> $candidates */
-        $candidates = [];
-        foreach ($rows as $row) {
-            $groups = $rule->violations($row->termText, $row->translation);
-            if ($groups !== []) {
-                $candidates[] = ['row' => $row, 'groups' => $groups];
-            }
-        }
+        $this->writeExport($path, $view->rows, $view->seen, $termLang, $sourceLang);
 
-        $this->writeExport($path, $candidates, count($rows), $termLang, $sourceLang);
+        $this->line('просмотрено пар: ' . $view->seen);
+        $this->line('кандидатов на вычитку: ' . count($view->rows));
 
-        $this->line("просмотрено пар: " . count($rows));
-        $this->line("кандидатов на вычитку: " . count($candidates));
-
-        $byGroup = array_fill_keys(AddresseeIsomorphism::groupNames(), 0);
-        foreach ($candidates as $candidate) {
-            foreach ($candidate['groups'] as $group) {
+        $byGroup = array_fill_keys($view->groupNames, 0);
+        foreach ($view->rows as $row) {
+            foreach ($row->groups as $group) {
                 $byGroup[$group]++;
             }
         }
@@ -72,7 +68,7 @@ final class AuditTranslationKeysCommand extends Command
         return self::SUCCESS;
     }
 
-    /** @param list<array{row: TranslationKeyRow, groups: list<string>}> $candidates */
+    /** @param list<\App\Modules\Generation\Application\Dto\TranslationKeyAuditRow> $candidates */
     private function writeExport(string $path, array $candidates, int $seen, string $termLang, string $sourceLang): void
     {
         $dir = dirname($path);
@@ -82,7 +78,7 @@ final class AuditTranslationKeysCommand extends Command
         file_put_contents($path, $this->markdown($candidates, $seen, $termLang, $sourceLang));
     }
 
-    /** @param list<array{row: TranslationKeyRow, groups: list<string>}> $candidates */
+    /** @param list<\App\Modules\Generation\Application\Dto\TranslationKeyAuditRow> $candidates */
     private function markdown(array $candidates, int $seen, string $termLang, string $sourceLang): string
     {
         $header = ExportHeader::now();
@@ -114,15 +110,14 @@ final class AuditTranslationKeysCommand extends Command
 
         $lines[] = '| термин | текущий перевод | коллекция | группа-нарушение |';
         $lines[] = '|---|---|---|---|';
-        foreach ($candidates as $candidate) {
-            $row = $candidate['row'];
+        foreach ($candidates as $row) {
             $decks = $row->collections === [] ? '—' : implode(', ', $row->collections);
             $lines[] = sprintf(
                 '| %s | %s | %s | `%s` |',
                 $this->cell($row->termText),
                 $this->cell($row->translation),
                 $this->cell($decks),
-                implode('`, `', $candidate['groups']),
+                implode('`, `', $row->groups),
             );
         }
         $lines[] = '';
