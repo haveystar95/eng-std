@@ -169,8 +169,8 @@ final class EloquentAdminLadderReader implements AdminLadderReader
 
     public function events(string $userId, int $limit): array
     {
-        // Each log is read in ITS OWN truthful order — reviews by client_seq, intros by the only
-        // time they have — and only then merged for display.
+        // Each log is read in ITS OWN truthful order — reviews by client_seq, intros and triages by
+        // the only time they have — and only then merged for display.
         $reviews = DB::table('reviews as r')
             ->leftJoin('terms as t', 't.id', '=', 'r.term_id')
             ->where('r.user_id', $userId)
@@ -188,6 +188,17 @@ final class EloquentAdminLadderReader implements AdminLadderReader
             ->orderByDesc('e.shown_at')
             ->limit($limit)
             ->get(['e.term_id', 'e.shown_at', 't.text']);
+
+        // A «знаю»/«не знаю»/«не уверен» swipe is how a word can leave the ladder (or skip its first
+        // rung) without ever being answered — without this, the pairs table shows a known word that
+        // the feed has no event explaining.
+        $triages = DB::table('term_triages as x')
+            ->leftJoin('terms as t', 't.id', '=', 'x.term_id')
+            ->where('x.user_id', $userId)
+            ->orderByDesc('x.client_seq')
+            ->orderByDesc('x.decided_at')
+            ->limit($limit)
+            ->get(['x.id', 'x.term_id', 'x.verdict', 'x.client_seq', 'x.decided_at', 't.text']);
 
         $events = array_map(static fn (stdClass $r): AdminLadderEvent => new AdminLadderEvent(
             id: (string) $r->id,
@@ -221,6 +232,25 @@ final class EloquentAdminLadderReader implements AdminLadderReader
                 ladderStep: null,
                 response: null,
                 clientSeq: null,
+            );
+        }
+
+        foreach ($triages->all() as $x) {
+            /** @var stdClass $x */
+            $events[] = new AdminLadderEvent(
+                id: (string) $x->id,
+                kind: AdminLadderEvent::KIND_TRIAGE,
+                termId: (string) $x->term_id,
+                termText: $x->text !== null ? (string) $x->text : null,
+                occurredAt: Iso::orNull($x->decided_at),
+                exerciseMode: null,
+                grade: null,
+                isCorrect: null,
+                isPractice: false,
+                ladderStep: null,
+                response: null,
+                clientSeq: (int) $x->client_seq,
+                verdict: (string) $x->verdict,
             );
         }
 

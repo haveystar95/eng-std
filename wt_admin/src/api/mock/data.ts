@@ -133,7 +133,11 @@ function buildLadderPair(i: number, k: number, collections: UserCollection[]): L
     reps,
     lapses: k % 5 === 0 ? 1 : 0,
     intervalDays: graduated ? [1, 3, 7, 21][k % 4] : 0,
-    dueAt: graduated ? iso(-(k % 4) * DAY) : null,
+    // A third of the graduated pairs model "released, never reviewed" — off the recognition ladder
+    // but not yet scheduled for its first SM-2 review, so `dueAt` is null even though `acquisition`
+    // is `graduated`. That is a different reason for null than a mid-ladder pair's, and the screen
+    // now says so instead of drawing the same dash for both.
+    dueAt: graduated ? (k % 3 === 0 ? null : iso(-(k % 4) * DAY)) : null,
     lastReviewedAt: step !== null && step > 0 ? iso(answeredMsAgo) : null,
     exposedAt: isKnown ? null : iso(answeredMsAgo + 90_000),
     lastReview:
@@ -153,10 +157,14 @@ function buildLadderPair(i: number, k: number, collections: UserCollection[]): L
   }
 }
 
-/** The feed: every answer that exists, plus the intros, newest first. */
+/**
+ * The feed: every answer that exists, plus the intros, plus a triage verdict for every «знаю»
+ * pair — newest first. Without the triage entries a known word appeared on the ladder screen
+ * having come from nowhere; this mirrors the real event feed, which merges all three logs.
+ */
 function buildLadderEvents(pairs: LadderPair[]): LadderEvent[] {
   const events: LadderEvent[] = []
-  for (const p of pairs) {
+  pairs.forEach((p, idx) => {
     if (p.lastReview) {
       events.push({
         id: p.lastReview.id,
@@ -171,6 +179,7 @@ function buildLadderEvents(pairs: LadderPair[]): LadderEvent[] {
         ladderStep: p.lastReview.ladderStep,
         response: p.lastReview.response,
         clientSeq: p.lastReview.clientSeq,
+        verdict: null,
       })
     }
     if (p.exposedAt) {
@@ -187,9 +196,27 @@ function buildLadderEvents(pairs: LadderPair[]): LadderEvent[] {
         ladderStep: null,
         response: null,
         clientSeq: null,
+        verdict: null,
       })
     }
-  }
+    if (p.state === 'known') {
+      events.push({
+        id: `triage:${p.termId}`,
+        kind: 'triage',
+        termId: p.termId,
+        termText: p.text,
+        occurredAt: iso(idx * 53_000 + 15_000),
+        exerciseMode: null,
+        grade: null,
+        isCorrect: null,
+        isPractice: false,
+        ladderStep: null,
+        response: null,
+        clientSeq: null,
+        verdict: 'known',
+      })
+    }
+  })
   return events.sort((a, b) => (b.occurredAt ?? '').localeCompare(a.occurredAt ?? ''))
 }
 

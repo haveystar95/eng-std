@@ -9,11 +9,11 @@
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Activity, Eye, Sparkles } from 'lucide-vue-next'
+import { Activity, Eye, ScanEye, Sparkles } from 'lucide-vue-next'
 import { api } from '@/api'
 import { usePolling } from '@/composables/usePolling'
 import { plural } from '@/utils/format'
-import { MODE_LABEL, STATE_LABEL, stateTone } from '@/utils/labels'
+import { MODE_LABEL, STATE_LABEL, stateTone, TRIAGE_VERDICT_LABEL, triageVerdictTone } from '@/utils/labels'
 import type { LadderCounts, LadderEvent, LadderLearner, LadderPair, LadderPhase, UserDetail } from '@/api/types'
 import Badge from '@/components/Badge.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
@@ -146,9 +146,21 @@ function selectPhase(key: LadderPhase | ''): void {
   phase.value = phase.value === key ? '' : key
 }
 
-function eventVerdict(e: LadderEvent): 'known' | 'unknown' | 'neutral' {
-  if (e.kind === 'exposure' || e.isCorrect === null) return 'neutral'
+function eventVerdict(e: LadderEvent): 'known' | 'unsure' | 'unknown' | 'neutral' {
+  if (e.kind === 'exposure') return 'neutral'
+  if (e.kind === 'triage') return e.verdict !== null ? triageVerdictTone(e.verdict) : 'neutral'
+  if (e.isCorrect === null) return 'neutral'
   return e.isCorrect ? 'known' : 'unknown'
+}
+
+/**
+ * «Срок» fallback text for a pair with no due date — the reasons read differently on purpose:
+ * a mid-ladder pair has no due date AT ALL yet (dash, as before); a released one is simply awaiting
+ * its first SM-2 review, which is worth saying rather than drawing the same hole-shaped dash; a
+ * triaged «знаю» pair is outside the ladder entirely and keeps the dash it always had.
+ */
+function dueFallback(row: LadderPair): string {
+  return row.state !== 'known' && row.acquisition === 'graduated' ? 'к первому повторению' : '—'
 }
 
 const columns: Column[] = [
@@ -255,7 +267,7 @@ const columns: Column[] = [
             <template #cell-reps="{ row }">{{ row.reps }}</template>
             <template #cell-due="{ row }">
               <RelativeDate v-if="row.dueAt" :value="row.dueAt" />
-              <span v-else class="faint">—</span>
+              <span v-else class="faint">{{ dueFallback(row) }}</span>
             </template>
             <template #cell-intro="{ row }">
               <span v-if="row.exposedAt" class="ok" :title="`интро показано`">✓</span>
@@ -300,6 +312,11 @@ const columns: Column[] = [
                 <template v-if="e.kind === 'exposure'">
                   <Sparkles :size="12" class="ev-icon" />
                   <span>интро</span>
+                </template>
+                <template v-else-if="e.kind === 'triage'">
+                  <ScanEye :size="12" class="ev-icon" />
+                  <span>триаж</span>
+                  <span v-if="e.verdict" class="ev-verdict">{{ TRIAGE_VERDICT_LABEL[e.verdict] }}</span>
                 </template>
                 <template v-else>
                   <Eye :size="12" class="ev-icon" />
@@ -527,6 +544,9 @@ const columns: Column[] = [
 .ev.known {
   border-left-color: var(--verdict-known);
 }
+.ev.unsure {
+  border-left-color: var(--verdict-unsure);
+}
 .ev.unknown {
   border-left-color: var(--verdict-unknown);
 }
@@ -563,6 +583,10 @@ const columns: Column[] = [
 }
 .ev.known .ev-verdict {
   color: var(--verdict-known);
+  font-weight: 600;
+}
+.ev.unsure .ev-verdict {
+  color: var(--verdict-unsure);
   font-weight: 600;
 }
 .ev.unknown .ev-verdict {

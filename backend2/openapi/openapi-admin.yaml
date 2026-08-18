@@ -1471,9 +1471,13 @@ components:
 
     LadderEvent:
       type: object
+      description: >
+        One entry of the live feed: an answer, a word being introduced, or a self-assessed triage
+        verdict. The triage kind exists so a word reaching `known` has an event explaining how it
+        got there — without it the pairs table shows a known word that arrived from nowhere.
       properties:
-        id: { type: string, description: 'the review id, or `exposure:<term_id>` — an intro''s identity IS the pair' }
-        kind: { type: string, enum: [review, exposure] }
+        id: { type: string, description: 'the review id, the triage id, or `exposure:<term_id>` — an intro''s identity IS the pair' }
+        kind: { type: string, enum: [review, exposure, triage] }
         term_id: { type: string }
         term_text: { type: [string, 'null'] }
         occurred_at: { type: [string, 'null'], format: date-time }
@@ -1481,9 +1485,13 @@ components:
         grade: { type: [string, 'null'], enum: [again, hard, good, easy, null] }
         is_correct: { type: [boolean, 'null'] }
         is_practice: { type: boolean }
-        ladder_step: { type: [integer, 'null'], description: 'always null for an intro — an intro is rung 0 by nature' }
+        ladder_step: { type: [integer, 'null'], description: 'always null for an intro or a triage — neither is a graded card' }
         response: { type: [string, 'null'] }
         client_seq: { type: [integer, 'null'] }
+        verdict:
+          type: [string, 'null']
+          enum: [known, unknown, unsure, null]
+          description: Set only when `kind` is `triage` — the self-assessment the learner swiped.
 
     CollectionRow:
       type: object

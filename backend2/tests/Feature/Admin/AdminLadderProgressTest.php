@@ -238,7 +238,7 @@ it('lists learners for the selector, most recently active first', function () {
         ->toBeGreaterThan(array_search($user->id, array_column($rows, 'id'), true));
 });
 
-it('streams answers and intros as one feed, newest first', function () {
+it('streams answers, intros and triage verdicts as one feed, newest first', function () {
     [$user, $adminToken, $terms] = ladderFixture();
 
     $events = $this->withHeader('Authorization', "Bearer {$adminToken}")
@@ -246,19 +246,29 @@ it('streams answers and intros as one feed, newest first', function () {
         ->assertOk()
         ->json('data');
 
-    // Three intros' worth of activity: two exposures and one answer (the triage is a verdict, not
-    // an event of this feed).
-    expect($events)->toHaveCount(3);
+    // Two exposures, one answer, and the «cat» triage — otherwise a known word would show up on the
+    // ladder screen with no event explaining how it got there.
+    expect($events)->toHaveCount(4);
 
     $kinds = array_column($events, 'kind');
-    expect($kinds)->toContain('review')->toContain('exposure');
+    expect($kinds)->toContain('review')->toContain('exposure')->toContain('triage');
 
-    // Newest first: `bank`'s intro was the last thing that happened.
-    expect($events[0]['term_id'])->toBe($terms['bank'])
-        ->and($events[0]['kind'])->toBe('exposure')
-        ->and($events[0]['term_text'])->toBe('bank')
+    // Newest first: `cat`'s triage (6 minutes ago) is the last thing that happened, ahead of
+    // `bank`'s intro (7 minutes ago).
+    expect($events[0]['term_id'])->toBe($terms['cat'])
+        ->and($events[0]['kind'])->toBe('triage')
+        ->and($events[0]['term_text'])->toBe('cat')
+        ->and($events[0]['verdict'])->toBe('known')
+        ->and($events[0]['client_seq'])->toBe(20)
         ->and($events[0]['grade'])->toBeNull()
-        ->and($events[0]['ladder_step'])->toBeNull();
+        ->and($events[0]['ladder_step'])->toBeNull()
+        ->and($events[0]['is_correct'])->toBeNull();
+
+    expect($events[1]['term_id'])->toBe($terms['bank'])
+        ->and($events[1]['kind'])->toBe('exposure')
+        ->and($events[1]['term_text'])->toBe('bank')
+        ->and($events[1]['grade'])->toBeNull()
+        ->and($events[1]['ladder_step'])->toBeNull();
 
     $answer = collect($events)->firstWhere('kind', 'review');
     expect($answer['term_id'])->toBe($terms['apple'])
@@ -272,7 +282,7 @@ it('streams answers and intros as one feed, newest first', function () {
         ->getJson("/admin/api/users/{$user->id}/ladder/events?limit=1")
         ->assertOk()
         ->json('data');
-    expect($one)->toHaveCount(1)->and($one[0]['term_id'])->toBe($terms['bank']);
+    expect($one)->toHaveCount(1)->and($one[0]['term_id'])->toBe($terms['cat']);
 });
 
 it('reads nothing and writes nothing without an admin token', function () {

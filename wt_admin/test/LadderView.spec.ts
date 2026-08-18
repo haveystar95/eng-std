@@ -88,4 +88,27 @@ describe('LadderView', () => {
     await toggle.setValue(false)
     expect(w.text()).toContain('обновление на паузе')
   })
+
+  // QA-20: a known word used to appear on the ladder with no event explaining how it got there —
+  // the triage verdict is now part of the same feed as answers and intros.
+  it('shows a triage verdict in the event feed, distinct from an answer or an intro', async () => {
+    const { w } = await mountView()
+
+    const triageEntries = w.findAll('.feed .ev').filter((li) => li.text().includes('триаж'))
+    expect(triageEntries.length).toBeGreaterThan(0)
+    expect(triageEntries[0].text()).toContain('знаю')
+    expect(triageEntries[0].classes()).toContain('known')
+  })
+
+  // QA-20: an empty «Срок» read as a hole whether the pair was mid-ladder or released-but-unreviewed
+  // — those are two different reasons, and only the released one now says so in words.
+  it('labels a released pair with no due date, instead of the same dash as a mid-ladder one', async () => {
+    const { w } = await mountView()
+
+    const dueCells = w.findAll('tbody tr').map((r) => r.findAll('td')[4].text())
+    expect(dueCells).toContain('к первому повторению')
+    // A mid-ladder pair (still on recognition rungs) keeps the plain dash — it has no due date
+    // concept at all, which is a different kind of "empty" than "released, awaiting its first review".
+    expect(dueCells).toContain('—')
+  })
 })

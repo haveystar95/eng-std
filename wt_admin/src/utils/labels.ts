@@ -10,6 +10,7 @@ import type {
   ModeSettingsSource,
   ProgressState,
   Tier,
+  TriageVerdict,
 } from '@/api/types'
 
 type Tone = 'neutral' | 'known' | 'unsure' | 'unknown'
@@ -60,6 +61,17 @@ export const ACQUISITION_LABEL: Record<Acquisition, string> = {
 export const MODE_SETTINGS_SOURCE_LABEL: Record<ModeSettingsSource, string> = {
   global: 'общее',
   override: 'своё',
+}
+
+export const TRIAGE_VERDICT_LABEL: Record<TriageVerdict, string> = {
+  known: 'знаю',
+  unknown: 'не знаю',
+  unsure: 'не уверен',
+}
+export function triageVerdictTone(v: TriageVerdict): Tone {
+  if (v === 'known') return 'known'
+  if (v === 'unsure') return 'unsure'
+  return 'unknown'
 }
 
 export const STATE_LABEL: Record<ProgressState, string> = {

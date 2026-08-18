@@ -238,10 +238,16 @@ export interface LadderPair {
   lastReview: LadderReview | null
 }
 
-/** One entry of the live feed: an answer, or a word being introduced. */
+export type TriageVerdict = 'known' | 'unknown' | 'unsure'
+
+/**
+ * One entry of the live feed: an answer, a word being introduced, or a self-assessed triage
+ * verdict. The triage kind exists so a word reaching `known` has an event explaining how it got
+ * there — without it the pairs table shows a known word that arrived from nowhere.
+ */
 export interface LadderEvent {
   id: string
-  kind: 'review' | 'exposure'
+  kind: 'review' | 'exposure' | 'triage'
   termId: string
   termText: string | null
   occurredAt: string | null
@@ -252,6 +258,8 @@ export interface LadderEvent {
   ladderStep: number | null
   response: string | null
   clientSeq: number | null
+  /** Set only when `kind` is `triage`. */
+  verdict: TriageVerdict | null
 }
 
 /** The pairs page carries its counters, so a polled table and its header agree on one moment. */

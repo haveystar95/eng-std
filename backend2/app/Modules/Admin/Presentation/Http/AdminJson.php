@@ -324,6 +324,7 @@ final class AdminJson
             'ladder_step' => $e->ladderStep,
             'response' => $e->response,
             'client_seq' => $e->clientSeq,
+            'verdict' => $e->verdict,
         ];
     }
 
