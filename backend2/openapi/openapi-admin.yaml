@@ -1194,6 +1194,16 @@ components:
             Where this row comes from in the scope that was read: `override` when the requested
             user owns this mode's row directly, `global` when they inherit it from the product
             default. Present on responses only; ignored if sent in a request body.
+        floor:
+          type: string
+          enum: [new, learning, graduated]
+          readOnly: true
+          description: >-
+            This trainer's constructive minimum — the earliest acquisition phase its question can
+            honestly be asked at (e.g. `speaking` can never float below `graduated`: before then
+            there is nothing to recall). Independent of `min_acquisition`, which is the admin's
+            OWN setting and may (legacy data, a rollback) read below its own floor; a write below
+            the floor is rejected with 422. Present on responses only.
 
     Problem:
       type: object

@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Port\EnabledModesWriter;
 use App\Modules\Learning\Domain\Service\LearningLadder;
+use App\Modules\Learning\Domain\Service\ModePassport;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ModeRule;
@@ -28,6 +29,12 @@ final readonly class SetModeSettingsRowHandler
             ?? throw new InvalidArgumentException("Unknown acquisition: {$command->minAcquisition}");
         $policy = OptionsPolicy::tryFrom($command->optionsPolicy)
             ?? throw new InvalidArgumentException("Unknown options policy: {$command->optionsPolicy}");
+
+        // A threshold below the trainer's constructive minimum is not a stricter setting, it is
+        // one that silently does nothing — see ModePassport.
+        if (!ModePassport::meetsFloor($mode, $acquisition)) {
+            throw new InvalidArgumentException(ModePassport::reasonFor($mode));
+        }
 
         if ($command->position < 0) {
             throw new InvalidArgumentException('position cannot be negative.');

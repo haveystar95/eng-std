@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
+use App\Modules\Learning\Domain\Service\ModePassport;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -83,7 +84,7 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
     }
 
     /**
-     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string}>
+     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string, floor: string}>
      */
     public function rowsFor(?UserId $userId): array
     {
@@ -106,7 +107,7 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
             if ($row === null) {
                 continue;
             }
-            $rows[] = $this->toMatrixRow($row, $own !== null ? 'override' : 'global');
+            $rows[] = $this->toMatrixRow($row, $mode, $own !== null ? 'override' : 'global');
         }
 
         usort($rows, static fn (array $a, array $b): int => [(int) $a['position'], $a['mode']] <=> [(int) $b['position'], $b['mode']]);
@@ -114,8 +115,8 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
         return $rows;
     }
 
-    /** @return array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string} */
-    private function toMatrixRow(stdClass $row, string $source): array
+    /** @return array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string, floor: string} */
+    private function toMatrixRow(stdClass $row, ExerciseMode $mode, string $source): array
     {
         return [
             'mode' => (string) $row->mode,
@@ -126,6 +127,10 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
             'min_successful_reviews' => $row->min_successful_reviews !== null ? (int) $row->min_successful_reviews : null,
             'options_policy' => (string) $row->options_policy,
             'source' => $source,
+            // The passport, not the stored row: it says what the FLOOR is, independent of what an
+            // admin has (mis)configured — the admin screen needs both to know a legacy row reads
+            // below its own passport.
+            'floor' => ModePassport::floorFor($mode)->value,
         ];
     }
 

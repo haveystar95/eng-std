@@ -11,7 +11,7 @@ final readonly class GetModeSettingsMatrixHandler
     public function __construct(private ModeAdmissionReader $admission) {}
 
     /**
-     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string}>
+     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string, floor: string}>
      */
     public function __invoke(GetModeSettingsMatrix $query): array
     {

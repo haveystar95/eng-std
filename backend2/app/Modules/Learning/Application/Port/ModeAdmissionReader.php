@@ -31,7 +31,7 @@ interface ModeAdmissionReader
      * `ModeAdmission`/`ModeRule` VOs above don't carry it because "where did this rule come from" is
      * a reporting concern, not a ladder one.
      *
-     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string}>
+     * @return list<array{mode: string, enabled: bool, position: int, min_acquisition: string, min_learning_step: int|null, min_successful_reviews: int|null, options_policy: string, source: string, floor: string}>
      */
     public function rowsFor(?UserId $userId): array;
 }

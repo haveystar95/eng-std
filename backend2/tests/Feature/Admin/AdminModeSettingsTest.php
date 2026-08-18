@@ -155,6 +155,50 @@ it('answers 401 on every matrix route without a token', function () {
     }
 });
 
+it('carries each mode\'s constructive floor in the matrix, independent of the stored threshold', function () {
+    [, $token] = adminActor();
+
+    $rows = collect($this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/admin/api/mode-settings')
+        ->assertOk()
+        ->json('rows'))->keyBy('mode');
+
+    expect($rows['intro']['floor'])->toBe('new')
+        ->and($rows['multiple_choice']['floor'])->toBe('learning')
+        ->and($rows['word_bank']['floor'])->toBe('graduated')
+        ->and($rows['typing']['floor'])->toBe('graduated')
+        ->and($rows['speaking']['floor'])->toBe('graduated');
+});
+
+it('refuses a threshold below the mode\'s passport floor, with a human reason, and accepts it at the floor', function () {
+    [, $token] = adminActor();
+
+    $belowFloor = $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/mode-settings', [
+            'mode' => 'speaking', 'enabled' => true, 'position' => 8,
+            'min_acquisition' => 'learning', 'options_policy' => 'standard',
+        ])
+        ->assertStatus(422);
+    expect($belowFloor->json('message'))->toContain('вспоминать');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/mode-settings', [
+            'mode' => 'multiple_choice', 'enabled' => true, 'position' => 1,
+            'min_acquisition' => 'new', 'options_policy' => 'distant',
+        ])
+        ->assertStatus(422);
+
+    // At the floor itself — the lowest passport-honest setting — the write is accepted.
+    $rows = collect($this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/admin/api/mode-settings', [
+            'mode' => 'speaking', 'enabled' => true, 'position' => 8,
+            'min_acquisition' => 'graduated', 'options_policy' => 'standard',
+        ])
+        ->assertOk()
+        ->json('rows'))->keyBy('mode');
+    expect($rows['speaking']['min_acquisition'])->toBe('graduated');
+});
+
 it('renamed the column to min_successful_reviews without moving the /sync wire key', function () {
     [$user, $token] = learner();
 
