@@ -1634,6 +1634,12 @@ abstract class AppLocalizations {
   /// **'Проверяем, вспомнил ли ты слово, а не произношение.'**
   String get sessionSpeakHint;
 
+  /// Вердикт говорения — что распознал микрофон, на обоих исходах (QA-20).
+  ///
+  /// In ru, this message translates to:
+  /// **'Услышали: «{text}»'**
+  String sessionSpeakHeard(String text);
+
   /// Необязательная кнопка эха на карточке знакомства: послушал и повторил. Ничего не оценивается.
   ///
   /// In ru, this message translates to:

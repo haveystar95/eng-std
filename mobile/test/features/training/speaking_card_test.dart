@@ -124,6 +124,10 @@ void main() {
   // the test does not depend on which icon pack is in use.
   Finder recordButton() => find.bySemanticsLabel(RegExp('Сказать|Готово'));
 
+  // `_PromptPhoto` is private to session_exercise.dart, but runtimeType.toString() ignores library
+  // privacy — the standard way to count instances of a private widget from an external test file.
+  Finder promptPhotos() => find.byWidgetPredicate((w) => w.runtimeType.toString() == '_PromptPhoto');
+
   Future<void> record(WidgetTester tester) async {
     await tester.tap(recordButton().first);
     await tester.pumpAndSettle();
@@ -259,6 +263,55 @@ void main() {
 
       expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
       expect(answers, isEmpty);
+    });
+  });
+
+  group('the verdict (QA-20)', () {
+    testWidgets('shows what the recogniser heard on a WRONG word-form verdict', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(find.textContaining('registration'), findsWidgets);
+    });
+
+    testWidgets('shows what the recogniser heard on a CORRECT word-form verdict too', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Reservation')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      // Both outcomes: a correct verdict must not go silent about what was actually heard either.
+      expect(find.textContaining('Reservation'), findsWidgets);
+    });
+
+    testWidgets('does not repeat the prompt photo in a wrong word-form verdict', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+      // The prompt's own photo is already on screen before any answer.
+      expect(promptPhotos(), findsOneWidget);
+
+      await record(tester);
+
+      // Still exactly one — the feedback block must not add a second copy.
+      expect(promptPhotos(), findsOneWidget);
+    });
+
+    testWidgets('shows no photo at all in a wrong example-form verdict', (tester) async {
+      // The example form's prompt never shows a photo (reading the sentence is the task) — the
+      // feedback must not introduce one either.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('completely wrong reading')]);
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+      expect(promptPhotos(), findsNothing);
+
+      await record(tester);
+
+      expect(promptPhotos(), findsNothing);
     });
   });
 

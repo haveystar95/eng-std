@@ -1012,6 +1012,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'We\'re checking that you remembered the word, not how you pronounce it.';
 
   @override
+  String sessionSpeakHeard(String text) {
+    return 'Heard: “$text”';
+  }
+
+  @override
   String get sessionEchoTry => 'Say it back';
 
   @override

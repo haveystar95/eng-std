@@ -812,6 +812,11 @@
   "@sessionSpeakSkipHint": { "description": "Пояснение под кнопкой пропуска — пропуск не пишет ни ревью, ни оценку." },
   "sessionSpeakHint": "Проверяем, вспомнил ли ты слово, а не произношение.",
   "@sessionSpeakHint": { "description": "Рамка тренажёра говорения: это не оценка акцента (показывается на карточке)." },
+  "sessionSpeakHeard": "Услышали: «{text}»",
+  "@sessionSpeakHeard": {
+    "description": "Вердикт говорения — что распознал микрофон, на обоих исходах (QA-20).",
+    "placeholders": { "text": { "type": "String" } }
+  },
 
   "sessionEchoTry": "Повторить вслух",
   "@sessionEchoTry": { "description": "Необязательная кнопка эха на карточке знакомства: послушал и повторил. Ничего не оценивается." },

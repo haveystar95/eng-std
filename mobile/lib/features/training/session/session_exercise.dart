@@ -534,6 +534,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             photoUrl: widget.photoUrl,
             photoResolved: widget.photoResolved,
             showDue: widget.showDue,
+            recognizedText: _isSpeaking ? _response : null,
           ),
         ],
       ],
@@ -1499,6 +1500,7 @@ class _FeedbackBlock extends ConsumerWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.showDue = true,
+    this.recognizedText,
   });
 
   final SessionCard card;
@@ -1506,24 +1508,40 @@ class _FeedbackBlock extends ConsumerWidget {
   final Future<void> Function(String) onSpeak;
 
   /// Same resolved photo the prompt uses — the feedback of a wrong answer shows it too.
+  /// Unused on a speaking card: see [_isSpeaking] below.
   final String? photoUrl;
   final bool photoResolved;
 
   /// See [SessionExerciseCard.showDue].
   final bool showDue;
 
+  /// What the recogniser heard, for a speaking card only (null on every other mode). Shown on
+  /// BOTH outcomes (QA-20) — a wrong verdict with nothing to compare against left the learner
+  /// unable to tell a genuine miss from a channel problem the recogniser mangled.
+  final String? recognizedText;
+
+  bool get _isSpeaking => card.mode == ExerciseMode.speaking;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final wrong = verdict == LocalCheck.wrong;
+    final heard = recognizedText?.trim() ?? '';
 
     final verdictRow = _verdictRow(l);
     final content = <Widget>[
       verdictRow,
+      if (_isSpeaking && heard.isNotEmpty) ...[
+        const SizedBox(height: AppSpacing.s4),
+        Text(l.sessionSpeakHeard(heard), style: AppTextExercise.feedbackTranscription),
+      ],
       if (wrong) ...[
         const SizedBox(height: AppSpacing.s16),
-        // The feedback lands on a STATIC screen, so revealing straight away is fine here.
-        _PromptPhoto(termId: card.termId, url: photoUrl, resolved: photoResolved),
+        // The feedback lands on a STATIC screen, so revealing straight away is fine here — except
+        // on a speaking card, which stays compact and skips the photo (QA-20): term, transcription,
+        // what was heard (above) and pronunciation are the whole point of that verdict, not a
+        // second copy of the prompt's image.
+        if (!_isSpeaking) _PromptPhoto(termId: card.termId, url: photoUrl, resolved: photoResolved),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

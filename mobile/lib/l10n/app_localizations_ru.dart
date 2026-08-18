@@ -1049,6 +1049,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверяем, вспомнил ли ты слово, а не произношение.';
 
   @override
+  String sessionSpeakHeard(String text) {
+    return 'Услышали: «$text»';
+  }
+
+  @override
   String get sessionEchoTry => 'Повторить вслух';
 
   @override
