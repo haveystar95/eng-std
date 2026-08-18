@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { Activity, LayoutDashboard, Users, Library, Type, Sparkles,
-  SlidersHorizontal, ScrollText, LogOut } from 'lucide-vue-next'
+  SlidersHorizontal, Table2, ScrollText, LogOut } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useMocks } from '@/api'
 import CommandPalette from '@/components/CommandPalette.vue'
@@ -18,6 +18,7 @@ const nav = [
   { to: { name: 'collections' }, label: 'Коллекции', icon: Library, section: '/collections' },
   { to: { name: 'terms' }, label: 'Термины', icon: Type, section: '/terms' },
   { to: { name: 'exercise-modes' }, label: 'Тренажёры', icon: SlidersHorizontal, section: '/exercise-modes' },
+  { to: { name: 'mode-settings' }, label: 'Матрица режимов', icon: Table2, section: '/mode-settings' },
   { to: { name: 'generations' }, label: 'Генерации', icon: Sparkles, section: '/generations' },
   { to: { name: 'logs' }, label: 'Логи', icon: ScrollText, section: '/logs' },
 ]

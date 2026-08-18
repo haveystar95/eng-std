@@ -26,6 +26,8 @@ import type {
   LadderProgress,
   LadderQuery,
   LoginResponse,
+  ModeSettingsMatrix,
+  ModeSettingsRowInput,
   Paginated,
   PageQuery,
   RequestLog,
@@ -112,6 +114,22 @@ export const api = {
   // null drops the override — the user goes back to the product default, including later changes.
   setUserExerciseModes: (id: string, modes: ExerciseMode[] | null): Promise<ExerciseModes> =>
     useMocks ? mock.setUserExerciseModes(id, modes) : httpPut(`/users/${id}/exercise-modes`, { modes }),
+
+  // ── Mode settings matrix («Матрица режимов»): the full row — on/off, position and the
+  // acquisition-ladder threshold — as one editable unit, keyed by (scope, mode). Distinct from the
+  // toggles above: this is the newer, dedicated screen's API.
+  getModeSettingsMatrix: (): Promise<ModeSettingsMatrix> =>
+    useMocks ? mock.getModeSettingsMatrix() : httpGet('/mode-settings'),
+  saveModeSettingsRow: (row: ModeSettingsRowInput): Promise<ModeSettingsMatrix> =>
+    useMocks ? mock.saveModeSettingsRow(row) : httpPut('/mode-settings', snakeizeParams(row)),
+  getUserModeSettingsMatrix: (id: string): Promise<ModeSettingsMatrix> =>
+    useMocks ? mock.getUserModeSettingsMatrix(id) : httpGet(`/users/${id}/mode-settings`),
+  saveUserModeSettingsRow: (id: string, row: ModeSettingsRowInput): Promise<ModeSettingsMatrix> =>
+    useMocks ? mock.saveUserModeSettingsRow(id, row) : httpPut(`/users/${id}/mode-settings`, snakeizeParams(row)),
+  resetUserModeSettingsOverride: (id: string, mode: ExerciseMode): Promise<ModeSettingsMatrix> =>
+    useMocks
+      ? mock.resetUserModeSettingsOverride(id, mode)
+      : httpDelete(`/users/${id}/mode-settings/${mode}`),
 
   // ── Collections ──
   listCollections: (q: CollectionsQuery = {}): Promise<Paginated<CollectionRow>> =>

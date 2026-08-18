@@ -65,6 +65,13 @@ export const router = createRouter({
           name: 'exercise-modes',
           component: () => import('@/views/ExerciseModesView.vue'),
         },
+        // The full row per trainer (on/off, position, ladder threshold) — separate from the toggles
+        // screen above, whose state (learner in the query string) it mirrors.
+        {
+          path: 'mode-settings',
+          name: 'mode-settings',
+          component: () => import('@/views/ModeSettingsMatrixView.vue'),
+        },
         { path: 'generations', name: 'generations', component: () => import('@/views/GenerationsView.vue') },
         { path: 'logs', name: 'logs', component: () => import('@/views/LogsView.vue') },
       ],

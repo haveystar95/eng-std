@@ -1,11 +1,13 @@
 // Domain → display mappings (Russian labels + paper-palette tones).
 import type {
+  Acquisition,
   CollectionSource,
   CollectionType,
   DialogStatus,
   ExerciseMode,
   GenerationStatus,
   Grade,
+  ModeSettingsSource,
   ProgressState,
   Tier,
 } from '@/api/types'
@@ -45,6 +47,19 @@ export const MODE_LABEL: Record<ExerciseMode, string> = {
   scramble: 'предложение',
   dictation: 'диктант',
   pick_correct: 'верное предложение',
+  speaking: 'говорение',
+  intro: 'интро',
+}
+
+export const ACQUISITION_LABEL: Record<Acquisition, string> = {
+  new: 'новое',
+  learning: 'узнавание',
+  graduated: 'выпущено',
+}
+
+export const MODE_SETTINGS_SOURCE_LABEL: Record<ModeSettingsSource, string> = {
+  global: 'общее',
+  override: 'своё',
 }
 
 export const STATE_LABEL: Record<ProgressState, string> = {

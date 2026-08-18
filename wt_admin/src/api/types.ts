@@ -136,6 +136,8 @@ export type ExerciseMode =
   | 'scramble'
   | 'dictation'
   | 'pick_correct'
+  | 'speaking'
+  | 'intro'
 export type Grade = 'again' | 'hard' | 'good' | 'easy'
 
 export interface PlanEntry {
@@ -502,6 +504,37 @@ export interface ExerciseModes {
   override: ExerciseMode[] | null
   effective: ExerciseMode[]
   inherits: boolean
+}
+
+// ── Mode settings matrix («Матрица режимов») ──
+/**
+ * Where one row comes from, in the scope that was read: `override` when the requested user owns
+ * this mode's row directly, `global` when they inherit it from the product default. A global-scope
+ * read (no user) has every row tagged `global` — there is nothing to inherit from there.
+ */
+export type ModeSettingsSource = 'global' | 'override'
+
+/**
+ * One full row of `learning_mode_settings`: on/off, rotation position AND the acquisition-ladder
+ * threshold together — unlike `ExerciseModes`, which the older toggles screen edits, and its
+ * `admission` array, which the older admission-only write edits. This is the field the BE renamed
+ * the DB column to (`min_successful_reviews`, not `min_reps`) — deliberately NOT the same name
+ * `/sync` and `/exercise-modes*` still use for the client-facing wire, which is out of scope here.
+ */
+export interface ModeSettingsRow {
+  mode: ExerciseMode
+  enabled: boolean
+  position: number
+  minAcquisition: Acquisition
+  minLearningStep: number | null
+  minSuccessfulReviews: number | null
+  optionsPolicy: 'distant' | 'standard'
+  source: ModeSettingsSource
+}
+/** The row shape a PUT sends — `source` is server-derived, never written. */
+export type ModeSettingsRowInput = Omit<ModeSettingsRow, 'source'>
+export interface ModeSettingsMatrix {
+  rows: ModeSettingsRow[]
 }
 
 // ── Query params (FE side; mapped to snake_case + page/per_page at the boundary) ──

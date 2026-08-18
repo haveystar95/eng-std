@@ -22,6 +22,9 @@ import type {
   LadderQuery,
   LoginResponse,
   LogsQuery,
+  ModeSettingsMatrix,
+  ModeSettingsRow,
+  ModeSettingsRowInput,
   PageQuery,
   Paginated,
   RequestLog,
@@ -73,6 +76,49 @@ function modesFor(userId?: string): ExerciseModes {
     effective: override ? [...override] : [...globalModes],
     inherits: override === null,
   }
+}
+
+// «Матрица режимов»: the full row per mode. Every mode this build knows gets one, mirroring the
+// shipped matrix's rungs — same data the toggles mock above is deliberately NOT kept in sync with,
+// since the two screens edit different rows of the same real table and this file has no database
+// to keep them honest against.
+type ModeSettingsRowData = Omit<ModeSettingsRow, 'mode' | 'source'>
+const MODE_SETTINGS_ORDER: ExerciseMode[] = [
+  'multiple_choice',
+  'word_bank',
+  'cloze',
+  'scramble',
+  'typing',
+  'listening',
+  'speaking',
+  'dictation',
+  'pick_correct',
+  'intro',
+]
+const SHIPPED_MODE_SETTINGS: Record<ExerciseMode, ModeSettingsRowData> = {
+  intro: { enabled: false, position: 9, minAcquisition: 'new', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  multiple_choice: { enabled: true, position: 0, minAcquisition: 'learning', minLearningStep: 1, minSuccessfulReviews: null, optionsPolicy: 'distant' },
+  word_bank: { enabled: true, position: 1, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  cloze: { enabled: true, position: 2, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  scramble: { enabled: true, position: 3, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  typing: { enabled: true, position: 4, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard' },
+  listening: { enabled: true, position: 5, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 4, optionsPolicy: 'standard' },
+  speaking: { enabled: false, position: 6, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+  dictation: { enabled: false, position: 7, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: 20, optionsPolicy: 'standard' },
+  pick_correct: { enabled: false, position: 8, minAcquisition: 'graduated', minLearningStep: null, minSuccessfulReviews: null, optionsPolicy: 'standard' },
+}
+const globalModeSettings: Record<ExerciseMode, ModeSettingsRowData> = structuredClone(SHIPPED_MODE_SETTINGS)
+const modeSettingsOverrides = new Map<string, Partial<Record<ExerciseMode, ModeSettingsRowData>>>()
+
+function modeSettingsMatrixFor(userId?: string): ModeSettingsMatrix {
+  const own = userId !== undefined ? modeSettingsOverrides.get(userId) : undefined
+  const rows: ModeSettingsRow[] = MODE_SETTINGS_ORDER.map((mode) => {
+    const ownRow = own?.[mode]
+    const data = ownRow ?? globalModeSettings[mode]
+    return { mode, ...data, source: ownRow ? 'override' : 'global' }
+  })
+  rows.sort((a, b) => a.position - b.position || a.mode.localeCompare(b.mode))
+  return { rows }
 }
 
 /**
@@ -299,6 +345,33 @@ export const mock = {
     if (modes === null || modes.length === 0) modeOverrides.delete(id)
     else modeOverrides.set(id, [...modes])
     return modesFor(id)
+  },
+
+  async getModeSettingsMatrix(): Promise<ModeSettingsMatrix> {
+    return modeSettingsMatrixFor()
+  },
+  async saveModeSettingsRow(row: ModeSettingsRowInput): Promise<ModeSettingsMatrix> {
+    const { mode, ...data } = row
+    globalModeSettings[mode] = data
+    return modeSettingsMatrixFor()
+  },
+  async getUserModeSettingsMatrix(id: string): Promise<ModeSettingsMatrix> {
+    findUser(id)
+    return modeSettingsMatrixFor(id)
+  },
+  async saveUserModeSettingsRow(id: string, row: ModeSettingsRowInput): Promise<ModeSettingsMatrix> {
+    findUser(id)
+    const { mode, ...data } = row
+    const own = modeSettingsOverrides.get(id) ?? {}
+    own[mode] = data
+    modeSettingsOverrides.set(id, own)
+    return modeSettingsMatrixFor(id)
+  },
+  async resetUserModeSettingsOverride(id: string, mode: ExerciseMode): Promise<ModeSettingsMatrix> {
+    findUser(id)
+    const own = modeSettingsOverrides.get(id)
+    if (own) delete own[mode]
+    return modeSettingsMatrixFor(id)
   },
 
   async setTier(id: string, tier: Tier): Promise<{ id: string; tier: Tier }> {
