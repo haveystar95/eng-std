@@ -19,8 +19,8 @@ use App\Modules\Generation\Domain\ValueObject\EnrichmentFinding;
 use App\Modules\Generation\Domain\ValueObject\FindingKind;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Infrastructure\Support\ExportHeader;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Process;
 
 /**
  * Runs the enrichment станок over named collections and reports what it cost and what it broke.
@@ -192,45 +192,18 @@ final class EnrichBackfillCommand extends Command
         return true;
     }
 
-    /**
-     * The commit the export was produced by, short form.
-     *
-     * `APP_GIT_SHA` first, because that is the only thing that works in a deployed container: the app
-     * image mounts backend2, and `.git` lives one directory above it, so asking git in-container finds
-     * nothing. The git call is the local-checkout path. When neither answers, the field says so out
-     * loud rather than silently disappearing — a header with a hole in it still dates the data, and a
-     * reader can see which half is missing.
-     */
-    private function headRevision(): string
-    {
-        $configured = config('services.generation.git_sha');
-        if (is_string($configured) && trim($configured) !== '') {
-            return substr(trim($configured), 0, 12);
-        }
-
-        $result = Process::path(base_path())->run('git rev-parse --short HEAD');
-
-        return $result->successful() && trim($result->output()) !== ''
-            ? trim($result->output())
-            : 'не определён (нет .git и APP_GIT_SHA)';
-    }
-
     /** @param  list<EnrichmentExportGroup>  $groups */
     private function markdown(array $groups, string $version, bool $includeAmbiguity): string
     {
-        $snapshot = now()->toIso8601String();
-        $head = $this->headRevision();
+        // The header rule lives in ONE place now ({@see ExportHeader}) — a second exporting command
+        // must not have to re-type it to be correct, which is exactly how a rule drifts.
+        $header = ExportHeader::now();
 
         $lines = [
-            // FIRST line, machine-readable, before anything a reader's eye lands on. An export is a
-            // frozen snapshot that keeps looking authoritative forever: the store5 review was written
-            // against a file taken 1.5 hours before the fix it then reported as outstanding, and
-            // nothing in the file said when it was taken. Both halves are needed — the timestamp
-            // dates the DATA, the revision dates the CODE that shaped it.
-            "<!-- snapshot: {$snapshot} · head: {$head} -->",
+            $header->comment(),
             '# Выгрузка станка на вычитку',
             '',
-            "Снимок: **{$snapshot}** · HEAD: `{$head}` · версия генератора: `{$version}`.",
+            $header->line("версия генератора: `{$version}`"),
             '',
             'Снимок старше правок в базе — выгрузку надо снять заново: то, что здесь написано, было',
             'верно на момент снимка и с тех пор могло быть починено.',

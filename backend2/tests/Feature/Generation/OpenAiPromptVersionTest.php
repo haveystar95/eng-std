@@ -175,8 +175,51 @@ it('keeps the v7 rule out of the frozen v6 prompt', function () {
     });
 });
 
-it('generates on v7 by default', function () {
-    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v7');
+/**
+ * v8 is the answer to a translation that stops pointing at its own term (QA-17). «Tell us about a
+ * challenge you faced» came back as «Расскажите о вызове, с которым вы столкнулись» — fluent, and
+ * unanswerable: `Tell me…`, `Tell us…` and `Describe…` all fit it equally, so an honest answer goes
+ * into the log as a lapse. The translation is a KEY, not prose; it has to be reversible.
+ */
+it('adds the v8 rule: the translation keeps the term pronouns and qualifiers', function () {
+    fakeOpenAi();
+    generateWith('v8');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, 'Keep every part of the term')
+            // The mapping stated concretely — a generic «be accurate» is what v7 already said.
+            && str_contains($system, 'the addressee and the speaker')
+            && str_contains($system, 'Tell us about a challenge you faced')
+            // …and the tie-break, because this rule only bites when the two answers differ.
+            && str_contains($system, 'Accuracy beats fluency')
+            // The self-check gains its own step, and its count is kept honest.
+            && str_contains($system, 'Nothing dropped')
+            && str_contains($system, 'all six must hold')
+            // v7's content is inherited, not replaced.
+            && str_contains($system, 'must EXPAND the term, never repeat it')
+            && str_contains($system, 'The two languages, fixed before you start')
+            && str_contains($system, 'determine its own answer')
+            && str_contains($system, 'image_api_prompt');
+    });
+});
+
+it('keeps the v8 rule out of the frozen v7 prompt', function () {
+    fakeOpenAi();
+    generateWith('v7');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return ! str_contains($system, 'Keep every part of the term')
+            && ! str_contains($system, 'Accuracy beats fluency')
+            && str_contains($system, 'all five must hold');
+    });
+});
+
+it('generates on v8 by default', function () {
+    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v8');
 });
 
 it('keeps the v5 rules out of the frozen v4 prompt', function () {

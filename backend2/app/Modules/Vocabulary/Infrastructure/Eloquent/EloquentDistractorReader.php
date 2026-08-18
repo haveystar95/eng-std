@@ -27,10 +27,16 @@ final class EloquentDistractorReader implements DistractorReader
         $picked = [];
         /** @var array<string, true> $usedTexts */
         $usedTexts = [];
+        // The MEANINGS already on the card, starting with the prompt's own. Two options that read
+        // the same in the learner's language are one option: «check-in desk» and «front desk» are
+        // both «стойка регистрации», so whichever is the answer, the other is equally right and the
+        // card has a second correct answer on it (QA-17). Seeded with the target's translations so
+        // this is one rule instead of two — the prompt is just the first meaning taken.
+        $usedTranslations = $targetTranslations;
 
         // 1. Prefer the session's pool (its collection), minus the target itself.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $this->appendCandidates($poolIds, $targetTranslations, $count, $picked, $usedTexts);
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations);
 
         // 2. Top up from same-language terms of a similar level (same cefr first).
         if (count($picked) < $count) {
@@ -43,7 +49,7 @@ final class EloquentDistractorReader implements DistractorReader
                 ->pluck('id')
                 ->map(static fn (mixed $id): string => (string) $id)
                 ->all());
-            $this->appendCandidates($fallbackIds, $targetTranslations, $count, $picked, $usedTexts);
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations);
         }
 
         return array_slice($picked, 0, $count);
@@ -51,11 +57,11 @@ final class EloquentDistractorReader implements DistractorReader
 
     /**
      * @param  list<string>  $candidateIds
-     * @param  array<string, true>  $targetTranslations
      * @param  list<string>  $picked
      * @param  array<string, true>  $usedTexts
+     * @param  array<string, true>  $usedTranslations  every meaning already on the card, prompt first
      */
-    private function appendCandidates(array $candidateIds, array $targetTranslations, int $count, array &$picked, array &$usedTexts): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
@@ -77,13 +83,18 @@ final class EloquentDistractorReader implements DistractorReader
             if (isset($usedTexts[$textKey])) {
                 continue; // no duplicate option texts
             }
-            // Exclude near-duplicates: a candidate whose translation overlaps the target's would
-            // read as correct for the same prompt.
-            if ($this->overlaps($translations[$id] ?? [], $targetTranslations)) {
+            // Exclude near-duplicates by MEANING, against the prompt AND against every option
+            // already taken — a translation twin reads as correct for the same prompt whichever of
+            // the two the card happens to be asking about.
+            $candidateTranslations = $translations[$id] ?? [];
+            if ($this->overlaps($candidateTranslations, $usedTranslations)) {
                 continue;
             }
             $picked[] = $text;
             $usedTexts[$textKey] = true;
+            foreach ($candidateTranslations as $key => $_) {
+                $usedTranslations[$key] = true;
+            }
         }
     }
 

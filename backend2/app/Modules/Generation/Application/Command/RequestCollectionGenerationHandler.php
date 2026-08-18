@@ -31,7 +31,7 @@ final readonly class RequestCollectionGenerationHandler
      * a deliberate cache miss: the next identical prompt is regenerated rather than served the set
      * the previous version produced. That is the point of bumping rather than editing v5 in place.
      */
-    public const PROMPT_VERSION = 'v7';
+    public const PROMPT_VERSION = 'v8';
 
     public function __construct(
         private GenerationRequestRepository $requests,

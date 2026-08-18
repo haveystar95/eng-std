@@ -5,12 +5,16 @@ import '../local/app_database.dart';
 /// deliberate restriction — both because the local mirror is smaller than the database.
 ///
 /// **Near-duplicates.** The server compares the full set of a term's translations (it has a
-/// `term_translations` table) and drops any candidate whose translations overlap the target's,
-/// because such an option would read as correct for the same prompt. The mirror stores ONE
-/// translation per term, so this compares that one. It is the same rule on less data: it still
-/// removes the case that matters (two words in a collection sharing a translation), it just can't
-/// see synonyms the server would. A distractor is cosmetic — practice schedules nothing — so the
-/// gap costs an occasionally easier card, never a wrong grade.
+/// `term_translations` table) and drops any candidate whose translations overlap the target's — or
+/// any option ALREADY TAKEN — because such an option would read as correct for the same prompt. The
+/// mirror stores ONE translation per term, so this compares that one. It is the same rule on less
+/// data: it still removes the case that matters (two words in a collection sharing a translation),
+/// it just can't see synonyms the server would. A distractor is cosmetic — practice schedules
+/// nothing — so the gap costs an occasionally easier card, never a wrong grade.
+///
+/// Comparing against the taken options and not only against the target is what stops «check-in
+/// desk» and «front desk» — both «стойка регистрации» — standing beside each other as each other's
+/// wrong answer (QA-17). Whichever is the answer, the other is equally right.
 ///
 /// **Where candidates come from.** The server tops up from same-language terms of a similar level
 /// when the pool is thin. The mirror has no `lang` or `cefr` column, so topping up globally could
@@ -33,6 +37,9 @@ abstract final class PracticeDistractors {
 
     final picked = <String>[];
     final usedTexts = <String>{targetText};
+    // The MEANINGS already on the card, the prompt's own taken first — so the prompt and the
+    // options are one rule rather than two.
+    final usedTranslations = <String>{if (targetTranslation.isNotEmpty) targetTranslation};
 
     for (final candidate in pool) {
       if (picked.length >= count) break;
@@ -44,9 +51,10 @@ abstract final class PracticeDistractors {
       final key = _normalize(text);
       if (!usedTexts.add(key)) continue; // no duplicate option texts
 
-      // A candidate that means the same thing would read as correct for the same prompt.
+      // A candidate that means the same as the prompt — or as an option already taken — would read
+      // as correct for this very prompt.
       final translation = _normalize(candidate.translation ?? '');
-      if (translation.isNotEmpty && translation == targetTranslation) continue;
+      if (translation.isNotEmpty && !usedTranslations.add(translation)) continue;
 
       picked.add(text);
     }

@@ -15,6 +15,7 @@ use App\Modules\Generation\Presentation\Console\RepairContentLanguageCommand;
 use App\Modules\Generation\Presentation\Console\SmokePracticeDialogCommand;
 use App\Modules\Identity\Presentation\Console\GrantPremiumCommand;
 use App\Modules\Learning\Presentation\Console\VerificationStatsCommand;
+use App\Modules\Vocabulary\Presentation\Console\AuditTranslationKeysCommand;
 use App\Modules\Vocabulary\Presentation\Console\RelabelRepairedTranslationsCommand;
 use App\Modules\Shared\Domain\Exception\ProblemDetails;
 use Illuminate\Auth\AuthenticationException;
@@ -47,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,
         AdminCreateCommand::class,
+        AuditTranslationKeysCommand::class,
         RelabelRepairedTranslationsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
