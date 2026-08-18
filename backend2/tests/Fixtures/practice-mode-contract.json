@@ -25,7 +25,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2586771104,
             "expected_mode": "scramble"
@@ -47,7 +48,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2586771105,
             "expected_mode": "multiple_choice"
@@ -69,7 +71,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2586771106,
             "expected_mode": "typing"
@@ -91,7 +94,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2586771107,
             "expected_mode": "listening"
@@ -113,7 +117,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2586771111,
             "expected_mode": "typing"
@@ -136,7 +141,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 4078547774,
             "expected_mode": "typing"
@@ -159,7 +165,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 4078547775,
             "expected_mode": "listening"
@@ -182,7 +189,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 4078547776,
             "expected_mode": "cloze"
@@ -205,7 +213,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 4078547777,
             "expected_mode": "scramble"
@@ -228,7 +237,8 @@
                 "listening",
                 "cloze",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 4078547781,
             "expected_mode": "listening"
@@ -248,7 +258,8 @@
                 "multiple_choice",
                 "word_bank",
                 "typing",
-                "listening"
+                "listening",
+                "speaking"
             ],
             "rotation": 1566025639,
             "expected_mode": "listening"
@@ -268,7 +279,8 @@
                 "multiple_choice",
                 "word_bank",
                 "typing",
-                "listening"
+                "listening",
+                "speaking"
             ],
             "rotation": 1566025640,
             "expected_mode": "multiple_choice"
@@ -288,7 +300,8 @@
                 "multiple_choice",
                 "word_bank",
                 "typing",
-                "listening"
+                "listening",
+                "speaking"
             ],
             "rotation": 1566025641,
             "expected_mode": "word_bank"
@@ -308,7 +321,8 @@
                 "multiple_choice",
                 "word_bank",
                 "typing",
-                "listening"
+                "listening",
+                "speaking"
             ],
             "rotation": 1566025642,
             "expected_mode": "typing"
@@ -328,7 +342,8 @@
                 "multiple_choice",
                 "word_bank",
                 "typing",
-                "listening"
+                "listening",
+                "speaking"
             ],
             "rotation": 1566025646,
             "expected_mode": "typing"
@@ -349,7 +364,8 @@
                 "typing",
                 "listening",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2512098382,
             "expected_mode": "listening"
@@ -370,7 +386,8 @@
                 "typing",
                 "listening",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2512098383,
             "expected_mode": "scramble"
@@ -391,7 +408,8 @@
                 "typing",
                 "listening",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2512098384,
             "expected_mode": "multiple_choice"
@@ -412,7 +430,8 @@
                 "typing",
                 "listening",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2512098385,
             "expected_mode": "typing"
@@ -433,7 +452,8 @@
                 "typing",
                 "listening",
                 "scramble",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 2512098389,
             "expected_mode": "typing"
@@ -455,7 +475,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 3017789990,
             "expected_mode": "multiple_choice"
@@ -477,7 +498,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 3017789991,
             "expected_mode": "word_bank"
@@ -499,7 +521,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 3017789992,
             "expected_mode": "typing"
@@ -521,7 +544,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 3017789993,
             "expected_mode": "listening"
@@ -543,7 +567,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "dictation"
+                "dictation",
+                "speaking"
             ],
             "rotation": 3017789997,
             "expected_mode": "typing"
@@ -564,7 +589,8 @@
                 "word_bank",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 4139553216,
             "expected_mode": "word_bank"
@@ -585,7 +611,8 @@
                 "word_bank",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 4139553217,
             "expected_mode": "typing"
@@ -606,7 +633,8 @@
                 "word_bank",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 4139553218,
             "expected_mode": "listening"
@@ -627,7 +655,8 @@
                 "word_bank",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 4139553219,
             "expected_mode": "cloze"
@@ -648,7 +677,8 @@
                 "word_bank",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 4139553223,
             "expected_mode": "listening"
@@ -668,7 +698,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 1927533452,
             "expected_mode": "multiple_choice"
@@ -688,7 +719,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 1927533453,
             "expected_mode": "typing"
@@ -708,7 +740,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 1927533454,
             "expected_mode": "listening"
@@ -728,7 +761,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 1927533455,
             "expected_mode": "cloze"
@@ -748,7 +782,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 1927533459,
             "expected_mode": "cloze"
@@ -768,7 +803,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 3371275912,
             "expected_mode": "multiple_choice"
@@ -788,7 +824,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 3371275913,
             "expected_mode": "typing"
@@ -808,7 +845,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 3371275914,
             "expected_mode": "listening"
@@ -828,7 +866,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 3371275915,
             "expected_mode": "cloze"
@@ -848,7 +887,8 @@
                 "multiple_choice",
                 "typing",
                 "listening",
-                "cloze"
+                "cloze",
+                "speaking"
             ],
             "rotation": 3371275919,
             "expected_mode": "cloze"
@@ -869,7 +909,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "scramble"
+                "scramble",
+                "speaking"
             ],
             "rotation": 483864013,
             "expected_mode": "cloze"
@@ -890,7 +931,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "scramble"
+                "scramble",
+                "speaking"
             ],
             "rotation": 483864014,
             "expected_mode": "scramble"
@@ -911,7 +953,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "scramble"
+                "scramble",
+                "speaking"
             ],
             "rotation": 483864015,
             "expected_mode": "multiple_choice"
@@ -932,7 +975,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "scramble"
+                "scramble",
+                "speaking"
             ],
             "rotation": 483864016,
             "expected_mode": "typing"
@@ -953,7 +997,8 @@
                 "typing",
                 "listening",
                 "cloze",
-                "scramble"
+                "scramble",
+                "speaking"
             ],
             "rotation": 483864020,
             "expected_mode": "multiple_choice"

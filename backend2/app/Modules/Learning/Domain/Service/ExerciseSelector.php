@@ -23,9 +23,10 @@ use App\Modules\Learning\Domain\ValueObject\TermPlayability;
  *   step 0  intro                    the word is shown, not asked
  *   step 1  recognition forward      term → translation
  *   step 2  recognition reverse      translation → term
- *   step 3  assembly / choice        word_bank, cloze, scramble, pick_correct, multiple_choice
+ *   step 3  assembly / choice        word_bank, cloze, scramble, pick_correct, multiple_choice,
+ *                                    speaking (say the WORD)
  *   step 4  + typed production       typing, listening
- *   step 5  + dictation
+ *   step 5  + dictation              …and speaking switches to reading the EXAMPLE aloud
  *   known   (outside the ladder)     always typing — recognition proves nothing here
  *
  * Within steps 3–5 the rotation is keyed on `reps` (never rand()), so it is deterministic and
@@ -35,7 +36,7 @@ use App\Modules\Learning\Domain\ValueObject\TermPlayability;
  * A ladder here is a plain ORDERED LIST, passed through three independent filters — is the mode
  * switched on ({@see EnabledModes}), can this term's data build it ({@see TermPlayability}), has
  * this pair earned it ({@see ModeAdmission}). Keeping them apart is what keeps this readable at
- * nine modes instead of collapsing into a tree of conditions.
+ * ten modes instead of collapsing into a tree of conditions.
  *
  * Everything degrades only within the enabled set, so a mode a user has switched off is never
  * handed out — with one deliberate exception, {@see floor()}.
@@ -118,13 +119,19 @@ final class ExerciseSelector
                 ExerciseMode::Scramble,
                 ExerciseMode::Dictation,
                 ExerciseMode::PickCorrect,
+                // On the END, like every rung added since: switching speaking on must not renumber
+                // the rotation for words already partway through it.
+                ExerciseMode::Speaking,
             ];
             $offset = $progress->reps();
         } else {
             $base = $playable->supports(ExerciseMode::WordBank) ? ExerciseMode::WordBank : ExerciseMode::Typing;
             // `pick_correct` joins the learning rung too: spotting a wrong sentence is recognition,
             // which a term still being learned can do — unlike dictation, which stays review-only.
-            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::PickCorrect];
+            // `speaking` joins the learning rung too — saying a word you have just graduated on is
+            // the same act the typed trainers ask for, only out loud, and unlike dictation it does
+            // not need the pair to have been through the scheduler several times first.
+            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::PickCorrect, ExerciseMode::Speaking];
             $offset = max(0, $progress->reps() - 1);
         }
 

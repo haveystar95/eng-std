@@ -13,6 +13,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/pronouncer.dart';
 import '../../data/api_client.dart';
 import '../../data/app_settings.dart';
+import '../../data/languages.dart';
 import '../../data/models.dart';
 import '../../data/perf_log.dart';
 import '../../data/practice/recognition_replay.dart';
@@ -333,6 +334,21 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     setState(() => _answered = true);
   }
 
+  /// A speaking card the MICROPHONE lost — «Пропустить» after a few failed attempts.
+  ///
+  /// The whole behaviour is what it does NOT do: no `reviewSync.record`, so no review row and no
+  /// grade; no `_results` entry, so no tick or cross in the summary; no ladder movement, so the
+  /// pair stands exactly where it did. The word simply comes back on its own schedule, as if this
+  /// card had never been dealt — which is the honest reading of «the room was too noisy».
+  ///
+  /// It is a session slot spent, and only that: the counter moves so a card cannot trap the learner.
+  void _skipCard() {
+    PerfLog.instance.tapHandled('skip');
+    _prepareCard(_pos + 1);
+    _prepareCard(_pos + 2);
+    _next();
+  }
+
   /// «Понятно» on an intro card. Nothing is graded and nothing reaches the review queue: the card
   /// asked for nothing, so there is no retrieval to log. What it produces is an EXPOSURE — durable,
   /// idempotent on the pair — plus the local ladder step, so the word's recognition cards later in
@@ -423,6 +439,7 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             onSpeak: _speak,
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
+            speechLocaleId: sttLocaleFor(_targetLang),
             isCurrent: () => mounted && _pos == builtAt,
           )
         : SessionExerciseCard(
@@ -431,6 +448,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             autoPronounce: autoPronounce,
             onAnswered: _onAnswered,
             onSpeak: _speak,
+            onSkipped: _skipCard,
+            // The learner is speaking the language being LEARNED, whatever the app's own language
+            // is — the same value the pronouncer speaks in.
+            speechLocaleId: sttLocaleFor(_targetLang),
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
             showDue: !widget.practice,

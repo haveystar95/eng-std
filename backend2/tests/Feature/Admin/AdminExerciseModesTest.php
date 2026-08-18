@@ -17,7 +17,7 @@ it('lists every mode this build can deal, plus the current default', function ()
         ->assertOk()
         // `available` comes from the enum, so a newly built mode shows up in the panel the moment
         // it exists — switched off, per the release rule.
-        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'intro'])
+        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'speaking', 'intro'])
         ->assertJsonPath('global', config('learning.enabled_modes'))
         ->assertJsonPath('inherits', true);
 
@@ -27,6 +27,8 @@ it('lists every mode this build can deal, plus the current default', function ()
         ->and($response->json('global'))->not->toContain('dictation')
         ->and($response->json('available'))->toContain('pick_correct')
         ->and($response->json('global'))->not->toContain('pick_correct')
+        ->and($response->json('available'))->toContain('speaking')
+        ->and($response->json('global'))->not->toContain('speaking')
         ->and($response->json('available'))->toContain('intro')
         ->and($response->json('global'))->not->toContain('intro')
         // …and `intro` is flagged as producing no grade, so the panel offers it as a toggle rather

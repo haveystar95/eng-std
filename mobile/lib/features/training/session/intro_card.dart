@@ -10,6 +10,8 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
+import '../../../data/providers.dart';
+import '../../../data/speech/speech_recognizer.dart';
 import 'session_exercise.dart';
 
 /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked (кадр 16b).
@@ -33,6 +35,7 @@ class SessionIntroCard extends ConsumerStatefulWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.autoPronounce = true,
+    this.speechLocaleId = 'en_US',
     this.isCurrent = _alwaysCurrent,
   });
 
@@ -47,6 +50,9 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   final bool photoResolved;
   final bool autoPronounce;
 
+  /// Recognition locale for the echo — the language being learned.
+  final String speechLocaleId;
+
   /// Still the on-screen card? A fast «Понятно» must cancel a deferred pronounce rather than fire
   /// it over the next card — the same rule the exercise card follows (F20).
   final bool Function() isCurrent;
@@ -55,8 +61,26 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   ConsumerState<SessionIntroCard> createState() => _SessionIntroCardState();
 }
 
+/// How the optional echo on an intro card is going. There is no verdict here on purpose — see
+/// [_EchoRow] — so «heard» and «again» are the only two things it can ever say.
+enum _Echo { idle, listening, heard, again }
+
 class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   Timer? _speakTimer;
+
+  /// The echo's state. Starts [idle] and, if the learner never taps, stays there forever: the echo
+  /// is entirely optional and the intro's «Понятно →» is reachable without it.
+  _Echo _echo = _Echo.idle;
+
+  /// Resolved once, so `dispose` can close a microphone left open without reaching for `ref` on a
+  /// widget that is already coming down.
+  late final SpeechRecognizer _recognizer = ref.read(speechRecognizerProvider);
+
+  /// Is the recogniser already permitted? The echo button is HIDDEN until it is, so an intro card
+  /// never raises a microphone prompt on its own — the learner meets that question on the first
+  /// speaking card, where saying something is the actual task, and not on a card that only asks
+  /// them to read.
+  bool get _speechReady => _recognizer.isReady;
 
   @override
   void initState() {
@@ -73,7 +97,32 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   @override
   void dispose() {
     _speakTimer?.cancel();
+    if (_echo == _Echo.listening) unawaited(_recognizer.cancel());
     super.dispose();
+  }
+
+  /// «Повторить вслух»: listen once, say something kind either way, and write NOTHING.
+  ///
+  /// No grade, no review, no exposure of its own, no effect on the ladder — the intro card's whole
+  /// contract is that it asks for nothing, and an echo that could be failed would quietly turn it
+  /// into the app's first exercise. What it is for is the mouth: hearing the word and then making
+  /// it is how a word stops being a shape on a page, and doing that once, unwatched, is worth more
+  /// here than any score would be.
+  Future<void> _echoBack() async {
+    if (_echo == _Echo.listening) return;
+    AppHaptics.light();
+    setState(() => _echo = _Echo.listening);
+
+    final attempt = await _recognizer.listenOnce(
+          expected: [widget.card.answerText],
+          localeId: widget.speechLocaleId,
+        );
+
+    if (!mounted) return;
+    // «Услышал тебя» means exactly that — the microphone worked. It is deliberately NOT a check
+    // against the word: telling someone their first attempt at a new word was wrong is the fastest
+    // way to make them stop trying it out loud.
+    setState(() => _echo = attempt.isHeard ? _Echo.heard : _Echo.again);
   }
 
   @override
@@ -129,14 +178,60 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
                   style: AppTextExercise.introAlso,
                 ),
               ],
+              // The echo. Absent entirely until the microphone has been permitted elsewhere, so
+              // this card never asks for anything — including a permission.
+              if (_speechReady) ...[
+                const SizedBox(height: AppSpacing.s16),
+                _EchoRow(state: _echo, onTap: _echoBack),
+              ],
               // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
               // what KIND of card this is, and at the top it was the first thing read — a label
-              // where the word itself should have met the reader.
+              // where the word itself should have met the reader. It stays the last line even with
+              // the echo above it: the echo is something to DO, the badge only says what this is.
               const SizedBox(height: AppSpacing.s16),
               _IntroBadge(label: l.sessionIntroBadge),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// «Повторить вслух» plus its one-line reaction.
+///
+/// Quiet by construction — a [QuietButton] and a grey line, no colour, no icon, no verdict. The
+/// intro card has nothing on it that is a judgement, and the moment this row got a green tick it
+/// would become one. «Услышал тебя» is a statement about the microphone; «Попробуй ещё» is an
+/// invitation, not a fail.
+class _EchoRow extends StatelessWidget {
+  const _EchoRow({required this.state, required this.onTap});
+
+  final _Echo state;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final note = switch (state) {
+      _Echo.idle => null,
+      _Echo.listening => l.sessionSpeakListening,
+      _Echo.heard => l.sessionEchoHeard,
+      _Echo.again => l.sessionEchoAgain,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        QuietButton(
+          label: l.sessionEchoTry,
+          icon: LucideIcons.mic,
+          onPressed: state == _Echo.listening ? null : onTap,
+        ),
+        if (note != null) ...[
+          const SizedBox(height: AppSpacing.s4),
+          Text(note, style: AppTextExercise.taskInstruction),
+        ],
       ],
     );
   }

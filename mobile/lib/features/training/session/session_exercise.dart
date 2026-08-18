@@ -13,6 +13,7 @@ import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/perf_log.dart';
 import '../../../data/providers.dart';
+import '../../../data/speech/speech_recognizer.dart';
 import 'session_grading.dart';
 
 /// Where an `error_span` really sits in its sentence: the first occurrence that is not buried inside
@@ -83,6 +84,15 @@ class SessionAnswer {
   final int? latencyMs;
 }
 
+/// A card the learner LEFT rather than answered: the speaking trainer's channel skip.
+///
+/// It is a separate callback from [SessionAnswer] and not a verdict inside it, because the two are
+/// different KINDS of event and the difference is the whole point of the trainer. An answer is
+/// evidence about memory and is uploaded; a skip is a statement about a microphone and must reach
+/// nothing at all — no review, no verdict, no summary row, no schedule. Giving it its own way out
+/// of the card is what makes "writes nothing" a shape the code has rather than a rule to remember.
+typedef SessionSkipped = void Function();
+
 /// Drop a term's decoded photo once its card is well behind, so a session's photos don't pile up.
 /// A GLOBAL cache cap is the wrong tool here — it evicts by LRU, which is free to throw away the
 /// card we just warmed up, and a second practice pass in the same app launch runs straight into the
@@ -123,6 +133,8 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.autoPronounce,
     required this.onAnswered,
     required this.onSpeak,
+    this.onSkipped,
+    this.speechLocaleId = 'en_US',
     this.isCurrent = _alwaysCurrent,
     this.photoUrl,
     this.photoResolved = false,
@@ -155,6 +167,14 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// «Дальше» bar (advancing lives on the shell, not in the card — device-batch F9).
   final ValueChanged<SessionAnswer> onAnswered;
 
+  /// Called instead of [onAnswered] when the learner gives up on the MICROPHONE — the speaking
+  /// trainer's channel skip. The shell moves to the next card and records nothing anywhere.
+  final SessionSkipped? onSkipped;
+
+  /// The recognition locale for the speaking card — the language being LEARNED, not the interface
+  /// language: the learner is speaking English, whatever the app is written in.
+  final String speechLocaleId;
+
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
   final Future<void> Function(String text, {bool slow}) onSpeak;
@@ -182,6 +202,32 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   bool get _isCloze => _mode == ExerciseMode.cloze;
   bool get _isScramble => _mode == ExerciseMode.scramble;
   bool get _isDictation => _mode == ExerciseMode.dictation;
+  bool get _isSpeaking => _mode == ExerciseMode.speaking;
+
+  // ── speaking ───────────────────────────────────────────────────────────────
+  // The channel state, kept apart from the answering state above on purpose: `_attempts` counts
+  // failures of the MICROPHONE, never wrong answers. A recognised answer is a verdict on the first
+  // try like every other trainer; only silence is retried.
+
+  bool _listeningNow = false;
+  String _partial = '';
+  int _attempts = 0;
+
+  /// The last channel failure, shown as a quiet line rather than as a verdict. Null once something
+  /// is heard, so a successful retry clears the apology.
+  SpeechOutcome? _channelFailure;
+
+  /// Resolved once, in [initState], and never through `ref` again — `dispose` has to close the
+  /// microphone, and reading a provider from a widget that is already coming down is not allowed.
+  SpeechRecognizer? _recognizer;
+
+  /// May the learner set this card aside? Offered only once the microphone has actually let them
+  /// down — an escape hatch that appears before it is needed reads as «this probably won't work».
+  bool get _canSkip => _attempts >= SpokenAnswer.maxChannelAttempts && widget.onSkipped != null;
+
+  /// The words the recogniser is listening for, and what the answer is graded against.
+  List<String> get _spokenTargets =>
+      _card.asksForExample ? [_card.answer] : [_card.answer, ..._card.acceptedVariants];
 
   /// A listening card with options is recognition (12g); without, production/typing (12h). The
   /// backend currently sends no options for listening, so this is the typed path — but it stays
@@ -201,6 +247,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   @override
   void initState() {
     super.initState();
+    if (_isSpeaking) _recognizer = ref.read(speechRecognizerProvider);
     _settleTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 30), () {
       if (mounted) setState(() => _settled = true);
     });
@@ -250,6 +297,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _speakTimer?.cancel();
     _settleTimer?.cancel();
     if (_isCloze) _input.removeListener(_onClozeInput);
+    // A card left mid-utterance must not leave the microphone open behind it — and must not have
+    // its transcript arrive over the next card either. Cancel keeps nothing, which is right: an
+    // abandoned attempt was never an answer.
+    final recognizer = _recognizer;
+    if (recognizer != null) unawaited(recognizer.cancel());
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -268,12 +320,18 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // other card grades its text against the accepted set.
     final verdict = _card.isIdentityGraded
         ? (response == _card.answer ? LocalCheck.correct : LocalCheck.wrong)
-        : SessionGrader.check(
-            response,
-            _card.answer,
-            variants: _card.acceptedVariants,
-            forgiveTypos: _mode.forgivesTypos,
-          );
+        // A sentence READ ALOUD is compared by coverage, not by equality — the same policy the
+        // server puts on this key. A recogniser eats articles and guesses homophones, so equality
+        // here would print «Не то» over an answer the scheduler is about to count as correct, which
+        // is the one direction this check is forbidden to take.
+        : (_isSpeaking && _card.asksForExample)
+            ? (SessionGrader.covers(response, _card.answer) ? LocalCheck.correct : LocalCheck.wrong)
+            : SessionGrader.check(
+                response,
+                _card.answer,
+                variants: _card.acceptedVariants,
+                forgiveTypos: _mode.forgivesTypos,
+              );
     switch (verdict) {
       case LocalCheck.correct:
       case LocalCheck.typo:
@@ -356,6 +414,59 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
   void _giveUp() => _commit('', usedHint: _usedHint); // honest fail — shows the answer
 
+  // ── speaking ───────────────────────────────────────────────────────────────
+
+  /// One listening attempt. Heard → the transcript is committed as the answer and graded like any
+  /// other; not heard → the ATTEMPT is spent, nothing is committed, and after a few of them the
+  /// «Пропустить» button appears.
+  Future<void> _listenOnce() async {
+    if (_answered || _listeningNow) return;
+    AppHaptics.light();
+    setState(() {
+      _listeningNow = true;
+      _partial = '';
+      _channelFailure = null;
+    });
+
+    final attempt = await _recognizer!.listenOnce(
+          expected: _spokenTargets,
+          localeId: widget.speechLocaleId,
+          onPartial: (text) {
+            if (mounted && _listeningNow) setState(() => _partial = text);
+          },
+        );
+
+    if (!mounted) return;
+    setState(() => _listeningNow = false);
+
+    if (attempt.isHeard) {
+      _commit(attempt.text);
+
+      return;
+    }
+
+    // A channel failure. Deliberately NOT `_commit('')` — an empty answer is «не помню», which is a
+    // claim about the learner's memory, and a microphone is not entitled to make that claim.
+    setState(() {
+      _attempts++;
+      _partial = '';
+      _channelFailure = attempt.outcome;
+    });
+    AppHaptics.warning();
+  }
+
+  Future<void> _stopListening() async {
+    if (!_listeningNow) return;
+    await _recognizer?.stop();
+  }
+
+  /// Set the card aside: the microphone lost, and nothing about this word is recorded anywhere.
+  void _skipCard() {
+    if (_answered) return;
+    _answered = true; // no second exit from this card
+    widget.onSkipped?.call();
+  }
+
   // ── build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -376,6 +487,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (_mode.isAssembled) ...[
           const SizedBox(height: AppSpacing.s16),
           _chipTray(l),
+        ],
+        if (!_answered && _isSpeaking) ...[
+          const SizedBox(height: AppSpacing.s16),
+          _speakingControls(l),
         ],
         if (!_answered && (_mode.isTyped && !_isRecognitionListening)) ...[
           const SizedBox(height: AppSpacing.s12),
@@ -417,6 +532,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isListening && !_isRecognitionListening) return _listeningPrompt(l, typed: true);
     if (_isRecognitionListening) return _listeningPrompt(l, typed: false);
     if (_isCloze) return _clozePrompt(l);
+    if (_isSpeaking) return _speakingPrompt(l);
     if (_isScramble) return _scramblePrompt(l);
     if (_mode.isSentenceChoice) return _pickCorrectPrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
@@ -441,6 +557,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ExerciseMode.scramble => l.sessionInstrAssembleSentence,
         ExerciseMode.dictation => l.sessionInstrDictation,
         ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
+        // The mode's two forms read as two different tasks, because they ARE two different tasks —
+        // recall the word, or read the sentence you can see.
+        ExerciseMode.speaking =>
+          _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
         ExerciseMode.listening => _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
       };
 
@@ -555,6 +675,96 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           ),
         ],
       ),
+    );
+  }
+
+  // speaking — the prompt by form, then the record button and the live transcript.
+  //
+  // WORD form: the translation and the photo, exactly the material multiple_choice shows, and
+  // deliberately not the term — printing the word being recalled would turn free recall into
+  // reading aloud, which is the OTHER form of this card.
+  //
+  // EXAMPLE form: the sentence itself, large, because reading it IS the task. The translation sits
+  // under it as it does everywhere else.
+  Widget _speakingPrompt(AppLocalizations l) {
+    final asksExample = _card.asksForExample;
+    return PaperCard(
+      clipContent: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!asksExample)
+            _PromptPhoto(
+              termId: _card.termId,
+              url: widget.photoUrl,
+              resolved: widget.photoResolved,
+              reveal: _settled,
+            ),
+          if (asksExample) ...[
+            Text(_card.answer, style: AppTextExercise.introExample),
+            if ((_card.exampleTranslation ?? '').isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.s8),
+              Text(_card.exampleTranslation!, style: AppText.translation.copyWith(height: 1.4)),
+            ],
+          ] else
+            Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
+          const SizedBox(height: AppSpacing.s4),
+          _instructionLine(l, withType: !asksExample),
+          const SizedBox(height: AppSpacing.s4),
+          // The frame, on the card and not only in a spec: this is recall, not pronunciation. It is
+          // what makes a learner willing to speak at all.
+          Text(l.sessionSpeakHint, style: AppTextExercise.taskInstruction),
+        ],
+      ),
+    );
+  }
+
+  /// The record button, the live transcript, and — only once the microphone has actually failed —
+  /// the way out.
+  Widget _speakingControls(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: _RecordCircle(
+            listening: _listeningNow,
+            onTap: _listeningNow ? _stopListening : _listenOnce,
+            label: _listeningNow ? l.sessionSpeakStop : l.sessionSpeakStart,
+          ),
+        ),
+        if (_listeningNow) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Center(child: Text(l.sessionSpeakListening, style: AppTextExercise.taskInstruction)),
+        ],
+        // What the recogniser has so far, live. Seeing the words appear is what tells the learner
+        // the phone is hearing them at all — the difference between «it is thinking» and «it is
+        // broken», on a card with no keyboard to prove otherwise.
+        if (_partial.trim().isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(_partial, textAlign: TextAlign.center, style: AppTextExercise.typingInput),
+        ],
+        if (_channelFailure != null) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(
+            _channelFailure == SpeechOutcome.unavailable ? l.sessionSpeakNoMic : l.sessionSpeakNotHeard,
+            textAlign: TextAlign.center,
+            // The colour of an ordinary note, NOT of a verdict: nothing has gone wrong with the
+            // learner's memory, and the card must not look as if it has.
+            style: AppTextExercise.taskInstruction,
+          ),
+        ],
+        if (_canSkip) ...[
+          const SizedBox(height: AppSpacing.s16),
+          QuietButton(label: l.sessionSpeakSkip, onPressed: _skipCard),
+          const SizedBox(height: AppSpacing.s4),
+          Text(l.sessionSpeakSkipHint, textAlign: TextAlign.center, style: AppTextExercise.taskInstruction),
+        ],
+        const SizedBox(height: AppSpacing.s12),
+        // «Не помню» is the OTHER exit, and the only one that writes anything: an honest lapse,
+        // the same code path every typed card uses. It is always available — a learner who knows
+        // they have forgotten should not have to fail three microphone attempts to say so.
+        QuietButton(label: l.sessionDontRemember, onPressed: _listeningNow ? null : _giveUp),
+      ],
     );
   }
 
@@ -1046,6 +1256,80 @@ class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderState
   }
 }
 
+// ── speaking record button ────────────────────────────────────────────────────
+
+/// The speaking card's one affordance: a big circle that starts listening, and while listening
+/// breathes so the learner can see the phone is awake.
+///
+/// Deliberately the same size and weight as the listening card's play circle — the two are a pair
+/// («here is the word», «now say it»), and giving them different shapes would suggest they are
+/// different kinds of task.
+class _RecordCircle extends StatefulWidget {
+  const _RecordCircle({required this.listening, required this.onTap, required this.label});
+
+  final bool listening;
+  final VoidCallback onTap;
+  final String label;
+
+  @override
+  State<_RecordCircle> createState() => _RecordCircleState();
+}
+
+class _RecordCircleState extends State<_RecordCircle> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse =
+      AnimationController(vsync: this, duration: AppMotion.listenPulse, lowerBound: 1.0, upperBound: 1.06);
+
+  @override
+  void didUpdateWidget(_RecordCircle old) {
+    super.didUpdateWidget(old);
+    if (widget.listening == old.listening) return;
+    if (widget.listening && !MediaQuery.of(context).disableAnimations) {
+      _pulse.repeat(reverse: true);
+    } else {
+      _pulse.stop();
+      _pulse.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Listening inverts the circle — outlined while idle, filled while it hears you. One glance
+    // answers the only question this card has ("is it recording?"), without a word of copy.
+    final filled = widget.listening;
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: ScaleTransition(
+          scale: _pulse,
+          child: Container(
+            width: 112,
+            height: 112,
+            decoration: BoxDecoration(
+              color: filled ? AppColors.ink : AppColors.surfaceRaised,
+              shape: BoxShape.circle,
+              border: filled ? null : const Border.fromBorderSide(BorderSide(color: AppColors.ink, width: 1.5)),
+              boxShadow: filled ? AppShadows.anchor : AppShadows.card,
+            ),
+            child: Icon(
+              LucideIcons.mic,
+              color: filled ? AppColors.paper : AppColors.ink,
+              size: 44,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── prompt photo (from the local term mirror) ─────────────────────────────────
 
 class _PromptPhoto extends ConsumerStatefulWidget {
@@ -1199,14 +1483,14 @@ class _FeedbackBlock extends ConsumerWidget {
           ],
         ),
         // The transcription belongs to the TERM; under a whole sentence it reads as nonsense.
-        if (!card.mode.asksForExample && card.transcription != null && card.transcription!.isNotEmpty) ...[
+        if (!card.asksForExample && card.transcription != null && card.transcription!.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s4),
           Text('/${card.transcription}/', style: AppTextExercise.feedbackTranscription),
         ],
       ],
       // On a sentence card the example IS the answer, already shown above — printing it again as
       // "the example" would just be the same line twice.
-      if (!card.mode.asksForExample && card.example != null && card.example!.isNotEmpty) ...[
+      if (!card.asksForExample && card.example != null && card.example!.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.s12),
         Text(card.example!, style: AppText.usageExample),
       ],

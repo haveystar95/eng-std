@@ -239,6 +239,10 @@ class ModeAdmission {
     ExerciseMode.typing: ModeRule(mode: ExerciseMode.typing, minStep: LearningLadder.stepTyping),
     ExerciseMode.listening: ModeRule(mode: ExerciseMode.listening, minStep: LearningLadder.stepTyping),
     ExerciseMode.dictation: ModeRule(mode: ExerciseMode.dictation, minStep: LearningLadder.stepDictation),
+    // Speaking opens with the assembly trainers. Its two forms separate themselves by rung INSIDE
+    // the mode ([ExerciseMode.asksForExample]), so there is one row here and not two — the same
+    // shape the server's `ModeAdmission::shipped()` has.
+    ExerciseMode.speaking: ModeRule(mode: ExerciseMode.speaking, minStep: LearningLadder.stepAssembly),
   });
 
   final Map<ExerciseMode, ModeRule> rules;

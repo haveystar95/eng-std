@@ -22,11 +22,24 @@ import 'review_queue.dart';
 import 'review_sync.dart';
 import 'seq_counter.dart';
 import 'session_completion_sync.dart';
+import 'speech/speech_recognizer.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
 import 'triage_sync.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
+
+/// On-device speech recognition, shared by the speaking card and the intro's echo.
+///
+/// ONE instance for the app, because the permission and the engine are one thing: the learner is
+/// asked once, on the first record button they tap, and every later surface finds it already
+/// prepared. Overridden in tests with a fake — a simulator has no microphone, so a widget test of
+/// the speaking card can only exist through this provider.
+final speechRecognizerProvider = Provider<SpeechRecognizer>((ref) {
+  final recognizer = PluginSpeechRecognizer();
+  ref.onDispose(recognizer.cancel);
+  return recognizer;
+});
 
 /// The local-first store. One instance for the app; screens read through it.
 final appDatabaseProvider = Provider<AppDatabase>((ref) {

@@ -121,5 +121,5 @@ it('is never dealt while it is switched off, however well the term fits', functi
 it('can earn easy — nothing was on the screen to lean on', function () {
     expect(ExerciseMode::Dictation->isProduction())->toBeTrue()
         ->and(ExerciseMode::Dictation->maxGrade())->toBe(\App\Modules\Learning\Domain\ValueObject\Grade::Easy)
-        ->and(ExerciseMode::Dictation->gradesAgainstExample())->toBeTrue();
+        ->and(ExerciseMode::Dictation->gradesAgainstExample(null))->toBeTrue();
 });

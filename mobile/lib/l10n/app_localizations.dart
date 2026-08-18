@@ -1574,6 +1574,84 @@ abstract class AppLocalizations {
   /// **'также:'**
   String get sessionIntroAlso;
 
+  /// Инструкция speaking, ранняя форма: по переводу и фото вспомнить термин и произнести его.
+  ///
+  /// In ru, this message translates to:
+  /// **'скажи слово вслух'**
+  String get sessionInstrSpeakWord;
+
+  /// Инструкция speaking, поздняя форма: пример уже на экране, его нужно прочитать вслух.
+  ///
+  /// In ru, this message translates to:
+  /// **'прочитай предложение вслух'**
+  String get sessionInstrSpeakExample;
+
+  /// Кнопка записи на карточке говорения — до начала прослушивания.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сказать'**
+  String get sessionSpeakStart;
+
+  /// Кнопка остановки записи, пока телефон слушает.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get sessionSpeakStop;
+
+  /// Индикатор под кнопкой записи, пока идёт распознавание.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаю…'**
+  String get sessionSpeakListening;
+
+  /// Мягкая ошибка канала: распознавание вернулось пустым. Не является провалом ответа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не расслышал. Попробуй ещё раз — ближе к микрофону.'**
+  String get sessionSpeakNotHeard;
+
+  /// Распознавание не запустилось: нет разрешения или движка. Тоже сбой канала, не ответа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Микрофон недоступен. Можно пропустить эту карточку.'**
+  String get sessionSpeakNoMic;
+
+  /// Пропуск карточки говорения после нескольких неудач микрофона: ничего не записывается, слово вернётся своим чередом.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить'**
+  String get sessionSpeakSkip;
+
+  /// Пояснение под кнопкой пропуска — пропуск не пишет ни ревью, ни оценку.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропуск ничего не испортит: слово вернётся своим чередом.'**
+  String get sessionSpeakSkipHint;
+
+  /// Рамка тренажёра говорения: это не оценка акцента (показывается на карточке).
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверяем, вспомнил ли ты слово, а не произношение.'**
+  String get sessionSpeakHint;
+
+  /// Необязательная кнопка эха на карточке знакомства: послушал и повторил. Ничего не оценивается.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить вслух'**
+  String get sessionEchoTry;
+
+  /// Мягкая отметка эха на интро: распознавание что-то расслышало. Не оценка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Услышал тебя'**
+  String get sessionEchoHeard;
+
+  /// Мягкая отметка эха на интро: расслышать не удалось. Не оценка и не провал.
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробуй ещё'**
+  String get sessionEchoAgain;
+
   /// Шапка сессии на карточке знакомства (кадры 16a–16b).
   ///
   /// In ru, this message translates to:

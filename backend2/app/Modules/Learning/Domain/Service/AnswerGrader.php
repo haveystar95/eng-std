@@ -9,6 +9,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LatencyBaseline;
+use App\Modules\Learning\Domain\ValueObject\MatchPolicy;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 
 /**
@@ -40,10 +41,26 @@ final class AnswerGrader
     private const MIN_TYPO_LENGTH = 5;
 
     /** The one shared definition of "the same words"; the coverage check uses it too. */
-    public function __construct(private readonly LexicalNormalizer $normalizer = new LexicalNormalizer()) {}
+    public function __construct(
+        private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
+        private readonly SpokenCoverage $coverage = new SpokenCoverage(),
+    ) {}
 
     public function grade(Answer $answer, ExerciseMode $mode, ExpectedAnswer $expected, LatencyBaseline $baseline): Grade
     {
+        // A key that asks to be MATCHED LOOSELY skips the three stages below entirely — they are
+        // stages of equality, and this key is not asking for equality. Reached only by a sentence
+        // read aloud into a recogniser ({@see SpokenCoverage} for why equality is the wrong bar).
+        if ($expected->policy === MatchPolicy::Coverage) {
+            foreach ($expected->accepted as $candidate) {
+                if ($this->coverage->covers($answer->response, $candidate)) {
+                    return $this->gradeCorrect($answer, $mode, $expected->isPhrase, $baseline);
+                }
+            }
+
+            return Grade::Again;
+        }
+
         $response = $this->normalizer->normalize($answer->response);
 
         // Stages 1 & 2: exact after normalisation, against the target OR any accepted synonym.

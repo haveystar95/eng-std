@@ -100,7 +100,15 @@ final readonly class TermPlayability
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
             // `intro` asks for nothing at all, so there is no content it could lack: a term with no
             // example and no transcription still has a text and a translation to be shown.
-            ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening, ExerciseMode::Intro => true,
+            //
+            // `speaking` fits every term for the same reason as typing: its WORD form asks for the
+            // term, which every term has. Its late form asks for the example, but a term without
+            // one simply keeps being asked for the word — a degradation inside the mode, never a
+            // reason to make the whole trainer unavailable. This is deliberately NOT gated on the
+            // example: gating here would silently drop speaking from every exampleless term at
+            // every rung, including the early one where the example was never wanted.
+            ExerciseMode::MultipleChoice, ExerciseMode::Typing, ExerciseMode::Listening,
+            ExerciseMode::Speaking, ExerciseMode::Intro => true,
         };
     }
 

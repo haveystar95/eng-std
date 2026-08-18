@@ -31,6 +31,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\ExpectedAnswer;
 use App\Modules\Learning\Domain\ValueObject\Grade;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
+use App\Modules\Learning\Domain\ValueObject\MatchPolicy;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use DateTimeImmutable;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -198,6 +199,12 @@ final readonly class SubmitReviewsHandler
      * accepted forms; a sentence-level mode (scramble) is checked against the term's PINNED example
      * — the very sentence its card was built from, which the answer key carries for exactly this.
      *
+     * Which of the two a card asked for is READ OFF THE RUNG the client echoed back, because
+     * `speaking` asks for the word early and for the example late and the mode alone cannot say
+     * which. That is the same `ladder_step` the recognition path below already trusts, and it is
+     * trustworthy for the same reason: it is a statement about the card that was SHOWN, which the
+     * server cannot reconstruct after the pair has moved.
+     *
      * `isPhrase` is forced true for the sentence case: the latency thresholds are per shape, and a
      * sentence held to the single-word "slow" bound (8 s) would grade an honest assembly as `hard`.
      *
@@ -219,11 +226,26 @@ final readonly class SubmitReviewsHandler
             return new ExpectedAnswer([$input->termId->value]);
         }
 
-        if ($input->exerciseMode->gradesAgainstExample() && $key->example !== null && trim($key->example) !== '') {
-            return new ExpectedAnswer([$key->example], isPhrase: true);
+        if ($input->exerciseMode->gradesAgainstExample($input->ladderStep)
+            && $key->example !== null
+            && trim($key->example) !== '') {
+            return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyFor($input));
         }
 
         return new ExpectedAnswer($key->accepted, $key->isPhrase);
+    }
+
+    /**
+     * How the sentence key is compared. Every mode that assembles, types or taps a sentence is
+     * compared for equality, because the learner produced every character of it. `speaking` is not:
+     * its answer came out of a speech recogniser, which drops and swaps words on a perfectly good
+     * reading, so it is compared by COVERAGE ({@see \App\Modules\Learning\Domain\Service\SpokenCoverage} for the numbers and the
+     * reasoning). Being wrong in the strict direction here is not a cosmetic bug — an exact match
+     * on a transcript delivers a LAPSE for a room that was noisy.
+     */
+    private function policyFor(ReviewInput $input): MatchPolicy
+    {
+        return $input->exerciseMode === ExerciseMode::Speaking ? MatchPolicy::Coverage : MatchPolicy::Exact;
     }
 
     /**

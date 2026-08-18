@@ -142,6 +142,13 @@ void main() {
         case ExerciseMode.listening:
           expect(card.options, isNull);
           expect(card.chips, isNull);
+        case ExerciseMode.speaking:
+          // Nothing is tapped or assembled — the answer is spoken. Which of the two forms the card
+          // is, is decided by the rung it carries, and either way its answer must be the thing it
+          // asked for: the sentence when it asked for the sentence, the term otherwise.
+          expect(card.options, isNull);
+          expect(card.chips, isNull);
+          expect(card.answer, card.asksForExample ? card.example : isNot(card.example));
         case ExerciseMode.intro:
           fail('practice introduces nothing — an intro card must never be dealt here');
       }

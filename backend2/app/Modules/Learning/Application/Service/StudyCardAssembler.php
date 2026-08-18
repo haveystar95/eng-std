@@ -147,6 +147,14 @@ final readonly class StudyCardAssembler
         // against and what the server grades) is that sentence, and the prompt is its translation —
         // "assemble this in English". The term's own translation would be the wrong question here.
         $prompt = $content->translation;
+        // Does THIS card ask for the example — the mode's question at this rung, AND a term that
+        // actually has the sentence to ask for. Read once, so the answer, the prompt and the
+        // accepted variants below cannot disagree about what was asked. The content half never
+        // fires for scramble/dictation/pick_correct (their playability gates guarantee an example);
+        // it exists for `speaking`, whose word form is offered to exampleless terms on purpose.
+        $asksExample = $mode->gradesAgainstExample($step)
+            && $content->example !== null
+            && trim($content->example) !== '';
 
         if ($mode === ExerciseMode::MultipleChoice) {
             $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, self::OPTION_COUNT - 1);
@@ -182,6 +190,24 @@ final readonly class StudyCardAssembler
                 ],
                 $wrong,
             );
+        } elseif ($mode === ExerciseMode::Speaking) {
+            // Two forms, one mode, chosen by the rung the card is dealt at — the same shape as the
+            // recognition card's two directions ({@see ExerciseMode::gradesAgainstExample}).
+            //
+            //   word form     the prompt is the translation and the photo the client already has;
+            //                 the learner says the TERM. Nothing else is on screen — printing the
+            //                 term would turn free recall into reading aloud.
+            //   example form  the pinned example IS the task: it is shown and read aloud, so the
+            //                 card's answer is that sentence and the prompt is its translation.
+            //
+            // `asksExample` is computed rather than re-asked below, because a term with no example
+            // has to degrade to the word form CONSISTENTLY — the same decision must reach the
+            // answer, the prompt and the accepted variants, or the card grades against a sentence
+            // it never showed.
+            if ($asksExample) {
+                $answer = (string) $content->example;
+                $prompt = $content->exampleTranslation;
+            }
         } elseif ($mode === ExerciseMode::Dictation) {
             // The task is the AUDIO. No written prompt at all — a translation on screen would turn
             // "write what you hear" into "translate this", which is a different exercise and an
@@ -205,7 +231,7 @@ final readonly class StudyCardAssembler
             // Only when this card's answer IS the term. On scramble/dictation the answer is the
             // example sentence, and the server's own expected set is that sentence alone — sending
             // the term's variants there would make the client accept what the server rejects.
-            acceptedVariants: $mode->gradesAgainstExample() ? [] : $content->acceptedVariants,
+            acceptedVariants: $asksExample ? [] : $content->acceptedVariants,
             ladderStep: $step,
         );
     }
