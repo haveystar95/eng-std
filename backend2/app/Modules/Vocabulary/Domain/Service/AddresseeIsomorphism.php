@@ -14,58 +14,81 @@ namespace App\Modules\Vocabulary\Domain\Service;
  * lapse. The words that go missing are almost always the small ones that say WHO is speaking and
  * WHO is addressed, because a translation reads more smoothly without them.
  *
- * The rule, deliberately per GROUP rather than against one flat list of Russian pronouns: a term
- * that says `us` is not rescued by a translation that happens to contain «вы». Each group is an
- * English trigger set and the Russian forms that can carry it; a term trips the group when it uses
- * one of the triggers as a STANDALONE word and its translation contains none of the counterparts.
+ * The rule, deliberately per GROUP rather than against one flat list of pronouns: a term that says
+ * `us` is not rescued by a translation that happens to contain «вы». Each group is an English
+ * trigger set and, per learner language, the forms that can carry it; a term trips the group when
+ * it uses one of the triggers as a STANDALONE word and its translation contains none of that
+ * language's counterparts. Started Russian-only, extended to Ukrainian the same way — a second
+ * counterpart list per group, not a second rule.
  *
- * It is coarse ON PURPOSE and it never fixes anything. Russian carries a person in ways this cannot
- * see — «расскажите» is already addressed, a genitive can be implied, «свой» can stand in for «ваш»
- * — so a hit is a CANDIDATE for a human to read, not a verdict. The owner proof-reads the export and
- * the accepted corrections go back through the existing apply mechanism. Anything stricter would be
- * a heuristic quietly rewriting the content it was asked to audit.
+ * It is coarse ON PURPOSE and it never fixes anything. Both languages carry a person in ways this
+ * cannot see — «расскажите»/«розкажіть» is already addressed, a genitive can be implied, «свій» can
+ * stand in for «ваш» — so a hit is a CANDIDATE for a human to read, not a verdict. The owner
+ * proof-reads the export and the accepted corrections go back through the existing apply mechanism.
+ * Anything stricter would be a heuristic quietly rewriting the content it was asked to audit.
  */
 final class AddresseeIsomorphism
 {
     /**
-     * The groups, as (name, English triggers, Russian counterparts).
+     * The groups, as (name, English triggers, counterparts per learner language).
      *
-     * `you` sits with `your`/`yours` because Russian marks them with the same stem, and separating
-     * them would flag «расскажите нам о вашем опыте» for having no separate word for `you`.
+     * `you` sits with `your`/`yours` because both Russian and Ukrainian mark them with the same
+     * stem, and separating them would flag «расскажите нам о вашем опыте» for having no separate
+     * word for `you`.
      *
-     * @var list<array{name: string, triggers: list<string>, counterparts: list<string>}>
+     * Ukrainian's `us`/`me` forms overlap Russian's exactly for this pair («нам», «нас» are spelled
+     * identically in both languages) — everything else (мені, мене, ви, вас, вам, ваш-forms, твій,
+     * тобі, ми, наш-forms) is Ukrainian-specific and does not exist in the Russian list.
+     *
+     * @var list<array{name: string, triggers: list<string>, counterparts: array<string, list<string>>}>
      */
     private const GROUPS = [
         [
             'name' => 'us/me',
             'triggers' => ['us', 'me'],
-            'counterparts' => ['нам', 'нас', 'мне', 'меня', 'я'],
+            'counterparts' => [
+                'ru' => ['нам', 'нас', 'мне', 'меня', 'я'],
+                'uk' => ['нам', 'нас', 'мені', 'мене'],
+            ],
         ],
         [
             'name' => 'you/your',
             'triggers' => ['you', 'your', 'yours'],
-            'counterparts' => ['вы', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваши'],
+            'counterparts' => [
+                'ru' => ['вы', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваши'],
+                'uk' => ['ви', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваші', 'твій', 'тобі'],
+            ],
         ],
         [
             'name' => 'we/our',
             'triggers' => ['we', 'our', 'ours'],
-            'counterparts' => ['мы', 'наш', 'наша', 'наше', 'наши'],
+            'counterparts' => [
+                'ru' => ['мы', 'наш', 'наша', 'наше', 'наши'],
+                'uk' => ['ми', 'наш', 'наша', 'наше', 'наші'],
+            ],
         ],
     ];
 
     /**
      * The groups this pair trips — empty when the translation carries everything the term addresses.
      *
+     * @param  string  $lang  the translation's language — which counterpart list applies. A group
+     *                        with no list for this language is skipped entirely (never a false hit
+     *                        for a learner language the rule hasn't been taught yet).
      * @return list<string>  group names, in the order declared above
      */
-    public function violations(string $term, string $translation): array
+    public function violations(string $term, string $translation, string $lang = 'ru'): array
     {
         $out = [];
         foreach (self::GROUPS as $group) {
+            $counterparts = $group['counterparts'][$lang] ?? null;
+            if ($counterparts === null) {
+                continue;
+            }
             if (! $this->containsAny($term, $group['triggers'])) {
                 continue; // the term never addresses anyone in this group
             }
-            if ($this->containsAny($translation, $group['counterparts'])) {
+            if ($this->containsAny($translation, $counterparts)) {
                 continue; // …and the translation carries it
             }
             $out[] = $group['name'];

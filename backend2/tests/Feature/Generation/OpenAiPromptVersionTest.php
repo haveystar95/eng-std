@@ -218,8 +218,56 @@ it('keeps the v8 rule out of the frozen v7 prompt', function () {
     });
 });
 
-it('generates on v8 by default', function () {
-    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v8');
+/**
+ * v9 rewords v8's pronoun-keeping rule to stay correct for a non-Russian {{source_lang}}
+ * (Ukrainian support, 2026-08-18): v8's worked examples stated the rule AS Russian word mappings
+ * (`us` → «нам/нас», …) — instructions the model would follow literally even when {{source_lang}}
+ * is Ukrainian, planting Russian words in a Ukrainian field, which is exactly what this same
+ * prompt's own "Language purity" section forbids. v9 states the requirement in terms of
+ * {{source_lang}} and keeps the Russian worked example only as a labelled illustration.
+ */
+it('adds the v9 rewording: the pronoun rule is stated in terms of {{source_lang}}, not hardcoded Russian', function () {
+    fakeOpenAi();
+    generateWith('v9');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, 'Keep every part of the term')
+            // The requirement is phrased around the resolved source-language name, not a fixed
+            // Russian mapping — for this test's ru brief that name is "Russian".
+            && str_contains($system, 'The exact word depends on Russian, but the requirement itself does not')
+            && str_contains($system, "learner's own language too")
+            // The old v8 literal instruction to map straight to Russian words is gone.
+            && ! str_contains($system, '`us` → «нам/нас»')
+            // The worked example survives, explicitly labelled as one language's illustration.
+            && str_contains($system, 'translated into Russian:')
+            && str_contains($system, 'Tell us about a challenge you faced')
+            // v8's content otherwise inherited, not replaced.
+            && str_contains($system, 'Accuracy beats fluency')
+            && str_contains($system, 'Nothing dropped')
+            && str_contains($system, 'all six must hold')
+            && str_contains($system, 'must EXPAND the term, never repeat it')
+            && str_contains($system, 'The two languages, fixed before you start')
+            && str_contains($system, 'determine its own answer')
+            && str_contains($system, 'image_api_prompt');
+    });
+});
+
+it('keeps the v9 rewording out of the frozen v8 prompt', function () {
+    fakeOpenAi();
+    generateWith('v8');
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, '`us` → «нам/нас»')
+            && ! str_contains($system, 'The exact word depends on Russian, but the requirement itself does not');
+    });
+});
+
+it('generates on v9 by default', function () {
+    expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v9');
 });
 
 it('keeps the v5 rules out of the frozen v4 prompt', function () {

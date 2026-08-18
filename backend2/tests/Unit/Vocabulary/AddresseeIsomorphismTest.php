@@ -76,3 +76,66 @@ it('reports each tripped group once, in a stable order', function () {
     expect($this->rule->violations('Can you tell me about our plans?', 'Расскажите про планы'))
         ->toBe(['us/me', 'you/your', 'we/our']);
 });
+
+// Ukrainian (QA, 2026-08-18): extends the same detector with a second counterpart list per group
+// rather than a second rule — «us/me» happens to share its Russian and Ukrainian forms («нам»,
+// «нас»), the other two groups are Ukrainian-specific words that would never appear as Russian
+// counterparts.
+
+it('catches «нам» dropped from a `Tell us…` in Ukrainian too — us/me forms overlap Russian', function () {
+    expect($this->rule->violations(
+        'Tell us about a challenge you faced',
+        'Розкажіть про виклик, з яким ви зіткнулися',
+        'uk',
+    ))->toBe(['us/me']);
+});
+
+it('clears the Ukrainian us/me case once «нам» is back', function () {
+    expect($this->rule->violations(
+        'Tell us about a challenge you faced',
+        'Розкажіть нам про виклик, з яким ви зіткнулися',
+        'uk',
+    ))->toBe([]);
+});
+
+it('catches `me` dropped from a Ukrainian translation via мені/мене', function () {
+    expect($this->rule->violations('Tell me about yourself', 'Розкажіть про себе', 'uk'))
+        ->toBe(['us/me']);
+    expect($this->rule->violations('Tell me about yourself', 'Розкажіть мені про себе', 'uk'))
+        ->toBe([]);
+});
+
+it('catches `your` dropped from a Ukrainian translation, and clears on ваш or твій', function () {
+    expect($this->rule->violations('Describe your experience', 'Опишіть досвід', 'uk'))
+        ->toBe(['you/your']);
+    expect($this->rule->violations('Describe your experience', 'Опишіть ваш досвід', 'uk'))
+        ->toBe([]);
+    expect($this->rule->violations('What is your name?', 'Як тебе звати?', 'uk'))
+        ->toBe(['you/your'], 'тебе is not one of the listed Ukrainian counterparts, only ви/вас/вам/ваш*/твій/тобі');
+    expect($this->rule->violations('What is your name?', 'Як твій друг?', 'uk'))
+        ->toBe([]);
+});
+
+it('catches `our` dropped from a Ukrainian translation via ми/наш*', function () {
+    expect($this->rule->violations('Tell us about our plans', 'Розкажіть про плани', 'uk'))
+        ->toBe(['us/me', 'we/our']);
+    expect($this->rule->violations('Tell us about our plans', 'Розкажіть нам про наші плани', 'uk'))
+        ->toBe([]);
+});
+
+it('does not read «нас» inside a Ukrainian word either', function () {
+    expect($this->rule->violations('Tell us about the pump', 'Розкажіть про насос', 'uk'))
+        ->toBe(['us/me'], 'насос must not count as «нас» in Ukrainian any more than in Russian');
+});
+
+it('defaults to Russian when no language is given, unchanged from before Ukrainian support', function () {
+    // Judged with no $lang: falls back to Russian counterparts, so a Ukrainian translation (which
+    // shares none of the Russian pronoun spellings tested here) trips every group the term uses.
+    expect($this->rule->violations('Tell us about a challenge you faced', 'Розкажіть про виклик'))
+        ->toBe(['us/me', 'you/your']);
+});
+
+it('skips every group for a language it has no counterpart list for, rather than false-hitting', function () {
+    expect($this->rule->violations('Tell us about a challenge you faced', 'Скажи-nous quelque chose', 'fr'))
+        ->toBe([]);
+});

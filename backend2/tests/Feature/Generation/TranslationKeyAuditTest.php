@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
  * QA-17, the audit half: find the translations that stopped pointing at their own term, write them
  * out for a human, and change NOTHING.
  */
-function seedKey(string $term, string $translation, ?string $collectionTitle = null): string
+function seedKey(string $term, string $translation, ?string $collectionTitle = null, string $lang = 'ru'): string
 {
     $termId = Ulid::generate();
     DB::table('terms')->insert([
@@ -20,7 +20,7 @@ function seedKey(string $term, string $translation, ?string $collectionTitle = n
         'type' => 'phrase', 'source' => 'ai', 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('term_translations')->insert([
-        'id' => Ulid::generate(), 'term_id' => $termId, 'lang' => 'ru', 'text' => $translation,
+        'id' => Ulid::generate(), 'term_id' => $termId, 'lang' => $lang, 'text' => $translation,
         'is_primary' => true, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -40,10 +40,10 @@ function seedKey(string $term, string $translation, ?string $collectionTitle = n
     return $termId;
 }
 
-function runKeyAudit(object $ctx, string $path): string
+function runKeyAudit(object $ctx, string $path, string $sourceLang = 'ru'): string
 {
     @unlink($path);
-    $ctx->artisan('vocab:audit-translation-keys', ['--out' => $path])->assertSuccessful();
+    $ctx->artisan('vocab:audit-translation-keys', ['--out' => $path, '--source-lang' => $sourceLang])->assertSuccessful();
 
     return (string) file_get_contents($path);
 }
@@ -91,6 +91,22 @@ it('changes nothing — it is a reading list, not a repair', function () {
     expect(DB::table('term_translations')->where('term_id', $termId)->value('text'))->toBe($before);
 
     @unlink(storage_path('app/keys-audit-noop-test.md'));
+});
+
+it('audits Ukrainian translations with Ukrainian counterparts, not Russian ones', function () {
+    // «Розкажіть про виклик» drops «нам» — a violation in either language, since us/me's forms
+    // overlap. «Розкажіть нам про наш досвід» carries everything Ukrainian-specific (наш) — it
+    // must NOT be flagged just because it lacks the Russian word «вы».
+    seedKey('Tell us about a challenge you faced', 'Розкажіть про виклик', 'Співбесіда', 'uk');
+    seedKey('Tell us about our experience', 'Розкажіть нам про наш досвід', 'Співбесіда', 'uk');
+
+    $body = runKeyAudit($this, storage_path('app/keys-audit-uk-test.md'), 'uk');
+
+    expect($body)->toContain('Tell us about a challenge you faced')
+        ->and($body)->toContain('`us/me`')
+        ->and($body)->not->toContain('Tell us about our experience');
+
+    @unlink(storage_path('app/keys-audit-uk-test.md'));
 });
 
 it('says so plainly when there is nothing to proof-read', function () {

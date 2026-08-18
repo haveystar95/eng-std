@@ -25,7 +25,7 @@ final readonly class AuditTranslationKeysHandler
 
         $candidates = [];
         foreach ($rows as $row) {
-            $groups = $this->rule->violations($row->termText, $row->translation);
+            $groups = $this->rule->violations($row->termText, $row->translation, $query->sourceLang);
             if ($groups !== []) {
                 $candidates[] = new TranslationKeyCandidate(
                     termId: $row->termId,
