@@ -13,6 +13,7 @@ import '../../../data/models.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import 'session_exercise.dart';
+import 'session_grading.dart';
 
 /// The zeroth rung of the acquisition ladder: the word is SHOWN, not asked (кадр 16b).
 ///
@@ -72,15 +73,37 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// is entirely optional and the intro's «Понятно →» is reachable without it.
   _Echo _echo = _Echo.idle;
 
+  /// What the recogniser transcribed on the last attempt, printed back under the button.
+  ///
+  /// Showing it is not a step toward grading it (QA-21): a bare «Услышал тебя» left the learner
+  /// unable to tell a good attempt from a mangled one, or even whether the microphone had heard
+  /// THEM rather than the room. The text answers that and nothing else — there is still no verdict
+  /// here, and there is not going to be one. Cleared at the start of every new attempt, so the
+  /// screen never shows a previous try's words beside a fresh recording.
+  String _heard = '';
+
   /// Resolved once, so `dispose` can close a microphone left open without reaching for `ref` on a
   /// widget that is already coming down.
   late final SpeechRecognizer _recognizer = ref.read(speechRecognizerProvider);
+
+  /// Set once an async, non-prompting OS permission check (below) confirms it — a brand-new word's
+  /// intro card is very often the FIRST speech-touching card in a fresh app run, and its echo is
+  /// never the thing that calls [SpeechRecognizer.prepare] (see [_speechReady]'s doc), so
+  /// [SpeechRecognizer.isReady] alone stayed false there even with the mic already permitted from a
+  /// past run or iOS Settings (QA-21).
+  bool _osPermitted = false;
 
   /// Is the recogniser already permitted? The echo button is HIDDEN until it is, so an intro card
   /// never raises a microphone prompt on its own — the learner meets that question on the first
   /// speaking card, where saying something is the actual task, and not on a card that only asks
   /// them to read.
-  bool get _speechReady => _recognizer.isReady;
+  ///
+  /// [SpeechRecognizer.isReady] alone answers "has *this process* already prepared" — true once
+  /// some OTHER card has called [SpeechRecognizer.prepare], but false for as long as this intro
+  /// card is the first thing in the run to ask, even when the OS would say yes right now.
+  /// [_osPermitted] (started in [initState], never prompts — see its own doc) covers exactly that
+  /// gap without this card ever being the one that calls [SpeechRecognizer.prepare] itself.
+  bool get _speechReady => _recognizer.isReady || _osPermitted;
 
   @override
   void initState() {
@@ -91,6 +114,14 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
       _speakTimer = Timer(AppMotion.nextTaskEnter + const Duration(milliseconds: 60), () {
         if (mounted && widget.isCurrent()) widget.onSpeak(widget.card.answerText);
       });
+    }
+    // Skip the round trip when [SpeechRecognizer.isReady] already answers yes (the common case once
+    // any card has prepared this run). [SpeechRecognizer.hasPermission] itself never prompts — see
+    // its doc — so this cannot be the thing that raises iOS's permission dialog.
+    if (!_recognizer.isReady) {
+      unawaited(_recognizer.hasPermission.then((granted) {
+        if (mounted && granted) setState(() => _osPermitted = true);
+      }));
     }
   }
 
@@ -108,21 +139,64 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// into the app's first exercise. What it is for is the mouth: hearing the word and then making
   /// it is how a word stops being a shape on a page, and doing that once, unwatched, is worth more
   /// here than any score would be.
+  /// A second tap WHILE listening settles the attempt on whatever has been heard — the same
+  /// «Готово» the speaking card offers. Without it the only way to end a recording was to go quiet
+  /// and wait out the pause window, which on a card with no progress of any kind read as a hang
+  /// (QA-21). Tapping again AFTER a result simply starts a fresh attempt, replacing the old text.
   Future<void> _echoBack() async {
-    if (_echo == _Echo.listening) return;
-    AppHaptics.light();
-    setState(() => _echo = _Echo.listening);
+    if (_echo == _Echo.listening) {
+      await _recognizer.stop();
 
+      return;
+    }
+    AppHaptics.light();
+    setState(() {
+      _echo = _Echo.listening;
+      _heard = '';
+    });
+
+    final term = widget.card.answerText;
     final attempt = await _recognizer.listenOnce(
-          expected: [widget.card.answerText],
+          expected: [term],
           localeId: widget.speechLocaleId,
+          // Same window the speaking word form picks for a term of this length — a phrase-shaped
+          // term needs the sentence-sized one (QA-21).
+          timeout: SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor,
+          pauseFor: SpokenAnswer.windowFor(asksForExample: false, term: term).pauseFor,
+          // The same vocabulary hint the speaking word form sends (QA-20): the term whole, plus its
+          // individual words. Nothing here grades against it — it only helps the recogniser print
+          // back what was actually said.
+          contextualStrings: _contextualStrings(term),
+          onPartial: (text) {
+            if (mounted && _echo == _Echo.listening) setState(() => _heard = text);
+          },
         );
 
     if (!mounted) return;
     // «Услышал тебя» means exactly that — the microphone worked. It is deliberately NOT a check
     // against the word: telling someone their first attempt at a new word was wrong is the fastest
     // way to make them stop trying it out loud.
-    setState(() => _echo = attempt.isHeard ? _Echo.heard : _Echo.again);
+    setState(() {
+      _echo = attempt.isHeard ? _Echo.heard : _Echo.again;
+      _heard = attempt.isHeard ? attempt.text.trim() : '';
+    });
+  }
+
+  /// The term whole plus its individual words, deduplicated, no empties — the word form's own
+  /// contextualStrings shape (see `SessionExerciseCard`).
+  List<String> _contextualStrings(String term) {
+    final strings = <String>{};
+    void add(String text) {
+      final trimmed = text.trim();
+      if (trimmed.isNotEmpty) strings.add(trimmed);
+    }
+
+    add(term);
+    for (final word in term.trim().split(RegExp(r'\s+'))) {
+      add(word);
+    }
+
+    return strings.take(50).toList();
   }
 
   @override
@@ -182,7 +256,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
               // this card never asks for anything — including a permission.
               if (_speechReady) ...[
                 const SizedBox(height: AppSpacing.s16),
-                _EchoRow(state: _echo, onTap: _echoBack),
+                _EchoRow(state: _echo, heard: _heard, onTap: _echoBack),
               ],
               // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
               // what KIND of card this is, and at the top it was the first thing read — a label
@@ -204,29 +278,98 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
 /// intro card has nothing on it that is a judgement, and the moment this row got a green tick it
 /// would become one. «Услышал тебя» is a statement about the microphone; «Попробуй ещё» is an
 /// invitation, not a fail.
-class _EchoRow extends StatelessWidget {
-  const _EchoRow({required this.state, required this.onTap});
+class _EchoRow extends StatefulWidget {
+  const _EchoRow({required this.state, required this.heard, required this.onTap});
 
   final _Echo state;
+
+  /// The transcript to print back, or '' when there is none (idle, or nothing was made out).
+  final String heard;
+
   final VoidCallback onTap;
+
+  @override
+  State<_EchoRow> createState() => _EchoRowState();
+}
+
+class _EchoRowState extends State<_EchoRow> with SingleTickerProviderStateMixin {
+  /// The «I am recording» sign. A tap used to change nothing at all on screen (QA-21) — the button
+  /// simply went disabled — so there was no way to tell a live microphone from a dead one, and no
+  /// way to guess when to stop talking. The same slow breath the speaking card's record circle
+  /// uses, so the two read as one behaviour.
+  /// Built in [initState], NOT as a `late final` field: this row only touches the controller while
+  /// listening, so on the common path (the echo is optional and usually never tapped) a lazy field
+  /// would be constructed for the first time inside [dispose] — and an AnimationController reads
+  /// TickerMode off the tree it is already leaving, which throws.
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: AppMotion.listenPulse,
+      lowerBound: 0.55,
+      upperBound: 1.0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(_EchoRow old) {
+    super.didUpdateWidget(old);
+    if (widget.state == old.state) return;
+    if (widget.state == _Echo.listening && !MediaQuery.of(context).disableAnimations) {
+      _pulse.repeat(reverse: true);
+    } else {
+      _pulse.stop();
+      _pulse.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final note = switch (state) {
+    final listening = widget.state == _Echo.listening;
+    final heard = widget.heard.trim();
+
+    // What the row says under the button. While listening it is the live partial, if there is one
+    // yet — seeing your own words appear is the clearest possible «yes, it hears you».
+    final note = switch (widget.state) {
       _Echo.idle => null,
-      _Echo.listening => l.sessionSpeakListening,
-      _Echo.heard => l.sessionEchoHeard,
+      _Echo.listening => heard.isEmpty ? l.sessionSpeakListening : l.sessionSpeakHeard(heard),
+      // Печатаем РАСПОЗНАННОЕ, not a bare «Услышал тебя»: the point of the echo is the mouth, and
+      // the learner can only tell how it went by reading what came out. Still not a verdict — the
+      // text is shown, never marked.
+      _Echo.heard => heard.isEmpty ? l.sessionEchoHeard : l.sessionSpeakHeard(heard),
       _Echo.again => l.sessionEchoAgain,
     };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        QuietButton(
-          label: l.sessionEchoTry,
-          icon: LucideIcons.mic,
-          onPressed: state == _Echo.listening ? null : onTap,
+        Row(
+          children: [
+            // Never disabled, unlike before: while listening the tap becomes «стоп», which is the
+            // other half of making the recording's end knowable.
+            QuietButton(
+              label: listening ? l.sessionSpeakStop : l.sessionEchoTry,
+              icon: listening ? LucideIcons.square : LucideIcons.mic,
+              onPressed: widget.onTap,
+            ),
+            if (listening) ...[
+              const SizedBox(width: AppSpacing.s8),
+              FadeTransition(
+                opacity: _pulse,
+                child: const Icon(LucideIcons.mic, size: 16, color: AppColors.ink),
+              ),
+            ],
+          ],
         ),
         if (note != null) ...[
           const SizedBox(height: AppSpacing.s4),

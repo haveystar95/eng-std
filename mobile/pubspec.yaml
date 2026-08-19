@@ -67,6 +67,14 @@ dependencies:
   flutter_pcm_sound: ^3.3.3
   flutter_timezone: ^5.1.0 # device IANA zone → sent at login + PUT /profile for calendar-day due rounding (F19)
 
+# Vendored fork of speech_to_text 7.4.0 — QA-20's contextualStrings passthrough (SFSpeechRecognitionRequest
+# .contextualStrings), which upstream 7.4.0 does not expose. See packages/speech_to_text/UPSTREAM.md
+# for the full delta; upstream PR is SLV-5, tracked separately. Package name is unchanged so this
+# override is transparent to every `package:speech_to_text/...` import in the app.
+dependency_overrides:
+  speech_to_text:
+    path: packages/speech_to_text
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -74,6 +82,11 @@ dev_dependencies:
   # drift codegen
   drift_dev: ^2.20.0
   build_runner: ^2.4.0
+
+  # Direct sqlite3 access for the migration tests (QA-23): they need to wind `user_version` back by
+  # hand to rebuild a half-applied upgrade. Already present transitively via drift; declared here
+  # because a test imports it directly.
+  sqlite3: ^3.5.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -95,6 +108,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # The two verdict sounds (QA-22). GENERATED, not sourced — regenerate with
+  # `dart run tool/gen_feedback_sounds.dart`, which is where their pitch, length and fade live.
+  # Played natively through AudioServices (ios/Runner/AppDelegate.swift), not by a pub package.
+  assets:
+    - assets/sounds/
 
   # Bundled fonts — offline-first, no runtime fetch. Instanced from the OFL
   # variable fonts down to exactly the token-list weights (no extra weights);

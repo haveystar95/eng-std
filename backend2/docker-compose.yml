@@ -52,5 +52,23 @@ services:
     image: redis:7-alpine
     container_name: wt_redis
 
+  # Read-only admin console (Vue SPA served by nginx). Source lives at repo-root
+  # ../wt_admin. nginx reverse-proxies /admin/api → the backend (BACKEND_ORIGIN), so the
+  # SPA calls the API SAME-ORIGIN and there is no CORS. Open http://localhost:5175 and
+  # log in with an admin account (php artisan admin:create). Set ADMIN_USE_MOCKS=true to
+  # run standalone on built-in demo data instead of the live backend.
+  admin:
+    build:
+      context: ../wt_admin
+    container_name: wt_admin
+    ports:
+      - "5175:80"
+    environment:
+      API_BASE: ${ADMIN_API_BASE:-}
+      USE_MOCKS: ${ADMIN_USE_MOCKS:-false}
+      BACKEND_ORIGIN: ${ADMIN_BACKEND_ORIGIN:-http://wt_app:8000}
+    depends_on:
+      - app
+
 volumes:
   wt_pgdata:

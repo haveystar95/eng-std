@@ -370,6 +370,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
   void _next() {
     PerfLog.instance.tapHandled('next');
+    // The verdict's auto-pronounce is fired on a timer AFTER the feedback settles, so a «Дальше»
+    // tapped while it is still speaking used to carry the previous card's word over the slide and
+    // finish it on top of the next card (QA-21). Cutting it here covers every way forward — the
+    // «Дальше» bar, a microphone skip, an intro's «Понятно» — because all of them funnel through
+    // this one method, including the last card's jump to the summary.
+    unawaited(_pronouncer.stop());
     if (_pos + 1 >= _cards.length) {
       setState(() => _finished = true);
     } else {
@@ -387,6 +393,11 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   }
 
   Future<bool> _confirmExit() async {
+    // Silence the current utterance as the dialog opens, not after the pop: `dispose`'s `release`
+    // does stop the engine, but it only runs once the screen is actually gone, so the word carried
+    // on over the confirm dialog (QA-21). Staying (a cancelled dialog) simply leaves it quiet,
+    // which is the right outcome for a word the learner has already read.
+    unawaited(_pronouncer.stop());
     final l = AppLocalizations.of(context);
     final leave = await showCenterAlert(
       context: context,

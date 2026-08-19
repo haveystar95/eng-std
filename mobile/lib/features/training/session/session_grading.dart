@@ -50,6 +50,53 @@ abstract final class SpokenAnswer {
   static const Duration wordFormPauseFor = Duration(seconds: 2);
   static const Duration exampleFormListenFor = Duration(seconds: 15);
   static const Duration exampleFormPauseFor = Duration(seconds: 3);
+
+  /// From how many words a TERM stops being a "word" for the recording window's purposes (QA-21).
+  ///
+  /// The word/example split above is about which QUESTION the card asks, and it silently assumed
+  /// the word form's answer is a word. It is not: a term can itself be a whole phrase («Where do
+  /// you see yourself in five years?»), and reading one of those aloud into an 8s/2s window got cut
+  /// after the first word — the device reported «Heard: When» for the full question. What the
+  /// window actually has to fit is the LENGTH of what is being said, so a multi-word term gets the
+  /// sentence-sized window even though the card is still the word form.
+  static const int longTermWords = 3;
+
+  /// Does [term] need the sentence-sized recording window? See [longTermWords].
+  static bool isLongTerm(String term) => _wordCount(term) >= longTermWords;
+
+  /// The recording window for a card: the example form always reads a sentence, and the word form
+  /// looks at how long its own [term] is. Returned together so the two can never be picked from
+  /// different branches at the call site.
+  static ({Duration listenFor, Duration pauseFor}) windowFor({
+    required bool asksForExample,
+    required String term,
+  }) =>
+      asksForExample || isLongTerm(term)
+          ? (listenFor: exampleFormListenFor, pauseFor: exampleFormPauseFor)
+          : (listenFor: wordFormListenFor, pauseFor: wordFormPauseFor);
+
+  /// Is this spoken answer judged by COVERAGE rather than by equality (QA-22)?
+  ///
+  /// The same [longTermWords] rule that picks the recording window, deliberately reused rather than
+  /// re-derived: «длинность» has one definition, so a term that gets the sentence-sized window is
+  /// exactly the term that gets sentence-shaped grading. Two thresholds that could drift apart is
+  /// how a card ends up recording like a sentence and being marked like a word.
+  ///
+  /// Why coverage at all for a term: an on-device recogniser mangles a long utterance the same way
+  /// whether the card called it a term or an example — it eats function words and guesses
+  /// homophones. «How do you deal with conflict?» read correctly comes back as «How do you deal
+  /// this a conflict?», and equality marks a good reading wrong. A one- or two-word term stays
+  /// binary, where equality is both fair and what the learner is actually being asked for.
+  ///
+  /// Coverage never reaches past [minCoverage] or past the server's own «good» ceiling — this
+  /// changes WHICH answers are compared this way, not how much of one is enough.
+  static bool gradesByCoverage({required bool asksForExample, required String term}) =>
+      asksForExample || isLongTerm(term);
+
+  static int _wordCount(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? 0 : trimmed.split(RegExp(r'\s+')).length;
+  }
 }
 
 /// Mirror of the server `AnswerGrader`'s correctness stages (grading of the SPEED/hint into
@@ -77,17 +124,26 @@ abstract final class SessionGrader {
   /// eating a sound, not the learner not knowing the word). Pass true ONLY for a speaking word-form
   /// answer — every other mode keeps its existing [forgiveTypos] leniency (capped at «Почти», never
   /// «Верно») and must not additionally accept this at full grade.
+  /// [ignoreArticles] drops every a/an/the from BOTH sides before comparing, not just a leading one
+  /// (QA-21). Speaking only, and passed only from the speaking card: an on-device recogniser eats
+  /// unstressed function words, so «Are you a team player?» comes back as «are you team player» from
+  /// a perfectly good reading — failing that is the microphone's mistake being charged to the
+  /// learner. Every other mode leaves it false on purpose: in typing and dictation the article is
+  /// something the learner is deliberately practising and dropping one IS the mistake.
   static LocalCheck check(
     String response,
     String answer, {
     List<String> variants = const [],
     bool forgiveTypos = true,
     bool spokenSuffixTolerance = false,
+    bool ignoreArticles = false,
   }) {
-    final r = _normalize(response);
+    final r = _normalize(response, ignoreArticles: ignoreArticles);
     if (r.isEmpty) return LocalCheck.wrong; // «Не помню» / blank
 
-    final accepted = [answer, ...variants].map(_normalize).where((a) => a.isNotEmpty);
+    final accepted = [answer, ...variants]
+        .map((a) => _normalize(a, ignoreArticles: ignoreArticles))
+        .where((a) => a.isNotEmpty);
     for (final a in accepted) {
       if (r == a) return LocalCheck.correct;
     }
@@ -115,12 +171,15 @@ abstract final class SessionGrader {
   ///
   /// Order-free and counted by MULTISET, like the server: recognisers drop and substitute words,
   /// they do not transpose them, and a sentence that says «very» twice needs it twice.
-  static double coverageOf(String response, String expected) {
-    final wanted = _words(expected);
+  /// [ignoreArticles] — see [check]'s doc. Speaking-only, and here it matters twice over: a dropped
+  /// article is both a missing word in the numerator AND one more word in the denominator, so an
+  /// eaten «a» costs more coverage than the one word it is.
+  static double coverageOf(String response, String expected, {bool ignoreArticles = false}) {
+    final wanted = _words(expected, ignoreArticles: ignoreArticles);
     if (wanted.isEmpty) return 0; // nothing expected is never a vacuous pass
 
     final available = <String, int>{};
-    for (final word in _words(response)) {
+    for (final word in _words(response, ignoreArticles: ignoreArticles)) {
       available[word] = (available[word] ?? 0) + 1;
     }
 
@@ -140,21 +199,25 @@ abstract final class SessionGrader {
   /// Grouped by DISPLAYED word, not by canonicalised token: a contraction like "don't" canonicalises
   /// to two tokens ("don", "t") but must highlight (or not) as the one word on screen, never split
   /// into a fragment. It counts as covered only when every one of its sub-tokens was found.
-  static Set<int> uncoveredWords(String response, String expected) {
+  /// [ignoreArticles] — see [check]'s doc. It must match whatever [coverageOf] was given for the
+  /// same answer, or the highlight would mark an article the verdict already forgave.
+  static Set<int> uncoveredWords(String response, String expected, {bool ignoreArticles = false}) {
     final raw = expected.trim();
     if (raw.isEmpty) return const {};
     final rawWords = raw.split(RegExp(r'\s+'));
 
     final available = <String, int>{};
-    for (final word in _words(response)) {
+    for (final word in _words(response, ignoreArticles: ignoreArticles)) {
       available[word] = (available[word] ?? 0) + 1;
     }
 
     final uncovered = <int>{};
     for (var i = 0; i < rawWords.length; i++) {
-      final subTokens = _words(rawWords[i]);
-      final covered = subTokens.isNotEmpty && subTokens.every((t) => _consume(available, t));
-      if (!covered) uncovered.add(i);
+      final subTokens = _words(rawWords[i], ignoreArticles: ignoreArticles);
+      // An article, with articles ignored, tokenises to nothing — it is neither covered nor
+      // uncovered, so it simply never gets marked.
+      if (subTokens.isEmpty) continue;
+      if (!subTokens.every((t) => _consume(available, t))) uncovered.add(i);
     }
     return uncovered;
   }
@@ -177,19 +240,35 @@ abstract final class SessionGrader {
     return false;
   }
 
-  /// Was enough of [expected] said? [SpokenAnswer.minCoverage] is the shared threshold.
-  static bool covers(String response, String expected) =>
-      coverageOf(response, expected) >= SpokenAnswer.minCoverage;
+  /// Was enough of [expected] said? [SpokenAnswer.minCoverage] is the shared threshold — unchanged
+  /// by [ignoreArticles], which only decides WHAT is counted, never how much of it is enough.
+  static bool covers(String response, String expected, {bool ignoreArticles = false}) =>
+      coverageOf(response, expected, ignoreArticles: ignoreArticles) >= SpokenAnswer.minCoverage;
+
+  /// Was enough of ANY of [accepted] said? The coverage counterpart of [check]'s accepted set
+  /// (QA-22): a word-form term graded by coverage still has its `accepted_variants`, and grading
+  /// only against the canonical form would reject a variant the server counts as correct — the one
+  /// direction this check may never take. Empty and blank candidates are ignored, and an empty set
+  /// is never a vacuous pass.
+  static bool coversAny(String response, List<String> accepted, {bool ignoreArticles = false}) =>
+      accepted
+          .where((a) => a.trim().isNotEmpty)
+          .any((a) => covers(response, a, ignoreArticles: ignoreArticles));
 
   /// The comparable words of a string — canonicalised WITHOUT dropping the leading article, which
-  /// here is just another word the recogniser may or may not have caught.
-  static List<String> _words(String value) {
+  /// here is just another word the recogniser may or may not have caught. [ignoreArticles] (see
+  /// [check]) removes every article instead, on both sides.
+  static List<String> _words(String value, {bool ignoreArticles = false}) {
     var v = value.toLowerCase().trim();
     v = _expandContractions(v);
     v = v.replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ');
     v = v.replaceAll(RegExp(r'\s+', unicode: true), ' ').trim();
-    return v.isEmpty ? const [] : v.split(' ');
+    if (v.isEmpty) return const [];
+    final words = v.split(' ');
+    return ignoreArticles ? words.where((w) => !_articles.contains(w)).toList() : words;
   }
+
+  static const Set<String> _articles = {'a', 'an', 'the'};
 
   /// Which of the learner's OWN words do not belong, as indices into [given].
   ///
@@ -280,13 +359,15 @@ abstract final class SessionGrader {
   }
 
   /// Lowercase, expand contractions, punctuation → space, whitespace collapsed, leading article
-  /// dropped — the server's exact sequence.
-  static String _normalize(String value) {
+  /// dropped — the server's exact sequence. [ignoreArticles] (see [check]) drops every article
+  /// rather than only the leading one.
+  static String _normalize(String value, {bool ignoreArticles = false}) {
     var v = value.toLowerCase().trim();
     v = _expandContractions(v); // before stripping the apostrophe
     v = v.replaceAll(RegExp(r'[^\p{L}\p{N}\s]+', unicode: true), ' ');
     v = v.replaceAll(RegExp(r'\s+', unicode: true), ' ').trim();
-    return _stripArticle(v);
+    if (!ignoreArticles) return _stripArticle(v);
+    return v.split(' ').where((w) => w.isNotEmpty && !_articles.contains(w)).join(' ');
   }
 
   static String _stripArticle(String v) => v.replaceFirst(RegExp(r'^(the|a|an)\s+'), '');

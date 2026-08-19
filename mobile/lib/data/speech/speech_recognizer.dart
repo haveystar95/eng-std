@@ -56,28 +56,44 @@ abstract class SpeechRecognizer {
 
   /// Has [prepare] already succeeded in this app run? Read without side effects, so a surface that
   /// must stay silent until permission exists (the intro's echo button) can ask without prompting.
+  ///
+  /// NOT the same question as "does the OS say we're authorized" (QA-21) — [prepare] is what sets
+  /// this true, and nothing calls [prepare] on app start, so this is false for the whole first part
+  /// of a run even when the learner granted the permission in a PAST run (or in iOS Settings,
+  /// outside the app entirely). A surface that must reflect the real OS answer without waiting for
+  /// some other card to call [prepare] first needs [hasPermission] instead.
   bool get isReady;
+
+  /// Does the OS already say yes — WITHOUT prompting, and without needing [prepare] to have run
+  /// first? This is `SFSpeechRecognizer.authorizationStatus()` (+ the mic permission), asked
+  /// directly. Unlike [isReady], this reflects permission granted in a past run or via iOS
+  /// Settings, not just "has this process's [prepare] already succeeded" — the gap QA-21 fixes: a
+  /// brand-new word's intro card is often the FIRST speech-touching card in a fresh app run (its
+  /// echo is the only thing that could call [prepare], and it deliberately never does), so
+  /// [isReady] alone left the echo hidden despite the OS having already said yes.
+  Future<bool> get hasPermission;
 
   /// Listen once and return what was heard.
   ///
   /// [expected] is the words this card is hoping for. It is a HINT to the engine, never a check:
   /// whatever comes back is graded normally, and a learner who says something else gets what they
-  /// said.
+  /// said. It chooses the SFSpeechRecognitionTaskHint (a single word is a `search`, a sentence is
+  /// `dictation`).
   ///
-  /// KNOWN GAP, and the reason this parameter is thinner than it should be. The right use of
-  /// [expected] is `SFSpeechRecognitionRequest.contextualStrings`, which tells the recogniser what
-  /// it is about to hear and is the difference between transcribing «bespoke» and «be spoke» from a
-  /// learner's accent. `speech_to_text` 7.4.0 does not expose it — its Swift side sets `taskHint`
-  /// and `addsPunctuation` on the request and nothing else — and adding a dependency or a fork is
-  /// not this task's to decide. So [expected] currently does the one thing it can from here: it
-  /// chooses the SFSpeechRecognitionTaskHint (a single word is a `search`, a sentence is
-  /// `dictation`), which is a real but much smaller improvement. It stays in the signature because
-  /// it is the value `contextualStrings` needs, at the one call site that would pass it.
+  /// [contextualStrings] is the other half of that hint, and the one that actually fixes QA-20's
+  /// mishearings (e.g. «What are your strengths» heard as «What are you strengths»): it is passed
+  /// through to `SFSpeechRecognitionRequest.contextualStrings`, which tells the recogniser what
+  /// vocabulary to expect — the difference between transcribing «bespoke» and «be spoke». Upstream
+  /// `speech_to_text` 7.4.0 does not expose this at all (its Swift side sets only `taskHint` and
+  /// `addsPunctuation`); [PluginSpeechRecognizer] talks to a vendored fork
+  /// (`packages/speech_to_text`, see its `UPSTREAM.md`) that adds it. Like [expected], it is a hint
+  /// only — never a check.
   Future<SpeechAttempt> listenOnce({
     required List<String> expected,
     required String localeId,
     Duration timeout,
     Duration pauseFor,
+    List<String> contextualStrings,
     ValueChanged<String>? onPartial,
   });
 
@@ -104,6 +120,9 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
   bool get isReady => _initialized && _speech.isAvailable;
 
   @override
+  Future<bool> get hasPermission => _speech.hasPermission;
+
+  @override
   Future<bool> prepare() async {
     if (_initialized) return _speech.isAvailable;
     try {
@@ -123,6 +142,7 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
     required String localeId,
     Duration timeout = const Duration(seconds: 8),
     Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
   }) async {
     if (!await prepare()) return const SpeechAttempt.unavailable();
@@ -158,6 +178,9 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
           // full stops only make the two disagree about what was said.
           autoPunctuation: false,
         ),
+        // See this method's own doc comment: the vendored fork's addition, and the actual fix for
+        // QA-20's mishearings (`expected` above only picks the taskHint).
+        contextualStrings: contextualStrings.isEmpty ? null : contextualStrings,
         onResult: (result) => _onResult(result, onPartial),
       );
     } catch (e) {

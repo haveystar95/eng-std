@@ -228,19 +228,42 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     final navigator = Navigator.of(context);
     if (_listening) await _stopListening();
     setState(() => _submitting = true);
-    // Enqueue: a client-ULID pending row (survives an app kill and an offline start); the durable
-    // queue re-sends when the network returns. Voice never triggers this — «Сгенерировать» does.
-    await ref.read(generationControllerProvider).start(
-          topic: topic,
-          levels: _levels.toList(),
-          size: _size.count,
-          sourceLang: _sourceLang,
-          targetLang: _targetLang,
-          targetLangExplicit: _targetExplicit,
+    try {
+      // Enqueue: a client-ULID pending row (survives an app kill and an offline start); the durable
+      // queue re-sends when the network returns. Voice never triggers this — «Сгенерировать» does.
+      await ref.read(generationControllerProvider).start(
+            topic: topic,
+            levels: _levels.toList(),
+            size: _size.count,
+            sourceLang: _sourceLang,
+            targetLang: _targetLang,
+            targetLangExplicit: _targetExplicit,
+          );
+      ref.invalidate(generationQuotaProvider); // the count just went up
+      AppHaptics.success();
+      if (mounted) navigator.pop();
+    } catch (e) {
+      // QA-23. This used to have no catch and no finally, and the enqueue's very first act is a
+      // LOCAL DB write — so anything wrong with the local store (and on a fresh install that write
+      // is the first one the app ever makes) left `_submitting` true forever: «Сгенерировать» went
+      // grey and stayed grey, with the exception going only to the Flutter error handler. The
+      // owner's report was exactly that — «как будто приложение отдаёт какую-то ошибку, которую не
+      // видно». A failure here must always be BOTH recoverable (the button comes back) and said out
+      // loud.
+      debugPrint('[generate] enqueue failed: $e');
+      if (mounted) {
+        AppHaptics.warning();
+        // A SnackBar, like every other failure this app reports (profile save, store add): the
+        // screen stays open with the typed prompt intact, so «попробовать ещё раз» is one tap.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).generateEnqueueFailed('$e'))),
         );
-    ref.invalidate(generationQuotaProvider); // the count just went up
-    AppHaptics.success();
-    if (mounted) navigator.pop();
+      }
+    } finally {
+      // The button comes back even when the screen is being torn down — `mounted` guards setState,
+      // never the reset itself.
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   Future<void> _pickLanguage() async {

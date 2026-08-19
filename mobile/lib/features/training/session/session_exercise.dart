@@ -239,6 +239,52 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   List<String> get _spokenTargets =>
       _card.asksForExample ? [_card.answer] : [_card.answer, ..._card.acceptedVariants];
 
+  /// This card's recording window. The word form's own term can be a whole phrase, which needs the
+  /// sentence-sized window despite the card still being the word form (QA-21) — see
+  /// [SpokenAnswer.windowFor].
+  ({Duration listenFor, Duration pauseFor}) get _window =>
+      SpokenAnswer.windowFor(asksForExample: _card.asksForExample, term: _card.answerText);
+
+  /// Is this card's spoken answer judged by coverage rather than by equality (QA-22)? Same
+  /// «длинность» rule as [_window], from the one place that defines it.
+  bool get _gradesByCoverage =>
+      SpokenAnswer.gradesByCoverage(asksForExample: _card.asksForExample, term: _card.answerText);
+
+  /// The term's local mirror row, needed ONLY to get its plain headword (`termText`) for
+  /// [_contextualStrings] on the example form — [SessionCard] carries the example sentence but not
+  /// the bare term separately from it once [SessionCard.asksForExample] folds them together. Same
+  /// lazy, once-per-card, DB-not-network pattern as `_PromptPhotoState._term` below.
+  late final Future<Term?> _term = ref.read(appDatabaseProvider).termById(_card.termId);
+
+  /// The vocabulary hint sent as `contextualStrings` (see [SpeechRecognizer.listenOnce]'s doc) —
+  /// what the recogniser should expect to hear, distinct from [_spokenTargets] which also drives
+  /// grading and the taskHint. Word-form: the term whole, plus its individual words (a multi-word
+  /// term needs both — the recogniser sometimes matches best on a fragment). Example-form: the
+  /// UNIQUE words of the reference example, plus the term itself — the sentence alone does not
+  /// always spell the term the way its dictionary form would (inflection, capitalisation).
+  /// Deduplicated and capped at 50 entries; never empty strings.
+  Future<List<String>> _contextualStrings() async {
+    final strings = <String>{};
+    void add(String? text) {
+      final trimmed = (text ?? '').trim();
+      if (trimmed.isNotEmpty) strings.add(trimmed);
+    }
+
+    if (_card.asksForExample) {
+      for (final word in _card.answer.trim().split(RegExp(r'\s+'))) {
+        add(word);
+      }
+      add((await _term)?.termText);
+    } else {
+      add(_card.answer);
+      for (final word in _card.answer.trim().split(RegExp(r'\s+'))) {
+        add(word);
+      }
+    }
+
+    return strings.take(50).toList();
+  }
+
   /// A listening card with options is recognition (12g); without, production/typing (12h). The
   /// backend currently sends no options for listening, so this is the typed path — but it stays
   /// forward-compatible if options ever arrive.
@@ -339,25 +385,36 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // other card grades its text against the accepted set.
     final verdict = _card.isIdentityGraded
         ? (response == _card.answer ? LocalCheck.correct : LocalCheck.wrong)
-        // A sentence READ ALOUD is compared by coverage, not by equality — the same policy the
-        // server puts on this key. A recogniser eats articles and guesses homophones, so equality
-        // here would print «Не то» over an answer the scheduler is about to count as correct, which
-        // is the one direction this check is forbidden to take.
-        : (_isSpeaking && _card.asksForExample)
-            ? (SessionGrader.covers(response, _card.answer) ? LocalCheck.correct : LocalCheck.wrong)
+        // Anything LONG read aloud is compared by coverage, not by equality — the example form
+        // always, and since QA-22 a word form whose own term is a phrase (see
+        // [SpokenAnswer.gradesByCoverage]). A recogniser eats articles and guesses homophones, so
+        // equality here would print «Не то» over an answer the scheduler is about to count as
+        // correct, which is the one direction this check is forbidden to take.
+        : (_isSpeaking && _gradesByCoverage)
+            ? (SessionGrader.coversAny(
+                    response,
+                    [_card.answer, ..._card.acceptedVariants],
+                    ignoreArticles: true,
+                  )
+                ? LocalCheck.correct
+                : LocalCheck.wrong)
             : SessionGrader.check(
                 response,
                 _card.answer,
                 variants: _card.acceptedVariants,
                 forgiveTypos: _mode.forgivesTypos,
                 spokenSuffixTolerance: _isSpeaking,
+                // Speaking ONLY (QA-21) — see SessionGrader.check. Typing and dictation practise the
+                // article deliberately and keep failing a dropped one.
+                ignoreArticles: _isSpeaking,
               );
+    // Sound + haptic together, for every mode — the verdict is shared, so its feedback is too.
     switch (verdict) {
       case LocalCheck.correct:
       case LocalCheck.typo:
-        AppHaptics.success();
+        AppFeedback.correct();
       case LocalCheck.wrong:
-        AppHaptics.warning();
+        AppFeedback.wrong();
     }
     setState(() {
       _answered = true;
@@ -450,11 +507,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     });
     _manualStop = false;
 
+    final contextualStrings = await _contextualStrings();
+    if (!mounted) return;
+
     final attempt = await _recognizer!.listenOnce(
           expected: _spokenTargets,
           localeId: widget.speechLocaleId,
-          timeout: _card.asksForExample ? SpokenAnswer.exampleFormListenFor : SpokenAnswer.wordFormListenFor,
-          pauseFor: _card.asksForExample ? SpokenAnswer.exampleFormPauseFor : SpokenAnswer.wordFormPauseFor,
+          timeout: _window.listenFor,
+          pauseFor: _window.pauseFor,
+          contextualStrings: contextualStrings,
           onPartial: (text) {
             if (mounted && _listeningNow) setState(() => _partial = text);
           },
@@ -468,11 +529,17 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       // «Готово»), and what it caught covers under 70% of the sentence — a stumble or a channel
       // cutoff, not a wrong answer (QA-20 finding iii: "correct reading sometimes fails to
       // register"). Retried like a channel failure, spending an attempt but no verdict, rather than
-      // handing the scheduler a lapse for a room that cut the recording short. Word-form has no
-      // coverage concept (MatchPolicy::Exact), so this only ever applies to the sentence form.
+      // handing the scheduler a lapse for a room that cut the recording short.
+      //
+      // Still the EXAMPLE form only, deliberately, even though QA-22 gave a long word-form term a
+      // coverage verdict too: this is retry behaviour, not grading, and it was left exactly where
+      // it was. A long term cut off mid-reading therefore commits as wrong instead of being
+      // retried — which is what it already did when the word form was binary, so nothing regressed
+      // here. Worth revisiting together with the server's own retry policy, not on its own.
       if (!_manualStop &&
           _card.asksForExample &&
-          SessionGrader.coverageOf(attempt.text, _card.answer) < SpokenAnswer.minCoverage) {
+          SessionGrader.coverageOf(attempt.text, _card.answer, ignoreArticles: true) <
+              SpokenAnswer.minCoverage) {
         setState(() {
           _attempts++;
           _partial = '';
@@ -1552,14 +1619,23 @@ class _FeedbackBlock extends ConsumerWidget {
 
   bool get _isSpeaking => card.mode == ExerciseMode.speaking;
 
-  /// Indices into the target sentence's own displayed words with no pair in what was recognised —
-  /// empty off the speaking example form, where there is neither a sentence to mark nor a
-  /// transcript to mark it against.
+  /// Is this card's spoken answer judged by coverage (QA-22)? The same one rule the card itself
+  /// grades by — the highlight has to follow the verdict, or it would mark words on a card that
+  /// was never compared word by word.
+  bool get _gradesByCoverage =>
+      _isSpeaking &&
+      SpokenAnswer.gradesByCoverage(asksForExample: card.asksForExample, term: card.answerText);
+
+  /// Indices into the target's own displayed words with no pair in what was recognised — empty
+  /// wherever grading is binary, where there is neither a multi-word target worth marking nor a
+  /// word-by-word comparison behind the verdict to justify marking it.
   Set<int> get _uncoveredWords {
     final heard = recognizedText;
-    if (!_isSpeaking || !card.asksForExample || heard == null || heard.trim().isEmpty) return const {};
+    if (!_gradesByCoverage || heard == null || heard.trim().isEmpty) return const {};
 
-    return SessionGrader.uncoveredWords(heard, card.answerText);
+    // Matches the verdict's own comparison (QA-21) — marking an article the verdict forgave would
+    // point at a "mistake" that was not counted as one.
+    return SessionGrader.uncoveredWords(heard, card.answerText, ignoreArticles: true);
   }
 
   @override
@@ -1593,7 +1669,7 @@ class _FeedbackBlock extends ConsumerWidget {
             // WHICH part failed to register is worth showing, and the write-on animation has
             // nothing to say about that.
             Expanded(
-              child: (_isSpeaking && card.asksForExample)
+              child: _gradesByCoverage
                   ? _SpokenSentence(sentence: card.answerText, uncovered: _uncoveredWords)
                   : _WritesItself(text: card.answerText, style: AppTextExercise.feedbackTerm),
             ),

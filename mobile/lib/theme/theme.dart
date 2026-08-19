@@ -18,6 +18,7 @@ import 'typography.dart';
 
 export 'brand_palette.dart';
 export 'colors.dart';
+export 'feedback.dart';
 export 'flag_palette.dart';
 export 'geometry.dart';
 export 'haptics.dart';

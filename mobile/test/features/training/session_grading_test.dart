@@ -255,4 +255,172 @@ void main() {
       expect(ExerciseMode.fromWire(null), ExerciseMode.typing);
     });
   });
+
+  group('SpokenAnswer.windowFor — the recording window follows the LENGTH of what is said (QA-21)', () {
+    test('a one- or two-word term keeps the short window', () {
+      for (final term in ['evoke', 'boarding pass']) {
+        final w = SpokenAnswer.windowFor(asksForExample: false, term: term);
+        expect(w.listenFor, SpokenAnswer.wordFormListenFor, reason: term);
+        expect(w.pauseFor, SpokenAnswer.wordFormPauseFor, reason: term);
+      }
+    });
+
+    test('a term of three words or more gets the sentence-sized window', () {
+      // The live case: an 8s/2s window cut this off after the first word («Heard: When»).
+      final w = SpokenAnswer.windowFor(
+        asksForExample: false,
+        term: 'Where do you see yourself in five years?',
+      );
+      expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
+      expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
+    });
+
+    test('the threshold is exactly SpokenAnswer.longTermWords, counted in words', () {
+      expect(SpokenAnswer.longTermWords, 3);
+      expect(SpokenAnswer.isLongTerm('take a photo'), isTrue); // 3
+      expect(SpokenAnswer.isLongTerm('team player'), isFalse); // 2
+      expect(SpokenAnswer.isLongTerm('   '), isFalse); // no words at all
+    });
+
+    test('the example form always gets the long window, however short its term', () {
+      final w = SpokenAnswer.windowFor(asksForExample: true, term: 'evoke');
+      expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
+      expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
+    });
+  });
+
+  group('SpokenAnswer.gradesByCoverage — long spoken answers are judged by coverage (QA-22)', () {
+    test('a phrase-shaped term on the word form is coverage-graded', () {
+      expect(
+        SpokenAnswer.gradesByCoverage(
+            asksForExample: false, term: 'How do you deal with conflict?'),
+        isTrue,
+      );
+    });
+
+    test('a one- or two-word term stays binary', () {
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: false, term: 'evoke'), isFalse);
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: false, term: 'team player'), isFalse);
+    });
+
+    test('the example form is coverage-graded whatever its term — unchanged', () {
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: true, term: 'evoke'), isTrue);
+    });
+
+    test('it is the SAME «длинность» rule the recording window uses — one source, never two', () {
+      for (final term in ['evoke', 'team player', 'take a photo', 'How do you deal with conflict?']) {
+        final longWindow =
+            SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor ==
+                SpokenAnswer.exampleFormListenFor;
+        expect(
+          SpokenAnswer.gradesByCoverage(asksForExample: false, term: term),
+          longWindow,
+          reason: 'a term recorded like a sentence must be graded like one: $term',
+        );
+      }
+    });
+  });
+
+  group('coversAny — the coverage counterpart of the accepted set (QA-22)', () {
+    test('a variant is accepted, not just the canonical form', () {
+      expect(
+        SessionGrader.coversAny('i am a team player', ['Are you a team player?', 'I am a team player']),
+        isTrue,
+      );
+    });
+
+    test('blank candidates are ignored and an empty set never passes vacuously', () {
+      expect(SessionGrader.coversAny('anything', const []), isFalse);
+      expect(SessionGrader.coversAny('anything', const ['', '   ']), isFalse);
+    });
+  });
+
+  group('the live QA-22 case — «How do you deal with conflict?»', () {
+    const target = 'How do you deal with conflict?';
+    const heard = 'How do you deal this a conflict?';
+
+    test('the reading counts: 5 of 6 target words covered, above the 70% threshold', () {
+      // «with» is the only target word missing. The eaten article «a» the recogniser INVENTED is
+      // dropped from both sides, so it is not counted as an extra word either.
+      final coverage = SessionGrader.coverageOf(heard, target, ignoreArticles: true);
+      expect(coverage, closeTo(5 / 6, 1e-9));
+      expect(coverage, greaterThanOrEqualTo(SpokenAnswer.minCoverage));
+      expect(SessionGrader.covers(heard, target, ignoreArticles: true), isTrue);
+    });
+
+    test('«this» is uncovered and gets marked, «a» does not', () {
+      // Indices into the TARGET's own displayed words: How(0) do(1) you(2) deal(3) with(4)
+      // conflict?(5). The learner's stray «this» has no pair, which is what leaves «with» unmarked
+      // — the mark is on the target word that never registered.
+      expect(
+        SessionGrader.uncoveredWords(heard, target, ignoreArticles: true),
+        {4},
+      );
+    });
+
+    test('binary grading would have failed the same reading — which is the bug', () {
+      expect(SessionGrader.check(heard, target, ignoreArticles: true), LocalCheck.wrong);
+    });
+  });
+
+  group('ignoreArticles — speaking forgives an article the microphone ate (QA-21)', () {
+    test('check: «team player» ≡ «a team player» when the flag is on', () {
+      expect(
+        SessionGrader.check('are you team player', 'Are you a team player?', ignoreArticles: true),
+        LocalCheck.correct,
+      );
+    });
+
+    test('check: the SAME comparison without the flag is unchanged — typing still fails it', () {
+      // The default is off, so every non-speaking mode keeps grading the article. Not `correct`:
+      // the article is a whole word, so this is not a one-character typo either.
+      expect(
+        SessionGrader.check('are you team player', 'Are you a team player?'),
+        LocalCheck.wrong,
+      );
+    });
+
+    test('check: articles are dropped mid-sentence, not just at the front', () {
+      // _normalize already stripped a LEADING article before this change; the eaten one here is in
+      // the middle, which is the case the live run hit.
+      expect(
+        SessionGrader.check('i saw dog in the park', 'I saw a dog in the park', ignoreArticles: true),
+        LocalCheck.correct,
+      );
+      expect(
+        SessionGrader.check('i saw dog in the park', 'I saw a dog in the park'),
+        LocalCheck.wrong,
+      );
+    });
+
+    test('check: dropping articles does not make two different answers equal', () {
+      expect(
+        SessionGrader.check('are you a team leader', 'Are you a team player?', ignoreArticles: true),
+        LocalCheck.wrong,
+      );
+    });
+
+    test('coverage: the eaten article stops costing twice (missing word AND longer target)', () {
+      const target = 'Could you take a photo of us?';
+      const heard = 'could you take photo of us';
+      expect(SessionGrader.coverageOf(heard, target, ignoreArticles: true), 1.0);
+      // Without the flag the same reading is short of a word it never had a chance to say.
+      expect(SessionGrader.coverageOf(heard, target), lessThan(1.0));
+    });
+
+    test('coverage: the 70% threshold itself is untouched — only what gets counted changed', () {
+      expect(SpokenAnswer.minCoverage, 0.7);
+      expect(SessionGrader.covers('nothing like it', 'Could you take a photo of us?', ignoreArticles: true), isFalse);
+    });
+
+    test('uncoveredWords: a forgiven article is never marked as missing', () {
+      // Index 3 is «a» — with articles ignored it is neither covered nor uncovered, so the
+      // highlight cannot contradict the verdict that just forgave it.
+      expect(
+        SessionGrader.uncoveredWords('could you take photo of us', 'Could you take a photo of us?',
+            ignoreArticles: true),
+        isEmpty,
+      );
+    });
+  });
 }

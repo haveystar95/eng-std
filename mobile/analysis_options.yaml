@@ -9,6 +9,19 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # Vendored fork of `speech_to_text` (packages/speech_to_text — see its UPSTREAM.md). Its
+    # example/ and test/ subtrees are upstream's own, with their own pubspec (mockito, provider)
+    # that `flutter pub get` never resolves here — analysing them against THIS app's package graph
+    # produces nothing but false positives. lib/ (what the app actually imports) stays analysed.
+    - packages/speech_to_text/example/**
+    - packages/speech_to_text/test/**
+    # Untouched upstream file (the app never imports SpeechToTextProvider) with a pre-existing
+    # lint under this app's stricter ruleset than upstream's own. speech_to_text.dart — the file
+    # this fork actually edits — stays analysed.
+    - packages/speech_to_text/lib/speech_to_text_provider.dart
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

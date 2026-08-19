@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,8 +46,16 @@ class _FakeRecognizer implements SpeechRecognizer {
   final List<Duration> timeoutsPerCall = [];
   final List<Duration> pauseForsPerCall = [];
 
+  /// The `contextualStrings` vocabulary hint handed over per call — see this class's own doc:
+  /// this is what QA-20's fix actually sends the recogniser, [expectedPerCall] only picks the
+  /// taskHint.
+  final List<List<String>> contextualStringsPerCall = [];
+
   @override
   Future<bool> prepare() async => isReady;
+
+  @override
+  Future<bool> get hasPermission async => isReady;
 
   @override
   Future<SpeechAttempt> listenOnce({
@@ -54,12 +63,14 @@ class _FakeRecognizer implements SpeechRecognizer {
     required String localeId,
     Duration timeout = const Duration(seconds: 8),
     Duration pauseFor = const Duration(seconds: 2),
+    List<String> contextualStrings = const [],
     ValueChanged<String>? onPartial,
   }) async {
     expectedPerCall.add(expected);
     locales.add(localeId);
     timeoutsPerCall.add(timeout);
     pauseForsPerCall.add(pauseFor);
+    contextualStringsPerCall.add(contextualStrings);
     final attempt = _script[calls.clamp(0, _script.length - 1)];
     calls++;
     if (attempt.isHeard) onPartial?.call(attempt.text);
@@ -97,12 +108,16 @@ void main() {
     skips = 0;
   });
 
-  Widget host(SessionCard card, _FakeRecognizer recognizer) => ProviderScope(
+  // [db] lets a test seed the local mirror BEFORE the card ever reads it — needed to give the
+  // example-form's contextualStrings lookup (`_term` in session_exercise.dart, mirroring
+  // `_PromptPhotoState._term`) a `termText` to find. Every other test doesn't care and gets a
+  // fresh empty one, same as before.
+  Widget host(SessionCard card, _FakeRecognizer recognizer, {AppDatabase? db}) => ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
+            final database = db ?? AppDatabase.forTesting(NativeDatabase.memory());
+            ref.onDispose(database.close);
+            return database;
           }),
           speechRecognizerProvider.overrideWithValue(recognizer),
         ],
@@ -135,6 +150,26 @@ void main() {
         example: 'I have a reservation for tonight.',
         exampleTranslation: 'У меня бронь на сегодня.',
         acceptedVariants: const ['booking'],
+        ladderStep: LearningLadder.stepAssembly,
+      );
+
+  /// A term that is itself a whole phrase, still asked on the WORD form (rung: assembly).
+  SessionCard longTermWordCard() => SessionCard(
+        termId: 'T3',
+        mode: ExerciseMode.speaking,
+        type: 'phrase',
+        prompt: 'кем вы видите себя через пять лет?',
+        answer: 'Where do you see yourself in five years?',
+        ladderStep: LearningLadder.stepAssembly,
+      );
+
+  /// A word-form phrase whose only fragile part is the article.
+  SessionCard articleCard() => SessionCard(
+        termId: 'T4',
+        mode: ExerciseMode.speaking,
+        type: 'phrase',
+        prompt: 'вы командный игрок?',
+        answer: 'Are you a team player?',
         ladderStep: LearningLadder.stepAssembly,
       );
 
@@ -385,6 +420,132 @@ void main() {
       expect(recognizer.timeoutsPerCall.single, SpokenAnswer.exampleFormListenFor);
       expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
     });
+
+    testWidgets('a PHRASE-shaped term on the word form also gets the longer window (QA-21)', (tester) async {
+      // The live case: an 8s/2s window cut this reading off after the first word («Heard: When»).
+      // Still the word form — the card asks for the term, not the example — but what is being said
+      // is sentence-length, and the window has to fit that.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Where do you see yourself in five years')]);
+      await tester.pumpWidget(host(longTermWordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(recognizer.timeoutsPerCall.single, SpokenAnswer.exampleFormListenFor);
+      expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
+    });
+  });
+
+  group('an article the microphone ate (QA-21)', () {
+    testWidgets('a word-form phrase missing only «a» is accepted, not failed', (tester) async {
+      // The live case: «Are you a team player?» read correctly, transcribed without the article.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Are you team player')]);
+      await tester.pumpWidget(host(articleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.correct);
+      // The RAW transcript still goes up untouched — the server grades it, this only fixes what the
+      // phone SHOWS in the meantime.
+      expect(answers.single.response, 'Are you team player');
+    });
+
+    testWidgets('a genuinely different answer is still wrong', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Do you like coffee')]);
+      await tester.pumpWidget(host(articleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+    });
+
+    testWidgets('ONE wrong content word in a short phrase now passes — the 70% trade-off', (tester) async {
+      // «Are you a team player?» → «are you team leader»: with the article dropped the target is
+      // four tokens, so a single wrong one is 3/4 = 75%, over the threshold. This is the specified
+      // consequence of coverage-grading a phrase at 70% (QA-22) and is pinned, not accidental —
+      // before QA-22 this card was binary and this reading failed. The shorter the phrase, the
+      // coarser the threshold's grain; the server is the grader that decides what it counts.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Are you a team leader')]);
+      await tester.pumpWidget(host(articleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.correct);
+    });
+  });
+
+  group('a phrase-shaped term on the word form is graded by coverage (QA-22)', () {
+    /// The live case, verbatim: the reading was correct, the recogniser mangled the middle.
+    SessionCard conflictCard() => SessionCard(
+          termId: 'T5',
+          mode: ExerciseMode.speaking,
+          type: 'phrase',
+          prompt: 'как вы справляетесь с конфликтами?',
+          answer: 'How do you deal with conflict?',
+          ladderStep: LearningLadder.stepAssembly,
+        );
+
+    testWidgets('«How do you deal this a conflict?» counts — 5 of 6, article forgiven', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('How do you deal this a conflict?')]);
+      await tester.pumpWidget(host(conflictCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      // Binary equality marked this wrong, which is the bug: the learner read it correctly.
+      expect(answers.single.verdict, LocalCheck.correct);
+      // The RAW transcript still goes up untouched — the server is the grader.
+      expect(answers.single.response, 'How do you deal this a conflict?');
+    });
+
+    testWidgets('a reading that really is short still fails', (tester) async {
+      // Two of six words: nowhere near the 70% the threshold asks for.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('How do')]);
+      await tester.pumpWidget(host(conflictCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+    });
+
+    testWidgets('a SHORT term keeps binary grading — one wrong word is still wrong', (tester) async {
+      // 'reservation' vs 'registration' shares no coverage concept at all: the word form of a
+      // one-word term is exactly where equality is the fair question.
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+    });
+
+    testWidgets('a WRONG reading marks the target words that never registered', (tester) async {
+      // A deliberate «Готово» on a short reading, so the verdict is wrong and the reveal (which is
+      // where the highlight lives) is shown. Before QA-22 the word form had no highlight at all —
+      // it typed the term out whole, because it was never compared word by word.
+      final recognizer = _FakeRecognizer(
+        [const SpeechAttempt.heard('How do you')],
+        completeOnStop: true,
+      );
+      await tester.pumpWidget(host(conflictCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first); // start
+      await tester.pump();
+      await tester.tap(recordButton().first); // «Готово»
+      await tester.pumpAndSettle();
+
+      expect(answers.single.verdict, LocalCheck.wrong);
+      // «deal with conflict?» never registered; «How do you» did.
+      expect(styleOf(tester, 'conflict?')?.decorationStyle, TextDecorationStyle.wavy);
+      expect(styleOf(tester, 'deal')?.decorationStyle, TextDecorationStyle.wavy);
+      expect(styleOf(tester, 'How')?.decorationStyle, isNot(TextDecorationStyle.wavy));
+    });
   });
 
   group('a pause cutoff on the example form (QA-20 finding iii)', () {
@@ -493,6 +654,60 @@ void main() {
       expect(answers.single.verdict, LocalCheck.wrong);
       expect(skips, 0);
       expect(recognizer.calls, 0);
+    });
+  });
+
+  group('contextualStrings (QA-20 — the recogniser vocabulary hint)', () {
+    testWidgets('word form: the term whole, plus its individual words', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('reservation')]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      final sent = recognizer.contextualStringsPerCall.single;
+      expect(sent, containsAll(['reservation']));
+      // acceptedVariants ('booking') is the taskHint's job (expectedPerCall), not this list's — the
+      // work order asks only for the term itself and its words here.
+      expect(sent.toSet().length, sent.length, reason: 'deduplicated');
+    });
+
+    testWidgets('example form: the unique example words, plus the term looked up locally', (tester) async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      await db.into(db.terms).insert(
+            TermsCompanion.insert(
+              id: 'T2',
+              updatedAt: DateTime.utc(2026, 8, 19),
+              termText: const Value('take a photo'),
+            ),
+          );
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('could you take a photo of us')]);
+      await tester.pumpWidget(host(exampleCard(), recognizer, db: db));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      final sent = recognizer.contextualStringsPerCall.single;
+      expect(
+        sent,
+        containsAll(['Could', 'you', 'take', 'a', 'photo', 'of', 'us?', 'take a photo']),
+      );
+      expect(sent.toSet().length, sent.length, reason: 'deduplicated (e.g. "a" appears once)');
+    });
+
+    testWidgets('example form with no local term row: falls back to just the example words', (tester) async {
+      // No termById row for T2 — the DB is fresh/unsynced. The lookup returns null, and the card
+      // must not crash or hang on it (this is the exact «без параметра» backward-compat shape one
+      // layer up, at the app's own call site rather than the plugin's).
+      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('could you take a photo of us')]);
+      await tester.pumpWidget(host(exampleCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      final sent = recognizer.contextualStringsPerCall.single;
+      expect(sent, containsAll(['Could', 'you', 'take', 'a', 'photo', 'of', 'us?']));
+      expect(sent, isNotEmpty);
     });
   });
 }
