@@ -51,11 +51,23 @@ final readonly class BakeoffSample
     {
         $rows = $this->keys->primaryKeys($termLang, $lang);
 
-        usort($rows, static fn (TranslationKeyRow $a, TranslationKeyRow $b): int => $a->termId <=> $b->termId);
+        usort($rows, static fn (TranslationKeyRow $a, TranslationKeyRow $b): int => [$a->termId, $a->translationId] <=> [$b->termId, $b->translationId]);
 
         $buckets = ['addressee' => [], 'phrase' => [], 'word' => [], 'flagged' => []];
 
+        // One row per TERM. The store holds nine terms with two `is_primary` translations each
+        // («stay calm» → «Оставайтесь спокойны» AND «оставаться спокойным»), which is a content
+        // defect in its own right — the card's question is then whichever of the two a query
+        // happens to return. Here it would silently spend two calls on one term and shrink the
+        // sample; the lowest translation id wins, so the pick stays deterministic.
+        $seen = [];
+
         foreach ($rows as $row) {
+            if (isset($seen[$row->termId])) {
+                continue;
+            }
+            $seen[$row->termId] = true;
+
             $bucket = $this->bucketOf($row, $lang);
             $buckets[$bucket][] = [
                 'id' => $row->termId,

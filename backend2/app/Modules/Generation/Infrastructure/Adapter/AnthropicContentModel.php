@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\ModelCost;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -45,7 +46,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
         private string $baseUrl = 'https://api.anthropic.com/v1',
         private ModelCost $cost = new ModelCost(),
         private int $timeoutSeconds = 180,
-        private int $retries = 2,
+        private int $retries = 4,
         private int $maxTokens = 16000,
     ) {}
 
@@ -68,7 +69,15 @@ final readonly class AnthropicContentModel implements ContentModelPort
             'anthropic-version' => self::API_VERSION,
         ])
             ->timeout($this->timeoutSeconds)
-            ->retry($this->retries, 1000, throw: false)
+            // Same policy as the OpenAI-shaped adapter — see the comment there for why the backoff
+            // escalates and why a 403 is not retried.
+            ->retry(
+                $this->retries,
+                static fn (int $attempt): int => $attempt * 4000,
+                static fn (\Throwable $e): bool => ! $e instanceof RequestException
+                    || in_array($e->response->status(), [408, 409, 429, 500, 502, 503, 504], true),
+                throw: false,
+            )
             ->post(rtrim($this->baseUrl, '/') . '/messages', [
                 'model' => $this->model,
                 'max_tokens' => $this->maxTokens,

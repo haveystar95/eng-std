@@ -6,10 +6,16 @@ namespace App\Modules\Generation\Infrastructure\Eloquent;
 
 use App\Modules\Generation\Application\Dto\BakeoffCallResult;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
+use App\Modules\Generation\Application\Dto\ModelAnswer;
+use App\Modules\Generation\Domain\ValueObject\BakeoffTrack;
+use App\Modules\Generation\Domain\ValueObject\CandidateItem;
 use App\Modules\Generation\Domain\ValueObject\CandidateVerdict;
+use App\Modules\Generation\Domain\ValueObject\CheckedBatch;
 use App\Modules\Generation\Domain\ValueObject\CheckId;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 /**
  * The sandbox writer. Three tables, all of them new, none of them read by anything that serves a
@@ -88,6 +94,125 @@ final readonly class EloquentBakeoffJournal implements BakeoffJournal
         }
 
         return $callId;
+    }
+
+    public function readRun(string $runId): ?array
+    {
+        $run = DB::table('bakeoff_runs')->where('id', $runId)->first();
+        if ($run === null) {
+            return null;
+        }
+
+        $candidates = [];
+        foreach (DB::table('bakeoff_candidates')->where('run_id', $runId)->orderBy('position')->get() as $row) {
+            $candidates[$row->call_id][] = $row;
+        }
+
+        $results = [];
+        foreach (DB::table('bakeoff_calls')->where('run_id', $runId)->orderBy('created_at')->get() as $call) {
+            $track = BakeoffTrack::from($call->track);
+            $provider = ProviderId::from($call->provider);
+
+            if (! $call->ok) {
+                $results[] = BakeoffCallResult::failed(
+                    $track, $provider, $call->model, $call->task_key, $call->prompt_sha,
+                    (string) ($call->error ?? ''), $call->latency_ms,
+                );
+
+                continue;
+            }
+
+            $verdicts = [];
+            foreach ($candidates[$call->id] ?? [] as $row) {
+                $verdicts[] = $this->verdict($row);
+            }
+
+            // The size verdict is re-derived rather than stored: it is a function of the item count
+            // and the run's requested size, and a stored copy could disagree with the rows beside it.
+            $expected = $this->expectedSize($run, $track);
+            $short = $expected !== null && count($verdicts) !== $expected;
+
+            $results[] = BakeoffCallResult::answered(
+                $track, $provider, $call->model, $call->task_key, $call->prompt_sha,
+                new CheckedBatch(
+                    $verdicts,
+                    $short ? [CheckId::Size] : [],
+                    $short ? 'запрошено ' . $expected . ', получено ' . count($verdicts) : null,
+                ),
+                new ModelAnswer(
+                    payload: [],
+                    model: $call->model,
+                    latencyMs: (int) ($call->latency_ms ?? 0),
+                    tokensIn: $call->tokens_in,
+                    tokensOut: $call->tokens_out,
+                    costUsd: $call->cost_usd !== null ? (string) $call->cost_usd : null,
+                ),
+            );
+        }
+
+        return [
+            'results' => $results,
+            'run' => [
+                'id' => $run->id,
+                'label' => $run->label,
+                'prompt_version' => $run->prompt_version,
+                'source_lang' => $run->source_lang,
+                'target_lang' => $run->target_lang,
+                'notes' => json_decode((string) $run->notes, true),
+                'created_at' => $run->created_at,
+            ],
+        ];
+    }
+
+    /** How many items this track's call should have had, from the run's own notes. */
+    private function expectedSize(stdClass $run, BakeoffTrack $track): ?int
+    {
+        if ($track === BakeoffTrack::Enrichment) {
+            return 1; // one call, one given term
+        }
+        $notes = json_decode((string) $run->notes, true);
+
+        return is_array($notes) && is_int($notes['size'] ?? null) ? $notes['size'] : null;
+    }
+
+    private function verdict(stdClass $row): CandidateVerdict
+    {
+        $payload = json_decode((string) $row->payload, true);
+        $checks = json_decode((string) $row->checks, true);
+        $payload = is_array($payload) ? $payload : [];
+        $checks = is_array($checks) ? $checks : [];
+
+        $failed = [];
+        foreach (is_array($checks['failed'] ?? null) ? $checks['failed'] : [] as $value) {
+            if (is_string($value) && ($check = CheckId::tryFrom($value)) !== null) {
+                $failed[] = $check;
+            }
+        }
+
+        $options = [];
+        foreach (is_array($payload['options'] ?? null) ? $payload['options'] : [] as $option) {
+            if (is_string($option)) {
+                $options[] = $option;
+            }
+        }
+
+        return new CandidateVerdict(
+            new CandidateItem(
+                position: (int) $row->position,
+                text: is_string($payload['text'] ?? null) ? $payload['text'] : '',
+                type: is_string($payload['type'] ?? null) ? $payload['type'] : null,
+                translation: is_string($payload['translation'] ?? null) ? $payload['translation'] : null,
+                example: is_string($payload['example'] ?? null) ? $payload['example'] : null,
+                exampleTranslation: is_string($payload['example_translation'] ?? null) ? $payload['example_translation'] : null,
+                transcription: is_string($payload['transcription'] ?? null) ? $payload['transcription'] : null,
+                cefr: is_string($payload['cefr'] ?? null) ? $payload['cefr'] : null,
+                options: $options,
+                givenTerm: is_string($row->term_text) ? $row->term_text : null,
+                sourceTermId: is_string($row->source_term_id) ? $row->source_term_id : null,
+            ),
+            $failed,
+            is_array($checks['notes'] ?? null) ? $checks['notes'] : [],
+        );
     }
 
     /** @return array<string, mixed> */

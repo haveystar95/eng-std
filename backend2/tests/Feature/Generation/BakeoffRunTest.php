@@ -172,6 +172,54 @@ it('writes candidates to the sandbox and nothing to the content tables', functio
         ->and(DB::table('term_translations')->count())->toBe($translationsBefore);
 });
 
+/**
+ * The sandbox earns its place only if a finished run can be re-read. A report gets argued with and
+ * improved; re-rendering it must not mean paying for the model answers a second time.
+ */
+it('reads a finished run back out of the sandbox, verdicts and spend intact', function () {
+    fakeProviderAnswer([
+        bakeoffGoodItem(),
+        [
+            'text' => 'Tell us about your experience',
+            'type' => 'phrase',
+            'transcription' => 'tel ʌs',
+            'translation' => 'Расскажите о своём опыте',   // «нам» dropped — a lost addressee
+            'example' => 'Tell us about your experience with the team.',
+            'example_translation' => 'Расскажите о своём опыте работы с командой.',
+            'cefr' => 'B1',
+            'image_api_prompt' => '',
+        ],
+    ]);
+
+    $journal = app(BakeoffJournal::class);
+    $runId = $journal->openRun('test', 'v10', 'ru', 'en', ['size' => 2, 'providers' => []]);
+    $journal->recordCall($runId, app(BakeoffRunner::class)->run(
+        bakeoffProvider(),
+        new BakeoffTask(BakeoffTrack::Collections, 'в банке', 'TOPIC', expectedSize: 2),
+        'v10',
+        new LanguageCode('ru'),
+        new LanguageCode('en'),
+    ));
+
+    $stored = $journal->readRun($runId);
+
+    expect($stored)->not->toBeNull()
+        ->and($stored['results'])->toHaveCount(1);
+
+    $result = $stored['results'][0];
+    expect($result->ok)->toBeTrue()
+        ->and($result->costUsd)->toBe('0.015000')
+        ->and($result->batch?->total())->toBe(2)
+        // The verdict survives the round trip, defect and all.
+        ->and($result->batch?->clean())->toBe(1)
+        ->and($result->batch?->failures(App\Modules\Generation\Domain\ValueObject\CheckId::Isomorphism))->toBe(1)
+        ->and($result->batch?->verdicts[1]->reason())->toContain('потеряно');
+});
+
+it('returns null for a run that is not in the sandbox', function () {
+    expect(app(BakeoffJournal::class)->readRun('01J000000000000000000MISS'))->toBeNull();
+});
+
 it('picks a sample that leads with the terms carrying an addressee, and repeats it exactly', function () {
     $import = app(ImportTermHandler::class);
     foreach ([

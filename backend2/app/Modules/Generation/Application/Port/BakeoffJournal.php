@@ -25,4 +25,16 @@ interface BakeoffJournal
 
     /** Append one call and its candidates. Returns the call id. */
     public function recordCall(string $runId, BakeoffCallResult $result): string;
+
+    /**
+     * Read a finished run back out of the sandbox.
+     *
+     * This is why the candidates are persisted at all. A comparison document gets re-read, argued
+     * with and improved, and re-rendering it must not mean paying for the model calls a second time
+     * — nor accepting whatever the report looked like the night it was generated. The provider
+     * answers are the expensive, irreplaceable part; the rendering is not.
+     *
+     * @return array{results: list<BakeoffCallResult>, run: array<string, mixed>}|null  null = no such run
+     */
+    public function readRun(string $runId): ?array;
 }

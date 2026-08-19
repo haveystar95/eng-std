@@ -6,12 +6,14 @@ namespace App\Modules\Generation\Presentation\Console;
 
 use App\Modules\Generation\Application\Dto\BakeoffCallResult;
 use App\Modules\Generation\Application\Dto\BakeoffTask;
+use App\Modules\Generation\Application\Dto\ProviderAvailability;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Service\BakeoffReport;
 use App\Modules\Generation\Application\Service\BakeoffRunner;
 use App\Modules\Generation\Application\Service\BakeoffSample;
+use App\Modules\Generation\Application\Service\StoreCollectionSnapshot;
 use App\Modules\Generation\Domain\ValueObject\BakeoffTrack;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Infrastructure\Support\ExportHeader;
@@ -51,6 +53,9 @@ final class BakeoffCommand extends Command
         {--source=ru : the learner\'s language}
         {--target=en : the language being learned}
         {--tracks=abc : which tracks to run — any subset of a, b, c}
+        {--pace=0 : milliseconds to wait between calls — the answer to an org tokens-per-minute cap}
+        {--compare= : collection id whose CURRENT content is printed beside track A (read-only)}
+        {--report-only= : re-render the file from a finished run in the sandbox — calls nothing}
         {--out= : where to write the comparison file (default docs/bakeoff-<version>.md)}
         {--dry : print the plan and the providers, call nothing, spend nothing}';
 
@@ -62,7 +67,14 @@ final class BakeoffCommand extends Command
         BakeoffSample $sample,
         BakeoffReport $report,
         BakeoffJournal $journal,
+        StoreCollectionSnapshot $store,
     ): int {
+        // Re-rendering a finished run costs nothing and must not require re-paying for the answers.
+        $reportOnly = $this->str($this->option('report-only'), '');
+        if ($reportOnly !== '') {
+            return $this->rerender($reportOnly, $journal, $report, $catalog, $store);
+        }
+
         $promptVersion = $this->str($this->option('prompt'), 'v10');
         $size = max(1, (int) $this->option('size'));
         $termCount = max(1, (int) $this->option('terms'));
@@ -131,9 +143,20 @@ final class BakeoffCommand extends Command
         $bar = $this->output->createProgressBar(count($tasks) * count($providers));
         $bar->start();
 
+        // Pacing, not parallelism. This prompt is ~4.5k tokens and a vendor's per-minute token cap
+        // is an ORG-wide ceiling, so firing calls back to back turns a third of a run into 429s —
+        // which the checks would then have to report as "no answer" for reasons that have nothing
+        // to do with the model's quality. A wait between calls is the cheapest honest fix.
+        $pace = max(0, (int) $this->option('pace'));
+
         $results = [];
+        $first = true;
         foreach ($tasks as $task) {
             foreach ($providers as $provider) {
+                if ($pace > 0 && ! $first) {
+                    usleep($pace * 1000);
+                }
+                $first = false;
                 $result = $runner->run($provider, $task, $promptVersion, $source, $target);
                 $journal->recordCall($runId, $result);
                 $results[] = $result;
@@ -145,22 +168,102 @@ final class BakeoffCommand extends Command
 
         $this->summarise($results);
 
-        $path = $this->str($this->option('out'), base_path('docs/bakeoff-' . $promptVersion . '.md'));
-        $header = ExportHeader::now();
-        file_put_contents($path, $header->comment() . "\n\n" . $report->render($results, $availability, [
+        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $source->value, $store);
+
+        $path = $this->write($report, $results, $availability, [
             'label' => $promptVersion,
-            'header_line' => $header->line('run ' . $runId),
             'prompt_version' => $promptVersion,
             'source_lang' => $source->value,
             'target_lang' => $target->value,
             'run_id' => $runId,
             'collection_size' => $size,
-        ]));
+            'store_topic' => $storeTopic,
+            'store_terms' => $storeTerms,
+        ]);
 
         $this->info('Сравнение: ' . $path);
         $this->line('Кандидаты в песочнице: bakeoff_candidates where run_id = \'' . $runId . '\'');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Re-render a stored run. The provider answers are the expensive part and they are already in
+     * the sandbox; the rendering is not, and a report that could only ever be produced once would
+     * make every improvement to it cost another paid run.
+     */
+    private function rerender(
+        string $runId,
+        BakeoffJournal $journal,
+        BakeoffReport $report,
+        ContentModelCatalog $catalog,
+        StoreCollectionSnapshot $store,
+    ): int {
+        $stored = $journal->readRun($runId);
+        if ($stored === null) {
+            $this->error('Прогон не найден: ' . $runId);
+
+            return self::FAILURE;
+        }
+
+        $run = $stored['run'];
+        $source = is_string($run['source_lang'] ?? null) ? $run['source_lang'] : 'ru';
+        $notes = is_array($run['notes'] ?? null) ? $run['notes'] : [];
+
+        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $source, $store);
+
+        $path = $this->write($report, $stored['results'], $catalog->availability(), [
+            'label' => is_string($run['prompt_version'] ?? null) ? $run['prompt_version'] : 'run',
+            'prompt_version' => $run['prompt_version'] ?? '?',
+            'source_lang' => $source,
+            'target_lang' => $run['target_lang'] ?? '?',
+            'run_id' => $runId,
+            'collection_size' => is_int($notes['size'] ?? null) ? $notes['size'] : 12,
+            'store_topic' => $storeTopic,
+            'store_terms' => $storeTerms,
+        ]);
+
+        $this->summarise($stored['results']);
+        $this->info('Перерисовано из песочницы (ни одного вызова к провайдерам): ' . $path);
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @param  list<BakeoffCallResult>  $results
+     * @param  list<ProviderAvailability>  $availability
+     * @param  array<string, mixed>  $meta
+     */
+    private function write(BakeoffReport $report, array $results, array $availability, array $meta): string
+    {
+        $path = $this->str($this->option('out'), base_path('docs/bakeoff-' . ($meta['label'] ?? 'run') . '.md'));
+        $header = ExportHeader::now();
+        $meta['header_line'] = $header->line('run ' . ($meta['run_id'] ?? '?'));
+
+        file_put_contents($path, $header->comment() . "\n\n" . $report->render($results, $availability, $meta));
+
+        return $path;
+    }
+
+    /**
+     * The CURRENT content of the collection named by --compare, read-only, for the side-by-side.
+     *
+     * @return array{0: string, 1: list<array{text: string, translation: string}>}
+     */
+    private function storeContent(string $collectionId, string $lang, StoreCollectionSnapshot $store): array
+    {
+        if ($collectionId === '') {
+            return ['', []];
+        }
+
+        $snapshot = $store->read($collectionId, $lang);
+        if ($snapshot === null) {
+            $this->warn('--compare: коллекция не найдена, блок сравнения с витриной пропущен.');
+
+            return ['', []];
+        }
+
+        return [$snapshot['title'], $snapshot['terms']];
     }
 
     /**

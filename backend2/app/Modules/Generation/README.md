@@ -34,6 +34,66 @@ is the real one; `FakeCollectionGenerator` is deterministic and bound when
 (`Infrastructure/Prompt/generate_collection.v1.md`), never inline; the user's prompt is
 passed as delimited data, never as instructions.
 
+## Prompt versions — v10 is composed, not a file
+
+v1–v9 are single frozen files (`Infrastructure/Prompt/generate_collection.vN.md`). **v10 is a
+DIRECTORY of sections** (`Infrastructure/Prompt/v10/*.md`) assembled by `PromptLibrary` into three
+SHAPES:
+
+| Shape | Product | Used by |
+|---|---|---|
+| `terms` | topic → list of terms with translations | what production generation does (bake-off track А) |
+| `enrich` | existing terms → full content (translation, example, options) | the enrichment станок (track Б) |
+| `full` | topic → finished collection in ONE call | the one-shot experiment (track В) |
+
+Composed because the rules that matter most — the translation-key isomorphism, **both waves** — are
+identical in all three, and three files would mean three copies of the rule the last two content
+sweeps were about. A test asserts the section is byte-identical across shapes. `RenderedPrompt`
+carries a sha256 of the rendered text, so a section edited without a version bump is visible.
+
+What v10 adds to v9: wave 2 of the isomorphism rule (a translation must not ADD what the term never
+said — «Я *хорошо* лажу со своей командой»), a **mandatory** example (no example → no card on rung 3
+→ the term drops out of the course), no two items sharing a `translation`, and a self-check that
+demands the last item of a long answer be read as carefully as the first.
+
+**Production still generates on v9** (`RequestCollectionGenerationHandler::PROMPT_VERSION`).
+Switching it is a decision from the bake-off numbers, not a side effect.
+
+## Content provenance
+
+Generated content carries `prompt_version` + `generation_model` **per row** (`terms`,
+`term_translations`, `term_examples`; `generation_model` beside the existing `generator_version` on
+`term_accepted_variants` / `example_distractors`). Per row, not per request, because terms are
+deduplicated and a later prompt's translation can hang off an earlier prompt's term. Rows written
+before the column exist carry the sentinel `legacy`; a NULL afterwards means a writer created
+content without stamping it, which is a bug the column can then find by itself.
+
+## Providers — one seam, three vendors
+
+`Application/Port/ContentModelPort` = one vendor, one structured JSON answer. Narrower than
+`CollectionGeneratorPort` on purpose: that port can express exactly one product, and the three
+shapes above need three.
+
+| Provider | Adapter | Key |
+|---|---|---|
+| OpenAI | `OpenAiCompatibleContentModel` | `OPENAI_API_KEY` |
+| xAI (Grok) | the same adapter, different base url — xAI implements OpenAI's request shape | `GROK_API_KEY` |
+| Anthropic | `AnthropicContentModel` (`x-api-key`, top-level `system`, `output_config.format`) | `ANTHROPIC_API_KEY` |
+
+`ConfiguredContentModelCatalog` reports availability: **no key is not an error**, it is a provider
+that does not run, named in the report with the env var that would fix it. Retries escalate
+(4s/8s/12s) and only on statuses that can change by themselves — a 429 is a per-minute token ceiling
+and clears; a 403 (no credits) never will.
+
+## The bake-off (`php artisan generation:bakeoff`)
+
+Compares providers on identical work, writes only to the sandbox (`bakeoff_runs` / `bakeoff_calls` /
+`bakeoff_candidates`), and exports one readable comparison file. Three tracks, because A and B are
+two halves of today's pipeline and can have different winners; C is the one-shot experiment.
+`ContentChecks` (Domain) judges every item by the detectors the rest of the app already uses —
+`LanguagePurity` and, through Vocabulary's Application, `AddresseeIsomorphism`. `--dry` prints the
+plan and spends nothing; `--pace=` spaces calls under an org token-per-minute cap.
+
 ## Boundaries
 
 Generation never touches other modules' tables or Domain. It calls, through Application only:

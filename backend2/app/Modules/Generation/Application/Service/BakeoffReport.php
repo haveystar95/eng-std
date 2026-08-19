@@ -48,7 +48,7 @@ final readonly class BakeoffReport
             . '(`bakeoff_runs` / `bakeoff_calls` / `bakeoff_candidates`).';
         $out[] = '';
 
-        $out[] = $this->providersSection($availability);
+        $out[] = $this->providersSection($availability, $results);
         $out[] = $this->checksLegend();
 
         foreach (BakeoffTrack::cases() as $track) {
@@ -57,6 +57,14 @@ final readonly class BakeoffReport
                 continue;
             }
             $out[] = $this->trackSection($track, $trackResults);
+
+            // Only under track А: the store's own list is the baseline the generated one is judged
+            // against, and repeating it under every track would be noise.
+            if ($track === BakeoffTrack::Collections && is_array($meta['store_terms'] ?? null) && $meta['store_terms'] !== []) {
+                /** @var list<array{text: string, translation: string}> $storeTerms */
+                $storeTerms = $meta['store_terms'];
+                $out[] = $this->storeSection((string) ($meta['store_topic'] ?? ''), $storeTerms);
+            }
         }
 
         $out[] = $this->twoStageVsOneShot($results, $meta);
@@ -65,22 +73,52 @@ final readonly class BakeoffReport
         return implode("\n", array_filter($out, static fn (string $s): bool => $s !== "\0")) . "\n";
     }
 
-    /** @param list<ProviderAvailability> $availability */
-    private function providersSection(array $availability): string
+    /**
+     * Who ran, and — just as important — who did not and why.
+     *
+     * A key is only half of "available". A vendor can hold a valid key and refuse every call (no
+     * credits, a spending cap), and that provider produced NOTHING while the plan counted it as a
+     * participant. Left to the numbers alone it reads as a catastrophic quality result. So a
+     * provider whose every call failed is named here with the error it actually returned.
+     *
+     * @param  list<ProviderAvailability>  $availability
+     * @param  list<BakeoffCallResult>  $results
+     */
+    private function providersSection(array $availability, array $results): string
     {
         $lines = ['## Провайдеры', '', '| Провайдер | Модель | Участвовал | Почему нет |', '|---|---|---|---|'];
         foreach ($availability as $row) {
-            $lines[] = sprintf(
-                '| %s | `%s` | %s | %s |',
-                $row->provider->label(),
-                $row->model,
-                $row->available ? 'да' : '**нет**',
-                $row->reason !== '' ? $row->reason : '—',
-            );
+            $ran = array_values(array_filter(
+                $results,
+                static fn (BakeoffCallResult $r): bool => $r->provider === $row->provider,
+            ));
+            $answered = array_filter($ran, static fn (BakeoffCallResult $r): bool => $r->ok);
+
+            [$participated, $reason] = match (true) {
+                ! $row->available => ['**нет**', $row->reason],
+                $ran === [] => ['**нет**', 'не было заданий'],
+                // A key that opens no door: every single call came back an error.
+                $answered === [] => ['**нет — все вызовы упали**', $this->firstError($ran)],
+                default => ['да', count($answered) === count($ran) ? '—' : (count($ran) - count($answered)) . ' из ' . count($ran) . ' вызовов упали'],
+            };
+
+            $lines[] = sprintf('| %s | `%s` | %s | %s |', $row->provider->label(), $row->model, $participated, $reason);
         }
         $lines[] = '';
 
         return implode("\n", $lines);
+    }
+
+    /** @param list<BakeoffCallResult> $results */
+    private function firstError(array $results): string
+    {
+        foreach ($results as $result) {
+            if ($result->error !== null) {
+                return $this->cell(mb_substr($result->error, 0, 240));
+            }
+        }
+
+        return 'причина не записана';
     }
 
     private function checksLegend(): string
@@ -125,6 +163,38 @@ final readonly class BakeoffReport
         }
 
         $lines[] = $this->examples($track, $results);
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * What the store already holds for the topic that exists in it.
+     *
+     * One of the four topics is deliberately a collection that is already live, and the question a
+     * reader actually has about it is not "which provider looks better" but "is any of this better
+     * than what the learner is being shown today". Without this block that comparison is a memory
+     * exercise.
+     *
+     * @param  list<array{text: string, translation: string}>  $terms
+     */
+    private function storeSection(string $topic, array $terms): string
+    {
+        if ($terms === []) {
+            return '';
+        }
+
+        $lines = [
+            '### Что в витрине сегодня по теме «' . $topic . '»',
+            '',
+            'Живой контент, прочитанный на момент прогона. Приведён для сравнения и НЕ изменялся.',
+            '',
+            '| # | Термин | Перевод |',
+            '|---|---|---|',
+        ];
+        foreach ($terms as $i => $term) {
+            $lines[] = sprintf('| %d | %s | %s |', $i + 1, $this->cell($term['text']), $this->cell($term['translation']));
+        }
+        $lines[] = '';
 
         return implode("\n", $lines);
     }

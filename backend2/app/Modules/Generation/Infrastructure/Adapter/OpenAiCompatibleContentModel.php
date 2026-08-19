@@ -10,6 +10,7 @@ use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
 use App\Modules\Shared\Domain\Service\ModelCost;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -33,7 +34,7 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
         private string $baseUrl,
         private ModelCost $cost = new ModelCost(),
         private int $timeoutSeconds = 180,
-        private int $retries = 2,
+        private int $retries = 4,
     ) {}
 
     public function provider(): ProviderId
@@ -53,9 +54,18 @@ final readonly class OpenAiCompatibleContentModel implements ContentModelPort
         // Labelled so the request log can say what this spend was FOR, like every other vendor call.
         $response = $this->context->run('generation', null, fn () => Http::withToken($this->apiKey)
             ->timeout($this->timeoutSeconds)
-            // Transport only: a 4xx from the vendor is an answer, not a hiccup, and re-asking it
-            // costs the same money for the same refusal.
-            ->retry($this->retries, 1000, throw: false)
+            // Escalating backoff, and ONLY on the statuses that can change on their own. A 429 is
+            // an org token-per-minute ceiling and clears when the window rolls, so a fixed 1s wait
+            // just spends the retry inside the same saturated minute; 4s/8s/12s crosses it. A 403
+            // (no credits, wrong key) will answer the same way forever — retrying it turns one dead
+            // provider into four times the wall clock and tells us nothing new.
+            ->retry(
+                $this->retries,
+                static fn (int $attempt): int => $attempt * 4000,
+                static fn (\Throwable $e): bool => ! $e instanceof RequestException
+                    || in_array($e->response->status(), [408, 409, 429, 500, 502, 503, 504], true),
+                throw: false,
+            )
             ->post(rtrim($this->baseUrl, '/') . '/chat/completions', [
                 'model' => $this->model,
                 'messages' => [
