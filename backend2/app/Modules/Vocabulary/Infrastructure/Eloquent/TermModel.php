@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $image_author_url
  * @property string $source
  * @property string|null $created_by
+ * @property string|null $prompt_version
+ * @property string|null $generation_model
  * @property \Illuminate\Support\Carbon $created_at
  */
 final class TermModel extends Model

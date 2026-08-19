@@ -145,7 +145,7 @@ final readonly class ProcessGenerationHandler
 
         // Materialize the *final accepted* set (after filter + top-up). This is also what the prompt
         // cache stores, so the next identical prompt reuses the fixed-up set, not the raw under-delivery.
-        $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $assembled->draft));
+        $collectionId = $this->tx->run(fn (): CollectionId => $this->materialize($request, $assembled->draft, $assembled->model));
 
         $request->markSucceeded(
             collectionId: $collectionId,
@@ -192,7 +192,12 @@ final readonly class ProcessGenerationHandler
         );
     }
 
-    private function materialize(GenerationRequest $request, GeneratedCollectionDraft $draft): CollectionId
+    /**
+     * @param  string|null  $model  the model that actually answered — from the assembled draft, not
+     *                              from config: a top-up or a repair can land on a different one,
+     *                              and the row must say which one wrote it.
+     */
+    private function materialize(GenerationRequest $request, GeneratedCollectionDraft $draft, ?string $model = null): CollectionId
     {
         $collectionId = ($this->createCollection)(new CreateGeneratedCollection(
             ownerId: $request->userId(),
@@ -218,6 +223,8 @@ final readonly class ProcessGenerationHandler
                     : [],
                 cefr: $item->cefr,
                 imageApiPrompt: $item->imageApiPrompt,   // per-term image query for AttachImagesJob
+                promptVersion: $request->promptVersion(),
+                generationModel: $model,
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));

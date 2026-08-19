@@ -7,6 +7,7 @@ namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 use App\Modules\Vocabulary\Domain\Entity\Term;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Vocabulary\Domain\ValueObject\PartOfSpeech;
+use App\Modules\Vocabulary\Domain\ValueObject\Provenance;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Domain\ValueObject\TermSource;
 use App\Modules\Vocabulary\Domain\ValueObject\TermText;
@@ -19,7 +20,14 @@ final class TermMapper
     {
         $translations = [];
         foreach ($model->translations as $row) {
-            $translations[] = new Translation(new LanguageCode($row->lang), $row->text, $row->is_primary);
+            $translations[] = new Translation(
+                new LanguageCode($row->lang),
+                $row->text,
+                $row->is_primary,
+                // Read back so a re-save of an existing term rewrites the same stamp rather than
+                // erasing it. `legacy` is a real stored version, not a null — it round-trips.
+                Provenance::forOrNull($row->prompt_version, $row->generation_model),
+            );
         }
 
         return Term::create(
@@ -38,6 +46,7 @@ final class TermMapper
             imageApiPrompt: $model->image_api_prompt !== null ? (string) $model->image_api_prompt : null,
             imageAuthor: $model->image_author !== null ? (string) $model->image_author : null,
             imageAuthorUrl: $model->image_author_url !== null ? (string) $model->image_author_url : null,
+            provenance: Provenance::forOrNull($model->prompt_version, $model->generation_model),
         );
     }
 
@@ -58,6 +67,8 @@ final class TermMapper
             'image_author_url' => $term->imageAuthorUrl(),
             'source' => $term->source()->value,
             'created_at' => $term->createdAt(),
+            'prompt_version' => $term->provenance()?->promptVersion,
+            'generation_model' => $term->provenance()?->model,
         ];
     }
 }

@@ -7,6 +7,7 @@ namespace App\Modules\Vocabulary\Domain\Entity;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Vocabulary\Domain\ValueObject\Example;
 use App\Modules\Vocabulary\Domain\ValueObject\PartOfSpeech;
+use App\Modules\Vocabulary\Domain\ValueObject\Provenance;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Domain\ValueObject\TermSource;
 use App\Modules\Vocabulary\Domain\ValueObject\TermText;
@@ -59,6 +60,7 @@ final class Term
         ?string $imageApiPrompt,
         ?string $imageAuthor,
         ?string $imageAuthorUrl,
+        private readonly ?Provenance $provenance,
     ) {
         $this->translations = [];
         foreach ($translations as $translation) {
@@ -97,10 +99,11 @@ final class Term
         ?string $imageApiPrompt = null,
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
+        ?Provenance $provenance = null,
     ): self {
         return new self(
             $id, $lang, $text, $normalizedText, $type, $pos, $source, $createdAt, $translations, $ipa, $examples, $cefr,
-            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl,
+            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl, $provenance,
         );
     }
 
@@ -288,5 +291,19 @@ final class Term
     public function imageAuthorUrl(): ?string
     {
         return $this->imageAuthorUrl;
+    }
+
+    /**
+     * Which prompt version and model wrote THIS term row, or null for a row that predates the
+     * stamp or that a human typed.
+     *
+     * It belongs to the row and is never re-stamped on a dedup merge: a term created under one
+     * prompt version keeps that version even when a later generation adds a translation to it, and
+     * that later translation carries its own. Merging the two into one "the term's version" would
+     * answer the sweep's question — "which prompt wrote the line I am reading" — with a guess.
+     */
+    public function provenance(): ?Provenance
+    {
+        return $this->provenance;
     }
 }

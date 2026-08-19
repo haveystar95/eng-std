@@ -11,8 +11,15 @@ final class Example
 {
     public readonly string $sentence;
 
-    public function __construct(string $sentence, public readonly ?string $sentenceTranslation = null)
-    {
+    /**
+     * @param  Provenance|null  $provenance  which prompt version and model wrote this sentence,
+     *                                       when it came from the станок — see {@see Provenance}.
+     */
+    public function __construct(
+        string $sentence,
+        public readonly ?string $sentenceTranslation = null,
+        public readonly ?Provenance $provenance = null,
+    ) {
         $trimmed = trim($sentence);
         if ($trimmed === '') {
             throw new InvalidArgumentException('Example sentence cannot be empty.');

@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $sentence
  * @property string|null $sentence_translation
  * @property string|null $source
+ * @property string|null $prompt_version
+ * @property string|null $generation_model
  */
 final class TermExampleModel extends Model
 {

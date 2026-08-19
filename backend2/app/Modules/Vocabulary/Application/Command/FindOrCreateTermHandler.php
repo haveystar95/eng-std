@@ -56,6 +56,7 @@ final readonly class FindOrCreateTermHandler
             examples: $command->examples,
             cefr: $command->cefr,
             imageApiPrompt: $command->imageApiPrompt,
+            provenance: $command->provenance,
         );
 
         $this->terms->save($term);

@@ -57,6 +57,10 @@ final class EloquentTermRepository implements TermRepository
                     [
                         'id' => Ulid::generate(),
                         'is_primary' => $translation->isPrimary,
+                        // Provenance is stamped on CREATE only: firstOrCreate leaves an existing
+                        // row alone, so a re-run can never re-label content it did not write.
+                        'prompt_version' => $translation->provenance?->promptVersion,
+                        'generation_model' => $translation->provenance?->model,
                     ],
                 );
             }
@@ -71,6 +75,8 @@ final class EloquentTermRepository implements TermRepository
                         'id' => Ulid::generate(),
                         'sentence_translation' => $example->sentenceTranslation,
                         'source' => $term->source()->value,
+                        'prompt_version' => $example->provenance?->promptVersion,
+                        'generation_model' => $example->provenance?->model,
                     ],
                 );
             }

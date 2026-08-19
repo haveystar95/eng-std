@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $lang
  * @property string $text
  * @property bool $is_primary
+ * @property string|null $prompt_version
+ * @property string|null $generation_model
  */
 final class TermTranslationModel extends Model
 {
