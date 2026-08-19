@@ -7,21 +7,31 @@ import 'package:eng_std/data/practice/local_session_builder.dart';
 import 'package:eng_std/data/practice/practice_mode_selector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// FREE PRACTICE IS UNDER THE LADDER TOO.
+/// WHAT THE LADDER STILL DECIDES ABOUT FREE PRACTICE — AND WHAT IT NO LONGER DOES.
 ///
-/// This is the gate that was deferred when the ladder landed server-side (B1): practice fans across
-/// modes, but a word met a minute ago is not dealt dictation here either. The rule is the server's —
-/// which rung opens which trainer — read from `/sync` and applied before the mode fan, so the
-/// contract-pinned [PracticeModeSelector] itself is untouched by it.
+/// It decides two things, both about the POOL and the card's SHAPE:
+///
+///   * a pair standing at RUNG 0 gets no practice card at all. Practice introduces nothing — no
+///     exposure, no quota — so a word nobody has introduced has nothing for practice to drill.
+///   * a pair still on the recognition rungs gets FAR options, so its first meetings stay winnable.
+///
+/// It no longer decides WHICH TRAINERS may be dealt (QA-26). Practice fans across every switched-on
+/// trainer the term's data can furnish, which is what the server's own `selectForPractice` has
+/// always done; gating the mode set here as well meant dictation (6 successful reviews) and typed
+/// production (4) were unreachable in free practice on any real pool, and the dictation card never
+/// appeared once. Free practice is a drill, not a rung: it schedules nothing, so nothing has to be
+/// earned to enter it.
 void main() {
-  Term term(String id, String text) => Term(
+  Term term(String id, String text, {String translation = 'перевод'}) => Term(
         id: id,
         termText: text,
         type: 'word',
         transcription: null,
-        translation: 'перевод',
-        example: 'A sentence that is long enough to scramble and dictate.',
-        exampleTranslation: 'Достаточно длинное предложение.',
+        translation: translation,
+        // Long enough to scramble and to dictate, and it CONTAINS the term, so cloze is playable
+        // too: anything missing from a session is then the selection's doing, never the content's.
+        example: 'Please find the $text before tonight.',
+        exampleTranslation: 'Пожалуйста, найдите это до вечера.',
         imageUrl: null,
         imageAuthor: null,
         imageAuthorUrl: null,
@@ -88,10 +98,12 @@ void main() {
     }
   });
 
-  test('the substitution is gone from the mode filter too, not just from the pool', () {
-    // Belt and braces: PracticeModeSelector floors an EMPTY applicable set to multiple_choice, so a
-    // rung-0 word reaching the card builder would still come back as a rung-1 card. Nothing may
-    // deal it — which the empty session above already shows — and nothing may claim it is dealable.
+  test('rung 0 is refused by the POOL, which is the only place that refusal now lives', () {
+    // The mode filter no longer says no to anything (QA-26), so this is the single gate keeping a
+    // never-introduced word out of practice. PracticeModeSelector floors an empty applicable set to
+    // multiple_choice, so a rung-0 word that reached the card builder WOULD come back as a card —
+    // which is exactly why `build` must drop it from the pool and not rely on the matrix.
+    expect(LearningLadder.admitsPractice(LearningLadder.stepIntro), isFalse);
     expect(ModeAdmission.shipped.only(
       [for (final m in everyMode.modes) if (m.isGraded) m],
       LearningLadder.stepIntro,
@@ -115,10 +127,11 @@ void main() {
       },
     );
 
-    expect(session.cards.map((c) => c.termId), [terms.first.id]);
-    final card = session.cards.single;
-    expect(card.mode, ExerciseMode.multipleChoice);
-    expect(card.options, hasLength(greaterThan(1)));
+    expect(session.cards.map((c) => c.termId).toSet(), {terms.first.id});
+    for (final card in session.cards) {
+      // Whatever trainer was dealt, a choice card is never a one-option card.
+      if (card.options != null) expect(card.options, hasLength(greaterThan(1)));
+    }
   });
 
   test('practice introduces nothing — an intro card is never dealt, even with intro switched on', () {
@@ -130,36 +143,69 @@ void main() {
     }
   });
 
-  test('the assembly rungs open on graduation, and typed production does not', () {
-    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated, enrolled: true));
+  test('EVERY switched-on trainer is dealt in free practice, at every rung above 0 (QA-26)', () {
+    // The owner's rule, and the bug it replaced: with all trainers on, a long enough draw must show
+    // all of them — dictation included, on a pair that has never been through the scheduler six
+    // times. Deterministic: fixed ids (the rotation seed is card index + crc32 of the id), fixed
+    // seeds, and terms whose example every content gate accepts.
+    //
+    // A DECK, not the four terms above, because the round-robin gives a term as many rotations as
+    // the session has cards: four cards can never walk seven trainers however the deck is shuffled.
+    final deck = [
+      for (var i = 0; i < 24; i++)
+        term('01KZETAB${i.toString().padLeft(2, '0')}0EMHCN6SP80T8DH', i.isEven ? 'towel$i' : 'front desk$i',
+            // Distinct translations: a choice card's near-miss distractors are filtered by meaning,
+            // and twenty-four terms all meaning the same thing would leave it with no wrong option.
+            translation: 'перевод$i'),
+    ];
+    final graded = [for (final m in everyMode.modes) if (m.isGraded) m];
 
-    expect(dealt, isNot(contains(ExerciseMode.typing)));
-    expect(dealt, isNot(contains(ExerciseMode.listening)));
-    expect(dealt, isNot(contains(ExerciseMode.dictation)));
-    expect(dealt.any((m) => const [
-          ExerciseMode.wordBank,
-          ExerciseMode.cloze,
-          ExerciseMode.scramble,
-          ExerciseMode.multipleChoice,
-        ].contains(m)), isTrue);
+    for (final position in [
+      // The lowest rung practice deals at all…
+      onLadder,
+      const LadderPosition(acquisition: Acquisition.learning,
+          learningStep: LearningLadder.stepRecognitionReverse, enrolled: true),
+      // …just graduated, nothing earned yet — the state a real pool is almost entirely in…
+      const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
+      // …and a pair that HAS earned the top rung.
+      const LadderPosition(acquisition: Acquisition.graduated,
+          successfulReviews: LearningLadder.dictationMinSuccesses, enrolled: true),
+    ]) {
+      final dealt = <ExerciseMode>{};
+      for (var seed = 0; seed < 4; seed++) {
+        dealt.addAll(LocalPracticeSessionBuilder.build(
+          terms: deck,
+          limit: deck.length,
+          random: Random(seed),
+          sessionId: 'S',
+          enabled: everyMode,
+          ladder: {for (final t in deck) t.id: position},
+        ).cards.map((c) => c.mode));
+      }
+
+      expect(dealt, containsAll(graded), reason: 'missing ${graded.toSet().difference(dealt)}');
+      // …and never the one trainer that asks nothing: practice introduces nothing.
+      expect(dealt, isNot(contains(ExerciseMode.intro)));
+    }
   });
 
-  test('typing opens at rung 4 and dictation only at rung 5', () {
-    final atFour = modesAt(
-      const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.typingMinSuccesses, enrolled: true),
-      seed: 11,
-    );
-    expect(atFour, isNot(contains(ExerciseMode.dictation)));
+  test('«Тренировать слово» fans one word across every trainer it can furnish, dictation included', () {
+    // The other practice entry point (QA-14). Same rule, so the same trainers must be reachable —
+    // including dictation on a pair that has only just graduated.
+    final cards = LocalPracticeSessionBuilder.build(
+      terms: terms,
+      limit: 1,
+      random: Random(3),
+      sessionId: 'S',
+      enabled: everyMode,
+      ladder: {
+        for (final t in terms)
+          t.id: const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
+      },
+    ).cards;
 
-    // Sweep the seeds at rung 5 — the fan is a round-robin, so one session need not show every mode.
-    final atFive = <ExerciseMode>{};
-    for (var seed = 0; seed < 8; seed++) {
-      atFive.addAll(modesAt(
-        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.dictationMinSuccesses, enrolled: true),
-        seed: seed,
-      ));
-    }
-    expect(atFive, contains(ExerciseMode.dictation));
+    expect(cards.map((c) => c.termId).toSet(), hasLength(1), reason: 'the fan is over ONE word');
+    expect(cards.map((c) => c.mode), contains(ExerciseMode.dictation));
   });
 
   test('a `known` word is not held back — it is outside the ladder, not at the bottom of it', () {
@@ -180,8 +226,7 @@ void main() {
       ladder: {for (final t in terms) t.id: onLadder},
     );
 
-    for (final card in session.cards) {
-      expect(card.mode, ExerciseMode.multipleChoice);
+    for (final card in session.cards.where((c) => c.mode == ExerciseMode.multipleChoice)) {
       expect(card.options, isNotNull);
       // Every wrong option is another term OF THIS SESSION — unmistakably different, so the card is
       // answerable by knowing the word and by nothing else.

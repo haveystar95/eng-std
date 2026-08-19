@@ -43,7 +43,9 @@ void main() {
 
   Future<List<Term>> allTerms() => db.watchAllTerms().first;
 
-  /// A practice session over the whole mirror, with the pool as the device actually holds it.
+  /// Which WORDS a practice session over the whole mirror draws, with the pool as the device
+  /// actually holds it. Distinct: a one-word pool is fanned into a card per trainer (QA-14/QA-26),
+  /// and this asks which words practice reaches, never how many cards each of them got.
   Future<List<String>> practiceTermIds() async {
     final terms = await allTerms();
     final session = LocalPracticeSessionBuilder.build(
@@ -53,7 +55,7 @@ void main() {
       sessionId: 'S',
       ladder: await db.ladderPositions([for (final t in terms) t.id]),
     );
-    return [for (final c in session.cards) c.termId];
+    return {for (final c in session.cards) c.termId}.toList();
   }
 
   test('a collection full of words is not a queue: nothing is studied until it is chosen', () async {

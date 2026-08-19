@@ -579,9 +579,9 @@ final studySessionProvider =
     // local DB like everything else on this path, so practice keeps working offline — and so a
     // toggle flipped in the admin panel changes the offline session on the next sync.
     final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
-    // …and the acquisition ladder the same feed carried: where each pair stands, and which rung
-    // opens which trainer. Practice is not exempt from it — a word met a minute ago is not dealt
-    // dictation here either — which is the gate that was deferred when the ladder landed server-side.
+    // …and the acquisition ladder the same feed carried: where each pair stands, and where a choice
+    // card's wrong options come from. It no longer narrows the TRAINERS in free practice (QA-26) —
+    // that is what made dictation unreachable — but rung 0 still gets no practice card at all.
     final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
     final ladder = await db.ladderPositions([for (final t in terms) t.id]);
     return LocalPracticeSessionBuilder.build(

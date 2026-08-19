@@ -20,10 +20,18 @@ import 'practice_mode_selector.dart';
 /// server generates. What is NOT pinned, deliberately: which distractors and which chip order —
 /// those are shuffled per session by design, on both sides.
 ///
-/// Practice fans across modes, but it is NOT exempt from the acquisition ladder: a word met a
-/// minute ago is not dealt dictation here either. Every card passes the same three filters the
-/// server applies — is the trainer on ([PracticeModes]), can this term's data build it
-/// ([TermPlayability]), has this PAIR earned it ([ModeAdmission]).
+/// Practice fans across EVERY switched-on trainer the term's data can furnish — two filters, not
+/// three: is the trainer on ([PracticeModes]) and can this term's data build it
+/// ([TermPlayability]). The acquisition ladder does NOT narrow the mode set here, which is what the
+/// server's own `ExerciseSelector::selectForPractice` has always done and what this port had
+/// diverged from (QA-26): the admission matrix opens dictation at 6 successful reviews and typed
+/// production at 4, so on a real pool — where nothing had passed 3 — free practice could only ever
+/// deal recognition and the assembly trainers, and the dictation card never appeared once. Free
+/// practice is a DRILL, not a rung: it schedules nothing, so nothing has to be earned to enter it.
+///
+/// [ModeAdmission] is still read, for the one thing that is about the card and not about the gate:
+/// where a choice card's wrong options come from ([OptionsPolicy]), so a pair still on the
+/// recognition rungs keeps its far options and its first meetings stay winnable.
 ///
 /// Three things practice deliberately does NOT do, all because it moves nothing:
 ///
@@ -125,15 +133,15 @@ abstract final class LocalPracticeSessionBuilder {
     );
   }
 
-  /// One card per mode this pair may be drilled in right now, in the matrix's own order.
+  /// One card per mode this pair may be drilled in right now, in the enabled set's own order.
   ///
   /// The order is the enabled set's — which the server sorts by the `position` column of
   /// `learning_mode_settings` and the sync feed hands over unchanged — so the fan walks the trainers
   /// in the order the product puts them in, not in whatever order the rotation seed happened to land
-  /// on. Same three filters as every other practice card and in the same order: switched on, admitted
-  /// at this rung, buildable from this term's data.
+  /// on. Same two filters as every other practice card and in the same order: switched on, buildable
+  /// from this term's data.
   ///
-  /// A pair whose admitted set comes out empty still gets exactly ONE card — [PracticeModeSelector]'s
+  /// A pair whose applicable set comes out empty still gets exactly ONE card — [PracticeModeSelector]'s
   /// floor. «Nothing applies» must not become «nothing to train».
   static List<SessionCard> _fan({
     required Term term,
@@ -150,10 +158,7 @@ abstract final class LocalPracticeSessionBuilder {
       exampleTranslation: term.exampleTranslation,
       distractorCount: _spanDistinct(_distractorsOf(term)).length,
     );
-    final modes = playable.only(admission.only(
-      [for (final m in enabled.modes) if (m.isGraded) m],
-      position.admissionStep,
-    ));
+    final modes = playable.only(_drillable(enabled));
 
     if (modes.isEmpty) {
       final floor = _card(
@@ -194,16 +199,13 @@ abstract final class LocalPracticeSessionBuilder {
     final usableDistractors = _spanDistinct(_distractorsOf(term));
     final step = position.admissionStep;
     final mode = forcedMode ?? PracticeModeSelector.select(
-      // The ladder filter, applied to the enabled set before the term's own data narrows it
-      // further. The rung is taken AS IT IS — no substitution: a rung whose admitted set is empty
-      // means "not yet", and [PracticeModeSelector.select] floors an empty set to multiple_choice,
-      // so substituting here (or letting rung 0 through at all) would deal the card the gate just
-      // refused. Rung 0 never reaches this method; `build` leaves it out of the pool.
-      // `intro` is filtered out ahead of the matrix anyway — practice introduces nothing.
-      enabled: PracticeModes(admission.only(
-        [for (final m in enabled.modes) if (m.isGraded) m],
-        step,
-      )),
+      // The switched-on trainers, minus `intro` — practice introduces nothing. The ladder is NOT a
+      // filter here (QA-26): free practice drills every trainer the term's data can furnish, which
+      // is what the server's `selectForPractice` does. What the rung still decides is the card's
+      // SHAPE, below: where a choice card's options come from, and which form `speaking` asks in.
+      // Rung 0 never reaches this method at all — `build` leaves it out of the pool, because
+      // practice writes no exposure and a first meeting belongs to a study session.
+      enabled: PracticeModes(_drillable(enabled)),
       rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
       playable: TermPlayability.of(
         answer: answer,
@@ -310,6 +312,12 @@ abstract final class LocalPracticeSessionBuilder {
       ladderStep: cardStep,
     );
   }
+
+  /// The switched-on trainers that actually ASK the learner something — mirror of the server's
+  /// `ExerciseSelector::drillable()`. `intro` is toggled like a trainer but is not one: it can never
+  /// be an answer to «what can this term be drilled in», so it is dropped here, once.
+  static List<ExerciseMode> _drillable(PracticeModes enabled) =>
+      [for (final mode in enabled.modes) if (mode.isGraded) mode];
 
   /// The term's example distractors, as mirrored by `/sync` (a JSON array in one column). Malformed
   /// or absent JSON degrades to "none", which simply gates pick_correct out for that term — the safe

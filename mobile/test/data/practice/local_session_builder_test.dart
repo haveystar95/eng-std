@@ -367,10 +367,11 @@ void main() {
       expect(modes, isNot(contains(ExerciseMode.scramble)));
     });
 
-    test('a pair low on the ladder gets its one card — once there is a second option to offer', () {
-      // Rung 1 admits multiple_choice and nothing else, so the fan is a fan of one. In a deck of ONE
-      // that card has nothing beside the answer and is refused (QA-15); with a neighbour it is dealt,
-      // and «few modes apply» still does not become «no session».
+    test('a deck of ONE drops the choice card that has nothing to offer beside the answer', () {
+      // The option floor (QA-15) survives the fan getting wider (QA-26): «towel» has no example, so
+      // the trainers it can furnish are multiple_choice and the typed ones — and multiple_choice is
+      // the only one that needs a NEIGHBOUR. Alone it is refused; the rest of the fan is dealt, so
+      // «one mode cannot be built» still does not become «no session».
       final t = term('01KZETAAN18AQK14YFSBWW6KRQ', text: 'towel', translation: 'полотенце');
       final other = term('01KZETAAP2C0MG5J6ZV1S4XQD7', text: 'sheets', translation: 'простыни');
       final ladder = {
@@ -378,21 +379,22 @@ void main() {
         other.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
       };
 
+      final alone = LocalPracticeSessionBuilder.build(
+        terms: [t], limit: 20, random: Random(4), sessionId: 'S',
+        ladder: {t.id: ladder[t.id]!},
+      );
+      expect(alone.cards, isNotEmpty);
       expect(
-        LocalPracticeSessionBuilder.build(
-          terms: [t], limit: 20, random: Random(4), sessionId: 'S',
-          ladder: {t.id: ladder[t.id]!},
-        ).cards,
-        isEmpty,
-        reason: 'nothing to offer beside the answer — the card is not a question',
+        alone.cards.map((c) => c.mode),
+        isNot(contains(ExerciseMode.multipleChoice)),
+        reason: 'nothing to offer beside the answer — that card is not a question',
       );
 
+      // With a neighbour to lend a wrong option, the choice card comes back.
       final session = LocalPracticeSessionBuilder.build(
         terms: [t, other], limit: 20, random: Random(4), sessionId: 'S', ladder: ladder,
       );
-      final own = session.cards.where((c) => c.termId == t.id).toList();
-      expect(own, hasLength(1));
-      expect(own.single.mode, ExerciseMode.multipleChoice);
+      expect(session.cards.where((c) => c.termId == t.id), hasLength(1));
     });
 
     test('a MANY-word session is untouched — one card per term', () {
