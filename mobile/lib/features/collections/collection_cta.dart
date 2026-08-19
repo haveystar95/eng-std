@@ -25,3 +25,17 @@ HomeCta computeCollectionCta({
   if (untriaged > 0) return HomeCta(HomeCtaKind.triage, count: untriaged);
   return const HomeCta(HomeCtaKind.none);
 }
+
+/// Is the SECONDARY «Разобрать N» entry point shown, beside the primary CTA (QA-25)?
+///
+/// The priority above answers «what is the one most useful thing here right now», and the answer
+/// stops being triage the moment the first swipe produces something to learn or to review. But the
+/// swipe pass is a pass over a WHOLE collection: three words triaged out of forty left the other
+/// thirty-seven with no way in, because the only button that reached them had been outranked by
+/// «Учить 3». Rung and quota are the primary CTA's business; being able to finish sorting the
+/// collection is not, so it gets its own quiet button that lives exactly as long as there is
+/// something left to sort.
+///
+/// Suppressed only when the primary CTA IS triage — one button per action, never the same one twice.
+bool showsSecondaryTriage(HomeCta cta, int untriaged) =>
+    untriaged > 0 && cta.kind != HomeCtaKind.triage;

@@ -41,6 +41,39 @@ void main() {
     });
   });
 
+  group('showsSecondaryTriage — the pass stays reachable until it is finished (QA-25)', () {
+    test('partially triaged: «Учить» takes the primary slot, the pass keeps its own button', () {
+      // The phone repro: 3 of 40 swiped, the swipes enrolled them, «Учить 3» outranked triage — and
+      // the other 37 words had nothing left that reached them.
+      final cta = computeCollectionCta(untriaged: 37, learnable: 3, due: 0, remainingNewQuota: 20);
+      expect(cta.kind, HomeCtaKind.learn);
+      expect(showsSecondaryTriage(cta, 37), isTrue);
+    });
+
+    test('a due count does not take it away either — reviews outrank triage, they do not end it', () {
+      final cta = computeCollectionCta(untriaged: 37, learnable: 3, due: 12, remainingNewQuota: 20);
+      expect(cta.kind, HomeCtaKind.review);
+      expect(showsSecondaryTriage(cta, 37), isTrue);
+    });
+
+    test('nor does the daily new quota being spent — the pass never spends it', () {
+      final cta = computeCollectionCta(untriaged: 37, learnable: 3, due: 0, remainingNewQuota: 0);
+      expect(cta.kind, HomeCtaKind.limitReached);
+      expect(showsSecondaryTriage(cta, 37), isTrue);
+    });
+
+    test('the last word swiped → the button goes away', () {
+      final cta = computeCollectionCta(untriaged: 0, learnable: 40, due: 0, remainingNewQuota: 20);
+      expect(showsSecondaryTriage(cta, 0), isFalse);
+    });
+
+    test('never doubled: when triage IS the primary CTA there is no second copy of it', () {
+      final cta = computeCollectionCta(untriaged: 40, learnable: 0, due: 0, remainingNewQuota: 20);
+      expect(cta.kind, HomeCtaKind.triage);
+      expect(showsSecondaryTriage(cta, 40), isFalse);
+    });
+  });
+
   group('homeGoalRing — new_today vs new_goal (F13b)', () {
     Stats stats({required int newGoal, required int newRemaining, int reviews = 0}) => Stats(
           totalWords: 0, learned: 0, mastered: 0, dueToday: 0,

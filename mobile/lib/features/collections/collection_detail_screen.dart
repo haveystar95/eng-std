@@ -286,11 +286,23 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   _DensityLegend(density: density),
                   const SizedBox(height: 18),
                   _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
+                  // «Разобрать N» — the swipe pass over what is left, for as long as anything is
+                  // left (QA-25). The primary CTA above outranks triage the moment the first swipes
+                  // produce something to learn or to review, and the rest of the collection then had
+                  // no way in at all.
+                  if (showsSecondaryTriage(cta, untriaged)) ...[
+                    SizedBox(height: cta.kind == HomeCtaKind.none ? 0 : AppSpacing.s12),
+                    _TriageButton(count: untriaged, onTap: _openTriage),
+                  ],
                   // «Тренировка» — always available under the primary CTA (Training Loop v2 / F17):
                   // drills every word in the collection at any moment, ignoring due/status, and moves
                   // no progress. Hidden only on an empty collection (nothing to drill).
                   if (total > 0) ...[
-                    SizedBox(height: cta.kind == HomeCtaKind.none ? 0 : AppSpacing.s12),
+                    SizedBox(
+                      height: cta.kind == HomeCtaKind.none && !showsSecondaryTriage(cta, untriaged)
+                          ? 0
+                          : AppSpacing.s12,
+                    ),
                     _PracticeButton(onTap: () => _openSession(true)),
                   ],
                   // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
@@ -583,6 +595,47 @@ class _PracticeButton extends StatelessWidget {
               const Icon(LucideIcons.dumbbell, size: 17, color: AppColors.ink),
               const SizedBox(width: 9),
               Text(l.collectionPracticeButton,
+                  style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Secondary «Разобрать N» button (QA-25) — the same quiet outline as «Тренировка», for the same
+/// reason: it is a low-priority action beside whatever the primary CTA turned out to be. It exists
+/// while the collection still holds a word nobody has swiped, and disappears with the last one.
+class _TriageButton extends StatelessWidget {
+  const _TriageButton({required this.count, required this.onTap});
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        side: const BorderSide(color: AppInkDensity.outlineColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          AppHaptics.light();
+          onTap();
+        },
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(LucideIcons.layers, size: 17, color: AppColors.ink),
+              const SizedBox(width: 9),
+              Text(l.collectionTriageButton(count),
                   style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
