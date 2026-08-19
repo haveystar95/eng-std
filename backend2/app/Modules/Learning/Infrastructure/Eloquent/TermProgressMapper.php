@@ -34,6 +34,7 @@ final class TermProgressMapper
             acquisition: Acquisition::from((string) $row['acquisition']),
             learningStep: (int) $row['learning_step'],
             successfulReviews: (int) $row['successful_reviews'],
+            enrolledAt: $this->toDate($row['enrolled_at'] ?? null),
         );
     }
 
@@ -52,6 +53,9 @@ final class TermProgressMapper
             'acquisition' => $progress->acquisition()->value,
             'learning_step' => $progress->learningStep(),
             'successful_reviews' => $progress->successfulReviews(),
+            // Pool membership: the third, independent fact on the row. Written only by enroll() /
+            // unenroll(), and by nothing else — see TermProgress.
+            'enrolled_at' => $progress->enrolledAt(),
             'ease_factor' => $progress->easeFactor(),
             'interval_days' => $progress->intervalDays(),
             'due_at' => $progress->dueAt(),

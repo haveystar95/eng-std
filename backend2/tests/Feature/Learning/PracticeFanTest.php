@@ -44,6 +44,9 @@ function graduate(string $userId, string $termId, int $reps = 12): void
             'ease_factor' => 2.5,
             'interval_days' => 10,
             'due_at' => now()->addDays(3),
+            // In the POOL: a pair the trainer may deal at all. Everything this file exercises
+            // happens inside a session, and a session only ever draws from the pool.
+            'enrolled_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
         ],
@@ -157,6 +160,7 @@ it('deals nothing at rung 1 in a deck of one — there is no second option to of
             'acquisition' => Acquisition::Learning->value,
             'learning_step' => 1,
             'reps' => 0, 'lapses' => 0, 'ease_factor' => 2.5, 'interval_days' => 0, 'due_at' => null,
+            'enrolled_at' => now(),
             'created_at' => now(), 'updated_at' => now(),
         ],
     );
@@ -181,6 +185,7 @@ it('deals the fan again as soon as the deck has a second word', function () {
             'learning_step' => 1,
             'reps' => 0, 'successful_reviews' => 0, 'lapses' => 0, 'ease_factor' => 2.5,
             'interval_days' => 0, 'due_at' => null,
+            'enrolled_at' => now(),
             'created_at' => now(), 'updated_at' => now(),
         ],
     );

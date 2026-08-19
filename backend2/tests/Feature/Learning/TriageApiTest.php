@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -25,11 +26,25 @@ it('projects triage verdicts onto progress and never writes reviews', function (
         ->assertJsonPath('data.accepted', 3)
         ->assertJsonPath('data.unknown', 0);
 
-    // Each verdict routes the pair onto the acquisition ladder, and only «known» touches the
-    // scheduler (its verification due date).
-    $this->assertDatabaseHas('user_term_progress', ['term_id' => $money, 'state' => 'known', 'acquisition' => 'graduated']);
-    $this->assertDatabaseHas('user_term_progress', ['term_id' => $withdraw, 'acquisition' => 'learning', 'learning_step' => 1, 'state' => 'new']);
-    $this->assertDatabaseMissing('user_term_progress', ['term_id' => $overdraft]); // «не знаю» → stays new, no row
+    // Each verdict routes the pair onto the acquisition ladder AND decides the pool: «не знаю» and
+    // «не уверен» both mean «учи это»; «знаю» means the opposite. Only «знаю» touches the scheduler
+    // (its verification due date).
+    $money = DB::table('user_term_progress')->where('term_id', $money)->first();
+    expect($money?->state)->toBe('known')
+        ->and($money?->acquisition)->toBe('graduated')
+        ->and($money?->enrolled_at)->toBeNull();
+
+    $withdraw = DB::table('user_term_progress')->where('term_id', $withdraw)->first();
+    expect($withdraw?->state)->toBe('new')
+        ->and($withdraw?->acquisition)->toBe('learning')
+        ->and($withdraw?->learning_step)->toBe(1)
+        ->and($withdraw?->enrolled_at)->not->toBeNull();
+
+    $overdraft = DB::table('user_term_progress')->where('term_id', $overdraft)->first();
+    expect($overdraft?->state)->toBe('new')
+        ->and($overdraft?->acquisition)->toBe('new')     // rung 0: never shown
+        ->and($overdraft?->enrolled_at)->not->toBeNull(); // …but in the pool
+
     $this->assertDatabaseCount('reviews', 0);
 });
 

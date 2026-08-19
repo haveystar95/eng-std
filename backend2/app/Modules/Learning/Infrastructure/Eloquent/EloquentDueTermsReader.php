@@ -11,7 +11,8 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
-use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -22,25 +23,23 @@ final class EloquentDueTermsReader implements DueTermsReader
     /** @var list<string> */
     private const COLUMNS = ['term_id', 'state', 'interval_days', 'due_at', 'reps', 'acquisition', 'learning_step', 'successful_reviews'];
 
-    public function selectableAmong(UserId $userId, DateTimeImmutable $now, array $termIds, int $limit): array
+    public function selectableInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array
     {
-        if ($termIds === []) {
+        $query = $this->scoped($userId, $termIds);
+        if ($query === null) {
             return [];
         }
 
-        $rows = DB::table(self::TABLE)
-            ->where('user_id', $userId->value)
-            ->whereIn('term_id', $termIds)
-            ->where(static function (Builder $q) use ($now): void {
-                // Unfinished on the ladder — no due date, and none is wanted: the recognition rungs
-                // never schedule, so "is it due" is not a question that applies to them.
-                $q->where('acquisition', '<>', Acquisition::Graduated->value)
-                    // …or graduated and owed a review: due now, or never scheduled at all (a fresh
-                    // graduate, or a pair returned from `known`).
-                    ->orWhere(static function (Builder $q) use ($now): void {
-                        $q->where('acquisition', Acquisition::Graduated->value)
-                            ->where(static fn (Builder $q) => $q->whereNull('due_at')->orWhere('due_at', '<=', $now));
-                    });
+        $rows = $query
+            ->where(static function (BuilderContract $q) use ($now): void {
+                $q->where(static fn (BuilderContract $q) => self::owedInPool($q, $now))
+                    // A «знаю» VERIFICATION rides beside the pool, and it is the one card in the app
+                    // that is not about a word the learner chose to study. The pair is deliberately
+                    // OUT of the pool — the verdict meant the opposite of «учи это» — but the claim
+                    // still has to be checked on the day it comes due, or the check that swipe
+                    // scheduled would simply never happen. The system auditing a statement, not the
+                    // learner's queue.
+                    ->orWhere(static fn (BuilderContract $q) => self::dueVerification($q, $now));
             })
             // NULLS FIRST is the whole ordering: it puts the unfinished and the freshly graduated
             // ahead of anything merely due, then soonest first among the rest.
@@ -52,21 +51,95 @@ final class EloquentDueTermsReader implements DueTermsReader
         return array_values($rows->map($this->toView(...))->all());
     }
 
-    public function allAmong(UserId $userId, array $termIds, int $limit): array
+    /**
+     * A POOL pair the trainer owes a card, for two reasons different in kind: introduced and
+     * unfinished (no `due_at`, and none is wanted — the recognition rungs never schedule), or
+     * graduated and owed a review (due now, or never scheduled at all: a fresh graduate, or a pair
+     * returned from `known`).
+     */
+    private static function owedInPool(BuilderContract $q, DateTimeImmutable $now): void
     {
-        if ($termIds === []) {
+        $q->whereNotNull('enrolled_at')
+            ->where(static function (BuilderContract $q) use ($now): void {
+                $q->where('acquisition', Acquisition::Learning->value)
+                    ->orWhere(static function (BuilderContract $q) use ($now): void {
+                        $q->where('acquisition', Acquisition::Graduated->value)
+                            ->where(static fn (BuilderContract $q) => $q->whereNull('due_at')->orWhere('due_at', '<=', $now));
+                    });
+            });
+    }
+
+    /** A `known` self-assessment whose verification check has come due. */
+    private static function dueVerification(BuilderContract $q, DateTimeImmutable $now): void
+    {
+        $q->where('state', LearningState::Known->value)
+            ->whereNotNull('due_at')
+            ->where('due_at', '<=', $now);
+    }
+
+    public function introductionsInPool(UserId $userId, ?array $termIds, int $limit): array
+    {
+        $query = $this->pool($userId, $termIds);
+        if ($query === null || $limit <= 0) {
             return [];
         }
 
-        // No state/due filter: practice drills whatever is in scope. Ordering is irrelevant (the
-        // caller shuffles), so we just cap the read.
-        $rows = DB::table(self::TABLE)
-            ->where('user_id', $userId->value)
-            ->whereIn('term_id', $termIds)
+        $rows = $query
+            ->where('acquisition', Acquisition::New->value)
+            // First enrolled, first taught. `term_id` breaks ties so a repeated call deals the same
+            // words rather than a fresh sample of them.
+            ->orderBy('enrolled_at')
+            ->orderBy('term_id')
             ->limit($limit)
             ->get(self::COLUMNS);
 
         return array_values($rows->map($this->toView(...))->all());
+    }
+
+    public function allInPool(UserId $userId, ?array $termIds, int $limit): array
+    {
+        $query = $this->pool($userId, $termIds);
+        if ($query === null) {
+            return [];
+        }
+
+        // No state/due filter: practice drills whatever the learner is studying. Ordering is
+        // irrelevant (the caller shuffles), so we just cap the read.
+        $rows = $query->limit($limit)->get(self::COLUMNS);
+
+        return array_values($rows->map($this->toView(...))->all());
+    }
+
+    /**
+     * The pool proper: enrolled pairs only.
+     *
+     * @param  list<string>|null  $termIds
+     */
+    private function pool(UserId $userId, ?array $termIds): ?Builder
+    {
+        return $this->scoped($userId, $termIds)?->whereNotNull('enrolled_at');
+    }
+
+    /**
+     * One learner's pairs, optionally narrowed to a scope. Returns null for an EMPTY scope — «this
+     * collection has no terms» is not the same question as «everything», and `whereIn('term_id', [])`
+     * would quietly answer the first with the second's SQL.
+     *
+     * @param  list<string>|null  $termIds
+     */
+    private function scoped(UserId $userId, ?array $termIds): ?Builder
+    {
+        if ($termIds !== null && $termIds === []) {
+            return null;
+        }
+
+        $query = DB::table(self::TABLE)->where('user_id', $userId->value);
+
+        if ($termIds !== null) {
+            $query->whereIn('term_id', $termIds);
+        }
+
+        return $query;
     }
 
     private function toView(stdClass $row): DueTermView

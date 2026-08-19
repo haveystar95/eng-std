@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Learning\Presentation\Http\Controller\PoolController;
 use App\Modules\Learning\Presentation\Http\Controller\ReviewController;
 use App\Modules\Learning\Presentation\Http\Controller\StudyController;
 use App\Modules\Learning\Presentation\Http\Controller\SyncController;
@@ -15,6 +16,11 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/study/progress', [StudyController::class, 'progress']);
     Route::get('/stats', [StudyController::class, 'stats']);
     Route::post('/reviews/batch', [ReviewController::class, 'batch']);
+
+    // The pool: the two deliberate acts that put a word into the trainer and take it back out.
+    // Reading the pool is not here on purpose — the device reads it from its own mirror.
+    Route::put('/pool/terms/{termId}', [PoolController::class, 'enroll']);
+    Route::delete('/pool/terms/{termId}', [PoolController::class, 'unenroll']);
 
     Route::get('/triage/queue', [TriageController::class, 'queue']);
     Route::post('/triage/batch', [TriageController::class, 'batch']);

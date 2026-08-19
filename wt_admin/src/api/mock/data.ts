@@ -140,6 +140,9 @@ function buildLadderPair(i: number, k: number, collections: UserCollection[]): L
     dueAt: graduated ? (k % 3 === 0 ? null : iso(-(k % 4) * DAY)) : null,
     lastReviewedAt: step !== null && step > 0 ? iso(answeredMsAgo) : null,
     exposedAt: isKnown ? null : iso(answeredMsAgo + 90_000),
+    // Out of the pool: a «знаю» self-assessment always, plus one paused word in nine so the
+    // «вне пула» filter has something to find in the mock.
+    enrolledAt: isKnown || k % 9 === 4 ? null : iso(answeredMsAgo + 600_000),
     lastReview:
       step !== null && step > 0
         ? {

@@ -914,9 +914,11 @@ paths:
       summary: Upload a batch of triage swipes (idempotent by triage id)
       description: >-
         A swipe is a self-assessment, kept out of the review log. Projects onto (user, term)
-        progress: known → a known row, unsure → learning (due now), unknown → stays new (and,
-        for a term currently known, drops the row to return it to learning). Re-sending an id
-        is a duplicate, not an error; a swipe for an unknown term is skipped.
+        progress, and decides POOL MEMBERSHIP: `unknown` → a rung-0 row, enrolled; `unsure` →
+        the first recognition rung, enrolled; `known` → a `known` row with a verification check,
+        NOT enrolled (on an untaught word this supersedes an earlier enrolment). A pair that has
+        actually been taught is never rewritten by a swipe — it is only enrolled. Re-sending an
+        id is a duplicate, not an error; a swipe for an unknown term is skipped.
       requestBody:
         required: true
         content:
@@ -987,6 +989,51 @@ paths:
                       unknown: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /pool/terms/{termId}:
+    put:
+      tags: [Study]
+      summary: Put a term into the learner's pool («Учить это слово»)
+      description: >-
+        THE POOL is the learner's own list of words being studied — the queue, as opposed to the
+        catalogue their collections are. Sessions (study and practice alike) are assembled from it
+        and from nothing else, so a word reaches the trainer only through a deliberate act: this
+        endpoint, or a `не знаю` / `не уверен` triage swipe.
+
+        Idempotent. The pair's row is created if the learner has never met the word; if it is
+        already in the pool nothing is written, and the ORIGINAL enrolment moment is kept. A pair
+        that was paused and is being brought back resumes at the rung, counter and due date it left
+        with — none of them is touched here.
+
+        There is no GET: the device reads its pool from its own mirror, which `/sync` keeps fresh
+        (`enrolled_at` rides every progress row).
+      parameters:
+        - name: termId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      responses:
+        '200': { $ref: '#/components/responses/PoolMembership' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not a term id }
+
+    delete:
+      tags: [Study]
+      summary: Take a term out of the learner's pool («Убрать из изучения»)
+      description: >-
+        A PAUSE, not an erasure. `enrolled_at` is cleared and nothing else changes: the append-only
+        review log, the acquisition rung, the successful-review counter and the SM-2 schedule all
+        stand, so re-enrolling continues from exactly where the word was left. Idempotent — a pair
+        that is not in the pool answers 200 with `changed: false`.
+      parameters:
+        - name: termId
+          in: path
+          required: true
+          schema: { type: string, minLength: 26, maxLength: 26 }
+      responses:
+        '200': { $ref: '#/components/responses/PoolMembership' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not a term id }
 
   /sync/cursor:
     get:
@@ -1231,6 +1278,20 @@ paths:
                                     a miss re-schedules the pair immediately. Grows on a correct
                                     answer (`hard` included) and never decreases — a rung, once
                                     earned, is not taken back.
+                                enrolled_at:
+                                  type: string
+                                  format: date-time
+                                  nullable: true
+                                  description: >-
+                                    POOL MEMBERSHIP — a third dimension, independent of the two
+                                    above: not when the pair comes back, nor as what, but WHETHER
+                                    it comes back at all. Non-null = the learner is studying this
+                                    word and sessions may deal it; null = it is in the catalogue
+                                    only (never taken into study, marked `знаю`, or paused with
+                                    «Убрать из изучения»). Null is not a tombstone — the row and its
+                                    whole history stay, which is what makes a pause undoable. The
+                                    device mirrors it because «Мои слова» and its offline session
+                                    builder both read the pool from the local database.
                           triages:
                             type: array
                             description: >-
@@ -1271,6 +1332,26 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+    PoolMembership:
+      description: The pair's pool membership after the call
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                required: [term_id, enrolled, changed]
+                properties:
+                  term_id: { type: string, minLength: 26, maxLength: 26 }
+                  enrolled:
+                    type: boolean
+                    description: Where the pair now stands — true after PUT, false after DELETE.
+                  changed:
+                    type: boolean
+                    description: >-
+                      Whether THIS call moved anything. False for a replayed request from an
+                      offline queue, which is an ordinary outcome rather than an error.
     ValidationError:
       description: Input validation failed (Laravel shape)
       content:

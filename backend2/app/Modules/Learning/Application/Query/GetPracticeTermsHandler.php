@@ -7,17 +7,20 @@ namespace App\Modules\Learning\Application\Query;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Port\DueTermsReader;
-use App\Modules\Learning\Domain\ValueObject\Acquisition;
-use App\Modules\Learning\Domain\ValueObject\LearningState;
-use App\Modules\Shared\Domain\ValueObject\TermId;
 use Random\Randomizer;
 
 /**
- * Assembles the free-practice pool: take every term in scope (a collection, or all the user's
- * collections), attach each term's real progress so the {@see \App\Modules\Learning\Domain\Service\ExerciseSelector}
- * picks the right rung of the ladder (a never-studied term → reps 0 → multiple_choice), then
- * shuffle and cap to the session size. No due/new filtering, no quota — practice ignores the
- * schedule entirely and never introduces or spends anything.
+ * Assembles the free-practice pool: every pair the learner has ENROLLED (optionally narrowed to one
+ * collection), with its real progress attached so the {@see \App\Modules\Learning\Domain\Service\ExerciseSelector}
+ * picks the right rung of the ladder, then shuffled and capped to the session size. No due/new
+ * filtering, no quota — practice ignores the schedule entirely and never introduces or spends
+ * anything.
+ *
+ * It is the POOL and not the collection, by the same rule the study session follows: practice is
+ * training, and a word nobody has decided to study is not in training. Until this chapter the pool
+ * here was «every term in the collection, with an invented rung-0 row for the ones never met», which
+ * is exactly the behaviour the library/queue split exists to end — opening a 200-word collection
+ * would drill 200 words the learner never asked for.
  */
 final readonly class GetPracticeTermsHandler
 {
@@ -35,27 +38,13 @@ final readonly class GetPracticeTermsHandler
     {
         $size = max(1, min(self::MAX_SESSION_SIZE, $query->sessionSize));
 
-        $candidates = $query->collectionId !== null
+        $scope = $query->collectionId !== null
             ? $this->collectionTerms->termIdsForCollection($query->userId, $query->collectionId, self::CANDIDATE_CAP)
-            : $this->collectionTerms->termIdsForUser($query->userId, self::CANDIDATE_CAP);
+            : null;
 
-        if ($candidates === []) {
+        $views = $this->reader->allInPool($query->userId, $scope, self::CANDIDATE_CAP);
+        if ($views === []) {
             return [];
-        }
-
-        // Real progress for the studied terms, keyed by term id; the rest are new (reps 0).
-        $studied = [];
-        foreach ($this->reader->allAmong($query->userId, $candidates, self::CANDIDATE_CAP) as $view) {
-            $studied[$view->termId->value] = $view;
-        }
-
-        $views = [];
-        foreach ($candidates as $termId) {
-            // A term with no row is new on both dimensions: unscheduled, and standing at rung 0.
-            $views[] = $studied[$termId] ?? new DueTermView(
-                TermId::fromString($termId), LearningState::New, 0, null,
-                acquisition: Acquisition::New,
-            );
         }
 
         /** @var list<DueTermView> $shuffled */

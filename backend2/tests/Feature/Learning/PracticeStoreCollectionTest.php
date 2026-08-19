@@ -43,6 +43,23 @@ function f24Deck(string $text = 'passport', string $translation = 'паспор�
     return [$cid, $tid];
 }
 
+/**
+ * Take every term of a collection into the learner's POOL — the deliberate act a session needs.
+ * Subscribing to a store collection puts its words in the CATALOGUE; studying them is a separate
+ * decision, and these tests are about what happens after it has been made.
+ */
+function f24Enroll(string $userId, string $collectionId): void
+{
+    foreach (DB::table('collection_items')->where('collection_id', $collectionId)->pluck('term_id') as $termId) {
+        app(App\Modules\Learning\Application\Command\EnrollTermHandler::class)(
+            new App\Modules\Learning\Application\Command\EnrollTerm(
+                App\Modules\Shared\Domain\ValueObject\UserId::fromString($userId),
+                App\Modules\Shared\Domain\ValueObject\TermId::fromString((string) $termId),
+            ),
+        );
+    }
+}
+
 function f24Subscribe(string $userId, string $collectionId, ?DateTimeInterface $unsubscribedAt = null): void
 {
     DB::table('user_collections')->insert([
@@ -65,6 +82,7 @@ it('offers a subscribed store collection term as a practice card (F24)', functio
     [$user, $token] = f24Learner();
     [$cid, $tid] = f24Deck();
     f24Subscribe($user->id, $cid);
+    f24Enroll($user->id, $cid);
 
     // Before the fix the practice pool scoped by owner_id only → the store term was excluded and
     // the session came back empty (the on-device symptom).
@@ -82,6 +100,7 @@ it('offers a subscribed store collection term as a normal study (new) card too',
     [$user, $token] = f24Learner();
     [$cid, $tid] = f24Deck();
     f24Subscribe($user->id, $cid);
+    f24Enroll($user->id, $cid);
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $cid])
@@ -100,8 +119,9 @@ it('includes a subscribed store term in the all-collections practice pool', func
     [, $tid] = f24Deck();
     [$cid] = [DB::table('collection_items')->where('term_id', $tid)->value('collection_id')];
     f24Subscribe($user->id, (string) $cid);
+    f24Enroll($user->id, (string) $cid);
 
-    // No collection_id → practice across everything the user has (owned ∪ subscribed).
+    // No collection_id → practice across the learner's whole pool.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['practice' => true])
         ->assertOk()
@@ -112,15 +132,26 @@ it('includes a subscribed store term in the all-collections practice pool', func
 
 // ── Negative: an unsubscribe (tombstone) must close access ─────────────────────────────
 
-it('drops a store collection from practice once the subscription is tombstoned', function () {
+it('drops a store collection from a SCOPED practice session once the subscription is tombstoned', function () {
     [$user, $token] = f24Learner();
     [$cid] = f24Deck();
     f24Subscribe($user->id, $cid, unsubscribedAt: now()); // inactive from the start
+    f24Enroll($user->id, $cid);
 
+    // Scoping by collection resolves the scope through Collections, so a collection the learner can
+    // no longer study narrows the pool to nothing. What it does NOT do is take the words out of the
+    // pool: an unsubscribe puts the BOOK back on the shelf, and the words the learner deliberately
+    // took into study are theirs until they say otherwise. That is what «Убрать из изучения» is for.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $cid, 'practice' => true])
         ->assertOk()
         ->assertJsonPath('data.cards', []);
+
+    $unscoped = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['practice' => true])
+        ->assertOk()
+        ->json('data.cards');
+    expect($unscoped)->not->toBe([]);
 });
 
 it('does not leak a store collection the user never subscribed to', function () {

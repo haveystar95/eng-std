@@ -192,7 +192,8 @@ it('never sees a channel skip at all — a skipped card leaves no trace in its o
     expect(speakingAnswer($this, $token, $spoken, 'reservation', LearningLadder::STEP_ASSEMBLY))->toBe('good');
 
     expect(DB::table('reviews')->where('term_id', $skipped)->count())->toBe(0)
-        ->and(DB::table('user_term_progress')->where('term_id', $skipped)->count())->toBe(0)
+        // Its pair row is the enrolment's and is untouched: never introduced, never answered.
+        ->and(DB::table('user_term_progress')->where('term_id', $skipped)->where('acquisition', 'new')->where('reps', 0)->count())->toBe(1)
         // …while the card that DID produce an utterance went all the way through.
         ->and(DB::table('reviews')->where('term_id', $spoken)->count())->toBe(1);
 });

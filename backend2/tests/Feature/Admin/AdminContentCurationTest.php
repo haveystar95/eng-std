@@ -23,7 +23,9 @@ function curationFixture(): array
     Profile::create(['user_id' => $user->id, 'daily_goal' => 5, 'tier' => 'free']);
     $userToken = $user->createToken('phone')->plainTextToken;
 
-    [$collectionId, $termId] = adminSeedTerm($user, 'Banking', 'account', 'счёт');
+    // enroll: false — these cases are about the CATALOGUE (what curating a term does to the
+    // collections holding it), and several of them write the learner's progress row themselves.
+    [$collectionId, $termId] = adminSeedTerm($user, 'Banking', 'account', 'счёт', enroll: false);
 
     $exampleId = Ulid::generate();
     DB::table('term_examples')->insert([
@@ -142,7 +144,7 @@ it('retires a term: out of every collection, progress gone, review log untouched
 
 it('edits a collection and curates its membership', function () {
     [$user, , $adminToken, $collectionId, $termId] = curationFixture();
-    [, $otherTermId] = adminSeedTerm($user, 'Other deck', 'invoice', 'счёт-фактура');
+    [, $otherTermId] = adminSeedTerm($user, 'Other deck', 'invoice', 'счёт-фактура', enroll: false);
 
     test()->withHeader('Authorization', "Bearer {$adminToken}")
         ->patchJson("/admin/api/collections/{$collectionId}", ['title' => 'Банк и деньги'])

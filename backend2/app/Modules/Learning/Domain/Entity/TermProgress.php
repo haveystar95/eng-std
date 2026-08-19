@@ -27,6 +27,12 @@ use DateTimeImmutable;
  *               ({@see LearningLadder}). Written only by `introduce()`, `advanceLadder()`,
  *               `recordSuccessfulReview()` and the triage entry points.
  *
+ * A THIRD fact rides in the same row and is independent of both: `enrolledAt` — whether this pair is
+ * in the learner's personal POOL. It answers WHETHER the pair comes back at all, where the two above
+ * answer when and as what. Only {@see enroll()} and {@see unenroll()} write it, and neither touches
+ * anything else: leaving the pool is a pause, so the schedule and the rung are left standing exactly
+ * where they were and re-entering resumes from them.
+ *
  * No method writes both. That is the whole reason the ladder could be introduced over live data
  * without recomputing an interval: `graduate` moves a pair off the recognition rungs and leaves
  * SM-2 exactly where it was, so the first real grade afterwards enters the scheduler from `new`
@@ -49,9 +55,14 @@ final class TermProgress
         private readonly Acquisition $acquisition = Acquisition::Graduated,
         private readonly int $learningStep = 0,
         private readonly int $successfulReviews = 0,
+        private readonly ?DateTimeImmutable $enrolledAt = null,
     ) {}
 
-    /** A term the user has never answered: unscheduled, and standing at the intro rung. */
+    /**
+     * A term the user has never answered: unscheduled, and standing at the intro rung — and NOT in
+     * the pool. A row appearing because a word was met or answered is not an act of enrolment;
+     * enrolment is a decision, and it is made by the triage handler or by «Учить это слово».
+     */
     public static function start(UserId $userId, TermId $termId): self
     {
         return new self(
@@ -64,6 +75,9 @@ final class TermProgress
      * A term triaged as "known": self-assessed, not proven. Its `due_at` is a verification
      * check (scheduled by TriageVerificationPlanner), not an SRS interval — SM-2 never
      * touches it while known.
+     *
+     * NOT enrolled: «знаю» is the one verdict that says the opposite of «учи это». The pair exists
+     * so the claim can be checked, and the check rides `due_at`, not the pool.
      */
     public static function knownFromTriage(UserId $userId, TermId $termId, DateTimeImmutable $verificationDueAt): self
     {
@@ -87,7 +101,10 @@ final class TermProgress
     {
         return new self(
             $userId, $termId, LearningState::New, self::DEFAULT_EASE, 0, null, 0, 0, null,
-            Acquisition::Learning, LearningLadder::FIRST_LADDER_STEP,
+            // «Не уверен» is one of the two swipes that ENROL: the learner has said, about this
+            // word, that they want it worked on. That is what puts a pair in the pool — never the
+            // mere existence of a row.
+            Acquisition::Learning, LearningLadder::FIRST_LADDER_STEP, 0, $now,
         );
     }
 
@@ -157,7 +174,7 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
-            $this->acquisition, $this->learningStep, $this->successfulReviews + 1,
+            $this->acquisition, $this->learningStep, $this->successfulReviews + 1, $this->enrolledAt,
         );
     }
 
@@ -167,7 +184,7 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
-            $acquisition, $learningStep, $this->successfulReviews,
+            $acquisition, $learningStep, $this->successfulReviews, $this->enrolledAt,
         );
     }
 
@@ -188,7 +205,10 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, LearningState::New, self::DEFAULT_EASE, 0, null,
             $this->reps, $this->lapses, $this->lastReviewedAt,
-            Acquisition::New, LearningLadder::STEP_INTRO, $this->successfulReviews,
+            // Pool membership is NOT touched here. Undoing a `known` mark is a statement about how
+            // well the word is known, not about whether it is being studied; the triage handler
+            // enrols it separately, by the same rule every other «не знаю» goes through.
+            Acquisition::New, LearningLadder::STEP_INTRO, $this->successfulReviews, $this->enrolledAt,
         );
     }
 
@@ -206,7 +226,7 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now,
             $this->reps, $this->lapses, $now,
-            $this->acquisition, $this->learningStep, $this->successfulReviews,
+            $this->acquisition, $this->learningStep, $this->successfulReviews, $this->enrolledAt,
         );
     }
 
@@ -217,7 +237,7 @@ final class TermProgress
             $this->userId, $this->termId, LearningState::Known, self::DEFAULT_EASE, 0,
             $now->add(new DateInterval('P' . $days . 'D')),
             $this->reps, $this->lapses, $now,
-            $this->acquisition, $this->learningStep, $this->successfulReviews,
+            $this->acquisition, $this->learningStep, $this->successfulReviews, $this->enrolledAt,
         );
     }
 
@@ -235,11 +255,81 @@ final class TermProgress
         Acquisition $acquisition = Acquisition::Graduated,
         int $learningStep = 0,
         int $successfulReviews = 0,
+        ?DateTimeImmutable $enrolledAt = null,
     ): self {
         return new self(
             $userId, $termId, $state, $easeFactor, $intervalDays,
             $dueAt, $reps, $lapses, $lastReviewedAt,
-            $acquisition, $learningStep, $successfulReviews,
+            $acquisition, $learningStep, $successfulReviews, $enrolledAt,
+        );
+    }
+
+    /**
+     * Put this pair in the learner's pool — the deliberate act that makes it studiable.
+     *
+     * IDEMPOTENT, and that is the whole design of the timestamp: re-enrolling a pair that is
+     * already in the pool keeps the ORIGINAL moment, so «с какого дня я это учу» is not rewritten by
+     * a second tap, a replayed offline batch, or a swipe that arrives twice. Nothing else on the row
+     * moves — a pair returning after a pause resumes at the rung and the due date it left with.
+     */
+    public function enroll(DateTimeImmutable $now): self
+    {
+        if ($this->enrolledAt !== null) {
+            return $this;
+        }
+
+        return $this->withEnrolment($now);
+    }
+
+    /**
+     * Take this pair OUT of the pool — a pause, not an erasure.
+     *
+     * Deliberately the smallest possible transition: one column to NULL. The review log is
+     * append-only and is not touched; `state`, `due_at`, `acquisition`, `learning_step` and
+     * `successful_reviews` all stay exactly as they are. That is what makes the promise the UI
+     * makes — «слово можно вернуть в любой момент» — literally true rather than approximately.
+     */
+    public function unenroll(): self
+    {
+        return $this->withEnrolment(null);
+    }
+
+    /**
+     * Has the app ever actually TAUGHT this pair — as opposed to the learner merely having decided
+     * to study it?
+     *
+     * The question a triage verdict has to ask before it overwrites anything. Enrolment creates a
+     * row before the word has ever been shown, so «does a row exist» stopped being the same question
+     * and a `known` swipe on an enrolled-but-unmet word would either clobber real progress (if the
+     * guard were dropped) or do nothing at all (if it stayed).
+     *
+     * Untaught means all three: standing at rung 0, the scheduler has never run for it, and it has
+     * never been answered. Anything else is a history a swipe must not rewrite.
+     */
+    public function hasBeenTaught(): bool
+    {
+        return $this->acquisition !== Acquisition::New
+            || $this->reps > 0
+            || $this->lastReviewedAt !== null;
+    }
+
+    /** Is this pair in the pool, i.e. may the trainer deal it at all? */
+    public function isEnrolled(): bool
+    {
+        return $this->enrolledAt !== null;
+    }
+
+    public function enrolledAt(): ?DateTimeImmutable
+    {
+        return $this->enrolledAt;
+    }
+
+    private function withEnrolment(?DateTimeImmutable $enrolledAt): self
+    {
+        return new self(
+            $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
+            $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
+            $this->acquisition, $this->learningStep, $this->successfulReviews, $enrolledAt,
         );
     }
 

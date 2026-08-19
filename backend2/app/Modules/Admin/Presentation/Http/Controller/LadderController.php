@@ -58,12 +58,18 @@ final class LadderController
         }
         $collectionId = $request->string('collection_id')->toString();
 
+        // «в пуле / вне пула». Absent means both — the honest default for a table whose job is to
+        // explain everything the app knows about this learner. `in_pool=0` is the interesting half:
+        // the rows that exist and are never dealt.
+        $inPool = $request->has('in_pool') ? $request->boolean('in_pool') : null;
+
         $view = ($this->progress)(new GetLadderProgress(
             userId: $userId,
             filter: new AdminLadderFilter(
                 collectionId: $collectionId !== '' ? $collectionId : null,
                 phase: $phase !== '' ? $phase : null,
                 dueOnly: $request->boolean('due'),
+                inPool: $inPool,
             ),
             window: Paging::of($request),
         ));

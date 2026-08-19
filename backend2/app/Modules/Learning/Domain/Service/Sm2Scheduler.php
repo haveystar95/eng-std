@@ -176,6 +176,10 @@ final readonly class Sm2Scheduler implements Scheduler
             // «graduated, rung 0, no successes», which for a pair mid-ladder would be a silent
             // demotion the moment it was saved.
             successfulReviews: $p->successfulReviews(),
+            // Same rule, third dimension: POOL MEMBERSHIP. Its default here is «not in the pool», so
+            // forgetting this line does not throw — it quietly un-enrols every word the moment its
+            // first real answer is scheduled, and the learner watches their queue empty itself.
+            enrolledAt: $p->enrolledAt(),
         );
     }
 

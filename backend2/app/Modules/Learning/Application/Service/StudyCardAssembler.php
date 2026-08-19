@@ -68,7 +68,7 @@ final readonly class StudyCardAssembler
 
     /**
      * @param  list<string>  $poolTermIds
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
      *         the other terms in THIS session — the far-option pool for the recognition rungs
      * @param  int|null  $slotStep  the rung this particular card was laid out at; a session gives a
      *                              term up to three cards at different rungs ({@see SessionLayout})
@@ -359,7 +359,7 @@ final readonly class StudyCardAssembler
      * one shape, or one whose translations have not been generated yet. A single-option card is not
      * a card, and the caller falls through to ordinary multiple_choice.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
      */
     private function recognitionCard(
         DueTermView $view,
@@ -376,9 +376,10 @@ final readonly class StudyCardAssembler
         }
 
         // Deterministic: rotate the neighbour list by this card's index so two cards in one session
-        // do not get the same three options, and a rebuilt session deals the same ones.
+        // do not get the same three options, and a rebuilt session deals the same ones. Then the
+        // topic preference re-orders that rotation — see sameTopicFirst().
         $pool = [];
-        foreach ($this->rotate($neighbours, $cardIndex) as $neighbour) {
+        foreach ($this->sameTopicFirst($this->rotate($neighbours, $cardIndex), $this->collectionsOf($neighbours, $view->termId->value)) as $neighbour) {
             if ($neighbour['term_id'] === $view->termId->value) {
                 continue;
             }
@@ -432,8 +433,69 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string}>  $neighbours
-     * @return list<array{term_id: string, text: string, translation: string|null, type: string}>
+     * Neighbours from the card's OWN topic first, everything else after, each half keeping the order
+     * it arrived in (so the rotation above still varies the options card to card).
+     *
+     * A session used to be one collection, which made every neighbour a same-topic neighbour for
+     * free. A pool session mixes topics, and a far option from another topic is far in the wrong
+     * way: shown «без злаков», «пересадка» and «жаропонижающее» beside «выписка со счёта», the
+     * learner picks the banking-shaped word without knowing it. Same-topic options are the ones that
+     * make the card ask about the word.
+     *
+     * A preference and not a filter, deliberately: a topic with too few same-shape neighbours must
+     * fall back to distant ones rather than lose the card, which is the same rule the type filter
+     * follows one level down.
+     *
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @param  list<string>  $own  the card term's own collections
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>
+     */
+    private function sameTopicFirst(array $neighbours, array $own): array
+    {
+        if ($own === []) {
+            return $neighbours;
+        }
+
+        $ownSet = array_flip($own);
+        $same = [];
+        $rest = [];
+        foreach ($neighbours as $neighbour) {
+            $shared = false;
+            foreach ($neighbour['collections'] ?? [] as $collectionId) {
+                if (isset($ownSet[$collectionId])) {
+                    $shared = true;
+
+                    break;
+                }
+            }
+            if ($shared) {
+                $same[] = $neighbour;
+            } else {
+                $rest[] = $neighbour;
+            }
+        }
+
+        return array_merge($same, $rest);
+    }
+
+    /**
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @return list<string>
+     */
+    private function collectionsOf(array $neighbours, string $termId): array
+    {
+        foreach ($neighbours as $neighbour) {
+            if ($neighbour['term_id'] === $termId) {
+                return $neighbour['collections'] ?? [];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>
      */
     private function rotate(array $neighbours, int $by): array
     {

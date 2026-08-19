@@ -33,5 +33,11 @@ final readonly class ProgressSyncRow
          * owner has only ever got wrong.
          */
         public int $successfulReviews = 0,
+        /**
+         * When this pair entered the learner's POOL, or null when it is not in it. The device
+         * mirrors it because every «what should I study» question on the phone is answered from the
+         * local database — the pool has to be readable in airplane mode, not fetched.
+         */
+        public ?DateTimeImmutable $enrolledAt = null,
     ) {}
 }

@@ -32,6 +32,12 @@ final readonly class AdminLadderPairFacts
         /** When the intro card was shown, or null if the word has never been introduced. */
         public ?string $exposedAt,
         public ?AdminLadderReview $lastReview,
+        /**
+         * When the learner took this word into study, or null when it is not in the pool — a
+         * «знаю» self-assessment, or a word paused with «Убрать из изучения». A row outside the
+         * pool is never dealt, which is the first thing to check when a word «не приходит».
+         */
+        public ?string $enrolledAt = null,
     ) {}
 
     /** A `known` pair is a triage self-assessment and stands outside the ladder entirely. */

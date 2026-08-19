@@ -8,8 +8,8 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 
 /**
- * What to study now for one user: due cards, then new cards to fill the session up to
- * the remaining daily new-term quota.
+ * What to study now for one user, out of their POOL: due cards, then first meetings to fill the
+ * session up to the remaining daily new-term quota.
  */
 final readonly class GetDueTerms
 {
@@ -18,6 +18,6 @@ final readonly class GetDueTerms
         public DateTimeImmutable $now,
         public int $sessionSize = 20,
         public int $newTermsRemaining = 10,
-        public ?string $collectionId = null, // when set, restrict the session to that collection
+        public ?string $collectionId = null, // when set, narrow the pool to that collection's terms
     ) {}
 }

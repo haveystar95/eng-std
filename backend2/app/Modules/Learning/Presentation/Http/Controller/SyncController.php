@@ -191,6 +191,10 @@ final class SyncController
             // scheduler calls of every grade, so a device deriving the rung from it would deal
             // dictation to a word its owner has only ever got wrong (QA-18).
             'successful_reviews' => $r->successfulReviews,
+            // POOL MEMBERSHIP. Null means the pair is in the catalogue only — the trainer never
+            // deals it and «Мои слова» never lists it. Not a tombstone: the row and its whole
+            // history stay, which is what makes «убрать» a pause the learner can undo.
+            'enrolled_at' => $r->enrolledAt?->format(DATE_ATOM),
         ];
     }
 

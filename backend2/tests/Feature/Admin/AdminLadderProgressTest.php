@@ -318,3 +318,36 @@ it('404s an unknown learner', function () {
         ->getJson('/admin/api/users/not-a-ulid/ladder/events')
         ->assertNotFound();
 });
+
+it('filters the table by «в пуле / вне пула» and counts the rows outside it', function () {
+    [$user, $adminToken, $terms] = ladderFixture();
+    $token = $user->createToken('phone-pool')->plainTextToken;
+
+    // «bank» is paused by the learner; «cat» never entered the pool (a «знаю» swipe). «apple» is
+    // the only word still being studied.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/pool/terms/{$terms['bank']}")
+        ->assertOk();
+
+    $inPool = $this->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/users/{$user->id}/ladder?in_pool=1")
+        ->assertOk()
+        ->json();
+    expect(array_column($inPool['data'], 'term_id'))->toBe([$terms['apple']]);
+
+    $outOfPool = $this->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/users/{$user->id}/ladder?in_pool=0")
+        ->assertOk()
+        ->json();
+    expect(array_column($outOfPool['data'], 'term_id'))
+        ->toEqualCanonicalizing([$terms['bank'], $terms['cat']]);
+
+    // No parameter = both, and the counter says how many of them the trainer will never deal.
+    $all = $this->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/users/{$user->id}/ladder")
+        ->assertOk()
+        ->json();
+    expect($all['data'])->toHaveCount(3)
+        ->and($all['counts']['total'])->toBe(3)
+        ->and($all['counts']['out_of_pool'])->toBe(2);
+});

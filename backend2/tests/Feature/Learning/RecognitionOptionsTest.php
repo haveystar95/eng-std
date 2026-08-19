@@ -6,8 +6,11 @@ use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
+use App\Modules\Learning\Application\Command\EnrollTerm;
+use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -28,13 +31,18 @@ uses(RefreshDatabase::class);
  */
 function seedTyped(string $collectionId, string $userId, string $text, string $translation, string $type): string
 {
-    return app(AddWordToCollectionHandler::class)(new AddWordToCollection(
+    $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection(
         CollectionId::fromString($collectionId),
         UserId::fromString($userId),
         $text,
         $translation,
         type: $type,
     ))->value;
+
+    // …and into the learner's pool, because every case here is about the cards a SESSION deals.
+    app(EnrollTermHandler::class)(new EnrollTerm(UserId::fromString($userId), TermId::fromString($termId)));
+
+    return $termId;
 }
 
 /** The dog-food deck from the acceptance run: two words among four sentences. */
@@ -143,4 +151,52 @@ it('falls back to an ordinary card when no neighbour shares the shape', function
         expect($card['option_ids'] ?? null)->toBeNull();
         expect($card['answer'])->toBe('grain-free');
     }
+});
+
+it('prefers far options from the card own topic when the pool mixes collections', function () {
+    // A pool session is no longer one collection's words. «аптека» beside «собеседование» beside
+    // «аэропорт» makes a far option far by SUBJECT, and the learner picks the pharmacy-shaped word
+    // without knowing it — so same-topic neighbours come first, and the other topics only fill in.
+    [$user, $token] = learner();
+    $actor = UserId::fromString($user->id);
+
+    $pharmacy = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
+        $actor, 'Аптека', new LanguageCode('ru'), new LanguageCode('en'),
+    ))->value;
+    $interview = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
+        $actor, 'Собеседование', new LanguageCode('ru'), new LanguageCode('en'),
+    ))->value;
+
+    $target = seedTyped($pharmacy, $user->id, 'antipyretic', 'жаропонижающее', 'word');
+    $sameTopic = [
+        seedTyped($pharmacy, $user->id, 'painkiller', 'обезболивающее', 'word'),
+        seedTyped($pharmacy, $user->id, 'prescription', 'рецепт', 'word'),
+        seedTyped($pharmacy, $user->id, 'pharmacist', 'фармацевт', 'word'),
+    ];
+    // Plenty of other-topic words, so a preference that did nothing would show up as a mix.
+    foreach ([['resume', 'резюме'], ['vacancy', 'вакансия'], ['salary', 'зарплата'], ['notice', 'уведомление']] as [$en, $ru]) {
+        seedTyped($interview, $user->id, $en, $ru, 'word');
+    }
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['limit' => 40])
+        ->assertOk()
+        ->json('data.cards');
+
+    $own = array_values(array_filter(
+        $cards,
+        static fn (array $c): bool => $c['term_id'] === $target && in_array($c['ladder_step'] ?? null, [1, 2], true),
+    ));
+    expect($own)->not->toBe([], 'the target is a first meeting, so it is dealt recognition cards');
+
+    $pharmacyWords = ['antipyretic', 'жаропонижающее', 'painkiller', 'обезболивающее',
+        'prescription', 'рецепт', 'pharmacist', 'фармацевт'];
+    foreach ($own as $card) {
+        // Three same-topic neighbours exist, and a recognition card takes three options — so every
+        // option on this card can and must come from the pharmacy.
+        foreach ($card['options'] as $option) {
+            expect($pharmacyWords)->toContain($option);
+        }
+    }
+    expect($sameTopic)->toHaveCount(3); // guard: the fixture really does offer enough neighbours
 });

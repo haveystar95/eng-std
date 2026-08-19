@@ -22,5 +22,15 @@ final readonly class AdminLadderCounts
         public int $known,
         /** Scheduled and ripe right now. Ladder pairs have no due date at all and are never here. */
         public int $due,
+        /**
+         * Pairs OUTSIDE the pool — a row exists, but the trainer will never deal it: a «знаю»
+         * self-assessment awaiting its check, or a word the learner paused.
+         *
+         * It cuts ACROSS the four phase buckets rather than being a fifth one, so it is not part of
+         * their sum. Note also what it cannot see: a word sitting in a collection the learner has
+         * never triaged has no row at all, so «в каталоге, не в пуле» in the fullest sense is a
+         * different query over `collection_items` and a screen of its own.
+         */
+        public int $outOfPool = 0,
     ) {}
 }

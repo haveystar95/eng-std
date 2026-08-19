@@ -8,6 +8,8 @@ use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
+use App\Modules\Learning\Application\Command\EnrollTerm;
+use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Learning\Application\Command\SubmitReviewsHandler;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\Fuzz;
@@ -92,13 +94,16 @@ function adminActor(string $email = 'root@wt.test'): array
  *
  * @return array{0: string, 1: string}  [collectionId, termId]
  */
-function adminSeedTerm(User $user, string $title, string $text, string $translation = 'x'): array
+function adminSeedTerm(User $user, string $title, string $text, string $translation = 'x', bool $enroll = true): array
 {
     $actor = UserId::fromString($user->id);
     $collectionId = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
         $actor, $title, new LanguageCode('ru'), new LanguageCode('en'),
     ));
     $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
+    if ($enroll) {
+        enrollTerm($user, $termId);
+    }
 
     return [$collectionId->value, $termId];
 }
@@ -115,15 +120,34 @@ function learner(): array
     return [$user, $user->createToken('test-device')->plainTextToken];
 }
 
+/**
+ * Put one term into the user's POOL — the deliberate act that makes it studiable at all.
+ *
+ * Every seeding helper below does this by default, because «a word this user is studying» is what
+ * almost every Learning test means by seeding one. Pass `enroll: false` to seed a word that sits in
+ * the catalogue only; that is the case the pool gate exists for, and PoolApiTest leans on it.
+ */
+function enrollTerm(User $user, string $termId): void
+{
+    app(EnrollTermHandler::class)(new EnrollTerm(
+        UserId::fromString($user->id), TermId::fromString($termId),
+    ));
+}
+
 /** Create a collection + word for the user and return the term id (no HTTP). */
-function seedWordFor(User $user, string $text = 'apple', string $translation = 'яблоко'): string
+function seedWordFor(User $user, string $text = 'apple', string $translation = 'яблоко', bool $enroll = true): string
 {
     $actor = UserId::fromString($user->id);
     $collectionId = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
         $actor, 'Fruit', new LanguageCode('ru'), new LanguageCode('en'),
     ));
 
-    return app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
+    $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
+    if ($enroll) {
+        enrollTerm($user, $termId);
+    }
+
+    return $termId;
 }
 
 /**
@@ -131,23 +155,31 @@ function seedWordFor(User $user, string $text = 'apple', string $translation = '
  *
  * @return array{0: string, 1: string}  [collectionId, termId]
  */
-function seedCollectionWith(User $user, string $text, string $translation = 'x'): array
+function seedCollectionWith(User $user, string $text, string $translation = 'x', bool $enroll = true): array
 {
     $actor = UserId::fromString($user->id);
     $collectionId = app(CreateCustomCollectionHandler::class)(new CreateCustomCollection(
         $actor, $text, new LanguageCode('ru'), new LanguageCode('en'),
     ));
     $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection($collectionId, $actor, $text, $translation))->value;
+    if ($enroll) {
+        enrollTerm($user, $termId);
+    }
 
     return [$collectionId->value, $termId];
 }
 
 /** Add a word to an existing collection (no HTTP) and return the term id. */
-function addWordTo(string $collectionId, string $userId, string $text, string $translation = 'x'): string
+function addWordTo(string $collectionId, string $userId, string $text, string $translation = 'x', bool $enroll = true): string
 {
-    return app(AddWordToCollectionHandler::class)(new AddWordToCollection(
+    $termId = app(AddWordToCollectionHandler::class)(new AddWordToCollection(
         CollectionId::fromString($collectionId), UserId::fromString($userId), $text, $translation,
     ))->value;
+    if ($enroll) {
+        app(EnrollTermHandler::class)(new EnrollTerm(UserId::fromString($userId), TermId::fromString($termId)));
+    }
+
+    return $termId;
 }
 
 /** GET /sync and return the `data` envelope. */

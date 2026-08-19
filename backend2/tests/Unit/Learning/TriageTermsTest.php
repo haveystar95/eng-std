@@ -74,19 +74,26 @@ it('routes all three verdicts onto the ladder, and only «знаю» touches the
         swipe($known, TriageVerdict::Known, $this->now),
     ]));
 
-    // «не знаю» → rung 0. No row at all, which to selection means exactly the same thing.
-    expect($this->progress->get($this->user, $unknown))->toBeNull();
+    // «не знаю» → rung 0, IN THE POOL. The row exists so the enrolment has somewhere to live.
+    $n = $this->progress->get($this->user, $unknown);
+    expect($n?->acquisition())->toBe(Acquisition::New)
+        ->and($n?->ladderStep())->toBe(0)
+        ->and($n?->isEnrolled())->toBeTrue()
+        ->and($n?->dueAt())->toBeNull();          // rung 0 schedules nothing either
 
-    // «не уверен» → rung 1: past the intro, because the swipe pass already showed them the word.
+    // «не уверен» → rung 1, also in the pool: past the intro, because the swipe pass already
+    // showed them the word.
     $u = $this->progress->get($this->user, $unsure);
     expect($u?->acquisition())->toBe(Acquisition::Learning)
         ->and($u?->ladderStep())->toBe(1)
+        ->and($u?->isEnrolled())->toBeTrue()
         ->and($u?->dueAt())->toBeNull();          // the ladder never schedules
 
-    // «знаю» → off the ladder, and the ONE verdict that writes a scheduling field.
+    // «знаю» → off the ladder, out of the pool, and the ONE verdict that writes a scheduling field.
     $k = $this->progress->get($this->user, $known);
     expect($k?->ladderStep())->toBeNull()
         ->and($k?->state())->toBe(LearningState::Known)
+        ->and($k?->isEnrolled())->toBeFalse()
         ->and($k?->dueAt())->not->toBeNull();     // its verification check
 });
 
@@ -104,12 +111,28 @@ it('projects unsure straight into learning, due now', function () {
         ->and($p?->dueAt())->toBeNull();
 });
 
-it('leaves an unknown-swiped term new — no progress row', function () {
+it('enrols an unknown-swiped term at rung 0', function () {
+    // «Не знаю» means «учи это». Until the pool it left no row at all and the word was found again
+    // by "has a triage marker but no progress row" — a definition only readable backwards.
     $term = TermId::generate();
     $result = triageHandler($this)(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now)]));
 
+    $p = $this->progress->get($this->user, $term);
     expect($result->accepted)->toBe(1)
-        ->and($this->progress->count())->toBe(0);
+        ->and($p?->acquisition())->toBe(Acquisition::New)
+        ->and($p?->isEnrolled())->toBeTrue()
+        ->and($p?->enrolledAt())->toEqual($this->now);
+});
+
+it('keeps the first enrolment moment when a word is swiped «не знаю» twice', function () {
+    $term = TermId::generate();
+    $handler = triageHandler($this);
+
+    $handler(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now, seq: 1)]));
+    $handler(new TriageTerms($this->user, [swipe($term, TriageVerdict::Unknown, $this->now, seq: 2)]));
+
+    // Idempotent by design: «с какого дня я это учу» is not rewritten by a second swipe.
+    expect($this->progress->get($this->user, $term)?->enrolledAt())->toEqual($this->now);
 });
 
 it('returns a known term to new when swiped unknown, keeping its history', function () {
@@ -130,7 +153,9 @@ it('returns a known term to new when swiped unknown, keeping its history', funct
         // Back to rung 0, reps notwithstanding: a `known` mark was a claim, never a taught word,
         // so there is no recognition step it has ever passed.
         ->and($p?->acquisition())->toBe(Acquisition::New)
-        ->and($p?->ladderStep())->toBe(0);
+        ->and($p?->ladderStep())->toBe(0)
+        // …and it joins the pool: the learner has just said they do not know it after all.
+        ->and($p?->isEnrolled())->toBeTrue();
 });
 
 it('does not clobber real study progress with a stray unknown swipe', function () {
@@ -154,9 +179,11 @@ it('picks the current verdict by client_seq, not decided_at, within a batch', fu
 
     triageHandler($this)(new TriageTerms($this->user, [$known, $unknown]));
 
-    // Governing verdict is the higher seq (unknown) → the term stays new. Ordering by decided_at
+    // Governing verdict is the higher seq (unknown) → rung 0, in the pool. Ordering by decided_at
     // would have let the older "known" win and wrongly parked the term as known.
-    expect($this->progress->count())->toBe(0);
+    $p = $this->progress->get($this->user, $term);
+    expect($p?->state())->toBe(LearningState::New)
+        ->and($p?->isEnrolled())->toBeTrue();
 });
 
 it('keeps the higher-seq verdict when a lower-seq swipe arrives in a later batch (out-of-order chunks)', function () {
@@ -169,8 +196,10 @@ it('keeps the higher-seq verdict when a lower-seq swipe arrives in a later batch
     $handler(new TriageTerms($this->user, [swipe($term, TriageVerdict::Known, $this->now, seq: 1)]));
 
     // The re-projection reads the governing verdict across the whole log by client_seq, so the
-    // stale "known" must NOT create a row. Arrival-order guards alone would have parked it known.
-    expect($this->progress->count())->toBe(0);
+    // stale "known" must NOT win. Arrival-order guards alone would have parked it known.
+    $p = $this->progress->get($this->user, $term);
+    expect($p?->state())->toBe(LearningState::New)
+        ->and($p?->isEnrolled())->toBeTrue();
 });
 
 it('ignores a re-uploaded triage batch (idempotent by id)', function () {

@@ -95,11 +95,13 @@ it('leaves the option-free trainers alone — a term with an example is still tr
         'sentence_translation' => 'Как вы справляетесь с конфликтами на работе?',
         'source' => 'ai', 'created_at' => now(), 'updated_at' => now(),
     ]);
+    DB::table('user_term_progress')->where('term_id', $termId)->delete(); // the enrolment's row; this case writes its own
     DB::table('user_term_progress')->insert([
         'user_id' => $user->id, 'term_id' => $termId,
         'state' => 'review', 'acquisition' => 'graduated', 'learning_step' => 0,
         'reps' => 2, 'successful_reviews' => 2, 'lapses' => 0,
         'ease_factor' => 2.5, 'interval_days' => 5, 'due_at' => now()->subDay(),
+        'enrolled_at' => now(),
         'created_at' => now(), 'updated_at' => now(),
     ]);
 

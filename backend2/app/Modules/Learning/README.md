@@ -1,7 +1,7 @@
 # Learning
 
-**Owns:** progress, SRS scheduling, the acquisition ladder, triage, exercises/grading, study
-sessions, reviews, statistics
+**Owns:** progress, the personal pool, SRS scheduling, the acquisition ladder, triage,
+exercises/grading, study sessions, reviews, statistics
 
 Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports/DTOs) ·
 `Infrastructure` (Eloquent, adapters, migrations, provider) · `Presentation` (Http, Phase 3).
@@ -10,6 +10,14 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
 
 - **Progress is per `(user_id, term_id)`** (`TermProgress`), never per collection. A term
   learned in one collection is learned everywhere. Collection progress is derived, not stored.
+- **The POOL is an attribute of the pair, not a collection.** `enrolled_at` non-null = the learner
+  is studying this word; null = it is in the catalogue only. Sessions — study AND practice — are
+  assembled from the pool and nothing else, so a collection is a catalogue of a topic and the pool
+  is the queue. There is deliberately no «Мои слова» collection entity: one would duplicate terms,
+  need a tombstone per removal, and give one word two progress stories.
+- **Leaving the pool is a PAUSE.** `enrolled_at → NULL` and nothing else moves — the review log, the
+  rung, the counter and the due date all stand, so re-enrolling resumes exactly where the word was
+  left. Enrolment is idempotent and keeps its first moment.
 - **`reviews` is append-only** with a client-generated ULID primary key; inserts are
   idempotent (`insertIgnore` / ON CONFLICT DO NOTHING), never updated.
 - **`daily_user_stats` is a projection** of the reviews log — rebuildable by replay.
@@ -22,12 +30,18 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
   A study session's **composition is fixed** under its id — answers outside it are rejected. A term
   may occupy several slots of one session (its ladder chain); the composition is a set of terms.
 
-## Two dimensions, and they never read each other
+## Three dimensions, and they never read each other
 
 | | answers | owned by | columns |
 |---|---|---|---|
 | `LearningState` | **when** the pair comes back | `Sm2Scheduler` | `state`, `ease_factor`, `interval_days`, `due_at`, `reps`, `lapses`, `last_reviewed_at` |
-| `Acquisition` | **what** it comes back as | `ModeAdmission` | `acquisition`, `learning_step` |
+| `Acquisition` | **what** it comes back as | `ModeAdmission` | `acquisition`, `learning_step`, `successful_reviews` |
+| the pool | **whether** it comes back at all | the learner | `enrolled_at` |
+
+Three dimensions on one row, and no transition writes two of them. The third is the newest: a word
+reaches the trainer only through a deliberate act — a `не знаю` / `не уверен` triage swipe, or
+«Учить это слово» on the word card. Nothing else enrols: not adding a collection, not generating
+one, not answering a practice card.
 
 The scheduler does not know `acquisition` exists; the admission matrix never looks at `state`. That
 orthogonality is why the ladder landed over live data without re-deriving a single interval —
@@ -72,15 +86,26 @@ Swap in an `FsrsScheduler` later without touching handlers.
   `TransactionManager`.
 - `SetModeAdmission` — moves one trainer's place on the ladder, globally or per user. Separate from
   the on/off write on purpose: moving a rung must not switch a trainer on for someone.
-- `TriageTerms` — appends triage swipes, projects the latest verdict per term onto progress
-  (`known` schedules a verification via `TriageVerificationPlanner`); never writes `reviews`.
-- `BuildStudySession` — assembles a self-contained session (scoped/global, deduped, one global
-  quota) and its RUNNING ORDER (`SessionLayout`): a word introduced in a session is answered in
-  that session, at widening gaps, interleaved with due repeats and never in a block of intros. A
+- `TriageTerms` — appends triage swipes, projects the latest verdict per term onto progress and
+  decides pool membership: `unknown` → rung 0 enrolled, `unsure` → rung 1 enrolled, `known` → a
+  verification row (via `TriageVerificationPlanner`), NOT enrolled. A pair that has actually been
+  taught (`TermProgress::hasBeenTaught`) is only enrolled, never rewritten. Never writes `reviews`.
+- `EnrollTerm` / `UnenrollTerm` — «Учить это слово» and «Убрать из изучения». Both idempotent,
+  both about one pair, and `UnenrollTerm` deliberately has no other branch: one column to NULL.
+- `BuildStudySession` — assembles a self-contained session FROM THE POOL (optionally narrowed to
+  one collection's terms, deduped, one global quota) and its RUNNING ORDER (`SessionLayout`): a
+  word introduced in a session is answered in that session, at widening gaps, interleaved with due repeats and never in a block of intros. A
   word whose chain does not fit is deferred whole. Cards come from `ExerciseSelector` +
   distractors/chips, and the composition is persisted. Practice sessions never introduce new terms
   or schedule, and are laid out flat.
-- Queries: `GetDueTerms`, `GetTriageQueue`, `GetCollectionsProgress`, `GetUserStats`.
+- Queries: `GetDueTerms` (pool repeats + pool first meetings, read under separate limits so a
+  freshly triaged pool cannot crowd out the repeats), `GetTriageQueue`, `GetCollectionsProgress`,
+  `GetUserStats`.
+
+One card is dealt from OUTSIDE the pool, on purpose: a `known` self-assessment whose verification
+check has come due. That is the system auditing a claim rather than the learner's queue, and
+dropping it would mean a «знаю» swipe is never questioned. `DueTermsReader` and the `due_today`
+stat agree about it, so the home CTA never offers a session that comes back empty.
 
 Cross-module (via other modules' Application): Vocabulary `TermExistenceReader` /
 `TermContentReader` / `TermAnswerKeyReader` / `TermDifficultyReader` / `DistractorReader`,

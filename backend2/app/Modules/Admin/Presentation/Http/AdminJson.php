@@ -262,6 +262,7 @@ final class AdminJson
             'graduated' => $c->graduated,
             'known' => $c->known,
             'due' => $c->due,
+            'out_of_pool' => $c->outOfPool,
         ];
     }
 
@@ -288,6 +289,7 @@ final class AdminJson
             'due_at' => $f->dueAt,
             'last_reviewed_at' => $f->lastReviewedAt,
             'exposed_at' => $f->exposedAt,
+            'enrolled_at' => $f->enrolledAt,
             'last_review' => $f->lastReview !== null ? self::ladderReview($f->lastReview) : null,
         ];
     }

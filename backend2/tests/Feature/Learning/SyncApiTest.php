@@ -98,6 +98,7 @@ it('returns an empty delta when the client is caught up', function () {
     DB::table('collections')->where('id', $col)->update(['updated_at' => now()->subDay()]);
     DB::table('collection_items')->where('collection_id', $col)->update(['updated_at' => now()->subDay()]);
     DB::table('terms')->where('id', $term)->update(['updated_at' => now()->subDay()]);
+    DB::table('user_term_progress')->where('term_id', $term)->update(['updated_at' => now()->subDay()]);
 
     $data = sync($this, $token, 'since=' . urlencode(now()->toIso8601String()));
 
@@ -179,8 +180,9 @@ it('carries triage verdicts so a re-login cannot resurrect an unknown swipe', fu
     [$user, $token] = learner();
     [$col, $money] = seedCollectionWith($user, 'money', 'деньги');
 
-    // `unknown` writes NO progress row — only a term_triages log entry. The delta feed must still
-    // carry it, or the client (which wiped its local marker on sign-out) re-offers it in the deck.
+    // `unknown` enrols the pair at rung 0 AND appends to the term_triages log. Both halves have to
+    // reach the device: the progress row is what «Мои слова» and the trainer read, and the triage
+    // marker is what stops the deck re-offering the word after a sign-out wiped the local one.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/triage/batch', ['triages' => [[
             'id' => Ulid::generate(), 'term_id' => $money, 'verdict' => 'unknown',
@@ -190,7 +192,11 @@ it('carries triage verdicts so a re-login cannot resurrect an unknown swipe', fu
 
     $data = sync($this, $token);
 
-    expect(collect($data['changes']['progress'])->firstWhere('term_id', $money))->toBeNull();
+    $p = collect($data['changes']['progress'])->firstWhere('term_id', $money);
+    expect($p)->not->toBeNull()
+        ->and($p['acquisition'])->toBe('new')       // rung 0 — never shown
+        ->and($p['enrolled_at'])->not->toBeNull();  // …and in the pool, which is what the swipe meant
+
     $t = collect($data['changes']['triages'])->firstWhere('term_id', $money);
     expect($t)->not->toBeNull()
         ->and($t['op'])->toBe('upsert')

@@ -200,6 +200,13 @@ export interface LadderCounts {
   graduated: number
   known: number
   due: number
+  /**
+   * Rows the trainer will never deal: a «знаю» self-assessment, or a word paused with «Убрать из
+   * изучения». Cuts ACROSS the four phase buckets rather than being a fifth one, so it is not part
+   * of their sum. It cannot see a word that is merely sitting in a collection untouched — that has
+   * no row here at all.
+   */
+  outOfPool: number
 }
 
 export interface LadderReview {
@@ -236,6 +243,12 @@ export interface LadderPair {
   /** When the intro card was shown. Null = the word has never been introduced. */
   exposedAt: string | null
   lastReview: LadderReview | null
+  /**
+   * When the learner took the word into study. **null = outside the pool** — «знаю», or paused —
+   * and a pair outside the pool is never dealt, whatever rung it stands on. First thing to check
+   * when a word «не приходит».
+   */
+  enrolledAt: string | null
 }
 
 export type TriageVerdict = 'known' | 'unknown' | 'unsure'
@@ -569,6 +582,8 @@ export interface LadderQuery extends PageQuery {
   collectionId?: string
   phase?: LadderPhase
   due?: boolean
+  /** true = only pool pairs, false = only the ones outside it, undefined = both (the default). */
+  inPool?: boolean
 }
 export interface CollectionsQuery extends PageQuery {
   type?: CollectionType

@@ -314,6 +314,7 @@ export const mock = {
     if (q.phase === 'known') rows = rows.filter((p) => p.state === 'known')
     else if (q.phase) rows = rows.filter((p) => p.acquisition === q.phase && p.state !== 'known')
     if (q.due) rows = rows.filter((p) => p.dueAt !== null && new Date(p.dueAt).getTime() <= MOCK_NOW)
+    if (q.inPool !== undefined) rows = rows.filter((p) => (p.enrolledAt !== null) === q.inPool)
 
     // Offset paging only, like the real endpoint: the order is "most recently answered", which is
     // not a unique key, so the shared id-keyset paginator does not apply here.
@@ -336,6 +337,7 @@ export const mock = {
         graduated: scoped.filter((p) => p.state !== 'known' && p.acquisition === 'graduated').length,
         known: scoped.filter((p) => p.state === 'known').length,
         due: scoped.filter((p) => p.dueAt !== null && new Date(p.dueAt).getTime() <= MOCK_NOW).length,
+        outOfPool: scoped.filter((p) => p.enrolledAt === null).length,
       },
     }
   },

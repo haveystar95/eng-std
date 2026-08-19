@@ -496,8 +496,18 @@ final readonly class SubmitReviewsHandler
             $termId = $termReviews[0]->termId;
 
             $termProgress = $this->progress->findForUpdate($command->actorId, $termId);
-            if ($termProgress === null) {
-                $termProgress = TermProgress::start($command->actorId, $termId);
+            // «Introduced today» is a question about the ACQUISITION LADDER — did this answer take
+            // the pair off rung 0 — not about whether a row happened to exist. It used to be read
+            // off row existence, which agreed with the ladder only while the first answer was also
+            // the first write; enrolling a word now creates its row before it has ever been shown,
+            // and reading existence would report a day's whole new-word goal as already spent by the
+            // act of choosing what to learn.
+            //
+            // An intro card earlier in this same batch has already moved the pair off rung 0, so it
+            // is not counted twice: the exposure counted it (see EloquentDailyStatsProjector).
+            $introduce = $termProgress === null || $termProgress->acquisition() === Acquisition::New;
+            $termProgress ??= TermProgress::start($command->actorId, $termId);
+            if ($introduce) {
                 $introduced[] = $termId->value;
             }
 

@@ -35,6 +35,16 @@ const detail = ref<UserDetail | null>(null)
 const phase = ref<LadderPhase | ''>((route.query.phase as LadderPhase) ?? '')
 const collectionId = ref<string>((route.query.collection as string) ?? '')
 const dueOnly = ref(route.query.due === '1')
+/**
+ * «в пуле / вне пула» — the question the personal pool made askable, and the first one to ask when
+ * a word «не приходит на тренировке». A pair outside the pool has a row, a rung and a due date and
+ * is still never dealt: it is either a «знаю» self-assessment or a word the learner paused.
+ * '' = both, which is the default because this table exists to explain everything the app knows.
+ */
+const pool = ref<'' | 'in' | 'out'>(
+  route.query.pool === 'in' || route.query.pool === 'out' ? route.query.pool : '',
+)
+const inPool = computed<boolean | undefined>(() => (pool.value === '' ? undefined : pool.value === 'in'))
 const page = ref(Number(route.query.page ?? 1) || 1)
 
 const pairs = ref<LadderPair[]>([])
@@ -44,7 +54,7 @@ const events = ref<LadderEvent[]>([])
 const error = ref<string | null>(null)
 const firstLoad = ref(true)
 
-const EMPTY_COUNTS: LadderCounts = { total: 0, new: 0, learning: 0, graduated: 0, known: 0, due: 0 }
+const EMPTY_COUNTS: LadderCounts = { total: 0, new: 0, learning: 0, graduated: 0, known: 0, due: 0, outOfPool: 0 }
 
 /** The two polled reads, together — the table and the feed must describe the same moment. */
 async function refresh(): Promise<void> {
@@ -55,6 +65,7 @@ async function refresh(): Promise<void> {
         collectionId: collectionId.value || undefined,
         phase: phase.value || undefined,
         due: dueOnly.value || undefined,
+        inPool: inPool.value,
         page: page.value,
         perPage: 25,
       }),
@@ -104,7 +115,7 @@ watch(userId, async () => {
   firstLoad.value = true
   await loadUser()
 })
-watch([phase, collectionId, dueOnly], () => {
+watch([phase, collectionId, dueOnly, pool], () => {
   page.value = 1
   void run()
 })
@@ -112,13 +123,14 @@ watch(page, () => void run())
 
 // Every filter lives in the URL, like the rest of the panel: the view can be pasted to someone (or
 // to yourself, tomorrow) and it opens on exactly the same slice.
-watch([userId, phase, collectionId, dueOnly, page], () => {
+watch([userId, phase, collectionId, dueOnly, pool, page], () => {
   void router.replace({
     query: {
       user: userId.value || undefined,
       phase: phase.value || undefined,
       collection: collectionId.value || undefined,
       due: dueOnly.value ? '1' : undefined,
+      pool: pool.value || undefined,
       page: page.value > 1 ? String(page.value) : undefined,
     },
   })
@@ -211,6 +223,14 @@ const columns: Column[] = [
         <input v-model="dueOnly" type="checkbox" />
         <span>только к повтору<span v-if="counts" class="cnt tnum"> ({{ c.due }})</span></span>
       </label>
+      <label class="f">
+        <span class="section-label">Пул</span>
+        <select v-model="pool">
+          <option value="">все</option>
+          <option value="in">в пуле</option>
+          <option value="out">вне пула{{ counts ? ` (${c.outOfPool})` : '' }}</option>
+        </select>
+      </label>
       <span v-if="learners.length" class="last-seen faint">
         последняя активность:
         <RelativeDate :value="learners.find((l) => l.id === userId)?.lastActivityAt ?? null" />
@@ -246,6 +266,12 @@ const columns: Column[] = [
               <div class="word">
                 <span class="serif term">{{ row.text }}</span>
                 <span class="tr faint">{{ row.translation ?? '—' }}</span>
+                <!-- A row that exists and is never dealt. Said on the WORD rather than in a column
+                     of its own: it is rare, and when it is true it is the explanation for everything
+                     else the row shows. -->
+                <Badge v-if="row.enrolledAt === null" tone="neutral" title="Пара вне пула: тренажёр её не выдаёт">
+                  вне пула
+                </Badge>
               </div>
               <div v-if="row.collections.length" class="cols faint">
                 {{ row.collections.map((x) => x.title).join(' · ') }}

@@ -263,14 +263,18 @@ it('records a free-practice answer: streak counts, but progress is untouched', f
         ->assertOk()
         ->assertJsonPath('data.accepted', 1);
 
-    // Never scheduled → no progress row; but logged and counted toward the day's reviews (streak).
-    $this->assertDatabaseMissing('user_term_progress', ['user_id' => $user->id, 'term_id' => $termId]);
+    // The row exists because the word was ENROLLED (seedWordFor), not because practice wrote
+    // anything: it is untouched — rung 0, unscheduled, never answered for real.
+    $this->assertDatabaseHas('user_term_progress', [
+        'user_id' => $user->id, 'term_id' => $termId,
+        'state' => 'new', 'acquisition' => 'new', 'reps' => 0, 'due_at' => null, 'last_reviewed_at' => null,
+    ]);
     $this->assertDatabaseHas('reviews', ['term_id' => $termId, 'is_practice' => true]);
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/v1/stats')
         ->assertOk()
         ->assertJsonPath('data.reviews_today', 1)
-        ->assertJsonPath('data.total_terms', 0);
+        ->assertJsonPath('data.due_today', 0);
 });
 
 it('does not double the daily new-term quota across two scoped sessions', function () {
@@ -308,12 +312,10 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
     // daily_goal 0 → a normal session introduces nothing; practice must ignore the quota entirely.
     Profile::create(['user_id' => $user->id, 'daily_goal' => 0]);
     [$colA] = seedCollectionWith($user, 'apple', 'яблоко');
-    app(AddWordToCollectionHandler::class)(new AddWordToCollection(
-        \App\Modules\Shared\Domain\ValueObject\CollectionId::fromString($colA),
-        UserId::fromString($user->id),
-        'bank',
-        'банк',
-    ));
+    addWordTo($colA, $user->id, 'bank', 'банк');
+    // …and one word of the same collection that the learner never took into study. Practice must
+    // not drill it: the catalogue is not the queue.
+    addWordTo($colA, $user->id, 'ledger', 'гроссбух', enroll: false);
 
     // A normal scoped session is empty (quota 0, nothing due)…
     $this->withHeader('Authorization', "Bearer {$token}")
@@ -321,8 +323,9 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 
-    // …but practice drills both never-studied terms. Practice fans across every applicable mode
-    // (not the reps ladder): single words with no example → multiple_choice / typing / listening.
+    // …but practice drills both ENROLLED never-studied terms, and only those. Practice fans across
+    // every applicable mode (not the reps ladder): single words with no example →
+    // multiple_choice / typing / listening.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
@@ -385,8 +388,11 @@ it('does not spend the daily new-term quota during practice', function () {
         ]]])
         ->assertOk();
 
-    // …the term is still new (no progress written), so a normal session still offers it as new.
-    $this->assertDatabaseMissing('user_term_progress', ['user_id' => $user->id, 'term_id' => $apple]);
+    // …the term has still never been introduced (practice writes no progress), so a normal session
+    // still offers it as a first meeting. Its row is the enrolment's, standing at rung 0.
+    $this->assertDatabaseHas('user_term_progress', [
+        'user_id' => $user->id, 'term_id' => $apple, 'acquisition' => 'new', 'reps' => 0,
+    ]);
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
         ->assertOk()

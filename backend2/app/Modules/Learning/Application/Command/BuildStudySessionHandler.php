@@ -117,12 +117,21 @@ final readonly class BuildStudySessionHandler
         // learner has a reason to have in mind, which is what makes a far option fair rather than
         // arbitrary. `type` rides along because a far option still has to be a PLAUSIBLE one: an
         // option of a different shape is answerable by its shape (see StudyCardAssembler).
+        //
+        // `collections` rides along for a reason the pool created. A session used to be one
+        // collection's words, so «the session's own terms» and «words from the same topic» were the
+        // same set; a pool session mixes topics, and «аптека» beside «собеседование» beside
+        // «аэропорт» makes a far option far in a way that gives the answer away by subject alone.
+        // The assembler therefore prefers neighbours that SHARE a collection with the card's term,
+        // and only then widens. Read once per session, and only when it can matter.
+        $termCollections = $this->termCollections($command, $renderable);
         $neighbours = array_map(
             static fn (DueTermView $v): array => [
                 'term_id' => $v->termId->value,
                 'text' => $content[$v->termId->value]->text,
                 'translation' => $content[$v->termId->value]->translation,
                 'type' => $content[$v->termId->value]->type,
+                'collections' => $termCollections[$v->termId->value] ?? [],
             ],
             $renderable,
         );
@@ -277,6 +286,45 @@ final readonly class BuildStudySessionHandler
         }
 
         return $this->layout->arrange($ladder, $repeats, $size);
+    }
+
+    /**
+     * Which collections each of this session's terms came from, for the far-option preference.
+     *
+     * Skipped entirely — an empty map, and the preference degrades to «any neighbour», which is what
+     * it was before the pool — in the two cases where it would buy nothing: a session already scoped
+     * to one collection (every neighbour shares it), and a session with no term on the recognition
+     * rungs (nothing reads neighbours at all).
+     *
+     * @param  list<DueTermView>  $renderable
+     * @return array<string, list<string>>  term id => collection ids
+     */
+    private function termCollections(BuildStudySession $command, array $renderable): array
+    {
+        if ($command->collectionId !== null) {
+            return [];
+        }
+
+        $onLadder = false;
+        foreach ($renderable as $view) {
+            if ($view->acquisition !== Acquisition::Graduated) {
+                $onLadder = true;
+
+                break;
+            }
+        }
+        if (! $onLadder) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->collectionTerms->termIdsByCollection($command->actorId) as $collectionId => $termIds) {
+            foreach ($termIds as $termId) {
+                $out[$termId][] = $collectionId;
+            }
+        }
+
+        return $out;
     }
 
     /**

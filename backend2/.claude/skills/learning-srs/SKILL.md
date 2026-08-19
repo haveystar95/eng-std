@@ -15,6 +15,34 @@ A term learned inside "Travel" is learned inside "Bank" too. Collection progress
 derived aggregate — the percentage of that collection's terms in `review` state with a
 future `due_at`. Never store per-collection progress rows.
 
+## The pool: a collection is the LIBRARY, the pool is the QUEUE
+
+A collection is a catalogue of a topic. What the trainer actually works through is the learner's
+own **pool** — the pairs whose `enrolled_at` is not null. Rules:
+
+- **Membership is an attribute of the pair**, one nullable timestamp on `user_term_progress`.
+  Never a «Мои слова» collection entity: that would duplicate every term, need a tombstone per
+  removal, and give one word two progress stories depending on where it was answered.
+- **Only a deliberate act enrols.** A `не знаю` / `не уверен` triage swipe, or «Учить это слово»
+  on the word card. Adding a collection, generating one, subscribing to a store deck and
+  answering a practice card all enrol **nothing**.
+- **Every session is assembled from the pool** — study and free practice alike. `collection_id`
+  is a FILTER on the pool («потренировать аптечные перед аптекой»), never a source: a word of that
+  collection which is not enrolled stays out. An unscoped session is the whole pool, so a word
+  whose collection was deleted or unsubscribed keeps being studied — the book went back on the
+  shelf, the word did not.
+- **Removal is a PAUSE, never an erasure.** `enrolled_at → NULL` and nothing else moves: the
+  append-only review log, the rung, the counter and the due date all stand, so re-enrolling
+  resumes exactly where the word was left. Both writes are idempotent, and enrolment keeps its
+  FIRST moment — «с какого дня я это учу» is not rewritten by a second tap.
+- **One card is dealt from outside the pool**: a `known` self-assessment whose verification check
+  has come due. That is the system auditing a claim, not the learner's queue — dropping it would
+  mean a «знаю» swipe is never questioned. Anything counting «сколько к повтору» must agree with
+  the reader about this, or the home screen offers a session that comes back empty.
+- **A row is not membership.** Enrolment creates the row before the word has ever been shown, so
+  «does a progress row exist» stopped being the same question as «has this been taught». Anything
+  that used to mean the latter asks `TermProgress::hasBeenTaught()`.
+
 ## State machine
 
 ```
@@ -95,14 +123,18 @@ time. Its invariants:
   ladder); `unknown` → `acquisition=new`, so it starts at the intro step; `unsure` →
   `acquisition=learning, learning_step=1`, i.e. straight past the intro — the skip is a
   *position on the ladder*, not a flag.
+- **Two of the three verdicts also ENROL.** `не знаю` and `не уверен` both mean «учи это», so both
+  put the pair in the pool; `знаю` means the opposite and leaves it out (and, on a word that was
+  enrolled but never taught, supersedes that earlier enrolment — the later deliberate statement
+  wins). A pair that has actually been taught is only enrolled by a swipe, never rewritten.
 - **Triage is never written to `reviews`.** A swipe is a self-assessment, not an exercise
   answer; in the review log it would inflate retention with unproven words. It lives in an
   append-only `term_triages` log (client ULID, no `unique(user, term)` — re-triage and
   "return to learning" are new rows; the current verdict is the latest by `decided_at`).
   Progress state is a projection of this log, like it is of `reviews`.
-- **The triage queue excludes already-triaged terms**, distinct from the study "new" pool
-  which only cares whether a progress row exists — so an `unknown`-swiped term stays new
-  (studyable) but is never asked again.
+- **The triage queue excludes already-triaged terms**, and it asks about the LADDER (a pair still
+  at `acquisition = new` counts as never studied), not about row existence — so an
+  `unknown`-swiped term is enrolled and studyable but is never asked again.
 - **Returning a `known` term to learning keeps its history.** Reset state to `new`, but keep
   `reps`/`lapses` — a term the user manually marked known then undid must not restart from
   zero. (A `new` row and a missing row mean the same thing to selection.)
@@ -173,14 +205,20 @@ Folding in `answered_at` order gives the same result as if the user had been onl
 `POST /study/sessions` returns a ready-to-play payload so the client can run offline:
 
 ```
-due terms (due_at <= now, ordered by due_at, limit = session_size)
-+ new terms (up to remaining new-per-day quota)
+pool pairs owed a card (mid-ladder, or due, or graduated and never scheduled)
++ pool pairs at rung 0 (first meetings, up to the remaining new-per-day quota)
 + each term's content: text, translations, one example, audio_url
 ```
 
 Selection rules:
 - Due before new. A backlog of 300 due cards means no new words that day.
-- Mix collections unless the session is scoped to one (`collection_id` filter).
+- **Read the two populations under SEPARATE limits.** Rung-0 pairs sort ahead of everything (no
+  `due_at`, ordering is NULLS FIRST), so one capped query over a freshly triaged pool of a hundred
+  words comes back as a hundred first meetings, is trimmed to the daily quota, and leaves every
+  repeat out of the session.
+- Mix collections unless the session is scoped to one (`collection_id` filter). A pool session
+  mixes topics by design, so **far options prefer neighbours from the card's own collection** —
+  otherwise a far option is far by SUBJECT and the card is answerable without knowing the word.
 - Never show two forms of the same term in one session.
 - Session size default 20, capped at 100.
 
@@ -252,7 +290,9 @@ produced it.
 
 ## Free practice
 
-When a collection has nothing due, offer a practice session rather than an empty screen.
+When a collection has nothing due, offer a practice session rather than an empty screen. It draws
+the same pool a study session does (optionally narrowed to one collection) — training is for words
+someone decided to train.
 Practice answers **are written to `reviews`** (with `is_practice = true`) but never affect
 `user_term_progress` — not intervals, not state, not lapses. Reasons to write, not drop:
 

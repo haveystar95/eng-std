@@ -56,7 +56,9 @@ function loggedReview(
 beforeEach(function () {
     [$user] = learner();
     $this->userId = $user->id;
-    $this->termId = seedWordFor($user, 'antipyretic', 'жаропонижающее');
+    // enroll: false — this beforeEach writes the pair's row itself, verbatim from the owner's
+    // database, and a second one from the helper would collide on the (user, term) key.
+    $this->termId = seedWordFor($user, 'antipyretic', 'жаропонижающее', enroll: false);
 
     DB::table('user_term_progress')->insert([
         'user_id' => $this->userId,
@@ -70,6 +72,7 @@ beforeEach(function () {
         'ease_factor' => 2.5,
         'interval_days' => 0,
         'due_at' => now(),
+        'enrolled_at' => now(),
         'created_at' => now(),
         'updated_at' => now(),
     ]);

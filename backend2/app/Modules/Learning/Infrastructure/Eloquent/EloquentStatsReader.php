@@ -33,9 +33,17 @@ final class EloquentStatsReader implements StatsReader
                         $q2->where('state', 'review')->where('interval_days', '>=', Mastery::MASTERED_INTERVAL_DAYS);
                     });
             })->count();
+        // «Повторить N» has to be the number of cards a session would actually deal, or the home
+        // screen offers a session that comes back empty. Two populations, matching the reader that
+        // builds the session: pool pairs whose due date has come, and `known` verifications — which
+        // are out of the pool on purpose and still get checked (see EloquentDueTermsReader).
         $dueToday = DB::table('user_term_progress')
             ->where('user_id', $uid)->where('state', '<>', 'new')
-            ->where('due_at', '<=', $now)->count();
+            ->where('due_at', '<=', $now)
+            ->where(function (Builder $q): void {
+                $q->whereNotNull('enrolled_at')->orWhere('state', 'known');
+            })
+            ->count();
 
         // Activity is derived live from the append-only review log in the user's timezone — no
         // client state to lose on relogin, and a late-arriving (offline/end-of-session) practice

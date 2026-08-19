@@ -86,7 +86,7 @@ final class EloquentAdminLadderReader implements AdminLadderReader
             ->limit($window->limit)
             ->get([
                 'p.term_id', 'p.state', 'p.acquisition', 'p.learning_step', 'p.reps', 'p.lapses',
-                'p.interval_days', 'p.due_at', 'p.last_reviewed_at', 't.text',
+                'p.interval_days', 'p.due_at', 'p.last_reviewed_at', 'p.enrolled_at', 't.text',
             ]);
 
         /** @var list<string> $termIds */
@@ -118,6 +118,7 @@ final class EloquentAdminLadderReader implements AdminLadderReader
                 lastReviewedAt: Iso::orNull($r->last_reviewed_at),
                 exposedAt: $exposures[$termId] ?? null,
                 lastReview: $lastReviews[$termId] ?? null,
+                enrolledAt: Iso::orNull($r->enrolled_at),
             );
         }, $rows->all());
 
@@ -156,6 +157,9 @@ final class EloquentAdminLadderReader implements AdminLadderReader
         }
 
         $due = (clone $base)->whereNotNull('p.due_at')->where('p.due_at', '<=', now())->count();
+        // Rows the trainer will never deal: a «знаю» self-assessment, or a word paused. Counted
+        // over the same base as everything else, so it reads against the same slice.
+        $outOfPool = (clone $base)->whereNull('p.enrolled_at')->count();
 
         return new AdminLadderCounts(
             total: $total,
@@ -164,6 +168,7 @@ final class EloquentAdminLadderReader implements AdminLadderReader
             graduated: $byAcquisition['graduated'],
             known: $known,
             due: $due,
+            outOfPool: $outOfPool,
         );
     }
 
@@ -284,6 +289,10 @@ final class EloquentAdminLadderReader implements AdminLadderReader
 
         if ($filter->dueOnly) {
             $q->whereNotNull('p.due_at')->where('p.due_at', '<=', now());
+        }
+
+        if ($filter->inPool !== null) {
+            $filter->inPool ? $q->whereNotNull('p.enrolled_at') : $q->whereNull('p.enrolled_at');
         }
 
         return $q;

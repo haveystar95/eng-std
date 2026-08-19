@@ -132,10 +132,12 @@ final readonly class StartPracticeDialogHandler
             $textOf[$item->termId] = $item->text;
         }
 
-        // Priority: learning/due → new → known, capped at the configured max.
+        // Priority: learning/due → new → known, capped at the configured max. The "due" half is
+        // read from the learner's POOL — a word of this collection that nobody has decided to study
+        // is not a word to build a lesson around, and the prioritizer's later tiers still reach it.
         $due = array_map(
             static fn ($v): string => $v->termId->value,
-            $this->dueTerms->selectableAmong($command->userId, $now, $termIds, $this->config->maxTargetWords),
+            $this->dueTerms->selectableInPool($command->userId, $now, $termIds, $this->config->maxTargetWords),
         );
         $started = $this->progress->existingTermIds($command->userId, $termIds);
         $selected = $this->prioritizer->select($termIds, $due, $started, $this->config->maxTargetWords);
