@@ -37,8 +37,11 @@ final readonly class GetTranslationKeyAuditHandler
             static fn ($c): TranslationKeyAuditRow => new TranslationKeyAuditRow(
                 termId: $c->termId,
                 termText: $c->termText,
+                lang: $c->lang,
                 translation: $c->translation,
                 groups: $c->groups,
+                missingWords: $c->missingWords,
+                expectedForms: $c->expectedForms,
                 collections: $titles[$c->termId] ?? [],
             ),
             $judged->candidates,
@@ -48,8 +51,11 @@ final readonly class GetTranslationKeyAuditHandler
             seen: $judged->seen,
             rows: $rows,
             // Carried through Vocabulary's own view: the rule is its Domain, not something this
-            // layer is allowed to reach into.
+            // layer is allowed to reach into. Which languages it knows is the same kind of fact —
+            // the report states it, Vocabulary decides it.
             groupNames: $judged->groupNames,
+            seenByLang: $judged->seenByLang,
+            ruleLanguages: $judged->ruleLanguages,
         );
     }
 }

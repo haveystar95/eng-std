@@ -32,4 +32,20 @@ final class EloquentTranslationKeyReader implements TranslationKeyReader
             translation: (string) $r->translation,
         ))->all());
     }
+
+    public function translationLangs(string $termLang): array
+    {
+        // The same WHERE as above, minus the language: whatever the sweep will judge is whatever
+        // this returns, so a row can never be counted by one and skipped by the other.
+        $langs = DB::table('terms as t')
+            ->join('term_translations as tr', 'tr.term_id', '=', 't.id')
+            ->whereNull('t.deleted_at')
+            ->where('t.lang', $termLang)
+            ->where('tr.is_primary', true)
+            ->distinct()
+            ->orderBy('tr.lang')
+            ->pluck('tr.lang');
+
+        return array_values($langs->map(static fn (mixed $l): string => (string) $l)->all());
+    }
 }

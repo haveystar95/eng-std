@@ -23,4 +23,16 @@ interface TranslationKeyReader
      * @return list<TranslationKeyRow>
      */
     public function primaryKeys(string $termLang, string $translationLang): array;
+
+    /**
+     * Which learner languages the store actually holds primary keys in.
+     *
+     * Asked of the content, never of a config list: an audit that sweeps «the languages we support»
+     * misses the one that arrived with a batch nobody re-configured for, and that is precisely the
+     * language whose keys no one has read.
+     *
+     * @param  string  $termLang  the term side's language ('en')
+     * @return list<string>  sorted, so two exports of the same store are diffable
+     */
+    public function translationLangs(string $termLang): array;
 }

@@ -139,3 +139,59 @@ it('skips every group for a language it has no counterpart list for, rather than
     expect($this->rule->violations('Tell us about a challenge you faced', 'Скажи-nous quelque chose', 'fr'))
         ->toBe([]);
 });
+
+// The evidence half (QA-17, whole-store sweep): a group name counts a row, the WORD makes it
+// readable. The export hands a human «чего не хватает», and it must be the term's own word, not a
+// category the reader has to re-derive by eye.
+
+it('names the term word that went unanswered, not just the group', function () {
+    $misses = $this->rule->misses(
+        'Can you tell me about the career growth opportunities?',
+        'Можете рассказать о возможностях карьерного роста?',
+    );
+
+    expect($misses)->toHaveCount(2)
+        ->and($misses[0]->group)->toBe('us/me')
+        ->and($misses[0]->termWords)->toBe(['me'], 'the term says `me`, never `us` — the report must not claim otherwise')
+        ->and($misses[1]->group)->toBe('you/your')
+        ->and($misses[1]->termWords)->toBe(['you']);
+});
+
+it('lists every trigger of a group the term actually uses, in term order', function () {
+    $misses = $this->rule->misses('Tell us what you think of your team and our plan', 'Скажите, что думаете о команде и плане');
+
+    expect($misses[0]->termWords)->toBe(['us'])
+        ->and($misses[1]->termWords)->toBe(['you', 'your'], 'both triggers are in the term, both are unanswered')
+        ->and($misses[2]->termWords)->toBe(['our']);
+});
+
+it('carries the forms that would have cleared the group, so a false positive is visible as one', function () {
+    // «Расскажите о своём опыте» is good Russian and a flagged row. The reader needs to see WHY:
+    // «свой» is not among the forms the rule accepts for `your`.
+    $misses = $this->rule->misses('Describe your experience', 'Опишите свой опыт');
+
+    expect($misses)->toHaveCount(1)
+        ->and($misses[0]->expected)->toBe(['вы', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваши'])
+        ->and($misses[0]->expected)->not->toContain('свой');
+});
+
+it('offers the counterparts of the language actually being judged', function () {
+    $ru = $this->rule->misses('Tell me about it', 'Расскажите об этом', 'ru');
+    $uk = $this->rule->misses('Tell me about it', 'Розкажіть про це', 'uk');
+
+    expect($ru[0]->expected)->toContain('мне')
+        ->and($uk[0]->expected)->toContain('мені')
+        ->and($uk[0]->expected)->not->toContain('мне');
+});
+
+it('says which languages it has been taught, so a sweep can tell «silent» from «clean»', function () {
+    // A store that grows a third learner language gets zero candidates in it either way; only this
+    // list separates «the rule read it and found nothing» from «the rule cannot read it at all».
+    expect(AddresseeIsomorphism::languages())->toBe(['ru', 'uk'])
+        ->and(AddresseeIsomorphism::knowsLanguage('ru'))->toBeTrue()
+        ->and(AddresseeIsomorphism::knowsLanguage('es'))->toBeFalse();
+});
+
+it('reports no miss at all for a language it does not know, rather than an empty-formed one', function () {
+    expect($this->rule->misses('Tell us about it', 'Cuéntanos sobre esto', 'es'))->toBe([]);
+});

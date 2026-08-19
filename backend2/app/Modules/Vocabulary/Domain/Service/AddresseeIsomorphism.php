@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Domain\Service;
 
+use App\Modules\Vocabulary\Domain\ValueObject\AddresseeMiss;
+
 /**
  * A COARSE detector for translations that have lost the term's addressee (QA-17).
  *
@@ -70,14 +72,18 @@ final class AddresseeIsomorphism
     ];
 
     /**
-     * The groups this pair trips — empty when the translation carries everything the term addresses.
+     * What this pair dropped: per tripped group, the term's own words that went unanswered.
+     *
+     * This is the rule's full answer and {@see violations()} is a projection of it. The group name
+     * counts a row; the words are what makes the row readable — a proof-reader should not have to
+     * re-derive by eye that `us/me` fired on `me` and not on `us`.
      *
      * @param  string  $lang  the translation's language — which counterpart list applies. A group
      *                        with no list for this language is skipped entirely (never a false hit
      *                        for a learner language the rule hasn't been taught yet).
-     * @return list<string>  group names, in the order declared above
+     * @return list<AddresseeMiss>  in the order the groups are declared above
      */
-    public function violations(string $term, string $translation, string $lang = 'ru'): array
+    public function misses(string $term, string $translation, string $lang = 'ru'): array
     {
         $out = [];
         foreach (self::GROUPS as $group) {
@@ -85,16 +91,31 @@ final class AddresseeIsomorphism
             if ($counterparts === null) {
                 continue;
             }
-            if (! $this->containsAny($term, $group['triggers'])) {
+            $used = $this->matched($term, $group['triggers']);
+            if ($used === []) {
                 continue; // the term never addresses anyone in this group
             }
             if ($this->containsAny($translation, $counterparts)) {
                 continue; // …and the translation carries it
             }
-            $out[] = $group['name'];
+            $out[] = new AddresseeMiss($group['name'], $used, $counterparts);
         }
 
         return $out;
+    }
+
+    /**
+     * The groups this pair trips — empty when the translation carries everything the term addresses.
+     *
+     * @param  string  $lang  the translation's language, as in {@see misses()}
+     * @return list<string>  group names, in the order declared above
+     */
+    public function violations(string $term, string $translation, string $lang = 'ru'): array
+    {
+        return array_map(
+            static fn (AddresseeMiss $miss): string => $miss->group,
+            $this->misses($term, $translation, $lang),
+        );
     }
 
     /**
@@ -108,24 +129,64 @@ final class AddresseeIsomorphism
     }
 
     /**
-     * Is any of [$words] present as a STANDALONE word?
+     * The learner languages the rule has counterpart lists for.
      *
-     * Standalone is the whole point: `us` lives inside «campus», «because» and «discuss», and «я»
-     * lives inside almost every Russian verb. A substring search here would flag or clear nearly
-     * everything, which is a detector that says nothing.
+     * A sweep over the whole store has to be able to say WHY a language came back with nothing. Zero
+     * candidates in a language the rule has never been taught is not a clean language — it is a
+     * language the rule stays silent in, by the same design that keeps it from false-hitting there.
+     * Without this, a report would present the two as the same fact.
+     *
+     * @return list<string>
+     */
+    public static function languages(): array
+    {
+        $langs = [];
+        foreach (self::GROUPS as $group) {
+            foreach (array_keys($group['counterparts']) as $lang) {
+                $langs[$lang] = true;
+            }
+        }
+
+        return array_keys($langs);
+    }
+
+    /** Does the rule have counterpart lists for this learner language at all? */
+    public static function knowsLanguage(string $lang): bool
+    {
+        return in_array($lang, self::languages(), true);
+    }
+
+    /**
+     * Is any of [$words] present as a STANDALONE word? — the yes/no half of {@see matched()}.
      *
      * @param  list<string>  $words
      */
     private function containsAny(string $haystack, array $words): bool
     {
+        return $this->matched($haystack, $words) !== [];
+    }
+
+    /**
+     * Which of [$words] are present as STANDALONE words, in the order given.
+     *
+     * Standalone is the whole point: `us` lives inside «campus», «because» and «discuss», and «я»
+     * lives inside almost every Russian verb. A substring search would flag or clear nearly
+     * everything, which is a detector that says nothing at all.
+     *
+     * @param  list<string>  $words
+     * @return list<string>
+     */
+    private function matched(string $haystack, array $words): array
+    {
+        $found = [];
         foreach ($words as $word) {
             // \p{L} rather than \b: the subject side is Cyrillic, where PCRE's word boundary is only
             // right with the /u flag AND the unicode property class — «нас» must not match «насос».
             if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($word, '/') . '(?![\p{L}\p{N}])/iu', $haystack) === 1) {
-                return true;
+                $found[] = $word;
             }
         }
 
-        return false;
+        return $found;
     }
 }
