@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Vocabulary\Domain\Service\AddresseeIsomorphism;
+use App\Modules\Vocabulary\Domain\ValueObject\AddresseeDirection;
 
 /**
  * QA-17: the detector that finds translations which have stopped pointing at their own term.
@@ -69,7 +70,7 @@ it('is case-insensitive on both sides', function () {
 });
 
 it('names every group it knows, so a report can show the empty ones too', function () {
-    expect(AddresseeIsomorphism::groupNames())->toBe(['us/me', 'you/your', 'we/our']);
+    expect(AddresseeIsomorphism::groupNames())->toBe(['us/me', 'you/your', 'we/our', 'well/хорошо']);
 });
 
 it('reports each tripped group once, in a stable order', function () {
@@ -275,4 +276,92 @@ it('clears the same example once «нам» is back', function () {
         'Tell us about a challenge you faced and how you overcame it',
         'Расскажите нам о вызове, с которым вы столкнулись, и как вы его преодолели',
     ))->toBe([]);
+});
+
+// Вторая волна, часть 3 (QA-22): обратное правило. Ключ ломается в обе стороны, и вторая —
+// зеркальная: перевод несёт то, чего в источнике нет. Учащийся отвечает верно, а ключ требует
+// слова, которого никогда не было.
+
+it("catches the owner's live EXTRA case: «хорошо» that no `well` licenses", function () {
+    $extras = $this->rule->extras('I get along with my team', 'Я хорошо лажу со своей командой');
+
+    expect($extras)->toHaveCount(1)
+        ->and($extras[0]->direction)->toBe(AddresseeDirection::Extra)
+        ->and($extras[0]->group)->toBe('well/хорошо')
+        ->and($extras[0]->words)->toBe(['хорошо'])
+        ->and($extras[0]->expected)->toContain('well', 'good');
+});
+
+it('clears the same pair once the source says `well`', function () {
+    expect($this->rule->extras('I get along well with my team', 'Я хорошо лажу со своей командой'))
+        ->toBe([]);
+});
+
+it('does not call «я» extra when the source is first person at all', function () {
+    // The point of a separate licence list. `I`/`my` never DEMAND «я» — Russian drops the subject
+    // pronoun constantly — but they plainly permit it, and a mirror rule that read only the triggers
+    // would flag every first-person sentence in the store.
+    expect($this->rule->extras('I get along with my team', 'Я лажу со своей командой'))->toBe([]);
+    expect($this->rule->extras('Tell me about yourself', 'Расскажите мне о себе'))->toBe([]);
+});
+
+it('catches an addressee the translation invented', function () {
+    $extras = $this->rule->extras('Open the window, please', 'Откройте, пожалуйста, ваше окно');
+
+    expect($extras)->toHaveCount(1)
+        ->and($extras[0]->group)->toBe('you/your')
+        ->and($extras[0]->words)->toBe(['ваше']);
+});
+
+it('catches a first person the translation changed the number of', function () {
+    // `I` licenses «нам» for the `us/me` group — it is the same person — but nothing in the source
+    // licenses the PLURAL, so the group that owns «мы» still speaks up.
+    $extras = $this->rule->extras('Can I have the bill?', 'Можно нам счёт?');
+
+    expect($extras)->toHaveCount(1)
+        ->and($extras[0]->group)->toBe('we/our')
+        ->and($extras[0]->words)->toBe(['нам']);
+});
+
+it('reports one unlicensed word once, even when two groups share it', function () {
+    // «нам» is first person plural: it lives in both `us/me` and `we/our`. One invented «нам» is one
+    // thing to read, not two rows saying it twice.
+    $extras = $this->rule->extras('Bring the bill, please', 'Принесите нам счёт, пожалуйста');
+
+    expect($extras)->toHaveCount(1)
+        ->and($extras[0]->group)->toBe('us/me', 'the first group to claim the word reports it')
+        ->and($extras[0]->words)->toBe(['нам']);
+});
+
+it('stays quiet on a translation that invents nothing', function () {
+    expect($this->rule->extras('withdraw cash', 'снять наличные'))->toBe([]);
+    expect($this->rule->extras('Tell us about a challenge you faced', 'Расскажите нам о вызове, с которым вы столкнулись'))
+        ->toBe([]);
+});
+
+it('does not read a group word inside another word in the EXTRA direction either', function () {
+    expect($this->rule->extras('Turn on the pump', 'Включите насос'))->toBe([]);
+    expect($this->rule->extras('Water the flowers', 'Полить цветы'))->toBe([]);
+});
+
+it('judges EXTRA in the language being read, and stays silent in a language it does not know', function () {
+    expect($this->rule->extras('I get along with my team', 'Я добре ладнаю зі своєю командою', 'uk'))
+        ->toHaveCount(1);
+    expect($this->rule->extras('I get along with my team', 'Me llevo bien con mi equipo', 'es'))
+        ->toBe([]);
+});
+
+it('gaps() returns both directions, LOST first', function () {
+    // A pair can be broken both ways at once: the addressee is gone AND a «хорошо» arrived.
+    $gaps = $this->rule->gaps('Tell us how it went', 'Расскажите, как всё прошло хорошо');
+
+    expect($gaps)->toHaveCount(2)
+        ->and($gaps[0]->direction)->toBe(AddresseeDirection::Lost)
+        ->and($gaps[0]->words)->toBe(['us'])
+        ->and($gaps[1]->direction)->toBe(AddresseeDirection::Extra)
+        ->and($gaps[1]->words)->toBe(['хорошо']);
+});
+
+it('names the well group among the groups it knows', function () {
+    expect(AddresseeIsomorphism::groupNames())->toBe(['us/me', 'you/your', 'we/our', 'well/хорошо']);
 });

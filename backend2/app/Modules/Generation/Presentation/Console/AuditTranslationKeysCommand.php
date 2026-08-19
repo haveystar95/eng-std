@@ -60,7 +60,9 @@ final class AuditTranslationKeysCommand extends Command
         $this->line('просмотрено пар: ' . $view->seen
             . ' (терминных ' . array_sum($view->seenTermsByLang)
             . ', примерных ' . array_sum($view->seenExamplesByLang) . ')');
-        $this->line('кандидатов на вычитку: ' . count($view->rows));
+        $this->line('кандидатов на вычитку: ' . count($view->rows)
+            . ' (LOST ' . $this->countForDirection($view->rows, 'lost')
+            . ', EXTRA ' . $this->countForDirection($view->rows, 'extra') . ')');
         if ($view->skippedExamples > 0) {
             $this->warn('примеров пропущено (язык перевода примера не записан): ' . $view->skippedExamples);
         }
@@ -128,8 +130,14 @@ final class AuditTranslationKeysCommand extends Command
             '',
             $header->line($direction),
             '',
-            'Здесь то, где термин к кому-то ОБРАЩАЕТСЯ, а перевод этого не несёт: по такому переводу',
-            'нельзя однозначно восстановить термин, и честный ответ уходит в лог как промах.',
+            'Ключ должен ОДНОЗНАЧНО указывать на свой источник. Ломается это в обе стороны, и обе',
+            'здесь:',
+            '',
+            '- **LOST** — источник к кому-то обращается, а перевод этого не несёт: по такому переводу',
+            '  нельзя однозначно восстановить источник, и честный ответ уходит в лог как промах.',
+            '- **EXTRA** — перевод несёт то, чего в источнике нет: «I get along with my team» →',
+            '  «Я **хорошо** лажу со своей командой». Тут наоборот — учащийся отвечает верно, а ключ',
+            '  требует слова, которого в источнике никогда не было.',
             '',
             'Прогон по ВСЕЙ витрине: языки не задавались списком, а взяты из самого контента —',
             'сколько языков перевода в базе, столько и просмотрено.',
@@ -141,7 +149,8 @@ final class AuditTranslationKeysCommand extends Command
             '',
             "Просмотрено пар: **{$view->seen}** — терминных **" . array_sum($view->seenTermsByLang)
                 . '**, примерных **' . array_sum($view->seenExamplesByLang) . '**. Кандидатов: **'
-                . count($view->rows) . '**.',
+                . count($view->rows) . '** — LOST **' . $this->countForDirection($view->rows, 'lost')
+                . '**, EXTRA **' . $this->countForDirection($view->rows, 'extra') . '**.',
             '',
             'Пример — такой же ключ, как термин: его показывают, произносят и отвечают на него, поэтому',
             'потерянный адресат в переводе примера ломает карточку ровно так же.',
@@ -186,21 +195,23 @@ final class AuditTranslationKeysCommand extends Command
 
         $lines[] = '## Кандидаты';
         $lines[] = '';
-        $lines[] = 'Колонка «чего не хватает» — слово САМОГО термина, которое перевод не отразил, и формы,';
-        $lines[] = 'которые детектор счёл бы ответом на него. Это его критерий, а не предложенная правка:';
-        $lines[] = 'если перевод несёт лицо иначе (глаголом, «свой»), строка — ложное срабатывание, и это';
-        $lines[] = 'видно прямо здесь.';
+        $lines[] = 'Колонка «что не так» читается по направлению. LOST: слово САМОГО источника, которое';
+        $lines[] = 'перевод не отразил, и формы, которые детектор счёл бы ответом на него. EXTRA: слово';
+        $lines[] = 'ПЕРЕВОДА, которого источник не давал, и слова источника, которые его бы оправдали.';
+        $lines[] = 'Это критерий детектора, а не предложенная правка: если перевод несёт лицо иначе';
+        $lines[] = '(глаголом, «свой»), строка — ложное срабатывание, и это видно прямо здесь.';
         $lines[] = '';
         $terms = array_values(array_filter($view->rows, static fn (TranslationKeyAuditRow $r): bool => $r->kind === 'term'));
         $examples = array_values(array_filter($view->rows, static fn (TranslationKeyAuditRow $r): bool => $r->kind === 'example'));
 
         $lines[] = '### Термины (' . count($terms) . ')';
         $lines[] = '';
-        $lines[] = '| язык | термин | текущий перевод | чего не хватает | коллекция | группа |';
-        $lines[] = '|---|---|---|---|---|---|';
+        $lines[] = '| ← | язык | термин | текущий перевод | что не так | коллекция | группа |';
+        $lines[] = '|---|---|---|---|---|---|---|';
         foreach ($terms as $row) {
             $lines[] = sprintf(
-                '| `%s` | %s | %s | %s | %s | `%s` |',
+                '| **%s** | `%s` | %s | %s | %s | %s | `%s` |',
+                strtoupper($row->direction),
                 $row->lang,
                 $this->cell($row->termText),
                 $this->cell($row->translation),
@@ -217,11 +228,12 @@ final class AuditTranslationKeysCommand extends Command
             $lines[] = '_Чисто._';
             $lines[] = '';
         } else {
-            $lines[] = '| язык | термин | пример | перевод примера | чего не хватает | коллекция | группа |';
-            $lines[] = '|---|---|---|---|---|---|---|';
+            $lines[] = '| ← | язык | термин | пример | перевод примера | что не так | коллекция | группа |';
+            $lines[] = '|---|---|---|---|---|---|---|---|';
             foreach ($examples as $row) {
                 $lines[] = sprintf(
-                    '| `%s` | %s | %s | %s | %s | %s | `%s` |',
+                    '| **%s** | `%s` | %s | %s | %s | %s | %s | `%s` |',
+                    strtoupper($row->direction),
                     $row->lang,
                     $this->cell($row->termText),
                     $this->cell($row->sourceText),
@@ -264,18 +276,35 @@ final class AuditTranslationKeysCommand extends Command
         return $row->collections === [] ? '—' : implode(', ', $row->collections);
     }
 
-    /** «чего не хватает», one line per unanswered word: the word, then what would have answered it. */
+    /**
+     * «что не так», one entry per word: the word, then the rule's criterion for it.
+     *
+     * The arrow means different things per direction and the label says which, because a reader
+     * skimming the column must not have to remember: LOST expects those forms in the TRANSLATION,
+     * EXTRA expected one of those words in the SOURCE.
+     */
     private function missing(TranslationKeyAuditRow $row): string
     {
         $parts = [];
-        foreach ($row->missingWords as $word) {
+        foreach ($row->words as $word) {
             $expected = $row->expectedForms[$word] ?? [];
-            $parts[] = $expected === []
-                ? "`{$word}`"
+            if ($expected === []) {
+                $parts[] = "`{$word}`";
+
+                continue;
+            }
+            $parts[] = $row->direction === 'extra'
+                ? "`{$word}` — нет в источнике: " . implode('/', $expected)
                 : "`{$word}` → " . implode('/', $expected);
         }
 
         return $parts === [] ? '—' : implode('; ', $parts);
+    }
+
+    /** @param list<TranslationKeyAuditRow> $rows */
+    private function countForDirection(array $rows, string $direction): int
+    {
+        return count(array_filter($rows, static fn (TranslationKeyAuditRow $r): bool => $r->direction === $direction));
     }
 
     /** @param list<TranslationKeyAuditRow> $rows */

@@ -17,9 +17,11 @@ final readonly class TranslationKeyAuditRow
      * @param  'term'|'example'  $kind  which of the card's two keys this is
      * @param  string  $sourceText  the string the learner must reproduce: the term, or the sentence
      * @param  string  $lang  the translation's language
-     * @param  list<string>  $groups        the groups the pair tripped
-     * @param  list<string>  $missingWords  the source's own words the translation left unanswered
-     * @param  array<string, list<string>>  $expectedForms  missing word => forms that would have cleared it
+     * @param  'lost'|'extra'  $direction  which way the pair broke
+     * @param  list<string>  $groups  the groups the pair tripped
+     * @param  list<string>  $words  LOST: the source's unanswered words. EXTRA: the translation's
+     *                       unlicensed ones.
+     * @param  array<string, list<string>>  $expectedForms  word => what the rule expected for it
      * @param  list<string>  $collections   titles of the live decks this term sits in
      */
     public function __construct(
@@ -29,8 +31,9 @@ final readonly class TranslationKeyAuditRow
         public string $sourceText,
         public string $lang,
         public string $translation,
+        public string $direction,
         public array $groups,
-        public array $missingWords,
+        public array $words,
         public array $expectedForms,
         public array $collections,
     ) {}

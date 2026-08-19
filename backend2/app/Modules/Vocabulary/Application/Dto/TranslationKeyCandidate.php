@@ -18,9 +18,12 @@ final readonly class TranslationKeyCandidate
      * @param  'term'|'example'  $kind  which of the card's two keys this is
      * @param  string  $sourceText  the string the learner must reproduce: the term, or the sentence
      * @param  string  $lang  the translation's language — the sweep judges every language the store has
+     * @param  'lost'|'extra'  $direction  LOST: the translation dropped what the source addresses.
+     *                       EXTRA: the translation says what the source never licensed.
      * @param  list<string>  $groups  the groups the pair tripped
-     * @param  list<string>  $missingWords  the source's own words left unanswered, in source order
-     * @param  array<string, list<string>>  $expectedForms  missing word => forms that would have cleared it
+     * @param  list<string>  $words  LOST: the source's own words left unanswered. EXTRA: the
+     *                       translation's words that nothing licenses. Both in their own order.
+     * @param  array<string, list<string>>  $expectedForms  word => what the rule expected for it
      */
     public function __construct(
         public string $termId,
@@ -29,8 +32,9 @@ final readonly class TranslationKeyCandidate
         public string $sourceText,
         public string $lang,
         public string $translation,
+        public string $direction,
         public array $groups,
-        public array $missingWords,
+        public array $words,
         public array $expectedForms,
     ) {}
 }

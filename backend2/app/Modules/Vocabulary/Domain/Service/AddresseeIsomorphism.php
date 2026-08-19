@@ -4,24 +4,37 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Domain\Service;
 
-use App\Modules\Vocabulary\Domain\ValueObject\AddresseeMiss;
+use App\Modules\Vocabulary\Domain\ValueObject\AddresseeDirection;
+use App\Modules\Vocabulary\Domain\ValueObject\AddresseeGap;
 
 /**
- * A COARSE detector for translations that have lost the term's addressee (QA-17).
+ * A COARSE detector for translations that no longer point at their own source (QA-17, QA-22).
  *
  * The class of defect: a translation is not prose, it is the KEY the learner is asked to turn back
- * into the term. «Tell us about a challenge you faced» came back as «Расскажите о вызове, с которым
- * вы столкнулись» — fluent, and unanswerable, because «нам» is gone and `Tell me…`, `Tell us…` and
- * `Describe…` all fit it equally well. An honest answer then goes into an append-only log as a
- * lapse. The words that go missing are almost always the small ones that say WHO is speaking and
- * WHO is addressed, because a translation reads more smoothly without them.
+ * into the source. «Tell us about a challenge you faced» came back as «Расскажите о вызове, с
+ * которым вы столкнулись» — fluent, and unanswerable, because «нам» is gone and `Tell me…`,
+ * `Tell us…` and `Describe…` all fit it equally well. An honest answer then goes into an append-only
+ * log as a lapse. The words that go missing are almost always the small ones that say WHO is
+ * speaking and WHO is addressed, because a translation reads more smoothly without them.
  *
- * The rule, deliberately per GROUP rather than against one flat list of pronouns: a term that says
- * `us` is not rescued by a translation that happens to contain «вы». Each group is an English
- * trigger set and, per learner language, the forms that can carry it; a term trips the group when
- * it uses one of the triggers as a STANDALONE word and its translation contains none of that
- * language's counterparts. Started Russian-only, extended to Ukrainian the same way — a second
- * counterpart list per group, not a second rule.
+ * Both directions break a key, so both are judged:
+ *
+ * - LOST — the source addresses someone, the translation carries nothing of that person.
+ * - EXTRA — the mirror (QA-22): the translation says something the source never did. «I get along
+ *   with my team» came back as «Я **хорошо** лажу со своей командой», and a learner who answers with
+ *   the source is marked wrong for missing a `well` that was never there.
+ *
+ * The rule is per GROUP rather than against one flat list of words: a source that says `us` is not
+ * rescued by a translation that happens to contain «вы». Each group carries three lists —
+ *
+ * - `triggers`  — source words that DEMAND the group in the translation (drives LOST);
+ * - `licences`  — source words that ALLOW it (drives EXTRA);
+ * - `counterparts` — per learner language, the forms that carry the group.
+ *
+ * Triggers and licences are deliberately different sets. `me` demands a first-person form; `I` and
+ * `my` only permit one — Russian and Ukrainian drop the subject pronoun constantly, so demanding
+ * «я» for every `I` would flag half the store, while a translation that says «я» for a source with
+ * `I` in it is obviously fine. Merging the two lists would make one of the directions useless.
  *
  * It is coarse ON PURPOSE and it never fixes anything. Both languages carry a person in ways this
  * cannot see — «расскажите»/«розкажіть» is already addressed, a genitive can be implied, «свій» can
@@ -32,33 +45,34 @@ use App\Modules\Vocabulary\Domain\ValueObject\AddresseeMiss;
 final class AddresseeIsomorphism
 {
     /**
-     * The groups, as (name, English triggers, counterparts per learner language).
+     * The groups, as (name, English triggers, English licences, counterparts per learner language).
      *
      * `you` sits with `your`/`yours` because both Russian and Ukrainian mark them with the same
      * stem, and separating them would flag «расскажите нам о вашем опыте» for having no separate
-     * word for `you`. For the same reason a group is a PERSON, not a case: any form of that person
-     * answers it. «нам» — first person plural, dative — answers `we` as readily as it answers `us`
-     * («Could we have the bill?» → «Можно **нам** счёт?»), so it belongs in both lists; the first
-     * whole-store run flagged that row for a «мы» it never needed.
+     * word for `you`. For the same reason each group is a PERSON, not a case: any form of the second
+     * person answers `you`, and «нам» — first person plural, dative — answers `we` as readily as it
+     * answers `us` («Could we have the bill?» → «Можно **нам** счёт?»). A group's counterpart list
+     * is therefore that person's whole paradigm, and two groups may share a word where the person
+     * they mark overlaps.
      *
-     * The ты-forms are in `you/your` because Russian's informal second person is still the second
-     * person. «На **твоём** месте я бы согласился» answers `If I were you` completely, and the same
-     * run flagged it, «Если **ты** будешь усердно учиться» and «Какой у **тебя** номер?» only
-     * because the rule had been taught вы-forms and not ты-forms. Ukrainian gets the same treatment
-     * in the same commit: the identical defect must not read as a hit in one language and clean in
-     * the other, which is what its shorter твій/тобі list used to produce.
+     * The ты-forms sit in `you/your` because Russian's informal second person is still the second
+     * person: «На **твоём** месте я бы согласился» answers `If I were you` completely, and the rule
+     * used to flag it only because it had been taught вы-forms and not ты-forms. Ukrainian is kept
+     * symmetric with it for the same reason — the same defect must not be a hit in one language and
+     * clean in the other.
      *
-     * Each list is a whole paradigm rather than a stem, because matching is by standalone word: a
-     * missing «вашем» is a false positive nobody can see, and a stem match would clear «нас» on
-     * «насос». Ukrainian's `us`/`me` forms overlap Russian's for the plural («нам», «нас», «нами»
-     * are spelled identically); the rest of each list is that language's own.
+     * `well/хорошо` is not a person at all, and it is here because it breaks a key the same way: the
+     * EXTRA direction is where it earns its place.
      *
-     * @var list<array{name: string, triggers: list<string>, counterparts: array<string, list<string>>}>
+     * @var list<array{name: string, triggers: list<string>, licences: list<string>, counterparts: array<string, list<string>>}>
      */
     private const GROUPS = [
         [
             'name' => 'us/me',
             'triggers' => ['us', 'me'],
+            // First person, in any shape: a translation may legitimately say «я»/«мне» whenever the
+            // source is in the first person at all, subject pronoun included.
+            'licences' => ['us', 'me', 'i', 'my', 'mine', 'myself', 'we', 'our', 'ours', 'ourselves', "let's", 'lets'],
             'counterparts' => [
                 'ru' => ['нам', 'нас', 'нами', 'мне', 'меня', 'мной', 'мною', 'я'],
                 'uk' => ['нам', 'нас', 'нами', 'мені', 'мене', 'мною', 'я'],
@@ -67,6 +81,7 @@ final class AddresseeIsomorphism
         [
             'name' => 'you/your',
             'triggers' => ['you', 'your', 'yours'],
+            'licences' => ['you', 'your', 'yours', 'yourself', 'yourselves'],
             'counterparts' => [
                 'ru' => [
                     'вы', 'вас', 'вам', 'вами', 'ваш', 'ваша', 'ваше', 'ваши', 'вашего', 'вашему',
@@ -85,24 +100,47 @@ final class AddresseeIsomorphism
         [
             'name' => 'we/our',
             'triggers' => ['we', 'our', 'ours'],
+            'licences' => ['we', 'our', 'ours', 'us', 'ourselves', "let's", 'lets'],
             'counterparts' => [
                 'ru' => ['мы', 'нам', 'нас', 'нами', 'наш', 'наша', 'наше', 'наши', 'нашего', 'нашему', 'нашей', 'нашем', 'нашим', 'нашими', 'наших', 'нашу'],
                 'uk' => ['ми', 'нам', 'нас', 'нами', 'наш', 'наша', 'наше', 'наші', 'нашого', 'нашому', 'нашій', 'нашим', 'нашими', 'наших', 'нашу'],
             ],
         ],
+        [
+            'name' => 'well/хорошо',
+            'triggers' => ['well'],
+            // Anything in the source that can honestly come out as «хорошо». Wide on purpose: this
+            // group exists for the EXTRA direction, where the question is «did ANYTHING license
+            // this», and a narrow list would report every idiomatic «хорошо» as invented.
+            'licences' => ['well', 'good', 'fine', 'nice', 'nicely', 'great', 'okay', 'ok', 'alright', 'right', 'better', 'best'],
+            'counterparts' => [
+                'ru' => ['хорошо'],
+                'uk' => ['добре'],
+            ],
+        ],
     ];
 
     /**
-     * What this pair dropped: per tripped group, the source's own words that went unanswered.
+     * Everything wrong with this pair, LOST first — the rule's whole answer.
      *
-     * This is the rule's full answer and {@see violations()} is a projection of it. The group name
-     * counts a row; the words are what makes the row readable — a proof-reader should not have to
-     * re-derive by eye that `us/me` fired on `me` and not on `us`.
-     *
+     * @param  string  $source  the side the learner must reproduce: a term, or an example sentence
      * @param  string  $lang  the translation's language — which counterpart list applies. A group
      *                        with no list for this language is skipped entirely (never a false hit
      *                        for a learner language the rule hasn't been taught yet).
-     * @return list<AddresseeMiss>  in the order the groups are declared above
+     * @return list<AddresseeGap>
+     */
+    public function gaps(string $source, string $translation, string $lang = 'ru'): array
+    {
+        return array_merge(
+            $this->misses($source, $translation, $lang),
+            $this->extras($source, $translation, $lang),
+        );
+    }
+
+    /**
+     * LOST: per tripped group, the source's own words that went unanswered.
+     *
+     * @return list<AddresseeGap>  in the order the groups are declared above
      */
     public function misses(string $source, string $translation, string $lang = 'ru'): array
     {
@@ -114,19 +152,59 @@ final class AddresseeIsomorphism
             }
             $used = $this->matched($source, $group['triggers']);
             if ($used === []) {
-                continue; // the source never addresses anyone in this group
+                continue; // the source never demands this group
             }
             if ($this->containsAny($translation, $counterparts)) {
                 continue; // …and the translation carries it
             }
-            $out[] = new AddresseeMiss($group['name'], $used, $counterparts);
+            $out[] = new AddresseeGap(AddresseeDirection::Lost, $group['name'], $used, $counterparts);
         }
 
         return $out;
     }
 
     /**
-     * The groups this pair trips — empty when the translation carries everything the term addresses.
+     * EXTRA: per group, the translation's words that nothing in the source licenses.
+     *
+     * The mirror of {@see misses()} and not its inverse: a group fires here when the translation
+     * carries one of its forms and the source has NONE of the group's licences — not merely none of
+     * its triggers. `I get along with my team` licenses «я» (first person, `I`/`my`) and licenses no
+     * «хорошо» at all, which is exactly the row this direction was built to find.
+     *
+     * @return list<AddresseeGap>  in the order the groups are declared above
+     */
+    public function extras(string $source, string $translation, string $lang = 'ru'): array
+    {
+        $out = [];
+        $alreadyReported = [];
+        foreach (self::GROUPS as $group) {
+            $counterparts = $group['counterparts'][$lang] ?? null;
+            if ($counterparts === null) {
+                continue;
+            }
+            $carried = $this->matched($translation, $counterparts);
+            if ($carried === []) {
+                continue; // the translation says nothing of this group
+            }
+            if ($this->containsAny($source, $group['licences'])) {
+                continue; // …and the source allows it
+            }
+            // Groups overlap where the person they mark overlaps — «нам» is in both `us/me` and
+            // `we/our` — and one unlicensed «нам» is ONE thing to read, not two rows saying it twice.
+            // Only the words no earlier group has already reported make this a row.
+            $fresh = array_values(array_diff($carried, $alreadyReported));
+            if ($fresh === []) {
+                continue;
+            }
+            $alreadyReported = array_merge($alreadyReported, $fresh);
+            $out[] = new AddresseeGap(AddresseeDirection::Extra, $group['name'], $fresh, $group['licences']);
+        }
+
+        return $out;
+    }
+
+    /**
+     * The groups this pair loses — empty when the translation carries everything the source demands.
      *
      * @param  string  $lang  the translation's language, as in {@see misses()}
      * @return list<string>  group names, in the order declared above
@@ -134,7 +212,7 @@ final class AddresseeIsomorphism
     public function violations(string $source, string $translation, string $lang = 'ru'): array
     {
         return array_map(
-            static fn (AddresseeMiss $miss): string => $miss->group,
+            static fn (AddresseeGap $gap): string => $gap->group,
             $this->misses($source, $translation, $lang),
         );
     }

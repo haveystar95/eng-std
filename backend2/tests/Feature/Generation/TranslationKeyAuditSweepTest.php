@@ -246,3 +246,25 @@ it('never judges an example whose language it cannot know, and says how many it 
         ->toContain('### Примеры (0)')
         ->not->toContain('and how you overcame it');
 });
+
+it('marks the direction of every candidate and counts both', function () {
+    // An EXTRA row: the translation says «хорошо» and the source never said `well`.
+    seedSweepTerm(
+        str_pad('01SWEEPEXTRA', 26, '0'),
+        'I get along with my team',
+        'ru',
+        'Я хорошо лажу со своей командой',
+        str_pad('01SWEEPTEXTRA', 26, '0'),
+    );
+
+    $this->artisan('vocab:audit-translation-keys', ['--out' => sweepExportPath()])
+        ->assertSuccessful();
+
+    $export = (string) file_get_contents(sweepExportPath());
+
+    expect($export)
+        ->toContain('LOST **3**, EXTRA **1**')
+        ->toContain('| **EXTRA** | `ru` | I get along with my team | Я хорошо лажу со своей командой |')
+        ->toContain('`хорошо` — нет в источнике: well/good')
+        ->toContain('| **LOST** | `ru` | Tell us about a challenge you faced |');
+});
