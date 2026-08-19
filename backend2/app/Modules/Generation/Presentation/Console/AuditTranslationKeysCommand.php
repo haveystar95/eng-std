@@ -277,6 +277,16 @@ final class AuditTranslationKeysCommand extends Command
     }
 
     /**
+     * How many accepted forms a cell shows before it stops being evidence and starts being noise.
+     *
+     * The counterpart lists are whole paradigms — «вы» through «твоею» is 35 words — and a table
+     * that prints all of them per row cannot be read at all. The first few say what the criterion
+     * IS, which is the point; the count says how much was elided, so nobody mistakes the cell for
+     * the whole list.
+     */
+    private const EXPECTED_SHOWN = 6;
+
+    /**
      * «что не так», one entry per word: the word, then the rule's criterion for it.
      *
      * The arrow means different things per direction and the label says which, because a reader
@@ -293,9 +303,13 @@ final class AuditTranslationKeysCommand extends Command
 
                 continue;
             }
+            $shown = implode('/', array_slice($expected, 0, self::EXPECTED_SHOWN));
+            if (count($expected) > self::EXPECTED_SHOWN) {
+                $shown .= '/… (' . count($expected) . ' форм)';
+            }
             $parts[] = $row->direction === 'extra'
-                ? "`{$word}` — нет в источнике: " . implode('/', $expected)
-                : "`{$word}` → " . implode('/', $expected);
+                ? "`{$word}` — нет в источнике: {$shown}"
+                : "`{$word}` → {$shown}";
         }
 
         return $parts === [] ? '—' : implode('; ', $parts);
