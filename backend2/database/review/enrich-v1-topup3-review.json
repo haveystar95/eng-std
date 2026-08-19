@@ -1,0 +1,709 @@
+{
+  "_": [
+    "Вычитка выгрузки docs/enrich-v1-topup3-full-store.md",
+    "(snapshot 2026-08-19T09:23:11Z · HEAD 08c091f · генератор enrich-v1-topup3).",
+    "«pos» — порядковый номер дистрактора в этом файле-снимке, для сверки со списком решений;",
+    "handler его не читает. 96 позиций удалены как разобранные при вычитке (легальное предложение",
+    "не по теме термина / кросс-терминный дубль / по факту синоним эталона), 12 — удалены по",
+    "отдельному решению после разбора флага у термина. 6 позиций отремонтированы (error_span/",
+    "correction) — каждая проверена круговым правилом валидатора (span->correction возвращает",
+    "эталон-пример) до включения сюда. Позиция 409 — оставлена как есть (KEEP), в файл не входит.",
+    "«note» — причина по памяти ревьюера; в enrichment_suppressions поля под неё нет (source only),",
+    "поэтому это только для истории самого review-файла в git."
+  ],
+  "generator_version": "enrich-v1-topup3",
+  "remove_distractors": [
+    {
+      "pos": 12,
+      "term": "get to know",
+      "sentence": "I enjoy getting to know the people's stories and backgrounds.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 17,
+      "term": "chat",
+      "sentence": "We sat in a coffee shop and had a nice chat.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 22,
+      "term": "break the ice",
+      "sentence": "Telling a joke can help to break the ice in a new environment.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 40,
+      "term": "mute the phone",
+      "sentence": "Please mute the phone during the meeting.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 41,
+      "term": "mute the phone",
+      "sentence": "Please mute your phone in the meeting.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 49,
+      "term": "get through to",
+      "sentence": "I tried calling, but I can't get through to him.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 52,
+      "term": "video call",
+      "sentence": "She prefers the video calls to stay in touch with family.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 54,
+      "term": "voicemail",
+      "sentence": "He left the voicemail about the meeting details.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 59,
+      "term": "quick chat",
+      "sentence": "Let's have the quick chat about the project.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 66,
+      "term": "fill out",
+      "sentence": "Please fill this application out to proceed.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 84,
+      "term": "minimize fees",
+      "sentence": "I want to minimize fees in my account.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 86,
+      "term": "financial advisor",
+      "sentence": "I schedule a meeting with my financial advisor to discuss investments.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 92,
+      "term": "security deposit",
+      "sentence": "You'll need to pay the security deposit before moving in.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 103,
+      "term": "maintenance request",
+      "sentence": "You can submit the maintenance request online.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 104,
+      "term": "walk-through",
+      "sentence": "We did a walk-through in the apartment before moving in.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 112,
+      "term": "shared accommodation",
+      "sentence": "I'm looking for shared accommodations in the city center.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 113,
+      "term": "sublet",
+      "sentence": "Do you have permissions to sublet the apartment?",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 130,
+      "term": "How can I help you?",
+      "sentence": "Welcome to the pharmacy. How can I help you all?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 132,
+      "term": "medicine",
+      "sentence": "Did the doctor give you medicine?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 144,
+      "term": "allergic reaction",
+      "sentence": "Watch for any allergic reaction to the medication.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 146,
+      "term": "I'll have the chicken salad.",
+      "sentence": "I'll have chicken salad, please.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 153,
+      "term": "Can I get this to go?",
+      "sentence": "I’d like the pastas to go, please.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 155,
+      "term": "starter",
+      "sentence": "For a starter, I would recommend soup.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 157,
+      "term": "main course",
+      "sentence": "I'll have steak as my main course.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 161,
+      "term": "order in",
+      "sentence": "Let's order tonight instead of cooking.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 165,
+      "term": "Would you like anything to drink?",
+      "sentence": "Would you like anything to drink with your meals?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 169,
+      "term": "serve",
+      "sentence": "The waiter will serve your meal soon.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 171,
+      "term": "shopping cart",
+      "sentence": "I grabbed a shopping cart and started the grocery shopping.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 176,
+      "term": "self-checkout",
+      "sentence": "I prefer using a self-checkout for small purchases.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 180,
+      "term": "Can I pay by card?",
+      "sentence": "When I reached the cashier, I asked, 'Can I pay with card?'",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 189,
+      "term": "pay in cash",
+      "sentence": "I decided to pay by cash this time.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 194,
+      "term": "How would you like to pay?",
+      "sentence": "The cashier asked, 'How would you like for pay?'",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 195,
+      "term": "How would you like to pay?",
+      "sentence": "The cashier asked, 'How would you liked to pay?'",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 197,
+      "term": "scan an item",
+      "sentence": "I need to scan every item at the checkout.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 202,
+      "term": "larger size",
+      "sentence": "Do you have this in the larger size?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 206,
+      "term": "How much does it cost?",
+      "sentence": "How much does a pain reliever cost?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 209,
+      "term": "Do you accept credit cards?",
+      "sentence": "Do you accept credit cards in payment?",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 216,
+      "term": "exchange policy",
+      "sentence": "The exchange policy allows you to return the items within 30 days.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 222,
+      "term": "cash register",
+      "sentence": "The cash register was down, so we has to wait.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 223,
+      "term": "What's your return policy?",
+      "sentence": "What's your return policy for sale items?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 225,
+      "term": "on sale",
+      "sentence": "These shoes is on sale for 50% off.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 226,
+      "term": "on sale",
+      "sentence": "These shoes are at sale for 50% off.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 234,
+      "term": "membership card",
+      "sentence": "Don't forget to bring the membership card to the gym.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 244,
+      "term": "personal trainer",
+      "sentence": "My personal trainer helped me to develop a workout plan.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 249,
+      "term": "warm up",
+      "sentence": "It's important to warm up before exercise.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 256,
+      "term": "flexibility exercises",
+      "sentence": "Flexibility exercises help to prevent injuries.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 264,
+      "term": "I need help",
+      "sentence": "I need help, please call the ambulance.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 265,
+      "term": "I need help",
+      "sentence": "I need help, please call help.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 267,
+      "term": "ambulance",
+      "sentence": "We called the ambulance after the accident.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 268,
+      "term": "I lost my wallet",
+      "sentence": "I lost my wallet in the station.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 272,
+      "term": "My passport was stolen",
+      "sentence": "My passport was stolen while I was in the cafe.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 274,
+      "term": "contact the authorities",
+      "sentence": "You should contact the authorities for the missing person.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 275,
+      "term": "emergency services",
+      "sentence": "Dial 911 to reach the emergency services.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 278,
+      "term": "stay calm",
+      "sentence": "Stay calm and tell me what is wrong.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 283,
+      "term": "locksmith",
+      "sentence": "I need the locksmith because I lost my keys.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 286,
+      "term": "pickpocket",
+      "sentence": "Beware of the pickpockets in crowded places.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 293,
+      "term": "boarding pass",
+      "sentence": "You need a boarding pass to enter the boarding area.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 301,
+      "term": "boarding",
+      "sentence": "Boarding begins 30 minutes before departure.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 302,
+      "term": "boarding",
+      "sentence": "Boarding will begin 30 minutes after departure.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 306,
+      "term": "window seat",
+      "sentence": "Would you like the window seat or an aisle seat?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 309,
+      "term": "fasten your seatbelt",
+      "sentence": "Please fasten the seatbelt as we prepare for takeoff.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 311,
+      "term": "tray table",
+      "sentence": "Please fold up your tray table for landing.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 314,
+      "term": "in-flight meal",
+      "sentence": "The in-flight meal will be served shortly after the takeoff.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 315,
+      "term": "flight attendant",
+      "sentence": "If you need any assistance, ask the flight attendant.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 320,
+      "term": "on time",
+      "sentence": "The flight departed on time without any delay.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 324,
+      "term": "I'd like to book a room.",
+      "sentence": "I'd like to book the room with a sea view.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 336,
+      "term": "Wi-Fi password",
+      "sentence": "Can you give me a Wi-Fi password, please?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 338,
+      "term": "twin room",
+      "sentence": "We booked a twin room for our stays.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 341,
+      "term": "concierge",
+      "sentence": "You can ask a concierge for dinner recommendations.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 347,
+      "term": "front desk",
+      "sentence": "If you need any help, a front desk is available 24/7.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 348,
+      "term": "housekeeping",
+      "sentence": "I asked housekeeping to clean a room while I was out.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 353,
+      "term": "luggage storage",
+      "sentence": "The hotel offers the luggage storage for early arrivals.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 354,
+      "term": "wake-up call",
+      "sentence": "I requested a wake-up call at 6 AM.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 355,
+      "term": "Where can I buy a ticket?",
+      "sentence": "Where can I buy a ticket in the subway?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 357,
+      "term": "I'm looking for the bus stop.",
+      "sentence": "I'm looking for the bus stop in Main Street.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 368,
+      "term": "I'd like to book a taxi.",
+      "sentence": "I'd like to book a taxi at 7pm.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 371,
+      "term": "change trains",
+      "sentence": "We need to change trains in the next station.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 376,
+      "term": "Is this the line for the bus?",
+      "sentence": "Is this line for the bus to the city center?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 380,
+      "term": "Please take me to...",
+      "sentence": "Please take me to the hotel in Elm Street.",
+      "note": "reviewed: flagged — removed by reviewer decision"
+    },
+    {
+      "pos": 398,
+      "term": "multitasking ability",
+      "sentence": "I mentioned the multitasking ability as one of my strengths.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 404,
+      "term": "notice period",
+      "sentence": "I am currently in a one-month notice periods with my current employer.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 405,
+      "term": "notice period",
+      "sentence": "I am currently in one-month notice period with my current employer.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 406,
+      "term": "notice period",
+      "sentence": "I am currently in a one-month notice period to my current employer.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 407,
+      "term": "hands-on experience",
+      "sentence": "I have hands-on experience with the JavaScript frameworks in previous projects.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 411,
+      "term": "When can you start?",
+      "sentence": "They asked me when I can start if offered the position.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 414,
+      "term": "Tell me about a time you faced a challenge at work.",
+      "sentence": "Tell me about the time you faced a challenge at work and how you overcame it.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 419,
+      "term": "What are your salary expectations?",
+      "sentence": "What are your salary expectations in this role?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 420,
+      "term": "trade-off",
+      "sentence": "There is always a trade-off between the performance and cost.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 422,
+      "term": "trade-off",
+      "sentence": "There is always a trade-off between performance and the cost.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 427,
+      "term": "How do you prioritize your tasks?",
+      "sentence": "How do you prioritize your tasks in the fast-paced environment?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 429,
+      "term": "cloud architecture",
+      "sentence": "Optimizing cloud architecture can reduce cost significantly.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 430,
+      "term": "cloud architecture",
+      "sentence": "Optimizing the cloud architecture can reduce costs significantly.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 435,
+      "term": "negotiate a salary",
+      "sentence": "During the final round, she was ready to negotiate a salary which matched her experience.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 437,
+      "term": "resilient",
+      "sentence": "A resilient system can recover quickly from the failures.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 441,
+      "term": "bump up",
+      "sentence": "They decided to bump up the offer after negotiations.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 445,
+      "term": "data redundancy",
+      "sentence": "Ensuring the data redundancy is important to prevent data loss.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 456,
+      "term": "set up a conference call",
+      "sentence": "I set up a conference call with the team for Friday afternoon.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 462,
+      "term": "take minutes",
+      "sentence": "Could you take the minutes during the meeting?",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 466,
+      "term": "follow up",
+      "sentence": "I'll follow up with you after the meeting to ensure all is clear.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 486,
+      "term": "in touch",
+      "sentence": "We'll be in touch for more information next week.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 494,
+      "term": "set up a new account",
+      "sentence": "I need to set up the new account for this service.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 500,
+      "term": "log in",
+      "sentence": "Please log in to access the account.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 503,
+      "term": "device",
+      "sentence": "This is a new device which connects to the internet.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 508,
+      "term": "upload a document",
+      "sentence": "Please upload the document to the portal.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 509,
+      "term": "connectivity issues",
+      "sentence": "We are experiencing connectivity issues on the internet.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 516,
+      "term": "desktop",
+      "sentence": "I prefer using the desktop for complex tasks.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 518,
+      "term": "run a program",
+      "sentence": "Click the icon to run the program.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    },
+    {
+      "pos": 520,
+      "term": "update software",
+      "sentence": "You should update the software to the latest version.",
+      "note": "reviewed: legal sentence / duplicate / synonym"
+    }
+  ],
+  "fix_distractors": [
+    {
+      "pos": 77,
+      "term": "withdrawal limit",
+      "sentence": "My ATM have a daily withdrawal limit of $500.",
+      "error_span": "have",
+      "correction": "has"
+    },
+    {
+      "pos": 95,
+      "term": "first and last month's rent",
+      "sentence": "You'll have to pay the first and last month's rent on you sign the lease.",
+      "error_span": "on",
+      "correction": "when"
+    },
+    {
+      "pos": 122,
+      "term": "I have a headache.",
+      "sentence": "I've had a headache since in the morning.",
+      "error_span": "in the",
+      "correction": "this"
+    },
+    {
+      "pos": 238,
+      "term": "cardio workout",
+      "sentence": "Cardio workouts is great for heart health.",
+      "error_span": "is",
+      "correction": "are"
+    },
+    {
+      "pos": 350,
+      "term": "housekeeping",
+      "sentence": "I asked housekeeping to clean my room for I was out.",
+      "error_span": "for",
+      "correction": "while"
+    },
+    {
+      "pos": 365,
+      "term": "I'd like a ticket to...",
+      "sentence": "I'd like a ticket to airport, please.",
+      "error_span": "airport",
+      "correction": "the airport"
+    }
+  ]
+}

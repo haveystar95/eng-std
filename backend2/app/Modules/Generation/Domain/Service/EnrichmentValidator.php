@@ -279,6 +279,16 @@ final class EnrichmentValidator
             if ($span === '' || mb_stripos($text, $span) === false) {
                 continue;
             }
+            // The error span must not fall inside an occurrence of the term's OWN accepted answer —
+            // marking part of the term's canonical wording as a mistake is not a distractor, it's the
+            // correct answer with a false "correction" grafted onto it. «mute the phone» → span «the»,
+            // correction «your»: the row repairs cleanly to the pinned example and passes every check
+            // in this method, but "mute the phone" is the term's own accepted form and "the" in it is
+            // not wrong — the example just phrased the sentence with a possessive instead. Live on the
+            // topup-3 store, case #40 (docs/enrich-v1-topup3-full-store.md).
+            if ($this->spanIsInsideAcceptedForm($text, $span, $candidate->acceptedForms)) {
+                continue;
+            }
             $correction = $this->stripEmphasis($raw->correction);
             if ($correction === '') {
                 continue;
@@ -624,6 +634,39 @@ final class EnrichmentValidator
     private function isWordChar(string $char): bool
     {
         return $char !== '' && preg_match('/[\p{L}\p{N}]/u', $char) === 1;
+    }
+
+    /**
+     * Does the span [position, position+len) overlap an occurrence of one of the term's accepted
+     * answers in this sentence? Case-insensitive; every occurrence of every form is checked, not
+     * just the first, because a phrase can legitimately appear more than once in a sentence.
+     *
+     * @param  list<string>  $acceptedForms
+     */
+    private function spanIsInsideAcceptedForm(string $sentence, string $span, array $acceptedForms): bool
+    {
+        $spanAt = $this->spanPosition($sentence, $span);
+        if ($spanAt === false) {
+            return false;
+        }
+        $spanEnd = $spanAt + mb_strlen($span);
+
+        foreach ($acceptedForms as $form) {
+            $form = trim($form);
+            if ($form === '') {
+                continue;
+            }
+            $offset = 0;
+            while (($at = mb_stripos($sentence, $form, $offset)) !== false) {
+                $end = $at + mb_strlen($form);
+                if ($at < $spanEnd && $spanAt < $end) {
+                    return true;
+                }
+                $offset = $at + 1;
+            }
+        }
+
+        return false;
     }
 
     /** @see EMPHASIS_MARKERS — the model marks the error, which hands the learner the answer. */

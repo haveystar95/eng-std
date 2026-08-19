@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
+use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\EnrichmentTargetView;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
@@ -11,7 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
 {
-    public function __construct(private readonly TranslationPick $pick = new TranslationPick()) {}
+    public function __construct(
+        private readonly TranslationPick $pick = new TranslationPick(),
+        private readonly LexicalNormalizer $normalizer = new LexicalNormalizer(),
+    ) {}
 
     public function underCovered(array $termIds, int $minDistractors): array
     {
@@ -61,12 +65,43 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
 
         $ids = array_map(static fn (TermId $id): string => $id->value, $termIds);
 
+        // Every term's text and language, once — the table is a few hundred rows, and this is the
+        // only way to find SIBLINGS: other terms whose text collides with one of these once
+        // normalised (a case/whitespace-only duplicate; the global `terms` unique index does not
+        // normalise, so it does not catch this). A distractor already written or suppressed for one
+        // sibling has to count as "already proposed" for the rest too, or a re-run offers the
+        // identical wrong sentence to a term that only spells the same phrase differently — 8 live
+        // instances found by the topup-3 proofreading pass (2026-08-19,
+        // docs/enrich-v1-topup3-full-store.md).
+        $textById = [];
+        $langById = [];
+        $idsByNormalizedText = [];
+        foreach (DB::table('terms')->get(['id', 'text', 'lang']) as $t) {
+            $tid = (string) $t->id;
+            $textById[$tid] = (string) $t->text;
+            $langById[$tid] = (string) $t->lang;
+            $idsByNormalizedText[$this->normalizer->normalize((string) $t->text)][] = $tid;
+        }
+
+        $siblingsPerId = [];
+        foreach ($ids as $id) {
+            $key = $this->normalizer->normalize($textById[$id] ?? '');
+            $siblingsPerId[$id] = array_values(array_filter(
+                $idsByNormalizedText[$key] ?? [],
+                static fn (string $sid): bool => $sid !== $id,
+            ));
+        }
+        // Only the DISTRACTOR dedup reads this wider set (own rows + every sibling's); variants,
+        // translation and the exported view itself stay scoped to $ids — a sibling's accepted forms
+        // or translation are not this term's answer key.
+        $dedupIds = array_values(array_unique(array_merge($ids, ...array_values($siblingsPerId))));
+
         // The PINNED example — `orderBy('id')`, the same rule EloquentTermContentReader and
         // EloquentTermAnswerKeyReader use. Distractors are keyed to `example_id`, so if this read
         // picked a different row than the card does, the whole product would point at a sentence
         // the learner never sees.
         $examples = [];
-        foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')
+        foreach (DB::table('term_examples')->whereIn('term_id', $dedupIds)->orderBy('id')
             ->get(['id', 'term_id', 'sentence', 'sentence_translation']) as $row) {
             $examples[(string) $row->term_id] ??= $row;
         }
@@ -86,7 +121,8 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         }
 
         // Distractors an earlier run already wrote against the pinned example. Read by example id, so
-        // a term whose pinned example changed does not drag the old sentences along.
+        // a term whose pinned example changed does not drag the old sentences along. Covers siblings
+        // too, per $dedupIds above.
         $distractors = [];
         $pinnedIds = array_values(array_map(static fn (object $row): string => (string) $row->id, $examples));
         if ($pinnedIds !== []) {
@@ -99,31 +135,45 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         // Sentences a human (review) or the retro-audit already judged wrong for this term and removed.
         // Folded into `existingDistractors` below — the validator's dedup treats "already rejected" the
         // same as "already stored", so the станок never proposes the same sentence back on a топап.
+        // Covers siblings too, per $dedupIds above.
         $suppressed = [];
-        foreach (DB::table('enrichment_suppressions')->whereIn('term_id', $ids)->get(['term_id', 'sentence']) as $row) {
+        foreach (DB::table('enrichment_suppressions')->whereIn('term_id', $dedupIds)->get(['term_id', 'sentence']) as $row) {
             $suppressed[(string) $row->term_id][] = (string) $row->sentence;
         }
 
         $out = [];
-        foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'lang']) as $term) {
-            $id = (string) $term->id;
+        foreach ($ids as $id) {
+            $text = $textById[$id] ?? null;
+            if ($text === null) {
+                continue;
+            }
             $example = $examples[$id] ?? null;
+
+            $siblingSentences = [];
+            foreach ($siblingsPerId[$id] as $sibling) {
+                $sibExample = $examples[$sibling] ?? null;
+                if ($sibExample !== null) {
+                    array_push($siblingSentences, ...($distractors[(string) $sibExample->id] ?? []));
+                }
+                array_push($siblingSentences, ...($suppressed[$sibling] ?? []));
+            }
 
             $out[$id] = new EnrichmentTargetView(
                 termId: $id,
-                text: (string) $term->text,
-                acceptedForms: [(string) $term->text, ...($variants[$id] ?? [])],
+                text: $text,
+                acceptedForms: [$text, ...($variants[$id] ?? [])],
                 translation: $picked[$id]['text'] ?? null,
                 exampleId: $example !== null ? (string) $example->id : null,
                 exampleSentence: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 exampleTranslation: $example !== null && $example->sentence_translation !== null
                     ? (string) $example->sentence_translation
                     : null,
-                lang: (string) $term->lang,
+                lang: $langById[$id] ?? 'en',
                 translationLang: $picked[$id]['lang'] ?? null,
                 existingDistractors: [
                     ...($example !== null ? ($distractors[(string) $example->id] ?? []) : []),
                     ...($suppressed[$id] ?? []),
+                    ...$siblingSentences,
                 ],
             );
         }

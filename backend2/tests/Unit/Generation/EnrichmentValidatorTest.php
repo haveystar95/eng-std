@@ -372,6 +372,36 @@ it('dedupes against a stored sibling even when the pack itself is clean', functi
         ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
+// Found by the topup-3 proofreading pass (2026-08-19, case #40 in
+// docs/enrich-v1-topup3-full-store.md): «mute the phone» → span «the» inside «mute the phone» (the
+// term's own accepted form), corrected to «your». The row repairs cleanly to the pinned example and
+// passed every check above this one, but "the phone" is the term's OWN canonical wording — marking
+// part of it wrong is not a real error, it's the correct answer with a fake correction grafted on.
+it("scraps a distractor whose error span sits inside the term's own accepted form", function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Please mute the phone during the meeting.', 'article', 'the', 'your')],
+        acceptedForms: ['mute the phone'],
+        example: 'Please mute your phone during the meeting.',
+        backTranslation: 'mute the phone',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it("keeps a distractor whose span sits outside the term's own accepted form", function () {
+    // The ordinary, valid case the check above must not touch: the claimed error is elsewhere in the
+    // sentence, not inside the term's own wording.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Please mute the phone during meeting.', 'article', 'meeting', 'the meeting')],
+        acceptedForms: ['mute the phone'],
+        example: 'Please mute the phone during the meeting.',
+        backTranslation: 'mute the phone',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
 // ---- variants ---------------------------------------------------------------------------------
 
 it('keeps a genuinely different correct variant', function () {
