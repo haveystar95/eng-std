@@ -48,6 +48,7 @@ final readonly class BakeoffReport
             . '(`bakeoff_runs` / `bakeoff_calls` / `bakeoff_candidates`).';
         $out[] = '';
 
+        $out[] = $this->trackSources($meta);
         $out[] = $this->providersSection($availability, $results);
         $out[] = $this->checksLegend();
 
@@ -71,6 +72,51 @@ final readonly class BakeoffReport
         $out[] = $this->howToRead();
 
         return implode("\n", array_filter($out, static fn (string $s): bool => $s !== "\0")) . "\n";
+    }
+
+    /**
+     * When a track's numbers come from a different run than its neighbours', say so at the top.
+     *
+     * A run can die half-way — credits run out, a limit bites — and the honest repair is to take
+     * each track from the run that actually answered it. That is only honest while the reader can
+     * see it, so this block is printed before any table and never omitted when it applies.
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    private function trackSources(array $meta): string
+    {
+        $sources = $meta['track_sources'] ?? null;
+        if (! is_array($sources) || $sources === []) {
+            return "\0";
+        }
+
+        $lines = [
+            '## Откуда цифры',
+            '',
+            '**Ни один прогон не закончился целиком** (см. «Провайдеры»), поэтому каждый трек взят '
+            . 'из того прогона, который ответил по нему лучше всего — механическое правило «больше '
+            . 'успешных вызовов», а не выбор понравившихся чисел. Треки между собой сравнивать '
+            . 'можно: внутри трека все провайдеры получили одно и то же задание в одном прогоне.',
+            '',
+            '| Трек | Прогон | Успешных вызовов (все провайдеры) |',
+            '|---|---|---|',
+        ];
+        foreach ($sources as $track => $source) {
+            if (! is_array($source)) {
+                continue;
+            }
+            $case = BakeoffTrack::tryFrom((string) $track);
+            $lines[] = sprintf(
+                '| %s | `%s` | %s из %s |',
+                $case?->title() ?? (string) $track,
+                (string) ($source['run'] ?? '?'),
+                (string) ($source['ok'] ?? '?'),
+                (string) ($source['total'] ?? '?'),
+            );
+        }
+        $lines[] = '';
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -458,20 +504,38 @@ final readonly class BakeoffReport
 
         $size = is_int($meta['collection_size'] ?? null) ? $meta['collection_size'] : 12;
 
-        foreach ([BakeoffTrack::Collections, BakeoffTrack::Enrichment, BakeoffTrack::OneShot] as $track) {
-            foreach ($this->byProvider(array_values(array_filter(
-                $results,
-                static fn (BakeoffCallResult $r): bool => $r->track === $track,
-            ))) as $providerValue => $providerResults) {
-                $calls = count($providerResults);
-                if ($calls === 0) {
+        // Only providers that actually produced something. A row of $0.0000 for a vendor whose every
+        // call was refused reads as "free", which is the opposite of what happened.
+        $providers = [];
+        foreach ($results as $result) {
+            if ($result->ok) {
+                $providers[$result->provider->value] = true;
+            }
+        }
+
+        foreach (array_keys($providers) as $providerValue) {
+            $twoStage = 0.0;
+            $complete = true;
+
+            foreach ([BakeoffTrack::Collections, BakeoffTrack::Enrichment, BakeoffTrack::OneShot] as $track) {
+                $ofTrack = array_values(array_filter(
+                    $results,
+                    static fn (BakeoffCallResult $r): bool => $r->track === $track
+                        && $r->provider->value === $providerValue && $r->ok,
+                ));
+                if ($ofTrack === []) {
+                    if ($track !== BakeoffTrack::OneShot) {
+                        $complete = false;
+                    }
+
                     continue;
                 }
+
                 $cost = 0.0;
                 $latency = [];
                 $items = 0;
                 $clean = 0;
-                foreach ($providerResults as $r) {
+                foreach ($ofTrack as $r) {
                     $cost += (float) ($r->costUsd ?? 0);
                     if ($r->latencyMs !== null) {
                         $latency[] = $r->latencyMs;
@@ -480,16 +544,15 @@ final readonly class BakeoffReport
                     $clean += $r->batch?->clean() ?? 0;
                 }
 
-                // Per-collection: track A and C are already one call per collection; track B is one
-                // call per TERM, so its per-collection cost is the mean term cost times the size.
+                // Per-collection: A and C are already one call per collection; B is one call per
+                // TERM, so its per-collection cost is the mean term cost times the collection size.
                 $perCollection = $track === BakeoffTrack::Enrichment
-                    ? ($cost / $calls) * $size
-                    : $cost / $calls;
-                $latencyText = $latency === []
-                    ? '—'
-                    : ($track === BakeoffTrack::Enrichment
-                        ? $this->median($latency) . ' мс × ' . $size . ' терминов'
-                        : $this->median($latency) . ' мс');
+                    ? ($cost / count($ofTrack)) * $size
+                    : $cost / count($ofTrack);
+
+                if ($track !== BakeoffTrack::OneShot) {
+                    $twoStage += $perCollection;
+                }
 
                 $lines[] = sprintf(
                     '| %s | %s | $%s | %s | %s |',
@@ -497,19 +560,34 @@ final readonly class BakeoffReport
                     match ($track) {
                         BakeoffTrack::Collections => 'А (список)',
                         BakeoffTrack::Enrichment => 'Б (обогащение, ×' . $size . ')',
-                        BakeoffTrack::OneShot => '**В (one-shot)**',
+                        BakeoffTrack::OneShot => '**В (one-shot, один вызов)**',
                     },
                     number_format($perCollection, 4, '.', ''),
-                    $latencyText,
+                    $latency === []
+                        ? '—'
+                        : ($track === BakeoffTrack::Enrichment
+                            ? $this->median($latency) . ' мс × ' . $size . ' терминов'
+                            : $this->median($latency) . ' мс'),
                     $items > 0 ? (int) round(100 * $clean / $items) . '%' : '—',
+                );
+            }
+
+            // The line the whole table exists for: what the current two-step pipeline costs, added
+            // up, so the one-shot row above it is compared against a number and not against
+            // arithmetic the reader has to do.
+            if ($complete) {
+                $lines[] = sprintf(
+                    '| %s | **А + Б — текущая схема, итого** | **$%s** | — | — |',
+                    ProviderId::from($providerValue)->label(),
+                    number_format($twoStage, 4, '.', ''),
                 );
             }
         }
 
         $lines[] = '';
-        $lines[] = 'Сумма А + Б — это стоимость двухэтапной схемы; строка В — альтернатива ей. '
-            . 'Трек В — **эксперимент**: он не заменяет А и Б, решение по схеме пайплайна '
-            . 'принимает архитектор.';
+        $lines[] = 'Строка «А + Б» — это то, во что обходится готовая коллекция СЕЙЧАС; строка В — '
+            . 'альтернатива ей одним вызовом. Трек В — **эксперимент**: он не заменяет А и Б, '
+            . 'решение по схеме пайплайна принимает архитектор.';
         $lines[] = '';
 
         return implode("\n", $lines);

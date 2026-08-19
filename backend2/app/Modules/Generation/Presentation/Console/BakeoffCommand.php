@@ -55,7 +55,7 @@ final class BakeoffCommand extends Command
         {--tracks=abc : which tracks to run — any subset of a, b, c}
         {--pace=0 : milliseconds to wait between calls — the answer to an org tokens-per-minute cap}
         {--compare= : collection id whose CURRENT content is printed beside track A (read-only)}
-        {--report-only= : re-render the file from a finished run in the sandbox — calls nothing}
+        {--report-only= : re-render from finished run(s) in the sandbox, calling nothing — comma-separate several and each track is taken from whichever run answered it best}
         {--out= : where to write the comparison file (default docs/bakeoff-<version>.md)}
         {--dry : print the plan and the providers, call nothing, spend nothing}';
 
@@ -199,20 +199,30 @@ final class BakeoffCommand extends Command
         ContentModelCatalog $catalog,
         StoreCollectionSnapshot $store,
     ): int {
-        $stored = $journal->readRun($runId);
-        if ($stored === null) {
-            $this->error('Прогон не найден: ' . $runId);
+        $ids = array_values(array_filter(array_map('trim', explode(',', $runId))));
 
-            return self::FAILURE;
+        $runs = [];
+        foreach ($ids as $id) {
+            $one = $journal->readRun($id);
+            if ($one === null) {
+                $this->error('Прогон не найден: ' . $id);
+
+                return self::FAILURE;
+            }
+            $runs[$id] = $one;
         }
 
+        [$results, $sources] = $this->bestPerTrack($runs);
+
+        $stored = $runs[$ids[0]];
         $run = $stored['run'];
         $source = is_string($run['source_lang'] ?? null) ? $run['source_lang'] : 'ru';
         $notes = is_array($run['notes'] ?? null) ? $run['notes'] : [];
 
         [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $source, $store);
 
-        $path = $this->write($report, $stored['results'], $catalog->availability(), [
+        $path = $this->write($report, $results, $catalog->availability(), [
+            'track_sources' => $sources,
             'label' => is_string($run['prompt_version'] ?? null) ? $run['prompt_version'] : 'run',
             'prompt_version' => $run['prompt_version'] ?? '?',
             'source_lang' => $source,
@@ -223,10 +233,60 @@ final class BakeoffCommand extends Command
             'store_terms' => $storeTerms,
         ]);
 
-        $this->summarise($stored['results']);
+        $this->summarise($results);
         $this->info('Перерисовано из песочницы (ни одного вызова к провайдерам): ' . $path);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * When several runs are given, each TRACK is taken from the run that answered it best.
+     *
+     * Not cherry-picking, because the rule is mechanical and the report prints its outcome: a run
+     * that died half-way (credits, a rate limit) leaves a real hole, and the alternative is either a
+     * document missing a track or one that adds two runs' numbers together and double-counts the
+     * track both of them completed. "Most successful calls for this track" is the only comparison
+     * that means anything here — a track answered 28 times out of 30 is better evidence than the
+     * same track answered 18 times, whatever else the two runs did.
+     *
+     * @param  array<string, array{results: list<BakeoffCallResult>, run: array<string, mixed>}>  $runs
+     * @return array{0: list<BakeoffCallResult>, 1: array<string, array{run: string, ok: int, total: int}>}
+     */
+    private function bestPerTrack(array $runs): array
+    {
+        if (count($runs) === 1) {
+            return [reset($runs)['results'], []];
+        }
+
+        $results = [];
+        $sources = [];
+
+        foreach (BakeoffTrack::cases() as $track) {
+            $best = null;
+            foreach ($runs as $id => $stored) {
+                $ofTrack = array_values(array_filter(
+                    $stored['results'],
+                    static fn (BakeoffCallResult $r): bool => $r->track === $track,
+                ));
+                if ($ofTrack === []) {
+                    continue;
+                }
+                $ok = count(array_filter($ofTrack, static fn (BakeoffCallResult $r): bool => $r->ok));
+                if ($best === null || $ok > $best['ok']) {
+                    $best = ['run' => $id, 'ok' => $ok, 'total' => count($ofTrack), 'results' => $ofTrack];
+                }
+            }
+
+            if ($best === null) {
+                continue;
+            }
+            foreach ($best['results'] as $result) {
+                $results[] = $result;
+            }
+            $sources[$track->value] = ['run' => $best['run'], 'ok' => $best['ok'], 'total' => $best['total']];
+        }
+
+        return [$results, $sources];
     }
 
     /**
