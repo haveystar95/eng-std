@@ -397,6 +397,12 @@
   "generationHide": "Скрыть",
   "@generationHide": { "description": "Убрать карточку ошибки генерации из списка (кадр 2.5)." },
 
+  "generateEnqueueFailed": "Не удалось поставить генерацию в очередь: {error}",
+  "@generateEnqueueFailed": {
+    "description": "QA-23. Постановка генерации в очередь упала на ЛОКАЛЬНОМ хранилище — раньше это молча оставляло кнопку «Сгенерировать» серой навсегда.",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
   "generationReadyLabel": "Готово",
   "@generationReadyLabel": { "description": "Метка готовой коллекции на карточке генерации." },
 
@@ -1167,5 +1173,57 @@
   "sessionLoadFailed": "Не удалось загрузить сессию",
   "@sessionLoadFailed": { "description": "Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран." },
   "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
-  "@syncStuckBanner": { "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)." }
+  "@syncStuckBanner": { "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)." },
+  "poolNotStudyingNote": "Слово в каталоге — ты его пока не учишь.",
+  "@poolNotStudyingNote": { "description": "Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет." },
+  "poolEnrollAction": "Учить это слово",
+  "@poolEnrollAction": { "description": "Кнопка карточки слова: зачислить пару в пул (16e)." },
+  "poolEnrollNote": "Слово встанет в очередь и начнёт приходить на тренировках.",
+  "@poolEnrollNote": { "description": "Пояснение под кнопкой «Учить это слово»: что именно произойдёт (16e)." },
+  "poolUnenrollAction": "Убрать из изучения",
+  "@poolUnenrollAction": { "description": "Тихая кнопка карточки слова: пауза — слово перестаёт приходить (16e)." },
+  "poolUnenrollTitle": "Убрать «{term}» из изучения?",
+  "@poolUnenrollTitle": {
+    "description": "Заголовок подтверждения паузы слова.",
+    "placeholders": { "term": { "type": "String" } }
+  },
+  "poolUnenrollMessage": "Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.",
+  "@poolUnenrollMessage": { "description": "Текст подтверждения: это пауза, а не удаление." },
+  "poolUnenrollConfirm": "Убрать",
+  "@poolUnenrollConfirm": { "description": "Подтверждающая кнопка паузы слова." },
+  "poolInCatalogue": "в каталоге",
+  "@poolInCatalogue": { "description": "Пометка в списке слов коллекции: слово есть в каталоге, но не в пуле — тренажёр его не выдаёт." },
+
+  "myWordsTitle": "Мои слова",
+  "@myWordsTitle": { "description": "Экран пула: все слова, которые пользователь взял в изучение." },
+  "myWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@myWordsCount": {
+    "description": "Подпись под заголовком «Мои слова»: размер пула (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "myWordsSearchHint": "Поиск по словам",
+  "@myWordsSearchHint": { "description": "Плейсхолдер поля поиска на экране «Мои слова»." },
+  "myWordsFilterAll": "Все",
+  "@myWordsFilterAll": { "description": "Фильтр фазы на экране «Мои слова»: без фильтра." },
+  "myWordsFilterNew": "Новые",
+  "@myWordsFilterNew": { "description": "Фильтр фазы: слово в пуле, но ещё ни разу не показано." },
+  "myWordsFilterLearning": "Узнавание",
+  "@myWordsFilterLearning": { "description": "Фильтр фазы: слово на ступенях узнавания." },
+  "myWordsFilterReview": "Повторение",
+  "@myWordsFilterReview": { "description": "Фильтр фазы: слово вышло с лестницы и идёт по интервальным повторам." },
+  "myWordsSourceAll": "Все коллекции",
+  "@myWordsSourceAll": { "description": "Фильтр по коллекции-источнику на экране «Мои слова»: без фильтра." },
+  "myWordsSourceNone": "Без коллекции",
+  "@myWordsSourceNone": { "description": "Фильтр по источнику: слова, чья коллекция удалена или отписана — из пула они не уходят." },
+  "myWordsEmptyTitle": "Пока пусто",
+  "@myWordsEmptyTitle": { "description": "Пустое состояние экрана «Мои слова»." },
+  "myWordsEmptyMessage": "Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.",
+  "@myWordsEmptyMessage": { "description": "Пустое состояние объясняет два способа зачисления в пул." },
+  "myWordsNothingFound": "Ничего не нашлось",
+  "@myWordsNothingFound": { "description": "Пустое состояние экрана «Мои слова» под активным поиском или фильтром." },
+
+  "topicSessionAction": "Тренировка по теме",
+  "@topicSessionAction": { "description": "Вход на главном экране: учебная сессия, суженная до одной коллекции-источника." },
+  "topicSessionTitle": "Выбери тему",
+  "@topicSessionTitle": { "description": "Заголовок шита выбора коллекции для тематической тренировки." }
 }

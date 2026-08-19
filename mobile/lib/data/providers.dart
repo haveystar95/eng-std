@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -20,6 +21,7 @@ import 'practice/practice_mode_selector.dart';
 import 'models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
+import 'pool_sync.dart';
 import 'seq_counter.dart';
 import 'session_completion_sync.dart';
 import 'speech/speech_recognizer.dart';
@@ -110,6 +112,30 @@ final sessionCompletionSyncProvider = Provider<SessionCompletionSync>((ref) {
   );
 });
 
+/// «Учить это слово» / «Убрать из изучения» — the two acts that decide what the trainer works on.
+/// Its own durable queue, keyed by the TERM and holding the desired membership rather than a log:
+/// the verbs are idempotent and there is no order to protect.
+final poolSyncProvider = Provider<PoolSync>((ref) {
+  return PoolSync(
+    ref.watch(apiClientProvider),
+    ref.watch(appDatabaseProvider),
+  );
+});
+
+/// «Мои слова» — every word the learner has taken into study, newest first, straight from the local
+/// mirror so the screen opens in airplane mode like every other one.
+final poolProvider = StreamProvider<List<PoolWordRow>>((ref) {
+  return ref.watch(appDatabaseProvider).watchPool();
+});
+
+/// How many pool words have never been shown — the «Учить N» number.
+///
+/// Read off the POOL, not off the collections: a word whose collection was deleted is still a word
+/// the learner asked to learn, and the session builder will still deal it.
+final learnableCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(appDatabaseProvider).watchLearnableCount();
+});
+
 final triageQueueProvider = Provider<TriageQueue>((ref) => TriageQueue());
 
 /// Offline-first triage upload pipeline (record locally → batch flush).
@@ -196,7 +222,18 @@ class AuthController extends AsyncNotifier<AppUser?> {
     await ref.read(authRepositoryProvider).signOut();
     // Wipe the local mirror + sync cursor so the next account starts from a full snapshot,
     // never a delta against someone else's data.
-    await ref.read(appDatabaseProvider).clearAll();
+    //
+    // A wipe that FAILS must still leave the person signed out (QA-24). This used to be a bare
+    // await: on a device whose local store could not be opened it threw here, after the token was
+    // already gone — so the app was signed out at the server, still «signed in» on screen, and
+    // carrying the previous account's rows with nothing to remove them. The safety net is the
+    // snapshot reap in SyncService, which now clears exactly this on the next login; what matters
+    // here is that the failure is logged and does not swallow the sign-out itself.
+    try {
+      await ref.read(appDatabaseProvider).clearAll();
+    } catch (e) {
+      debugPrint('[auth] local wipe on sign-out failed: $e');
+    }
     state = const AsyncData(null);
   }
 
@@ -436,6 +473,7 @@ Word _toWord(CollectionTermRow r) {
       isKnown: s == 'known',
     ),
     isKnown: s == 'known',
+    enrolled: r.enrolled,
   );
 }
 

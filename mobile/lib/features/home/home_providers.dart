@@ -10,11 +10,12 @@ import 'word_of_day.dart';
 final homeCtaProvider = Provider<HomeCta>((ref) {
   final stats = ref.watch(statsProvider).value;
   final untriaged = ref.watch(untriagedByCollectionProvider).value ?? const <String, int>{};
-  final learnable = ref.watch(learnableByCollectionProvider).value ?? const <String, int>{};
+  // The pool, globally — see computeHomeCta for why this one is not a per-collection sum.
+  final learnable = ref.watch(learnableCountProvider).value ?? 0;
   if (stats == null) return const HomeCta(HomeCtaKind.none);
   return computeHomeCta(
     due: stats.dueToday,
-    learnableByCollection: learnable,
+    learnable: learnable,
     untriagedByCollection: untriaged,
     remainingNewQuota: stats.newRemaining,
   );

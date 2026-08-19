@@ -50,10 +50,8 @@ void main() {
 
   /// The lowest rung practice will actually deal: introduced, working through recognition. Its
   /// options are still `distant`, because the pair has not graduated.
-  const onLadder = LadderPosition(
-    acquisition: Acquisition.learning,
-    learningStep: LearningLadder.stepRecognitionForward,
-  );
+  const onLadder = LadderPosition(acquisition: Acquisition.learning,
+    learningStep: LearningLadder.stepRecognitionForward, enrolled: true);
 
   Set<ExerciseMode> modesAt(LadderPosition position, {int seed = 3}) =>
       LocalPracticeSessionBuilder.build(
@@ -82,7 +80,7 @@ void main() {
     for (final position in [
       LadderPosition.untouched,
       // reps survived a `known` undo, but the pair still stands at rung 0.
-      const LadderPosition(acquisition: Acquisition.isNew, successfulReviews: 3),
+      const LadderPosition(acquisition: Acquisition.isNew, successfulReviews: 3, enrolled: true),
     ]) {
       expect(position.step, LearningLadder.stepIntro);
       expect(position.admitsPractice, isFalse);
@@ -111,10 +109,8 @@ void main() {
       sessionId: 'S',
       enabled: everyMode,
       ladder: {
-        terms.first.id: const LadderPosition(
-          acquisition: Acquisition.learning,
-          learningStep: LearningLadder.stepRecognitionReverse,
-        ),
+        terms.first.id: const LadderPosition(acquisition: Acquisition.learning,
+          learningStep: LearningLadder.stepRecognitionReverse, enrolled: true),
         for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
       },
     );
@@ -127,15 +123,15 @@ void main() {
 
   test('practice introduces nothing — an intro card is never dealt, even with intro switched on', () {
     for (final position in [
-      const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
-      const LadderPosition(acquisition: Acquisition.graduated),
+      const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
+      const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
     ]) {
       expect(modesAt(position), isNot(contains(ExerciseMode.intro)));
     }
   });
 
   test('the assembly rungs open on graduation, and typed production does not', () {
-    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated));
+    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated, enrolled: true));
 
     expect(dealt, isNot(contains(ExerciseMode.typing)));
     expect(dealt, isNot(contains(ExerciseMode.listening)));
@@ -150,7 +146,7 @@ void main() {
 
   test('typing opens at rung 4 and dictation only at rung 5', () {
     final atFour = modesAt(
-      const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.typingMinSuccesses),
+      const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.typingMinSuccesses, enrolled: true),
       seed: 11,
     );
     expect(atFour, isNot(contains(ExerciseMode.dictation)));
@@ -159,7 +155,7 @@ void main() {
     final atFive = <ExerciseMode>{};
     for (var seed = 0; seed < 8; seed++) {
       atFive.addAll(modesAt(
-        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.dictationMinSuccesses),
+        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: LearningLadder.dictationMinSuccesses, enrolled: true),
         seed: seed,
       ));
     }
@@ -167,7 +163,7 @@ void main() {
   });
 
   test('a `known` word is not held back — it is outside the ladder, not at the bottom of it', () {
-    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated, isKnown: true));
+    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated, isKnown: true, enrolled: true));
 
     // Reading «no rung» as rung 0 would gate a self-assessed word down to recognition, which proves
     // nothing about a claim.

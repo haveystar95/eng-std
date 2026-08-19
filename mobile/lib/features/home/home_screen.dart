@@ -40,6 +40,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       ref.read(reviewSyncProvider).migrate().then((_) => ref.read(reviewSyncProvider).flush());
       // …and any session closings left over from an offline run (QA-12).
       ref.read(sessionCompletionSyncProvider).flush();
+      // …and the pool decisions («Учить это слово» / «Убрать из изучения») made while offline.
+      ref.read(poolSyncProvider).flush();
       // Reconcile generations that were in flight when the app was last killed (poll / drop / retry).
       ref.read(generationControllerProvider).reconcile();
     });
@@ -50,6 +52,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         ref.read(syncServiceProvider).sync();
         ref.read(reviewSyncProvider).flush();
         ref.read(sessionCompletionSyncProvider).flush();
+      // …and the pool decisions («Учить это слово» / «Убрать из изучения») made while offline.
+      ref.read(poolSyncProvider).flush();
         ref.read(generationControllerProvider).flushQueue();
       }
     });
@@ -68,6 +72,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       ref.read(syncServiceProvider).sync();
       ref.read(reviewSyncProvider).flush();
       ref.read(sessionCompletionSyncProvider).flush();
+      // …and the pool decisions («Учить это слово» / «Убрать из изучения») made while offline.
+      ref.read(poolSyncProvider).flush();
       ref.read(generationControllerProvider).reconcile();
     }
   }

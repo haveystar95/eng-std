@@ -117,7 +117,9 @@ abstract final class LearningLadder {
   /// rung practice ignored: an exception dressed as a fallback. A first meeting happens in a study
   /// session, or it does not happen.
   ///
-  /// `null` — a `known` pair — is admitted: it is outside the ladder, not at the bottom of it.
+  /// `null` — a `known` pair — is admitted BY THIS RULE: it is outside the ladder, not at the
+  /// bottom of it. Whether it is drilled at all is then decided by the pool, which a `known` pair
+  /// is not in — see [LadderPosition.admitsPractice], where the two filters meet.
   ///
   /// This does not strand a word when the intro trainer is switched off globally: a study session
   /// then deals rung 0 its recognition card directly and passing it moves the pair up, so the word
@@ -133,9 +135,11 @@ class LadderPosition {
     this.learningStep = 0,
     this.successfulReviews = 0,
     this.isKnown = false,
+    this.enrolled = false,
   });
 
-  /// A term with NO progress row: never scheduled, never shown, standing at the intro.
+  /// A term with NO progress row: never scheduled, never shown, and NOT in the pool — which is
+  /// what a word sitting in a collection nobody has triaged looks like.
   static const LadderPosition untouched = LadderPosition();
 
   final Acquisition acquisition;
@@ -147,6 +151,12 @@ class LadderPosition {
 
   /// `state == 'known'` — a triage self-assessment, outside the ladder entirely.
   final bool isKnown;
+
+  /// Is this pair in the learner's POOL (`enrolled_at` non-null)? A third dimension, independent of
+  /// the rung: not when the word comes back, nor as what, but whether it comes back at all. A word
+  /// enters the pool only by a deliberate act — a «не знаю»/«не уверен» swipe, or «Учить это
+  /// слово» — and leaves it only by «Убрать из изучения», which is a pause.
+  final bool enrolled;
 
   /// The rung, or null when the pair is outside the ladder.
   int? get step => LearningLadder.stepFor(
@@ -160,8 +170,15 @@ class LadderPosition {
   /// verification is decided elsewhere — so it reads as the top rung rather than as rung 0.
   int get admissionStep => step ?? LearningLadder.stepDictation;
 
-  /// May this pair be dealt a free-practice card? See [LearningLadder.admitsPractice].
-  bool get admitsPractice => LearningLadder.admitsPractice(step);
+  /// May this pair be dealt a free-practice card?
+  ///
+  /// TWO filters, and they answer different questions. The pool asks whether the learner is
+  /// studying this word at all; the rung asks whether there is anything practice can usefully do
+  /// with it yet. Both must say yes — mirroring the server, where the practice pool is read with
+  /// `enrolled_at IS NOT NULL` and rung 0 is dropped by the same rule as here.
+  ///
+  /// The pool half is what stops opening a 200-word collection from drilling all 200 of them.
+  bool get admitsPractice => enrolled && LearningLadder.admitsPractice(step);
 }
 
 /// Where a choice card's WRONG options come from. Client port of the server's `OptionsPolicy`.

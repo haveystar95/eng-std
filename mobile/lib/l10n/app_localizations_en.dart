@@ -443,6 +443,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generationHide => 'Hide';
 
   @override
+  String generateEnqueueFailed(String error) {
+    return 'Could not queue the generation: $error';
+  }
+
+  @override
   String get generationReadyLabel => 'Ready';
 
   @override
@@ -1513,4 +1518,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get syncStuckBanner =>
       'Answers aren\'t reaching the server — check your connection';
+
+  @override
+  String get poolNotStudyingNote =>
+      'This word is in the catalogue — you are not studying it yet.';
+
+  @override
+  String get poolEnrollAction => 'Learn this word';
+
+  @override
+  String get poolEnrollNote =>
+      'It joins the queue and starts coming up in your sessions.';
+
+  @override
+  String get poolUnenrollAction => 'Stop studying';
+
+  @override
+  String poolUnenrollTitle(String term) {
+    return 'Stop studying “$term”?';
+  }
+
+  @override
+  String get poolUnenrollMessage =>
+      'The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.';
+
+  @override
+  String get poolUnenrollConfirm => 'Stop';
+
+  @override
+  String get poolInCatalogue => 'in the catalogue';
+
+  @override
+  String get myWordsTitle => 'My words';
+
+  @override
+  String myWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get myWordsSearchHint => 'Search your words';
+
+  @override
+  String get myWordsFilterAll => 'All';
+
+  @override
+  String get myWordsFilterNew => 'New';
+
+  @override
+  String get myWordsFilterLearning => 'Recognition';
+
+  @override
+  String get myWordsFilterReview => 'Review';
+
+  @override
+  String get myWordsSourceAll => 'All collections';
+
+  @override
+  String get myWordsSourceNone => 'No collection';
+
+  @override
+  String get myWordsEmptyTitle => 'Nothing here yet';
+
+  @override
+  String get myWordsEmptyMessage =>
+      'Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.';
+
+  @override
+  String get myWordsNothingFound => 'Nothing found';
+
+  @override
+  String get topicSessionAction => 'Session by topic';
+
+  @override
+  String get topicSessionTitle => 'Pick a topic';
 }

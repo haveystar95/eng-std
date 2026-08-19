@@ -53,7 +53,7 @@ void main() {
 
   test('a lone term is refused rather than dealt with the answer alone on screen', () {
     final session = build([lonely], ladder: {
-      lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+      lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
     });
 
     // Nothing to offer beside the answer, so nothing is dealt. An empty session is the screen's
@@ -69,7 +69,7 @@ void main() {
     ];
     final session = build(pool, ladder: {
       for (final t in pool)
-        t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+        t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
     });
 
     expect(session.cards, isNotEmpty, reason: 'a second term is all it takes to build the card');
@@ -91,7 +91,7 @@ void main() {
       random: Random(7),
       sessionId: 'SESSION',
       ladder: {
-        lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+        lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
       },
       enabled: const PracticeModes([ExerciseMode.multipleChoice, ExerciseMode.wordBank]),
     );

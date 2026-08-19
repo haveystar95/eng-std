@@ -117,7 +117,7 @@ void main() {
         sessionId: 'SESSION',
         ladder: {
           for (final t in scrambleable)
-            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
         },
       ).cards.where((c) => c.mode == ExerciseMode.scramble).toList();
 

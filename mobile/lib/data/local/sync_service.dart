@@ -97,6 +97,9 @@ class SyncService {
       final since = await _db.getMeta(_kCursor); // null on a fresh install → full snapshot
       final isSnapshot = since == null;
       final seenCollectionIds = <String>{};
+      final seenTermIds = <String>{};
+      final seenProgressIds = <String>{};
+      final seenTriageIds = <String>{};
       String? cursor;
       String? serverTime;
       var hasMore = true;
@@ -107,7 +110,12 @@ class SyncService {
         final page = await _api.syncDelta(since: since, cursor: cursor);
         final n = await _applyPage(page);
         cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu; tr += n.tr;
-        if (isSnapshot) seenCollectionIds.addAll(n.colIds);
+        if (isSnapshot) {
+          seenCollectionIds.addAll(n.colIds);
+          seenTermIds.addAll(n.termIds);
+          seenProgressIds.addAll(n.progressIds);
+          seenTriageIds.addAll(n.triageIds);
+        }
         // Settings ride every page whole (they are not a change stream). Stored as they arrive, so
         // a trainer switched on in the admin panel reaches the offline practice builder on the next
         // sync — no reinstall, no new build.
@@ -118,10 +126,26 @@ class SyncService {
         pages++;
       }
 
-      // A full snapshot is the authoritative live set — reap any local collection not in it
-      // (ghosts left by a server-side removal that sent no tombstone).
+      // A full snapshot is the authoritative live set — reap any local row it does not name.
+      //
+      // This used to reap collections and nothing else, and the gap showed up on a device (QA-24).
+      // The server database had been rebuilt (`migrate:fresh`), so every id the phone had mirrored
+      // BEFORE that rebuild referred to rows the server has no record of — and a server cannot send
+      // a tombstone for a row it has never heard of, so no delta could ever clear them. The phone's
+      // own sign-out wipe could not run either, because its local store was unopenable at the time.
+      // Result: a freshly registered account was offered «Повторить 62 слова» and a «Слово дня»
+      // from the pre-rebuild world, while the collections list correctly read «Пока нет коллекций»
+      // — the one table that was already reaped here.
+      //
+      // Progress, terms and triages are per-user exactly as collections are, so the same authority
+      // applies to them: a snapshot is the whole truth, and silence about a row means it is gone.
       if (isSnapshot) {
-        await _db.reconcileCollections(seenCollectionIds);
+        await _db.reconcileSnapshot(
+          collectionIds: seenCollectionIds,
+          termIds: seenTermIds,
+          progressTermIds: seenProgressIds,
+          triageTermIds: seenTriageIds,
+        );
       }
 
       // Advance the cursor only after the whole snapshot/delta is durably applied.
@@ -149,7 +173,20 @@ class SyncService {
     }
   }
 
-  Future<({int cu, int cd, int iu, int id, int tu, int pu, int tr, List<String> colIds})> _applyPage(Map<String, dynamic> page) async {
+  Future<
+      ({
+        int cu,
+        int cd,
+        int iu,
+        int id,
+        int tu,
+        int pu,
+        int tr,
+        List<String> colIds,
+        List<String> termIds,
+        List<String> progressIds,
+        List<String> triageIds,
+      })> _applyPage(Map<String, dynamic> page) async {
     final changes = (page['changes'] as Map<String, dynamic>?) ?? const {};
 
     final collectionUpserts = <CollectionsCompanion>[];
@@ -242,12 +279,19 @@ class SyncService {
         // leaves the pair at 0 — assembly — which is the safe direction here: it withholds the
         // harder trainers rather than dealing dictation to a word that has not earned it.
         successfulReviews: Value((p['successful_reviews'] as int?) ?? 0),
+        // POOL MEMBERSHIP. Null means the pair is in the catalogue only — the trainer never deals
+        // it and «Мои слова» never lists it. An older server that does not send the key leaves the
+        // pair OUT of the pool, which is the safe direction: it withholds cards rather than dealing
+        // words nobody asked to study. (Devices only ever meet a server that sends it — the v15
+        // migration asks for a full snapshot precisely so every row arrives carrying it.)
+        enrolledAt: Value(_dtn(p['enrolled_at'])),
       ));
     }
 
-    // Triage markers: restore the local deck-exclusion the server keeps in term_triages. An
-    // `unknown` swipe writes no progress row, so this is the ONLY thing that stops it resurrecting
-    // in the deck after a sign-out wipe + re-login (the marker is what triageEligible excludes on).
+    // Triage markers: restore the local deck-exclusion the server keeps in term_triages. A swiped
+    // word must not resurface in the deck after a sign-out wipe + re-login, and the progress row
+    // cannot say so on its own — a rung-0 enrolled pair looks exactly like a word waiting for its
+    // first card. The marker is what triageEligible excludes on.
     final triageUpserts = <TriagedTermsCompanion>[];
     for (final raw in (changes['triages'] as List?) ?? const []) {
       final t = raw as Map<String, dynamic>;
@@ -274,6 +318,9 @@ class SyncService {
       tu: termUpserts.length, pu: progressUpserts.length,
       tr: triageUpserts.length,
       colIds: [for (final c in collectionUpserts) c.id.value],
+      termIds: [for (final t in termUpserts) t.id.value],
+      progressIds: [for (final p in progressUpserts) p.termId.value],
+      triageIds: [for (final t in triageUpserts) t.termId.value],
     );
   }
 

@@ -86,7 +86,7 @@ void main() {
         sessionId: 's1',
         ladder: {
           for (final t in [term, decoy])
-            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
         },
       ).cards.firstWhere((c) => c.termId == term.id);
 

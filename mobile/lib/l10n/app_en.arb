@@ -109,6 +109,7 @@
   "generationFailedBody": "The service didn't answer “{topic}”. No generation was spent.",
   "generationRetry": "Retry",
   "generationHide": "Hide",
+  "generateEnqueueFailed": "Could not queue the generation: {error}",
   "generationReadyLabel": "Ready",
   "generationReadyLoading": "Ready — loading “{topic}”…",
   "generationUnderBadge": "{delivered} of {requested}",
@@ -429,5 +430,29 @@
   "devFlagPremium": "Premium (dev)",
   "sessionOffline": "No connection",
   "sessionLoadFailed": "Couldn't load the session",
-  "syncStuckBanner": "Answers aren't reaching the server — check your connection"
+  "syncStuckBanner": "Answers aren't reaching the server — check your connection",
+  "poolNotStudyingNote": "This word is in the catalogue — you are not studying it yet.",
+  "poolEnrollAction": "Learn this word",
+  "poolEnrollNote": "It joins the queue and starts coming up in your sessions.",
+  "poolUnenrollAction": "Stop studying",
+  "poolUnenrollTitle": "Stop studying “{term}”?",
+  "poolUnenrollMessage": "The word stops coming up in your sessions. Its progress and history are kept — you can bring it back at any time.",
+  "poolUnenrollConfirm": "Stop",
+  "poolInCatalogue": "in the catalogue",
+
+  "myWordsTitle": "My words",
+  "myWordsCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "myWordsSearchHint": "Search your words",
+  "myWordsFilterAll": "All",
+  "myWordsFilterNew": "New",
+  "myWordsFilterLearning": "Recognition",
+  "myWordsFilterReview": "Review",
+  "myWordsSourceAll": "All collections",
+  "myWordsSourceNone": "No collection",
+  "myWordsEmptyTitle": "Nothing here yet",
+  "myWordsEmptyMessage": "Words land here when you sweep a collection with “don’t know” or “not sure” — or tap “Learn this word” on a word card.",
+  "myWordsNothingFound": "Nothing found",
+
+  "topicSessionAction": "Session by topic",
+  "topicSessionTitle": "Pick a topic"
 }

@@ -102,6 +102,14 @@ class Word {
   /// pale dots, which would have said «at the very beginning».
   final bool isKnown;
 
+  /// Is the word in the learner's POOL — is the trainer working on it at all?
+  ///
+  /// Independent of [ladderStep], which says how far along a word is IF it is being studied. A
+  /// collection is a catalogue now, so most of its words may well be false here, and the card's
+  /// action changes accordingly: «Учить это слово» for one outside the pool, «Убрать из изучения»
+  /// for one inside it.
+  final bool enrolled;
+
   Word({
     required this.termId,
     required this.term,
@@ -117,6 +125,7 @@ class Word {
     this.imageAuthorUrl,
     this.ladderStep,
     this.isKnown = false,
+    this.enrolled = false,
   });
 
   /// Convenience so existing screens that used `word.id` keep working.

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import 'local/app_database.dart';
 import 'models.dart';
+import 'practice/learning_ladder.dart';
 import 'providers.dart';
 import 'seq_counter.dart';
 import 'triage_queue.dart';
@@ -57,6 +58,23 @@ class TriageSync {
     // it never resurrects after a sync — the exclusion the server does via term_triages, which the
     // delta feed doesn't carry. Independent of upload success; a swipe is a swipe.
     await _db.markTriaged(termId, collectionId, DateTime.now());
+    // …and the POOL. «Не знаю» and «не уверен» both mean «учи это», and the swipe pass is where a
+    // learner decides that word by word — so both put the pair in the pool right here, mirroring
+    // the server's projection, at the rung the verdict implies: «не знаю» has never been shown
+    // (rung 0), «не уверен» skips the intro (rung 1) because the swipe already showed the word.
+    //
+    // «Знаю» is deliberately NOT mirrored. It means the opposite, and on the server it may or may
+    // not supersede an earlier enrolment depending on whether the word has actually been taught —
+    // a rule only the server holds. Repeating it here would be a second implementation of it; the
+    // delta feed carries the real answer within seconds.
+    if (verdict != TriageVerdict.known) {
+      await _db.enrollLocally(
+        termId,
+        DateTime.now(),
+        acquisition: verdict == TriageVerdict.unsure ? 'learning' : 'new',
+        learningStep: verdict == TriageVerdict.unsure ? LearningLadder.firstLadderStep : 0,
+      );
+    }
     unawaited(flush());
   }
 
@@ -71,6 +89,9 @@ class TriageSync {
     // already uploaded there's nothing in the queue to drop, but clearing the mark still lets the
     // card reappear; the re-swipe that follows appends a newer verdict the server takes as current.
     await _db.unmarkTriaged(termId);
+    // …and take back the enrolment the swipe made, so an undone «не знаю» does not leave the word
+    // sitting in «Мои слова». Guarded to a never-shown pair — see unenrollLocallyIfUnshown.
+    await _db.unenrollLocallyIfUnshown(termId, DateTime.now());
     if (idx < 0) return false;
     list.removeAt(idx);
     await _queue.save(list);

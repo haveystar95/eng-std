@@ -465,6 +465,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get generationHide => 'Скрыть';
 
   @override
+  String generateEnqueueFailed(String error) {
+    return 'Не удалось поставить генерацию в очередь: $error';
+  }
+
+  @override
   String get generationReadyLabel => 'Готово';
 
   @override
@@ -1559,4 +1564,85 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get syncStuckBanner =>
       'Ответы не уходят на сервер — проверь соединение';
+
+  @override
+  String get poolNotStudyingNote => 'Слово в каталоге — ты его пока не учишь.';
+
+  @override
+  String get poolEnrollAction => 'Учить это слово';
+
+  @override
+  String get poolEnrollNote =>
+      'Слово встанет в очередь и начнёт приходить на тренировках.';
+
+  @override
+  String get poolUnenrollAction => 'Убрать из изучения';
+
+  @override
+  String poolUnenrollTitle(String term) {
+    return 'Убрать «$term» из изучения?';
+  }
+
+  @override
+  String get poolUnenrollMessage =>
+      'Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.';
+
+  @override
+  String get poolUnenrollConfirm => 'Убрать';
+
+  @override
+  String get poolInCatalogue => 'в каталоге';
+
+  @override
+  String get myWordsTitle => 'Мои слова';
+
+  @override
+  String myWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get myWordsSearchHint => 'Поиск по словам';
+
+  @override
+  String get myWordsFilterAll => 'Все';
+
+  @override
+  String get myWordsFilterNew => 'Новые';
+
+  @override
+  String get myWordsFilterLearning => 'Узнавание';
+
+  @override
+  String get myWordsFilterReview => 'Повторение';
+
+  @override
+  String get myWordsSourceAll => 'Все коллекции';
+
+  @override
+  String get myWordsSourceNone => 'Без коллекции';
+
+  @override
+  String get myWordsEmptyTitle => 'Пока пусто';
+
+  @override
+  String get myWordsEmptyMessage =>
+      'Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.';
+
+  @override
+  String get myWordsNothingFound => 'Ничего не нашлось';
+
+  @override
+  String get topicSessionAction => 'Тренировка по теме';
+
+  @override
+  String get topicSessionTitle => 'Выбери тему';
 }

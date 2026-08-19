@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -108,6 +109,15 @@ class TermProgress extends Table {
   /// CALLED, `again` included: reading the rung off that promoted words the learner had only ever
   /// got wrong, because a miss re-schedules the pair immediately (QA-18).
   IntColumn get successfulReviews => integer().withDefault(const Constant(0))();
+
+  /// THE POOL — a third dimension, independent of the two above: not when the pair comes back, nor
+  /// as what, but WHETHER it comes back at all. Non-null = the learner is studying this word;
+  /// null = it is in the catalogue only (never taken into study, marked «знаю», or paused).
+  ///
+  /// Null is NOT a tombstone. The row and its whole history stay, which is exactly what makes
+  /// «Убрать из изучения» a pause the learner can undo — a returned word resumes at the rung and
+  /// the due date it left with.
+  DateTimeColumn get enrolledAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -116,6 +126,28 @@ class TermProgress extends Table {
 
 /// The durable queue of un-uploaded INTRO acknowledgements — «this word was shown».
 ///
+/// The durable queue of un-uploaded POOL changes — «Учить это слово» and «Убрать из изучения».
+///
+/// Keyed by the TERM and holding the DESIRED state rather than an event, which is the whole shape
+/// of the thing: membership is a set, the two verbs are idempotent, and the last intent is the only
+/// one that matters. Enrol-then-remove offline collapses to one row saying «out», and replaying it
+/// lands exactly where replaying both would have. That is why this is not an append-only log like
+/// [ReviewQueueRows]: an order there changes the outcome, here it cannot.
+///
+/// It exists because these two taps are the ONLY way a word reaches the trainer. Dropping one made
+/// in the metro would silently cost the learner a word they asked for — and they would have no way
+/// to tell, because the local mirror already shows it enrolled.
+class PoolQueueRows extends Table {
+  TextColumn get termId => text()();
+
+  /// true = «должно быть в пуле», false = «должно быть вне пула».
+  BoolColumn get enrolled => boolean()();
+  DateTimeColumn get changedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {termId};
+}
+
 /// Separate from [ReviewQueueRows] because an exposure is not an answer: no mode, no response, no
 /// grade, and no `client_seq`. Sequence numbers exist to order events whose ORDER changes the
 /// outcome; an exposure has none — it is idempotent on the pair, it is applied before the batch's
@@ -264,6 +296,7 @@ class CollectionTermRow {
     this.acquisition,
     this.learningStep = 0,
     this.successfulReviews = 0,
+    this.enrolled = false,
   });
   final Term term; // generated data class for the Terms table
   final int position;
@@ -279,6 +312,33 @@ class CollectionTermRow {
   /// deliberately NOT carried here: nothing on this screen has a use for it, and it is the counter
   /// the rung used to be read off by mistake (QA-18).
   final int successfulReviews;
+
+  /// Is the word in the learner's POOL? The collection screen is a catalogue view now, so it says
+  /// which of its words are actually being studied — the rest carry a quiet «в каталоге».
+  final bool enrolled;
+}
+
+/// One word of the learner's POOL, as «Мои слова» shows it: the content, where it stands on the
+/// acquisition ladder, which collections it came from (possibly none — a pool word outlives its
+/// collection), and when it was taken into study.
+class PoolWordRow {
+  const PoolWordRow({
+    required this.term,
+    required this.position,
+    required this.collectionIds,
+    required this.enrolledAt,
+  });
+
+  final Term term;
+
+  /// The rung, ready to hand to the same five dots the collection screen draws.
+  final LadderPosition position;
+
+  /// Source collections, for the «откуда это слово» filter. Mutable on purpose: the query folds a
+  /// word's several join rows into one of these.
+  final List<String> collectionIds;
+
+  final DateTime enrolledAt;
 }
 
 /// (collectionId, term progress snapshot) for deriving per-collection progress locally.
@@ -328,6 +388,7 @@ class CachedImages extends Table {
   ReviewQueueRows,
   ExposureQueueRows,
   SessionCompletionQueueRows,
+  PoolQueueRows,
   CachedImages,
 ])
 class AppDatabase extends _$AppDatabase {
@@ -335,7 +396,33 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
+
+  /// `addColumn`, but a no-op when the column is already there (QA-23).
+  ///
+  /// Every step below has to be safe to run TWICE, because a migration that fails half-way is not
+  /// rolled back: SQLite applies each `ALTER TABLE` as it goes, and `user_version` only advances
+  /// once the whole `onUpgrade` returns. So one failing step leaves the schema partly migrated at
+  /// the OLD version number — and on the next launch the run starts again from that same old
+  /// number, hits the column it already added, and dies on «duplicate column name». Every launch
+  /// after that dies the same way, so the local store is bricked permanently and by design.
+  ///
+  /// That is exactly what a device reported: `duplicate column name: accepted_variants` on
+  /// `ALTER TABLE "terms" ADD COLUMN "accepted_variants"` — step 10 re-running forever. Since the
+  /// whole database is a MIRROR of the server, a bricked one takes the entire app with it: no
+  /// sync, no collections, and no generation (its first act is a local write).
+  ///
+  /// `createTable` needs no such guard — drift already emits `CREATE TABLE IF NOT EXISTS`.
+  static Future<void> _addColumnIfMissing(
+    Migrator m,
+    TableInfo<Table, dynamic> table,
+    GeneratedColumn<Object> column,
+  ) async {
+    final rows =
+        await m.database.customSelect('PRAGMA table_info(${table.actualTableName})').get();
+    final present = rows.any((r) => r.read<String>('name') == column.$name);
+    if (!present) await m.addColumn(table, column);
+  }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -343,23 +430,23 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.createTable(triagedTerms); // triage-from-local-DB
           if (from < 3) {
-            await m.addColumn(collections, collections.source); // origin badge
-            await m.addColumn(collections, collections.type);
+            await _addColumnIfMissing(m, collections, collections.source); // origin badge
+            await _addColumnIfMissing(m, collections, collections.type);
           }
           if (from < 4) {
             // Pexels imagery (A3): cover on collections, photo on terms, + attribution each.
-            await m.addColumn(collections, collections.imageUrl);
-            await m.addColumn(collections, collections.imageAuthor);
-            await m.addColumn(collections, collections.imageAuthorUrl);
-            await m.addColumn(terms, terms.imageUrl);
-            await m.addColumn(terms, terms.imageAuthor);
-            await m.addColumn(terms, terms.imageAuthorUrl);
+            await _addColumnIfMissing(m, collections, collections.imageUrl);
+            await _addColumnIfMissing(m, collections, collections.imageAuthor);
+            await _addColumnIfMissing(m, collections, collections.imageAuthorUrl);
+            await _addColumnIfMissing(m, terms, terms.imageUrl);
+            await _addColumnIfMissing(m, terms, terms.imageAuthor);
+            await _addColumnIfMissing(m, terms, terms.imageAuthorUrl);
           }
           if (from < 5) await m.createTable(pendingGenerations); // pending-generation card (Part B)
           if (from < 6) {
             // Offline prompt queue (A3.5): a generation may sit un-sent until the network returns.
-            await m.addColumn(pendingGenerations, pendingGenerations.sent);
-            await m.addColumn(pendingGenerations, pendingGenerations.targetLangExplicit);
+            await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.sent);
+            await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.targetLangExplicit);
           }
           if (from < 7) await m.createTable(dailyActivity); // Progress-screen activity (A3.6)
           // Durable review queue moved out of the Keychain (F20-r2). The existing blob is imported
@@ -372,8 +459,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 10) {
             // Enrichment станок: accepted variants (needed for offline typed grading) and example
             // distractors (mirrored ahead of the trainer that reads them).
-            await m.addColumn(terms, terms.acceptedVariants);
-            await m.addColumn(terms, terms.exampleDistractors);
+            await _addColumnIfMissing(m, terms, terms.acceptedVariants);
+            await _addColumnIfMissing(m, terms, terms.exampleDistractors);
             // Drop the sync cursor so the next sync is a FULL snapshot. A delta only carries terms
             // whose `updated_at` moved, so terms already mirrored here would otherwise keep their
             // new columns null forever — and a null variant list is exactly the state where the
@@ -386,8 +473,8 @@ class AppDatabase extends _$AppDatabase {
             // The acquisition ladder. Existing rows take the column default `graduated`, which is
             // the same backfill the server did and for the same reason: a word already being
             // reviewed must not be pushed back to an intro card.
-            await m.addColumn(termProgress, termProgress.acquisition);
-            await m.addColumn(termProgress, termProgress.learningStep);
+            await _addColumnIfMissing(m, termProgress, termProgress.acquisition);
+            await _addColumnIfMissing(m, termProgress, termProgress.learningStep);
             await m.createTable(exposureQueueRows);
             // Full snapshot on the next sync, for the same reason as v10: a delta carries only rows
             // whose `updated_at` moved, so pairs already mirrored here would keep the default
@@ -401,7 +488,7 @@ class AppDatabase extends _$AppDatabase {
             // Rows already queued stay null on purpose: they were recorded as TEXT, and stamping a
             // rung on them now would tell the server to read that text as a term id. They upload
             // exactly as they would have before this version — see the ladder_step contract note.
-            await m.addColumn(reviewQueueRows, reviewQueueRows.ladderStep);
+            await _addColumnIfMissing(m, reviewQueueRows, reviewQueueRows.ladderStep);
           }
           if (from < 13) {
             // Session completions ride their own durable queue, so a run finished in airplane mode
@@ -411,7 +498,7 @@ class AppDatabase extends _$AppDatabase {
           if (from < 14) {
             // The ladder's own counter (QA-18). Rungs 4 and 5 used to be read off `reps`, which
             // counts scheduler calls of every grade, so misses carried words upward.
-            await m.addColumn(termProgress, termProgress.successfulReviews);
+            await _addColumnIfMissing(m, termProgress, termProgress.successfulReviews);
             // Full snapshot on the next sync, for the same reason as v10 and v11: a delta carries
             // only rows whose `updated_at` moved, so every pair already mirrored here would keep
             // the column default 0 — and a word the owner HAS earned typing on would sit back at
@@ -420,6 +507,29 @@ class AppDatabase extends _$AppDatabase {
             await m.database.customStatement(
               "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
             );
+          }
+          if (from < 15) {
+            // The POOL. A word reaches the trainer only once the learner has taken it into study.
+            await _addColumnIfMissing(m, termProgress, termProgress.enrolledAt);
+            // Local backfill, mirroring the server's migration exactly: every pair that already
+            // exists was created by a deliberate act, so it is enrolled — except a «знаю»
+            // self-assessment, whose row exists only to carry a verification check. Done here as
+            // well as asked for over the wire because the phone must not show an empty «Мои слова»
+            // in the minutes (or the flight) between the update and the next sync.
+            await m.database.customStatement(
+              "UPDATE term_progress SET enrolled_at = updated_at WHERE state <> 'known'",
+            );
+            // …and a full snapshot on the next sync, for the same reason as v10, v11 and v14: a
+            // delta carries only rows whose `updated_at` moved, so the server's real enrolment
+            // moments (and any word paused on another device) would never arrive. The backfill
+            // above is the offline stand-in; this is the truth replacing it.
+            await m.database.customStatement(
+              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
+            );
+            // The two pool taps ride their own durable queue, for the same reason answers and
+            // session completions do: they are the only way a word reaches the trainer, so one
+            // made in airplane mode must not be lost.
+            await m.createTable(poolQueueRows);
           }
         },
       );
@@ -451,6 +561,7 @@ class AppDatabase extends _$AppDatabase {
             acquisition: progress?.acquisition,
             learningStep: progress?.learningStep ?? 0,
             successfulReviews: progress?.successfulReviews ?? 0,
+            enrolled: progress?.enrolledAt != null,
           );
         }).toList());
   }
@@ -586,6 +697,7 @@ class AppDatabase extends _$AppDatabase {
           learningStep: r.learningStep,
           successfulReviews: r.successfulReviews,
           isKnown: r.state == 'known',
+          enrolled: r.enrolledAt != null,
         ),
     };
   }
@@ -650,14 +762,151 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  /// Triage-eligible (never-studied AND never-triaged) term count per collection —
+  // ---- The pool -------------------------------------------------------------
+
+  /// Put a word into the pool locally — the optimistic half of «Учить это слово» and of a
+  /// «не знаю»/«не уверен» swipe.
+  ///
+  /// The server is the authority and its answer arrives by `/sync`; this write exists so the screen
+  /// changes under the finger and so an enrolment made in airplane mode is visible until it does.
+  /// Idempotent by the same rule the server uses: a pair already in the pool keeps its FIRST
+  /// moment, so «с какого дня я это учу» is not rewritten by a second tap or a replayed swipe.
+  ///
+  /// [acquisition]/[learningStep] are written ONLY when the row is created — they are the ladder
+  /// position the verdict implies («не знаю» → rung 0, «не уверен» → rung 1). An existing row is
+  /// never moved on the ladder from here: that is the server's projection, and a swipe must not
+  /// push a word that has been studied back down a rung.
+  Future<void> enrollLocally(
+    String termId,
+    DateTime at, {
+    String acquisition = 'new',
+    int learningStep = 0,
+  }) async {
+    final existing =
+        await (select(termProgress)..where((p) => p.termId.equals(termId))).getSingleOrNull();
+
+    if (existing == null) {
+      await into(termProgress).insert(TermProgressCompanion.insert(
+        termId: termId,
+        updatedAt: at,
+        acquisition: Value(acquisition),
+        learningStep: Value(learningStep),
+        enrolledAt: Value(at),
+      ));
+      return;
+    }
+    if (existing.enrolledAt != null) return; // already in the pool — keep the first moment
+
+    await (update(termProgress)..where((p) => p.termId.equals(termId))).write(
+      TermProgressCompanion(enrolledAt: Value(at), updatedAt: Value(at)),
+    );
+  }
+
+  /// Take a word out of the pool locally — a PAUSE. One column to null and nothing else, mirroring
+  /// the server: the rung, the counter, the schedule and the answer history all stand, so bringing
+  /// the word back resumes exactly where it was left.
+  Future<void> unenrollLocally(String termId, DateTime at) async {
+    await (update(termProgress)..where((p) => p.termId.equals(termId))).write(
+      TermProgressCompanion(enrolledAt: const Value(null), updatedAt: Value(at)),
+    );
+  }
+
+  /// Undo a local enrolment made by a swipe that is being taken back.
+  ///
+  /// Guarded to a pair the app has never SHOWN: a word already on the ladder or in the schedule was
+  /// not put in the pool by the swipe being undone, and an undo must not pause it. The remaining
+  /// imprecision — a never-shown word that was enrolled earlier by «Учить это слово» and is now
+  /// swiped and un-swiped — resolves itself on the next sync, because the server still holds that
+  /// enrolment and sends it back. The opposite choice does not self-heal: a local row the server
+  /// never had is never corrected by a delta feed, and the word would sit in «Мои слова» forever.
+  Future<void> unenrollLocallyIfUnshown(String termId, DateTime at) async {
+    await (update(termProgress)
+          ..where((p) =>
+              p.termId.equals(termId) & p.acquisition.equals('new') & p.reps.equals(0)))
+        .write(TermProgressCompanion(enrolledAt: const Value(null), updatedAt: Value(at)));
+  }
+
+  /// The pool changes still to be uploaded, oldest intent first. Order is informational — the
+  /// server keys them by the pair and both verbs are idempotent — but oldest-first keeps a backlog
+  /// readable in the logs.
+  Future<List<PoolQueueRow>> poolQueue() =>
+      (select(poolQueueRows)..orderBy([(t) => OrderingTerm(expression: t.changedAt)])).get();
+
+  /// Record the DESIRED membership. Upsert, not append: the last intent for a term is the only one
+  /// worth sending, so enrol-then-remove offline leaves one row rather than two calls to replay.
+  Future<void> enqueuePoolChange(String termId, {required bool enrolled, required DateTime at}) =>
+      into(poolQueueRows).insertOnConflictUpdate(PoolQueueRowsCompanion.insert(
+        termId: termId,
+        enrolled: enrolled,
+        changedAt: at,
+      ));
+
+  Future<void> dequeuePoolChanges(Iterable<String> termIds) =>
+      (delete(poolQueueRows)..where((t) => t.termId.isIn(termIds.toList()))).go();
+
+  /// Everything in the pool, newest enrolment first, with each word's content, its rung and the
+  /// collections it came from — the single query behind «Мои слова».
+  ///
+  /// A word appears here because the learner chose it, not because a collection holds it, so the
+  /// LEFT join on `collection_items`: a pool word whose collection was deleted or unsubscribed is
+  /// still being studied and still listed, with no source to show. The join fans a word into one
+  /// row per collection; they are folded back together here.
+  Stream<List<PoolWordRow>> watchPool() {
+    final query = select(termProgress).join([
+      innerJoin(terms, terms.id.equalsExp(termProgress.termId)),
+      leftOuterJoin(collectionItems, collectionItems.termId.equalsExp(termProgress.termId)),
+    ])
+      ..where(termProgress.enrolledAt.isNotNull())
+      ..orderBy([OrderingTerm(expression: termProgress.enrolledAt, mode: OrderingMode.desc)]);
+
+    return query.watch().map((rows) {
+      final byTerm = <String, PoolWordRow>{};
+      final order = <String>[];
+      for (final r in rows) {
+        final progress = r.readTable(termProgress);
+        final collectionId = r.readTableOrNull(collectionItems)?.collectionId;
+        final existing = byTerm[progress.termId];
+        if (existing != null) {
+          if (collectionId != null) existing.collectionIds.add(collectionId);
+          continue;
+        }
+        order.add(progress.termId);
+        byTerm[progress.termId] = PoolWordRow(
+          term: r.readTable(terms),
+          position: LadderPosition(
+            acquisition: Acquisition.fromWire(progress.acquisition),
+            learningStep: progress.learningStep,
+            successfulReviews: progress.successfulReviews,
+            isKnown: progress.state == 'known',
+            enrolled: true,
+          ),
+          collectionIds: collectionId != null ? [collectionId] : <String>[],
+          enrolledAt: progress.enrolledAt!,
+        );
+      }
+      return [for (final id in order) byTerm[id]!];
+    });
+  }
+
+  /// How many words are in the pool but have never been shown — the «Учить N» CTA's number.
+  ///
+  /// Read off the POOL rather than off the collections, so a word whose collection was deleted
+  /// still counts: it is still a word the learner asked to learn.
+  Stream<int> watchLearnableCount() {
+    final query = selectOnly(termProgress)
+      ..addColumns([termProgress.termId.count()])
+      ..where(termProgress.enrolledAt.isNotNull() & termProgress.acquisition.equals('new'));
+    return query.map((r) => r.read(termProgress.termId.count()) ?? 0).watchSingle();
+  }
+
+  /// Triage-eligible (never-shown AND never-triaged) term count per collection —
   /// powers the home «Разобрать N» CTA. Same rule as [triageEligible], reactive.
   Stream<Map<String, int>> watchUntriagedByCollection() {
     final query = select(collectionItems).join([
       leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
       leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
     ])
-      ..where(termProgress.termId.isNull() & triagedTerms.termId.isNull());
+      ..where(_neverShown & triagedTerms.termId.isNull());
     return query.watch().map((rows) {
       final map = <String, int>{};
       for (final r in rows) {
@@ -668,18 +917,18 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  /// Learnable term count per collection — a collection's terms that are never-studied (no progress
-  /// row) but ALREADY triaged (a local triage marker exists). These are the «не знаю» words that
-  /// have left the triage deck yet were never introduced in a session — they have no progress row,
-  /// so they are neither «due» nor «untriaged» and would otherwise be unreachable (device-batch F8).
-  /// Powers the «Учить N» CTA (a non-practice session introduces them under the daily new-quota).
-  /// (known/unsure verdicts get a server progress row that syncs down, so only «unknown» stays here.)
+  /// Learnable term count per collection — this collection's words that are IN THE POOL and have
+  /// never been shown. Powers the collection screen's «Учить N» (a non-practice session introduces
+  /// them under the daily new-quota).
+  ///
+  /// The rule used to be «no progress row, but a triage marker exists», which was the same set read
+  /// backwards: before the pool, a «не знаю» swipe wrote no row and the marker was the only trace
+  /// of it. Now the swipe enrols the pair outright, and the question is asked forwards.
   Stream<Map<String, int>> watchLearnableByCollection() {
     final query = select(collectionItems).join([
-      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
-      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+      innerJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
     ])
-      ..where(termProgress.termId.isNull() & triagedTerms.termId.isNotNull());
+      ..where(termProgress.enrolledAt.isNotNull() & termProgress.acquisition.equals('new'));
     return query.watch().map((rows) {
       final map = <String, int>{};
       for (final r in rows) {
@@ -690,11 +939,20 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// A word the app has never actually SHOWN: no progress row at all, or one still at rung 0.
+  ///
+  /// «No row» stopped being the same question the moment enrolment started creating rows before a
+  /// word was ever dealt — so the triage deck asks about the LADDER instead, exactly as the server's
+  /// queue does. Without this, taking a word into study with «Учить это слово» would silently pull
+  /// it out of the collection's swipe pass.
+  Expression<bool> get _neverShown =>
+      termProgress.termId.isNull() | termProgress.acquisition.equals('new');
+
   /// The triage-eligible terms of a collection, in study order — mirrors the server's queue rule:
-  /// a collection's terms that are never-studied (no progress row) AND never-triaged (not in the
-  /// local marker), capped at [cap]. Returned in full (not sliced to the page) so the caller can
-  /// compute `remaining` exactly like the backend. This is the single source for both the deck and
-  /// its counter — deriving them separately is what caused BUG-1.
+  /// a collection's terms that are never-shown AND never-triaged (not in the local marker), capped
+  /// at [cap]. Returned in full (not sliced to the page) so the caller can compute `remaining`
+  /// exactly like the backend. This is the single source for both the deck and its counter —
+  /// deriving them separately is what caused BUG-1.
   Future<List<Term>> triageEligible(String collectionId, {int cap = 500}) {
     final query = select(collectionItems).join([
       innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
@@ -702,7 +960,7 @@ class AppDatabase extends _$AppDatabase {
       leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
     ])
       ..where(collectionItems.collectionId.equals(collectionId) &
-          termProgress.termId.isNull() & // never studied (no progress row)
+          _neverShown & // never shown (no row, or still at rung 0)
           triagedTerms.termId.isNull()) // never triaged (local marker)
       ..orderBy([OrderingTerm(expression: collectionItems.position)])
       ..limit(cap);
@@ -885,6 +1143,53 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Reap everything a FULL snapshot did not mention (QA-24).
+  ///
+  /// The snapshot is the authoritative live set for the signed-in account — the server enumerates
+  /// every collection, term, progress row and triage marker it has for them — so anything still
+  /// here that it did not name is gone. [reconcileCollections] has always done this for
+  /// collections; the per-user tables carrying the actual LEARNING STATE were never reaped, so a
+  /// phone still holding rows from before a server rebuild kept scheduling them forever: the server
+  /// cannot send a tombstone for a row it no longer has, which makes a snapshot the ONLY thing that
+  /// can ever clear them («Повторить 62 слова» on an account with nothing in it).
+  ///
+  /// The durable queues are deliberately NOT consulted as protection here, unlike
+  /// [reconcileCollections]'s pending-generation guard. A queued review or exposure carries its own
+  /// term id and uploads perfectly well without a local term or progress row, and the server sends
+  /// both back on the next sync if they really are this account's. Keeping a row alive because an
+  /// un-uploaded answer mentions it is how the foreign data would survive the reap that exists to
+  /// remove it.
+  Future<void> reconcileSnapshot({
+    required Set<String> collectionIds,
+    required Set<String> termIds,
+    required Set<String> progressTermIds,
+    required Set<String> triageTermIds,
+  }) async {
+    await reconcileCollections(collectionIds);
+    await transaction(() async {
+      Future<void> reap<T extends Table, D>(
+        TableInfo<T, D> table,
+        String Function(D row) idOf,
+        Set<String> keep,
+        Expression<bool> Function(T t, List<String> stale) match,
+      ) async {
+        final stale = [
+          for (final row in await select(table).get())
+            if (!keep.contains(idOf(row))) idOf(row),
+        ];
+        if (stale.isEmpty) return;
+        await (delete(table)..where((t) => match(t, stale))).go();
+      }
+
+      await reap<Terms, Term>(
+          terms, (r) => r.id, termIds, (t, stale) => t.id.isIn(stale));
+      await reap<TermProgress, TermProgressData>(
+          termProgress, (r) => r.termId, progressTermIds, (t, stale) => t.termId.isIn(stale));
+      await reap<TriagedTerms, TriagedTerm>(
+          triagedTerms, (r) => r.termId, triageTermIds, (t, stale) => t.termId.isIn(stale));
+    });
+  }
+
   /// Wipe every synced table and the cursor. Used on sign-out so a different account can't read
   /// the previous one's cache. (A reinstall wipes the file outright.)
   Future<void> clearAll() async {
@@ -906,8 +1211,20 @@ class AppDatabase extends _$AppDatabase {
 
 LazyDatabase _open() {
   return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'wordtrainer.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File(p.join(dir.path, 'wordtrainer.sqlite'));
+
+      return NativeDatabase.createInBackground(file);
+    } catch (e, s) {
+      // Loud on purpose (QA-23). Failing to open is a real, if rare, state — a locked device's
+      // protected container, a full disk, a wedged platform channel — and until now it was also a
+      // COMPLETELY silent one: the error surfaced only inside whichever caller happened to touch
+      // the store first, and both of those swallow it (SyncService goes quiet by design, and the
+      // generate screen used to hang). One line here is the difference between «the app does
+      // nothing and says nothing» and a cause you can read off the device console.
+      debugPrint('[db] open failed: $e\n$s');
+      rethrow;
+    }
   });
 }

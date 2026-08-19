@@ -2085,6 +2085,17 @@ class $TermProgressTable extends TermProgress
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _enrolledAtMeta = const VerificationMeta(
+    'enrolledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> enrolledAt = GeneratedColumn<DateTime>(
+    'enrolled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2109,6 +2120,7 @@ class $TermProgressTable extends TermProgress
     acquisition,
     learningStep,
     successfulReviews,
+    enrolledAt,
     updatedAt,
   ];
   @override
@@ -2206,6 +2218,12 @@ class $TermProgressTable extends TermProgress
         ),
       );
     }
+    if (data.containsKey('enrolled_at')) {
+      context.handle(
+        _enrolledAtMeta,
+        enrolledAt.isAcceptableOrUnknown(data['enrolled_at']!, _enrolledAtMeta),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -2267,6 +2285,10 @@ class $TermProgressTable extends TermProgress
         DriftSqlType.int,
         data['${effectivePrefix}successful_reviews'],
       )!,
+      enrolledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}enrolled_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2305,6 +2327,15 @@ class TermProgressData extends DataClass
   /// CALLED, `again` included: reading the rung off that promoted words the learner had only ever
   /// got wrong, because a miss re-schedules the pair immediately (QA-18).
   final int successfulReviews;
+
+  /// THE POOL — a third dimension, independent of the two above: not when the pair comes back, nor
+  /// as what, but WHETHER it comes back at all. Non-null = the learner is studying this word;
+  /// null = it is in the catalogue only (never taken into study, marked «знаю», or paused).
+  ///
+  /// Null is NOT a tombstone. The row and its whole history stay, which is exactly what makes
+  /// «Убрать из изучения» a pause the learner can undo — a returned word resumes at the rung and
+  /// the due date it left with.
+  final DateTime? enrolledAt;
   final DateTime updatedAt;
   const TermProgressData({
     required this.termId,
@@ -2318,6 +2349,7 @@ class TermProgressData extends DataClass
     required this.acquisition,
     required this.learningStep,
     required this.successfulReviews,
+    this.enrolledAt,
     required this.updatedAt,
   });
   @override
@@ -2338,6 +2370,9 @@ class TermProgressData extends DataClass
     map['acquisition'] = Variable<String>(acquisition);
     map['learning_step'] = Variable<int>(learningStep);
     map['successful_reviews'] = Variable<int>(successfulReviews);
+    if (!nullToAbsent || enrolledAt != null) {
+      map['enrolled_at'] = Variable<DateTime>(enrolledAt);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -2359,6 +2394,9 @@ class TermProgressData extends DataClass
       acquisition: Value(acquisition),
       learningStep: Value(learningStep),
       successfulReviews: Value(successfulReviews),
+      enrolledAt: enrolledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(enrolledAt),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2380,6 +2418,7 @@ class TermProgressData extends DataClass
       acquisition: serializer.fromJson<String>(json['acquisition']),
       learningStep: serializer.fromJson<int>(json['learningStep']),
       successfulReviews: serializer.fromJson<int>(json['successfulReviews']),
+      enrolledAt: serializer.fromJson<DateTime?>(json['enrolledAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2398,6 +2437,7 @@ class TermProgressData extends DataClass
       'acquisition': serializer.toJson<String>(acquisition),
       'learningStep': serializer.toJson<int>(learningStep),
       'successfulReviews': serializer.toJson<int>(successfulReviews),
+      'enrolledAt': serializer.toJson<DateTime?>(enrolledAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2414,6 +2454,7 @@ class TermProgressData extends DataClass
     String? acquisition,
     int? learningStep,
     int? successfulReviews,
+    Value<DateTime?> enrolledAt = const Value.absent(),
     DateTime? updatedAt,
   }) => TermProgressData(
     termId: termId ?? this.termId,
@@ -2429,6 +2470,7 @@ class TermProgressData extends DataClass
     acquisition: acquisition ?? this.acquisition,
     learningStep: learningStep ?? this.learningStep,
     successfulReviews: successfulReviews ?? this.successfulReviews,
+    enrolledAt: enrolledAt.present ? enrolledAt.value : this.enrolledAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TermProgressData copyWithCompanion(TermProgressCompanion data) {
@@ -2456,6 +2498,9 @@ class TermProgressData extends DataClass
       successfulReviews: data.successfulReviews.present
           ? data.successfulReviews.value
           : this.successfulReviews,
+      enrolledAt: data.enrolledAt.present
+          ? data.enrolledAt.value
+          : this.enrolledAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2474,6 +2519,7 @@ class TermProgressData extends DataClass
           ..write('acquisition: $acquisition, ')
           ..write('learningStep: $learningStep, ')
           ..write('successfulReviews: $successfulReviews, ')
+          ..write('enrolledAt: $enrolledAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2492,6 +2538,7 @@ class TermProgressData extends DataClass
     acquisition,
     learningStep,
     successfulReviews,
+    enrolledAt,
     updatedAt,
   );
   @override
@@ -2509,6 +2556,7 @@ class TermProgressData extends DataClass
           other.acquisition == this.acquisition &&
           other.learningStep == this.learningStep &&
           other.successfulReviews == this.successfulReviews &&
+          other.enrolledAt == this.enrolledAt &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2524,6 +2572,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
   final Value<String> acquisition;
   final Value<int> learningStep;
   final Value<int> successfulReviews;
+  final Value<DateTime?> enrolledAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermProgressCompanion({
@@ -2538,6 +2587,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.acquisition = const Value.absent(),
     this.learningStep = const Value.absent(),
     this.successfulReviews = const Value.absent(),
+    this.enrolledAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2553,6 +2603,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     this.acquisition = const Value.absent(),
     this.learningStep = const Value.absent(),
     this.successfulReviews = const Value.absent(),
+    this.enrolledAt = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : termId = Value(termId),
@@ -2569,6 +2620,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Expression<String>? acquisition,
     Expression<int>? learningStep,
     Expression<int>? successfulReviews,
+    Expression<DateTime>? enrolledAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2584,6 +2636,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       if (acquisition != null) 'acquisition': acquisition,
       if (learningStep != null) 'learning_step': learningStep,
       if (successfulReviews != null) 'successful_reviews': successfulReviews,
+      if (enrolledAt != null) 'enrolled_at': enrolledAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2601,6 +2654,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     Value<String>? acquisition,
     Value<int>? learningStep,
     Value<int>? successfulReviews,
+    Value<DateTime?>? enrolledAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2616,6 +2670,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
       acquisition: acquisition ?? this.acquisition,
       learningStep: learningStep ?? this.learningStep,
       successfulReviews: successfulReviews ?? this.successfulReviews,
+      enrolledAt: enrolledAt ?? this.enrolledAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2657,6 +2712,9 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
     if (successfulReviews.present) {
       map['successful_reviews'] = Variable<int>(successfulReviews.value);
     }
+    if (enrolledAt.present) {
+      map['enrolled_at'] = Variable<DateTime>(enrolledAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2680,6 +2738,7 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
           ..write('acquisition: $acquisition, ')
           ..write('learningStep: $learningStep, ')
           ..write('successfulReviews: $successfulReviews, ')
+          ..write('enrolledAt: $enrolledAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5409,6 +5468,278 @@ class SessionCompletionQueueRowsCompanion
   }
 }
 
+class $PoolQueueRowsTable extends PoolQueueRows
+    with TableInfo<$PoolQueueRowsTable, PoolQueueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PoolQueueRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+    'term_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _enrolledMeta = const VerificationMeta(
+    'enrolled',
+  );
+  @override
+  late final GeneratedColumn<bool> enrolled = GeneratedColumn<bool>(
+    'enrolled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enrolled" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _changedAtMeta = const VerificationMeta(
+    'changedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> changedAt = GeneratedColumn<DateTime>(
+    'changed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [termId, enrolled, changedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pool_queue_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PoolQueueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('term_id')) {
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('enrolled')) {
+      context.handle(
+        _enrolledMeta,
+        enrolled.isAcceptableOrUnknown(data['enrolled']!, _enrolledMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_enrolledMeta);
+    }
+    if (data.containsKey('changed_at')) {
+      context.handle(
+        _changedAtMeta,
+        changedAt.isAcceptableOrUnknown(data['changed_at']!, _changedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_changedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {termId};
+  @override
+  PoolQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PoolQueueRow(
+      termId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}term_id'],
+      )!,
+      enrolled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enrolled'],
+      )!,
+      changedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}changed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PoolQueueRowsTable createAlias(String alias) {
+    return $PoolQueueRowsTable(attachedDatabase, alias);
+  }
+}
+
+class PoolQueueRow extends DataClass implements Insertable<PoolQueueRow> {
+  final String termId;
+
+  /// true = «должно быть в пуле», false = «должно быть вне пула».
+  final bool enrolled;
+  final DateTime changedAt;
+  const PoolQueueRow({
+    required this.termId,
+    required this.enrolled,
+    required this.changedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['term_id'] = Variable<String>(termId);
+    map['enrolled'] = Variable<bool>(enrolled);
+    map['changed_at'] = Variable<DateTime>(changedAt);
+    return map;
+  }
+
+  PoolQueueRowsCompanion toCompanion(bool nullToAbsent) {
+    return PoolQueueRowsCompanion(
+      termId: Value(termId),
+      enrolled: Value(enrolled),
+      changedAt: Value(changedAt),
+    );
+  }
+
+  factory PoolQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PoolQueueRow(
+      termId: serializer.fromJson<String>(json['termId']),
+      enrolled: serializer.fromJson<bool>(json['enrolled']),
+      changedAt: serializer.fromJson<DateTime>(json['changedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'termId': serializer.toJson<String>(termId),
+      'enrolled': serializer.toJson<bool>(enrolled),
+      'changedAt': serializer.toJson<DateTime>(changedAt),
+    };
+  }
+
+  PoolQueueRow copyWith({
+    String? termId,
+    bool? enrolled,
+    DateTime? changedAt,
+  }) => PoolQueueRow(
+    termId: termId ?? this.termId,
+    enrolled: enrolled ?? this.enrolled,
+    changedAt: changedAt ?? this.changedAt,
+  );
+  PoolQueueRow copyWithCompanion(PoolQueueRowsCompanion data) {
+    return PoolQueueRow(
+      termId: data.termId.present ? data.termId.value : this.termId,
+      enrolled: data.enrolled.present ? data.enrolled.value : this.enrolled,
+      changedAt: data.changedAt.present ? data.changedAt.value : this.changedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PoolQueueRow(')
+          ..write('termId: $termId, ')
+          ..write('enrolled: $enrolled, ')
+          ..write('changedAt: $changedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(termId, enrolled, changedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PoolQueueRow &&
+          other.termId == this.termId &&
+          other.enrolled == this.enrolled &&
+          other.changedAt == this.changedAt);
+}
+
+class PoolQueueRowsCompanion extends UpdateCompanion<PoolQueueRow> {
+  final Value<String> termId;
+  final Value<bool> enrolled;
+  final Value<DateTime> changedAt;
+  final Value<int> rowid;
+  const PoolQueueRowsCompanion({
+    this.termId = const Value.absent(),
+    this.enrolled = const Value.absent(),
+    this.changedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PoolQueueRowsCompanion.insert({
+    required String termId,
+    required bool enrolled,
+    required DateTime changedAt,
+    this.rowid = const Value.absent(),
+  }) : termId = Value(termId),
+       enrolled = Value(enrolled),
+       changedAt = Value(changedAt);
+  static Insertable<PoolQueueRow> custom({
+    Expression<String>? termId,
+    Expression<bool>? enrolled,
+    Expression<DateTime>? changedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (termId != null) 'term_id': termId,
+      if (enrolled != null) 'enrolled': enrolled,
+      if (changedAt != null) 'changed_at': changedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PoolQueueRowsCompanion copyWith({
+    Value<String>? termId,
+    Value<bool>? enrolled,
+    Value<DateTime>? changedAt,
+    Value<int>? rowid,
+  }) {
+    return PoolQueueRowsCompanion(
+      termId: termId ?? this.termId,
+      enrolled: enrolled ?? this.enrolled,
+      changedAt: changedAt ?? this.changedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (enrolled.present) {
+      map['enrolled'] = Variable<bool>(enrolled.value);
+    }
+    if (changedAt.present) {
+      map['changed_at'] = Variable<DateTime>(changedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PoolQueueRowsCompanion(')
+          ..write('termId: $termId, ')
+          ..write('enrolled: $enrolled, ')
+          ..write('changedAt: $changedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedImagesTable extends CachedImages
     with TableInfo<$CachedImagesTable, CachedImage> {
   @override
@@ -5737,6 +6068,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ExposureQueueRowsTable(this);
   late final $SessionCompletionQueueRowsTable sessionCompletionQueueRows =
       $SessionCompletionQueueRowsTable(this);
+  late final $PoolQueueRowsTable poolQueueRows = $PoolQueueRowsTable(this);
   late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5754,6 +6086,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reviewQueueRows,
     exposureQueueRows,
     sessionCompletionQueueRows,
+    poolQueueRows,
     cachedImages,
   ];
 }
@@ -6702,6 +7035,7 @@ typedef $$TermProgressTableCreateCompanionBuilder =
       Value<String> acquisition,
       Value<int> learningStep,
       Value<int> successfulReviews,
+      Value<DateTime?> enrolledAt,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -6718,6 +7052,7 @@ typedef $$TermProgressTableUpdateCompanionBuilder =
       Value<String> acquisition,
       Value<int> learningStep,
       Value<int> successfulReviews,
+      Value<DateTime?> enrolledAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6783,6 +7118,11 @@ class $$TermProgressTableFilterComposer
 
   ColumnFilters<int> get successfulReviews => $composableBuilder(
     column: $table.successfulReviews,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6856,6 +7196,11 @@ class $$TermProgressTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6916,6 +7261,11 @@ class $$TermProgressTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -6962,6 +7312,7 @@ class $$TermProgressTableTableManager
                 Value<String> acquisition = const Value.absent(),
                 Value<int> learningStep = const Value.absent(),
                 Value<int> successfulReviews = const Value.absent(),
+                Value<DateTime?> enrolledAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion(
@@ -6976,6 +7327,7 @@ class $$TermProgressTableTableManager
                 acquisition: acquisition,
                 learningStep: learningStep,
                 successfulReviews: successfulReviews,
+                enrolledAt: enrolledAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6992,6 +7344,7 @@ class $$TermProgressTableTableManager
                 Value<String> acquisition = const Value.absent(),
                 Value<int> learningStep = const Value.absent(),
                 Value<int> successfulReviews = const Value.absent(),
+                Value<DateTime?> enrolledAt = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermProgressCompanion.insert(
@@ -7006,6 +7359,7 @@ class $$TermProgressTableTableManager
                 acquisition: acquisition,
                 learningStep: learningStep,
                 successfulReviews: successfulReviews,
+                enrolledAt: enrolledAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -8560,6 +8914,168 @@ typedef $$SessionCompletionQueueRowsTableProcessedTableManager =
       SessionCompletionQueueRow,
       PrefetchHooks Function()
     >;
+typedef $$PoolQueueRowsTableCreateCompanionBuilder =
+    PoolQueueRowsCompanion Function({
+      required String termId,
+      required bool enrolled,
+      required DateTime changedAt,
+      Value<int> rowid,
+    });
+typedef $$PoolQueueRowsTableUpdateCompanionBuilder =
+    PoolQueueRowsCompanion Function({
+      Value<String> termId,
+      Value<bool> enrolled,
+      Value<DateTime> changedAt,
+      Value<int> rowid,
+    });
+
+class $$PoolQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+  $$PoolQueueRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enrolled => $composableBuilder(
+    column: $table.enrolled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PoolQueueRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+  $$PoolQueueRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get enrolled => $composableBuilder(
+    column: $table.enrolled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PoolQueueRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+  $$PoolQueueRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<bool> get enrolled =>
+      $composableBuilder(column: $table.enrolled, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get changedAt =>
+      $composableBuilder(column: $table.changedAt, builder: (column) => column);
+}
+
+class $$PoolQueueRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PoolQueueRowsTable,
+          PoolQueueRow,
+          $$PoolQueueRowsTableFilterComposer,
+          $$PoolQueueRowsTableOrderingComposer,
+          $$PoolQueueRowsTableAnnotationComposer,
+          $$PoolQueueRowsTableCreateCompanionBuilder,
+          $$PoolQueueRowsTableUpdateCompanionBuilder,
+          (
+            PoolQueueRow,
+            BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>,
+          ),
+          PoolQueueRow,
+          PrefetchHooks Function()
+        > {
+  $$PoolQueueRowsTableTableManager(_$AppDatabase db, $PoolQueueRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PoolQueueRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PoolQueueRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PoolQueueRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> termId = const Value.absent(),
+                Value<bool> enrolled = const Value.absent(),
+                Value<DateTime> changedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PoolQueueRowsCompanion(
+                termId: termId,
+                enrolled: enrolled,
+                changedAt: changedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String termId,
+                required bool enrolled,
+                required DateTime changedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PoolQueueRowsCompanion.insert(
+                termId: termId,
+                enrolled: enrolled,
+                changedAt: changedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PoolQueueRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PoolQueueRowsTable,
+      PoolQueueRow,
+      $$PoolQueueRowsTableFilterComposer,
+      $$PoolQueueRowsTableOrderingComposer,
+      $$PoolQueueRowsTableAnnotationComposer,
+      $$PoolQueueRowsTableCreateCompanionBuilder,
+      $$PoolQueueRowsTableUpdateCompanionBuilder,
+      (
+        PoolQueueRow,
+        BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>,
+      ),
+      PoolQueueRow,
+      PrefetchHooks Function()
+    >;
 typedef $$CachedImagesTableCreateCompanionBuilder =
     CachedImagesCompanion Function({
       required String url,
@@ -8771,6 +9287,8 @@ class $AppDatabaseManager {
         _db,
         _db.sessionCompletionQueueRows,
       );
+  $$PoolQueueRowsTableTableManager get poolQueueRows =>
+      $$PoolQueueRowsTableTableManager(_db, _db.poolQueueRows);
   $$CachedImagesTableTableManager get cachedImages =>
       $$CachedImagesTableTableManager(_db, _db.cachedImages);
 }

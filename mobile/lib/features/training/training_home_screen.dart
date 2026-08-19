@@ -11,6 +11,7 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../collections/collection_detail_screen.dart';
 import '../collections/generate_screen.dart';
+import '../collections/my_words_screen.dart';
 import '../home/home_cta.dart';
 import '../home/home_providers.dart';
 import '../home/limit_reached_card.dart';
@@ -107,6 +108,21 @@ class TrainingHomeScreen extends ConsumerWidget {
                       )),
                 )),
               ],
+              // The two ways into the pool from the main screen, under the primary action and
+              // deliberately quiet. The CTA answers «что делать сейчас»; these answer «что я вообще
+              // учу» and «хочу именно эту тему» — real questions, but not the daily one.
+              if (collections.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s12),
+                _pad(_PoolEntries(
+                  collections: collections,
+                  onMyWords: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const MyWordsScreen(),
+                      )),
+                  onTopic: (id, title) => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => SessionScreen(title: title, collectionId: id),
+                      )),
+                )),
+              ],
               const SizedBox(height: AppSpacing.sectionAiry),
               _pad(_GenerationCard(showQuotaNote: collections.isEmpty, offline: !online)),
             ],
@@ -137,6 +153,73 @@ class TrainingHomeScreen extends ConsumerWidget {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => SessionScreen(title: title, practice: practice, learn: learn),
     ));
+  }
+}
+
+/// «Мои слова» and «Тренировка по теме» — the pool's two entrances from the main screen.
+///
+/// A themed session is the SAME study session as the primary CTA, narrowed to one collection's
+/// words: «потренировать аптечные перед аптекой». It is a filter on the pool, never a source — a
+/// word of that collection the learner never took into study stays out of it, exactly as it does
+/// everywhere else.
+class _PoolEntries extends StatelessWidget {
+  const _PoolEntries({required this.collections, required this.onMyWords, required this.onTopic});
+
+  final List<WordCollection> collections;
+  final VoidCallback onMyWords;
+  final void Function(String collectionId, String title) onTopic;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: QuietButton(
+            label: l.myWordsTitle,
+            icon: LucideIcons.bookMarked,
+            onPressed: () {
+              AppHaptics.light();
+              onMyWords();
+            },
+          ),
+        ),
+        const SizedBox(width: AppSpacing.s8),
+        Expanded(
+          child: QuietButton(
+            label: l.topicSessionAction,
+            icon: LucideIcons.layers,
+            onPressed: () => _pickTopic(context, l),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickTopic(BuildContext context, AppLocalizations l) async {
+    AppHaptics.light();
+    await showAppBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.topicSessionTitle, style: AppText.sectionLabel),
+          const SizedBox(height: AppSpacing.s12),
+          for (final c in collections)
+            InkWell(
+              onTap: () {
+                Navigator.of(sheetContext).maybePop();
+                onTopic(c.id, c.title);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Text(c.title, style: AppText.termInList),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 

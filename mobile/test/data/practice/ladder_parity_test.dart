@@ -163,10 +163,49 @@ void main() {
     );
   });
 
+  group('the POOL filter, in parity with the server', () {
+    // The server reads its practice pool with `enrolled_at IS NOT NULL`
+    // (`EloquentDueTermsReader::allInPool`) and drops rung 0 by the same rule as here. The device
+    // builds its own practice sessions offline, so the same two filters exist twice — and, like the
+    // rung, they drift silently: the phone would simply drill a word nobody asked to learn.
+    test('a word nobody took into study is never drilled, whatever rung it claims', () {
+      for (final acquisition in Acquisition.values) {
+        final position = LadderPosition(acquisition: acquisition, successfulReviews: 12);
+        expect(position.admitsPractice, isFalse, reason: '$acquisition, out of the pool');
+      }
+      // …including a «знаю» pair, which is out of the pool BY the verdict.
+      expect(
+        const LadderPosition(acquisition: Acquisition.graduated, isKnown: true).admitsPractice,
+        isFalse,
+      );
+    });
+
+    test('in the pool, the rung decides — and rung 0 still has nothing to drill', () {
+      expect(
+        const LadderPosition(acquisition: Acquisition.isNew, enrolled: true).admitsPractice,
+        isFalse,
+        reason: 'practice introduces nothing, so a first meeting is not its job',
+      );
+      expect(
+        const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true).admitsPractice,
+        isTrue,
+      );
+      expect(
+        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true).admitsPractice,
+        isTrue,
+      );
+    });
+
+    test('a term with no progress row at all is in the catalogue, not in the queue', () {
+      expect(LadderPosition.untouched.enrolled, isFalse);
+      expect(LadderPosition.untouched.admitsPractice, isFalse);
+    });
+  });
+
   test('a pair outside the ladder is not held back by it', () {
     // `known` has no rung. Reading that as rung 0 would gate its verification down to the intro —
     // the one card that proves nothing about a claim.
-    const known = LadderPosition(acquisition: Acquisition.graduated, isKnown: true);
+    const known = LadderPosition(acquisition: Acquisition.graduated, isKnown: true, enrolled: true);
 
     expect(known.step, isNull);
     expect(known.admissionStep, LearningLadder.stepDictation);

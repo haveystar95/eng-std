@@ -340,6 +340,24 @@ class ApiClient {
     );
   }
 
+  /// Put a word into the learner's POOL — «Учить это слово». Idempotent server-side; returns
+  /// whether THIS call moved anything, which a replayed request from an offline retry does not.
+  ///
+  /// The local mirror is written first and independently (see AppDatabase.enrollLocally): the
+  /// screen must change under the finger, and an enrolment made in airplane mode has to survive
+  /// until `/sync` brings the server's own answer back.
+  Future<bool> enrollTerm(String termId) async {
+    final r = await _dio.put('/pool/terms/$termId');
+    return ((_data(r) as Map<String, dynamic>)['changed'] as bool?) ?? false;
+  }
+
+  /// Take a word out of the pool — «Убрать из изучения». A PAUSE: the server clears one column and
+  /// leaves the history, the rung and the schedule standing, so enrolling again resumes them.
+  Future<bool> unenrollTerm(String termId) async {
+    final r = await _dio.delete('/pool/terms/$termId');
+    return ((_data(r) as Map<String, dynamic>)['changed'] as bool?) ?? false;
+  }
+
   /// One page of the delta feed the local DB mirrors. Returns the raw `data` map
   /// (`server_time`, `next_cursor`, `has_more`, `changes`) for the SyncService to apply.
   /// [since] is the last stored `server_time` (never the device clock); [cursor] pages within

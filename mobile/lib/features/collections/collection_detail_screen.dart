@@ -322,6 +322,9 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   // Practice, narrowed to this word. Practice and not a study session: drilling one
                   // word on demand must not spend the day's new-term quota on it.
                   onTrain: () => _openSession(true, onlyTermId: items[i].termId),
+                  // The two pool decisions. Local first, then queued for the server — see PoolSync.
+                  onEnroll: () => ref.read(poolSyncProvider).enroll(items[i].termId),
+                  onUnenroll: () => ref.read(poolSyncProvider).unenroll(items[i].termId),
                 ),
             // «Добавить слово» — own collections only.
             if (!readOnly)
@@ -693,6 +696,8 @@ class _WordRow extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     this.onTrain,
+    this.onEnroll,
+    this.onUnenroll,
   });
 
   final Word word;
@@ -701,6 +706,10 @@ class _WordRow extends StatefulWidget {
 
   /// «Тренировать слово» from the expanded card: a practice session filtered to this term.
   final VoidCallback? onTrain;
+
+  /// The two pool decisions, offered by the expanded card — «Учить это слово» for a word still in
+  /// the catalogue, «Убрать из изучения» for one already being studied.
+  final VoidCallback? onEnroll, onUnenroll;
 
   /// Null on a read-only (store-subscribed) collection — the row then has no swipe actions and no
   /// long-press menu, only tap-to-speak.
@@ -732,6 +741,8 @@ class _WordRowState extends State<_WordRow> {
         word: widget.word,
         onSpeak: widget.onSpeak,
         onTrain: () => widget.onTrain?.call(),
+        onEnroll: widget.onEnroll,
+        onUnenroll: widget.onUnenroll,
       );
 
   Future<void> _menu() async {
@@ -904,8 +915,15 @@ class _RowBody extends StatelessWidget {
             // The dots take the slot the speaker button used to hold. Speech did not disappear —
             // it moved into the expanded card, one tap away, where there is room for it beside the
             // term it pronounces. A row cannot carry both without becoming a control panel.
+            //
+            // A word that is not in the POOL gets neither: it has no rung, because the ladder
+            // measures progress THROUGH a word and this one has not been started. It carries a
+            // quiet «в каталоге» instead — the collection is a catalogue now, and most of what it
+            // holds is honestly that. Neutral by design: nothing here is wrong or missing.
             if (word.isKnown)
               LadderKnownDash(label: AppLocalizations.of(context).ladderKnownDash)
+            else if (!word.enrolled)
+              Text(AppLocalizations.of(context).poolInCatalogue, style: AppText.ladderLockedNote)
             else if (word.ladderStep != null)
               LadderDots(step: word.ladderStep),
           ],

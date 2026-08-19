@@ -728,6 +728,12 @@ abstract class AppLocalizations {
   /// **'Скрыть'**
   String get generationHide;
 
+  /// QA-23. Постановка генерации в очередь упала на ЛОКАЛЬНОМ хранилище — раньше это молча оставляло кнопку «Сгенерировать» серой навсегда.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось поставить генерацию в очередь: {error}'**
+  String generateEnqueueFailed(String error);
+
   /// Метка готовой коллекции на карточке генерации.
   ///
   /// In ru, this message translates to:
@@ -2479,6 +2485,138 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ответы не уходят на сервер — проверь соединение'**
   String get syncStuckBanner;
+
+  /// Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово в каталоге — ты его пока не учишь.'**
+  String get poolNotStudyingNote;
+
+  /// Кнопка карточки слова: зачислить пару в пул (16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'Учить это слово'**
+  String get poolEnrollAction;
+
+  /// Пояснение под кнопкой «Учить это слово»: что именно произойдёт (16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово встанет в очередь и начнёт приходить на тренировках.'**
+  String get poolEnrollNote;
+
+  /// Тихая кнопка карточки слова: пауза — слово перестаёт приходить (16e).
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать из изучения'**
+  String get poolUnenrollAction;
+
+  /// Заголовок подтверждения паузы слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать «{term}» из изучения?'**
+  String poolUnenrollTitle(String term);
+
+  /// Текст подтверждения: это пауза, а не удаление.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово перестанет приходить на тренировках. Прогресс и история сохранятся — слово можно вернуть в любой момент.'**
+  String get poolUnenrollMessage;
+
+  /// Подтверждающая кнопка паузы слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать'**
+  String get poolUnenrollConfirm;
+
+  /// Пометка в списке слов коллекции: слово есть в каталоге, но не в пуле — тренажёр его не выдаёт.
+  ///
+  /// In ru, this message translates to:
+  /// **'в каталоге'**
+  String get poolInCatalogue;
+
+  /// Экран пула: все слова, которые пользователь взял в изучение.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои слова'**
+  String get myWordsTitle;
+
+  /// Подпись под заголовком «Мои слова»: размер пула (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String myWordsCount(int count);
+
+  /// Плейсхолдер поля поиска на экране «Мои слова».
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по словам'**
+  String get myWordsSearchHint;
+
+  /// Фильтр фазы на экране «Мои слова»: без фильтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все'**
+  String get myWordsFilterAll;
+
+  /// Фильтр фазы: слово в пуле, но ещё ни разу не показано.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые'**
+  String get myWordsFilterNew;
+
+  /// Фильтр фазы: слово на ступенях узнавания.
+  ///
+  /// In ru, this message translates to:
+  /// **'Узнавание'**
+  String get myWordsFilterLearning;
+
+  /// Фильтр фазы: слово вышло с лестницы и идёт по интервальным повторам.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение'**
+  String get myWordsFilterReview;
+
+  /// Фильтр по коллекции-источнику на экране «Мои слова»: без фильтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все коллекции'**
+  String get myWordsSourceAll;
+
+  /// Фильтр по источнику: слова, чья коллекция удалена или отписана — из пула они не уходят.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без коллекции'**
+  String get myWordsSourceNone;
+
+  /// Пустое состояние экрана «Мои слова».
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока пусто'**
+  String get myWordsEmptyTitle;
+
+  /// Пустое состояние объясняет два способа зачисления в пул.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова попадают сюда, когда ты разбираешь коллекцию свайпами «не знаю» и «не уверен» — или нажимаешь «Учить это слово» на карточке слова.'**
+  String get myWordsEmptyMessage;
+
+  /// Пустое состояние экрана «Мои слова» под активным поиском или фильтром.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничего не нашлось'**
+  String get myWordsNothingFound;
+
+  /// Вход на главном экране: учебная сессия, суженная до одной коллекции-источника.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тренировка по теме'**
+  String get topicSessionAction;
+
+  /// Заголовок шита выбора коллекции для тематической тренировки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбери тему'**
+  String get topicSessionTitle;
 }
 
 class _AppLocalizationsDelegate

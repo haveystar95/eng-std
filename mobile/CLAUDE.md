@@ -16,10 +16,28 @@ theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `li
 ## Structure (`lib/`)
 
 - `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
-- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
-- `features/` — `auth/`, `home/`, `training/` (`training_home_screen.dart` dashboard, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/`, `progress/`, `onboarding/`, `profile/`.
+- `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `pool_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
+- `features/` — `auth/`, `home/`, `training/` (`training_home_screen.dart` dashboard, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/` (incl. `my_words_screen.dart` = «Мои слова», the pool), `progress/`, `onboarding/`, `profile/`.
 - `l10n/` — `app_ru.arb` (source of truth) + `app_en.arb` (complete); both `ru` and `en` are in `kSupportedLocales`. All UI copy routes through `AppLocalizations` (guarded by `test/l10n/no_cyrillic_outside_l10n_test.dart`, allowlist now **empty**).
 - `tool/preview.dart` — design preview harness with mock data: `flutter run -d chrome --target tool/preview.dart` (no backend/login needed). Lives outside `lib/` so its sample Russian data is exempt from the cyrillic guard.
+
+## The pool («Мои слова») — the library is not the queue
+
+A collection is a CATALOGUE of a topic; what the trainer works through is the learner's **pool**.
+Membership is one nullable column on the mirrored progress row (`enrolled_at`), never a collection:
+
+- a word joins the pool only by a deliberate act — a `не знаю` / `не уверен` triage swipe, or
+  «Учить это слово» on the word card (кадр 16e). Adding or generating a collection enrols nothing.
+- every session is built from the pool, **including free practice** — `LadderPosition.admitsPractice`
+  asks the pool first and the rung second, mirroring the server's `enrolled_at IS NOT NULL`.
+- «Убрать из изучения» is a PAUSE: `enrolled_at → null` and nothing else, so the word resumes at the
+  rung and due date it left with. The wording says so, or the button reads as a delete.
+- both taps ride a durable queue (`data/pool_sync.dart`) keyed by term and holding the DESIRED
+  membership rather than a log — the verbs are idempotent and there is no order to protect.
+
+Pinned by `test/data/pool_lifecycle_test.dart` (the device's half of the story) and the pool section
+of `test/data/practice/ladder_parity_test.dart`; the server's half is
+`backend2/tests/Feature/Learning/PoolApiTest.php`.
 
 ## Design
 

@@ -6,8 +6,8 @@ enum HomeCtaKind {
   /// Есть due-повторения → «Повторить N».
   review,
 
-  /// Due нет, но есть отриаженные «не знаю» новые слова, ещё не введённые в сессию → «Учить N»
-  /// (non-practice сессия вводит их под дневную квоту). Без этой ветки они недостижимы (F8).
+  /// Due нет, но в ПУЛЕ есть слова, которые ещё ни разу не показывали → «Учить N» (non-practice
+  /// сессия вводит их под дневную квоту). Без этой ветки они недостижимы (F8).
   learn,
 
   /// Due нет, есть новые к изучению, но дневная квота новых исчерпана (F13) → неактивное
@@ -38,7 +38,13 @@ class HomeCta {
 }
 
 /// Decide the home CTA from local counts. Priority: **due → learn/limit → triage → none**
-/// (device-batch F8: «Учить N» sits above triage so triaged-«не знаю» words get introduced).
+/// (device-batch F8: «Учить N» sits above triage so words already taken into study get introduced).
+///
+/// [learnable] is read off the POOL and is deliberately GLOBAL, not a per-collection sum: a word
+/// the learner took into study is theirs to learn even if the collection it came from was deleted
+/// or unsubscribed, and the session builder will still deal it. The collection map survives only
+/// for [untriagedByCollection], where the number IS about a collection — the triage deck is a pass
+/// over one of them.
 ///
 /// Reviews are ALWAYS available when due, and never gated by the new-term quota — they don't spend
 /// it (F13 rule 1). New words are offered as «Учить M» only up to [remainingNewQuota]
@@ -49,15 +55,13 @@ class HomeCta {
 /// untriaged terms (ties broken by collection id, for a stable choice).
 HomeCta computeHomeCta({
   required int due,
-  required Map<String, int> learnableByCollection,
+  required int learnable,
   required Map<String, int> untriagedByCollection,
   required int remainingNewQuota,
 }) {
   if (due > 0) return HomeCta(HomeCtaKind.review, count: due);
 
-  final totalLearnable =
-      learnableByCollection.values.fold<int>(0, (s, v) => s + (v > 0 ? v : 0));
-  if (totalLearnable > 0) return learnOrLimitCta(totalLearnable, remainingNewQuota);
+  if (learnable > 0) return learnOrLimitCta(learnable, remainingNewQuota);
 
   final eligible = untriagedByCollection.entries.where((e) => e.value > 0).toList()
     ..sort((a, b) {

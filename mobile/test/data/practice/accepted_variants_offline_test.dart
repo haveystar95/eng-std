@@ -26,7 +26,7 @@ void main() {
   /// the VARIANTS reaching an offline card; a never-shown pair would be held at rung 1, where the
   /// only trainer admitted is multiple_choice and there is no typed answer to accept a variant for.
   const topOfLadder = {
-    't1': LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+    't1': LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
   };
 
   Future<void> seedTerm({List<String>? variants}) => db.applyDelta(

@@ -55,7 +55,7 @@ void main() {
   /// progress row has never been shown), and every assertion here would then be about one card.
   Map<String, LadderPosition> topOfLadder(List<Term> from) => {
         for (final t in from)
-          t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
+          t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
       };
 
   StudySession build({
@@ -168,8 +168,8 @@ void main() {
       random: Random(7),
       sessionId: 'SESSION',
       ladder: {
-        terms.first.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12),
-        terms[3].id: const LadderPosition(),
+        terms.first.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
+        terms[3].id: const LadderPosition(enrolled: true),
       },
     ).cards.first;
 
@@ -374,8 +374,8 @@ void main() {
       final t = term('01KZETAAN18AQK14YFSBWW6KRQ', text: 'towel', translation: 'полотенце');
       final other = term('01KZETAAP2C0MG5J6ZV1S4XQD7', text: 'sheets', translation: 'простыни');
       final ladder = {
-        t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
-        other.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1),
+        t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
+        other.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
       };
 
       expect(
@@ -421,7 +421,7 @@ void main() {
       enabled: const PracticeModes([ExerciseMode.multipleChoice]),
       ladder: {
         for (final t in mixed)
-          t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 2),
+          t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 2, enrolled: true),
       },
     );
 
