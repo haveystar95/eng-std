@@ -205,10 +205,26 @@ abstract final class SessionGrader {
   ///
   /// Returns an empty set when the answer matches, and when nothing can be compared: a mark on
   /// every word says nothing more than the verdict already did.
+  ///
+  /// The comparison runs over TOKENS, not over the chips the learner sees, and the two are not the
+  /// same list: "It's" canonicalises to two words ("it is") while the expected side counts them as
+  /// two of its own, so comparing a chip against a single expected word made a correctly placed
+  /// contraction unmatchable — it was marked wrong wherever it stood, and its unmatched pair then
+  /// pushed the alignment off and marked a second, innocent word with it (QA-27). Each chip is
+  /// therefore expanded into its own tokens, aligned as tokens, and marked as a chip: it is
+  /// misplaced when any token of it found no place in the expected order.
   static Set<int> misplacedWords(List<String> given, String expected) {
     final wanted = _words(expected);
-    final mine = given.map((w) => _words(w).join(' ')).toList();
-    if (wanted.isEmpty || mine.every((w) => w.isEmpty)) return const {};
+    // The learner's tokens, each remembering the chip it came from.
+    final mine = <String>[];
+    final owner = <int>[];
+    for (var chip = 0; chip < given.length; chip++) {
+      for (final token in _words(given[chip])) {
+        mine.add(token);
+        owner.add(chip);
+      }
+    }
+    if (wanted.isEmpty || mine.isEmpty) return const {};
 
     // LCS by table, over word lists that are a sentence long at most.
     final n = mine.length, m = wanted.length;
@@ -228,12 +244,12 @@ abstract final class SessionGrader {
         i++;
         j++;
       } else if (j < m && table[i + 1][j] >= table[i][j + 1]) {
-        wrong.add(i);
+        wrong.add(owner[i]);
         i++;
       } else if (j < m) {
         j++;
       } else {
-        wrong.add(i); // trailing extras: nothing left to match them against
+        wrong.add(owner[i]); // trailing extras: nothing left to match them against
         i++;
       }
     }
