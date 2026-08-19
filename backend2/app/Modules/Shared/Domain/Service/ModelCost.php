@@ -15,10 +15,36 @@ namespace App\Modules\Shared\Domain\Service;
  */
 final class ModelCost
 {
-    /** @var array<string, array{0: float, 1: float}> */
+    /**
+     * Text-model rates, USD per 1K tokens [input, output].
+     *
+     * A model that is not here prices as null — "unpriced", never as free. A bake-off that showed a
+     * missing rate as $0 would hand the cheapest-looking column to whichever vendor nobody had
+     * entered yet, which is the one mistake this table exists to prevent.
+     *
+     * Rates as published 2026-08-20, per 1M and divided by 1000 here: Anthropic Opus 5 $5/$25,
+     * Sonnet 5 $3/$15, Haiku 4.5 $1/$5; xAI grok-4.6 and 4.5 $2/$6, grok-4.3 $1.25/$2.50.
+     *
+     * xAI prices in TWO tiers — the rates above hold below 200K input tokens and double above it.
+     * Only the low tier is entered, because every call this app makes is a prompt of a few thousand
+     * tokens; a request that ever crossed 200K would be under-priced here and would be a bug on its
+     * own account. Re-check when a vendor announces a change: this is a cost ESTIMATE from token
+     * counts, not an invoice.
+     *
+     * @var array<string, array{0: float, 1: float}>
+     */
     private const PRICING = [
         'gpt-4o' => [0.0025, 0.01],
         'gpt-4o-mini' => [0.00015, 0.0006],
+        // Anthropic (Claude).
+        'claude-opus-5' => [0.005, 0.025],
+        'claude-sonnet-5' => [0.003, 0.015],
+        'claude-haiku-4-5' => [0.001, 0.005],
+        // xAI (Grok).
+        'grok-4.6' => [0.002, 0.006],
+        'grok-4.5' => [0.002, 0.006],
+        'grok-4.3' => [0.00125, 0.0025],
+        'grok-build-0.1' => [0.001, 0.002],
     ];
 
     /**

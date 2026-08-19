@@ -53,6 +53,23 @@ return [
         'summary_model' => env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
     ],
 
+    'anthropic' => [
+        // Claude, for the generation bake-off (and as a production candidate afterwards).
+        // Absent by default: the org has no credits, so this provider reports itself unavailable
+        // and the bake-off runs without it rather than failing.
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'generate_model' => env('ANTHROPIC_GENERATE_MODEL', 'claude-opus-5'),
+    ],
+
+    'xai' => [
+        // Grok. The key env var is GROK_API_KEY (the vendor's own name for it in this .env);
+        // the module and the reports call the provider `xai`, which is the API's name.
+        'api_key' => env('GROK_API_KEY'),
+        'generate_model' => env('XAI_GENERATE_MODEL', 'grok-4.6'),
+        // OpenAI-compatible endpoint — same request shape, different host.
+        'base_url' => env('XAI_BASE_URL', 'https://api.x.ai/v1'),
+    ],
+
     'gemini' => [
         // Google Gemini API key — server-side only; the client never sees it (only ephemeral tokens).
         'api_key' => env('GEMINI_API_KEY'),

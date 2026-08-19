@@ -6,6 +6,7 @@ namespace App\Modules\Generation\Infrastructure\Provider;
 
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
@@ -31,6 +32,7 @@ use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogMessageRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
+use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\ObservabilityLoggedResponseReader;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -76,6 +78,9 @@ final class GenerationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(GenerationRequestRepository::class, EloquentGenerationRequestRepository::class);
+        // The multi-vendor seam. Bound unconditionally: which providers can actually be called is a
+        // runtime fact about keys, which the catalogue reports rather than a driver switch decides.
+        $this->app->bind(ContentModelCatalog::class, ConfiguredContentModelCatalog::class);
         $this->app->bind(LoggedResponseReader::class, ObservabilityLoggedResponseReader::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
