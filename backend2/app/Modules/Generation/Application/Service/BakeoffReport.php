@@ -1,0 +1,493 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Generation\Application\Service;
+
+use App\Modules\Generation\Application\Dto\BakeoffCallResult;
+use App\Modules\Generation\Application\Dto\ProviderAvailability;
+use App\Modules\Generation\Domain\ValueObject\BakeoffTrack;
+use App\Modules\Generation\Domain\ValueObject\CandidateVerdict;
+use App\Modules\Generation\Domain\ValueObject\CheckId;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
+
+/**
+ * The file a person reads in the morning and decides from.
+ *
+ * Three tables, one per track, because the tracks can have different winners and a single ranking
+ * would force the worse choice on one of them. Under each table, the examples — the numbers exist
+ * to say WHICH rows are worth a human read, and a report of only counts asks the reader to trust an
+ * automatic check about a question ("is this translation a good key") that no automatic check can
+ * settle.
+ *
+ * Everything unmeasured is said out loud: a provider that was not run, a check that could not apply,
+ * a cost that could not be priced. A blank cell is the one thing a decision document must never have.
+ */
+final readonly class BakeoffReport
+{
+    /** How many side-by-side examples per track — the наряд asks for 5–6. */
+    private const EXAMPLES = 6;
+
+    /**
+     * @param  list<BakeoffCallResult>  $results
+     * @param  list<ProviderAvailability>  $availability
+     * @param  array<string, mixed>  $meta
+     */
+    public function render(array $results, array $availability, array $meta): string
+    {
+        $out = [];
+        $out[] = '# Bake-off провайдеров генерации — ' . ($meta['label'] ?? 'run');
+        $out[] = '';
+        $out[] = (string) ($meta['header_line'] ?? '');
+        $out[] = '';
+        $out[] = 'Промпт **' . ($meta['prompt_version'] ?? '?') . '**, языки **'
+            . ($meta['target_lang'] ?? '?') . ' ← ' . ($meta['source_lang'] ?? '?')
+            . '**, run id `' . ($meta['run_id'] ?? '?') . '`.';
+        $out[] = '';
+        $out[] = '> Живой контент не изменён: прогон только читает термины и пишет в песочницу '
+            . '(`bakeoff_runs` / `bakeoff_calls` / `bakeoff_candidates`).';
+        $out[] = '';
+
+        $out[] = $this->providersSection($availability);
+        $out[] = $this->checksLegend();
+
+        foreach (BakeoffTrack::cases() as $track) {
+            $trackResults = array_values(array_filter($results, static fn (BakeoffCallResult $r): bool => $r->track === $track));
+            if ($trackResults === []) {
+                continue;
+            }
+            $out[] = $this->trackSection($track, $trackResults);
+        }
+
+        $out[] = $this->twoStageVsOneShot($results, $meta);
+        $out[] = $this->howToRead();
+
+        return implode("\n", array_filter($out, static fn (string $s): bool => $s !== "\0")) . "\n";
+    }
+
+    /** @param list<ProviderAvailability> $availability */
+    private function providersSection(array $availability): string
+    {
+        $lines = ['## Провайдеры', '', '| Провайдер | Модель | Участвовал | Почему нет |', '|---|---|---|---|'];
+        foreach ($availability as $row) {
+            $lines[] = sprintf(
+                '| %s | `%s` | %s | %s |',
+                $row->provider->label(),
+                $row->model,
+                $row->available ? 'да' : '**нет**',
+                $row->reason !== '' ? $row->reason : '—',
+            );
+        }
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    private function checksLegend(): string
+    {
+        $lines = ['## Автопроверки', '', '| Код | Что проверяет |', '|---|---|'];
+        foreach (CheckId::cases() as $check) {
+            $lines[] = '| `' . $check->value . '` | ' . $check->label() . ' |';
+        }
+        $lines[] = '';
+        $lines[] = 'Проверки ловят ИЗВЕСТНЫЕ классы брака, а не «качество». Набор, прошедший всё, '
+            . 'по-прежнему может быть скучным или буквальным — для этого ниже примеры бок-о-бок.';
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    /** @param list<BakeoffCallResult> $results */
+    private function trackSection(BakeoffTrack $track, array $results): string
+    {
+        $shape = $track->shape();
+        $checks = CheckId::forShape($shape);
+
+        $header = ['Провайдер', 'вызовов', 'ошибок вызова', 'items', 'чистых'];
+        foreach ($checks as $check) {
+            $header[] = $check->value;
+        }
+        $header[] = 'размер';
+        $header[] = 'латентность med';
+        $header[] = 'токены in/out';
+        $header[] = '$';
+
+        $lines = ['## ' . $track->title(), '', '| ' . implode(' | ', $header) . ' |',
+            '|' . str_repeat('---|', count($header)), ];
+
+        foreach ($this->byProvider($results) as $providerValue => $providerResults) {
+            $lines[] = $this->providerRow(ProviderId::from($providerValue), $providerResults, $checks);
+        }
+        $lines[] = '';
+
+        if ($track === BakeoffTrack::OneShot) {
+            $lines[] = $this->degradationTable($results);
+        }
+
+        $lines[] = $this->examples($track, $results);
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param  list<BakeoffCallResult>  $results
+     * @param  list<CheckId>  $checks
+     */
+    private function providerRow(ProviderId $provider, array $results, array $checks): string
+    {
+        $calls = count($results);
+        $failedCalls = count(array_filter($results, static fn (BakeoffCallResult $r): bool => ! $r->ok));
+
+        $items = 0;
+        $clean = 0;
+        $perCheck = [];
+        $sizeMisses = 0;
+        $latencies = [];
+        $tokensIn = 0;
+        $tokensOut = 0;
+        $cost = 0.0;
+        $priced = true;
+
+        foreach ($results as $result) {
+            if ($result->latencyMs !== null) {
+                $latencies[] = $result->latencyMs;
+            }
+            $tokensIn += $result->tokensIn ?? 0;
+            $tokensOut += $result->tokensOut ?? 0;
+            if ($result->costUsd === null && $result->ok) {
+                $priced = false;
+            }
+            $cost += (float) ($result->costUsd ?? 0);
+
+            if ($result->batch === null) {
+                continue;
+            }
+            $items += $result->batch->total();
+            $clean += $result->batch->clean();
+            foreach ($checks as $check) {
+                $perCheck[$check->value] = ($perCheck[$check->value] ?? 0) + $result->batch->failures($check);
+            }
+            if (in_array(CheckId::Size, $result->batch->batchFailures, true)) {
+                $sizeMisses++;
+            }
+        }
+
+        $cells = [
+            $provider->label(),
+            (string) $calls,
+            $failedCalls > 0 ? '**' . $failedCalls . '**' : '0',
+            (string) $items,
+            $items > 0 ? sprintf('**%d** (%d%%)', $clean, (int) round(100 * $clean / $items)) : '—',
+        ];
+        foreach ($checks as $check) {
+            $n = $perCheck[$check->value] ?? 0;
+            $cells[] = $n === 0 ? '0' : (string) $n;
+        }
+        $cells[] = $sizeMisses === 0 ? 'ок' : $sizeMisses . ' из ' . $calls;
+        $cells[] = $latencies === [] ? '—' : $this->median($latencies) . ' мс';
+        $cells[] = $tokensIn . '/' . $tokensOut;
+        // An unpriced call must not silently become $0 — the cheapest column would go to whichever
+        // vendor nobody entered a rate for.
+        $cells[] = $priced ? '$' . number_format($cost, 4, '.', '') : '$' . number_format($cost, 4, '.', '') . ' (неполно)';
+
+        return '| ' . implode(' | ', $cells) . ' |';
+    }
+
+    /**
+     * The tail hypothesis, in numbers: does the second half of a long answer carry more defects than
+     * the first? Reported per provider, averaged over that provider's calls.
+     *
+     * @param  list<BakeoffCallResult>  $results
+     */
+    private function degradationTable(array $results): string
+    {
+        $lines = [
+            '### Деградация по позиции в списке',
+            '',
+            'Доля items с браком в первой половине ответа против второй. Гипотеза: «хвост длинного '
+            . 'ответа халтурит». Разница в пределах пары процентов на выборке этого размера — шум.',
+            '',
+            '| Провайдер | 1-я половина | 2-я половина | Δ |',
+            '|---|---|---|---|',
+        ];
+
+        foreach ($this->byProvider($results) as $providerValue => $providerResults) {
+            $firstBad = 0;
+            $firstN = 0;
+            $secondBad = 0;
+            $secondN = 0;
+            foreach ($providerResults as $result) {
+                if ($result->batch === null) {
+                    continue;
+                }
+                [$r1, $r2, $n1, $n2] = $result->batch->halves();
+                $firstBad += (int) round($r1 * $n1);
+                $firstN += $n1;
+                $secondBad += (int) round($r2 * $n2);
+                $secondN += $n2;
+            }
+            if ($firstN === 0 || $secondN === 0) {
+                continue;
+            }
+            $p1 = 100 * $firstBad / $firstN;
+            $p2 = 100 * $secondBad / $secondN;
+            $lines[] = sprintf(
+                '| %s | %d%% (%d/%d) | %d%% (%d/%d) | %+d п.п. |',
+                ProviderId::from($providerValue)->label(),
+                (int) round($p1), $firstBad, $firstN,
+                (int) round($p2), $secondBad, $secondN,
+                (int) round($p2 - $p1),
+            );
+        }
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Side-by-side rows: the same task, every provider's answer to it, defects named.
+     *
+     * Chosen by disagreement — the tasks where the providers' defect counts differ most — because a
+     * row everyone got right and a row everyone got wrong both say nothing about which to pick.
+     *
+     * @param  list<BakeoffCallResult>  $results
+     */
+    private function examples(BakeoffTrack $track, array $results): string
+    {
+        $lines = ['### Примеры бок-о-бок', ''];
+
+        // task key → provider → the items it produced
+        $byTask = [];
+        foreach ($results as $result) {
+            if ($result->batch === null) {
+                continue;
+            }
+            foreach ($result->batch->verdicts as $verdict) {
+                $byTask[$result->taskKey][$result->provider->value][] = $verdict;
+            }
+        }
+
+        if ($byTask === []) {
+            return implode("\n", [...$lines, '_Нечего показать: ни один провайдер не ответил._', '']);
+        }
+
+        if ($track === BakeoffTrack::Enrichment) {
+            // One term per block: the whole point of this track is the same term rendered by each
+            // provider, read next to the others.
+            $shown = 0;
+            foreach ($byTask as $taskKey => $providers) {
+                if ($shown >= self::EXAMPLES) {
+                    break;
+                }
+                if (! $this->interesting($providers)) {
+                    continue;
+                }
+                $shown++;
+                $lines[] = '**' . $shown . '. `' . $taskKey . '`**';
+                $lines[] = '';
+                $lines[] = '| Провайдер | Перевод | Пример | Опции | Брак |';
+                $lines[] = '|---|---|---|---|---|';
+                foreach ($providers as $providerValue => $verdicts) {
+                    foreach ($verdicts as $verdict) {
+                        $lines[] = $this->enrichRow(ProviderId::from($providerValue), $verdict);
+                    }
+                }
+                $lines[] = '';
+            }
+            if ($shown === 0) {
+                $lines[] = '_Провайдеры не разошлись ни на одном термине._';
+                $lines[] = '';
+            }
+
+            return implode("\n", $lines);
+        }
+
+        // A and C: a fragment of each provider's list for the SAME topic, so the lists can be read
+        // against each other (and, for the existing topic, against what is in the store today).
+        $shown = 0;
+        foreach ($byTask as $taskKey => $providers) {
+            if ($shown >= self::EXAMPLES) {
+                break;
+            }
+            $shown++;
+            $lines[] = '**' . $shown . '. Тема: ' . $taskKey . '**';
+            $lines[] = '';
+            foreach ($providers as $providerValue => $verdicts) {
+                $lines[] = '_' . ProviderId::from($providerValue)->label() . '_ — первые 6 из ' . count($verdicts) . ':';
+                $lines[] = '';
+                $lines[] = '| # | Термин | Перевод | Брак |';
+                $lines[] = '|---|---|---|---|';
+                foreach (array_slice($verdicts, 0, 6) as $verdict) {
+                    $lines[] = sprintf(
+                        '| %d | %s | %s | %s |',
+                        $verdict->item->position + 1,
+                        $this->cell($verdict->item->text),
+                        $this->cell($verdict->item->translation ?? '—'),
+                        $verdict->isClean() ? '—' : $this->cell($verdict->reason()),
+                    );
+                }
+                $lines[] = '';
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function enrichRow(ProviderId $provider, CandidateVerdict $verdict): string
+    {
+        $item = $verdict->item;
+
+        return sprintf(
+            '| %s | %s | %s | %s | %s |',
+            $provider->label(),
+            $this->cell($item->translation ?? '—'),
+            $this->cell($item->example ?? '**нет**'),
+            $item->options === [] ? '—' : $this->cell(implode(' / ', $item->options)),
+            $verdict->isClean() ? '—' : $this->cell($verdict->reason()),
+        );
+    }
+
+    /**
+     * Is this task worth a reader's time — did the providers actually disagree about it?
+     *
+     * @param  array<string, list<CandidateVerdict>>  $providers
+     */
+    private function interesting(array $providers): bool
+    {
+        if (count($providers) < 2) {
+            return true; // one provider ran: everything it produced is all there is to show
+        }
+
+        $defects = [];
+        foreach ($providers as $verdicts) {
+            $defects[] = count(array_filter($verdicts, static fn (CandidateVerdict $v): bool => ! $v->isClean()));
+        }
+
+        return count(array_unique($defects)) > 1;
+    }
+
+    /**
+     * The head-to-head the experiment exists for: one topic, built two ways.
+     *
+     * @param  list<BakeoffCallResult>  $results
+     * @param  array<string, mixed>  $meta
+     */
+    private function twoStageVsOneShot(array $results, array $meta): string
+    {
+        $lines = [
+            '## Два этапа (А + Б) против one-shot (В)',
+            '',
+            'Стоимость готовой коллекции целиком. Двухэтапная схема — это вызов трека А плюс по '
+            . 'одному вызову обогащения на каждый термин; one-shot — один вызов. Цифры ниже — '
+            . 'фактическая стоимость прогона, пересчитанная на коллекцию из '
+            . ($meta['collection_size'] ?? '?') . ' терминов.',
+            '',
+            '| Провайдер | Схема | $ на коллекцию | Латентность | Чистых items |',
+            '|---|---|---|---|---|',
+        ];
+
+        $size = is_int($meta['collection_size'] ?? null) ? $meta['collection_size'] : 12;
+
+        foreach ([BakeoffTrack::Collections, BakeoffTrack::Enrichment, BakeoffTrack::OneShot] as $track) {
+            foreach ($this->byProvider(array_values(array_filter(
+                $results,
+                static fn (BakeoffCallResult $r): bool => $r->track === $track,
+            ))) as $providerValue => $providerResults) {
+                $calls = count($providerResults);
+                if ($calls === 0) {
+                    continue;
+                }
+                $cost = 0.0;
+                $latency = [];
+                $items = 0;
+                $clean = 0;
+                foreach ($providerResults as $r) {
+                    $cost += (float) ($r->costUsd ?? 0);
+                    if ($r->latencyMs !== null) {
+                        $latency[] = $r->latencyMs;
+                    }
+                    $items += $r->batch?->total() ?? 0;
+                    $clean += $r->batch?->clean() ?? 0;
+                }
+
+                // Per-collection: track A and C are already one call per collection; track B is one
+                // call per TERM, so its per-collection cost is the mean term cost times the size.
+                $perCollection = $track === BakeoffTrack::Enrichment
+                    ? ($cost / $calls) * $size
+                    : $cost / $calls;
+                $latencyText = $latency === []
+                    ? '—'
+                    : ($track === BakeoffTrack::Enrichment
+                        ? $this->median($latency) . ' мс × ' . $size . ' терминов'
+                        : $this->median($latency) . ' мс');
+
+                $lines[] = sprintf(
+                    '| %s | %s | $%s | %s | %s |',
+                    ProviderId::from($providerValue)->label(),
+                    match ($track) {
+                        BakeoffTrack::Collections => 'А (список)',
+                        BakeoffTrack::Enrichment => 'Б (обогащение, ×' . $size . ')',
+                        BakeoffTrack::OneShot => '**В (one-shot)**',
+                    },
+                    number_format($perCollection, 4, '.', ''),
+                    $latencyText,
+                    $items > 0 ? (int) round(100 * $clean / $items) . '%' : '—',
+                );
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = 'Сумма А + Б — это стоимость двухэтапной схемы; строка В — альтернатива ей. '
+            . 'Трек В — **эксперимент**: он не заменяет А и Б, решение по схеме пайплайна '
+            . 'принимает архитектор.';
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    private function howToRead(): string
+    {
+        return implode("\n", [
+            '## Как это читать',
+            '',
+            '- Столбец «чистых» — items, не сработавшие НИ ПО ОДНОЙ проверке. Это самый строгий '
+            . 'показатель и самый честный из автоматических.',
+            '- Столбцы проверок — сколько items сработало по каждой. Один item может сработать по '
+            . 'нескольким, поэтому сумма столбцов больше числа грязных items.',
+            '- Победитель может быть РАЗНЫМ в треках А и Б: выбирать список слов и писать ключ к '
+            . 'выданному термину — разные задачи, и пайплайны независимы.',
+            '- Провайдер, помеченный «нет» в таблице провайдеров, не участвовал вообще; его '
+            . 'отсутствие — не результат.',
+            '',
+        ]);
+    }
+
+    /**
+     * @param  list<BakeoffCallResult>  $results
+     * @return array<string, list<BakeoffCallResult>>
+     */
+    private function byProvider(array $results): array
+    {
+        $out = [];
+        foreach ($results as $result) {
+            $out[$result->provider->value][] = $result;
+        }
+
+        return $out;
+    }
+
+    /** @param list<int> $values */
+    private function median(array $values): int
+    {
+        sort($values);
+        $n = count($values);
+
+        return $n === 0 ? 0 : (int) round($values[intdiv($n, 2)]);
+    }
+
+    /** Markdown table cells break on pipes and newlines; both are content here. */
+    private function cell(string $value): string
+    {
+        return str_replace(['|', "\n"], ['\\|', ' '], trim($value));
+    }
+}

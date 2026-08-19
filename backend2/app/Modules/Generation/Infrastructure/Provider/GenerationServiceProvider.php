@@ -6,7 +6,11 @@ namespace App\Modules\Generation\Infrastructure\Provider;
 
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
+use App\Modules\Generation\Application\Port\PromptSource;
+use App\Modules\Generation\Application\Service\VocabularyKeyIsomorphism;
+use App\Modules\Generation\Domain\Service\KeyIsomorphism;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
@@ -57,6 +61,7 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeRealtimeTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\GeminiLiveTokenMinter;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiDialogSummarizer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiRealtimeTokenMinter;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentBakeoffJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentEnrichmentJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationAccountEraser;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
@@ -68,6 +73,7 @@ use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeDialogReposit
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentTermEnrichmentLog;
 use App\Modules\Generation\Infrastructure\Prompt\PracticeDialogInstructions;
+use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Vocabulary\Application\Port\DispatchesTermEnrichment;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +87,14 @@ final class GenerationServiceProvider extends ServiceProvider
         // The multi-vendor seam. Bound unconditionally: which providers can actually be called is a
         // runtime fact about keys, which the catalogue reports rather than a driver switch decides.
         $this->app->bind(ContentModelCatalog::class, ConfiguredContentModelCatalog::class);
+        // Prompts are files, so reading them is Infrastructure's job; deciding which version to run
+        // is Application's. The port is what keeps that direction one-way.
+        $this->app->bind(PromptSource::class, PromptLibrary::class);
+        // One definition of a broken translation key in the codebase: Vocabulary's. Generation
+        // declares the collaborator it needs and this is what fulfils it.
+        $this->app->bind(KeyIsomorphism::class, VocabularyKeyIsomorphism::class);
+        // The bake-off's sandbox. Bound here so nothing else can be handed a writer by accident.
+        $this->app->bind(BakeoffJournal::class, EloquentBakeoffJournal::class);
         $this->app->bind(LoggedResponseReader::class, ObservabilityLoggedResponseReader::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);

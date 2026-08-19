@@ -7,6 +7,7 @@ use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
 use App\Modules\Generation\Presentation\Console\AuditTranslationKeysCommand;
 use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
+use App\Modules\Generation\Presentation\Console\BakeoffCommand;
 use App\Modules\Generation\Presentation\Console\EnrichBackfillCommand;
 use App\Modules\Generation\Presentation\Console\RepairEchoExamplesCommand;
 use App\Modules\Generation\Presentation\Console\EvalGenerationCommand;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         GenerateCollectionCommand::class,
         EvalGenerationCommand::class,
+        BakeoffCommand::class,
         EnrichBackfillCommand::class,
         RepairEchoExamplesCommand::class,
         ApplyEnrichmentReviewCommand::class,

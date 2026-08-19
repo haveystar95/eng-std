@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Infrastructure\Prompt;
 
 use App\Modules\Generation\Application\Dto\RenderedPrompt;
+use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use InvalidArgumentException;
 use RuntimeException;
@@ -37,7 +38,7 @@ use RuntimeException;
  * Frozen versions are never edited — an old version is what makes a before/after comparison mean
  * anything.
  */
-final class PromptLibrary
+final class PromptLibrary implements PromptSource
 {
     /** The composed version and the sections each shape is built from, in order. */
     private const COMPOSED = [
