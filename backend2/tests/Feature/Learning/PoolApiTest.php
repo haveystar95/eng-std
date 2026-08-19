@@ -188,6 +188,69 @@ it('requires authentication', function () {
     $this->deleteJson('/api/v1/pool/terms/' . Ulid::generate())->assertUnauthorized();
 });
 
+it('walks a word from a swipe to a rung: triage «не знаю» → pool → session → progress', function () {
+    // The whole chapter in one case, over HTTP, exactly as the device drives it.
+    [$user, $token] = learner();
+    [$col, $antipyretic] = seedCollectionWith($user, 'antipyretic', 'жаропонижающее', enroll: false);
+    $painkiller = addWordTo($col, $user->id, 'painkiller', 'обезболивающее', enroll: false);
+
+    // 1. Nothing is studied yet, so the trainer has nothing to deal.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')
+        ->assertOk()
+        ->assertJsonPath('data.cards', []);
+
+    // 2. The swipe pass: both words «не знаю» — the learner deciding, word by word.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/triage/batch', ['triages' => [
+            ['id' => Ulid::generate(), 'term_id' => $antipyretic, 'verdict' => 'unknown', 'collection_id' => $col,
+                'decided_at' => now()->toIso8601String(), 'client_seq' => 1],
+            ['id' => Ulid::generate(), 'term_id' => $painkiller, 'verdict' => 'unknown', 'collection_id' => $col,
+                'decided_at' => now()->toIso8601String(), 'client_seq' => 2],
+        ]])->assertOk()->assertJsonPath('data.accepted', 2);
+
+    expect(DB::table('user_term_progress')->whereNotNull('enrolled_at')->count())->toBe(2);
+
+    // 3. The session now deals them — a first meeting brings its whole recognition CHAIN, starting
+    //    at the rung this learner's trainers open at (the intro trainer ships switched off, so that
+    //    is the forward recognition; with it on, the chain would start one rung lower).
+    $session = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')
+        ->assertOk()
+        ->json('data');
+
+    $own = array_values(array_filter(
+        $session['cards'],
+        static fn (array $c): bool => $c['term_id'] === $antipyretic,
+    ));
+    expect($own)->not->toBe([])
+        ->and($own[0]['exercise_mode'])->toBe('multiple_choice')
+        ->and($own[0]['ladder_step'])->toBe(1);
+
+    // 4. Playing it moves the pair: the forward recognition is answered (a TAP, graded by identity,
+    //    so the response is the tapped option's term id) and the rung climbs. Progress goes, and it
+    //    goes on a word the learner chose.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', [
+            'reviews' => [[
+                'id' => Ulid::generate(), 'term_id' => $antipyretic, 'exercise_mode' => 'multiple_choice',
+                'ladder_step' => 1, 'response' => $antipyretic, 'answered_at' => now()->toIso8601String(),
+                'session_id' => $session['session_id'], 'client_seq' => 3,
+            ]],
+        ])->assertOk();
+
+    $row = DB::table('user_term_progress')->where('term_id', $antipyretic)->first();
+    expect($row?->acquisition)->toBe('learning')
+        ->and($row?->learning_step)->toBe(2)
+        ->and($row?->enrolled_at)->not->toBeNull();
+
+    // …and the day's new-word budget was spent by the MEETING, not by the decision to study it.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/stats')
+        ->assertOk()
+        ->assertJsonPath('data.new_today', 1);
+});
+
 it('still checks a «знаю» verification even though the pair is out of the pool', function () {
     [$user, $token] = learner();
     [$col, $money] = seedCollectionWith($user, 'money', 'деньги', enroll: false);
