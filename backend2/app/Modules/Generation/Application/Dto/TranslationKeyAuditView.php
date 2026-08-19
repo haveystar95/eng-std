@@ -8,10 +8,12 @@ namespace App\Modules\Generation\Application\Dto;
 final readonly class TranslationKeyAuditView
 {
     /**
-     * @param  int  $seen  pairs judged across every language swept
+     * @param  int  $seen  pairs judged across every language swept, terms and examples together
      * @param  list<TranslationKeyAuditRow>  $rows
      * @param  list<string>  $groupNames  every group, so a report can show the empty ones too
-     * @param  array<string, int>  $seenByLang  language => pairs judged in it
+     * @param  array<string, int>  $seenTermsByLang  language => term pairs judged in it
+     * @param  array<string, int>  $seenExamplesByLang  language => example pairs judged in it
+     * @param  int  $skippedExamples  example pairs left unjudged because their language is not recorded
      * @param  list<string>  $ruleLanguages  languages the rule has counterpart lists for, so the
      *                       report can mark a silent language as silent rather than clean
      */
@@ -19,7 +21,9 @@ final readonly class TranslationKeyAuditView
         public int $seen,
         public array $rows,
         public array $groupNames,
-        public array $seenByLang,
+        public array $seenTermsByLang,
+        public array $seenExamplesByLang,
+        public int $skippedExamples,
         public array $ruleLanguages,
     ) {}
 }

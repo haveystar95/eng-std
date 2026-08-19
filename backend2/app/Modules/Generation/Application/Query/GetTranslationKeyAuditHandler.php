@@ -37,6 +37,8 @@ final readonly class GetTranslationKeyAuditHandler
             static fn ($c): TranslationKeyAuditRow => new TranslationKeyAuditRow(
                 termId: $c->termId,
                 termText: $c->termText,
+                kind: $c->kind,
+                sourceText: $c->sourceText,
                 lang: $c->lang,
                 translation: $c->translation,
                 groups: $c->groups,
@@ -54,7 +56,9 @@ final readonly class GetTranslationKeyAuditHandler
             // layer is allowed to reach into. Which languages it knows is the same kind of fact —
             // the report states it, Vocabulary decides it.
             groupNames: $judged->groupNames,
-            seenByLang: $judged->seenByLang,
+            seenTermsByLang: $judged->seenTermsByLang,
+            seenExamplesByLang: $judged->seenExamplesByLang,
+            skippedExamples: $judged->skippedExamples,
             ruleLanguages: $judged->ruleLanguages,
         );
     }

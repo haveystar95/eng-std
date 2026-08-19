@@ -40,6 +40,19 @@ function seedSweepTerm(string $termId, string $text, string $lang, string $trans
     ]);
 }
 
+function seedSweepExample(string $termId, string $exampleId, string $sentence, ?string $translation): void
+{
+    DB::table('term_examples')->insert([
+        'id' => $exampleId,
+        'term_id' => $termId,
+        'sentence' => $sentence,
+        'sentence_translation' => $translation,
+        'source' => 'ai',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+}
+
 function sweepExportPath(): string
 {
     return storage_path('app/testing/translation-keys-sweep.md');
@@ -71,6 +84,28 @@ beforeEach(function () {
         str_pad('01SWEEPTOK', 26, '0'),
     );
 
+    // The owner's SECOND live case, from the phone: the example of the same card, «нам» dropped.
+    seedSweepExample(
+        str_pad('01SWEEPRU', 26, '0'),
+        str_pad('01SWEEPEXRU', 26, '0'),
+        'Tell us about a challenge you faced and how you overcame it',
+        'Расскажите о вызове, с которым вы столкнулись, и как вы его преодолели',
+    );
+    // A clean example, and one with no translation at all — neither is a candidate, and only the
+    // first is a judged pair.
+    seedSweepExample(
+        str_pad('01SWEEPOK', 26, '0'),
+        str_pad('01SWEEPEXOK', 26, '0'),
+        'I need to withdraw cash today',
+        'Мне нужно снять наличные сегодня',
+    );
+    seedSweepExample(
+        str_pad('01SWEEPOK', 26, '0'),
+        str_pad('01SWEEPEXNO', 26, '0'),
+        'The cash machine is broken',
+        null,
+    );
+
     @unlink(sweepExportPath());
 });
 
@@ -81,8 +116,8 @@ it('sweeps every language in the store without being told which ones exist', fun
     $export = (string) file_get_contents(sweepExportPath());
 
     expect($export)
-        ->toContain('Просмотрено пар: **3**')
-        ->toContain('Кандидатов: **2**')
+        ->toContain('Просмотрено пар: **5** — терминных **3**, примерных **2**')
+        ->toContain('Кандидатов: **3**')
         ->toContain('Tell us about a challenge you faced')
         ->toContain('Describe your experience')
         ->not->toContain('withdraw cash');
@@ -116,9 +151,9 @@ it('counts pairs per language and says where the rule is silent rather than clea
     $export = (string) file_get_contents(sweepExportPath());
 
     expect($export)
-        ->toContain('| `ru` | 2 | 1 | да |')
-        ->toContain('| `uk` | 1 | 1 | да |')
-        ->toContain('| `es` | 1 | 0 | **НЕТ — детектор здесь молчит** |');
+        ->toContain('| `ru` | 2 | 2 | 2 | да |')
+        ->toContain('| `uk` | 1 | 0 | 1 | да |')
+        ->toContain('| `es` | 1 | 0 | 0 | **НЕТ — детектор здесь молчит** |');
 });
 
 it('still narrows to one language when asked, and says so in the header', function () {
@@ -129,7 +164,7 @@ it('still narrows to one language when asked, and says so in the header', functi
 
     expect($export)
         ->toContain('направление: `en` → `ru`')
-        ->toContain('Просмотрено пар: **2**')
+        ->toContain('Просмотрено пар: **4** — терминных **2**, примерных **2**')
         ->not->toContain('Describe your experience');
 });
 
@@ -162,7 +197,7 @@ it('breaks the candidates down by the decks that ask them', function () {
 
     expect($export)
         ->toContain('## Разбивка по коллекциям')
-        ->toContain('| Собеседование в IT | 1 |')
+        ->toContain('| Собеседование в IT | 2 |')
         ->toContain('| — вне колод — | 1 |');
 });
 
@@ -174,4 +209,40 @@ it('writes the export with the standard header, so the snapshot dates the data',
 
     expect($export)->toStartWith('<!-- snapshot: ')
         ->and($export)->toContain('· head: ');
+});
+
+it('judges example sentences as keys in their own right, in their own table', function () {
+    $this->artisan('vocab:audit-translation-keys', ['--out' => sweepExportPath()])
+        ->assertSuccessful();
+
+    $export = (string) file_get_contents(sweepExportPath());
+
+    expect($export)
+        ->toContain('### Примеры (1)')
+        ->toContain('Tell us about a challenge you faced and how you overcame it')
+        ->not->toContain('I need to withdraw cash today');
+});
+
+it('never judges an example whose language it cannot know, and says how many it skipped', function () {
+    // A second primary translation, in another language, makes the example's own language a guess:
+    // `sentence_translation` records none. The pair drops out of the sweep and into the count.
+    DB::table('term_translations')->insert([
+        'id' => str_pad('01SWEEPTRU2', 26, '0'),
+        'term_id' => str_pad('01SWEEPRU', 26, '0'),
+        'lang' => 'uk',
+        'text' => 'Розкажіть про виклик, з яким ви зіткнулися',
+        'is_primary' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $this->artisan('vocab:audit-translation-keys', ['--out' => sweepExportPath()])
+        ->assertSuccessful();
+
+    $export = (string) file_get_contents(sweepExportPath());
+
+    expect($export)
+        ->toContain('Примеров **не проверено: 1**')
+        ->toContain('### Примеры (0)')
+        ->not->toContain('and how you overcame it');
 });

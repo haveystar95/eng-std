@@ -93,7 +93,7 @@ final class AddresseeIsomorphism
     ];
 
     /**
-     * What this pair dropped: per tripped group, the term's own words that went unanswered.
+     * What this pair dropped: per tripped group, the source's own words that went unanswered.
      *
      * This is the rule's full answer and {@see violations()} is a projection of it. The group name
      * counts a row; the words are what makes the row readable — a proof-reader should not have to
@@ -104,7 +104,7 @@ final class AddresseeIsomorphism
      *                        for a learner language the rule hasn't been taught yet).
      * @return list<AddresseeMiss>  in the order the groups are declared above
      */
-    public function misses(string $term, string $translation, string $lang = 'ru'): array
+    public function misses(string $source, string $translation, string $lang = 'ru'): array
     {
         $out = [];
         foreach (self::GROUPS as $group) {
@@ -112,9 +112,9 @@ final class AddresseeIsomorphism
             if ($counterparts === null) {
                 continue;
             }
-            $used = $this->matched($term, $group['triggers']);
+            $used = $this->matched($source, $group['triggers']);
             if ($used === []) {
-                continue; // the term never addresses anyone in this group
+                continue; // the source never addresses anyone in this group
             }
             if ($this->containsAny($translation, $counterparts)) {
                 continue; // …and the translation carries it
@@ -131,11 +131,11 @@ final class AddresseeIsomorphism
      * @param  string  $lang  the translation's language, as in {@see misses()}
      * @return list<string>  group names, in the order declared above
      */
-    public function violations(string $term, string $translation, string $lang = 'ru'): array
+    public function violations(string $source, string $translation, string $lang = 'ru'): array
     {
         return array_map(
             static fn (AddresseeMiss $miss): string => $miss->group,
-            $this->misses($term, $translation, $lang),
+            $this->misses($source, $translation, $lang),
         );
     }
 

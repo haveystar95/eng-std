@@ -57,20 +57,26 @@ final class AuditTranslationKeysCommand extends Command
 
         $this->writeExport($path, $view, $termLang);
 
-        $this->line('просмотрено пар: ' . $view->seen);
+        $this->line('просмотрено пар: ' . $view->seen
+            . ' (терминных ' . array_sum($view->seenTermsByLang)
+            . ', примерных ' . array_sum($view->seenExamplesByLang) . ')');
         $this->line('кандидатов на вычитку: ' . count($view->rows));
+        if ($view->skippedExamples > 0) {
+            $this->warn('примеров пропущено (язык перевода примера не записан): ' . $view->skippedExamples);
+        }
 
         $this->table(
-            ['язык', 'пар', 'кандидатов', 'правило знает язык'],
+            ['язык', 'терминных пар', 'примерных пар', 'кандидатов', 'правило знает язык'],
             array_map(
                 fn (string $lang, int $pairs): array => [
                     $lang,
                     (string) $pairs,
+                    (string) ($view->seenExamplesByLang[$lang] ?? 0),
                     (string) $this->countForLang($view->rows, $lang),
                     in_array($lang, $view->ruleLanguages, true) ? 'да' : 'НЕТ — правило молчит',
                 ],
-                array_keys($view->seenByLang),
-                $view->seenByLang,
+                array_keys($view->seenTermsByLang),
+                $view->seenTermsByLang,
             ),
         );
 
@@ -111,7 +117,7 @@ final class AuditTranslationKeysCommand extends Command
     private function markdown(TranslationKeyAuditView $view, string $termLang): string
     {
         $header = ExportHeader::now();
-        $langs = array_keys($view->seenByLang);
+        $langs = array_keys($view->seenTermsByLang);
         $direction = $langs === []
             ? "направление: `{$termLang}` → (в витрине нет переводов)"
             : "направление: `{$termLang}` → `" . implode('`, `', $langs) . '`';
@@ -133,27 +139,43 @@ final class AuditTranslationKeysCommand extends Command
             'притяжательное «свой»/«свій» — стоять за «ваш»/«ваш». Строка здесь — кандидат на прочтение,',
             'а не приговор. Правки едут отдельным заходом через существующий apply-механизм.',
             '',
-            "Просмотрено пар: **{$view->seen}**. Кандидатов: **" . count($view->rows) . '**.',
+            "Просмотрено пар: **{$view->seen}** — терминных **" . array_sum($view->seenTermsByLang)
+                . '**, примерных **' . array_sum($view->seenExamplesByLang) . '**. Кандидатов: **'
+                . count($view->rows) . '**.',
+            '',
+            'Пример — такой же ключ, как термин: его показывают, произносят и отвечают на него, поэтому',
+            'потерянный адресат в переводе примера ломает карточку ровно так же.',
             '',
             '## Языки',
             '',
             'Колонка «правило знает язык» — не формальность: для языка без списка соответствий детектор',
             'молчит по построению, и ноль кандидатов там означает «не проверено», а не «чисто».',
             '',
-            '| язык | пар | кандидатов | правило знает язык |',
-            '|---|---|---|---|',
+            '| язык | терминных пар | примерных пар | кандидатов | правило знает язык |',
+            '|---|---|---|---|---|',
         ];
 
-        foreach ($view->seenByLang as $lang => $pairs) {
+        foreach ($view->seenTermsByLang as $lang => $pairs) {
             $lines[] = sprintf(
-                '| `%s` | %d | %d | %s |',
+                '| `%s` | %d | %d | %d | %s |',
                 $lang,
                 $pairs,
+                $view->seenExamplesByLang[$lang] ?? 0,
                 $this->countForLang($view->rows, $lang),
                 in_array($lang, $view->ruleLanguages, true) ? 'да' : '**НЕТ — детектор здесь молчит**',
             );
         }
         $lines[] = '';
+
+        if ($view->skippedExamples > 0) {
+            $lines[] = sprintf(
+                'Примеров **не проверено: %d** — у их терминов перевод больше чем на один язык, а язык',
+                $view->skippedExamples,
+            );
+            $lines[] = 'самого перевода примера нигде не записан. Аудит не угадывает: строка, язык которой';
+            $lines[] = 'неизвестен, пропущена и посчитана здесь, а не судится наугад.';
+            $lines[] = '';
+        }
 
         if ($view->rows === []) {
             $lines[] = '_Нечего вычитывать._';
@@ -169,21 +191,48 @@ final class AuditTranslationKeysCommand extends Command
         $lines[] = 'если перевод несёт лицо иначе (глаголом, «свой»), строка — ложное срабатывание, и это';
         $lines[] = 'видно прямо здесь.';
         $lines[] = '';
+        $terms = array_values(array_filter($view->rows, static fn (TranslationKeyAuditRow $r): bool => $r->kind === 'term'));
+        $examples = array_values(array_filter($view->rows, static fn (TranslationKeyAuditRow $r): bool => $r->kind === 'example'));
+
+        $lines[] = '### Термины (' . count($terms) . ')';
+        $lines[] = '';
         $lines[] = '| язык | термин | текущий перевод | чего не хватает | коллекция | группа |';
         $lines[] = '|---|---|---|---|---|---|';
-        foreach ($view->rows as $row) {
-            $decks = $row->collections === [] ? '—' : implode(', ', $row->collections);
+        foreach ($terms as $row) {
             $lines[] = sprintf(
                 '| `%s` | %s | %s | %s | %s | `%s` |',
                 $row->lang,
                 $this->cell($row->termText),
                 $this->cell($row->translation),
                 $this->cell($this->missing($row)),
-                $this->cell($decks),
+                $this->cell($this->decks($row)),
                 implode('`, `', $row->groups),
             );
         }
         $lines[] = '';
+
+        $lines[] = '### Примеры (' . count($examples) . ')';
+        $lines[] = '';
+        if ($examples === []) {
+            $lines[] = '_Чисто._';
+            $lines[] = '';
+        } else {
+            $lines[] = '| язык | термин | пример | перевод примера | чего не хватает | коллекция | группа |';
+            $lines[] = '|---|---|---|---|---|---|---|';
+            foreach ($examples as $row) {
+                $lines[] = sprintf(
+                    '| `%s` | %s | %s | %s | %s | %s | `%s` |',
+                    $row->lang,
+                    $this->cell($row->termText),
+                    $this->cell($row->sourceText),
+                    $this->cell($row->translation),
+                    $this->cell($this->missing($row)),
+                    $this->cell($this->decks($row)),
+                    implode('`, `', $row->groups),
+                );
+            }
+            $lines[] = '';
+        }
 
         $lines[] = '## Разбивка по группам';
         $lines[] = '';
@@ -207,6 +256,12 @@ final class AuditTranslationKeysCommand extends Command
         $lines[] = '';
 
         return implode("\n", $lines) . "\n";
+    }
+
+    /** The decks a candidate is asked in, or a dash — a term outside every live deck is still a key. */
+    private function decks(TranslationKeyAuditRow $row): string
+    {
+        return $row->collections === [] ? '—' : implode(', ', $row->collections);
     }
 
     /** «чего не хватает», one line per unanswered word: the word, then what would have answered it. */

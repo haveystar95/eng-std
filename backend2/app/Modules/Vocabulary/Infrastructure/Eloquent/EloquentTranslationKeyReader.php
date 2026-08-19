@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
+use App\Modules\Vocabulary\Application\Dto\ExampleKeyRow;
 use App\Modules\Vocabulary\Application\Dto\TranslationKeyRow;
 use App\Modules\Vocabulary\Application\Query\TranslationKeyReader;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,51 @@ final class EloquentTranslationKeyReader implements TranslationKeyReader
             translationId: (string) $r->translation_id,
             translation: (string) $r->translation,
         ))->all());
+    }
+
+    public function primaryExampleKeys(string $termLang, string $translationLang): array
+    {
+        $rows = DB::table('terms as t')
+            ->join('term_examples as e', 'e.term_id', '=', 't.id')
+            ->whereNull('t.deleted_at')
+            ->where('t.lang', $termLang)
+            ->whereNotNull('e.sentence_translation')
+            ->where('e.sentence_translation', '<>', '')
+            // The example's own language is not recorded, so it is taken from the term's primary
+            // translation — and only when that is unambiguous. See the port for why a guess is worse
+            // than a skip.
+            ->whereExists(fn ($q) => $q->from('term_translations as tr')
+                ->whereColumn('tr.term_id', 't.id')
+                ->where('tr.is_primary', true)
+                ->where('tr.lang', $translationLang))
+            ->whereRaw(
+                '(select count(distinct tr2.lang) from term_translations tr2 where tr2.term_id = t.id and tr2.is_primary) = 1',
+            )
+            ->orderBy('t.text')
+            ->orderBy('e.id')
+            ->get(['t.id as term_id', 't.text as term_text', 'e.id as example_id', 'e.sentence', 'e.sentence_translation']);
+
+        return array_values($rows->map(static fn (object $r): ExampleKeyRow => new ExampleKeyRow(
+            termId: (string) $r->term_id,
+            termText: (string) $r->term_text,
+            exampleId: (string) $r->example_id,
+            sentence: (string) $r->sentence,
+            translation: (string) $r->sentence_translation,
+        ))->all());
+    }
+
+    public function examplesOfUnknownLangCount(string $termLang): int
+    {
+        return DB::table('terms as t')
+            ->join('term_examples as e', 'e.term_id', '=', 't.id')
+            ->whereNull('t.deleted_at')
+            ->where('t.lang', $termLang)
+            ->whereNotNull('e.sentence_translation')
+            ->where('e.sentence_translation', '<>', '')
+            ->whereRaw(
+                '(select count(distinct tr.lang) from term_translations tr where tr.term_id = t.id and tr.is_primary) > 1',
+            )
+            ->count();
     }
 
     public function translationLangs(string $termLang): array

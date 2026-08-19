@@ -152,17 +152,17 @@ it('names the term word that went unanswered, not just the group', function () {
 
     expect($misses)->toHaveCount(2)
         ->and($misses[0]->group)->toBe('us/me')
-        ->and($misses[0]->termWords)->toBe(['me'], 'the term says `me`, never `us` — the report must not claim otherwise')
+        ->and($misses[0]->words)->toBe(['me'], 'the term says `me`, never `us` — the report must not claim otherwise')
         ->and($misses[1]->group)->toBe('you/your')
-        ->and($misses[1]->termWords)->toBe(['you']);
+        ->and($misses[1]->words)->toBe(['you']);
 });
 
 it('lists every trigger of a group the term actually uses, in term order', function () {
     $misses = $this->rule->misses('Tell us what you think of your team and our plan', 'Скажите, что думаете о команде и плане');
 
-    expect($misses[0]->termWords)->toBe(['us'])
-        ->and($misses[1]->termWords)->toBe(['you', 'your'], 'both triggers are in the term, both are unanswered')
-        ->and($misses[2]->termWords)->toBe(['our']);
+    expect($misses[0]->words)->toBe(['us'])
+        ->and($misses[1]->words)->toBe(['you', 'your'], 'both triggers are in the term, both are unanswered')
+        ->and($misses[2]->words)->toBe(['our']);
 });
 
 it('carries the forms that would have cleared the group, so a false positive is visible as one', function () {
@@ -247,4 +247,32 @@ it('keeps ru and uk symmetric on the informal second person', function () {
         ->toBe(['you/your'], 'свій is still not a second-person word in either language');
     expect($this->rule->violations('Describe your experience', 'Опиши твій досвід', 'uk'))->toBe([]);
     expect($this->rule->violations('Describe your experience', 'Опиши твой опыт'))->toBe([]);
+});
+
+// Вторая волна, часть 2: пример — такой же ключ, как термин. Правило принимает ИСТОЧНИК, и ему
+// всё равно, термин это или предложение; здесь закреплено, что живой кейс с телефона ловится.
+
+it("catches the owner's second live case: «нам» dropped from an EXAMPLE sentence", function () {
+    expect($this->rule->violations(
+        'Tell us about a challenge you faced and how you overcame it',
+        'Расскажите о вызове, с которым вы столкнулись, и как вы его преодолели',
+    ))->toBe(['us/me']);
+});
+
+it('names `us` as the word the example translation left unanswered', function () {
+    $gaps = $this->rule->misses(
+        'Tell us about a challenge you faced and how you overcame it',
+        'Расскажите о вызове, с которым вы столкнулись, и как вы его преодолели',
+    );
+
+    expect($gaps)->toHaveCount(1)
+        ->and($gaps[0]->words)->toBe(['us'])
+        ->and($gaps[0]->expected)->toContain('нам');
+});
+
+it('clears the same example once «нам» is back', function () {
+    expect($this->rule->violations(
+        'Tell us about a challenge you faced and how you overcame it',
+        'Расскажите нам о вызове, с которым вы столкнулись, и как вы его преодолели',
+    ))->toBe([]);
 });
