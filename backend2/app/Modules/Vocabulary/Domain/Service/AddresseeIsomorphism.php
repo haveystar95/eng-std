@@ -36,11 +36,22 @@ final class AddresseeIsomorphism
      *
      * `you` sits with `your`/`yours` because both Russian and Ukrainian mark them with the same
      * stem, and separating them would flag «расскажите нам о вашем опыте» for having no separate
-     * word for `you`.
+     * word for `you`. For the same reason a group is a PERSON, not a case: any form of that person
+     * answers it. «нам» — first person plural, dative — answers `we` as readily as it answers `us`
+     * («Could we have the bill?» → «Можно **нам** счёт?»), so it belongs in both lists; the first
+     * whole-store run flagged that row for a «мы» it never needed.
      *
-     * Ukrainian's `us`/`me` forms overlap Russian's exactly for this pair («нам», «нас» are spelled
-     * identically in both languages) — everything else (мені, мене, ви, вас, вам, ваш-forms, твій,
-     * тобі, ми, наш-forms) is Ukrainian-specific and does not exist in the Russian list.
+     * The ты-forms are in `you/your` because Russian's informal second person is still the second
+     * person. «На **твоём** месте я бы согласился» answers `If I were you` completely, and the same
+     * run flagged it, «Если **ты** будешь усердно учиться» and «Какой у **тебя** номер?» only
+     * because the rule had been taught вы-forms and not ты-forms. Ukrainian gets the same treatment
+     * in the same commit: the identical defect must not read as a hit in one language and clean in
+     * the other, which is what its shorter твій/тобі list used to produce.
+     *
+     * Each list is a whole paradigm rather than a stem, because matching is by standalone word: a
+     * missing «вашем» is a false positive nobody can see, and a stem match would clear «нас» on
+     * «насос». Ukrainian's `us`/`me` forms overlap Russian's for the plural («нам», «нас», «нами»
+     * are spelled identically); the rest of each list is that language's own.
      *
      * @var list<array{name: string, triggers: list<string>, counterparts: array<string, list<string>>}>
      */
@@ -49,24 +60,34 @@ final class AddresseeIsomorphism
             'name' => 'us/me',
             'triggers' => ['us', 'me'],
             'counterparts' => [
-                'ru' => ['нам', 'нас', 'мне', 'меня', 'я'],
-                'uk' => ['нам', 'нас', 'мені', 'мене'],
+                'ru' => ['нам', 'нас', 'нами', 'мне', 'меня', 'мной', 'мною', 'я'],
+                'uk' => ['нам', 'нас', 'нами', 'мені', 'мене', 'мною', 'я'],
             ],
         ],
         [
             'name' => 'you/your',
             'triggers' => ['you', 'your', 'yours'],
             'counterparts' => [
-                'ru' => ['вы', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваши'],
-                'uk' => ['ви', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваші', 'твій', 'тобі'],
+                'ru' => [
+                    'вы', 'вас', 'вам', 'вами', 'ваш', 'ваша', 'ваше', 'ваши', 'вашего', 'вашему',
+                    'вашей', 'вашем', 'вашим', 'вашими', 'ваших', 'вашу',
+                    'ты', 'тебя', 'тебе', 'тобой', 'тобою', 'твой', 'твоя', 'твоё', 'твое', 'твои',
+                    'твоего', 'твоему', 'твоей', 'твоём', 'твоем', 'твоим', 'твоими', 'твоих', 'твою',
+                ],
+                'uk' => [
+                    'ви', 'вас', 'вам', 'вами', 'ваш', 'ваша', 'ваше', 'ваші', 'вашого', 'вашому',
+                    'вашій', 'вашим', 'вашими', 'ваших', 'вашу',
+                    'ти', 'тебе', 'тобі', 'тобою', 'твій', 'твоя', 'твоє', 'твої', 'твого', 'твоєму',
+                    'твоїй', 'твоїм', 'твоїми', 'твоїх', 'твою',
+                ],
             ],
         ],
         [
             'name' => 'we/our',
             'triggers' => ['we', 'our', 'ours'],
             'counterparts' => [
-                'ru' => ['мы', 'наш', 'наша', 'наше', 'наши'],
-                'uk' => ['ми', 'наш', 'наша', 'наше', 'наші'],
+                'ru' => ['мы', 'нам', 'нас', 'нами', 'наш', 'наша', 'наше', 'наши', 'нашего', 'нашему', 'нашей', 'нашем', 'нашим', 'нашими', 'наших', 'нашу'],
+                'uk' => ['ми', 'нам', 'нас', 'нами', 'наш', 'наша', 'наше', 'наші', 'нашого', 'нашому', 'нашій', 'нашим', 'нашими', 'наших', 'нашу'],
             ],
         ],
     ];

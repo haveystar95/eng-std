@@ -111,7 +111,7 @@ it('catches `your` dropped from a Ukrainian translation, and clears on ваш or
     expect($this->rule->violations('Describe your experience', 'Опишіть ваш досвід', 'uk'))
         ->toBe([]);
     expect($this->rule->violations('What is your name?', 'Як тебе звати?', 'uk'))
-        ->toBe(['you/your'], 'тебе is not one of the listed Ukrainian counterparts, only ви/вас/вам/ваш*/твій/тобі');
+        ->toBe([], 'тебе is the second person too — it clears the group since the ты-forms landed');
     expect($this->rule->violations('What is your name?', 'Як твій друг?', 'uk'))
         ->toBe([]);
 });
@@ -171,7 +171,7 @@ it('carries the forms that would have cleared the group, so a false positive is 
     $misses = $this->rule->misses('Describe your experience', 'Опишите свой опыт');
 
     expect($misses)->toHaveCount(1)
-        ->and($misses[0]->expected)->toBe(['вы', 'вас', 'вам', 'ваш', 'ваша', 'ваше', 'ваши'])
+        ->and($misses[0]->expected)->toContain('вы', 'ваш', 'ваши')
         ->and($misses[0]->expected)->not->toContain('свой');
 });
 
@@ -194,4 +194,57 @@ it('says which languages it has been taught, so a sweep can tell «silent» from
 
 it('reports no miss at all for a language it does not know, rather than an empty-formed one', function () {
     expect($this->rule->misses('Tell us about it', 'Cuéntanos sobre esto', 'es'))->toBe([]);
+});
+
+// Вторая волна, часть 1: списки соответствий по следам первого прогона по всей витрине. Каждый
+// случай здесь — конкретная строка выгрузки от 2026-08-19, помеченная зря.
+
+it('clears the ты-forms: informal is still the second person', function () {
+    // Три строки прошлого прогона. Адресат в переводе есть, правило его не знало.
+    expect($this->rule->violations('If I were you, I would take the job', 'На твоём месте я бы согласился на работу'))
+        ->toBe([]);
+    expect($this->rule->violations('If you study hard, you will pass the exam', 'Если ты будешь усердно учиться, ты сдашь экзамен'))
+        ->toBe([]);
+    expect($this->rule->violations("What's your number?", 'Какой у тебя номер?'))
+        ->toBe([]);
+});
+
+it('keeps flagging a translation with no second person at all', function () {
+    // The ты-forms must not have widened the group into "any word will do".
+    expect($this->rule->violations('Can you describe it?', 'Можете это описать?'))
+        ->toBe(['you/your']);
+    expect($this->rule->violations('fasten your seatbelt', 'пристегните ремень безопасности'))
+        ->toBe(['you/your']);
+});
+
+it('does not read «ты» inside another word', function () {
+    // «ты» is two letters and lives inside «цветы», «мечты», «работы» — a substring match here would
+    // clear half the store silently.
+    expect($this->rule->violations('Can you water your flowers?', 'Полить цветы?'))
+        ->toBe(['you/your'], 'цветы must not count as «ты»');
+    expect($this->rule->violations('What are your dreams?', 'Какие мечты?'))
+        ->toBe(['you/your'], 'мечты must not count as «ты»');
+});
+
+it('counts «нам» as an answer to `we`, not only to `us`', function () {
+    // «Could we have the bill, please?» → «Можно нам счёт, пожалуйста?». The dative first person
+    // plural renders `we` here; the group is a person, and «нам» is that person.
+    expect($this->rule->violations('Could we have the bill, please?', 'Можно нам счёт, пожалуйста?'))
+        ->toBe([]);
+    expect($this->rule->violations('Could we have the bill, please?', 'Можно нам счёт, будь ласка?', 'uk'))
+        ->toBe([]);
+});
+
+it('still catches a `we` that the translation carries in no form', function () {
+    expect($this->rule->violations('as per our conversation', 'как обсуждали ранее'))
+        ->toBe(['we/our']);
+});
+
+it('keeps ru and uk symmetric on the informal second person', function () {
+    // The same defect must not be a hit in one language and clean in the other — the whole reason
+    // the Ukrainian list grew in the same commit as the Russian one.
+    expect($this->rule->violations('Describe your experience', 'Опиши свій досвід', 'uk'))
+        ->toBe(['you/your'], 'свій is still not a second-person word in either language');
+    expect($this->rule->violations('Describe your experience', 'Опиши твій досвід', 'uk'))->toBe([]);
+    expect($this->rule->violations('Describe your experience', 'Опиши твой опыт'))->toBe([]);
 });

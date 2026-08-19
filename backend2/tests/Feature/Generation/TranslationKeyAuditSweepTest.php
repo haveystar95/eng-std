@@ -95,8 +95,8 @@ it('names the missing word of the term, with the forms that would have cleared i
     $export = (string) file_get_contents(sweepExportPath());
 
     expect($export)
-        ->toContain('`us` → нам/нас/мне/меня/я')
-        ->toContain('`your` → ви/вас/вам/ваш/ваша/ваше/ваші/твій/тобі');
+        ->toContain('`us` → нам/нас/нами/мне')
+        ->toContain('`your` → ви/вас/вам/вами/ваш');
 });
 
 it('counts pairs per language and says where the rule is silent rather than clean', function () {
