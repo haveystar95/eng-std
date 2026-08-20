@@ -15,9 +15,14 @@ namespace App\Modules\Learning\Domain\ValueObject;
  */
 final readonly class ContentAssessment
 {
-    /** @param  array<string, ModeContentVerdict>  $modes  keyed by {@see ExerciseMode::$value} */
+    /**
+     * @param  list<int>  $usableIndexes  positions, in the order the distractors were handed in, of
+     *                                    the rows a card would actually deal
+     * @param  array<string, ModeContentVerdict>  $modes  keyed by {@see ExerciseMode::$value}
+     */
     public function __construct(
         public int $usableDistractors,
+        public array $usableIndexes,
         public array $modes,
     ) {}
 

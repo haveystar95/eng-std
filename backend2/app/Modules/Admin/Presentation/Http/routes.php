@@ -79,6 +79,7 @@ Route::middleware('auth:admin')->group(function (): void {
     // when a trainer opens FOR A LEARNER; this answers whether the card can be built at all.
     Route::get('/content-health/summary', [ContentHealthController::class, 'summary']);
     Route::get('/content-health/collections/{id}', [ContentHealthController::class, 'collection']);
+    Route::get('/content-health/terms/{id}', [ContentHealthController::class, 'term']);
 
     Route::get('/terms', [TermController::class, 'index']);
     Route::get('/terms/{id}', [TermController::class, 'show']);

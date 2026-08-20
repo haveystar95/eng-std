@@ -786,6 +786,31 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
 
+  /content-health/terms/{id}:
+    get:
+      tags: [Content health]
+      summary: One term's content passport, with a per-trainer simulation
+      description: >
+        What this term HOLDS (translations, the pinned example, live distractors, accepted variants,
+        the enrichment marks and findings) and what each of the ten trainers could build from it.
+
+        Answers «что позволяет контент термина» and deliberately not «когда тренажёр откроется
+        ученику» — the second is the ladder's question and has its own screen. A green line here does
+        not mean the learner will see that card.
+
+        Two lists of wrong sentences, never merged: `distractors` are live rows (each flagged
+        `usable` — a card deals one per `error_span`), `suppressed` are sentences a proofreader or
+        the audit removed, which outlive the rows and even the example they hung off.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TermContentPassport' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
   /terms:
     get:
       tags: [Terms]
@@ -1786,6 +1811,136 @@ components:
         pick_correct_ready: { type: integer }
         estimated_topup_usd: { type: number }
         topup_command: { type: string, description: ready to paste into a terminal; the panel never runs it }
+        min_distractors: { type: integer }
+        cost_per_term_usd: { type: number }
+
+    ModeSimulation:
+      type: object
+      description: >
+        One trainer's verdict on this term's content. `pool_dependent` is not a hedge:
+        `multiple_choice` builds its wrong options out of OTHER words in the session, so no content
+        of this term decides whether its card assembles.
+      properties:
+        mode: { $ref: '#/components/schemas/ExerciseMode' }
+        status: { type: string, enum: [ok, blocked, pool_dependent] }
+        reason:
+          type: [string, 'null']
+          description: Machine reason; null exactly when `status` is `ok`.
+          enum: [single_word, no_example, example_lacks_term, example_is_term, no_example_translation,
+                 example_too_short, example_too_long, too_few_distractors, options_from_pool, null]
+        explanation: { type: string, description: 'the same thing in Russian, for the screen' }
+
+    TermContentPassport:
+      type: object
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        lang: { type: string }
+        type: { type: string }
+        translations:
+          type: array
+          items:
+            type: object
+            properties:
+              lang: { type: string }
+              text: { type: string }
+              is_primary: { type: boolean }
+        example:
+          type: [object, 'null']
+          description: The PINNED example — the only sentence the learner ever sees.
+          properties:
+            id: { type: string }
+            sentence: { type: [string, 'null'] }
+            translation: { type: [string, 'null'] }
+        distractors:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              sentence: { type: string }
+              error_type: { type: string, enum: [article, preposition, tense, word_order, false_friend, modal_to] }
+              error_span: { type: string }
+              correction: { type: string }
+              generator_version: { type: string }
+              usable:
+                type: boolean
+                description: >
+                  false = a card would not deal this row, because another distractor already breaks
+                  the same span and the trainer keeps one error per card.
+        error_type_note:
+          type: string
+          description: >
+            Says in Russian that `error_type` is the станок's own guess, checked by nothing — read
+            the span and the correction, treat the label as a hint.
+        suppressed:
+          type: array
+          description: Sentences a proofreader or the audit removed. Their own list, never merged with the live rows.
+          items:
+            type: object
+            properties:
+              sentence: { type: string, description: stored canonicalized }
+              source: { type: string, enum: [review, audit] }
+              created_at: { type: [string, 'null'], format: date-time }
+        accepted_variants:
+          type: array
+          items:
+            type: object
+            properties:
+              text: { type: string }
+              note: { type: [string, 'null'] }
+              generator_version: { type: string }
+        enrichment_versions:
+          type: array
+          description: Every mark the станок left on this term, newest first.
+          items:
+            type: object
+            properties:
+              version: { type: string }
+              created_at: { type: [string, 'null'], format: date-time }
+        enrichment_version: { type: [string, 'null'], description: the newest of the above }
+        findings:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: { type: string }
+              field: { type: [string, 'null'] }
+              detail: { type: string }
+              generator_version: { type: string }
+              created_at: { type: [string, 'null'], format: date-time }
+        simulation:
+          type: array
+          description: Every trainer this build knows, in the enum's own order.
+          items: { $ref: '#/components/schemas/ModeSimulation' }
+        usable_distractors: { type: integer }
+        missing_example:
+          type: boolean
+          description: 'no pinned example; cured by regeneration, and NOT counted into needs_enrichment'
+        needs_enrichment: { type: boolean }
+        needs_enrichment_reasons:
+          type: array
+          items: { type: string, enum: [few_distractors, no_variants] }
+        collections:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string }
+        topup_command:
+          type: string
+          description: >
+            Ready to paste into a terminal — the panel never runs it. Names EVERY collection holding
+            the term, because the станок resolves collections to terms and a shorter list can leave
+            the term out of the run entirely.
+        topup_hint:
+          type: [string, 'null']
+          description: >
+            Set only when this term is already marked at the current generator version — a plain run
+            would skip it («nothing to do»), which reads as the станок being broken.
+        current_generator_version: { type: string }
         min_distractors: { type: integer }
         cost_per_term_usd: { type: number }
 

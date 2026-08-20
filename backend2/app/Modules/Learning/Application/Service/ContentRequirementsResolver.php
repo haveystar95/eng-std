@@ -39,6 +39,7 @@ final readonly class ContentRequirementsResolver
 
         return new TermContentAssessmentView(
             usableDistractors: $assessment->usableDistractors,
+            usableIndexes: $assessment->usableIndexes,
             modes: array_values(array_map(
                 static fn (ModeContentVerdict $verdict): ModeContentStatusView => new ModeContentStatusView(
                     mode: $verdict->mode->value,

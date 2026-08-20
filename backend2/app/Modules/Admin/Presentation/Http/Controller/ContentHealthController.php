@@ -8,6 +8,8 @@ use App\Modules\Admin\Application\Query\GetCollectionContentHealth;
 use App\Modules\Admin\Application\Query\GetCollectionContentHealthHandler;
 use App\Modules\Admin\Application\Query\GetContentHealthSummary;
 use App\Modules\Admin\Application\Query\GetContentHealthSummaryHandler;
+use App\Modules\Admin\Application\Query\GetTermContentPassport;
+use App\Modules\Admin\Application\Query\GetTermContentPassportHandler;
 use App\Modules\Admin\Presentation\Http\AdminJson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -31,6 +33,7 @@ final class ContentHealthController
     public function __construct(
         private readonly GetContentHealthSummaryHandler $summary,
         private readonly GetCollectionContentHealthHandler $collection,
+        private readonly GetTermContentPassportHandler $term,
     ) {}
 
     public function summary(): JsonResponse
@@ -44,5 +47,14 @@ final class ContentHealthController
         abort_if($view === null, Response::HTTP_NOT_FOUND);
 
         return response()->json(AdminJson::collectionContentHealth($view));
+    }
+
+    /** One term's passport: what it holds, and what each of the ten trainers can build from it. */
+    public function term(string $id): JsonResponse
+    {
+        $view = ($this->term)(new GetTermContentPassport($id));
+        abort_if($view === null, Response::HTTP_NOT_FOUND);
+
+        return response()->json(AdminJson::termContentPassport($view));
     }
 }

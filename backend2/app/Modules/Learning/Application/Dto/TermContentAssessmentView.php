@@ -10,9 +10,15 @@ namespace App\Modules\Learning\Application\Dto;
  */
 final readonly class TermContentAssessmentView
 {
-    /** @param  list<ModeContentStatusView>  $modes  every trainer this build knows, enum order */
+    /**
+     * @param  list<int>  $usableIndexes  which of the distractors handed in a card would deal — by
+     *                                    position, so a screen can grey the rest instead of
+     *                                    re-deciding which ones they are
+     * @param  list<ModeContentStatusView>  $modes  every trainer this build knows, enum order
+     */
     public function __construct(
         public int $usableDistractors,
+        public array $usableIndexes,
         public array $modes,
     ) {}
 

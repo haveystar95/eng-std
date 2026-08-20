@@ -65,15 +65,15 @@ final readonly class ModeContentRequirements
         $hasExample = $example !== null && $example !== '';
         // Distractors hang off the pinned example; with no example there is nothing they could hang
         // off, so they cannot stock the term on their own. Same rule as the assessor's.
-        $usable = $hasExample ? $this->spans->countUsable($distractorSpans) : 0;
-        $playable = $this->playability->assess($answer, $example, $exampleTranslation, $usable);
+        $indexes = $hasExample ? $this->spans->usableIndexes($distractorSpans) : [];
+        $playable = $this->playability->assess($answer, $example, $exampleTranslation, count($indexes));
 
         $modes = [];
         foreach (ExerciseMode::cases() as $mode) {
             $modes[$mode->value] = $this->verdict($mode, $playable, $hasExample);
         }
 
-        return new ContentAssessment($usable, $modes);
+        return new ContentAssessment(count($indexes), $indexes, $modes);
     }
 
     /**

@@ -186,3 +186,130 @@ it('refuses an anonymous reader', function () {
 
     test()->getJson('/admin/api/content-health/summary')->assertUnauthorized();
 });
+
+// ── The term passport ───────────────────────────────────────────────────────────────────────────
+
+it('simulates every trainer against one term’s own content', function () {
+    [, $token, $ids] = contentHealthFixture();
+
+    $body = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
+        ->assertOk()
+        ->json();
+
+    $byMode = collect($body['simulation'])->keyBy('mode');
+    expect($byMode)->toHaveCount(10)
+        // The four that ask for the term itself (or for nothing) fit every term.
+        ->and($byMode['typing']['status'])->toBe('ok')
+        ->and($byMode['listening']['status'])->toBe('ok')
+        ->and($byMode['speaking']['status'])->toBe('ok')
+        ->and($byMode['intro']['status'])->toBe('ok')
+        // Its options are OTHER words, so the term's content decides nothing here.
+        ->and($byMode['multiple_choice']['status'])->toBe('pool_dependent')
+        ->and($byMode['multiple_choice']['reason'])->toBe('options_from_pool')
+        // Three rows, one span → one usable option → the card cannot be dealt.
+        ->and($byMode['pick_correct']['status'])->toBe('blocked')
+        ->and($byMode['pick_correct']['reason'])->toBe('too_few_distractors')
+        ->and($byMode['pick_correct']['explanation'])->toContain('годных дистракторов 1');
+
+    // A machine reason exactly when the card cannot be built, a human one always.
+    foreach ($body['simulation'] as $row) {
+        expect($row['explanation'])->not->toBe('');
+        expect($row['reason'] === null)->toBe($row['status'] === 'ok', "reason/status disagree for {$row['mode']}");
+    }
+});
+
+it('reports the single-word gap that the word_bank card actually hits', function () {
+    [, $token, $ids] = contentHealthFixture();
+
+    // 'invoice' is one word: nothing to assemble from chips. Same verdict the live gate gives.
+    $byMode = collect(
+        test()->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
+            ->json('simulation'),
+    )->keyBy('mode');
+
+    expect($byMode['word_bank']['status'])->toBe('blocked')
+        ->and($byMode['word_bank']['reason'])->toBe('single_word');
+});
+
+it('marks which distractors a card would deal, and keeps suppressions in their own list', function () {
+    [, $token, $ids] = contentHealthFixture();
+
+    $body = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
+        ->assertOk()
+        ->json();
+
+    expect($body['distractors'])->toHaveCount(3)
+        ->and(array_column($body['distractors'], 'usable'))->toBe([true, false, false])
+        ->and($body['usable_distractors'])->toBe(1)
+        ->and($body['error_type_note'])->toContain('error_type');
+
+    // Suppressions outlive the rows they were about — never merged into `distractors`.
+    expect($body['suppressed'])->toHaveCount(2)
+        ->and(collect($body['suppressed'])->pluck('source')->sort()->values()->all())->toBe(['audit', 'review']);
+
+    expect($body['needs_enrichment'])->toBeTrue()
+        ->and($body['needs_enrichment_reasons'])->toBe(['few_distractors', 'no_variants'])
+        ->and($body['missing_example'])->toBeFalse();
+});
+
+it('keeps «нет примера» apart from «нужен станок»', function () {
+    [, $token, $ids] = contentHealthFixture();
+
+    $body = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/content-health/terms/{$ids['bare']}")
+        ->assertOk()
+        ->json();
+
+    expect($body['example'])->toBeNull()
+        ->and($body['missing_example'])->toBeTrue()
+        // The станок writes AGAINST an example; with none there is nothing to pay it for.
+        ->and($body['needs_enrichment'])->toBeFalse()
+        ->and($body['needs_enrichment_reasons'])->toBe([]);
+
+    $byMode = collect($body['simulation'])->keyBy('mode');
+    foreach (['cloze', 'scramble', 'dictation', 'pick_correct'] as $mode) {
+        expect($byMode[$mode]['reason'])->toBe('no_example');
+    }
+});
+
+it('hands over a догон command, and the version-skip lesson only when it applies', function () {
+    [$collectionId, $token, $ids] = contentHealthFixture();
+
+    $thin = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
+        ->assertOk()
+        ->json();
+
+    expect($thin['topup_command'])
+        ->toContain("--collection={$collectionId}")
+        ->toContain('--topup=' . ContentTopUp::MIN_DISTRACTORS)
+        // Never marked at all → nothing to warn about.
+        ->and($thin['topup_hint'])->toBeNull();
+
+    // Mark it at the CURRENT version: a plain run would now skip it, which is exactly the trap.
+    $current = app(ContentTopUp::class)->currentVersion();
+    DB::table('term_enrichment_versions')->insert([
+        'term_id' => $ids['thin'], 'generator_version' => $current, 'created_at' => now(),
+    ]);
+
+    $again = test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
+        ->assertOk()
+        ->json();
+
+    expect($again['topup_hint'])->toContain($current)
+        ->and($again['topup_hint'])->toContain('--generator')
+        ->and($again['current_generator_version'])->toBe($current)
+        ->and(collect($again['enrichment_versions'])->pluck('version')->all())->toContain($current);
+});
+
+it('404s an unknown term passport', function () {
+    [, $token] = contentHealthFixture();
+
+    test()->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/admin/api/content-health/terms/' . Ulid::generate())
+        ->assertNotFound();
+});

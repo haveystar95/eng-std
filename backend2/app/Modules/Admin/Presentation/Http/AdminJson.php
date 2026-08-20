@@ -36,11 +36,14 @@ use App\Modules\Admin\Application\Dto\ExampleDistractorRow;
 use App\Modules\Admin\Application\Dto\DialogDetail;
 use App\Modules\Admin\Application\Dto\DialogRow;
 use App\Modules\Admin\Application\Dto\GenerationRow;
+use App\Modules\Admin\Application\Dto\ModeSimulationRow;
+use App\Modules\Admin\Application\Dto\PassportDistractorRow;
 use App\Modules\Admin\Application\Dto\Page;
 use App\Modules\Admin\Application\Dto\PurposeCost;
 use App\Modules\Admin\Application\Dto\RequestLogDetail;
 use App\Modules\Admin\Application\Dto\RequestLogRow;
 use App\Modules\Admin\Application\Dto\ReviewRow;
+use App\Modules\Admin\Application\Dto\TermContentPassport;
 use App\Modules\Admin\Application\Dto\TermDetail;
 use App\Modules\Admin\Application\Dto\TermExampleRow;
 use App\Modules\Admin\Application\Dto\TermRow;
@@ -560,6 +563,85 @@ final class AdminJson
     public static function contentLabelCount(ContentLabelCount $c): array
     {
         return ['label' => $c->label, 'count' => $c->count];
+    }
+
+    /**
+     * The term passport. Two things it deliberately does NOT carry: a ladder rung (that is
+     * `/users/{id}/ladder`'s answer to a different question) and any way to START the enrichment
+     * run — `topup_command` is a line to paste, and the panel never executes it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function termContentPassport(TermContentPassport $p): array
+    {
+        return [
+            'term_id' => $p->termId,
+            'text' => $p->text,
+            'lang' => $p->lang,
+            'type' => $p->type,
+            'translations' => array_map(static fn (TermTranslationRow $r): array => [
+                'lang' => $r->lang, 'text' => $r->text, 'is_primary' => $r->isPrimary,
+            ], $p->translations),
+            'example' => $p->exampleId === null ? null : [
+                'id' => $p->exampleId,
+                'sentence' => $p->exampleSentence,
+                'translation' => $p->exampleTranslation,
+            ],
+            'distractors' => array_map(static fn (PassportDistractorRow $d): array => [
+                'id' => $d->id,
+                'sentence' => $d->sentence,
+                'error_type' => $d->errorType,
+                'error_span' => $d->errorSpan,
+                'correction' => $d->correction,
+                'generator_version' => $d->generatorVersion,
+                // false = a card would not deal this row: another distractor already breaks the
+                // same span, and one error per card is the shape the trainer is for.
+                'usable' => $d->usable,
+            ], $p->distractors),
+            'error_type_note' => 'Ярлык error_type — догадка станка о том, какую ошибку он написал; ничем не проверяется. '
+                . 'Читайте сам фрагмент и исправление, ярлык — только подсказка.',
+            // Their own list, never merged with the live rows: a suppression outlives the distractor
+            // it was about, and even the example it hung off.
+            'suppressed' => array_map(static fn (array $s): array => [
+                'sentence' => $s['sentence'],
+                'source' => $s['source'],
+                'created_at' => $s['created_at'],
+            ], $p->suppressed),
+            'accepted_variants' => array_map(static fn (TermVariantRow $r): array => [
+                'text' => $r->text, 'note' => $r->note, 'generator_version' => $r->generatorVersion,
+            ], $p->acceptedVariants),
+            'enrichment_versions' => array_map(static fn (array $v): array => [
+                'version' => $v['version'], 'created_at' => $v['created_at'],
+            ], $p->enrichmentVersions),
+            'enrichment_version' => $p->enrichmentVersion,
+            'findings' => array_map(static fn (EnrichmentFindingRow $r): array => [
+                'kind' => $r->kind,
+                'field' => $r->field,
+                'detail' => $r->detail,
+                'generator_version' => $r->generatorVersion,
+                'created_at' => $r->createdAt,
+            ], $p->findings),
+            'simulation' => array_map(static fn (ModeSimulationRow $m): array => [
+                'mode' => $m->mode,
+                'status' => $m->status,
+                'reason' => $m->reason,
+                'explanation' => $m->explanation,
+            ], $p->simulation),
+            'usable_distractors' => $p->usableDistractors,
+            // Separate from `needs_enrichment` on purpose: no example = regenerate the example, and
+            // the станок cannot help.
+            'missing_example' => $p->missingExample,
+            'needs_enrichment' => $p->needsEnrichment,
+            'needs_enrichment_reasons' => $p->needsEnrichmentReasons,
+            'collections' => array_map(static fn (CollectionRefRow $c): array => [
+                'id' => $c->id, 'title' => $c->title, 'type' => $c->type,
+            ], $p->collections),
+            'topup_command' => $p->topUpCommand,
+            'topup_hint' => $p->topUpHint,
+            'current_generator_version' => $p->currentGeneratorVersion,
+            'min_distractors' => $p->minDistractors,
+            'cost_per_term_usd' => $p->costPerTermUsd,
+        ];
     }
 
     /** @return array<string, mixed> */

@@ -38,7 +38,7 @@ final class DistractorSpanFilter
         }
 
         $kept = [];
-        foreach ($this->keptIndexes($spans) as $index) {
+        foreach ($this->usableIndexes($spans) as $index) {
             $kept[] = $distractors[$index];
         }
 
@@ -55,7 +55,7 @@ final class DistractorSpanFilter
     public function usableSpans(array $spans): array
     {
         $kept = [];
-        foreach ($this->keptIndexes($spans) as $index) {
+        foreach ($this->usableIndexes($spans) as $index) {
             $kept[] = $spans[$index];
         }
 
@@ -65,17 +65,21 @@ final class DistractorSpanFilter
     /** @param  list<string>  $spans */
     public function countUsable(array $spans): int
     {
-        return count($this->keptIndexes($spans));
+        return count($this->usableIndexes($spans));
     }
 
     /**
      * The positions that survive: first occurrence of each non-empty span, case- and
      * whitespace-insensitive. THE rule — every method above reads it, so there is one copy of it.
      *
+     * Public because a report has to mark WHICH rows a card would deal, not just how many: a screen
+     * listing four distractors above a count of two invites the reader to guess which two, and
+     * guessing is how the rule gets re-implemented in a template.
+     *
      * @param  list<string>  $spans
      * @return list<int>
      */
-    private function keptIndexes(array $spans): array
+    public function usableIndexes(array $spans): array
     {
         $seen = [];
         $kept = [];
