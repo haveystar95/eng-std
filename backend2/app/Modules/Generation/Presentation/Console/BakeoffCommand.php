@@ -282,6 +282,12 @@ final class BakeoffCommand extends Command
             'collection_size' => is_int($notes['size'] ?? null) ? $notes['size'] : 12,
             'store_topic' => $storeTopic,
             'store_terms' => $storeTerms,
+            // What the RUN asked, read back from its own notes — not what the current flags say.
+            // A re-render describes work that already happened; taking the topic from the command
+            // line would let a document claim a task its data never answered.
+            'topics' => is_array($notes['topics'] ?? null) && $notes['topics'] !== []
+                ? $notes['topics']
+                : $this->topics(),
         ]);
 
         $this->summarise($results);

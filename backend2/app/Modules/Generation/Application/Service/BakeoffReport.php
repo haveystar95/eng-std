@@ -232,6 +232,10 @@ final readonly class BakeoffReport
         }
         $lines[] = '';
 
+        // When nobody trips a single check, the honest headline is that the checks did not separate
+        // anyone — not that everyone is equally good. Left unsaid, a row of 100%s reads as a verdict.
+        $lines[] = $this->verdictLine($results);
+
         if ($track === BakeoffTrack::OneShot) {
             $lines[] = $this->degradationTable($results);
         }
@@ -271,6 +275,44 @@ final readonly class BakeoffReport
         $lines[] = '';
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * What the numbers in the table above did, and did not, settle.
+     *
+     * @param  list<BakeoffCallResult>  $results
+     */
+    private function verdictLine(array $results): string
+    {
+        $withItems = 0;
+        $allClean = true;
+        foreach ($this->byProvider($results) as $providerResults) {
+            $items = 0;
+            $clean = 0;
+            foreach ($providerResults as $result) {
+                $items += $result->batch?->total() ?? 0;
+                $clean += $result->batch?->clean() ?? 0;
+            }
+            if ($items === 0) {
+                continue;
+            }
+            $withItems++;
+            if ($clean !== $items) {
+                $allClean = false;
+            }
+        }
+
+        if ($withItems < 2 || ! $allClean) {
+            return "\0";
+        }
+
+        return implode("\n", [
+            '> **Автопроверки на этом задании никого не различили: у всех 100% чистых.** Это не '
+            . 'значит «все одинаково хороши» — значит, что известные классы брака (чужой язык, '
+            . 'дубли, пустые поля, потерянный адресат) здесь не сработали ни у кого, и выбор '
+            . 'решается ЧТЕНИЕМ полных списков ниже плюс ценой и латентностью.',
+            '',
+        ]);
     }
 
     /**
