@@ -48,6 +48,7 @@ final readonly class BakeoffReport
             . '(`bakeoff_runs` / `bakeoff_calls` / `bakeoff_candidates`).';
         $out[] = '';
 
+        $out[] = $this->topicsSection($meta);
         $out[] = $this->trackSources($meta);
         $out[] = $this->providersSection($availability, $results);
         $out[] = $this->checksLegend();
@@ -72,6 +73,33 @@ final readonly class BakeoffReport
         $out[] = $this->howToRead();
 
         return implode("\n", array_filter($out, static fn (string $s): bool => $s !== "\0")) . "\n";
+    }
+
+    /**
+     * What was asked, and why that. A comparison document has to state its own task: a reader who
+     * cannot see the topic cannot tell a weak answer from a hard question.
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    private function topicsSection(array $meta): string
+    {
+        $topics = $meta['topics'] ?? null;
+        if (! is_array($topics) || $topics === []) {
+            return "\0";
+        }
+
+        $lines = ['## Задание', '', '| Тема | Почему она |', '|---|---|'];
+        foreach ($topics as $topic) {
+            if (is_array($topic) && is_string($topic['key'] ?? null)) {
+                $lines[] = '| ' . $this->cell($topic['key']) . ' | ' . $this->cell((string) ($topic['note'] ?? '—')) . ' |';
+            }
+        }
+        $lines[] = '';
+        $lines[] = 'Одно и то же задание, слово в слово, каждому провайдеру: промпт одной версии и '
+            . 'одной формы, схема одна, проверки одни. Различаются только модели.';
+        $lines[] = '';
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -429,16 +457,20 @@ final readonly class BakeoffReport
             $lines[] = '**' . $shown . '. Тема: ' . $taskKey . '**';
             $lines[] = '';
             foreach ($providers as $providerValue => $verdicts) {
-                $lines[] = '_' . ProviderId::from($providerValue)->label() . '_ — первые 6 из ' . count($verdicts) . ':';
+                // The WHOLE list, not a head. This block is the one a person reads to choose a
+                // provider, and a collection cannot be judged from its first six items — the tail
+                // is exactly where a set runs out of ideas and starts repeating the topic back.
+                $lines[] = '_' . ProviderId::from($providerValue)->label() . '_ — все ' . count($verdicts) . ':';
                 $lines[] = '';
-                $lines[] = '| # | Термин | Перевод | Брак |';
-                $lines[] = '|---|---|---|---|';
-                foreach (array_slice($verdicts, 0, 6) as $verdict) {
+                $lines[] = '| # | Термин | Перевод | Пример | Брак |';
+                $lines[] = '|---|---|---|---|---|';
+                foreach ($verdicts as $verdict) {
                     $lines[] = sprintf(
-                        '| %d | %s | %s | %s |',
+                        '| %d | %s | %s | %s | %s |',
                         $verdict->item->position + 1,
                         $this->cell($verdict->item->text),
                         $this->cell($verdict->item->translation ?? '—'),
+                        $this->cell($verdict->item->example ?? '**нет**'),
                         $verdict->isClean() ? '—' : $this->cell($verdict->reason()),
                     );
                 }

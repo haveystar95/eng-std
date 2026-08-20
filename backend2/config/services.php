@@ -46,7 +46,12 @@ return [
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
+        // What PRODUCTION generation uses. Do not repoint this to run a comparison.
         'generate_model' => env('OPENAI_GENERATE_MODEL', 'gpt-4o'),
+        // What the multi-provider comparison uses. Separate from `generate_model` on purpose: the
+        // two must be able to differ, and sharing one variable means a bake-off silently moves live
+        // generation onto a model nobody decided to ship. Unset falls back, so nothing changes.
+        'compare_model' => env('OPENAI_COMPARE_MODEL', env('OPENAI_GENERATE_MODEL', 'gpt-4o')),
         // Enriching a single bare term is a small task — the cheaper model is plenty.
         'enrich_model' => env('OPENAI_ENRICH_MODEL', 'gpt-4o-mini'),
         // Recapping a finished practice dialog is a tiny task — the cheap text model is plenty.
@@ -73,6 +78,9 @@ return [
     'gemini' => [
         // Google Gemini API key — server-side only; the client never sees it (only ephemeral tokens).
         'api_key' => env('GEMINI_API_KEY'),
+        // Text generation model for the bake-off. Flash rather than Pro: Pro is the top tier and
+        // flash-lite is the cheap one, and this comparison is between mid-tier workhorses.
+        'generate_model' => env('GEMINI_GENERATE_MODEL', 'gemini-3.7-flash'),
     ],
 
     'pexels' => [

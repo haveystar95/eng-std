@@ -53,6 +53,8 @@ final class BakeoffCommand extends Command
         {--source=ru : the learner\'s language}
         {--target=en : the language being learned}
         {--tracks=abc : which tracks to run — any subset of a, b, c}
+        {--topic= : run ONE topic instead of the built-in four (tracks A and C)}
+        {--topic-note= : why that topic was chosen — printed in the report}
         {--pace=0 : milliseconds to wait between calls — the answer to an org tokens-per-minute cap}
         {--compare= : collection id whose CURRENT content is printed beside track A (read-only)}
         {--report-only= : re-render from finished run(s) in the sandbox, calling nothing — comma-separate several and each track is taken from whichever run answered it best}
@@ -134,7 +136,7 @@ final class BakeoffCommand extends Command
                     static fn ($a): array => ['provider' => $a->provider->value, 'model' => $a->model, 'available' => $a->available, 'reason' => $a->reason],
                     $availability,
                 ),
-                'topics' => self::TOPICS,
+                'topics' => $this->topics(),
                 'sample' => $terms,
                 'size' => $size,
             ],
@@ -179,12 +181,33 @@ final class BakeoffCommand extends Command
             'collection_size' => $size,
             'store_topic' => $storeTopic,
             'store_terms' => $storeTerms,
+            'topics' => $this->topics(),
         ]);
 
         $this->info('Сравнение: ' . $path);
         $this->line('Кандидаты в песочнице: bakeoff_candidates where run_id = \'' . $runId . '\'');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The topics this run puts to every provider.
+     *
+     * `--topic` replaces the built-in four with ONE, which is how a focused comparison is run
+     * without editing a constant: four topics × four providers is sixteen paid calls to answer a
+     * question one topic answers, and the наряд that asks for one topic should not have to spend
+     * for four.
+     *
+     * @return list<array{key: string, note: string}>
+     */
+    private function topics(): array
+    {
+        $topic = $this->str($this->option('topic'), '');
+        if ($topic === '') {
+            return self::TOPICS;
+        }
+
+        return [['key' => $topic, 'note' => $this->str($this->option('topic-note'), 'задана ключом --topic')]];
     }
 
     /**
@@ -352,7 +375,7 @@ final class BakeoffCommand extends Command
                 continue;
             }
 
-            foreach (self::TOPICS as $topic) {
+            foreach ($this->topics() as $topic) {
                 $tasks[] = new BakeoffTask(
                     track: $track,
                     key: $topic['key'],

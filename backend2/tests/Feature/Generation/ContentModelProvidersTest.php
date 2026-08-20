@@ -7,6 +7,7 @@ use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\AnthropicContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\GeminiContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiCompatibleContentModel;
 use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -142,14 +143,126 @@ it('skips a text block that is not the answer when a model thinks out loud first
 });
 
 /**
+ * Gemini's four differences, asserted rather than assumed — the key as a HEADER (so it never lands
+ * in a logged URL), the system prompt in its own field, and JSON forced through generationConfig.
+ */
+it('sends the Gemini shape: x-goog-api-key, systemInstruction and a json responseSchema', function () {
+    Http::fake(['*' => Http::response([
+        'modelVersion' => 'gemini-3.7-flash',
+        'candidates' => [[
+            'finishReason' => 'STOP',
+            'content' => ['parts' => [['text' => json_encode(['items' => ['a']])]]],
+        ]],
+        'usageMetadata' => ['promptTokenCount' => 4000, 'candidatesTokenCount' => 1000],
+    ], 200)]);
+
+    $answer = (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+        ->complete(renderedPrompt(), 'TOPIC', tinySchema());
+
+    // 4000/1000 × $0.00075 + 1000/1000 × $0.00375
+    expect($answer->costUsd)->toBe('0.006750')
+        ->and($answer->payload)->toBe(['items' => ['a']])
+        ->and($answer->model)->toBe('gemini-3.7-flash');
+
+    Http::assertSent(function (Request $request): bool {
+        $body = $request->data();
+
+        return $request->hasHeader('x-goog-api-key', 'key')
+            // The key must NOT be in the URL: the outbound-call log records urls verbatim.
+            && ! str_contains((string) $request->url(), 'key=')
+            && str_contains((string) $request->url(), 'models/gemini-3.7-flash:generateContent')
+            && str_contains($body['systemInstruction']['parts'][0]['text'], 'a key must be isomorphic')
+            && $body['contents'][0]['parts'][0]['text'] === 'TOPIC'
+            && $body['generationConfig']['responseMimeType'] === 'application/json';
+    });
+});
+
+/**
+ * The one place where "every provider gets the same schema" cannot be literally true: Gemini's
+ * responseSchema is an OpenAPI-3.0 subset and REJECTS `additionalProperties`, which the other two
+ * providers require for strict mode. The constraint is the same; the dialect is not.
+ */
+it('translates the shared schema into the dialect Gemini accepts', function () {
+    Http::fake(['*' => Http::response([
+        'candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [['text' => '{"items":[]}']]]]],
+        'usageMetadata' => ['promptTokenCount' => 1, 'candidatesTokenCount' => 1],
+    ], 200)]);
+
+    $schema = [
+        'type' => 'object',
+        'additionalProperties' => false,
+        'properties' => [
+            'title' => ['type' => 'string'],
+            'items' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'properties' => ['text' => ['type' => 'string'], 'cefr' => ['type' => 'string', 'enum' => ['A1']]],
+                    'required' => ['text', 'cefr'],
+                ],
+            ],
+        ],
+        'required' => ['title', 'items'],
+    ];
+
+    (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+        ->complete(renderedPrompt(), 'TOPIC', $schema);
+
+    Http::assertSent(function (Request $request) : bool {
+        $sent = $request->data()['generationConfig']['responseSchema'];
+        $item = $sent['properties']['items']['items'];
+
+        return ! array_key_exists('additionalProperties', $sent)
+            // …at every level, not just the top one.
+            && ! array_key_exists('additionalProperties', $item)
+            // Everything that carries meaning survives.
+            && $sent['required'] === ['title', 'items']
+            && $item['required'] === ['text', 'cefr']
+            && $item['properties']['cefr']['enum'] === ['A1']
+            // Field order is pinned, so two runs of the same schema are comparable.
+            && $sent['propertyOrdering'] === ['title', 'items']
+            && $item['propertyOrdering'] === ['text', 'cefr'];
+    });
+});
+
+it('names a Gemini safety block as a block, not as malformed json', function () {
+    Http::fake(['*' => Http::response(['promptFeedback' => ['blockReason' => 'SAFETY']], 200)]);
+
+    expect(fn () => (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+        ->complete(renderedPrompt(), 'TOPIC', tinySchema()))
+        ->toThrow(RuntimeException::class, 'blockReason=SAFETY');
+});
+
+it('joins a Gemini answer split across several parts', function () {
+    Http::fake(['*' => Http::response([
+        'candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [
+            ['text' => '{"items":'],
+            ['text' => '["a"]}'],
+        ]]]],
+        'usageMetadata' => ['promptTokenCount' => 1, 'candidatesTokenCount' => 1],
+    ], 200)]);
+
+    $answer = (new GeminiContentModel(app(OutboundCallContext::class), 'key', 'gemini-3.7-flash'))
+        ->complete(renderedPrompt(), 'TOPIC', tinySchema());
+
+    expect($answer->payload)->toBe(['items' => ['a']]);
+});
+
+/**
  * A provider with no key is a normal state, not a failure. The whole bake-off depends on this: a
  * catalogue that threw on an unconfigured vendor would produce nothing on the night it mattered.
  */
 it('reports a keyless provider as unavailable with the env var named, and still lists it', function () {
+    // Models pinned as well as keys: without this the assertion reads whatever the developer
+    // happens to have in .env, and the test passes or fails by accident.
     config([
         'services.openai.api_key' => 'sk-test',
+        'services.openai.compare_model' => 'gpt-5.4',
         'services.anthropic.api_key' => '',
+        'services.anthropic.generate_model' => 'claude-sonnet-5',
         'services.xai.api_key' => 'xai-test',
+        'services.gemini.api_key' => 'AIza-test',
     ]);
 
     $catalog = new ConfiguredContentModelCatalog(app(OutboundCallContext::class));
@@ -158,16 +271,16 @@ it('reports a keyless provider as unavailable with the env var named, and still 
         $byProvider[$row->provider->value] = $row;
     }
 
-    expect(array_keys($byProvider))->toBe(['openai', 'anthropic', 'xai'])
+    expect(array_keys($byProvider))->toBe(['openai', 'anthropic', 'xai', 'gemini'])
         ->and($byProvider['anthropic']->available)->toBeFalse()
         ->and($byProvider['anthropic']->reason)->toContain('ANTHROPIC_API_KEY')
         // …and the model it WOULD have used is still reported, so the report can name what was missed.
-        ->and($byProvider['anthropic']->model)->toBe('claude-opus-5')
+        ->and($byProvider['anthropic']->model)->toBe('claude-sonnet-5')
         ->and($byProvider['openai']->available)->toBeTrue();
 
     expect($catalog->get(ProviderId::Anthropic))->toBeNull()
         ->and(array_map(static fn ($p): string => $p->provider()->value, $catalog->available()))
-        ->toBe(['openai', 'xai']);
+        ->toBe(['openai', 'xai', 'gemini']);
 });
 
 it('is bound so the catalogue can be resolved from the container', function () {

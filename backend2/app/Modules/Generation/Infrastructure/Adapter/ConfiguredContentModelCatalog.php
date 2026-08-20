@@ -27,7 +27,9 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         $this->config = [
             ProviderId::OpenAi->value => [
                 'key' => (string) config('services.openai.api_key'),
-                'model' => (string) config('services.openai.generate_model', 'gpt-4o'),
+                // `compare_model`, NOT `generate_model` — see config/services.php: production and
+                // this comparison must be able to run different models.
+                'model' => (string) config('services.openai.compare_model', 'gpt-4o'),
                 'base' => 'https://api.openai.com/v1',
                 'env' => 'OPENAI_API_KEY',
                 'default_model' => 'gpt-4o',
@@ -45,6 +47,13 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 'base' => (string) config('services.xai.base_url', 'https://api.x.ai/v1'),
                 'env' => 'GROK_API_KEY',
                 'default_model' => 'grok-4.6',
+            ],
+            ProviderId::Gemini->value => [
+                'key' => (string) config('services.gemini.api_key'),
+                'model' => (string) config('services.gemini.generate_model', 'gemini-3.7-flash'),
+                'base' => 'https://generativelanguage.googleapis.com/v1beta',
+                'env' => 'GEMINI_API_KEY',
+                'default_model' => 'gemini-3.7-flash',
             ],
         ];
     }
@@ -87,6 +96,12 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         $model = $row['model'] !== '' ? $row['model'] : $row['default_model'];
 
         return match ($provider) {
+            ProviderId::Gemini => new GeminiContentModel(
+                context: $this->context,
+                apiKey: $key,
+                model: $model,
+                baseUrl: $row['base'],
+            ),
             ProviderId::Anthropic => new AnthropicContentModel(
                 context: $this->context,
                 apiKey: $key,

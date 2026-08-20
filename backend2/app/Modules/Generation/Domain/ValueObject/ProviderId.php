@@ -17,6 +17,7 @@ enum ProviderId: string
     case OpenAi = 'openai';
     case Anthropic = 'anthropic';
     case Xai = 'xai';
+    case Gemini = 'gemini';
 
     /** How the provider is written in a report — the vendor's own spelling, not the enum's. */
     public function label(): string
@@ -25,6 +26,7 @@ enum ProviderId: string
             self::OpenAi => 'OpenAI',
             self::Anthropic => 'Anthropic',
             self::Xai => 'xAI (Grok)',
+            self::Gemini => 'Google (Gemini)',
         };
     }
 }

@@ -22,29 +22,52 @@ final class ModelCost
      * missing rate as $0 would hand the cheapest-looking column to whichever vendor nobody had
      * entered yet, which is the one mistake this table exists to prevent.
      *
-     * Rates as published 2026-08-20, per 1M and divided by 1000 here: Anthropic Opus 5 $5/$25,
-     * Sonnet 5 $3/$15, Haiku 4.5 $1/$5; xAI grok-4.6 and 4.5 $2/$6, grok-4.3 $1.25/$2.50.
-     *
-     * xAI prices in TWO tiers — the rates above hold below 200K input tokens and double above it.
-     * Only the low tier is entered, because every call this app makes is a prompt of a few thousand
-     * tokens; a request that ever crossed 200K would be under-priced here and would be a bug on its
-     * own account. Re-check when a vendor announces a change: this is a cost ESTIMATE from token
+     * Rates checked against each vendor's own pricing page on 2026-08-20, per 1M and divided by
+     * 1000 here. Re-check when a vendor announces a change: this is a cost ESTIMATE from token
      * counts, not an invoice.
+     *
+     * Two things that make a naive cross-vendor comparison wrong, and are NOT corrected for here
+     * because correcting for them silently would hide them:
+     *
+     *  - **xAI prices in two tiers.** The rates below hold under 200K input tokens and double above
+     *    it. Only the low tier is entered: every call this app makes is a few thousand tokens, and a
+     *    request that crossed 200K would be a bug on its own account.
+     *  - **Claude 4.7 and later use a newer tokenizer** that produces roughly 30% more tokens for
+     *    the same text. Its lower per-token price partly reflects that, so comparing $/token across
+     *    vendors flatters Claude and comparing token COUNTS flatters everyone else. Compare the
+     *    dollar total for the same task, which is what the bake-off actually reports.
      *
      * @var array<string, array{0: float, 1: float}>
      */
     private const PRICING = [
+        // OpenAI. gpt-4o/4o-mini are the previous generation and still serve production here.
         'gpt-4o' => [0.0025, 0.01],
         'gpt-4o-mini' => [0.00015, 0.0006],
-        // Anthropic (Claude).
+        'gpt-5.6-sol' => [0.005, 0.03],
+        'gpt-5.6-terra' => [0.002, 0.012],
+        'gpt-5.6-luna' => [0.0002, 0.0012],
+        'gpt-5.5' => [0.005, 0.03],
+        'gpt-5.4' => [0.0025, 0.015],
+        'gpt-5.4-mini' => [0.00075, 0.0045],
+        'gpt-5.4-nano' => [0.0002, 0.00125],
+        // Anthropic (Claude). Sonnet 5 is $2/$10: the increase to $3/$15 once scheduled for
+        // 2026-09-01 was cancelled and the introductory price became the standard one.
         'claude-opus-5' => [0.005, 0.025],
-        'claude-sonnet-5' => [0.003, 0.015],
+        'claude-sonnet-5' => [0.002, 0.01],
+        'claude-sonnet-4-6' => [0.003, 0.015],
         'claude-haiku-4-5' => [0.001, 0.005],
         // xAI (Grok).
         'grok-4.6' => [0.002, 0.006],
         'grok-4.5' => [0.002, 0.006],
         'grok-4.3' => [0.00125, 0.0025],
         'grok-build-0.1' => [0.001, 0.002],
+        // Google (Gemini). The 3.7/3.6 Flash rates are promotional through 2026-12-31.
+        'gemini-3.7-flash' => [0.00075, 0.00375],
+        'gemini-3.6-flash' => [0.00075, 0.00375],
+        'gemini-3.5-flash' => [0.0015, 0.009],
+        'gemini-3.5-flash-lite' => [0.0003, 0.0025],
+        'gemini-2.5-flash' => [0.0003, 0.0025],
+        'gemini-2.5-flash-lite' => [0.0001, 0.0004],
     ];
 
     /**
