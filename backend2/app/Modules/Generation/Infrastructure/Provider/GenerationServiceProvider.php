@@ -41,6 +41,7 @@ use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
+use App\Modules\Generation\Infrastructure\Adapter\MachineryEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\ObservabilityLoggedResponseReader;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -119,6 +120,27 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->bind(EnrichmentPackerPort::class, function (): EnrichmentPackerPort {
             if (config('services.generation.driver') === 'fake') {
                 return new FakeEnrichmentPacker();
+            }
+
+            $stack = $this->app->make(GenerationStackConfig::class);
+
+            if (! $stack->isLegacy()) {
+                $model = $this->app->make(ContentModelCatalog::class)
+                    ->get($stack->mechanicsProvider, $stack->mechanicsModel);
+
+                if ($model === null) {
+                    throw new RuntimeException(
+                        "The станок is configured on provider «{$stack->mechanicsProvider->value}», "
+                        . 'which has no API key. Set the key, or roll back with GENERATION_STACK=v1.'
+                    );
+                }
+
+                return new MachineryEnrichmentPacker(
+                    model: $model,
+                    prompts: $this->app->make(PromptSource::class),
+                    contract: $this->app->make(ContentContract::class),
+                    promptVersion: $stack->mechanicsPromptVersion,
+                );
             }
 
             return new OpenAiEnrichmentPacker(

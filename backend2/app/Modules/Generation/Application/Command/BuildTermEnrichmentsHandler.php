@@ -48,12 +48,16 @@ final readonly class BuildTermEnrichmentsHandler
      * validation rules change in a way that makes a re-run worth paying for; every already-processed
      * term is then pending again at the new version.
      *
-     * `enrich-v1` → `enrich-v2` is the bump that pays for audit A2. Under the old ordering the станок
-     * reached a repaired term before its example existed, wrote nothing, and marked it done at v1 —
-     * four terms in the store are marked done with zero distractors and no way back. They are pending
-     * again at v2, and the ordering fix means the second pass finds the example already there.
+     * `enrich-v1` → `enrich-v2` paid for audit A2: under the old ordering the станок reached a
+     * repaired term before its example existed, wrote nothing, and marked it done at v1 — four terms
+     * in the store are marked done with zero distractors and no way back. They are pending again, and
+     * the ordering fix means the next pass finds the example already there.
+     *
+     * `enrich-v2` → `mech-v12` is the станок itself changing: prompt v12, shape `machinery`, on the
+     * cheap model, asking for the two products this app stores and nothing else. The name says which
+     * prompt version wrote a row, which is what a `generator_version` column is for.
      */
-    public const VERSION = 'enrich-v2';
+    public const VERSION = 'mech-v12';
 
     public function __construct(
         private EnrichmentTargetReader $targets,

@@ -36,7 +36,9 @@ use RuntimeException;
  * they include and in what order.
  *
  * Frozen versions are never edited — an old version is what makes a before/after comparison mean
- * anything.
+ * anything. A version therefore carries its OWN copy of every section it uses, even where the text
+ * is identical to a neighbour's: a shared file would let an edit to one version move another's
+ * rendered bytes under a `prompt_version` that has already been recorded on live content.
  */
 final class PromptLibrary implements PromptSource
 {
@@ -80,6 +82,22 @@ final class PromptLibrary implements PromptSource
             PromptShape::Full->value => [
                 '00-role', '10-select-topic', '20-fields', '60-options', '30-example',
                 '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
+            ],
+        ],
+        // v12 exists for ONE shape, and that is the honest description of it: the machinery this app
+        // actually stores. v11's `mechanics` returns wrong TRANSLATIONS — a real product with no
+        // table under it here (the trainer builds meaning options out of neighbouring terms for
+        // free) — and it has no rules at all for the wrong SENTENCES `pick_correct` runs on, which
+        // only a model can write. Those rules exist, in `enrich_pack.v2`, and this version is where
+        // they move into the catalogue so production stops paying for one product to get the other.
+        //
+        // v11 is not edited to add them: it is what the published A/B compared, and a section added
+        // to it would change nothing about the rendered bytes of the shapes that were measured but
+        // would make «v11» name two different libraries. A version is cheaper than that ambiguity.
+        'v12' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '62-forms', '61-distractors',
+                '93-self-check-machinery', '99-closing',
             ],
         ],
     ];

@@ -6,6 +6,7 @@ namespace App\Modules\Generation\Application\Service;
 
 use App\Modules\Generation\Domain\ValueObject\CandidateItem;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
+use App\Modules\Generation\Domain\ValueObject\RawDistractor;
 
 /**
  * The JSON contract for a product shape, in both directions: the schema a provider is held to, and
@@ -25,6 +26,16 @@ final readonly class ContentContract
     /** Wrong answers per card: three, beside one right one. */
     private const OPTION_COUNT = 3;
 
+    /** A pinned example gets 2–3 options' worth of wrong sentences; more is paid-for noise. */
+    private const MAX_DISTRACTORS = 3;
+
+    /**
+     * The error taxonomy, mirroring the CHECK on `example_distractors.error_type`. A closed set:
+     * a report groups by it, and a value the table refuses would be a row the станок paid for and
+     * could not store.
+     */
+    private const ERROR_TYPES = ['article', 'preposition', 'tense', 'word_order', 'false_friend', 'modal_to'];
+
     /**
      * The JSON Schema for a whole answer of this shape.
      *
@@ -37,20 +48,45 @@ final readonly class ContentContract
      */
     public function schema(PromptShape $shape): array
     {
-        // The mechanics shape is handed a finished core and returns only the machinery. Asking it
-        // for the core fields would invite it to rewrite content that has already been reviewed —
-        // the schema is where "do not touch the core" stops being a request and becomes impossible.
+        // The mechanics and machinery shapes are handed a finished core and return only the
+        // machinery. Asking them for the core fields would invite a rewrite of content that has
+        // already been reviewed — the schema is where "do not touch the core" stops being a request
+        // and becomes impossible.
         if (! $shape->producesCore()) {
-            $itemProps = [
-                'text' => ['type' => 'string'],
-                'options' => [
+            $itemProps = ['text' => ['type' => 'string']];
+
+            if ($shape->hasOptions()) {
+                $itemProps['options'] = [
                     'type' => 'array',
                     'items' => ['type' => 'string'],
                     'minItems' => self::OPTION_COUNT,
                     'maxItems' => self::OPTION_COUNT,
-                ],
-                'forms' => ['type' => 'array', 'items' => ['type' => 'string']],
-            ];
+                ];
+            }
+
+            $itemProps['forms'] = ['type' => 'array', 'items' => ['type' => 'string']];
+
+            // Wrong versions of the card's own example: the only product here that a model has to
+            // write, because the trainer's meaning options come from neighbouring terms for free.
+            // The label travels with the sentence — a span with no correction beside it cannot be
+            // shown, and a correction that does not restore the example cannot be trusted.
+            if ($shape->hasDistractors()) {
+                $itemProps['distractors'] = [
+                    'type' => 'array',
+                    'maxItems' => self::MAX_DISTRACTORS,
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => [
+                            'sentence' => ['type' => 'string'],
+                            'error_type' => ['type' => 'string', 'enum' => self::ERROR_TYPES],
+                            'error_span' => ['type' => 'string'],
+                            'correction' => ['type' => 'string'],
+                        ],
+                        'required' => ['sentence', 'error_type', 'error_span', 'correction'],
+                    ],
+                ];
+            }
 
             return [
                 'type' => 'object',
@@ -154,6 +190,7 @@ final readonly class ContentContract
                 cefr: $this->str($row, 'cefr'),
                 options: $this->strings($row['options'] ?? null),
                 forms: $this->strings($row['forms'] ?? null),
+                distractors: $this->distractors($row['distractors'] ?? null),
                 givenTerm: $given['text'] ?? null,
                 sourceTermId: $given['id'] ?? null,
             );
@@ -169,6 +206,40 @@ final readonly class ContentContract
         $value = $row[$key] ?? null;
 
         return is_string($value) && trim($value) !== '' ? $value : null;
+    }
+
+    /**
+     * Read leniently, like everything else here: a missing field or a missing label becomes an empty
+     * string and reaches the validator, which is where a defect is supposed to be counted rather
+     * than turned into a dead call.
+     *
+     * @return list<RawDistractor>
+     */
+    private function distractors(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($value as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $out[] = new RawDistractor(
+                sentence: $this->text($row['sentence'] ?? null),
+                errorType: $this->text($row['error_type'] ?? null),
+                errorSpan: $this->text($row['error_span'] ?? null),
+                correction: $this->text($row['correction'] ?? null),
+            );
+        }
+
+        return $out;
+    }
+
+    private function text(mixed $value): string
+    {
+        return is_string($value) ? trim($value) : '';
     }
 
     /** @return list<string> */

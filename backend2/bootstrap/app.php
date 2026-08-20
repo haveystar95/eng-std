@@ -5,6 +5,7 @@ use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
 use App\Modules\Generation\Presentation\Console\AuditDistractorsCommand;
+use App\Modules\Generation\Presentation\Console\AuditTranslationsCommand;
 use App\Modules\Generation\Presentation\Console\AuditTranslationKeysCommand;
 use App\Modules\Generation\Presentation\Console\BackfillEnrichmentSuppressionsCommand;
 use App\Modules\Generation\Presentation\Console\BakeoffCommand;
@@ -42,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         RepairEchoExamplesCommand::class,
         ApplyEnrichmentReviewCommand::class,
         AuditDistractorsCommand::class,
+        AuditTranslationsCommand::class,
         AuditTranslationKeysCommand::class,
         BackfillEnrichmentSuppressionsCommand::class,
         RepairContentLanguageCommand::class,

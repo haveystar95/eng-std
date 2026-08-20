@@ -33,16 +33,35 @@ enum PromptShape: string
     /** A topic in, a finished collection out — terms AND their full content, in one call. */
     case Full = 'full';
 
+    /**
+     * FINISHED cards in, the machinery this app actually STORES out: the accepted forms of the term
+     * (its answer key beyond `text`) and the wrong versions of its example sentence.
+     *
+     * Distinct from {@see Mechanics}, which produces wrong TRANSLATIONS to sit beside the right one.
+     * That is a real product and it is not this one: the trainer builds its meaning options for free
+     * out of the neighbouring terms in the same session, while the wrong-sentence options of
+     * `pick_correct` can only come from a model — and nothing in this app can store a wrong
+     * translation. A shape is what a call PRODUCES, so two different products are two cases, and
+     * production asks for the one whose fields have somewhere to land.
+     */
+    case Machinery = 'machinery';
+
     /** Does this shape pick its own items from a topic, rather than being handed them? */
     public function selectsItems(): bool
     {
         return $this === self::Terms || $this === self::Full;
     }
 
-    /** Does this shape produce a card's wrong-answer options? */
+    /** Does this shape produce a card's wrong-answer options — wrong TRANSLATIONS beside the right one? */
     public function hasOptions(): bool
     {
-        return $this !== self::Terms;
+        return $this !== self::Terms && $this !== self::Machinery;
+    }
+
+    /** Does this shape produce wrong versions of the card's example sentence? */
+    public function hasDistractors(): bool
+    {
+        return $this === self::Machinery;
     }
 
     /**
@@ -54,12 +73,12 @@ enum PromptShape: string
      */
     public function producesCore(): bool
     {
-        return $this !== self::Mechanics;
+        return $this !== self::Mechanics && $this !== self::Machinery;
     }
 
     /** Does this shape produce the accepted FORMS of a term (its answer key beyond `text`)? */
     public function hasForms(): bool
     {
-        return $this === self::Mechanics;
+        return $this === self::Mechanics || $this === self::Machinery;
     }
 }
