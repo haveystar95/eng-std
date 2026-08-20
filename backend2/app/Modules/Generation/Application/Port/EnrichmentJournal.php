@@ -26,6 +26,16 @@ interface EnrichmentJournal
     /** Mark a term handled at this version — written even when the model produced nothing usable. */
     public function markDone(string $termId, string $generatorVersion): void;
 
+    /**
+     * Un-mark a term, so the next run at this version sees it as pending again.
+     *
+     * The one thing that legitimately invalidates a finished term is its CONTENT changing underneath
+     * the machinery: a replaced example orphans the distractors built against the old sentence, and a
+     * term left marked done would keep its hole forever (audit A2, on the four terms repaired after
+     * they had already been marked). Idempotent — un-marking an unmarked term is a no-op.
+     */
+    public function clearMark(string $termId, string $generatorVersion): void;
+
     /** @param  list<EnrichmentFinding>  $findings */
     public function recordFindings(array $findings, string $generatorVersion): void;
 

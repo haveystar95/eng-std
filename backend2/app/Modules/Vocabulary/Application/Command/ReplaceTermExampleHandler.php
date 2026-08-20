@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Application\Command;
 
 use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
+use App\Modules\Vocabulary\Domain\ValueObject\Provenance;
 
 final readonly class ReplaceTermExampleHandler
 {
@@ -12,6 +13,13 @@ final readonly class ReplaceTermExampleHandler
 
     public function __invoke(ReplaceTermExample $command): void
     {
-        $this->examples->replace($command->termId, $command->sentence, $command->sentenceTranslation);
+        $this->examples->replace(
+            $command->termId,
+            $command->sentence,
+            $command->sentenceTranslation,
+            $command->dropDistractorSentences,
+            $command->source,
+            Provenance::forOrNull($command->promptVersion, $command->generationModel),
+        );
     }
 }

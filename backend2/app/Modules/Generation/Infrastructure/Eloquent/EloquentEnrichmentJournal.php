@@ -40,6 +40,14 @@ final class EloquentEnrichmentJournal implements EnrichmentJournal
         ]);
     }
 
+    public function clearMark(string $termId, string $generatorVersion): void
+    {
+        DB::table('term_enrichment_versions')
+            ->where('term_id', $termId)
+            ->where('generator_version', $generatorVersion)
+            ->delete();
+    }
+
     public function recordFindings(array $findings, string $generatorVersion): void
     {
         if ($findings === []) {

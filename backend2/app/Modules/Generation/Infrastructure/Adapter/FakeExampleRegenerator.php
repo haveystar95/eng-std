@@ -19,6 +19,7 @@ final class FakeExampleRegenerator implements ExampleRegeneratorPort
             model: 'fake',
             tokensIn: 30,
             tokensOut: 45,
+            promptVersion: 'ex-regen.fake',
         );
     }
 }

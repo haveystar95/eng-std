@@ -11,12 +11,11 @@ use App\Modules\Generation\Application\Dto\ExampleRegenBrief;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Application\Service\DraftValidator;
+use App\Modules\Generation\Application\Service\ExampleReplacement;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermExample;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermExampleHandler;
 use App\Modules\Vocabulary\Application\Query\ExampleRegenContextReader;
 use Throwable;
 
@@ -49,7 +48,7 @@ final readonly class RepairEchoExamplesHandler
         private GetCollectionTermSetHandler $termSet,
         private ExampleRegenContextReader $context,
         private ExampleRegeneratorPort $regenerator,
-        private ReplaceTermExampleHandler $replaceExample,
+        private ExampleReplacement $replaceExample,
         private RecordsExampleRegeneration $spend,
         private ModelCost $cost,
         private Clock $clock,
@@ -117,11 +116,13 @@ final readonly class RepairEchoExamplesHandler
                 continue;
             }
 
-            ($this->replaceExample)(new ReplaceTermExample(
+            $this->replaceExample->apply(
                 $term['id'],
                 $result->example,
                 $result->exampleTranslation,
-            ));
+                $result->promptVersion,
+                $result->model,
+            );
 
             $callCost = $this->cost->estimate($result->model, $result->tokensIn, $result->tokensOut);
             $this->spend->record(

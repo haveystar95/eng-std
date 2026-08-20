@@ -9,14 +9,13 @@ use App\Modules\Generation\Application\Dto\RegeneratedExample;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
+use App\Modules\Generation\Application\Service\ExampleReplacement;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
 use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Identity\Application\Port\UserTierReader;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermExample;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermExampleHandler;
 use App\Modules\Vocabulary\Application\Query\ExampleRegenContextReader;
 
 /**
@@ -36,7 +35,7 @@ final readonly class RegenerateExampleHandler
     public function __construct(
         private ExampleRegenContextReader $context,
         private ExampleRegeneratorPort $regenerator,
-        private ReplaceTermExampleHandler $replaceExample,
+        private ExampleReplacement $replaceExample,
         private RecordsExampleRegeneration $spend,
         private ModelCost $cost,
         private GenerationQuota $quota,
@@ -65,11 +64,13 @@ final readonly class RegenerateExampleHandler
             avoid: $ctx->currentExample,
         ));
 
-        ($this->replaceExample)(new ReplaceTermExample(
+        $this->replaceExample->apply(
             $command->termId,
             $result->example,
             $result->exampleTranslation,
-        ));
+            $result->promptVersion,
+            $result->model,
+        );
 
         $this->spend->record(
             $command->userId,

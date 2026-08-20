@@ -19,11 +19,34 @@ final class EloquentDistractorAuditReader implements DistractorAuditReader
             $pinned[(string) $row->term_id] ??= (string) $row->id;
         }
 
+        return $this->rows(array_values($pinned));
+    }
+
+    public function forTerm(string $termId): array
+    {
+        $pinned = DB::table('term_examples')
+            ->where('term_id', $termId)
+            ->orderBy('id')
+            ->first(['id']);
+
+        return $pinned === null ? [] : $this->rows([(string) $pinned->id]);
+    }
+
+    /**
+     * @param  list<string>  $exampleIds
+     * @return list<DistractorAuditRow>
+     */
+    private function rows(array $exampleIds): array
+    {
+        if ($exampleIds === []) {
+            return [];
+        }
+
         $out = [];
         foreach (DB::table('example_distractors as d')
             ->join('term_examples as e', 'e.id', '=', 'd.example_id')
             ->join('terms as t', 't.id', '=', 'e.term_id')
-            ->whereIn('d.example_id', array_values($pinned))
+            ->whereIn('d.example_id', $exampleIds)
             ->orderBy('d.example_id')
             ->orderBy('d.id')
             ->get([
