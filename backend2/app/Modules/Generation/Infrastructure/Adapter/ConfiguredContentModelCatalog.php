@@ -22,8 +22,17 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
     /** @var array<string, array{key: string, model: string, base: string, env: string, default_model: string}> */
     private array $config;
 
+    /**
+     * Per-call timeout, shared by every adapter so one vendor is never given a longer rope than
+     * another by accident — a comparison where one model got three minutes and another got one is
+     * measuring the timeouts.
+     */
+    private int $timeoutSeconds;
+
     public function __construct(private OutboundCallContext $context)
     {
+        $this->timeoutSeconds = max(1, (int) config('services.generation.model_timeout', 180));
+
         $this->config = [
             ProviderId::OpenAi->value => [
                 'key' => (string) config('services.openai.api_key'),
@@ -101,12 +110,14 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
+                timeoutSeconds: $this->timeoutSeconds,
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
                 context: $this->context,
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
+                timeoutSeconds: $this->timeoutSeconds,
             ),
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
             ProviderId::OpenAi, ProviderId::Xai => new OpenAiCompatibleContentModel(
@@ -115,6 +126,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 apiKey: $key,
                 model: $model,
                 baseUrl: $row['base'],
+                timeoutSeconds: $this->timeoutSeconds,
             ),
         };
     }

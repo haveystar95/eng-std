@@ -114,6 +114,11 @@ return [
         // in-container finds nothing. Empty falls back to a git call (a local checkout) and then to
         // an explicit "не определён" — a header that admits the hole still dates the data.
         'git_sha' => env('APP_GIT_SHA'),
+        // Per-call timeout for the multi-provider comparison stack, seconds. 180 is generous for a
+        // model that answers directly and NOT enough for a reasoning model on a long prompt —
+        // grok-4.6 exceeded it on a 12-item collection. It is a knob rather than a constant so a
+        // slow model can be measured instead of being recorded as "did not answer" at OUR limit.
+        'model_timeout' => (int) env('GENERATION_MODEL_TIMEOUT', 180),
     ],
 
     'practice' => [

@@ -15,6 +15,7 @@ use App\Modules\Generation\Application\Service\BakeoffRunner;
 use App\Modules\Generation\Application\Service\BakeoffSample;
 use App\Modules\Generation\Application\Service\StoreCollectionSnapshot;
 use App\Modules\Generation\Domain\ValueObject\BakeoffTrack;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Infrastructure\Support\ExportHeader;
 use Illuminate\Console\Command;
@@ -55,6 +56,7 @@ final class BakeoffCommand extends Command
         {--tracks=abc : which tracks to run — any subset of a, b, c}
         {--topic= : run ONE topic instead of the built-in four (tracks A and C)}
         {--topic-note= : why that topic was chosen — printed in the report}
+        {--providers= : comma-separated subset (openai,anthropic,xai,gemini) — one provider per run keeps each invocation short, and --report-only merges them}
         {--pace=0 : milliseconds to wait between calls — the answer to an org tokens-per-minute cap}
         {--compare= : collection id whose CURRENT content is printed beside track A (read-only)}
         {--report-only= : re-render from finished run(s) in the sandbox, calling nothing — comma-separate several and each track is taken from whichever run answered it best}
@@ -85,7 +87,7 @@ final class BakeoffCommand extends Command
         $tracks = $this->tracks($this->str($this->option('tracks'), 'abc'));
 
         $availability = $catalog->availability();
-        $providers = $catalog->available();
+        $providers = $this->onlyRequested($catalog->available());
 
         $this->line('<options=bold>Провайдеры</>');
         foreach ($availability as $row) {
@@ -191,6 +193,32 @@ final class BakeoffCommand extends Command
     }
 
     /**
+     * Narrow the run to the providers named by `--providers`, if any.
+     *
+     * Not a convenience: a run has to fit inside one invocation, and a four-provider sweep where one
+     * vendor thinks for fifty seconds does not. Running one provider at a time keeps each invocation
+     * short, and `--report-only` stitches the runs back into one document — per (track, provider),
+     * so nothing is double-counted and nothing is dropped.
+     *
+     * @param  list<ContentModelPort>  $available
+     * @return list<ContentModelPort>
+     */
+    private function onlyRequested(array $available): array
+    {
+        $wanted = $this->str($this->option('providers'), '');
+        if ($wanted === '') {
+            return $available;
+        }
+
+        $names = array_map('trim', explode(',', strtolower($wanted)));
+
+        return array_values(array_filter(
+            $available,
+            static fn (ContentModelPort $p): bool => in_array($p->provider()->value, $names, true),
+        ));
+    }
+
+    /**
      * The topics this run puts to every provider.
      *
      * `--topic` replaces the built-in four with ONE, which is how a focused comparison is run
@@ -284,29 +312,36 @@ final class BakeoffCommand extends Command
         $results = [];
         $sources = [];
 
+        // Per (track, PROVIDER), not per track. Four single-provider runs of one track then union
+        // cleanly — the per-track rule would have kept one of them and thrown the other three away —
+        // and two full runs still resolve pair by pair, which is never worse.
         foreach (BakeoffTrack::cases() as $track) {
-            $best = null;
-            foreach ($runs as $id => $stored) {
-                $ofTrack = array_values(array_filter(
-                    $stored['results'],
-                    static fn (BakeoffCallResult $r): bool => $r->track === $track,
-                ));
-                if ($ofTrack === []) {
+            foreach (ProviderId::cases() as $provider) {
+                $best = null;
+                foreach ($runs as $id => $stored) {
+                    $ofPair = array_values(array_filter(
+                        $stored['results'],
+                        static fn (BakeoffCallResult $r): bool => $r->track === $track && $r->provider === $provider,
+                    ));
+                    if ($ofPair === []) {
+                        continue;
+                    }
+                    $ok = count(array_filter($ofPair, static fn (BakeoffCallResult $r): bool => $r->ok));
+                    if ($best === null || $ok > $best['ok']) {
+                        $best = ['run' => $id, 'ok' => $ok, 'total' => count($ofPair), 'results' => $ofPair];
+                    }
+                }
+
+                if ($best === null) {
                     continue;
                 }
-                $ok = count(array_filter($ofTrack, static fn (BakeoffCallResult $r): bool => $r->ok));
-                if ($best === null || $ok > $best['ok']) {
-                    $best = ['run' => $id, 'ok' => $ok, 'total' => count($ofTrack), 'results' => $ofTrack];
+                foreach ($best['results'] as $result) {
+                    $results[] = $result;
                 }
+                $sources[$track->value . '/' . $provider->value] = [
+                    'run' => $best['run'], 'ok' => $best['ok'], 'total' => $best['total'],
+                ];
             }
-
-            if ($best === null) {
-                continue;
-            }
-            foreach ($best['results'] as $result) {
-                $results[] = $result;
-            }
-            $sources[$track->value] = ['run' => $best['run'], 'ok' => $best['ok'], 'total' => $best['total']];
         }
 
         return [$results, $sources];

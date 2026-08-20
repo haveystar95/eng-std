@@ -121,10 +121,10 @@ final readonly class BakeoffReport
         $lines = [
             '## Откуда цифры',
             '',
-            '**Ни один прогон не закончился целиком** (см. «Провайдеры»), поэтому каждый трек взят '
-            . 'из того прогона, который ответил по нему лучше всего — механическое правило «больше '
-            . 'успешных вызовов», а не выбор понравившихся чисел. Треки между собой сравнивать '
-            . 'можно: внутри трека все провайдеры получили одно и то же задание в одном прогоне.',
+            'Отчёт собран из нескольких прогонов: каждая пара «трек + провайдер» взята из того '
+            . 'прогона, где она ответила лучше всего — механическое правило «больше успешных '
+            . 'вызовов», а не выбор понравившихся чисел. Сравнение остаётся честным: задание, '
+            . 'промпт, схема и проверки у всех одни и те же, разбиение на прогоны — техническое.',
             '',
             '| Трек | Прогон | Успешных вызовов (все провайдеры) |',
             '|---|---|---|',
@@ -522,6 +522,19 @@ final readonly class BakeoffReport
      */
     private function twoStageVsOneShot(array $results, array $meta): string
     {
+        // The section compares two PIPELINE SHAPES, so it needs both of them. On a run that covered
+        // only one track it would render as a heading over a single row and read like a comparison
+        // that had been made — which is the opposite of what happened.
+        $tracks = [];
+        foreach ($results as $result) {
+            if ($result->ok) {
+                $tracks[$result->track->value] = true;
+            }
+        }
+        if (! isset($tracks[BakeoffTrack::OneShot->value]) || ! isset($tracks[BakeoffTrack::Enrichment->value])) {
+            return "\0";
+        }
+
         $lines = [
             '## Два этапа (А + Б) против one-shot (В)',
             '',

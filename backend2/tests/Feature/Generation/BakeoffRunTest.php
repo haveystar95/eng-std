@@ -282,5 +282,32 @@ it('renders a report with a table per track and names the provider that could no
         // A provider that did not run is stated, with the reason — never a missing column.
         ->toContain('ANTHROPIC_API_KEY')
         ->toContain('Деградация по позиции в списке')
-        ->toContain('Два этапа (А + Б) против one-shot (В)');
+        // The pipeline-shape comparison needs BOTH shapes. Track Б did not run here, so the
+        // section is absent rather than rendered as a heading over one row — which would read
+        // like a comparison that had been made.
+        ->not->toContain('Два этапа (А + Б) против one-shot (В)');
+});
+
+it('compares the two pipeline shapes only once both of them have answered', function () {
+    fakeProviderAnswer([bakeoffGoodItem()]);
+
+    $results = [];
+    foreach (BakeoffTrack::cases() as $track) {
+        $results[] = app(BakeoffRunner::class)->run(
+            bakeoffProvider(),
+            new BakeoffTask($track, 'в банке', 'TOPIC', expectedSize: 1),
+            'v10',
+            new LanguageCode('ru'),
+            new LanguageCode('en'),
+        );
+    }
+
+    $markdown = app(BakeoffReport::class)->render(
+        $results,
+        [App\Modules\Generation\Application\Dto\ProviderAvailability::ready(ProviderId::OpenAi, 'gpt-4o')],
+        ['label' => 'v10', 'prompt_version' => 'v10', 'run_id' => 'r1', 'collection_size' => 12],
+    );
+
+    expect($markdown)->toContain('Два этапа (А + Б) против one-shot (В)')
+        ->toContain('А + Б — текущая схема, итого');
 });

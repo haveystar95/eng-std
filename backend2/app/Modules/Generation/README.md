@@ -74,11 +74,21 @@ content without stamping it, which is a bug the column can then find by itself.
 `CollectionGeneratorPort` on purpose: that port can express exactly one product, and the three
 shapes above need three.
 
-| Provider | Adapter | Key |
-|---|---|---|
-| OpenAI | `OpenAiCompatibleContentModel` | `OPENAI_API_KEY` |
-| xAI (Grok) | the same adapter, different base url — xAI implements OpenAI's request shape | `GROK_API_KEY` |
-| Anthropic | `AnthropicContentModel` (`x-api-key`, top-level `system`, `output_config.format`) | `ANTHROPIC_API_KEY` |
+| Provider | Adapter | Key | Model env |
+|---|---|---|---|
+| OpenAI | `OpenAiCompatibleContentModel` | `OPENAI_API_KEY` | `OPENAI_COMPARE_MODEL` |
+| xAI (Grok) | the same adapter, different base url — xAI implements OpenAI's request shape | `GROK_API_KEY` | `XAI_GENERATE_MODEL` |
+| Anthropic | `AnthropicContentModel` (`x-api-key`, top-level `system`, `output_config.format`) | `ANTHROPIC_API_KEY` | `ANTHROPIC_GENERATE_MODEL` |
+| Google | `GeminiContentModel` (`x-goog-api-key` header, `systemInstruction`, `generationConfig.responseSchema`) | `GEMINI_API_KEY` | `GEMINI_GENERATE_MODEL` |
+
+**`OPENAI_COMPARE_MODEL` is not `OPENAI_GENERATE_MODEL`.** The second is what production generation
+runs on; the first is what the comparison runs on. One variable for both would mean a bake-off
+silently repoints live generation. Unset, the comparison falls back to the production model.
+
+**Gemini's schema is not JSON Schema.** `responseSchema` is an OpenAPI-3.0 subset that *rejects*
+`additionalProperties` — which OpenAI's strict mode *requires*. `GeminiContentModel` translates on
+the way out. This is the only place where "every provider gets the same schema" is not literally
+true; the same constraint is expressed in each vendor's dialect.
 
 `ConfiguredContentModelCatalog` reports availability: **no key is not an error**, it is a provider
 that does not run, named in the report with the env var that would fix it. Retries escalate
