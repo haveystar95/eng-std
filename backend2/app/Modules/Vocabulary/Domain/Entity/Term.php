@@ -107,7 +107,28 @@ final class Term
         );
     }
 
-    /** Add a translation, ignoring exact (lang,text) duplicates. */
+    /**
+     * Add a translation, ignoring exact (lang,text) duplicates.
+     *
+     * ## A7: exactly one primary per language, and it is the newest one
+     *
+     * A term is global and deduplicated, so it accumulates translations: every regeneration of the
+     * same text merges another reading in. Until this rule existed the merge simply appended, and a
+     * translation that arrived marked primary landed BESIDE the primary already there — ten live
+     * store terms ended up with two («stay calm» → «Оставайтесь спокойны» AND «оставаться
+     * спокойным»). The question on the card is then whichever row the reader's ordering happens to
+     * return, which is a coin flip over what the learner is asked.
+     *
+     * So a primary arriving for a language demotes the primary that language already had. The old
+     * row is NOT deleted — it is a genuine alternative reading and it stays available — it only
+     * stops being the question. Freshest wins, because a merge is the newer generation speaking and
+     * a term with no opinion beats a term with two.
+     *
+     * An exact (lang,text) duplicate is not an arrival at all: nothing new was said, so nothing is
+     * promoted or demoted. That is what keeps a re-run of the same generation a genuine no-op, and
+     * it is what stops a repeat generation from taking the primary flag off a row a curator moved it
+     * onto by hand.
+     */
     public function addTranslation(Translation $translation): void
     {
         foreach ($this->translations as $existing) {
@@ -115,6 +136,16 @@ final class Term
                 return;
             }
         }
+
+        if ($translation->isPrimary) {
+            $this->translations = array_map(
+                static fn (Translation $existing): Translation => $existing->lang->equals($translation->lang)
+                    ? $existing->demoted()
+                    : $existing,
+                $this->translations,
+            );
+        }
+
         $this->translations[] = $translation;
     }
 

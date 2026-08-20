@@ -42,13 +42,15 @@ final class EloquentTermRepository implements TermRepository
     public function save(Term $term): void
     {
         DB::transaction(function () use ($term): void {
+            $repinned = false;
+
             TermModel::query()->updateOrCreate(
                 ['id' => $term->id()->value],
                 $this->mapper->toAttributes($term),
             );
 
             foreach ($term->translations() as $translation) {
-                TermTranslationModel::query()->firstOrCreate(
+                $row = TermTranslationModel::query()->firstOrCreate(
                     [
                         'term_id' => $term->id()->value,
                         'lang' => $translation->lang->value,
@@ -63,6 +65,26 @@ final class EloquentTermRepository implements TermRepository
                         'generation_model' => $translation->provenance?->model,
                     ],
                 );
+
+                // …and `is_primary` is the one column an EXISTING row still has to hear about.
+                // The aggregate demotes the previous primary when a newer one arrives (A7, see
+                // {@see Term::addTranslation()}), and a demotion that stopped at the aggregate would
+                // leave the table with the two primaries the rule exists to prevent. Text and
+                // provenance stay untouched: the row keeps saying what it said and who wrote it, it
+                // only stops being the question on the card.
+                if (! $row->wasRecentlyCreated && $row->is_primary !== $translation->isPrimary) {
+                    $row->forceFill(['is_primary' => $translation->isPrimary])->save();
+                    $repinned = true;
+                }
+            }
+
+            // The delta feed decides what to ship by `terms.updated_at`, and a translation lives in
+            // ANOTHER table — so a re-pinned primary would change the QUESTION on the card and never
+            // reach an already-synced phone (the QA-19 shape, seen there on a replaced example).
+            // Only when the pin actually moved: a merge that changed nothing must not re-send the
+            // term to every client.
+            if ($repinned) {
+                TermModel::query()->where('id', $term->id()->value)->update(['updated_at' => now()]);
             }
 
             foreach ($term->examples() as $example) {

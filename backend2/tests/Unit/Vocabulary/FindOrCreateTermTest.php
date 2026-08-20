@@ -61,6 +61,79 @@ it('merges new translations into an existing term', function () {
     expect($repo->findById($id)?->translations())->toHaveCount(2);
 });
 
+it('leaves exactly one primary translation when a dedup hit brings a different one (A7)', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $id = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('stay calm'), TermType::Phrase, null, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'Оставайтесь спокойны', true)],
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('stay calm'), TermType::Phrase, null, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'оставаться спокойным', true)],
+    ));
+
+    $translations = $repo->findById($id)?->translations() ?? [];
+    $primary = array_values(array_filter($translations, static fn (Translation $t): bool => $t->isPrimary));
+
+    // The older reading is demoted, never dropped: it stays a legitimate alternative.
+    expect($translations)->toHaveCount(2)
+        ->and($primary)->toHaveCount(1)
+        ->and($primary[0]->text)->toBe('оставаться спокойным');
+});
+
+it('demotes only the primary of the SAME language', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $id = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        [new Translation(new LanguageCode('uk'), 'банк', true)],
+    ));
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'банк', true)],
+    ));
+
+    $primary = array_values(array_filter(
+        $repo->findById($id)?->translations() ?? [],
+        static fn (Translation $t): bool => $t->isPrimary,
+    ));
+
+    // A Ukrainian primary beside a Russian one is not a defect — it is one question per language.
+    expect($primary)->toHaveCount(2);
+});
+
+it('keeps the existing primary when a dedup hit repeats the same translation', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $id = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'банк', true)],
+    ));
+    // A non-primary line arriving beside it must not become the question…
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::User,
+        [new Translation(new LanguageCode('ru'), 'берег', false)],
+    ));
+    // …and re-saying what was already said is a no-op, not a re-pin.
+    $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('bank'), TermType::Word, PartOfSpeech::Noun, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'банк', true)],
+    ));
+
+    $primary = array_values(array_filter(
+        $repo->findById($id)?->translations() ?? [],
+        static fn (Translation $t): bool => $t->isPrimary,
+    ));
+
+    expect($repo->findById($id)?->translations())->toHaveCount(2)
+        ->and($primary)->toHaveCount(1)
+        ->and($primary[0]->text)->toBe('банк');
+});
+
 it('persists a normalized cefr level, and stores null for an invalid one', function () {
     $repo = new InMemoryTermRepository();
     $handler = makeHandler($repo);
