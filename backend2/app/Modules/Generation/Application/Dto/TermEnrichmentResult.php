@@ -11,6 +11,11 @@ namespace App\Modules\Generation\Application\Dto;
  */
 final readonly class TermEnrichmentResult
 {
+    /**
+     * @param  string  $promptVersion  which versioned prompt file produced this — namespaced
+     *        (`enrich-term.v1`), because the provenance column also holds collection prompt versions
+     *        and a bare `v1` there would name two different prompts.
+     */
     public function __construct(
         public string $translation,
         public ?string $transcription,
@@ -20,5 +25,6 @@ final readonly class TermEnrichmentResult
         public string $model,
         public ?int $tokensIn,
         public ?int $tokensOut,
+        public string $promptVersion = 'enrich-term.v1',
     ) {}
 }

@@ -65,6 +65,11 @@ final readonly class EnrichTermHandler
                 ipa: $result->transcription,
                 examples: $result->example !== null ? [new ExampleInput($result->example, $result->exampleTranslation)] : [],
                 imageApiPrompt: $result->imageApiPrompt,
+                // «Учить это слово» is a model call like any other, and its translation and example
+                // are model output — they were being written with no stamp at all (audit A4), which
+                // is precisely the state the NULL sentinel exists to catch.
+                promptVersion: $result->promptVersion,
+                generationModel: $result->model,
             ));
 
             $this->spend->record(

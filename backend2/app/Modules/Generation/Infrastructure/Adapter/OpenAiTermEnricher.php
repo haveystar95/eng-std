@@ -71,6 +71,7 @@ final class OpenAiTermEnricher implements TermEnricherPort
             model: $this->model,
             tokensIn: is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null,
             tokensOut: is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null,
+            promptVersion: 'enrich-term.' . $this->promptVersion,
         );
     }
 

@@ -22,6 +22,7 @@ final class FakeTermEnricher implements TermEnricherPort
             model: 'fake',
             tokensIn: 40,
             tokensOut: 60,
+            promptVersion: 'enrich-term.fake',
         );
     }
 }

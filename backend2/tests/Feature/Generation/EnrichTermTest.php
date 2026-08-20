@@ -91,3 +91,27 @@ it('is idempotent — re-running enrichment does not re-spend on the model', fun
     expect(DB::table('term_enrichments')->where('term_id', $termId)->count())->toBe(1)          // no second spend
         ->and(DB::table('term_translations')->where('term_id', $termId)->count())->toBe(1);     // no duplicate translation
 });
+
+/**
+ * Audit A4: «Учить это слово» wrote a translation and an example through ImportTerm with no
+ * provenance at all — the same hole as the example writer's, on the other AI path. The stamp names
+ * the enrichment prompt rather than a bare `v1`: that column also holds collection prompt versions,
+ * and two different prompts sharing one label make a defect sweep unanswerable.
+ */
+it('stamps the enrichment prompt and model on what «Учить это слово» writes', function () {
+    [$user, $token] = enrichUser();
+    $collectionId = enrichCollection($user);
+
+    $termId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/collections/{$collectionId}/items", ['text' => 'overwhelm'])
+        ->assertStatus(201)
+        ->json('data.items.0.term_id');
+
+    expect(DB::table('term_translations')->where('term_id', $termId)->first(['prompt_version', 'generation_model']))
+        ->prompt_version->toBe('enrich-term.fake')
+        ->generation_model->toBe('fake');
+
+    expect(DB::table('term_examples')->where('term_id', $termId)->first(['prompt_version', 'generation_model']))
+        ->prompt_version->toBe('enrich-term.fake')
+        ->generation_model->toBe('fake');
+});
