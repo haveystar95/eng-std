@@ -120,7 +120,11 @@ final readonly class StudyCardAssembler
         // session fans WITHIN itself instead, and hands each slot its mode outright.
         $mode = $modeOverride
             ?? ($isPractice
-                ? $this->selector->selectForPractice($enabled, $cardIndex + $this->termOffset($view->termId->value), $playable)
+                ? $this->selector->selectForPractice(
+                    $this->practiceModes($view, $enabled, $admission),
+                    $cardIndex + $this->termOffset($view->termId->value),
+                    $playable,
+                )
                 : $this->selector->select($progress, $enabled, $playable, $admission, $slotStep));
 
         // The rung this card is actually being dealt at. Practice is off the ladder entirely — it
@@ -269,6 +273,37 @@ final readonly class StudyCardAssembler
     }
 
     /**
+     * The trainers free practice may pick from for this pair.
+     *
+     * For a POOL pair: the switched-on set, unfiltered — the ladder does not narrow free practice,
+     * which is what {@see ExerciseSelector::selectForPractice()} has always done and what keeps
+     * dictation reachable on a real pool (QA-26).
+     *
+     * For a pair OUTSIDE the pool — a word of the collection nobody has taken into study, which a
+     * collection's practice now reaches — the matrix DOES narrow it, to what it opens at
+     * {@see LearningLadder::STEP_UNENROLLED_PRACTICE}: choice and assembly, never typed production
+     * or dictation. Such a word has no rung to have earned them with.
+     *
+     * The narrowing is applied to the ENABLED SET rather than inside the selector on purpose: the
+     * round-robin, its rotation seed and its floor stay exactly as they are, and this stays one
+     * filter over one list.
+     *
+     * An empty narrowing falls back to multiple_choice alone — {@see ExerciseSelector::floor()}'s
+     * rule («the only mode that fits every term»), applied here because EnabledModes may not be
+     * empty. Reachable only by switching off everything the assembly rung opens.
+     */
+    private function practiceModes(DueTermView $view, EnabledModes $enabled, ModeAdmission $admission): EnabledModes
+    {
+        if ($view->inPool) {
+            return $enabled;
+        }
+
+        $opened = $admission->only($enabled->modes, LearningLadder::STEP_UNENROLLED_PRACTICE);
+
+        return new EnabledModes($opened !== [] ? $opened : [ExerciseMode::MultipleChoice]);
+    }
+
+    /**
      * Every mode this pair may be drilled in RIGHT NOW, in the matrix's own order — the fan a
      * one-term practice session deals ({@see BuildStudySessionHandler::practiceSlots()}).
      *
@@ -297,13 +332,16 @@ final readonly class StudyCardAssembler
         );
         // A `known` pair is OUTSIDE the ladder, not at the bottom of it — its verification is decided
         // elsewhere — so it reads as the top rung rather than as rung 0. Same rule, same words, as
-        // the client's `LadderPosition.admissionStep`.
-        $step = LearningLadder::stepFor(
-            $view->acquisition,
-            $view->reps,
-            $view->learningStep,
-            isKnown: $view->state === LearningState::Known,
-        ) ?? LearningLadder::STEP_DICTATION;
+        // the client's `LadderPosition.admissionStep`. A pair outside the POOL reads as the fixed
+        // rung a catalogue word is drilled at — it has no rung of its own to read.
+        $step = $view->inPool
+            ? (LearningLadder::stepFor(
+                $view->acquisition,
+                $view->reps,
+                $view->learningStep,
+                isKnown: $view->state === LearningState::Known,
+            ) ?? LearningLadder::STEP_DICTATION)
+            : LearningLadder::STEP_UNENROLLED_PRACTICE;
         $graded = array_values(array_filter($enabled->modes, static fn (ExerciseMode $m): bool => $m->isGraded()));
 
         return $playable->only($admission->only($graded, $step));

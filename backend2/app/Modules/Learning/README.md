@@ -11,10 +11,16 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
 - **Progress is per `(user_id, term_id)`** (`TermProgress`), never per collection. A term
   learned in one collection is learned everywhere. Collection progress is derived, not stored.
 - **The POOL is an attribute of the pair, not a collection.** `enrolled_at` non-null = the learner
-  is studying this word; null = it is in the catalogue only. Sessions — study AND practice — are
-  assembled from the pool and nothing else, so a collection is a catalogue of a topic and the pool
-  is the queue. There is deliberately no «Мои слова» collection entity: one would duplicate terms,
-  need a tombstone per removal, and give one word two progress stories.
+  is studying this word; null = it is in the catalogue only. STUDY sessions are assembled from the
+  pool and nothing else, so a collection is a catalogue of a topic and the pool is the queue. There
+  is deliberately no «Мои слова» collection entity: one would duplicate terms, need a tombstone per
+  removal, and give one word two progress stories.
+- **Free practice scoped to a COLLECTION is the one selection that leaves the pool.** It drills the
+  topic the learner pointed at, untriaged words included, so a fresh collection is playable without
+  a triage pass. It costs those words nothing — practice enrols nothing, writes no exposure and
+  never schedules — and they are dealt only what the matrix opens at
+  `LearningLadder::STEP_UNENROLLED_PRACTICE`, never typed production or dictation. Pool terms lead
+  the session and keep their own rung. UNSCOPED free practice still reads the pool alone.
 - **Leaving the pool is a PAUSE.** `enrolled_at → NULL` and nothing else moves — the review log, the
   rung, the counter and the due date all stand, so re-enrolling resumes exactly where the word was
   left. Enrolment is idempotent and keeps its first moment.

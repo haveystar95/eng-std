@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
  * about what it does NOT do.
  */
 
-it('never deals a word that is only in the catalogue', function () {
+it('never STUDIES a word that is only in the catalogue', function () {
     [$user, $token] = learner();
     [$col] = seedCollectionWith($user, 'apple', 'яблоко', enroll: false);
     addWordTo($col, $user->id, 'bank', 'банк', enroll: false);
@@ -29,8 +29,17 @@ it('never deals a word that is only in the catalogue', function () {
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 
+    // A DRILL over the collection is the one thing that does reach it — «Тренировка по теме» is over
+    // the topic, and it moves nothing: no enrolment, no exposure, no schedule. So the study session
+    // above is still empty afterwards, which is the assertion that matters here.
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $col, 'practice' => true])
+        ->assertOk()
+        ->assertJsonCount(2, 'data.cards');
+
+    expect(DB::table('user_term_progress')->whereNotNull('enrolled_at')->count())->toBe(0);
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 });

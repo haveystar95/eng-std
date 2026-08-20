@@ -8,6 +8,7 @@ use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -313,8 +314,8 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
     Profile::create(['user_id' => $user->id, 'daily_goal' => 0]);
     [$colA] = seedCollectionWith($user, 'apple', 'яблоко');
     addWordTo($colA, $user->id, 'bank', 'банк');
-    // …and one word of the same collection that the learner never took into study. Practice must
-    // not drill it: the catalogue is not the queue.
+    // …and one word of the same collection that the learner never took into study. A collection's
+    // practice drills the TOPIC, so it is reached too — but as a catalogue word, not as a rung.
     addWordTo($colA, $user->id, 'ledger', 'гроссбух', enroll: false);
 
     // A normal scoped session is empty (quota 0, nothing due)…
@@ -323,19 +324,45 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
         ->assertOk()
         ->assertJsonPath('data.cards', []);
 
-    // …but practice drills both ENROLLED never-studied terms, and only those. Practice fans across
-    // every applicable mode (not the reps ladder): single words with no example →
-    // multiple_choice / typing / listening.
+    // …but practice drills all three. Practice fans across every applicable mode (not the reps
+    // ladder): single words with no example → multiple_choice / typing / listening.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
         ->json('data.cards');
 
-    expect($cards)->toHaveCount(2);
-    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
+    expect($cards)->toHaveCount(3);
+    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank', 'ledger']);
     // No word_bank (single word) and no cloze (no example); the rest of the enabled set is fair game.
     expect(array_column($cards, 'exercise_mode'))
         ->each->toBeIn(['multiple_choice', 'typing', 'listening']);
+
+    // …and the catalogue word is never asked to PRODUCE the word: typing and listening are the
+    // trainers the admission matrix opens above the rung a word nobody has studied is dealt at.
+    $ledger = collect($cards)->firstWhere('answer', 'ledger');
+    expect($ledger['exercise_mode'])->toBe('multiple_choice');
+});
+
+it('drills an untriaged collection — nothing enrolled, and the topic still plays', function () {
+    [$user, $token] = learner();
+    Profile::create(['user_id' => $user->id, 'daily_goal' => 0]);
+    [$colA] = seedCollectionWith($user, 'apple', 'яблоко', enroll: false);
+    addWordTo($colA, $user->id, 'bank', 'банк', enroll: false);
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
+        ->assertOk()
+        ->json('data.cards');
+
+    expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
+    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice');
+
+    // …and the drill enrols nobody: the pool is still empty, so a study session still has nothing.
+    expect(DB::table('user_term_progress')->whereNotNull('enrolled_at')->count())->toBe(0);
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $colA])
+        ->assertOk()
+        ->assertJsonPath('data.cards', []);
 });
 
 it('includes a studied-but-not-due term in practice (which the normal session withholds)', function () {

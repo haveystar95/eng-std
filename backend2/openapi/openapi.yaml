@@ -633,11 +633,18 @@ paths:
         (target language) and mode-specific extras — shuffled options for multiple_choice, shuffled
         chips for word_bank — so the client runs it offline.
         The session's composition is fixed server-side under the returned session_id. A practice
-        session (practice=true) instead draws EVERY term in scope — a collection, or all the user's
-        collections — ignoring due_at, state and the daily quota (device-batch F17): free training on
-        demand. It introduces nothing and never schedules; its answers are recorded with is_practice
-        but do not move progress. The exercise mode still follows the reps ladder (never-studied →
-        multiple_choice, produced-before → word_bank/typing).
+        session (practice=true) instead draws EVERY term in scope ignoring due_at, state and the
+        daily quota (device-batch F17): free training on demand. It introduces nothing and never
+        schedules; its answers are recorded with is_practice but do not move progress.
+        What "in scope" means depends on collection_id, and the two answers differ on purpose.
+        WITHOUT one, the scope is the learner's POOL — the words they chose to study. WITH one, the
+        scope is the WHOLE COLLECTION, including terms that are not in the pool: the learner pointed
+        at a topic and asked to drill it, so an untriaged collection is playable («зашёл в кафе,
+        открыл тему»). Terms in the pool lead the session and are dealt by their own rung; terms
+        outside it follow, and are dealt only the trainers the admission matrix opens at the
+        assembly rung — multiple_choice and the assembly modes, never typing, listening or
+        dictation. Reaching such a term enrols nothing: it is still outside the pool afterwards, and
+        a study session over the same collection is unchanged.
       requestBody:
         required: false
         content:
@@ -996,9 +1003,10 @@ paths:
       summary: Put a term into the learner's pool («Учить это слово»)
       description: >-
         THE POOL is the learner's own list of words being studied — the queue, as opposed to the
-        catalogue their collections are. Sessions (study and practice alike) are assembled from it
-        and from nothing else, so a word reaches the trainer only through a deliberate act: this
-        endpoint, or a `не знаю` / `не уверен` triage swipe.
+        catalogue their collections are. STUDY sessions are assembled from it and from nothing else,
+        so a word is TAUGHT only after a deliberate act: this endpoint, or a `не знаю` / `не уверен`
+        triage swipe. (Free practice scoped to a collection may DRILL a word outside the pool — see
+        POST /study/sessions — but it moves nothing and never enrols.)
 
         Idempotent. The pair's row is created if the learner has never met the word; if it is
         already in the pool nothing is written, and the ORIGINAL enrolment moment is kept. A pair

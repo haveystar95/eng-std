@@ -13,10 +13,14 @@ use DateTimeImmutable;
  * hot query that runs at every session start, so implementations must use the partial indexes
  * added with the acquisition ladder and re-cut with the pool.
  *
- * EVERY method here is scoped to THE POOL — `enrolled_at IS NOT NULL`. That is the chapter's whole
- * point: a collection is a catalogue of a topic, and the trainer works through the learner's own
- * list of words. A term sitting in a collection the learner has never triaged is not a card waiting
- * to be dealt; it is a word in a book.
+ * Every SELECTION method here is scoped to THE POOL — `enrolled_at IS NOT NULL`. That is the
+ * chapter's whole point: a collection is a catalogue of a topic, and the trainer works through the
+ * learner's own list of words. A term sitting in a collection the learner has never triaged is not
+ * a card waiting to be dealt; it is a word in a book.
+ *
+ * {@see allInScope()} is the ONE exception, and it is not a selection for the trainer: it backs the
+ * free-practice DRILL over a collection, which is allowed to open the book. It says so in its name
+ * and returns rows tagged with {@see DueTermView::$inPool} so a caller can never confuse the two.
  *
  * `$termIds` is the OPTIONAL narrowing on top of that — a collection's terms, for «потренировать
  * аптечные перед аптекой». `null` means the whole pool, which is the ordinary case; an empty array
@@ -68,4 +72,25 @@ interface DueTermsReader
      * @return list<DueTermView>
      */
     public function allInPool(UserId $userId, ?array $termIds, int $limit): array;
+
+    /**
+     * Every progress row in scope, IN THE POOL OR NOT — the one read here that steps outside it.
+     *
+     * It backs free practice over a COLLECTION, which drills the topic and not the queue: «зашёл в
+     * кафе, открыл тему, прошёл маленькую тренировку без разбора коллекции». Practice enrols
+     * nothing, writes no exposure and schedules nothing, so reaching a word outside the pool costs
+     * that word nothing — it is still outside the pool when the session ends.
+     *
+     * Rows come back tagged with {@see DueTermView::$inPool}, because the two populations are dealt
+     * DIFFERENT cards (see {@see \App\Modules\Learning\Domain\Service\LearningLadder::STEP_UNENROLLED_PRACTICE}).
+     * A scope term with no progress row at all is simply absent — the caller fills it in with
+     * {@see DueTermView::outOfPool()} rather than this seeding a row for every unseen word.
+     *
+     * The scope is REQUIRED: there is no «everything, pool or not» question, and an empty array is
+     * an empty scope and therefore an empty result.
+     *
+     * @param  list<string>  $termIds
+     * @return list<DueTermView>
+     */
+    public function allInScope(UserId $userId, array $termIds, int $limit): array;
 }

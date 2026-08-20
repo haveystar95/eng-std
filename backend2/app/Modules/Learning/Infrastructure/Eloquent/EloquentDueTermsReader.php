@@ -110,6 +110,22 @@ final class EloquentDueTermsReader implements DueTermsReader
         return array_values($rows->map($this->toView(...))->all());
     }
 
+    public function allInScope(UserId $userId, array $termIds, int $limit): array
+    {
+        $query = $this->scoped($userId, $termIds);
+        if ($query === null) {
+            return [];
+        }
+
+        // No enrolment filter and no state/due filter: this is the collection's drill, not the
+        // trainer's queue. `enrolled_at` rides along so each row can say which population it is in
+        // — the caller deals the two differently, and guessing from `acquisition` would be wrong
+        // (a PAUSED word is graduated and still outside the pool).
+        $rows = $query->limit($limit)->get([...self::COLUMNS, 'enrolled_at']);
+
+        return array_values($rows->map($this->toScopeView(...))->all());
+    }
+
     /**
      * The pool proper: enrolled pairs only.
      *
@@ -142,7 +158,19 @@ final class EloquentDueTermsReader implements DueTermsReader
         return $query;
     }
 
+    /** A row read by one of the POOL methods: enrolled by construction. */
     private function toView(stdClass $row): DueTermView
+    {
+        return $this->view($row, inPool: true);
+    }
+
+    /** A row read by {@see allInScope()}, where enrolment is the question and not a given. */
+    private function toScopeView(stdClass $row): DueTermView
+    {
+        return $this->view($row, inPool: $row->enrolled_at !== null);
+    }
+
+    private function view(stdClass $row, bool $inPool): DueTermView
     {
         return new DueTermView(
             termId: TermId::fromString((string) $row->term_id),
@@ -153,6 +181,7 @@ final class EloquentDueTermsReader implements DueTermsReader
             acquisition: Acquisition::from((string) $row->acquisition),
             learningStep: (int) $row->learning_step,
             successfulReviews: (int) $row->successful_reviews,
+            inPool: $inPool,
         );
     }
 }

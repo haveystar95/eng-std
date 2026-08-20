@@ -65,6 +65,20 @@ final class LearningLadder
     public const FIRST_LADDER_STEP = self::STEP_RECOGNITION_FORWARD;
 
     /**
+     * The rung a word OUTSIDE the pool is dealt at in a collection's free practice.
+     *
+     * Such a word has no rung of its own — nobody has decided to study it, so nothing about it has
+     * been earned — and it must not be dealt the trainers a rung is for. It is dealt as a first
+     * meeting is: the easy half of the matrix (choice and assembly), never typed production or
+     * dictation, which ask the learner to reproduce a word they may be seeing for the first time.
+     *
+     * The assembly rung and not a recognition one, because recognition admits multiple_choice and
+     * nothing else, and «зашёл в кафе, открыл тему» deserves the assembly trainers too. Mirrored on
+     * the client as `LearningLadder.stepUnenrolledPractice`.
+     */
+    public const STEP_UNENROLLED_PRACTICE = self::STEP_ASSEMBLY;
+
+    /**
      * The rung this pair stands on, or NULL when it is outside the ladder.
      *
      * `null` is returned for a `known` pair — a triage self-assessment awaiting its verification

@@ -30,5 +30,21 @@ final readonly class DueTermView
         // The ladder's own counter — correct non-practice reviews since graduation. Rungs 3–5 are
         // read off THIS, not off `reps` above.
         public int $successfulReviews = 0,
+        // Is this pair in the learner's POOL (`enrolled_at` non-null)? True for every selection but
+        // one: a collection's FREE PRACTICE drills the whole collection, so it also carries the
+        // words nobody has triaged. They are not a rung and must not be dealt one — see
+        // {@see \App\Modules\Learning\Domain\Service\LearningLadder::STEP_UNENROLLED_PRACTICE}.
+        public bool $inPool = true,
     ) {}
+
+    /**
+     * A term of the collection with no progress row at all — never met, never chosen. The ordinary
+     * state of an untriaged collection, and the reason this is a named constructor rather than a
+     * pile of defaults at every call site: «what does a word we know nothing about look like» is
+     * one answer, given once.
+     */
+    public static function outOfPool(TermId $termId): self
+    {
+        return new self($termId, LearningState::New, 0, null, inPool: false);
+    }
 }

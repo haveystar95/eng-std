@@ -11,9 +11,14 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 
 /**
- * The pool projection, in memory. Everything handed to the constructor is by definition ENROLLED —
- * the port only ever speaks about pool pairs, so a test that wants a term left out of the pool
- * simply does not list it here.
+ * The pool projection, in memory. Everything handed to `$dueTerms` / `$allTerms` is by definition
+ * ENROLLED — those methods only ever speak about pool pairs, so a test that wants a term left out
+ * of the pool simply does not list it there.
+ *
+ * `$outOfPool` is the other population, and it exists for one caller: {@see allInScope()}, the read
+ * behind a collection's free practice, which drills the topic and not the queue. Rows listed there
+ * come back tagged `inPool: false` — a PAUSED word, or one that has a progress row for some other
+ * reason but is not being studied.
  */
 final class InMemoryDueTermsReader implements DueTermsReader
 {
@@ -27,10 +32,13 @@ final class InMemoryDueTermsReader implements DueTermsReader
      * @param  list<DueTermView>  $dueTerms  the selectable projection (ladder rows + due rows)
      * @param  list<DueTermView>|null  $allTerms  every pool row (any state, ignoring due_at)
      *                                            for {@see allInPool}; defaults to [$dueTerms]
+     * @param  list<DueTermView>  $outOfPool  rows in scope that are NOT enrolled — {@see allInScope}
+     *                                        only. Tagged `inPool: false` on the way out.
      */
     public function __construct(
         private readonly array $dueTerms = [],
         private readonly ?array $allTerms = null,
+        private readonly array $outOfPool = [],
     ) {}
 
     public function selectableInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array
@@ -65,6 +73,26 @@ final class InMemoryDueTermsReader implements DueTermsReader
     public function allInPool(UserId $userId, ?array $termIds, int $limit): array
     {
         return array_slice($this->scoped($this->allTerms ?? $this->dueTerms, $termIds), 0, $limit);
+    }
+
+    public function allInScope(UserId $userId, array $termIds, int $limit): array
+    {
+        $pool = array_map(
+            static fn (DueTermView $v): DueTermView => new DueTermView(
+                $v->termId, $v->state, $v->intervalDays, $v->dueAt, $v->reps,
+                $v->acquisition, $v->learningStep, $v->successfulReviews, inPool: true,
+            ),
+            $this->scoped($this->allTerms ?? $this->dueTerms, $termIds),
+        );
+        $outside = array_map(
+            static fn (DueTermView $v): DueTermView => new DueTermView(
+                $v->termId, $v->state, $v->intervalDays, $v->dueAt, $v->reps,
+                $v->acquisition, $v->learningStep, $v->successfulReviews, inPool: false,
+            ),
+            $this->scoped($this->outOfPool, $termIds),
+        );
+
+        return array_slice([...$pool, ...$outside], 0, $limit);
     }
 
     /**
