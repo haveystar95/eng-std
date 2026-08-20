@@ -1,6 +1,9 @@
 // Domain → display mappings (Russian labels + paper-palette tones).
 import type {
   Acquisition,
+  ContentGap,
+  ContentStatus,
+  NeedsEnrichmentReason,
   CollectionSource,
   CollectionType,
   DialogStatus,
@@ -139,6 +142,38 @@ export function generationTone(s: GenerationStatus): Tone {
   if (s === 'failed') return 'unknown'
   if (s === 'running') return 'unsure'
   return 'neutral'
+}
+
+// ── «Здоровье контента» ──
+// What the CONTENT of a term allows. Deliberately worded so it can never be read as «когда
+// тренажёр откроется ученику» — that is the ladder's question and lives on its own screen.
+export const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
+  ok: 'собирается',
+  blocked: 'не собирается',
+  pool_dependent: 'зависит от пула',
+}
+export function contentStatusTone(s: ContentStatus): Tone {
+  if (s === 'ok') return 'known'
+  if (s === 'blocked') return 'unknown'
+  return 'unsure'
+}
+
+/** A short chip for the machine reason. The server also sends a full sentence — show both. */
+export const CONTENT_GAP_LABEL: Record<ContentGap, string> = {
+  single_word: 'одно слово',
+  no_example: 'нет примера',
+  example_lacks_term: 'в примере нет термина',
+  example_is_term: 'пример = термин',
+  no_example_translation: 'нет перевода примера',
+  example_too_short: 'пример короткий',
+  example_too_long: 'пример длинный',
+  too_few_distractors: 'мало дистракторов',
+  options_from_pool: 'опции из пула',
+}
+
+export const NEEDS_ENRICHMENT_REASON_LABEL: Record<NeedsEnrichmentReason, string> = {
+  few_distractors: 'мало годных дистракторов',
+  no_variants: 'нет принимаемых вариантов',
 }
 
 export const TIER_LABEL: Record<Tier, string> = {

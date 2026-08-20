@@ -613,3 +613,159 @@ export interface GenerationsQuery extends PageQuery {
   userId?: string
   status?: GenerationStatus
 }
+
+// ── Content health («Здоровье контента») ──
+/**
+ * What a term's own CONTENT allows a trainer to build — a different question from the acquisition
+ * ladder, which says when a trainer opens FOR A LEARNER. A mode can be `ok` here and still never be
+ * dealt (the rung is not reached), and it can be `blocked` here for a learner at the top rung.
+ *
+ * `pool_dependent` is not a hedge: `multiple_choice` builds its wrong options out of OTHER words in
+ * the session, so no content of this term decides whether its card assembles.
+ */
+export type ContentStatus = 'ok' | 'blocked' | 'pool_dependent'
+
+/** The machine reason behind a non-`ok` status. Null exactly when the status is `ok`. */
+export type ContentGap =
+  | 'single_word'
+  | 'no_example'
+  | 'example_lacks_term'
+  | 'example_is_term'
+  | 'no_example_translation'
+  | 'example_too_short'
+  | 'example_too_long'
+  | 'too_few_distractors'
+  | 'options_from_pool'
+
+export interface ModeSimulation {
+  mode: ExerciseMode
+  status: ContentStatus
+  reason: ContentGap | null
+  /** Already in Russian — the server states the rule in words so the panel cannot re-phrase it. */
+  explanation: string
+}
+
+/** `few_distractors` / `no_variants` — what a догон would actually fix. */
+export type NeedsEnrichmentReason = 'few_distractors' | 'no_variants'
+
+export interface ContentHealthScope {
+  scope: 'all' | 'system' | 'user'
+  terms: number
+  withDistractors: number
+  pickCorrectReady: number
+  withVariants: number
+  withoutExample: number
+  needsEnrichment: number
+  estimatedTopupUsd: number
+  /** `version: null` is «станок не прогонялся» and comes first. */
+  enrichmentVersions: { version: string | null; terms: number }[]
+}
+
+export interface ContentHealthCollection {
+  id: string
+  title: string
+  type: CollectionType
+  terms: number
+  withoutExample: number
+  pickCorrectReady: number
+  needsEnrichment: number
+  estimatedTopupUsd: number
+}
+
+export interface ContentLabelCount {
+  label: string
+  count: number
+}
+
+export interface ContentHealthSummary {
+  /**
+   * NOT a partition: a term held by a store collection AND by someone's own list counts in both,
+   * and a term in no collection appears only in `all`. The screen says so out loud.
+   */
+  scopes: {
+    all: ContentHealthScope
+    system: ContentHealthScope
+    user: ContentHealthScope
+  }
+  collections: ContentHealthCollection[]
+  suppressions: { total: number; bySource: ContentLabelCount[] }
+  generationRejections: { total: number; byField: ContentLabelCount[] }
+  currentGeneratorVersion: string
+  minDistractors: number
+  costPerTermUsd: number
+}
+
+export interface ContentHealthTerm {
+  termId: string
+  text: string
+  translation: string | null
+  hasExample: boolean
+  /** No pinned example: cured by regenerating it, NOT by the станок — so never billed as a догон. */
+  missingExample: boolean
+  /** Span-distinct — the number a card can actually deal. */
+  usableDistractors: number
+  /** Rows on the pinned example; higher than `usableDistractors` when spans collide. */
+  rawDistractors: number
+  pickCorrectReady: boolean
+  variants: number
+  enrichmentVersion: string | null
+  needsEnrichment: boolean
+  needsEnrichmentReasons: NeedsEnrichmentReason[]
+}
+
+export interface CollectionContentHealth {
+  collectionId: string
+  title: string
+  type: CollectionType
+  /** Most under-stocked first. */
+  terms: ContentHealthTerm[]
+  needsEnrichment: number
+  withoutExample: number
+  pickCorrectReady: number
+  estimatedTopupUsd: number
+  /** A line to paste into a terminal. The panel never runs the станок. */
+  topupCommand: string
+  minDistractors: number
+  costPerTermUsd: number
+}
+
+export interface PassportDistractor extends ExampleDistractor {
+  /** false = a card would not deal this row; another distractor already breaks the same span. */
+  usable: boolean
+}
+
+export interface SuppressedSentence {
+  sentence: string
+  source: 'review' | 'audit'
+  createdAt: string | null
+}
+
+export interface TermContentPassport {
+  termId: string
+  text: string
+  lang: string
+  type: string
+  translations: TermTranslation[]
+  example: { id: string; sentence: string | null; translation: string | null } | null
+  distractors: PassportDistractor[]
+  /** Says that `error_type` is the станок's own guess, checked by nothing. */
+  errorTypeNote: string
+  /** Their own list: a suppression outlives the row — and the example — it was about. */
+  suppressed: SuppressedSentence[]
+  acceptedVariants: TermVariant[]
+  enrichmentVersions: { version: string; createdAt: string | null }[]
+  enrichmentVersion: string | null
+  findings: EnrichmentFinding[]
+  simulation: ModeSimulation[]
+  usableDistractors: number
+  missingExample: boolean
+  needsEnrichment: boolean
+  needsEnrichmentReasons: NeedsEnrichmentReason[]
+  collections: { id: string; title: string; type: string }[]
+  topupCommand: string
+  /** Set only when the term is already marked at the current version — a plain run would skip it. */
+  topupHint: string | null
+  currentGeneratorVersion: string
+  minDistractors: number
+  costPerTermUsd: number
+}

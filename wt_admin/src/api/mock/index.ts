@@ -4,6 +4,8 @@ import type {
   Acquisition,
   Admin,
   CallPurpose,
+  CollectionContentHealth,
+  ContentHealthSummary,
   CollectionDetail,
   CollectionImpact,
   CollectionRow,
@@ -32,6 +34,7 @@ import type {
   RequestLogDetail,
   Review,
   ReviewsQuery,
+  TermContentPassport,
   TermDetail,
   TermImpact,
   TermPatch,
@@ -42,6 +45,7 @@ import type {
   UserListQuery,
   UserRow,
 } from '../types'
+import { mockCollectionContentHealth, mockContentHealthSummary, mockTermContentPassport } from './contentHealth'
 import {
   MOCK_NOW,
   collectionRows,
@@ -447,6 +451,19 @@ export const mock = {
   async getTerm(id: string): Promise<TermDetail> {
     const t = termDetails.find((x) => x.id === id)
     return t ?? notFound('Термин')
+  },
+
+  // ── Content health («Здоровье контента») ──
+  async getContentHealthSummary(): Promise<ContentHealthSummary> {
+    return mockContentHealthSummary()
+  },
+
+  async getCollectionContentHealth(id: string): Promise<CollectionContentHealth> {
+    return mockCollectionContentHealth(id) ?? notFound('Коллекция')
+  },
+
+  async getTermContentPassport(id: string): Promise<TermContentPassport> {
+    return mockTermContentPassport(id) ?? notFound('Термин')
   },
 
   async listLogs(q: LogsQuery = {}): Promise<Paginated<RequestLog>> {

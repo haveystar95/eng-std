@@ -57,6 +57,11 @@ export const router = createRouter({
           props: true,
         },
 
+        // «Здоровье контента»: три уровня на одном маршруте, уровень — в query string
+        // (?collection=…&term=…), как на экране лестницы. Ссылка на паспорт термина открывает
+        // ровно его, а Back поднимает на уровень выше, а не выкидывает из раздела.
+        { path: 'content', name: 'content', component: () => import('@/views/ContentView.vue') },
+
         { path: 'terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
         { path: 'terms/:id', name: 'term', component: () => import('@/views/TermDetailView.vue'), props: true },
 

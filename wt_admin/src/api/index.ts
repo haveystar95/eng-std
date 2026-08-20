@@ -7,10 +7,12 @@ import { snakeizeParams } from './mapping'
 import { mock } from './mock'
 import type {
   Admin,
+  CollectionContentHealth,
   CollectionDetail,
   CollectionImpact,
   CollectionRow,
   CollectionsQuery,
+  ContentHealthSummary,
   CostByPurpose,
   Dashboard,
   ExerciseMode,
@@ -34,6 +36,7 @@ import type {
   RequestLogDetail,
   Review,
   ReviewsQuery,
+  TermContentPassport,
   TermDetail,
   TermImpact,
   TermPatch,
@@ -166,6 +169,16 @@ export const api = {
     useMocks ? mock.updateTerm(id, patch) : httpPatch(`/terms/${id}`, snakeizeParams(patch)),
   retireTerm: (id: string): Promise<{ id: string; retired: boolean }> =>
     useMocks ? mock.retireTerm(id) : httpDelete(`/terms/${id}`),
+
+  // ── Content health («Здоровье контента») ──
+  // Read-only, and there is deliberately no `runEnrichment`: the догон spends money against a
+  // model, so the API hands over a command to paste and the panel never executes it.
+  getContentHealthSummary: (): Promise<ContentHealthSummary> =>
+    useMocks ? mock.getContentHealthSummary() : httpGet('/content-health/summary'),
+  getCollectionContentHealth: (id: string): Promise<CollectionContentHealth> =>
+    useMocks ? mock.getCollectionContentHealth(id) : httpGet(`/content-health/collections/${id}`),
+  getTermContentPassport: (id: string): Promise<TermContentPassport> =>
+    useMocks ? mock.getTermContentPassport(id) : httpGet(`/content-health/terms/${id}`),
 
   // ── Logs ──
   listLogs: (q: LogsQuery = {}): Promise<Paginated<RequestLog>> =>
