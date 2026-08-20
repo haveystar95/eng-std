@@ -7,7 +7,9 @@ namespace App\Modules\Vocabulary\Infrastructure\Provider;
 use App\Modules\Vocabulary\Application\Port\AuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Application\Port\TermEnrichmentWriter;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
+use App\Modules\Vocabulary\Application\Port\TermCoreWriter;
 use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
+use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
 use App\Modules\Vocabulary\Application\Query\DistractorAuditReader;
@@ -35,6 +37,8 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentPendingTermImageReade
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermEnrichmentExportReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermEnrichmentWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermReviewWriter;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentStaleCoreReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermCoreWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExampleWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermAnswerKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermChangeReader;
@@ -70,6 +74,10 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(EnrichableTermReader::class, EloquentEnrichableTermReader::class);
         $this->app->bind(ExampleRegenContextReader::class, EloquentExampleRegenContextReader::class);
         $this->app->bind(TermExampleWriter::class, EloquentTermExampleWriter::class);
+        // The one writer allowed to REPLACE a core, and the reader that finds the cores worth
+        // replacing — both exist for the showcase regeneration and have no other caller.
+        $this->app->bind(TermCoreWriter::class, EloquentTermCoreWriter::class);
+        $this->app->bind(StaleCoreReader::class, EloquentStaleCoreReader::class);
         // Enrichment станок: Vocabulary owns the two content tables; Generation fills them.
         $this->app->bind(DistractorAuditReader::class, EloquentDistractorAuditReader::class);
         $this->app->bind(EnrichmentTargetReader::class, EloquentEnrichmentTargetReader::class);

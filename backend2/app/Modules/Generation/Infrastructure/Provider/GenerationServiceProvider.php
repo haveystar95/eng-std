@@ -20,6 +20,7 @@ use App\Modules\Generation\Application\Port\GenerationAccountEraser;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\LoggedResponseReader;
+use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
@@ -73,6 +74,7 @@ use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationQuota;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentExampleRegenerationLog;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRejectionJournal;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentGenerationRequestRepository;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentObservedTokenAverages;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeDialogMessageRepository;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeDialogRepository;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPracticeQuota;
@@ -102,6 +104,8 @@ final class GenerationServiceProvider extends ServiceProvider
         // The bake-off's sandbox. Bound here so nothing else can be handed a writer by accident.
         $this->app->bind(BakeoffJournal::class, EloquentBakeoffJournal::class);
         $this->app->bind(LoggedResponseReader::class, ObservabilityLoggedResponseReader::class);
+        // What calls on a model have really cost in tokens — the measured half of a spend estimate.
+        $this->app->bind(ObservedTokenAverages::class, EloquentObservedTokenAverages::class);
         $this->app->bind(GenerationQuota::class, EloquentGenerationQuota::class);
         $this->app->bind(GenerationAccountEraser::class, EloquentGenerationAccountEraser::class);
         $this->app->bind(RecordsTermEnrichment::class, EloquentTermEnrichmentLog::class);
