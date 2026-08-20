@@ -19,6 +19,7 @@ final readonly class CandidateItem
      * @param  string|null  $givenTerm  the term this item was asked to render, on the given-terms
      *                                  shape; null when the model chose the item itself
      * @param  list<string>  $options  wrong-answer options, as produced
+     * @param  list<string>  $forms  accepted alternative spellings of the term, as produced
      */
     public function __construct(
         public int $position,
@@ -30,6 +31,8 @@ final readonly class CandidateItem
         public ?string $transcription = null,
         public ?string $cefr = null,
         public array $options = [],
+        /** @var list<string> other accepted spellings of the term (the mechanics shape) */
+        public array $forms = [],
         public ?string $givenTerm = null,
         public ?string $sourceTermId = null,
     ) {}

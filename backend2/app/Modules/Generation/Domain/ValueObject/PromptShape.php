@@ -23,18 +23,43 @@ enum PromptShape: string
     /** Existing terms in, full content for each out (translation, example, options). The станок's job. */
     case Enrich = 'enrich';
 
+    /**
+     * FINISHED cards in, exercise machinery out — wrong-answer options and accepted forms, nothing
+     * else. The split that separates paying for content from paying for machinery: a core that has
+     * been reviewed must not be re-generated to obtain the options around it.
+     */
+    case Mechanics = 'mechanics';
+
     /** A topic in, a finished collection out — terms AND their full content, in one call. */
     case Full = 'full';
 
     /** Does this shape pick its own items from a topic, rather than being handed them? */
     public function selectsItems(): bool
     {
-        return $this !== self::Enrich;
+        return $this === self::Terms || $this === self::Full;
     }
 
     /** Does this shape produce a card's wrong-answer options? */
     public function hasOptions(): bool
     {
         return $this !== self::Terms;
+    }
+
+    /**
+     * Does this shape produce the CORE of a card — the term's translation and example?
+     *
+     * False for {@see Mechanics}, and that is the whole point of it: the core it is handed has
+     * already been paid for and reviewed, so the checks that judge a core (the key rules, the
+     * example rule) do not apply to an answer that was forbidden to produce one.
+     */
+    public function producesCore(): bool
+    {
+        return $this !== self::Mechanics;
+    }
+
+    /** Does this shape produce the accepted FORMS of a term (its answer key beyond `text`)? */
+    public function hasForms(): bool
+    {
+        return $this === self::Mechanics;
     }
 }

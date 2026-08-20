@@ -56,6 +56,32 @@ final class PromptLibrary implements PromptSource
                 '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
             ],
         ],
+        'v11' => [
+            // The COLLECTION shape: a core and nothing else — term, key, one example. No options,
+            // because a core is what a human reviews and machinery is what a cheaper model can add
+            // afterwards over a core that survived review.
+            PromptShape::Terms->value => [
+                '00-role', '10-select-topic', '20-fields', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '99-closing',
+            ],
+            // The MECHANICS shape: finished cards in, options and forms out. It is forbidden to
+            // touch the core, so it carries none of the rules about writing one.
+            PromptShape::Mechanics->value => [
+                '00-role', '16-given-core', '25-fields-mechanics', '60-options', '62-forms',
+                '50-purity', '92-self-check-mechanics', '99-closing',
+            ],
+            // The REPAIR shape: a bare term in, core AND machinery out. The path for regenerating
+            // the showcase and for "learn this word".
+            PromptShape::Enrich->value => [
+                '00-role', '15-given-terms', '20-fields', '60-options', '62-forms', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
+            ],
+            // The ONE-SHOT shape: a topic in, a finished collection out. The experiment.
+            PromptShape::Full->value => [
+                '00-role', '10-select-topic', '20-fields', '60-options', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}
@@ -127,10 +153,14 @@ final class PromptLibrary implements PromptSource
             return $this->read($this->directory . "/generate_collection.{$version}.md");
         }
 
-        // No "shape not found" branch: the map above declares every shape of every composed
-        // version literally, so a missing one is a static error rather than a runtime one — PHPStan
-        // refuses the null-check as unreachable, and refuses the map the day a shape is dropped.
-        $sections = self::COMPOSED[$version][$shape->value];
+        // v11 added a shape v10 does not have, so this lookup can genuinely miss and says so
+        // instead of resolving to an undefined index. (While every version had every shape PHPStan
+        // refused this branch as unreachable — it is the analyzer, not the author, that decides
+        // which of the two states we are in.)
+        $sections = self::COMPOSED[$version][$shape->value] ?? throw new InvalidArgumentException(
+            "Prompt {$version} has no '{$shape->value}' shape; it has: "
+            . implode(', ', array_keys(self::COMPOSED[$version])) . '.'
+        );
 
         $parts = [];
         foreach ($sections as $section) {

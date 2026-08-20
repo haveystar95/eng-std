@@ -196,6 +196,90 @@ it('splits the answer into halves so the tail hypothesis is measurable', functio
         ->and($second)->toBe(1.0);
 });
 
+/**
+ * The v11 headline defect, on the row that named it: «back up» → «подниматься обратно из-за засора»
+ * is true about the world and unanswerable as a card.
+ */
+it('flags a translation that describes the term instead of naming it', function () {
+    $batch = judgeItems([checkItem(0, [
+        'text' => 'back up',
+        'translation' => 'подниматься обратно из-за засора',
+        'example' => 'The sink backs up every time it rains.',
+        'exampleTranslation' => 'Раковина забивается каждый раз, когда идёт дождь.',
+    ])]);
+
+    expect($batch->verdicts[0]->failed(CheckId::Definition))->toBeTrue()
+        ->and($batch->verdicts[0]->reason())->toContain('из-за');
+});
+
+it('flags a translation three times its term even with no explanatory word in it', function () {
+    $batch = judgeItems([checkItem(0, [
+        'text' => 'commute',
+        'translation' => 'ездить каждый день на работу и обратно',
+        'example' => 'I commute by train every morning.',
+        'exampleTranslation' => 'Я езжу на работу на поезде каждое утро.',
+    ])]);
+
+    expect($batch->verdicts[0]->failed(CheckId::Definition))->toBeTrue()
+        ->and($batch->verdicts[0]->reason())->toContain('длиннее термина');
+});
+
+/**
+ * The guard that makes the rule usable. A long translation of a long term is not a definition, and a
+ * marker inside one is innocent — flagging these would bury the real ones.
+ */
+it('leaves a long key for a long term alone, marker and all', function () {
+    $batch = judgeItems([
+        checkItem(0, [
+            'text' => 'Tell us about a challenge you faced',
+            'translation' => 'Расскажите нам о вызове, с которым вы столкнулись',
+            'example' => 'Tell us about a challenge you faced at work last year.',
+            'exampleTranslation' => 'Расскажите нам о вызове, с которым вы столкнулись на работе.',
+        ]),
+        checkItem(1, ['text' => 'withdraw cash', 'translation' => 'снять наличные']),
+        checkItem(2, ['text' => 'fill out', 'translation' => 'заполнить (форму)']),
+    ]);
+
+    foreach ($batch->verdicts as $verdict) {
+        expect($verdict->failed(CheckId::Definition))->toBeFalse();
+    }
+});
+
+it('does not judge a core the mechanics shape was forbidden to write', function () {
+    // No translation, no example — that is CORRECT for this shape, and scoring it as a defect
+    // would rank a compliant answer below a disobedient one.
+    $batch = judgeItems([new CandidateItem(
+        position: 0,
+        text: 'withdraw cash',
+        options: ['положить деньги', 'закрыть счёт', 'проверить баланс'],
+        forms: ['take out cash'],
+    )], PromptShape::Mechanics);
+
+    expect($batch->verdicts[0]->failed(CheckId::Definition))->toBeFalse()
+        ->and($batch->verdicts[0]->failed(CheckId::Example))->toBeFalse()
+        ->and($batch->verdicts[0]->failed(CheckId::Isomorphism))->toBeFalse()
+        ->and(CheckId::forShape(PromptShape::Mechanics))->not->toContain(CheckId::Example);
+});
+
+it('fails a form that repeats the term or runs to a clause', function () {
+    $echo = judgeItems([new CandidateItem(
+        position: 0, text: 'check in', options: ['a', 'b', 'c'], forms: ['Check In'],
+    )], PromptShape::Mechanics);
+    expect($echo->verdicts[0]->reason())->toContain('повторяет термин');
+
+    $clause = judgeItems([new CandidateItem(
+        position: 0, text: 'check in', options: ['a', 'b', 'c'],
+        forms: ['to register at the hotel reception'],
+    )], PromptShape::Mechanics);
+    expect($clause->verdicts[0]->reason())->toContain('длиннее термина вдвое');
+
+    // An empty list is the normal answer for most terms and is never penalised.
+    $none = judgeItems([new CandidateItem(
+        position: 0, text: 'check in', options: ['a', 'b', 'c'], forms: [],
+    )], PromptShape::Mechanics);
+    expect($none->verdicts[0]->failed(CheckId::Forms))->toBeFalse();
+});
+
 it('stays silent about the key in a language the rule was never taught', function () {
     // German counterparts are not in the rule. Silence, not a false clean bill of health — the
     // report is what has to state that the language was not judged.

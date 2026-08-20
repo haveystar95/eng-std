@@ -35,11 +35,17 @@ enum CheckId: string
     /** The translation still points at its own term — both waves (nothing lost, nothing added). */
     case Isomorphism = 'isomorphism';
 
+    /** The translation NAMES the term rather than describing what it means. Coarse, flags candidates. */
+    case Definition = 'definition';
+
     /** Exactly 3 wrong options, all distinct, none of them equal to the right answer. */
     case Options = 'options';
 
     /** (given-terms only) `text` is the term we handed over, character for character. */
     case Verbatim = 'verbatim';
+
+    /** Accepted forms are shaped like the term (no clauses, no duplicates of `text`). */
+    case Forms = 'forms';
 
     /** Batch-level: the answer has as many items as were asked for. */
     case Size = 'size';
@@ -55,8 +61,10 @@ enum CheckId: string
             self::UniqueTranslation => 'дубли переводов',
             self::Example => 'пример',
             self::Isomorphism => 'изоморфность',
+            self::Definition => 'перевод-определение',
             self::Options => 'опции',
             self::Verbatim => 'термин дословно',
+            self::Forms => 'формы слова',
             self::Size => 'размер списка',
         };
     }
@@ -77,12 +85,21 @@ enum CheckId: string
             self::LangTarget,
             self::UniqueText,
             self::UniqueTranslation,
-            self::Example,
-            self::Isomorphism,
         ];
 
+        // A shape that was forbidden to write a core is not judged on one. Asking whether its
+        // example teaches or its key is reversible would score it on an answer it was told not to
+        // give — and a zero there would read as a clean bill of health.
+        if ($shape->producesCore()) {
+            $checks[] = self::Example;
+            $checks[] = self::Isomorphism;
+            $checks[] = self::Definition;
+        }
         if ($shape->hasOptions()) {
             $checks[] = self::Options;
+        }
+        if ($shape->hasForms()) {
+            $checks[] = self::Forms;
         }
         if (! $shape->selectsItems()) {
             $checks[] = self::Verbatim;

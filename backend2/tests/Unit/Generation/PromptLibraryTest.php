@@ -5,14 +5,36 @@ declare(strict_types=1);
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 
-function v10(PromptShape $shape): string
+function renderPrompt(string $version, PromptShape $shape): string
 {
-    return (new PromptLibrary())->render('v10', $shape, [
+    return (new PromptLibrary())->render($version, $shape, [
         'source_lang' => 'Russian',
         'target_lang' => 'English',
         'levels' => 'A2, B1',
         'size' => '12',
     ])->text;
+}
+
+function v10(PromptShape $shape): string
+{
+    return renderPrompt('v10', $shape);
+}
+
+function v11(PromptShape $shape): string
+{
+    return renderPrompt('v11', $shape);
+}
+
+/**
+ * The shapes a VERSION declares — not every case of the enum. v11 added `mechanics`, which v10 has
+ * no sections for, so a test that swept the enum would be asserting things about a prompt that does
+ * not exist.
+ *
+ * @return list<PromptShape>
+ */
+function shapesOf(string $version): array
+{
+    return (new PromptLibrary())->shapesFor($version);
 }
 
 /**
@@ -28,7 +50,7 @@ it('gives all three shapes the same isomorphism rule, both waves, word for word'
         '{{source_lang}}' => 'Russian', '{{target_lang}}' => 'English',
     ]);
 
-    foreach (PromptShape::cases() as $shape) {
+    foreach (shapesOf('v10') as $shape) {
         expect(v10($shape))->toContain($rendered);
     }
 });
@@ -75,8 +97,10 @@ it('tells the enrich shape to copy the given terms and the topic shapes to choos
 });
 
 it('substitutes every placeholder, leaving none in the sent text', function () {
-    foreach (PromptShape::cases() as $shape) {
-        expect(v10($shape))->not->toContain('{{');
+    foreach (['v10', 'v11'] as $version) {
+        foreach (shapesOf($version) as $shape) {
+            expect(renderPrompt($version, $shape))->not->toContain('{{');
+        }
     }
 });
 
@@ -106,7 +130,65 @@ it('still renders the frozen single-file versions, and refuses to invent shapes 
 it('knows which versions and shapes exist', function () {
     $library = new PromptLibrary();
 
-    expect($library->versions())->toContain('v9')->toContain('v10')
-        ->and($library->shapesFor('v10'))->toBe(PromptShape::cases())
+    expect($library->versions())->toContain('v9')->toContain('v10')->toContain('v11')
+        ->and($library->shapesFor('v10'))
+        ->toBe([PromptShape::Terms, PromptShape::Enrich, PromptShape::Full])
+        // v11 adds the mechanics shape; v10 must not silently answer for it.
+        ->and($library->shapesFor('v11'))
+        ->toBe([PromptShape::Terms, PromptShape::Mechanics, PromptShape::Enrich, PromptShape::Full])
         ->and($library->shapesFor('v9'))->toBe([PromptShape::Terms]);
+
+    expect(fn () => $library->render('v10', PromptShape::Mechanics, []))
+        ->toThrow(InvalidArgumentException::class, "has no 'mechanics' shape");
+});
+
+/**
+ * v11's headline rule. «back up» → «подниматься обратно из-за засора» is true about the world and
+ * useless as a card: nobody reads it and writes `back up` back.
+ */
+it('v11 forbids a translation that defines the term instead of naming it', function () {
+    $terms = v11(PromptShape::Terms);
+
+    expect($terms)
+        ->toContain('A DEFINITION instead of a key')
+        ->toContain('подниматься обратно из-за засора')
+        // The rule names the source language by NAME, not by placeholder — the same lesson v9 learned.
+        ->toContain('shortest Russian expression a native would use')
+        // …and the same question in the self-check, phrased as something to actually ask.
+        ->toContain('A key, not a definition.')
+        ->toContain('could someone who does not know this term');
+});
+
+it('v11 keeps the collection shape to a core — one example, no options', function () {
+    $terms = v11(PromptShape::Terms);
+
+    expect($terms)
+        ->toContain('ONE short, natural English sentence')
+        ->toContain('a second is paid for and discarded')
+        // Machinery is a separate, cheaper call now.
+        ->not->toContain('3 WRONG')
+        ->not->toContain('`forms`');
+});
+
+it('v11 mechanics is forbidden to touch the core and asks only for machinery', function () {
+    $mechanics = v11(PromptShape::Mechanics);
+
+    expect($mechanics)
+        ->toContain('Do not rewrite the core.')
+        ->toContain('Do not invent a new example.')
+        ->toContain('3 WRONG')
+        ->toContain('other spellings of the term that are also RIGHT')
+        // None of the core-writing rules ride along: they would be instructions to do the one
+        // thing this shape must not do, and they are most of the prompt's length.
+        ->not->toContain('A DEFINITION instead of a key')
+        ->not->toContain('must EXPAND the term')
+        ->not->toContain('BALANCED MIX');
+});
+
+it('v11 is materially shorter than v10 on the collection shape', function () {
+    // The core shape stopped carrying the options rules and the duplicated key restatement, so the
+    // call that runs on every generation got cheaper. Asserted as a number so a future edit that
+    // quietly re-inflates it has to argue with a test.
+    expect(str_word_count(v11(PromptShape::Terms)))
+        ->toBeLessThan((int) (str_word_count(v10(PromptShape::Terms)) * 0.95));
 });

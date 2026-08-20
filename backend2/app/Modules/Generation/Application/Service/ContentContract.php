@@ -37,6 +37,37 @@ final readonly class ContentContract
      */
     public function schema(PromptShape $shape): array
     {
+        // The mechanics shape is handed a finished core and returns only the machinery. Asking it
+        // for the core fields would invite it to rewrite content that has already been reviewed —
+        // the schema is where "do not touch the core" stops being a request and becomes impossible.
+        if (! $shape->producesCore()) {
+            $itemProps = [
+                'text' => ['type' => 'string'],
+                'options' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'string'],
+                    'minItems' => self::OPTION_COUNT,
+                    'maxItems' => self::OPTION_COUNT,
+                ],
+                'forms' => ['type' => 'array', 'items' => ['type' => 'string']],
+            ];
+
+            return [
+                'type' => 'object',
+                'additionalProperties' => false,
+                'properties' => ['items' => [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => $itemProps,
+                        'required' => array_keys($itemProps),
+                    ],
+                ]],
+                'required' => ['items'],
+            ];
+        }
+
         $itemProps = [
             'text' => ['type' => 'string'],
             'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
@@ -55,6 +86,9 @@ final readonly class ContentContract
                 'minItems' => self::OPTION_COUNT,
                 'maxItems' => self::OPTION_COUNT,
             ];
+        }
+        if ($shape->hasForms()) {
+            $itemProps['forms'] = ['type' => 'array', 'items' => ['type' => 'string']];
         }
 
         $item = [
@@ -119,6 +153,7 @@ final readonly class ContentContract
                 transcription: $this->str($row, 'transcription'),
                 cefr: $this->str($row, 'cefr'),
                 options: $this->strings($row['options'] ?? null),
+                forms: $this->strings($row['forms'] ?? null),
                 givenTerm: $given['text'] ?? null,
                 sourceTermId: $given['id'] ?? null,
             );
