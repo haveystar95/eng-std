@@ -16,10 +16,17 @@ use App\Modules\Admin\Application\Dto\AdminLadderReview;
 use App\Modules\Admin\Application\Dto\AdminUserCollectionRow;
 use App\Modules\Admin\Application\Dto\AdminUserDetail;
 use App\Modules\Admin\Application\Dto\AdminUserRow;
+use App\Modules\Admin\Application\Dto\CollectionContentHealth;
 use App\Modules\Admin\Application\Dto\CollectionDetail;
 use App\Modules\Admin\Application\Dto\CollectionRefRow;
 use App\Modules\Admin\Application\Dto\CollectionRow;
 use App\Modules\Admin\Application\Dto\CollectionTermRow;
+use App\Modules\Admin\Application\Dto\ContentHealthCollectionRow;
+use App\Modules\Admin\Application\Dto\ContentHealthScope;
+use App\Modules\Admin\Application\Dto\ContentHealthSummary;
+use App\Modules\Admin\Application\Dto\ContentHealthTermRow;
+use App\Modules\Admin\Application\Dto\ContentLabelCount;
+use App\Modules\Admin\Application\Dto\ContentVersionCount;
 use App\Modules\Admin\Application\Dto\CostByPurposeView;
 use App\Modules\Admin\Application\Dto\CostBreakdown;
 use App\Modules\Admin\Application\Dto\CostCategory;
@@ -446,6 +453,113 @@ final class AdminJson
                 'generator_version' => $d->generatorVersion,
             ], $e->distractors),
         ];
+    }
+
+    // ── «Здоровье контента» ─────────────────────────────────────────────────────────────────────
+
+    /** @return array<string, mixed> */
+    public static function contentHealthSummary(ContentHealthSummary $s): array
+    {
+        return [
+            // The three slices are NOT a partition: a term in a store collection and in someone's
+            // own list counts in both, and a term in no collection only in `all`.
+            'scopes' => [
+                'all' => self::contentHealthScope($s->all),
+                'system' => self::contentHealthScope($s->system),
+                'user' => self::contentHealthScope($s->user),
+            ],
+            'collections' => array_map(self::contentHealthCollection(...), $s->collections),
+            'suppressions' => [
+                'total' => $s->suppressionsTotal,
+                'by_source' => array_map(self::contentLabelCount(...), $s->suppressionsBySource),
+            ],
+            'generation_rejections' => [
+                'total' => $s->rejectionsTotal,
+                'by_field' => array_map(self::contentLabelCount(...), $s->rejectionsByField),
+            ],
+            'current_generator_version' => $s->currentGeneratorVersion,
+            'min_distractors' => $s->minDistractors,
+            'cost_per_term_usd' => $s->costPerTermUsd,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function contentHealthScope(ContentHealthScope $s): array
+    {
+        return [
+            'scope' => $s->scope,
+            'terms' => $s->terms,
+            'with_distractors' => $s->withDistractors,
+            'pick_correct_ready' => $s->pickCorrectReady,
+            'with_variants' => $s->withVariants,
+            'without_example' => $s->withoutExample,
+            'needs_enrichment' => $s->needsEnrichment,
+            'estimated_topup_usd' => $s->estimatedTopUpUsd,
+            'enrichment_versions' => array_map(static fn (ContentVersionCount $v): array => [
+                'version' => $v->version,
+                'terms' => $v->terms,
+            ], $s->enrichmentVersions),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function contentHealthCollection(ContentHealthCollectionRow $c): array
+    {
+        return [
+            'id' => $c->id,
+            'title' => $c->title,
+            'type' => $c->type,
+            'terms' => $c->terms,
+            'without_example' => $c->withoutExample,
+            'pick_correct_ready' => $c->pickCorrectReady,
+            'needs_enrichment' => $c->needsEnrichment,
+            'estimated_topup_usd' => $c->estimatedTopUpUsd,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function collectionContentHealth(CollectionContentHealth $c): array
+    {
+        return [
+            'collection_id' => $c->collectionId,
+            'title' => $c->title,
+            'type' => $c->type,
+            'terms' => array_map(self::contentHealthTerm(...), $c->terms),
+            'needs_enrichment' => $c->needsEnrichment,
+            'without_example' => $c->withoutExample,
+            'pick_correct_ready' => $c->pickCorrectReady,
+            'estimated_topup_usd' => $c->estimatedTopUpUsd,
+            'topup_command' => $c->topUpCommand,
+            'min_distractors' => $c->minDistractors,
+            'cost_per_term_usd' => $c->costPerTermUsd,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function contentHealthTerm(ContentHealthTermRow $t): array
+    {
+        return [
+            'term_id' => $t->termId,
+            'text' => $t->text,
+            'translation' => $t->translation,
+            'has_example' => $t->hasExample,
+            // Kept apart from `needs_enrichment` on purpose: a term with no example is cured by
+            // regenerating the example, never by the станок.
+            'missing_example' => $t->missingExample,
+            'usable_distractors' => $t->usableDistractors,
+            'raw_distractors' => $t->rawDistractors,
+            'pick_correct_ready' => $t->pickCorrectReady,
+            'variants' => $t->variants,
+            'enrichment_version' => $t->enrichmentVersion,
+            'needs_enrichment' => $t->needsEnrichment,
+            'needs_enrichment_reasons' => $t->needsEnrichmentReasons,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function contentLabelCount(ContentLabelCount $c): array
+    {
+        return ['label' => $c->label, 'count' => $c->count];
     }
 
     /** @return array<string, mixed> */

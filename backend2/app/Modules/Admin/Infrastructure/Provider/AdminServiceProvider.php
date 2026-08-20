@@ -6,6 +6,7 @@ namespace App\Modules\Admin\Infrastructure\Provider;
 
 use App\Modules\Admin\Application\Port\AdminAuditRecorder;
 use App\Modules\Admin\Application\Port\AdminCollectionReader;
+use App\Modules\Admin\Application\Port\AdminContentHealthReader;
 use App\Modules\Admin\Application\Port\AdminCostReader;
 use App\Modules\Admin\Application\Port\AdminDialogReader;
 use App\Modules\Admin\Application\Port\AdminGenerationReader;
@@ -21,6 +22,7 @@ use App\Modules\Admin\Application\Port\AdminTermReader;
 use App\Modules\Admin\Application\Port\AdminUserReader;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminAuditRecorder;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminCollectionReader;
+use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminContentHealthReader;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminCostReader;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminDialogReader;
 use App\Modules\Admin\Infrastructure\Eloquent\EloquentAdminGenerationReader;
@@ -57,6 +59,7 @@ final class AdminServiceProvider extends ServiceProvider
         $this->app->bind(AdminRequestLogReader::class, EloquentAdminRequestLogReader::class);
         $this->app->bind(AdminDialogReader::class, EloquentAdminDialogReader::class);
         $this->app->bind(AdminGenerationReader::class, EloquentAdminGenerationReader::class);
+        $this->app->bind(AdminContentHealthReader::class, EloquentAdminContentHealthReader::class);
     }
 
     public function boot(): void

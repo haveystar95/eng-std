@@ -9,6 +9,7 @@ use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Application\Dto\SessionCardView;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ChipShuffler;
+use App\Modules\Learning\Domain\Service\DistractorSpanFilter;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
@@ -64,6 +65,7 @@ final readonly class StudyCardAssembler
         private DistractorReader $distractors,
         private ChipShuffler $chips,
         private Randomizer $rng,
+        private DistractorSpanFilter $spans = new DistractorSpanFilter(),
     ) {}
 
     /**
@@ -558,36 +560,16 @@ final readonly class StudyCardAssembler
     /**
      * The distractors this example can actually contribute to a card: one per `error_span`.
      *
-     * Two distractors sharing a span put two options on screen that differ from the example in the
-     * same place — «Could you explain the fees?» beside «Could you explain fees?» — so the card stops
-     * asking "which sentence is right" and starts asking "which spelling of this one word did we
-     * mean". Whichever the learner picks, the underline afterwards points at the same fragment twice.
-     * One error per card is the shape this mode is for.
-     *
-     * This is also what the PLAYABILITY gate has to count. Counting the raw rows would let a term with
-     * two same-span distractors through the ≥2 check and then hand the assembler one usable option —
-     * a pick_correct card with two options, which is a coin flip. One derivation, used by both.
-     *
-     * Order is preserved, first occurrence wins, comparison is trim + lowercase: the client applies
-     * exactly this rule to exactly this list, so both sides drop the same row.
+     * The rule itself lives in {@see DistractorSpanFilter} — it is read by the playability gate here
+     * AND by the back-office content report, which has to count the same «годные» distractors the
+     * card does. This wrapper stays so the two call sites below read the way they always have.
      *
      * @param  list<array{sentence: string, error_type: string, error_span: string, correction: string}>  $distractors
      * @return list<array{sentence: string, error_type: string, error_span: string, correction: string}>
      */
     private function spanDistinct(array $distractors): array
     {
-        $kept = [];
-        $spans = [];
-        foreach ($distractors as $distractor) {
-            $span = mb_strtolower(trim($distractor['error_span']));
-            if ($span === '' || isset($spans[$span])) {
-                continue;
-            }
-            $spans[$span] = true;
-            $kept[] = $distractor;
-        }
-
-        return $kept;
+        return $this->spans->usable($distractors);
     }
 
     /**

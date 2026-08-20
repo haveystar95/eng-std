@@ -35,6 +35,7 @@ tags:
   - name: Exercise modes
   - name: Collections
   - name: Terms
+  - name: Content health
   - name: Logs
   - name: Costs
   - name: Curation
@@ -746,6 +747,44 @@ paths:
               schema: { $ref: '#/components/schemas/CostByPurpose' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+
+  /content-health/summary:
+    get:
+      tags: [Content health]
+      summary: Coverage of the dictionary — what the content can actually build
+      description: >
+        READ-ONLY, and deliberately without a sibling that STARTS the enrichment run: the догон
+        spends money against a model, so the panel hands over a command to paste rather than a
+        button to click.
+
+        Not to be confused with `/users/{id}/ladder`. That answers WHEN a trainer opens for a
+        learner (progress + the admission matrix). This answers whether a card can be built from a
+        term's content AT ALL — a different question with a different cure.
+
+        The three scopes are NOT a partition and are not meant to add up: a term held by a store
+        collection AND by someone's own list counts in both, and a term in no collection appears
+        only in `all`.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentHealthSummary' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /content-health/collections/{id}:
+    get:
+      tags: [Content health]
+      summary: One collection's terms, most under-stocked first
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectionContentHealth' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 
   /terms:
     get:
@@ -1634,6 +1673,121 @@ components:
               error_span: { type: string }
               correction: { type: string }
               generator_version: { type: string }
+
+    ContentHealthScope:
+      type: object
+      description: Coverage counters over one slice of the dictionary.
+      properties:
+        scope: { type: string, enum: [all, system, user] }
+        terms: { type: integer }
+        with_distractors: { type: integer, description: at least one USABLE (span-distinct) distractor }
+        pick_correct_ready:
+          type: integer
+          description: >
+            The whole pick_correct card assembles — a pinned example, its translation, and at least
+            two span-distinct distractors, i.e. three sentences on screen.
+        with_variants: { type: integer }
+        without_example: { type: integer, description: 'no pinned example; fixed by regeneration, NOT by the станок' }
+        needs_enrichment:
+          type: integer
+          description: live example AND (fewer than `min_distractors` usable, or no variants at all)
+        estimated_topup_usd: { type: number, description: needs_enrichment × cost_per_term_usd }
+        enrichment_versions:
+          type: array
+          description: '`version: null` is «станок не прогонялся» — first in the list, and the bucket that matters.'
+          items:
+            type: object
+            properties:
+              version: { type: [string, 'null'] }
+              terms: { type: integer }
+
+    ContentHealthSummary:
+      type: object
+      properties:
+        scopes:
+          type: object
+          properties:
+            all: { $ref: '#/components/schemas/ContentHealthScope' }
+            system: { $ref: '#/components/schemas/ContentHealthScope' }
+            user: { $ref: '#/components/schemas/ContentHealthScope' }
+        collections:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string, enum: [system, shared, custom] }
+              terms: { type: integer }
+              without_example: { type: integer }
+              pick_correct_ready: { type: integer }
+              needs_enrichment: { type: integer }
+              estimated_topup_usd: { type: number }
+        suppressions:
+          type: object
+          description: Sentences a proofreader or the audit removed. They OUTLIVE the rows they were about.
+          properties:
+            total: { type: integer }
+            by_source:
+              type: array
+              items: { $ref: '#/components/schemas/ContentLabelCount' }
+        generation_rejections:
+          type: object
+          description: Items the language barrier refused to write at all — no term was ever created.
+          properties:
+            total: { type: integer }
+            by_field:
+              type: array
+              items: { $ref: '#/components/schemas/ContentLabelCount' }
+        current_generator_version: { type: string, description: what a plain run writes and skips by today }
+        min_distractors: { type: integer, description: the stocking target the report flags against }
+        cost_per_term_usd: { type: number }
+
+    ContentLabelCount:
+      type: object
+      properties:
+        label: { type: string }
+        count: { type: integer }
+
+    ContentHealthTerm:
+      type: object
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        translation: { type: [string, 'null'] }
+        has_example: { type: boolean }
+        missing_example:
+          type: boolean
+          description: >
+            Kept apart from `needs_enrichment` on purpose — with no example the станок has nothing to
+            write against, so this is cured by regenerating the example and never by a догон.
+        usable_distractors: { type: integer, description: span-distinct — what a card can actually deal }
+        raw_distractors: { type: integer, description: rows on the pinned example; higher when spans collide }
+        pick_correct_ready: { type: boolean }
+        variants: { type: integer }
+        enrichment_version: { type: [string, 'null'] }
+        needs_enrichment: { type: boolean }
+        needs_enrichment_reasons:
+          type: array
+          items: { type: string, enum: [few_distractors, no_variants] }
+
+    CollectionContentHealth:
+      type: object
+      properties:
+        collection_id: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [system, shared, custom] }
+        terms:
+          type: array
+          description: Most under-stocked first — no example, then fewest usable distractors, then fewest variants.
+          items: { $ref: '#/components/schemas/ContentHealthTerm' }
+        needs_enrichment: { type: integer }
+        without_example: { type: integer }
+        pick_correct_ready: { type: integer }
+        estimated_topup_usd: { type: number }
+        topup_command: { type: string, description: ready to paste into a terminal; the panel never runs it }
+        min_distractors: { type: integer }
+        cost_per_term_usd: { type: number }
 
     TermImpact:
       type: object

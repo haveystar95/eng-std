@@ -130,9 +130,14 @@ deptrac:
     # Admin READS other modules' tables as projections, but it MUTATES only through their
     # Application — curating a term goes through Vocabulary, curating a collection through
     # Collections, exactly as the tier change goes through Identity.
+    # The Generation edge is the enrichment станок's CURRENT generator version and nothing else
+    # (ContentTopUp): «Здоровье контента» prints a copy-paste догон command, and the one thing that
+    # command must get right is which terms a plain run would skip. Reading the constant is the only
+    # way to be right about that — a version hard-coded in the panel is wrong the first time the
+    # станок is bumped, and silently. Admin → Generation adds no cycle: Generation never reads Admin.
     AdminDomain: [SharedDomain]
     AdminApplication:
-      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication]
+      [AdminDomain, SharedDomain, IdentityApplication, LearningApplication, VocabularyApplication, CollectionsApplication, GenerationApplication]
     AdminInfrastructure: [AdminApplication, AdminDomain, SharedDomain, SharedInfra, Framework]
     # Presentation reads the impact ports (Vocabulary/Collections Application) to state the blast
     # radius of a delete before it happens — a cross-module read through Application, like /me's.

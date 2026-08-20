@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Admin\Presentation\Http\Controller\AuthController;
 use App\Modules\Admin\Presentation\Http\Controller\CollectionController;
+use App\Modules\Admin\Presentation\Http\Controller\ContentHealthController;
 use App\Modules\Admin\Presentation\Http\Controller\CostController;
 use App\Modules\Admin\Presentation\Http\Controller\DashboardController;
 use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
@@ -71,6 +72,13 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::delete('/collections/{id}', [CollectionController::class, 'destroy']);
 
     Route::get('/costs', [CostController::class, 'summary']);
+
+    // «Здоровье контента» — what the dictionary is stocked with and which trainers that stock can
+    // build. Read-only by design: there is deliberately no route that STARTS the enrichment run,
+    // only one that hands over the command to paste. Not to be confused with /ladder, which answers
+    // when a trainer opens FOR A LEARNER; this answers whether the card can be built at all.
+    Route::get('/content-health/summary', [ContentHealthController::class, 'summary']);
+    Route::get('/content-health/collections/{id}', [ContentHealthController::class, 'collection']);
 
     Route::get('/terms', [TermController::class, 'index']);
     Route::get('/terms/{id}', [TermController::class, 'show']);
