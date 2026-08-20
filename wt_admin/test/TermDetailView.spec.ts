@@ -11,18 +11,22 @@ function makeRouter() {
       { path: '/terms', name: 'terms', component: { template: '<div />' } },
       { path: '/terms/:id', name: 'term', component: TermDetailView, props: true },
       { path: '/collections/:id', name: 'collection', component: { template: '<div />' } },
+      // Targets the «Здоровье / тренажёры» section links at. Stubs — this suite is about the term
+      // card, but the links have to RESOLVE or router-link throws.
+      { path: '/content', name: 'content', component: { template: '<div />' } },
+      { path: '/ladder', name: 'ladder', component: { template: '<div />' } },
     ],
   })
 }
 
-async function mountTerm() {
+async function mountTerm(hash = '') {
   // Pick a term the mock seeded with distractors and findings, so the page has something to show.
   const list = await mock.listTerms({ limit: 40 })
   const withExtras = await Promise.all(list.data.map((t) => mock.getTerm(t.id)))
   const term = withExtras.find((t) => t.examples.some((e) => e.distractors.length > 0)) ?? withExtras[0]
 
   const router = makeRouter()
-  router.push(`/terms/${term.id}`)
+  router.push(`/terms/${term.id}${hash}`)
   await router.isReady()
   const w = mount(TermDetailView, { props: { id: term.id }, global: { plugins: [router] } })
   await flushPromises()
@@ -76,5 +80,50 @@ describe('TermDetailView', () => {
     expect(text).toContain('Строки прогресса будут удалены')
     // The append-only review log is an invariant — the dialog promises it stays.
     expect(text).toContain('журнал ревью')
+  })
+})
+
+// ── «Здоровье / тренажёры» — the read-only passport section added to the CRUD card ──────────────
+//
+// Folded by default and MOUNTED only once opened: the passport is a second request, and opening a
+// term to fix a translation must not pay for it.
+
+describe('TermDetailView — секция «Здоровье / тренажёры»', () => {
+  it('is folded by default and asks the server for nothing', async () => {
+    const { w } = await mountTerm()
+
+    expect(w.text()).toContain('Здоровье / тренажёры')
+    // The passport's own headings appear only once the section is open.
+    expect(w.text()).not.toContain('Что соберётся из этого контента')
+    expect(w.findComponent({ name: 'TermContentPassport' }).exists()).toBe(false)
+  })
+
+  it('loads the passport lazily, on the first expand', async () => {
+    const { w } = await mountTerm()
+
+    await w.find('.health-head').trigger('click')
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'TermContentPassport' }).exists()).toBe(true)
+    expect(w.text()).toContain('Что соберётся из этого контента')
+    expect(w.text()).toContain('зависит от пула')
+  })
+
+  it('links into the Контент section and never back at itself', async () => {
+    const { w } = await mountTerm()
+    await w.find('.health-head').trigger('click')
+    await flushPromises()
+
+    const hrefs = w.findAll('a').map((a) => a.attributes('href') ?? '')
+    expect(hrefs.some((h) => h.includes('/content?term='))).toBe(true)
+    // The passport's own «Открыть карточку термина» is suppressed here — it would point at itself.
+    expect(w.findAll('a').some((a) => a.text().includes('Открыть карточку термина'))).toBe(false)
+  })
+
+  it('opens the section straight away when the URL carries the #health anchor', async () => {
+    const { w } = await mountTerm('#health')
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'TermContentPassport' }).exists()).toBe(true)
   })
 })

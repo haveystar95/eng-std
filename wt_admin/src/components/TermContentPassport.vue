@@ -30,7 +30,11 @@ import StateBlock from '@/components/StateBlock.vue'
 const props = withDefaults(
   defineProps<{
     termId: string
-    /** Hidden when the passport is already INSIDE the term card — the link would point at itself. */
+    /**
+     * Hidden when the passport is already INSIDE the term card — the link would point at itself.
+     * When shown it carries `#health`, so the trip lands on the card's own section rather than at
+     * the top of the page.
+     */
     showTermLink?: boolean
   }>(),
   { showTermLink: true },
@@ -285,7 +289,9 @@ async function copyCommand(): Promise<void> {
       </PaperCard>
 
       <p v-if="showTermLink" class="term-link">
-        <RouterLink :to="{ name: 'term', params: { id: data.termId } }">Открыть карточку термина →</RouterLink>
+        <RouterLink :to="{ name: 'term', params: { id: data.termId }, hash: '#health' }">
+          Открыть карточку термина →
+        </RouterLink>
       </p>
     </template>
   </div>

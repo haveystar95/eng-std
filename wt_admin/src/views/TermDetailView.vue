@@ -7,8 +7,8 @@
  * once) and the hazard. The confirm dialog therefore states the blast radius read from `/impact`,
  * not a generic "are you sure".
  */
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api'
 import { useAsync } from '@/composables/useAsync'
 import { langLabel } from '@/utils/labels'
@@ -21,12 +21,29 @@ import ImageThumb from '@/components/ImageThumb.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import TermContentPassport from '@/components/TermContentPassport.vue'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
+const route = useRoute()
 
 const { data, loading, error, run } = useAsync(() => api.getTerm(props.id))
 onMounted(run)
+
+/**
+ * «Здоровье / тренажёры» — read-only section, folded by default and MOUNTED only once opened, so
+ * opening the card costs one request as it always did. The passport is a second read (its own
+ * endpoint, with the per-trainer simulation) and nobody editing a translation needs it.
+ *
+ * `#health` in the URL opens it: that anchor is what the Контент section links back to, so the
+ * round trip lands on the section rather than at the top of the page.
+ */
+const healthOpen = ref(route.hash === '#health')
+onMounted(async () => {
+  if (!healthOpen.value) return
+  await nextTick()
+  document.getElementById('health')?.scrollIntoView({ block: 'start' })
+})
 
 const FINDING_LABEL: Record<string, string> = {
   ambiguity: 'многозначность',
@@ -289,6 +306,27 @@ function exampleKey(e: TermExample): string {
         </ul>
       </PaperCard>
 
+      <section id="health" class="block health">
+        <PaperCard>
+          <button class="health-head" type="button" :aria-expanded="healthOpen" @click="healthOpen = !healthOpen">
+            <span class="health-title">
+              <span class="serif h">Здоровье / тренажёры</span>
+              <span class="faint sub">
+                Что позволяет собрать КОНТЕНТ термина — примеры, дистракторы, варианты. Когда
+                тренажёр откроется ученику, решает лестница, это другой экран.
+              </span>
+            </span>
+            <span class="chev" aria-hidden="true">{{ healthOpen ? '−' : '+' }}</span>
+          </button>
+        </PaperCard>
+        <div v-if="healthOpen" class="health-body">
+          <TermContentPassport :term-id="id" :show-term-link="false" />
+          <p class="health-link">
+            <RouterLink :to="{ name: 'content', query: { term: id } }">Открыть в разделе «Контент» →</RouterLink>
+          </p>
+        </div>
+      </section>
+
       <PaperCard class="block">
         <h3 class="serif">Коллекции</h3>
         <p v-if="data.collections.length === 0" class="faint">Ни в одной коллекции.</p>
@@ -475,6 +513,43 @@ function exampleKey(e: TermExample): string {
 .edit-actions {
   display: flex;
   gap: var(--s8, 8px);
+}
+.health-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s16);
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.health-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.health-title .h {
+  font-size: 17px;
+}
+.health-title .sub {
+  font-size: 12px;
+  max-width: 78ch;
+}
+.chev {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--secondary);
+}
+.health-body {
+  margin-top: var(--s12);
+}
+.health-link {
+  margin: 0;
+  font-size: 13.5px;
 }
 .err {
   color: var(--destructive, #b4423a);
