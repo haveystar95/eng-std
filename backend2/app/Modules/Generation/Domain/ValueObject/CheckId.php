@@ -35,7 +35,10 @@ enum CheckId: string
     /** The translation still points at its own term — both waves (nothing lost, nothing added). */
     case Isomorphism = 'isomorphism';
 
-    /** The translation NAMES the term rather than describing what it means. Coarse, flags candidates. */
+    /**
+     * The translation NAMES the term — rather than describing what it means, and rather than
+     * rendering the shape of the target word into a form nobody says. Coarse, flags candidates.
+     */
     case Definition = 'definition';
 
     /** Exactly 3 wrong options, all distinct, none of them equal to the right answer. */
@@ -61,7 +64,7 @@ enum CheckId: string
             self::UniqueTranslation => 'дубли переводов',
             self::Example => 'пример',
             self::Isomorphism => 'изоморфность',
-            self::Definition => 'перевод-определение',
+            self::Definition => 'перевод-определение или калька',
             self::Options => 'опции',
             self::Verbatim => 'термин дословно',
             self::Forms => 'формы слова',

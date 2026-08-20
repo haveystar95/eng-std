@@ -185,6 +185,40 @@ it('v11 mechanics is forbidden to touch the core and asks only for machinery', f
         ->not->toContain('BALANCED MIX');
 });
 
+/**
+ * v11.1's one rule. The definition check beside it cannot reach these: «испытавший облегчение» is
+ * short, carries no explanatory connective and is perfectly accurate about `relieved` — and no
+ * learner writes `relieved` back from it, because nobody says it.
+ */
+it('v11.1 forbids a participial calque and asks for what a person actually says', function () {
+    $terms = renderPrompt('v11.1', PromptShape::Terms);
+
+    expect($terms)
+        ->toContain('A CALQUE instead of what a person actually says')
+        ->toContain('испытавший облегчение')
+        ->toContain('«с облегчением»')
+        // The rule is a TEST a writer can apply, not an adjective list to memorise.
+        ->toContain('say your translation out loud')
+        ->toContain('sounds like a case report rather than like a person')
+        // …and the self-check asks it again where the reading actually happens.
+        ->toContain('A person would say this.');
+
+    // The rule rides with the key, so every shape that writes a key carries it — and no shape that
+    // was forbidden to write one does.
+    expect(renderPrompt('v11.1', PromptShape::Enrich))->toContain('A CALQUE instead of what a person actually says')
+        ->and(renderPrompt('v11.1', PromptShape::Full))->toContain('A CALQUE instead of what a person actually says')
+        ->and(renderPrompt('v11.1', PromptShape::Mechanics))->not->toContain('A CALQUE instead of');
+});
+
+it('leaves v11 frozen — 39 live terms record it as their passport', function () {
+    expect(v11(PromptShape::Terms))
+        ->not->toContain('A CALQUE instead of')
+        ->not->toContain('испытавший облегчение');
+
+    // Same shapes, so a rollback of the config value is a rollback and not a crash.
+    expect(shapesOf('v11.1'))->toBe(shapesOf('v11'));
+});
+
 it('v11 is materially shorter than v10 on the collection shape', function () {
     // The core shape stopped carrying the options rules and the duplicated key restatement, so the
     // call that runs on every generation got cheaper. Asserted as a number so a future edit that

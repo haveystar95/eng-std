@@ -76,7 +76,8 @@ it('replaces the core, stamps it, and moves the term out of the old vintage', fu
         ->and($report->cursor)->toBe($termId);
 
     $term = DB::table('terms')->where('id', $termId)->first();
-    expect($term->prompt_version)->toBe('v11')
+    $version = app(GenerationStackConfig::class)->corePromptVersion;
+    expect($term->prompt_version)->toBe($version)
         ->and($term->generation_model)->toBe('gpt-5.4-2026-03-05')
         ->and($term->ipa)->toBe('ˈtenənt')
         ->and($term->cefr)->toBe('B1')
@@ -86,12 +87,12 @@ it('replaces the core, stamps it, and moves the term out of the old vintage', fu
 
     expect(DB::table('term_translations')->where('term_id', $termId)->first())
         ->text->toBe('арендатор')
-        ->prompt_version->toBe('v11');
+        ->prompt_version->toBe($version);
 
     expect(DB::table('term_examples')->where('term_id', $termId)->first())
         ->sentence->toBe('The tenant pays the rent on time.')
         ->source->toBe('ai')
-        ->prompt_version->toBe('v11');
+        ->prompt_version->toBe($version);
 });
 
 it('rebuilds the machinery against the sentence that is there now', function () {
@@ -190,7 +191,8 @@ it('prices the sweep without calling or writing anything', function () {
         ->toEqualWithDelta((float) $report->estimate->totalUsd / 2, 0.000001);
 
     Http::assertNothingSent();
-    expect(DB::table('terms')->where('prompt_version', 'v11')->count())->toBe(0);
+    expect(DB::table('terms')->where('prompt_version', app(GenerationStackConfig::class)->corePromptVersion)->count())
+        ->toBe(0);
 });
 
 it('does not blank a translation when the model answers without one', function () {

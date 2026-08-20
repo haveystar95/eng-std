@@ -84,6 +84,33 @@ final class PromptLibrary implements PromptSource
                 '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
             ],
         ],
+        // v11.1 is v11 plus ONE rule, in the section that owns the key: a translation is the form a
+        // living person says, not the grammatically faithful rendering of the target word's shape.
+        // The run-in collections found the defect on state adjectives, where the faithful rendering
+        // is a participle — `relieved` → «испытавший облегчение», which nobody utters and no learner
+        // can produce it back from. The definition rule beside it does not catch these: they are
+        // short, they contain no explanatory connective, and they are perfectly accurate.
+        //
+        // v11 is not edited: it is what the published A/B compared and what 39 live terms record as
+        // their passport.
+        'v11.1' => [
+            PromptShape::Terms->value => [
+                '00-role', '10-select-topic', '20-fields', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '99-closing',
+            ],
+            PromptShape::Mechanics->value => [
+                '00-role', '16-given-core', '25-fields-mechanics', '60-options', '62-forms',
+                '50-purity', '92-self-check-mechanics', '99-closing',
+            ],
+            PromptShape::Enrich->value => [
+                '00-role', '15-given-terms', '20-fields', '60-options', '62-forms', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
+            ],
+            PromptShape::Full->value => [
+                '00-role', '10-select-topic', '20-fields', '60-options', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '91-self-check-options', '99-closing',
+            ],
+        ],
         // v12 exists for ONE shape, and that is the honest description of it: the machinery this app
         // actually stores. v11's `mechanics` returns wrong TRANSLATIONS — a real product with no
         // table under it here (the trainer builds meaning options out of neighbouring terms for

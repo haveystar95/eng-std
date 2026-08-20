@@ -200,7 +200,7 @@ final class GenerationServiceProvider extends ServiceProvider
                     'services.generation.prompt_version',
                     $stack === GenerationStackConfig::LEGACY
                         ? RequestCollectionGenerationHandler::PROMPT_VERSION
-                        : (string) config('services.generation.core_prompt_version', 'v11'),
+                        : (string) config('services.generation.core_prompt_version', 'v11.1'),
                 ),
                 coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider', 'openai')) ?? ProviderId::OpenAi,
                 coreModel: (string) config('services.generation.core_model', 'gpt-5.4'),

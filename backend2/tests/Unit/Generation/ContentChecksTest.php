@@ -245,6 +245,55 @@ it('leaves a long key for a long term alone, marker and all', function () {
     }
 });
 
+/**
+ * The calque, which the length metric cannot see: two words against one, no explanatory connective,
+ * entirely accurate — and nobody says it, so the learner shown «испытавший облегчение» writes
+ * something else and is marked wrong.
+ */
+it('flags a participial calque of a state adjective, however short and accurate it is', function () {
+    $batch = judgeItems([
+        checkItem(0, [
+            'text' => 'relieved',
+            'translation' => 'испытавший облегчение',
+            'example' => 'I felt relieved when the results came back.',
+            'exampleTranslation' => 'Я почувствовал облегчение, когда пришли результаты.',
+        ]),
+        checkItem(1, [
+            'text' => 'overwhelmed',
+            'translation' => 'оказавшийся перегруженным',
+            'example' => 'She was overwhelmed by the workload.',
+            'exampleTranslation' => 'Она была перегружена объёмом работы.',
+        ]),
+    ]);
+
+    foreach ($batch->verdicts as $verdict) {
+        expect($verdict->failed(CheckId::Definition))->toBeTrue()
+            ->and($verdict->reason())->toContain('похоже на кальку');
+    }
+});
+
+it('leaves an ordinary adjective, a spoken phrase and a participle inside a phrase key alone', function () {
+    $batch = judgeItems([
+        // What the rule is asking FOR.
+        checkItem(0, ['text' => 'relieved', 'translation' => 'с облегчением']),
+        checkItem(1, ['text' => 'annoyed', 'translation' => 'раздражённый']),
+        // A participle deep inside a legitimate phrase key is the phrase, not a rendering of one
+        // word's grammar — anchoring the rule at the head is what keeps this clean.
+        checkItem(2, [
+            'text' => 'Tell us about a challenge you faced',
+            'translation' => 'Расскажите нам о вызове, с которым вы столкнулись',
+        ]),
+        // Adjectives that merely LOOK participial. A general rule would bury the real findings
+        // under these.
+        checkItem(3, ['text' => 'next', 'translation' => 'следующий']),
+        checkItem(4, ['text' => 'suitable', 'translation' => 'подходящий']),
+    ]);
+
+    foreach ($batch->verdicts as $verdict) {
+        expect($verdict->failed(CheckId::Definition))->toBeFalse();
+    }
+});
+
 it('does not judge a core the mechanics shape was forbidden to write', function () {
     // No translation, no example — that is CORRECT for this shape, and scoring it as a defect
     // would rank a compliant answer below a disobedient one.

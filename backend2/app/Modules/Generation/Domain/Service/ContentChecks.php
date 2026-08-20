@@ -47,6 +47,28 @@ final readonly class ContentChecks
         'процесс', 'действие', 'состояние', 'ситуация', 'значит',
     ];
 
+    /**
+     * Participial heads: the words a CALQUE of a state adjective starts with.
+     *
+     * `relieved` → «испытавший облегчение» is short, carries no explanatory connective and is
+     * perfectly accurate — every gate below lets it through — and it is still a card nobody can
+     * answer, because nobody says it. What went wrong is not description but SHAPE: the target
+     * word is built from a verb, so the grammatically faithful rendering is a participle, and the
+     * participle is not the form a living speaker uses («с облегчением» is).
+     *
+     * Matched as a HEAD, at the start of the translation, and only for these few verbs. A general
+     * participle rule would fire on «следующий», «настоящий», «подходящий» — ordinary adjectives
+     * that merely look participial — and a check that flags the innocent is a check nobody reads.
+     * These four are the ones the run-in collections produced.
+     */
+    private const CALQUE_HEADS = [
+        'испытавший', 'испытывающий', 'испытавшая', 'испытывающая',
+        'оказавшийся', 'оказавшаяся', 'оказавшееся',
+        'пришедший в', 'пришедшая в',
+        'находящийся в', 'находящаяся в', 'находящееся в',
+        'чувствующий себя', 'чувствующая себя',
+    ];
+
     /** A translation this many words long or more is long enough to be describing something. */
     private const DEFINITION_MIN_WORDS = 4;
 
@@ -251,12 +273,26 @@ final readonly class ContentChecks
      * is describing whatever words it used. Worked against the row that named the defect: «back up»
      * (2 words) → «подниматься обратно из-за засора» (4 words) — ratio 2.0, marker «из-за» → flagged.
      *
+     * ## The second shape: a CALQUE
+     *
+     * The length metric answers "is this explaining instead of naming". It has nothing to say about
+     * a line that names the right thing in a shape no one uses — `relieved` → «испытавший
+     * облегчение»: two words against one, no connective, entirely accurate, and still unanswerable,
+     * because a learner shown that prompt writes something else. So a participial HEAD is flagged on
+     * its own, before the length gates, with its own note. Same standing as everything else here:
+     * a candidate for a human to read, never an edit.
+     *
      * **It flags CANDIDATES and never a verdict**, exactly like the isomorphism rule beside it:
      * morphology-free heuristics over two languages cannot do better, and a check that quietly
      * rewrote content it merely suspected would be worse than the defect.
      */
     private function looksLikeDefinition(string $term, string $translation): ?string
     {
+        $calque = $this->looksLikeCalque($translation);
+        if ($calque !== null) {
+            return $calque;
+        }
+
         $termWords = $this->wordCount($term);
         $translationWords = $this->wordCount($translation);
 
@@ -278,6 +314,30 @@ final readonly class ContentChecks
         foreach (self::EXPLANATORY as $marker) {
             if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($marker, '/') . '(?![\p{L}\p{N}])/u', $lower) === 1) {
                 return sprintf('похоже на определение: «%s» при переводе вдвое длиннее термина', $marker);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Does this translation open with a participial construction — the shape of the target word
+     * carried across instead of the words a person says? Returns the evidence, or null.
+     *
+     * Anchored at the START, because that is where the defect lives: «испытавший облегчение» is a
+     * calque, while a participle deeper inside a legitimate phrase key («вызов, с которым вы
+     * столкнулись») is the phrase, not a rendering of one word's grammar.
+     */
+    private function looksLikeCalque(string $translation): ?string
+    {
+        $lower = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $translation) ?? $translation));
+
+        foreach (self::CALQUE_HEADS as $head) {
+            if ($lower === $head) {
+                continue;   // the participle alone is the whole key — nothing was carried across
+            }
+            if (str_starts_with($lower, $head . ' ')) {
+                return sprintf('похоже на кальку: причастный оборот «%s» вместо разговорной формы', $head);
             }
         }
 
