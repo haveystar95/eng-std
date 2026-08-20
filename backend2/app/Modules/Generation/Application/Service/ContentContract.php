@@ -26,8 +26,19 @@ final readonly class ContentContract
     /** Wrong answers per card: three, beside one right one. */
     private const OPTION_COUNT = 3;
 
-    /** A pinned example gets 2–3 options' worth of wrong sentences; more is paid-for noise. */
-    private const MAX_DISTRACTORS = 3;
+    /**
+     * How many wrong sentences a model may RETURN for one example.
+     *
+     * Not the same number as how many are STORED — {@see \App\Modules\Generation\Domain\Service\EnrichmentValidator::MAX_DISTRACTORS}
+     * is that one, and it is three, because a card deals one correct sentence beside two wrong ones.
+     * This is the ceiling on the ask, and the ask is deliberately larger: the validator is
+     * deterministic and scraps roughly half of what comes back, so a schema that let the model
+     * return exactly what fits produced examples with one option and no playable card (v12.1).
+     *
+     * A ceiling, never a quota: the prompt is what asks for four or five, and it is also what
+     * forbids inventing one to reach the count.
+     */
+    private const MAX_DISTRACTORS = 5;
 
     /**
      * The error taxonomy, mirroring the CHECK on `example_distractors.error_type`. A closed set:

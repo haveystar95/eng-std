@@ -56,8 +56,14 @@ final readonly class BuildTermEnrichmentsHandler
      * `enrich-v2` → `mech-v12` is the станок itself changing: prompt v12, shape `machinery`, on the
      * cheap model, asking for the two products this app stores and nothing else. The name says which
      * prompt version wrote a row, which is what a `generator_version` column is for.
+     *
+     * `mech-v12` → `mech-v12.1` is the distractor over-order: v12 asked for the two or three a card
+     * holds, the validator scrapped about half of them, and 28 of the 40 pinned examples in the two
+     * run-in collections came out unable to host a `pick_correct` at all. v12.1 asks for four or five
+     * candidates against the same rules. Worth re-paying for: an example short of options is a rung
+     * of the course the learner never reaches.
      */
-    public const VERSION = 'mech-v12';
+    public const VERSION = 'mech-v12.1';
 
     public function __construct(
         private EnrichmentTargetReader $targets,

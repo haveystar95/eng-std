@@ -142,5 +142,5 @@ it('puts the old four-product packer back on GENERATION_STACK=v1', function () {
 });
 
 it('bumps the станок version, so every already-marked term is pending at the new one', function () {
-    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v12');
+    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v12.1');
 });

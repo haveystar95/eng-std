@@ -100,6 +100,23 @@ final class PromptLibrary implements PromptSource
                 '93-self-check-machinery', '99-closing',
             ],
         ],
+        // v12.1 is v12 asking for MORE distractor candidates than a card can hold — four or five
+        // instead of two or three. The validator is deterministic and throws out roughly half of
+        // what comes back (a "wrong" sentence our own grader accepts, a span that is not in its own
+        // sentence, a correction that does not repair), so asking for exactly what fits produced
+        // cards with one option and no question: on the two run-in collections, 28 of 40 pinned
+        // examples could not host a `pick_correct` at all.
+        //
+        // The same shape as the ×1.3 overshoot on a term list ({@see GenerationPipeline}), and for
+        // the same reason: over-order the cheap input to a filter whose scrap rate is known. The
+        // rule the section keeps is the one that makes it safe — a candidate invented to reach the
+        // count is a sentence that is not wrong, and «пустые формы лучше набивки» still binds.
+        'v12.1' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '62-forms', '61-distractors',
+                '93-self-check-machinery', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}

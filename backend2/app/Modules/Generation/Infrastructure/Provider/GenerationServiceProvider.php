@@ -204,7 +204,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 ),
                 coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider', 'openai')) ?? ProviderId::OpenAi,
                 coreModel: (string) config('services.generation.core_model', 'gpt-5.4'),
-                mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version', 'v12'),
+                mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version', 'v12.1'),
                 mechanicsProvider: ProviderId::tryFrom((string) config('services.generation.mechanics_provider', 'openai')) ?? ProviderId::OpenAi,
                 mechanicsModel: (string) config('services.generation.mechanics_model', 'gpt-4o-mini'),
             );
