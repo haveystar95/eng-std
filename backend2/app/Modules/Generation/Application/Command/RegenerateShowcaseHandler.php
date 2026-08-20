@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Application\Command;
 
+use App\Modules\Generation\Application\Dto\FreshCore;
 use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Dto\ShowcaseRegenReport;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
@@ -12,7 +13,7 @@ use App\Modules\Generation\Application\Port\EnrichmentJournal;
 use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Service\ContentContract;
-use App\Modules\Generation\Application\Service\ExampleReplacement;
+use App\Modules\Generation\Application\Service\CoreReplacement;
 use App\Modules\Generation\Application\Service\ShowcaseCostEstimator;
 use App\Modules\Generation\Domain\ValueObject\CandidateItem;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
@@ -21,8 +22,6 @@ use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\EnrichmentTargetView;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermCore;
-use App\Modules\Vocabulary\Application\Command\ReplaceTermCoreHandler;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 use RuntimeException;
@@ -67,8 +66,7 @@ final readonly class RegenerateShowcaseHandler
         private GenerationStackConfig $stack,
         private PromptSource $prompts,
         private ContentContract $contract,
-        private ReplaceTermCoreHandler $cores,
-        private ExampleReplacement $examples,
+        private CoreReplacement $cores,
         private EnrichmentJournal $journal,
         private BuildTermEnrichmentsHandler $mechanics,
         private RecordsTermEnrichment $spend,
@@ -146,31 +144,22 @@ final readonly class RegenerateShowcaseHandler
                 continue;
             }
 
-            ($this->cores)(new ReplaceTermCore(
-                termId: TermId::fromString($termId),
-                translation: $item->translation,
-                translationLang: $target->translationLang ?? $command->translationLang,
-                promptVersion: $this->stack->corePromptVersion,
-                generationModel: $usage[2],
-                ipa: $item->transcription,
-                cefr: $item->cefr,
-                // The image query is deliberately left as it was: the term already carries a photo
-                // fetched from it, and a fresh query would either be ignored (the photo is not
-                // re-fetched) or, worse, describe a picture the card is not showing.
-                imageApiPrompt: null,
-            ));
-
-            if ($item->example !== null) {
-                // Through the repaired A1 path: the row is updated in place, the distractors that no
-                // longer describe it are dropped, and the term is re-opened for the станок.
-                $this->examples->apply(
-                    TermId::fromString($termId),
-                    $item->example,
-                    $item->exampleTranslation,
-                    $this->stack->corePromptVersion,
-                    $usage[2],
-                );
-            }
+            // Core + example through the one shared path (see {@see CoreReplacement}), so the A1
+            // repair — the example row updated in place, its still-valid distractors kept — cannot be
+            // applied here and forgotten on the dedup-merge refresh that does the same job.
+            $this->cores->apply(
+                TermId::fromString($termId),
+                new FreshCore(
+                    translation: $item->translation,
+                    ipa: $item->transcription,
+                    cefr: $item->cefr,
+                    example: $item->example,
+                    exampleTranslation: $item->exampleTranslation,
+                ),
+                $target->translationLang ?? $command->translationLang,
+                $this->stack->corePromptVersion,
+                $usage[2],
+            );
 
             $replaced[] = [
                 'term' => $target->text,

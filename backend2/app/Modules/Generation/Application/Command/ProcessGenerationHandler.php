@@ -12,6 +12,7 @@ use App\Modules\Collections\Application\Dto\CollectionTermSetView;
 use App\Modules\Collections\Application\Query\GetCollectionTermSet;
 use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Generation\Application\Dto\AttemptUsage;
+use App\Modules\Generation\Application\Dto\FreshCore;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
@@ -19,6 +20,7 @@ use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
+use App\Modules\Generation\Application\Service\CoreReplacement;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
 use App\Modules\Generation\Application\Service\LanguageBarrier;
@@ -33,6 +35,7 @@ use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
+use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 
 /**
  * The heavy step, run in the background (or inline from the console). Talks to Vocabulary
@@ -64,6 +67,10 @@ final readonly class ProcessGenerationHandler
         private DispatchesImageAttachment $attachImages,
         private DispatchesEnrichment $enrich,
         private DispatchesExampleRepair $repairExamples,
+        // The dedup-merge core refresh: which imported terms predate the prompt that just answered,
+        // and the one shared path for putting a fresh core onto an existing term.
+        private StaleCoreReader $staleCores,
+        private CoreReplacement $coreReplacement,
         private TransactionManager $tx,
         private Clock $clock,
     ) {
@@ -220,6 +227,9 @@ final readonly class ProcessGenerationHandler
             imageApiPrompt: $draft->imageApiPrompt,   // cover-image query for AttachImagesJob
         ));
 
+        /** @var array<string, \App\Modules\Generation\Application\Dto\GeneratedItem> $imported */
+        $imported = [];
+
         foreach ($draft->items as $item) {
             $termId = ($this->importTerm)(new ImportTerm(
                 lang: $request->targetLang(),
@@ -239,9 +249,68 @@ final readonly class ProcessGenerationHandler
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));
+
+            // First writer wins if two draft items dedup onto one term: the second is the same term
+            // said twice, and refreshing its core twice would only pay the later reading over the
+            // earlier one for no reason.
+            $imported[$termId->value] ??= $item;
         }
 
+        $this->refreshStaleCores($imported, $request, $model);
+
         return $collectionId;
+    }
+
+    /**
+     * The dedup merge, seen from the other side: a term the store ALREADY had, whose fresh core the
+     * model just wrote and this generation was about to throw away.
+     *
+     * A merge is additive by design — it adds the new translation (now the only primary, A7) and the
+     * new example beside the old ones, and leaves the term's own passport alone. For a term written
+     * by `legacy` or `v9` that is the wrong answer: the whole point of a prompt version is that the
+     * newer one writes better keys and better examples, and the store keeps showing the old ones
+     * because a card was created before the rules were fixed. The core is already bought. Not
+     * writing it is not a saving, it is content the reader paid for and never sees.
+     *
+     * So: a term whose passport is not the version that just answered gets the fresh core, through
+     * the same path the showcase regeneration uses ({@see CoreReplacement}) — the primary key
+     * rewritten in place, the example row updated in place so its still-valid distractors survive,
+     * and the passport moved to the version that wrote it. **No extra model call happens here.**
+     *
+     * A term already at this version is left alone: re-writing equal content is churn on rows a
+     * human may have just reviewed. `user_term_progress` and `reviews` are not touched either — this
+     * is about the words, not about who has learned them.
+     *
+     * @param  array<string, \App\Modules\Generation\Application\Dto\GeneratedItem>  $imported  by term id
+     */
+    private function refreshStaleCores(array $imported, GenerationRequest $request, ?string $model): void
+    {
+        // No model name means nothing honest to stamp the rewritten rows with, and a core rewrite
+        // that cannot say who wrote it is worse than the stale core it replaces.
+        if ($imported === [] || $model === null) {
+            return;
+        }
+
+        foreach ($this->staleCores->idsNotWrittenBy(array_keys($imported), $request->promptVersion()) as $termId) {
+            $item = $imported[$termId] ?? null;
+            if ($item === null) {
+                continue;
+            }
+
+            $this->coreReplacement->apply(
+                TermId::fromString($termId),
+                new FreshCore(
+                    translation: $item->translation,
+                    ipa: $item->transcription,
+                    cefr: $item->cefr,
+                    example: $item->example,
+                    exampleTranslation: $item->exampleTranslation,
+                ),
+                $request->sourceLang()->value,
+                $request->promptVersion(),
+                $model,
+            );
+        }
     }
 
     private function materializeFromCache(GenerationRequest $request, CollectionTermSetView $termSet): CollectionId

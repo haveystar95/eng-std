@@ -27,4 +27,21 @@ interface StaleCoreReader
 
     /** @param  list<string>  $promptVersions */
     public function countByPromptVersion(array $promptVersions): int;
+
+    /**
+     * Which of THESE terms were written by some prompt other than $promptVersion.
+     *
+     * The dedup-merge question, asked the other way round. A generation that lands on a term the
+     * store already has brought a whole fresh core with it, paid for and thrown away; whether that
+     * core is worth writing over the stored one is decided by the passport, and the honest test is
+     * "is the stored passport the one that just answered". Not a list of known-bad versions: those
+     * age (`legacy`, `v8`, `v9`, and tomorrow `v10`), while "not the one in front of me" does not.
+     *
+     * Equality is the reason this exists at all — a term already at the current version is left
+     * alone, because re-writing equal content is churn on rows the reader may have just reviewed.
+     *
+     * @param  list<string>  $termIds
+     * @return list<string>  in the order the store returns them; empty when nothing is stale
+     */
+    public function idsNotWrittenBy(array $termIds, string $promptVersion): array;
 }

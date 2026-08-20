@@ -18,8 +18,11 @@ use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
+use App\Modules\Generation\Application\Service\CoreReplacement;
 use App\Modules\Generation\Application\Service\DraftValidator;
+use App\Modules\Generation\Application\Service\ExampleReplacement;
 use App\Modules\Generation\Application\Service\LanguageBarrier;
+use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\Exception\GenerationQuotaExceeded;
 use App\Modules\Generation\Domain\Exception\InvalidGeneratedDraft;
 use App\Modules\Generation\Domain\Service\GenerationDailyLimit;
@@ -32,9 +35,13 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
+use App\Modules\Vocabulary\Application\Command\ReplaceTermCoreHandler;
+use App\Modules\Vocabulary\Application\Command\ReplaceTermExampleHandler;
 use App\Modules\Vocabulary\Domain\Service\TermNormalizer;
 use Tests\Doubles\FakeDefaultTargetLangReader;
+use Tests\Doubles\FakeDistractorAuditReader;
 use Tests\Doubles\FakeGenerationQuota;
+use Tests\Doubles\FakeStaleCoreReader;
 use Tests\Doubles\FakeUserTierReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
@@ -42,9 +49,12 @@ use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
 use Tests\Doubles\RecordingEnrichmentDispatcher;
+use Tests\Doubles\RecordingEnrichmentJournal;
 use Tests\Doubles\RecordingExampleRepairDispatcher;
 use Tests\Doubles\RecordingImageAttachmentDispatcher;
 use Tests\Doubles\RecordingRejectionJournal;
+use Tests\Doubles\RecordingTermCoreWriter;
+use Tests\Doubles\RecordingTermExampleWriter;
 use Tests\Doubles\ScriptedTranslationRepairer;
 
 beforeEach(function () {
@@ -55,6 +65,10 @@ beforeEach(function () {
     $this->attach = new RecordingImageAttachmentDispatcher();
     $this->enrich = new RecordingEnrichmentDispatcher();
     $this->repairExamples = new RecordingExampleRepairDispatcher();
+    // The dedup-merge core refresh: nothing is stale unless a test says so.
+    $this->staleCores = new FakeStaleCoreReader();
+    $this->coreWriter = new RecordingTermCoreWriter();
+    $this->exampleWriter = new RecordingTermExampleWriter();
     $this->user = UserId::generate();
 
     $findOrCreate = new FindOrCreateTermHandler($this->terms, new TermNormalizer(), $this->clock);
@@ -71,10 +85,30 @@ beforeEach(function () {
         attachImages: $this->attach,
         enrich: $this->enrich,
         repairExamples: $this->repairExamples,
+        staleCores: $this->staleCores,
+        coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
 });
+
+/**
+ * The real {@see CoreReplacement} over recording writers: the service under test here is the ORDER
+ * and the CONDITION of the two writes, not the SQL underneath them, and a fake of the service itself
+ * would test nothing.
+ */
+function coreReplacement(RecordingTermCoreWriter $cores, RecordingTermExampleWriter $examples): CoreReplacement
+{
+    return new CoreReplacement(
+        new ReplaceTermCoreHandler($cores),
+        new ExampleReplacement(
+            new FakeDistractorAuditReader(),
+            new EnrichmentValidator(),
+            new ReplaceTermExampleHandler($examples),
+            new RecordingEnrichmentJournal(),
+        ),
+    );
+}
 
 /** The live stack, as production resolves it — the version a request records comes from here. */
 function testStack(): GenerationStackConfig
@@ -90,7 +124,7 @@ function testStack(): GenerationStackConfig
     );
 }
 
-function openGeneration(object $ctx, int $used = 0): GenerationRequestId
+function openGeneration(object $ctx, int $used = 0, string $prompt = 'иду в банк'): GenerationRequestId
 {
     $handler = new RequestCollectionGenerationHandler(
         testStack(), $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
@@ -98,7 +132,7 @@ function openGeneration(object $ctx, int $used = 0): GenerationRequestId
     );
 
     return $handler(new RequestCollectionGeneration(
-        $ctx->user, 'иду в банк', new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 12,
+        $ctx->user, $prompt, new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 12,
     ))->id;
 }
 
@@ -120,6 +154,8 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
         repairExamples: new RecordingExampleRepairDispatcher(),
+        staleCores: $ctx->staleCores,
+        coreReplacement: coreReplacement($ctx->coreWriter, $ctx->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );
@@ -158,6 +194,56 @@ function items(string $prefix, int $count): array
 
     return $out;
 }
+
+it('refreshes the core of a deduped term whose passport predates the prompt that just answered', function () {
+    // Round one writes the terms. Round two is the same prompt against a store that already has
+    // them — the dedup case, with a whole fresh core the generation was about to throw away.
+    $first = openGeneration($this);
+    $old = new GeneratedItem('bank', 'word', 'банк', 'I opened a bank account.', 'B1', 'bæŋk', 'Я открыл счёт в банке.');
+    processWith($this, scriptedGenerator([[[$old, ...items('w', 7)], 100, 200]]))(new ProcessGeneration($first));
+
+    $termId = $this->terms->all()[0]->id()->value;
+    $this->staleCores->setStale([$termId]);
+
+    // A DIFFERENT prompt, so the request misses the prompt cache and actually materializes again —
+    // the cache path never reaches an import, and it is the import that deduplicates.
+    $second = openGeneration($this, 0, 'снова в банк');
+    $new = new GeneratedItem('bank', 'word', 'банк (учреждение)', 'The bank closes at five.', 'A2', 'bæŋk', 'Банк закрывается в пять.');
+    processWith($this, scriptedGenerator([[[$new, ...items('w', 7)], 100, 200]]))(new ProcessGeneration($second));
+
+    // The core is replaced — key, IPA and level — and stamped with the prompt that wrote it. No
+    // extra model call happened: the generation already had this core in hand.
+    expect($this->coreWriter->replaced)->toHaveCount(1)
+        ->and($this->coreWriter->replaced[0]['termId'])->toBe($termId)
+        ->and($this->coreWriter->replaced[0]['translation'])->toBe('банк (учреждение)')
+        ->and($this->coreWriter->replaced[0]['lang'])->toBe('ru')
+        ->and($this->coreWriter->replaced[0]['cefr'])->toBe('A2')
+        ->and($this->coreWriter->replaced[0]['promptVersion'])->toBe('v11')
+        ->and($this->coreWriter->replaced[0]['model'])->toBe('gpt-4o');
+
+    // …and the example goes through the A1 path — the row updated in place, stamped `ai`.
+    expect($this->exampleWriter->replaced)->toHaveCount(1)
+        ->and($this->exampleWriter->replaced[0]['sentence'])->toBe('The bank closes at five.')
+        ->and($this->exampleWriter->replaced[0]['translation'])->toBe('Банк закрывается в пять.')
+        ->and($this->exampleWriter->replaced[0]['source'])->toBe('ai');
+});
+
+it('leaves a deduped term alone when its passport is already the answering prompt', function () {
+    $first = openGeneration($this);
+    $generator = scriptedGenerator([[
+        [new GeneratedItem('bank', 'word', 'банк', 'I opened a bank account.', 'B1'), ...items('w', 7)],
+        100, 200,
+    ]]);
+    processWith($this, $generator)(new ProcessGeneration($first));
+
+    // Nothing stale: the term is already at this version. Re-writing equal content would be churn
+    // on rows a human may have just reviewed.
+    $second = openGeneration($this, 0, 'снова в банк');
+    processWith($this, $generator)(new ProcessGeneration($second));
+
+    expect($this->coreWriter->replaced)->toBe([])
+        ->and($this->exampleWriter->replaced)->toBe([]);
+});
 
 it('materializes a collection with deduplicated terms from a pending request', function () {
     $id = openGeneration($this);
@@ -284,6 +370,8 @@ it('records tokens, cost and raw response even when the draft fails validation',
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
         repairExamples: new RecordingExampleRepairDispatcher(),
+        staleCores: $this->staleCores,
+        coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -330,6 +418,8 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
         repairExamples: new RecordingExampleRepairDispatcher(),
+        staleCores: $this->staleCores,
+        coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
     );
@@ -393,6 +483,8 @@ function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, Lan
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
         repairExamples: new RecordingExampleRepairDispatcher(),
+        staleCores: $ctx->staleCores,
+        coreReplacement: coreReplacement($ctx->coreWriter, $ctx->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
     );
