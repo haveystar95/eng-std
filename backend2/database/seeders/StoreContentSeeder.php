@@ -132,8 +132,6 @@ final class StoreContentSeeder extends Seeder
             'type' => $t['type'],
             'pos' => $pos,
             'ipa' => $t['ipa'] ?? null,
-            'audio_url' => $t['audio_url'] ?? null,
-            'frequency_rank' => $t['frequency_rank'] ?? null,
             'source' => $t['source'],
             'cefr' => $t['cefr'] ?? null,
             'image_url' => $t['image_url'] ?? null,

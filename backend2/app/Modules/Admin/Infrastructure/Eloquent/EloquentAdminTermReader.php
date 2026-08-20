@@ -100,7 +100,6 @@ final class EloquentAdminTermReader implements AdminTermReader
             type: (string) $t->type,
             pos: $t->pos !== null ? (string) $t->pos : null,
             ipa: $t->ipa !== null ? (string) $t->ipa : null,
-            audioUrl: $t->audio_url !== null ? (string) $t->audio_url : null,
             imageUrl: $t->image_url !== null ? (string) $t->image_url : null,
             imageAuthor: $t->image_author !== null ? (string) $t->image_author : null,
             imageAuthorUrl: $t->image_author_url !== null ? (string) $t->image_author_url : null,

@@ -30,7 +30,6 @@ final readonly class TermDetail
         public string $type,
         public ?string $pos,
         public ?string $ipa,
-        public ?string $audioUrl,
         public ?string $imageUrl,
         public ?string $imageAuthor,
         public ?string $imageAuthorUrl,

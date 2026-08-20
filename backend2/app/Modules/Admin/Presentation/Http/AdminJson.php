@@ -400,7 +400,6 @@ final class AdminJson
             'type' => $t->type,
             'pos' => $t->pos,
             'ipa' => $t->ipa,
-            'audio_url' => $t->audioUrl,
             'image_url' => $t->imageUrl,
             'image_author' => $t->imageAuthor,
             'image_author_url' => $t->imageAuthorUrl,
