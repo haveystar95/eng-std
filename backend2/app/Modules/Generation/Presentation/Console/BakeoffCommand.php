@@ -10,14 +10,17 @@ use App\Modules\Generation\Application\Dto\ProviderAvailability;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\ContentModelPort;
+use App\Modules\Generation\Application\Port\LoggedResponseReader;
 use App\Modules\Generation\Application\Service\BakeoffReport;
 use App\Modules\Generation\Application\Service\BakeoffRunner;
 use App\Modules\Generation\Application\Service\BakeoffSample;
 use App\Modules\Generation\Application\Service\StoreCollectionSnapshot;
 use App\Modules\Generation\Domain\ValueObject\BakeoffTrack;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Shared\Domain\Service\ModelCost;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Infrastructure\Support\ExportHeader;
+use DateTimeImmutable;
 use Illuminate\Console\Command;
 
 /**
@@ -59,6 +62,7 @@ final class BakeoffCommand extends Command
         {--providers= : comma-separated subset (openai,anthropic,xai,gemini) — one provider per run keeps each invocation short, and --report-only merges them}
         {--model= : run the chosen provider on this model instead of its configured one}
         {--from-run= : take the CORES for tracks b/m from a finished run instead of from live content}
+        {--config=* : with --report-only, one pipeline configuration as "Name|runId,runId" — repeat for each}
         {--pace=0 : milliseconds to wait between calls — the answer to an org tokens-per-minute cap}
         {--compare= : collection id whose CURRENT content is printed beside track A (read-only)}
         {--report-only= : re-render from finished run(s) in the sandbox, calling nothing — comma-separate several and each track is taken from whichever run answered it best}
@@ -74,11 +78,12 @@ final class BakeoffCommand extends Command
         BakeoffReport $report,
         BakeoffJournal $journal,
         StoreCollectionSnapshot $store,
+        LoggedResponseReader $cache,
     ): int {
         // Re-rendering a finished run costs nothing and must not require re-paying for the answers.
         $reportOnly = $this->str($this->option('report-only'), '');
         if ($reportOnly !== '') {
-            return $this->rerender($reportOnly, $journal, $report, $catalog, $store);
+            return $this->rerender($reportOnly, $journal, $report, $catalog, $store, $cache);
         }
 
         $promptVersion = $this->str($this->option('prompt'), 'v10');
@@ -111,6 +116,7 @@ final class BakeoffCommand extends Command
         // unchanged: a comparison where two vendors got different terms measures the terms.
         $terms = [];
         $cores = [];
+        $inheritedTopics = null;
         $fromRun = $this->str($this->option('from-run'), '');
         $needsMaterial = in_array(BakeoffTrack::Enrichment, $tracks, true)
             || in_array(BakeoffTrack::Mechanics, $tracks, true);
@@ -129,6 +135,14 @@ final class BakeoffCommand extends Command
                 static fn (array $core): array => ['id' => $core['id'], 'text' => $core['text']],
                 $cores,
             );
+            // The chained run inherits the source run's topic, so every stage of one configuration
+            // reports the same one — a machinery call's task key is a term, not a topic, and
+            // without this the second stage would be a row with no subject.
+            $sourceRun = $journal->readRun($fromRun);
+            $sourceNotes = is_array($sourceRun['run']['notes'] ?? null) ? $sourceRun['run']['notes'] : [];
+            if (is_array($sourceNotes['topics'] ?? null) && $sourceNotes['topics'] !== []) {
+                $inheritedTopics = $sourceNotes['topics'];
+            }
             $this->line('');
             $this->line('<options=bold>Ядра из прогона ' . $fromRun . ':</> ' . count($cores));
         } elseif ($needsMaterial) {
@@ -137,7 +151,7 @@ final class BakeoffCommand extends Command
             $this->line('<options=bold>Выборка треку Б:</> ' . count($terms) . ' терминов — ' . $this->bucketSummary($terms));
         }
 
-        $tasks = $this->tasks($tracks, $size, $terms, $cores);
+        $tasks = $this->tasks($tracks, $size, $terms, $cores, $fromRun);
         $this->line('');
         $this->line('<options=bold>План:</> ' . count($tasks) . ' заданий × ' . count($providers) . ' провайдеров = '
             . count($tasks) * count($providers) . ' вызовов, промпт ' . $promptVersion . '.');
@@ -161,7 +175,7 @@ final class BakeoffCommand extends Command
                     static fn ($a): array => ['provider' => $a->provider->value, 'model' => $a->model, 'available' => $a->available, 'reason' => $a->reason],
                     $availability,
                 ),
-                'topics' => $this->topics(),
+                'topics' => $inheritedTopics ?? $this->topics(),
                 'sample' => $terms,
                 'size' => $size,
             ],
@@ -213,6 +227,100 @@ final class BakeoffCommand extends Command
         $this->line('Кандидаты в песочнице: bakeoff_candidates where run_id = \'' . $runId . '\'');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * How much of these runs' prompt was served from the vendor's cache.
+     *
+     * Read from the outbound log rather than from the sandbox, because the sandbox stores only
+     * totals — and the totals are exactly what a cached prompt makes misleading. Bounded by the
+     * runs' own time span so an unrelated generation in the same hour is not counted in.
+     *
+     * @param  array<string, array{results: list<BakeoffCallResult>, run: array<string, mixed>}>  $runs
+     * @return array<string, array{calls: int, prompt_tokens: int, cached_tokens: int}>
+     */
+    private function promptCache(LoggedResponseReader $cache, array $runs): array
+    {
+        $earliest = null;
+        foreach ($runs as $stored) {
+            $startedAt = $stored['run']['created_at'] ?? null;
+            if (! is_string($startedAt) && ! $startedAt instanceof \DateTimeInterface) {
+                continue;
+            }
+            $at = $startedAt instanceof \DateTimeInterface
+                ? DateTimeImmutable::createFromInterface($startedAt)
+                : new DateTimeImmutable($startedAt);
+            if ($earliest === null || $at < $earliest) {
+                $earliest = $at;
+            }
+        }
+
+        if ($earliest === null) {
+            return [];
+        }
+
+        // Bounded by the reported runs' own span, or the note would count an unrelated generation
+        // that happened to run in the same hour and report a cache rate that belongs to someone
+        // else. Widened by two minutes at each end: a log row is written when the call FINISHES.
+        return $cache->promptCacheByModel(
+            'generation',
+            $earliest->modify('-2 minutes'),
+            new DateTimeImmutable('+2 minutes'),
+        );
+    }
+
+    /**
+     * The pipeline configurations to compare, as `--config="Name|runA,runB"`.
+     *
+     * A configuration is a CHAIN — a collection call plus whatever second stage finishes it — and
+     * nothing in the sandbox records that a given enrichment run belongs to a given collection run.
+     * It is stated here rather than guessed, because guessing it wrong would add two halves that
+     * never met and print the sum as the price of a collection.
+     *
+     * @param  array<string, array{results: list<BakeoffCallResult>, run: array<string, mixed>}>  $runs
+     * @return list<array{name: string, runs: list<string>, topic: string, calls: list<BakeoffCallResult>}>
+     */
+    private function configs(array $runs): array
+    {
+        $specs = $this->option('config');
+        if (! is_array($specs) || $specs === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($specs as $spec) {
+            if (! is_string($spec) || ! str_contains($spec, '|')) {
+                continue;
+            }
+            [$name, $ids] = explode('|', $spec, 2);
+            $runIds = array_values(array_filter(array_map('trim', explode(',', $ids))));
+
+            $calls = [];
+            $topic = '';
+            foreach ($runIds as $id) {
+                if (! isset($runs[$id])) {
+                    $this->warn('--config «' . $name . '»: прогон ' . $id . ' не передан в --report-only, пропущен.');
+
+                    continue;
+                }
+                foreach ($runs[$id]['results'] as $result) {
+                    $calls[] = $result;
+                }
+                // The topic is the run's own, and a chained run inherits it from the run it was
+                // chained to — so every stage of one configuration reports the same one.
+                $notes = is_array($runs[$id]['run']['notes'] ?? null) ? $runs[$id]['run']['notes'] : [];
+                $first = is_array($notes['topics'] ?? null) ? ($notes['topics'][0] ?? null) : null;
+                if ($topic === '' && is_array($first) && is_string($first['key'] ?? null)) {
+                    $topic = $first['key'];
+                }
+            }
+
+            if ($calls !== []) {
+                $out[] = ['name' => trim($name), 'runs' => $runIds, 'topic' => $topic, 'calls' => $calls];
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -301,6 +409,7 @@ final class BakeoffCommand extends Command
         BakeoffReport $report,
         ContentModelCatalog $catalog,
         StoreCollectionSnapshot $store,
+        LoggedResponseReader $cache,
     ): int {
         $ids = array_values(array_filter(array_map('trim', explode(',', $runId))));
 
@@ -340,6 +449,8 @@ final class BakeoffCommand extends Command
             'topics' => is_array($notes['topics'] ?? null) && $notes['topics'] !== []
                 ? $notes['topics']
                 : $this->topics(),
+            'configs' => $this->configs($runs),
+            'prompt_cache' => $this->promptCache($cache, $runs),
         ]);
 
         $this->summarise($results);
@@ -367,39 +478,39 @@ final class BakeoffCommand extends Command
             return [reset($runs)['results'], []];
         }
 
+        // The key is (track, provider, MODEL, task). Everything in it is something that makes two
+        // calls incomparable: the same provider on two models is the interesting comparison inside
+        // one vendor, and the same model on two topics is two different questions. Keying more
+        // loosely silently drops one of them; keying on the run id alone would stop de-duplicating
+        // a task that was simply retried, which is what the rule is for.
+        $groups = [];
+        foreach ($runs as $id => $stored) {
+            foreach ($stored['results'] as $result) {
+                $key = implode('|', [
+                    $result->track->value,
+                    $result->provider->value,
+                    ModelCost::baseModel($result->model),
+                    $result->taskKey,
+                ]);
+                $groups[$key][$id][] = $result;
+            }
+        }
+
         $results = [];
         $sources = [];
-
-        // Per (track, PROVIDER), not per track. Four single-provider runs of one track then union
-        // cleanly — the per-track rule would have kept one of them and thrown the other three away —
-        // and two full runs still resolve pair by pair, which is never worse.
-        foreach (BakeoffTrack::cases() as $track) {
-            foreach (ProviderId::cases() as $provider) {
-                $best = null;
-                foreach ($runs as $id => $stored) {
-                    $ofPair = array_values(array_filter(
-                        $stored['results'],
-                        static fn (BakeoffCallResult $r): bool => $r->track === $track && $r->provider === $provider,
-                    ));
-                    if ($ofPair === []) {
-                        continue;
-                    }
-                    $ok = count(array_filter($ofPair, static fn (BakeoffCallResult $r): bool => $r->ok));
-                    if ($best === null || $ok > $best['ok']) {
-                        $best = ['run' => $id, 'ok' => $ok, 'total' => count($ofPair), 'results' => $ofPair];
-                    }
+        foreach ($groups as $key => $byRun) {
+            $best = null;
+            foreach ($byRun as $id => $ofGroup) {
+                $ok = count(array_filter($ofGroup, static fn (BakeoffCallResult $r): bool => $r->ok));
+                if ($best === null || $ok > $best['ok']) {
+                    $best = ['run' => $id, 'ok' => $ok, 'total' => count($ofGroup), 'results' => $ofGroup];
                 }
-
-                if ($best === null) {
-                    continue;
-                }
-                foreach ($best['results'] as $result) {
-                    $results[] = $result;
-                }
-                $sources[$track->value . '/' . $provider->value] = [
-                    'run' => $best['run'], 'ok' => $best['ok'], 'total' => $best['total'],
-                ];
             }
+            // $best is always set: a group only exists because at least one run put a call in it.
+            foreach ($best['results'] as $result) {
+                $results[] = $result;
+            }
+            $sources[$key] = ['run' => $best['run'], 'ok' => $best['ok'], 'total' => $best['total']];
         }
 
         return [$results, $sources];
@@ -448,7 +559,7 @@ final class BakeoffCommand extends Command
      * @param  list<array{id: string, text: string, translation: string, example: string, example_translation: string}>  $cores
      * @return list<BakeoffTask>
      */
-    private function tasks(array $tracks, int $size, array $terms, array $cores = []): array
+    private function tasks(array $tracks, int $size, array $terms, array $cores = [], string $fromRun = ''): array
     {
         $tasks = [];
 
@@ -462,7 +573,10 @@ final class BakeoffCommand extends Command
                 }
                 $tasks[] = new BakeoffTask(
                     track: $track,
-                    key: 'механика ×' . count($cores),
+                    // The source run is IN the key: two machinery calls over two different topics
+                    // otherwise carry the same key, and the report's de-duplication — which treats
+                    // one key as one task that may have been retried — would keep only one of them.
+                    key: 'механика ×' . count($cores) . ($fromRun !== '' ? ' из ' . $fromRun : ''),
                     userMessage: $this->mechanicsMessage($cores),
                     expectedSize: count($cores),
                     terms: $terms,

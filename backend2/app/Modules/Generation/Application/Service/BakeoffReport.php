@@ -69,6 +69,7 @@ final readonly class BakeoffReport
             }
         }
 
+        $out[] = $this->configsSection($meta);
         $out[] = $this->twoStageVsOneShot($results, $meta);
         $out[] = $this->howToRead();
 
@@ -675,6 +676,155 @@ final readonly class BakeoffReport
         $lines[] = 'Строка «А + Б» — это то, во что обходится готовая коллекция СЕЙЧАС; строка В — '
             . 'альтернатива ей одним вызовом. Трек В — **эксперимент**: он не заменяет А и Б, '
             . 'решение по схеме пайплайна принимает архитектор.';
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * The A/B table: one row per configuration × topic, priced as a FINISHED collection.
+     *
+     * A configuration is a chain of calls, so its cost is their sum and its latency is their sum
+     * too — a learner waits for both stages, and reporting the slower of the two as "the latency"
+     * would understate the wait by the length of the other one. Cleanliness is reported per STAGE
+     * rather than merged: a core defect and a machinery defect are fixed by different people, and a
+     * single blended percentage hides which half needs the work.
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    private function configsSection(array $meta): string
+    {
+        $configs = $meta['configs'] ?? null;
+        if (! is_array($configs) || $configs === []) {
+            return "\0";
+        }
+
+        $lines = [
+            '## A/B: конфигурации пайплайна',
+            '',
+            'Строка — одна готовая коллекция: цепочка вызовов от темы до карточек с механикой. '
+            . 'Стоимость и латентность СУММИРУЮТСЯ по стадиям (ученик ждёт обе), чистота — по '
+            . 'стадиям раздельно, потому что дефект ядра и дефект механики чинят разные люди.',
+            '',
+            '**Где «ядро чистых» показывает вдвое больше items, чем в коллекции — это и есть двойная '
+            . 'оплата.** Конфигурация, в которой вторая стадия заново порождает ядро, платит за ядро '
+            . 'дважды, и в этой колонке видно оба раза.',
+            '',
+            '| Конфигурация | Тема | Ядро чистых | Механика чистых | $ на коллекцию | Латентность | Токены in/out |',
+            '|---|---|---|---|---|---|---|',
+        ];
+
+        foreach ($configs as $config) {
+            if (! is_array($config) || ! is_array($config['calls'] ?? null)) {
+                continue;
+            }
+
+            $cost = 0.0;
+            $latency = 0;
+            $tokensIn = 0;
+            $tokensOut = 0;
+            $coreItems = 0;
+            $coreClean = 0;
+            $mechItems = 0;
+            $mechClean = 0;
+            $failed = 0;
+
+            foreach ($config['calls'] as $call) {
+                if (! $call instanceof BakeoffCallResult) {
+                    continue;
+                }
+                $cost += (float) ($call->costUsd ?? 0);
+                $latency += $call->latencyMs ?? 0;
+                $tokensIn += $call->tokensIn ?? 0;
+                $tokensOut += $call->tokensOut ?? 0;
+                if (! $call->ok) {
+                    $failed++;
+
+                    continue;
+                }
+                // A call that wrote a core is scored as core; the machinery-only track is scored as
+                // machinery. The one-shot track writes both in one call and counts as both.
+                if ($call->track->shape()->producesCore()) {
+                    $coreItems += $call->batch?->total() ?? 0;
+                    $coreClean += $call->batch?->clean() ?? 0;
+                }
+                if ($call->track->shape()->hasOptions()) {
+                    $mechItems += $call->batch?->total() ?? 0;
+                    $mechClean += $call->batch?->clean() ?? 0;
+                }
+            }
+
+            $lines[] = sprintf(
+                '| %s | %s | %s | %s | **$%s** | %.1f с | %s/%s |',
+                $this->cell((string) ($config['name'] ?? '?')) . ($failed > 0 ? ' ⚠️ ' . $failed . ' сбоев' : ''),
+                $this->cell((string) ($config['topic'] ?? '—')),
+                $coreItems > 0 ? sprintf('%d/%d (%d%%)', $coreClean, $coreItems, (int) round(100 * $coreClean / $coreItems)) : '—',
+                $mechItems > 0 ? sprintf('%d/%d (%d%%)', $mechClean, $mechItems, (int) round(100 * $mechClean / $mechItems)) : '—',
+                number_format($cost, 4, '.', ''),
+                $latency / 1000,
+                $tokensIn,
+                $tokensOut,
+            );
+        }
+
+        $lines[] = '';
+        $lines[] = '_Стоимость — по фактическим токенам вызовов, а не по оценке._';
+        $lines[] = '';
+        $lines[] = $this->promptCacheNote($meta);
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * What the vendor's prompt cache did to these numbers.
+     *
+     * The prices above charge every input token at full rate. A per-term stage re-sends one system
+     * prompt ten times in a row and the vendor serves most of it from cache at a fraction of the
+     * price — so the row that looks most expensive is also the row most overstated, and saying the
+     * total without saying this would make the comparison read as more lopsided than it is.
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    private function promptCacheNote(array $meta): string
+    {
+        $cache = $meta['prompt_cache'] ?? null;
+        if (! is_array($cache) || $cache === []) {
+            return "\0";
+        }
+
+        $lines = [
+            '### Кеш промпта',
+            '',
+            'Цены выше считают КАЖДЫЙ входной токен по полной ставке. Вендор часть промпта отдал из '
+            . 'своего кеша дешевле — значит суммы в таблице это верхняя граница, и сильнее всего '
+            . 'завышена та строка, где один и тот же системный промпт уходил много раз подряд.',
+            '',
+            '| Модель | Вызовов | Входных токенов | Из кеша | Доля |',
+            '|---|---|---|---|---|',
+        ];
+
+        $totalIn = 0;
+        $totalCached = 0;
+        foreach ($cache as $model => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $in = is_int($row['prompt_tokens'] ?? null) ? $row['prompt_tokens'] : 0;
+            $cached = is_int($row['cached_tokens'] ?? null) ? $row['cached_tokens'] : 0;
+            $totalIn += $in;
+            $totalCached += $cached;
+            $lines[] = sprintf(
+                '| `%s` | %d | %d | %d | %s |',
+                $this->cell((string) $model),
+                is_int($row['calls'] ?? null) ? $row['calls'] : 0,
+                $in,
+                $cached,
+                $in > 0 ? round(100 * $cached / $in, 1) . '%' : '—',
+            );
+        }
+        if ($totalIn > 0) {
+            $lines[] = sprintf('| **всего** | | **%d** | **%d** | **%s%%** |', $totalIn, $totalCached, round(100 * $totalCached / $totalIn, 1));
+        }
         $lines[] = '';
 
         return implode("\n", $lines);

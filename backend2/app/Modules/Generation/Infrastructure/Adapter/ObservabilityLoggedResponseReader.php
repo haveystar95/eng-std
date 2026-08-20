@@ -15,4 +15,9 @@ final readonly class ObservabilityLoggedResponseReader implements LoggedResponse
     {
         return $this->logs->findResponseBody($logId);
     }
+
+    public function promptCacheByModel(string $purpose, \DateTimeInterface $from, \DateTimeInterface $to): array
+    {
+        return $this->logs->promptCacheByModel($purpose, $from, $to);
+    }
 }
