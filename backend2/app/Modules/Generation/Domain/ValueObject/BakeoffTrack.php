@@ -28,12 +28,20 @@ enum BakeoffTrack: string
     /** Topic in, finished collection out, one call. The experiment. */
     case OneShot = 'c';
 
+    /**
+     * A FINISHED core in, exercise machinery out. The second half of the "core + mechanics" split,
+     * and it exists to be measured against Enrichment — which produces the same machinery by
+     * regenerating the core it was handed.
+     */
+    case Mechanics = 'm';
+
     public function shape(): PromptShape
     {
         return match ($this) {
             self::Collections => PromptShape::Terms,
             self::Enrichment => PromptShape::Enrich,
             self::OneShot => PromptShape::Full,
+            self::Mechanics => PromptShape::Mechanics,
         };
     }
 
@@ -43,6 +51,7 @@ enum BakeoffTrack: string
             self::Collections => 'Трек А — генерация коллекций',
             self::Enrichment => 'Трек Б — обогащение существующих терминов',
             self::OneShot => 'Трек В — one-shot (эксперимент)',
+            self::Mechanics => 'Трек М — механика поверх готового ядра',
         };
     }
 }

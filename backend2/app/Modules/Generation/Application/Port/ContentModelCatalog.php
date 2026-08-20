@@ -30,6 +30,13 @@ interface ContentModelCatalog
     /** @return list<ContentModelPort> only the providers that can be called */
     public function available(): array;
 
-    /** One provider by name, or null when it is not configured. */
-    public function get(ProviderId $provider): ?ContentModelPort;
+    /**
+     * One provider by name, or null when it is not configured.
+     *
+     * @param  string|null  $model  run this provider on a DIFFERENT model than its configured one.
+     *        Needed because the interesting comparison is often within one vendor — the same core
+     *        enriched by a cheap model and an expensive one — and re-pointing the shared config to
+     *        do that would move every other caller with it.
+     */
+    public function get(ProviderId $provider, ?string $model = null): ?ContentModelPort;
 }

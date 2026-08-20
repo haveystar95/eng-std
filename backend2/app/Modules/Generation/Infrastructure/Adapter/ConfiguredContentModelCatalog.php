@@ -94,7 +94,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
@@ -102,7 +102,9 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
             return null;
         }
 
-        $model = $row['model'] !== '' ? $row['model'] : $row['default_model'];
+        $model = $model !== null && trim($model) !== ''
+            ? trim($model)
+            : ($row['model'] !== '' ? $row['model'] : $row['default_model']);
 
         return match ($provider) {
             ProviderId::Gemini => new GeminiContentModel(

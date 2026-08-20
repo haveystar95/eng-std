@@ -164,6 +164,50 @@ final readonly class EloquentBakeoffJournal implements BakeoffJournal
         ];
     }
 
+    public function readCores(string $runId, ?string $provider = null, ?string $track = null): array
+    {
+        $query = DB::table('bakeoff_candidates')->where('run_id', $runId);
+        if ($provider !== null) {
+            $query->where('provider', $provider);
+        }
+        if ($track !== null) {
+            $query->where('track', $track);
+        }
+
+        $cores = [];
+        foreach ($query->orderBy('call_id')->orderBy('position')->get() as $row) {
+            $payload = json_decode((string) $row->payload, true);
+            if (! is_array($payload)) {
+                continue;
+            }
+            $text = is_string($payload['text'] ?? null) ? trim($payload['text']) : '';
+            if ($text === '') {
+                continue;
+            }
+
+            // A core with no translation or example is not a core — handing it to the machinery
+            // stage would ask that stage to build options against a blank, and the resulting
+            // failure would be recorded against the wrong half of the pipeline.
+            $translation = is_string($payload['translation'] ?? null) ? trim($payload['translation']) : '';
+            $example = is_string($payload['example'] ?? null) ? trim($payload['example']) : '';
+            if ($translation === '' || $example === '') {
+                continue;
+            }
+
+            $cores[] = [
+                'id' => (string) $row->id,
+                'text' => $text,
+                'translation' => $translation,
+                'example' => $example,
+                'example_translation' => is_string($payload['example_translation'] ?? null)
+                    ? trim($payload['example_translation'])
+                    : '',
+            ];
+        }
+
+        return $cores;
+    }
+
     /** How many items this track's call should have had, from the run's own notes. */
     private function expectedSize(stdClass $run, BakeoffTrack $track): ?int
     {

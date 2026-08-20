@@ -216,6 +216,82 @@ it('reads a finished run back out of the sandbox, verdicts and spend intact', fu
         ->and($result->batch?->verdicts[1]->reason())->toContain('потеряно');
 });
 
+/**
+ * The two-stage config only means anything if the second stage runs over the cores the first stage
+ * actually produced — otherwise two halves that never met are being priced as one collection.
+ */
+it('hands the machinery stage the cores the collection stage produced', function () {
+    fakeProviderAnswer([
+        bakeoffGoodItem(),
+        bakeoffGoodItem('open an account', 'открыть счёт'),
+        // A core missing its example is not a core: handing it on would score the machinery stage
+        // for a blank it was never given.
+        [...bakeoffGoodItem('half a card', 'половина карточки'), 'example' => ''],
+    ]);
+
+    $journal = app(BakeoffJournal::class);
+    $runId = $journal->openRun('two-stage', 'v11', 'ru', 'en', ['size' => 3, 'providers' => []]);
+    $journal->recordCall($runId, app(BakeoffRunner::class)->run(
+        bakeoffProvider(),
+        new BakeoffTask(BakeoffTrack::Collections, 'в банке', 'TOPIC', expectedSize: 3),
+        'v11',
+        new LanguageCode('ru'),
+        new LanguageCode('en'),
+    ));
+
+    $cores = $journal->readCores($runId, null, BakeoffTrack::Collections->value);
+
+    expect($cores)->toHaveCount(2)
+        ->and(array_column($cores, 'text'))->toBe(['withdraw cash', 'open an account'])
+        ->and($cores[0]['translation'])->toBe('снять наличные')
+        ->and($cores[0]['example'])->toContain('withdraw cash');
+});
+
+it('asks the mechanics shape for machinery only, with no core fields in the schema', function () {
+    Http::fake(['*' => Http::response([
+        'model' => 'gpt-4o-mini',
+        'choices' => [['message' => ['content' => json_encode([
+            'items' => [[
+                'text' => 'withdraw cash',
+                'options' => ['положить деньги', 'закрыть счёт', 'проверить баланс'],
+                'forms' => ['take out cash'],
+            ]],
+        ], JSON_UNESCAPED_UNICODE)]]],
+        'usage' => ['prompt_tokens' => 800, 'completion_tokens' => 120],
+    ], 200)]);
+
+    $result = app(BakeoffRunner::class)->run(
+        bakeoffProvider(),
+        new BakeoffTask(
+            BakeoffTrack::Mechanics,
+            'механика ×1',
+            "GIVEN CARDS\n1. TERM: withdraw cash\n   TRANSLATION: снять наличные\n   EXAMPLE: I need to withdraw cash.",
+            expectedSize: 1,
+            terms: [['id' => '01J0000000000000000000TERM', 'text' => 'withdraw cash']],
+        ),
+        'v11',
+        new LanguageCode('ru'),
+        new LanguageCode('en'),
+    );
+
+    // A compliant machinery answer is CLEAN even though it carries no translation and no example.
+    expect($result->ok)->toBeTrue()
+        ->and($result->batch?->clean())->toBe(1)
+        ->and($result->batch?->verdicts[0]->item->forms)->toBe(['take out cash']);
+
+    Http::assertSent(function (Request $r): bool {
+        $item = $r->data()['response_format']['json_schema']['schema']['properties']['items']['items'];
+        $system = $r->data()['messages'][0]['content'];
+
+        return $item['required'] === ['text', 'options', 'forms']
+            // The core fields are absent from the SCHEMA, which is what makes "do not touch the
+            // core" impossible to disobey rather than merely discouraged.
+            && ! array_key_exists('translation', $item['properties'])
+            && ! array_key_exists('example', $item['properties'])
+            && str_contains($system, 'Do not rewrite the core.');
+    });
+});
+
 it('returns null for a run that is not in the sandbox', function () {
     expect(app(BakeoffJournal::class)->readRun('01J000000000000000000MISS'))->toBeNull();
 });
@@ -291,8 +367,10 @@ it('renders a report with a table per track and names the provider that could no
 it('compares the two pipeline shapes only once both of them have answered', function () {
     fakeProviderAnswer([bakeoffGoodItem()]);
 
+    // The three PIPELINE tracks, named explicitly. Sweeping the enum would drag in the mechanics
+    // track, which v10 has no shape for — the version, not the enum, decides what can be asked.
     $results = [];
-    foreach (BakeoffTrack::cases() as $track) {
+    foreach ([BakeoffTrack::Collections, BakeoffTrack::Enrichment, BakeoffTrack::OneShot] as $track) {
         $results[] = app(BakeoffRunner::class)->run(
             bakeoffProvider(),
             new BakeoffTask($track, 'в банке', 'TOPIC', expectedSize: 1),

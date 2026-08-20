@@ -37,4 +37,16 @@ interface BakeoffJournal
      * @return array{results: list<BakeoffCallResult>, run: array<string, mixed>}|null  null = no such run
      */
     public function readRun(string $runId): ?array;
+
+    /**
+     * The CORES a finished run produced — term, key, example — ready to be handed to a later stage.
+     *
+     * This is what makes a two-stage config measurable end to end: the machinery stage must run over
+     * the very cores the collection stage produced, not over a sample of live content, or the two
+     * halves are being measured on different material and their costs cannot be added up.
+     *
+     * @param  string|null  $provider  narrow to one provider's cores; null takes whatever the run has
+     * @return list<array{id: string, text: string, translation: string, example: string, example_translation: string}>
+     */
+    public function readCores(string $runId, ?string $provider = null, ?string $track = null): array;
 }
