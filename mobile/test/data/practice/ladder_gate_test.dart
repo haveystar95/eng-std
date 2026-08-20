@@ -11,8 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// It decides two things, both about the POOL and the card's SHAPE:
 ///
-///   * a pair standing at RUNG 0 gets no practice card at all. Practice introduces nothing — no
-///     exposure, no quota — so a word nobody has introduced has nothing for practice to drill.
+///   * an ENROLLED pair standing at RUNG 0 gets no practice card at all. Practice introduces
+///     nothing — no exposure, no quota — and that pair's first meeting is owed to a study session.
+///     (A word OUTSIDE the pool is a different case entirely; see `catalogue_practice_test.dart`.)
 ///   * a pair still on the recognition rungs gets FAR options, so its first meetings stay winnable.
 ///
 /// It no longer decides WHICH TRAINERS may be dealt (QA-26). Practice fans across every switched-on
@@ -83,12 +84,14 @@ void main() {
         ladder: {for (final t in terms) t.id: position},
       ).cards;
 
-  test('a never-shown word gets NO practice card at all — the gate is fail-closed', () {
-    // The owner's rule: practice introduces nothing, so a word nobody has introduced has nothing
-    // for practice to drill. Rung 0 used to be handed the rung-1 card as a substitute, which made
-    // the one rung the matrix places a trainer at the one rung the gate ignored.
+  test('an ENROLLED never-shown word gets NO practice card at all — the gate is fail-closed', () {
+    // The owner's rule: practice introduces nothing, so an enrolled word waiting for its first
+    // meeting has nothing for practice to drill — that meeting belongs to a study session, which is
+    // where the quota and the exposure are. Rung 0 used to be handed the rung-1 card as a
+    // substitute, which made the one rung the matrix places a trainer at the one rung the gate
+    // ignored.
     for (final position in [
-      LadderPosition.untouched,
+      const LadderPosition(acquisition: Acquisition.isNew, enrolled: true),
       // reps survived a `known` undo, but the pair still stands at rung 0.
       const LadderPosition(acquisition: Acquisition.isNew, successfulReviews: 3, enrolled: true),
     ]) {
@@ -98,7 +101,7 @@ void main() {
     }
   });
 
-  test('rung 0 is refused by the POOL, which is the only place that refusal now lives', () {
+  test('rung 0 in the pool is refused by the LADDER, which is the only place that refusal lives', () {
     // The mode filter no longer says no to anything (QA-26), so this is the single gate keeping a
     // never-introduced word out of practice. PracticeModeSelector floors an empty applicable set to
     // multiple_choice, so a rung-0 word that reached the card builder WOULD come back as a card —
@@ -111,9 +114,9 @@ void main() {
   });
 
   test('one introduced word is drilled while its rung-0 neighbours only lend their text', () {
-    // A half-new collection must still be practisable, and a rung-0 word is allowed to be someone
-    // else's WRONG option: appearing there claims nothing about it. Dropping it from the option
-    // pool as well would leave a one-option multiple choice.
+    // A half-new pool must still be practisable, and an enrolled rung-0 word is allowed to be
+    // someone else's WRONG option: appearing there claims nothing about it. Dropping it from the
+    // option pool as well would leave a one-option multiple choice.
     final session = LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: 20,
@@ -123,7 +126,8 @@ void main() {
       ladder: {
         terms.first.id: const LadderPosition(acquisition: Acquisition.learning,
           learningStep: LearningLadder.stepRecognitionReverse, enrolled: true),
-        for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
+        for (final t in terms.skip(1))
+          t.id: const LadderPosition(acquisition: Acquisition.isNew, enrolled: true),
       },
     );
 

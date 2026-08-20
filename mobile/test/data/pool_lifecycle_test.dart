@@ -43,19 +43,28 @@ void main() {
 
   Future<List<Term>> allTerms() => db.watchAllTerms().first;
 
-  /// Which WORDS a practice session over the whole mirror draws, with the pool as the device
+  /// Which POOL words a practice session over the whole mirror draws, with the pool as the device
   /// actually holds it. Distinct: a one-word pool is fanned into a card per trainer (QA-14/QA-26),
   /// and this asks which words practice reaches, never how many cards each of them got.
+  ///
+  /// Filtered to the pool ON PURPOSE, and that filter belongs to this test rather than to the
+  /// builder: free practice is a drill over the whole COLLECTION now, catalogue included
+  /// (`practice/catalogue_practice_test.dart` owns that half), so the raw card list would answer a
+  /// different question than the one this file asks — «что я учу».
   Future<List<String>> practiceTermIds() async {
     final terms = await allTerms();
+    final ladder = await db.ladderPositions([for (final t in terms) t.id]);
     final session = LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: 20,
       random: Random(7),
       sessionId: 'S',
-      ladder: await db.ladderPositions([for (final t in terms) t.id]),
+      ladder: ladder,
     );
-    return {for (final c in session.cards) c.termId}.toList();
+    return {
+      for (final c in session.cards)
+        if (ladder[c.termId]?.enrolled ?? false) c.termId,
+    }.toList();
   }
 
   test('a collection full of words is not a queue: nothing is studied until it is chosen', () async {
@@ -63,7 +72,7 @@ void main() {
 
     expect(await db.watchPool().first, isEmpty);
     expect(await db.watchLearnableCount().first, 0);
-    expect(await practiceTermIds(), isEmpty, reason: 'free practice draws from the pool too');
+    expect(await practiceTermIds(), isEmpty, reason: 'no word is being STUDIED yet');
   });
 
   test('a «не знаю» swipe puts the word in the pool at rung 0, and «Учить N» counts it', () async {

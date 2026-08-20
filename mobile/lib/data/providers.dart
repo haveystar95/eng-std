@@ -556,8 +556,9 @@ final studySessionProvider =
   // Free practice is built HERE, always — not "when offline". It has to work in airplane mode from
   // start to summary, and one code path is the only way both halves of that stay honest: a second,
   // online-only branch would be the one nobody exercises until it breaks. Everything it needs is
-  // already mirrored locally, its pool rule is simply "the whole collection, shuffled", and it
-  // schedules nothing. The session id is a client ULID the server adopts when the answers arrive.
+  // already mirrored locally, its rule is simply "the whole collection, shuffled — studied words
+  // first", and it schedules nothing. The session id is a client ULID the server adopts when the
+  // answers arrive.
   //
   // A scheduling session stays server-built: it spends the daily new-word quota and its
   // composition is what stops an abandoned session spending it on unseen terms.
@@ -579,9 +580,12 @@ final studySessionProvider =
     // local DB like everything else on this path, so practice keeps working offline — and so a
     // toggle flipped in the admin panel changes the offline session on the next sync.
     final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
-    // …and the acquisition ladder the same feed carried: where each pair stands, and where a choice
-    // card's wrong options come from. It no longer narrows the TRAINERS in free practice (QA-26) —
-    // that is what made dictation unreachable — but rung 0 still gets no practice card at all.
+    // …and the acquisition ladder the same feed carried: where each pair stands, whether the learner
+    // is studying it at all, and where a choice card's wrong options come from. For a POOL pair it
+    // no longer narrows the trainers (QA-26) — that is what made dictation unreachable — and an
+    // enrolled rung-0 pair still gets no practice card. A word the learner has NOT taken into study
+    // is drilled here too, from the easy half of the matrix: «Тренировка по теме» is over the
+    // collection, not over the pool, and it still moves no progress.
     final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
     final ladder = await db.ladderPositions([for (final t in terms) t.id]);
     return LocalPracticeSessionBuilder.build(

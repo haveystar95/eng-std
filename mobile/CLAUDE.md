@@ -28,8 +28,14 @@ Membership is one nullable column on the mirrored progress row (`enrolled_at`), 
 
 - a word joins the pool only by a deliberate act — a `не знаю` / `не уверен` triage swipe, or
   «Учить это слово» on the word card (кадр 16e). Adding or generating a collection enrols nothing.
-- every session is built from the pool, **including free practice** — `LadderPosition.admitsPractice`
-  asks the pool first and the rung second, mirroring the server's `enrolled_at IS NOT NULL`.
+- every **study** session is built from the pool — «Учить N», due repeats, the main-screen session.
+- **free practice over a collection is the one exception**: «Тренировка по теме» drills the whole
+  collection, untriaged words included, so a topic is usable the moment it exists. It still moves
+  nothing (no enrolment, no exposure, no schedule), and a word outside the pool is dealt only what
+  the matrix opens at `LearningLadder.stepUnenrolledPractice` — choice and assembly, never typing,
+  listening or dictation. Pool words come first in the session and keep their own rung.
+  `LadderPosition.admitsPractice` holds both halves; the server's
+  `GetPracticeTermsHandler` does the same for `/study/sessions?practice=true&collection_id=…`.
 - «Убрать из изучения» is a PAUSE: `enrolled_at → null` and nothing else, so the word resumes at the
   rung and due date it left with. The wording says so, or the button reads as a delete.
 - both taps ride a durable queue (`data/pool_sync.dart`) keyed by term and holding the DESIRED

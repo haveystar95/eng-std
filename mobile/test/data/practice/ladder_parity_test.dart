@@ -164,20 +164,42 @@ void main() {
   });
 
   group('the POOL filter, in parity with the server', () {
-    // The server reads its practice pool with `enrolled_at IS NOT NULL`
-    // (`EloquentDueTermsReader::allInPool`) and drops rung 0 by the same rule as here. The device
-    // builds its own practice sessions offline, so the same two filters exist twice — and, like the
-    // rung, they drift silently: the phone would simply drill a word nobody asked to learn.
-    test('a word nobody took into study is never drilled, whatever rung it claims', () {
+    // A collection's free practice reads the whole COLLECTION on both sides — the server's
+    // `GetPracticeTermsHandler` widened its scoped branch off `allInPool` at the same time this
+    // did — and both narrow a word outside the pool to the trainers the matrix opens at
+    // `stepUnenrolledPractice`. The device builds its own practice sessions offline, so the same
+    // rules exist twice and, like the rung, they drift silently: the phone would simply deal a card
+    // the server would not have dealt.
+    test('a word nobody took into study IS drilled — free practice is over the collection', () {
       for (final acquisition in Acquisition.values) {
         final position = LadderPosition(acquisition: acquisition, successfulReviews: 12);
-        expect(position.admitsPractice, isFalse, reason: '$acquisition, out of the pool');
+        expect(position.admitsPractice, isTrue, reason: '$acquisition, out of the pool');
+        // …and always at the same fixed rung: it has no rung of its own to be dealt at.
+        expect(position.practiceCardStep, LearningLadder.stepUnenrolledPractice);
       }
-      // …including a «знаю» pair, which is out of the pool BY the verdict.
+      // …including a «знаю» pair, which is out of the pool BY the verdict. The drill claims nothing
+      // about that verdict: practice never resolves the verification, on either side.
       expect(
         const LadderPosition(acquisition: Acquisition.graduated, isKnown: true).admitsPractice,
-        isFalse,
+        isTrue,
       );
+    });
+
+    test('the easy half of the matrix is what a word outside the pool may be asked', () {
+      // «без диктанта/печати/аудирования» — the owner's rule for a word nobody has studied. The
+      // matrix is the single place that is decided, and this is the row it resolves to.
+      const graded = [
+        ExerciseMode.multipleChoice, ExerciseMode.wordBank, ExerciseMode.cloze,
+        ExerciseMode.scramble, ExerciseMode.pickCorrect, ExerciseMode.speaking,
+        ExerciseMode.typing, ExerciseMode.listening, ExerciseMode.dictation,
+      ];
+      final opened = ModeAdmission.shipped.only(graded, LearningLadder.stepUnenrolledPractice);
+
+      expect(opened, contains(ExerciseMode.multipleChoice));
+      expect(opened, containsAll([ExerciseMode.wordBank, ExerciseMode.cloze, ExerciseMode.scramble]));
+      expect(opened, isNot(contains(ExerciseMode.typing)));
+      expect(opened, isNot(contains(ExerciseMode.listening)));
+      expect(opened, isNot(contains(ExerciseMode.dictation)));
     });
 
     test('in the pool, the rung decides — and rung 0 still has nothing to drill', () {
@@ -198,7 +220,9 @@ void main() {
 
     test('a term with no progress row at all is in the catalogue, not in the queue', () {
       expect(LadderPosition.untouched.enrolled, isFalse);
-      expect(LadderPosition.untouched.admitsPractice, isFalse);
+      // Drillable by «Тренировка по теме» — and still not in the queue: nothing about a practice
+      // answer enrols it, and the STUDY selection on both sides is read strictly from the pool.
+      expect(LadderPosition.untouched.admitsPractice, isTrue);
     });
   });
 

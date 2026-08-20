@@ -114,9 +114,10 @@ class _WordLadderSheet extends StatelessWidget {
 
   /// One primary action, and it depends on where the word stands — not on how far along it is.
   ///
-  /// OUT of the pool: «Учить это слово», and nothing else. Offering a training run beside it would
-  /// be offering a session the builder refuses to assemble, because it only ever draws from the
-  /// pool.
+  /// OUT of the pool: «Учить это слово», and nothing else. Not because a run is impossible — free
+  /// practice over the collection now reaches such a word too — but because this card has one move
+  /// to offer and it is the decision, not a drill: the word is in the catalogue, and the question
+  /// the card asks is whether to start studying it.
   ///
   /// IN the pool: the training run, gated by the rung as before, plus the quiet way back out.
   List<Widget> _actions(BuildContext context, AppLocalizations l, bool trainable) {

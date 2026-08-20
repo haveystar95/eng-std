@@ -75,6 +75,19 @@ abstract final class LearningLadder {
   /// The first `learningStep` a pair holds once it has been introduced.
   static const int firstLadderStep = stepRecognitionForward;
 
+  /// The rung a word OUTSIDE the pool is dealt at in a collection's free practice.
+  ///
+  /// Such a word has no rung of its own — nobody has decided to study it, so nothing about it has
+  /// been earned — and it must not be dealt the trainers a rung is for. It is dealt as a first
+  /// meeting is: the easy half of the matrix, choice and assembly, and never typed production
+  /// («написание», «аудирование») or dictation, which ask the learner to reproduce a word they may
+  /// be seeing for the first time.
+  ///
+  /// The assembly rung and not a recognition one, because recognition admits multiple_choice and
+  /// nothing else, and «зашёл в кафе, открыл тему» deserves the assembly trainers too. Mirrored on
+  /// the server as `LearningLadder::STEP_UNENROLLED_PRACTICE`.
+  static const int stepUnenrolledPractice = stepAssembly;
+
   /// The rung this pair stands on, or null when it is outside the ladder.
   ///
   /// Null is returned for a `known` pair — a triage self-assessment awaiting its verification check,
@@ -172,13 +185,38 @@ class LadderPosition {
 
   /// May this pair be dealt a free-practice card?
   ///
-  /// TWO filters, and they answer different questions. The pool asks whether the learner is
-  /// studying this word at all; the rung asks whether there is anything practice can usefully do
-  /// with it yet. Both must say yes — mirroring the server, where the practice pool is read with
-  /// `enrolled_at IS NOT NULL` and rung 0 is dropped by the same rule as here.
+  /// The two halves of the pair are asked DIFFERENT questions, because they are in different
+  /// situations:
   ///
-  /// The pool half is what stops opening a 200-word collection from drilling all 200 of them.
-  bool get admitsPractice => enrolled && LearningLadder.admitsPractice(step);
+  ///  * IN the pool — the rung decides, as it always has. A pair standing at rung 0 is enrolled and
+  ///    waiting for its first meeting, and that meeting belongs to a study session: practice
+  ///    introduces nothing (no exposure, no quota), so it has nothing to do with such a pair and
+  ///    would only spend it. See [LearningLadder.admitsPractice].
+  ///  * OUTSIDE the pool — admitted. «Тренировка по теме» is a drill over the COLLECTION, and a
+  ///    collection that nobody has triaged is exactly the case the owner asked for: «зашёл в кафе,
+  ///    открыл тему, прошёл маленькую тренировку без разбора коллекции». There is no study session
+  ///    coming for these words, so practice is not spending a first meeting that was owed
+  ///    elsewhere — it is the only meeting on offer.
+  ///
+  /// Admitting them changes NOTHING about progress: practice enrols nothing, writes no exposure,
+  /// moves no rung and spends no quota, so a word outside the pool is still outside it when the
+  /// session ends and «Мои слова» does not grow. What it does change is the CARD such a word gets
+  /// — see [LearningLadder.stepUnenrolledPractice].
+  ///
+  /// Study sessions, «Учить N» and due repeats are untouched by any of this: they are still read
+  /// strictly from the pool, on both sides.
+  bool get admitsPractice =>
+      enrolled ? LearningLadder.admitsPractice(step) : true;
+
+  /// The rung a free-practice card for this pair is DEALT at — what the card reports back with the
+  /// answer, and what narrows the trainers for a word outside the pool.
+  ///
+  /// For a pool pair it is the pair's own rung, folded the way a practice card has always folded it:
+  /// never rung 1, because practice does not deal the identity-graded direction. For a pair outside
+  /// the pool it is the fixed [LearningLadder.stepUnenrolledPractice].
+  int? get practiceCardStep => enrolled
+      ? (LearningLadder.isRecognitionStep(step) ? LearningLadder.stepRecognitionReverse : step)
+      : LearningLadder.stepUnenrolledPractice;
 }
 
 /// Where a choice card's WRONG options come from. Client port of the server's `OptionsPolicy`.
