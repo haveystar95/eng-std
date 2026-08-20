@@ -160,18 +160,29 @@ final readonly class ProcessGenerationHandler
 
         // Fire-and-forget: attach photos to the new terms + cover, off the generation thread.
         $this->attachImages->dispatch($collectionId);
-        $this->chainEnrichment($collectionId);
-        // …and give a real example to whatever the validator refused for merely repeating its term
-        // (QA-7). Same shape as the two chains above: it must not be able to slow this down or fail
-        // it, and a collection missing an example or two is still a complete collection.
-        $this->repairExamples->repairCollection($collectionId, $request->userId());
+        // Then, in this order and not the other one: give a real example to whatever the validator
+        // refused for merely repeating its term (QA-7), and only afterwards build the exercise
+        // machinery on top of the examples the learner will actually see. The станок used to run
+        // first and reach the echo terms while their example was still missing — see audit A2 and
+        // {@see DispatchesExampleRepair::repairThenEnrich}. Same shape as the image chain: it must
+        // not be able to slow this down or fail it, and a collection missing an example or two — or
+        // its distractors — is still a complete, playable collection.
+        $this->repairExamples->repairThenEnrich(
+            $collectionId,
+            $request->userId(),
+            BuildTermEnrichmentsHandler::VERSION,
+        );
     }
 
     /**
-     * Queue the enrichment станок for the finished collection — accepted variants (which offline
-     * grading needs) and distractors. Same shape as the image chain and for the same reason: it runs
-     * AFTER the generation the user is waiting on, on its own job, so it can neither slow that down
-     * nor fail it. A collection without variants is still a complete, playable collection.
+     * Queue the enrichment станок for a collection whose examples are already settled — the
+     * cache-hit path, where the terms are reused and were repaired when they were first written.
+     * A freshly generated collection goes through {@see DispatchesExampleRepair::repairThenEnrich}
+     * instead, because there the examples are not settled yet.
+     *
+     * Same shape as the image chain and for the same reason: it runs AFTER the generation the user is
+     * waiting on, on its own job, so it can neither slow that down nor fail it. A collection without
+     * variants is still a complete, playable collection.
      *
      * Whether the chain is switched on at all is the adapter's business (it reads the config) — this
      * layer only says that a finished generation is the moment to enrich.

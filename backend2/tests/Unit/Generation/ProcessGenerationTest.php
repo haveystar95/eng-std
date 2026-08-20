@@ -162,18 +162,18 @@ it('materializes a collection with deduplicated terms from a pending request', f
         ->and($request?->deliveredCount())->toBe(16)
         // Image attachment is kicked off once, for the new collection, after success.
         ->and($this->attach->dispatched)->toBe([$request->collectionId()->value])
-        // …and so is the enrichment станок, on its own job, AFTER the generation the user waited
-        // for — so it can neither slow that down nor fail it.
-        ->and($this->enrich->collections)->toBe([[
-            'collection_id' => $request->collectionId()->value,
-            'version' => BuildTermEnrichmentsHandler::VERSION,
-        ]])
-        // …and the third follow-up, same shape and same reason: give a real example to whatever the
-        // validator refused for merely repeating its term (QA-7).
+        // …and the second follow-up, same shape and same reason: give a real example to whatever the
+        // validator refused for merely repeating its term (QA-7), and only THEN build the exercise
+        // machinery on top of those examples. One call, because the order is the point — the станок
+        // used to be dispatched first and reached echo terms before their example existed (audit A2).
         ->and($this->repairExamples->collections)->toBe([[
             'collection_id' => $request->collectionId()->value,
             'owner_id' => $this->user->value,
-        ]]);
+            'generator_version' => BuildTermEnrichmentsHandler::VERSION,
+        ]])
+        // Nothing enriches a fresh collection on its own any more: that path belongs to the chain
+        // above. The direct dispatcher is only the cache-hit path's, where examples are settled.
+        ->and($this->enrich->collections)->toBe([]);
 });
 
 it('tops up a shortfall and sums tokens and cost across both model calls', function () {

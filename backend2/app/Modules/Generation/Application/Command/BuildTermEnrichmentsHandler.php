@@ -47,8 +47,13 @@ final readonly class BuildTermEnrichmentsHandler
      * skips by it (the console backfill, the post-generation chain). Bump it when the prompt or the
      * validation rules change in a way that makes a re-run worth paying for; every already-processed
      * term is then pending again at the new version.
+     *
+     * `enrich-v1` → `enrich-v2` is the bump that pays for audit A2. Under the old ordering the станок
+     * reached a repaired term before its example existed, wrote nothing, and marked it done at v1 —
+     * four terms in the store are marked done with zero distractors and no way back. They are pending
+     * again at v2, and the ordering fix means the second pass finds the example already there.
      */
-    public const VERSION = 'enrich-v1';
+    public const VERSION = 'enrich-v2';
 
     public function __construct(
         private EnrichmentTargetReader $targets,
