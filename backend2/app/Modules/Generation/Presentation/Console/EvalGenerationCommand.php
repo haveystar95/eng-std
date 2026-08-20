@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Presentation\Console;
 
-use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
 use App\Modules\Generation\Application\Dto\AssembledDraft;
 use App\Modules\Generation\Application\Dto\AttemptUsage;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
+use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Service\DraftValidator;
 use App\Modules\Generation\Application\Service\GenerationPipeline;
@@ -34,7 +34,7 @@ final class EvalGenerationCommand extends Command
     protected $signature = 'generation:eval
         {--fake : use the deterministic fake generator (no network, no spend — smoke test only)}
         {--out= : also write the full report as JSON to this path}
-        {--prompt= : prompt version to trial (e.g. v3); defaults to the production PROMPT_VERSION}
+        {--prompt= : prompt version to trial (e.g. v12); defaults to the live stack\'s core version}
         {--source=ru : source (native) language}
         {--target=en : target (learned) language}';
 
@@ -52,10 +52,12 @@ final class EvalGenerationCommand extends Command
         }
 
         // Trial a prompt version (e.g. v3) without flipping production: override the config the
-        // adapter reads to pick its prompt file, BEFORE the generator is resolved.
+        // adapter reads to pick its prompt file, BEFORE the generator is resolved. The default is
+        // whatever the LIVE stack renders — an eval whose baseline was the old stack's frozen
+        // version would compare a candidate against a prompt production no longer sends.
         $promptVersion = $this->option('prompt') !== null
             ? $this->asString($this->option('prompt'))
-            : RequestCollectionGenerationHandler::PROMPT_VERSION;
+            : app(GenerationStackConfig::class)->corePromptVersion;
         config(['services.generation.prompt_version' => $promptVersion]);
 
         /** @var CollectionGeneratorPort $generator */

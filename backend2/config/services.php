@@ -97,6 +97,24 @@ return [
     'generation' => [
         // 'openai' (default) or 'fake' (deterministic, no network — for local/dev/tests).
         'driver' => env('GENERATION_DRIVER', 'openai'),
+        // WHICH STACK production generation runs on, and the rollback switch for the cut-over:
+        //   'v1' — the frozen single-vendor generator (prompt v9, `generate_model`, OpenAI inline);
+        //   'v2' — the multi-vendor stack: prompt catalogue + shared schema + ContentModelPort.
+        // A flag rather than a deploy, because the cut-over moves the model, the prompt and the
+        // vendor path at once, and content defects surface days later. v1 is the code that has been
+        // serving production all along, and it stays callable.
+        'stack' => env('GENERATION_STACK', 'v2'),
+        // The CORE of a card — term, key, one example — under the v2 stack. Written once and read
+        // forever, so it runs on the strong model (A/B decision К2, docs/bakeoff-v11-ab.md).
+        'core_provider' => env('GENERATION_CORE_PROVIDER', 'openai'),
+        'core_model' => env('GENERATION_CORE_MODEL', 'gpt-5.4'),
+        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v11'),
+        // The MACHINERY around a finished core — accepted forms and the example's wrong versions.
+        // Mechanical work over content that already exists: the cheap model does it at 1/200th of
+        // the price of re-generating the core inside a full enrichment.
+        'mechanics_provider' => env('GENERATION_MECHANICS_PROVIDER', 'openai'),
+        'mechanics_model' => env('GENERATION_MECHANICS_MODEL', 'gpt-4o-mini'),
+        'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v12'),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
         // Chain the enrichment станок onto a finished generation (accepted variants + distractors).

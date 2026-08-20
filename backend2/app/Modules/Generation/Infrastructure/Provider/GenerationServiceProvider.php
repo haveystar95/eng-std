@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
 use App\Modules\Generation\Application\Port\PromptSource;
+use App\Modules\Generation\Application\Service\ContentContract;
 use App\Modules\Generation\Application\Service\VocabularyKeyIsomorphism;
 use App\Modules\Generation\Domain\Service\KeyIsomorphism;
 use App\Modules\Generation\Application\Port\DispatchesGeneration;
@@ -30,13 +31,16 @@ use App\Modules\Generation\Application\Port\EnrichmentJournal;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
+use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Dto\PracticeDialogConfig;
 use App\Modules\Generation\Application\Dto\RealtimeVad;
 use App\Modules\Generation\Domain\Repository\GenerationRequestRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogMessageRepository;
 use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\ObservabilityLoggedResponseReader;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
@@ -77,6 +81,7 @@ use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Vocabulary\Application\Port\DispatchesTermEnrichment;
 use Illuminate\Support\Facades\Route;
+use RuntimeException;
 use Illuminate\Support\ServiceProvider;
 
 final class GenerationServiceProvider extends ServiceProvider
@@ -151,9 +156,62 @@ final class GenerationServiceProvider extends ServiceProvider
             );
         });
 
+        // Which stack production generates on. Resolved once, from config, and injected — so the
+        // handler that records `prompt_version` and the adapter that renders the prompt cannot
+        // disagree about which version is live (they used to share a constant, which only worked
+        // while there was one stack).
+        $this->app->singleton(GenerationStackConfig::class, function (): GenerationStackConfig {
+            $stack = config('services.generation.stack') === GenerationStackConfig::LEGACY
+                ? GenerationStackConfig::LEGACY
+                : GenerationStackConfig::CONTENT_MODEL;
+
+            return new GenerationStackConfig(
+                stack: $stack,
+                // The v1 stack's prompt version is frozen with the adapter that loads it; the v2
+                // stack's is configurable, and `prompt_version` stays the eval command's override
+                // for either — that is what lets a new version be trialled without flipping prod.
+                corePromptVersion: (string) config(
+                    'services.generation.prompt_version',
+                    $stack === GenerationStackConfig::LEGACY
+                        ? RequestCollectionGenerationHandler::PROMPT_VERSION
+                        : (string) config('services.generation.core_prompt_version', 'v11'),
+                ),
+                coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider', 'openai')) ?? ProviderId::OpenAi,
+                coreModel: (string) config('services.generation.core_model', 'gpt-5.4'),
+                mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version', 'v12'),
+                mechanicsProvider: ProviderId::tryFrom((string) config('services.generation.mechanics_provider', 'openai')) ?? ProviderId::OpenAi,
+                mechanicsModel: (string) config('services.generation.mechanics_model', 'gpt-4o-mini'),
+            );
+        });
+
         $this->app->bind(CollectionGeneratorPort::class, function (): CollectionGeneratorPort {
             if (config('services.generation.driver') === 'fake') {
                 return new FakeCollectionGenerator();
+            }
+
+            $stack = $this->app->make(GenerationStackConfig::class);
+
+            if (! $stack->isLegacy()) {
+                $model = $this->app->make(ContentModelCatalog::class)
+                    ->get($stack->coreProvider, $stack->coreModel);
+
+                // No key for the configured provider is a misconfiguration, not a reason to
+                // silently generate on the old stack with a different model and a different
+                // prompt: a caller that asked for v2 and got v9 content would have no way to see
+                // it. Fall back only when the provider is genuinely unreachable — and say so.
+                if ($model === null) {
+                    throw new RuntimeException(
+                        "Generation stack v2 is configured on provider «{$stack->coreProvider->value}», "
+                        . 'which has no API key. Set the key, or roll back with GENERATION_STACK=v1.'
+                    );
+                }
+
+                return new ContentModelCollectionGenerator(
+                    model: $model,
+                    prompts: $this->app->make(PromptSource::class),
+                    contract: $this->app->make(ContentContract::class),
+                    promptVersion: $stack->corePromptVersion,
+                );
             }
 
             return new OpenAiCollectionGenerator(
@@ -163,7 +221,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 // Which prompt file to load. Defaults to the production version so the recorded
                 // prompt_version and the file used always match; the eval command overrides it via
                 // config to trial a new version (e.g. v3) without flipping production.
-                promptVersion: (string) config('services.generation.prompt_version', RequestCollectionGenerationHandler::PROMPT_VERSION),
+                promptVersion: $stack->corePromptVersion,
             );
         });
 

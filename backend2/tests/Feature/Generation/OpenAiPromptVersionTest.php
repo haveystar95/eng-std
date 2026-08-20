@@ -266,7 +266,9 @@ it('keeps the v9 rewording out of the frozen v8 prompt', function () {
     });
 });
 
-it('generates on v9 by default', function () {
+it('pins the legacy (v1) stack to v9 — the frozen adapter and its frozen file agree', function () {
+    // What production actually runs is GenerationStackConfig's business now (see
+    // GenerationStackTest); this constant is what «roll back to v1» resolves to.
     expect(RequestCollectionGenerationHandler::PROMPT_VERSION)->toBe('v9');
 });
 

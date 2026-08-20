@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Command;
 
 use App\Modules\Generation\Application\Dto\GenerationRequestOutcome;
+use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Port\GenerationQuota;
 use App\Modules\Generation\Domain\Entity\GenerationRequest;
 use App\Modules\Generation\Domain\Exception\GenerationIdConflict;
@@ -27,13 +28,17 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 final readonly class RequestCollectionGenerationHandler
 {
     /**
-     * The prompt file the model is given, and part of the prompt-cache key — so a bump here is also
-     * a deliberate cache miss: the next identical prompt is regenerated rather than served the set
-     * the previous version produced. That is the point of bumping rather than editing v5 in place.
+     * The prompt version of the LEGACY (v1) stack — frozen with the adapter that loads it.
+     *
+     * Which version production actually runs is no longer a constant: it comes from
+     * {@see GenerationStackConfig}, because there are two stacks now and the v2 one is configurable.
+     * This one stays because it is what «roll back to v1» means, and because the frozen adapter and
+     * the version it loads have to agree.
      */
     public const PROMPT_VERSION = 'v9';
 
     public function __construct(
+        private GenerationStackConfig $stack,
         private GenerationRequestRepository $requests,
         private GenerationQuota $quota,
         private PromptNormalizer $normalizer,
@@ -79,7 +84,11 @@ final readonly class RequestCollectionGenerationHandler
             targetLang: $targetLang,
             levels: $command->levels,
             size: $command->size,
-            promptVersion: self::PROMPT_VERSION,
+            // The version that will actually be rendered — it is stamped on every term this request
+            // creates AND is part of the prompt-cache key, so a stack or version change is also a
+            // deliberate cache miss: the next identical prompt is regenerated rather than served the
+            // set an older version produced.
+            promptVersion: $this->stack->corePromptVersion,
             createdAt: $now,
         );
 

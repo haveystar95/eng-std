@@ -12,6 +12,8 @@ use App\Modules\Generation\Application\Command\ProcessGeneration;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Application\Command\RequestCollectionGeneration;
 use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandler;
+use App\Modules\Generation\Application\Dto\GenerationStackConfig;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Application\Dto\GeneratedCollectionDraft;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
@@ -74,10 +76,24 @@ beforeEach(function () {
     );
 });
 
+/** The live stack, as production resolves it — the version a request records comes from here. */
+function testStack(): GenerationStackConfig
+{
+    return new GenerationStackConfig(
+        stack: GenerationStackConfig::CONTENT_MODEL,
+        corePromptVersion: 'v11',
+        coreProvider: ProviderId::OpenAi,
+        coreModel: 'gpt-5.4',
+        mechanicsPromptVersion: 'v12',
+        mechanicsProvider: ProviderId::OpenAi,
+        mechanicsModel: 'gpt-4o-mini',
+    );
+}
+
 function openGeneration(object $ctx, int $used = 0): GenerationRequestId
 {
     $handler = new RequestCollectionGenerationHandler(
-        $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
+        testStack(), $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
         new FakeUserTierReader(), new GenerationDailyLimit(), new FakeDefaultTargetLangReader(),
     );
 
