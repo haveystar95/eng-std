@@ -669,3 +669,47 @@ it('ignores a note with an empty detail', function () {
 
     expect($verdict->hasLanguageFinding())->toBeFalse();
 });
+
+/**
+ * Regression, found on the first real v12 collection: all twenty terms came back carrying an
+ * `ambiguity` finding that said the model had not restored the reference from the Russian —
+ * about a shape that produces no translations and was never asked to restore anything.
+ *
+ * Under `enrich_pack.v2` a null back-translation meant "asked, and the model returned nothing",
+ * which is a defect worth a person's time. Under the machinery shape it means "not asked". The
+ * candidate has to carry which of the two it is; a worklist that flags every term is a worklist
+ * nobody reads, and the real findings drown in it.
+ */
+it('does not flag ambiguity for a shape that was never asked for a back-translation', function () {
+    $verdict = (new EnrichmentValidator())->validate(new EnrichmentCandidate(
+        termId: '01TERM',
+        acceptedForms: ['to calm down'],
+        exampleId: '01EX',
+        exampleSentence: 'Take a few deep breaths and try to calm down.',
+        translation: 'успокоиться',
+        exampleTranslation: 'Сделай несколько глубоких вдохов и постарайся успокоиться.',
+        distractors: [],
+        variants: [],
+        backTranslation: null,
+        backTranslationAsked: false,
+    ));
+
+    expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeFalse()
+        ->and($verdict->findings)->toBe([]);
+});
+
+it('still flags a shape that WAS asked and answered with nothing', function () {
+    $verdict = (new EnrichmentValidator())->validate(new EnrichmentCandidate(
+        termId: '01TERM',
+        acceptedForms: ['to calm down'],
+        exampleId: '01EX',
+        exampleSentence: 'Take a few deep breaths and try to calm down.',
+        translation: 'успокоиться',
+        exampleTranslation: 'Сделай несколько глубоких вдохов и постарайся успокоиться.',
+        distractors: [],
+        variants: [],
+        backTranslation: null,
+    ));
+
+    expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeTrue();
+});

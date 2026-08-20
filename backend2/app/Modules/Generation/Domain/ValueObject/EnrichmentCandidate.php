@@ -22,6 +22,11 @@ final readonly class EnrichmentCandidate
      * @param  list<RawVariant>  $variants
      * @param  list<RawLanguageNote>  $languageNotes  the model's own lexis observations (see the validator)
      * @param  list<string>  $existingDistractors  sentences ALREADY stored against the pinned example
+     * @param  bool  $backTranslationAsked  whether the shape that produced this pack was asked for a
+     *         back-translation at all. It decides what a NULL one means, and the two meanings are
+     *         opposite: for a shape that had to return one, null is a defect worth a human's time;
+     *         for a shape that was never asked (the machinery shape produces no translations at all),
+     *         null is silence, and reporting silence as a finding buries the real ones.
      */
     public function __construct(
         public string $termId,
@@ -35,5 +40,6 @@ final readonly class EnrichmentCandidate
         public ?string $backTranslation,       // model's EN reconstruction from the RU prompt alone
         public array $languageNotes = [],
         public array $existingDistractors = [],
+        public bool $backTranslationAsked = true,
     ) {}
 }

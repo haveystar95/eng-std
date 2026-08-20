@@ -22,6 +22,11 @@ final readonly class EnrichmentPack
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
      * @param  list<RawLanguageNote>  $languageNotes
+     * @param  bool  $backTranslationAsked  did the prompt behind this pack ask for the QA fields at
+     *         all? A pack from a shape that produces no translations carries `null` because there was
+     *         no question, not because the model failed to answer one — and the validator judges the
+     *         two differently. Defaults to true: the shape that DOES ask is the older one, and a new
+     *         caller has to say so deliberately rather than inherit silence.
      */
     public function __construct(
         public array $distractors,
@@ -31,5 +36,6 @@ final readonly class EnrichmentPack
         public string $model,
         public ?int $tokensIn,
         public ?int $tokensOut,
+        public bool $backTranslationAsked = true,
     ) {}
 }

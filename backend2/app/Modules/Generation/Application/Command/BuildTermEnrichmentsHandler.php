@@ -147,6 +147,7 @@ final readonly class BuildTermEnrichmentsHandler
             backTranslation: $pack->backTranslation,
             languageNotes: $pack->languageNotes,
             existingDistractors: $target->existingDistractors,
+            backTranslationAsked: $pack->backTranslationAsked,
         ));
 
         ($this->import)(new ImportTermEnrichment(

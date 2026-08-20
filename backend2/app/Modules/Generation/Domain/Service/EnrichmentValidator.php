@@ -370,6 +370,15 @@ final class EnrichmentValidator
      */
     private function ambiguityFinding(EnrichmentCandidate $candidate, array $correct, array $acceptedForms): ?EnrichmentFinding
     {
+        // Never asked → nothing to conclude. The `machinery` shape produces no translations at all,
+        // so treating its (necessarily) absent back-translation as a failed one flagged EVERY term
+        // it touched: twenty findings on a twenty-term collection, all of them saying the model had
+        // not restored a reference it was never asked to restore. A worklist that flags everything
+        // is a worklist nobody reads.
+        if (! $candidate->backTranslationAsked) {
+            return null;
+        }
+
         $back = $this->nullIfBlank($candidate->backTranslation);
         if ($back === null) {
             return new EnrichmentFinding(

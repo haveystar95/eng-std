@@ -75,14 +75,15 @@ final readonly class MachineryEnrichmentPacker implements EnrichmentPackerPort
                 static fn (string $text): RawVariant => new RawVariant($text, null),
                 $item->forms,
             ),
-            // Deliberately absent — see the class docblock. The validator treats a missing
-            // back-translation as "no ambiguity evidence" and reports nothing, which is honest:
-            // this call was never asked the question.
+            // Deliberately absent — see the class docblock. `backTranslationAsked: false` is what
+            // makes that honest rather than silently defective: a null the validator reads as "the
+            // model failed to restore the reference" would flag every term this shape ever touches.
             backTranslation: null,
             languageNotes: [],
             model: $answer->model,
             tokensIn: $answer->tokensIn,
             tokensOut: $answer->tokensOut,
+            backTranslationAsked: false,
         );
     }
 
