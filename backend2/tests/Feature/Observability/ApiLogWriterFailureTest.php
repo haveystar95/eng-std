@@ -43,6 +43,16 @@ it('accepts translation_repair as an outbound purpose', function () {
     expect(ApiRequestLogModel::query()->find($id)?->purpose)->toBe('translation_repair');
 });
 
+// The same hole, one adapter later: the sandbox labels its calls `playground`, the whitelist did
+// not know the value, and so no model call made from the panel was ever logged — while the screen
+// promised the opposite.
+it('accepts playground as an outbound purpose', function () {
+    $id = app(ApiLogWriter::class)->write(logEntry('playground'));
+
+    expect($id)->not->toBeNull();
+    expect(ApiRequestLogModel::query()->find($id)?->purpose)->toBe('playground');
+});
+
 // D-1, half two: a write that still fails must not take the observed call down with it — and must
 // not disappear either. The previous version logged the message alone, which is why a whole day of
 // dropped rows read as noise.

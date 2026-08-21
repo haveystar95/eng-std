@@ -88,6 +88,11 @@ final class LogOutboundHttp
             str_contains($host, 'openai') => 'openai',
             str_contains($host, 'pexels') => 'pexels',
             str_contains($host, 'googleapis') => 'gemini',
+            // The two vendors the bake-off and the sandbox added. Missing here, their rows carried
+            // service = null and were invisible to the panel's provider filter — the same way the
+            // Pexels calls went untagged, which is what this docblock was written about.
+            str_contains($host, 'anthropic') => 'anthropic',
+            str_contains($host, 'x.ai') => 'xai',
             default => null,
         };
     }

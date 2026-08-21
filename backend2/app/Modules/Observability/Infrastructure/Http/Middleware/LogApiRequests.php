@@ -22,6 +22,28 @@ final class LogApiRequests
 {
     private const MAX_RAW = 8000;
 
+    /**
+     * Paths the log never records: the back-office itself.
+     *
+     * This log exists to show what the PRODUCT did — what the app asked for, what we asked the
+     * vendors. The panel is the instrument, not the traffic, and recording it breaks the instrument
+     * three ways at once:
+     *
+     *  - it observes itself. Opening `admin/api/logs/{id}` writes a new row whose `response_body`
+     *    IS the row just opened — so the reader sees an empty request body (a GET has none) beside
+     *    a response body containing somebody else's request body, and concludes the two are mixed
+     *    up. They are not; it is a log of looking at a log.
+     *  - it steals the columns. `model` is read as `COALESCE(response_body->>'model', …)`, so a row
+     *    that merely CONTAINS an OpenAI record inherits its model — an admin GET displayed as
+     *    `gpt-4o-mini-2024-07-18`, which is a plain lie about who called what.
+     *  - it buries the evidence. One pass over the panel writes dozens of rows, and the newest-first
+     *    list pushes the app and provider calls — the reason anyone opened this screen — off page one.
+     *
+     * Nothing auditable is lost: admin MUTATIONS record themselves in `admin_audit_log`, which is
+     * where "who changed what" belongs, and reads have no audit value at all.
+     */
+    private const IGNORED_PATHS = ['admin/api', 'admin/api/*'];
+
     public function __construct(
         private readonly ApiLogWriter $writer,
         private readonly SecretRedactor $redactor,
@@ -36,6 +58,10 @@ final class LogApiRequests
 
     public function terminate(Request $request, Response $response): void
     {
+        if ($request->is(...self::IGNORED_PATHS)) {
+            return;
+        }
+
         try {
             $started = $request->attributes->get('obs_started_at');
             $durationMs = is_float($started) ? (int) round((microtime(true) - $started) * 1000) : null;

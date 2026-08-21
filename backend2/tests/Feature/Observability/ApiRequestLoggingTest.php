@@ -33,6 +33,30 @@ it('logs an inbound API request after it completes', function () {
     expect($log->duration_ms)->not->toBeNull();
 });
 
+it('does not log the back-office reading the log', function () {
+    // The panel is the instrument, not the traffic. Reading a log used to write a row whose
+    // response body WAS the row just read — an empty request body beside a response body carrying
+    // somebody else's request body, which reads as two mixed-up fields and is not.
+    [, $adminToken] = adminActor();
+
+    test()->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson('/admin/api/logs')
+        ->assertOk();
+
+    expect(ApiRequestLogModel::query()->where('path', 'like', 'admin/api%')->count())->toBe(0);
+});
+
+it('still logs the product API while the back-office is skipped', function () {
+    [, $token] = logUser();
+    [, $adminToken] = adminActor();
+
+    $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/stats')->assertOk();
+    test()->withHeader('Authorization', "Bearer {$adminToken}")->getJson('/admin/api/logs')->assertOk();
+
+    expect(ApiRequestLogModel::query()->where('direction', 'inbound')->pluck('path')->all())
+        ->toBe(['api/v1/stats']);
+});
+
 it('redacts secrets in a logged inbound request body', function () {
     [, $token] = logUser();
 
