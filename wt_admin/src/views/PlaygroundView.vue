@@ -13,6 +13,11 @@
  *
  * Промпт живёт в localStorage браузера — перезагрузка страницы посреди эксперимента не должна
  * стоить пятнадцати минут набора.
+ *
+ * **Валидатор не требует вызова модели.** Он читает поле «Строки на проверку», а ответ модели туда
+ * лишь подставляется. Так сделано потому, что чаще всего разбирают уже случившийся прогон: JSON
+ * лежит в логах или в чате, платить за его повторную генерацию незачем. Побочно это даёт то, ради
+ * чего в песочницу и ходят, — правку одной строки и повторный прогон, без нового вызова.
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { api } from '@/api'
@@ -36,6 +41,7 @@ import StateBlock from '@/components/StateBlock.vue'
 
 const PROMPT_KEY = 'wt_admin.playground.prompt'
 const PICK_KEY = 'wt_admin.playground.pick'
+const ROWS_KEY = 'wt_admin.playground.rows'
 
 const providers = ref<PlaygroundProvider[]>([])
 const providersError = ref<string | null>(null)
@@ -46,6 +52,10 @@ const temperature = ref<string>('')
 
 const sending = ref(false)
 const result = ref<PlaygroundResult | null>(null)
+
+// What the validator reads. Declared here, next to the other persisted fields, because a model
+// answer WRITES into it — it is the one piece of state the two halves of the screen share.
+const rowsText = ref('')
 
 const current = computed(() => providers.value.find((p) => p.provider === provider.value) ?? null)
 const models = computed(() => current.value?.models ?? [])
@@ -59,6 +69,7 @@ onMounted(async () => {
   }
 
   prompt.value = localStorage.getItem(PROMPT_KEY) ?? ''
+  rowsText.value = localStorage.getItem(ROWS_KEY) ?? ''
   const saved = localStorage.getItem(PICK_KEY)?.split('|') ?? []
   // A saved pick is only honoured if it still exists AND is still usable — a key can be removed
   // between two sessions, and silently keeping a dead provider selected reads as a broken screen.
@@ -69,6 +80,7 @@ onMounted(async () => {
 })
 
 watch(prompt, (v) => localStorage.setItem(PROMPT_KEY, v))
+watch(rowsText, (v) => localStorage.setItem(ROWS_KEY, v))
 watch([provider, model], ([p, m]) => {
   if (p !== '') localStorage.setItem(PICK_KEY, `${p}|${m}`)
 })
@@ -89,6 +101,17 @@ async function send(): Promise<void> {
       prompt: prompt.value,
       temperature: t === '' ? null : Number(t),
     })
+    // The answer lands in the validator's field, and from there it is editable. Overwriting is the
+    // intent: «отправил → появилось». What was in the box was either the previous answer or a paste
+    // the person has already run, and both are recoverable — the answer above has its own «Скопировать».
+    const answer = result.value
+    if (answer.error === null && answer.parseError === null && answer.parsedJson !== null) {
+      rowsText.value = JSON.stringify(answer.parsedJson, null, 2)
+    } else if (answer.error === null && answer.rawText !== '') {
+      // Not JSON: still put it in the box rather than leaving the old rows there pretending to be
+      // this answer. The parse error below then names what is wrong, on the actual text.
+      rowsText.value = answer.rawText
+    }
   } catch (e) {
     result.value = {
       provider: provider.value,
@@ -120,7 +143,21 @@ async function copyAnswer(): Promise<void> {
 
 // ── The validation block ────────────────────────────────────────────────────────────────────────
 
-const found = computed(() => findDistractorItems(result.value?.parsedJson ?? null))
+/**
+ * Строки берутся ИЗ ПОЛЯ, а не из последнего ответа модели: валидатор работает и без вызова.
+ * Пустое поле — это не ошибка, а «ещё ничего не вставили», и говорится это отдельной фразой.
+ */
+const rowsJson = computed<{ value: unknown; error: string | null }>(() => {
+  const text = rowsText.value.trim()
+  if (text === '') return { value: null, error: null }
+  try {
+    return { value: JSON.parse(text) as unknown, error: null }
+  } catch (e) {
+    return { value: null, error: e instanceof Error ? e.message : 'не разбирается как JSON' }
+  }
+})
+
+const found = computed(() => findDistractorItems(rowsJson.value.value))
 const hint = computed(() => itemsHint(found.value))
 
 const manualMode = ref(false)
@@ -131,10 +168,13 @@ const termQuery = ref('')
 const termHits = ref<TermRow[]>([])
 const pickedTerm = ref<TermRow | null>(null)
 const searching = ref(false)
+const searched = ref(false)
+const autoPicked = ref(false)
 
 async function searchTerms(q: string): Promise<void> {
   if (q === '') {
     termHits.value = []
+    searched.value = false
     return
   }
   searching.value = true
@@ -144,8 +184,43 @@ async function searchTerms(q: string): Promise<void> {
     termHits.value = []
   } finally {
     searching.value = false
+    searched.value = true
   }
 }
+
+/**
+ * Эталон из самого JSON. Ответ станка несёт `text` термина, о котором он писал, — искать этот же
+ * термин руками означает набирать заново то, что уже вставлено, и именно на этом шаге экран
+ * упирался в «сначала выберите эталон» без единой подсказки, что делать.
+ *
+ * Подставляется ТОЛЬКО точное совпадение и только когда термин не выбран руками: угаданный «похожий»
+ * эталон дал бы вердикты про чужой пример, а песочница, соврав один раз, перестаёт быть аргументом.
+ * Если точного нет — запрос уходит в поле поиска, дальше человек выбирает сам.
+ */
+async function adoptTermFromJson(text: string): Promise<void> {
+  if (pickedTerm.value !== null) return
+  termQuery.value = text
+  await searchTerms(text)
+  const fold = (v: string): string => v.trim().toLowerCase()
+  const exact = termHits.value.filter((t) => fold(t.text) === fold(text))
+  if (exact.length === 1) {
+    pickedTerm.value = exact[0]
+    autoPicked.value = true
+    termHits.value = []
+    termQuery.value = ''
+  }
+}
+
+watch(
+  () => found.value.termText,
+  (text) => {
+    if (text !== null && !manualMode.value) void adoptTermFromJson(text)
+  },
+)
+// Сбросили эталон руками — метка «подставлен из JSON» больше не про него.
+watch(pickedTerm, (t) => {
+  if (t === null) autoPicked.value = false
+})
 
 function pickTerm(term: TermRow): void {
   pickedTerm.value = term
@@ -281,11 +356,28 @@ async function validate(): Promise<void> {
     </PaperCard>
 
     <!-- ── Валидация ───────────────────────────────────────────────────────────────────────── -->
-    <PaperCard v-if="result && !result.error" class="block">
+    <PaperCard class="block">
       <h3 class="serif">Прогнать через валидатор</h3>
       <p class="faint sub">
-        Те же проверки, что у станка, на настоящем эталоне. Ничего не сохраняется.
+        Те же проверки, что у станка, на настоящем эталоне. Ничего не сохраняется. Вызов модели не
+        нужен — вставьте JSON, который уже есть на руках.
       </p>
+
+      <label class="f">
+        <span class="section-label">Строки на проверку</span>
+        <textarea
+          v-model="rowsText"
+          class="prompt rows"
+          rows="10"
+          spellcheck="false"
+          placeholder='Ответ модели целиком или просто массив: [{"sentence": "…", "error_span": "…", "correction": "…", "error_type": "article"}]'
+        />
+      </label>
+      <p class="faint tiny">
+        Ответ модели подставляется сюда сам; поле правится руками и сохраняется в этом браузере.
+        До 50 строк за прогон.
+      </p>
+      <p v-if="rowsJson.error" class="warn">Не разбирается как JSON: {{ rowsJson.error }}</p>
 
       <div class="ref-switch">
         <label><input v-model="manualMode" type="radio" :value="false" /> Термин из базы</label>
@@ -303,11 +395,18 @@ async function validate(): Promise<void> {
             </button>
           </li>
         </ul>
+        <p v-if="searched && !searching && termHits.length === 0 && !pickedTerm" class="faint tiny">
+          По запросу ничего не нашли — проверьте написание или задайте ручной эталон.
+        </p>
         <p v-if="pickedTerm" class="picked">
           Эталон: <span class="serif">{{ pickedTerm.text }}</span>
+          <span v-if="autoPicked" class="faint tiny"> — подставлен из JSON</span>
           <button type="button" class="clear" @click="pickedTerm = null">сбросить</button>
         </p>
-        <p v-else class="faint tiny">Выберите термин — из него возьмутся закреплённый пример, формы ответа и дедуп с базой.</p>
+        <p v-else class="faint tiny">
+          Выберите термин — из него возьмутся закреплённый пример, формы ответа и дедуп с базой.
+          Если в JSON есть поле <code>text</code>, термин подставится сам.
+        </p>
       </div>
 
       <div v-else class="manual">
@@ -326,9 +425,14 @@ async function validate(): Promise<void> {
 
       <p v-if="found.items.length" class="faint tiny">
         Нашли {{ found.items.length }} строк{{ found.items.length === 1 ? 'у' : '' }} в
-        <code>{{ found.path === '' ? 'корне ответа' : found.path }}</code>.
+        <code>{{ found.path === '' ? 'корне JSON' : found.path }}</code>.
       </p>
-      <p v-else class="warn">{{ hint }}</p>
+      <p v-else-if="rowsText.trim() === ''" class="faint tiny">
+        Пока пусто — вставьте JSON выше или отправьте промпт модели.
+      </p>
+      <!-- Битый JSON уже назван своей ошибкой выше; вторая красная строка про «нет массива»
+           отправила бы искать не ту проблему. -->
+      <p v-else-if="rowsJson.error === null" class="warn">{{ hint }}</p>
 
       <div class="actions">
         <PaperButton :disabled="!canValidate" @click="validate">
@@ -445,6 +549,10 @@ async function validate(): Promise<void> {
   line-height: 1.55;
   width: 100%;
   resize: vertical;
+}
+.rows {
+  font-size: 12px;
+  max-height: 340px;
 }
 .actions {
   display: flex;

@@ -21,6 +21,15 @@ export interface ItemsFound {
   items: DistractorItem[]
   /** Where they were found, e.g. `result.distractors` — empty string for the root array. */
   path: string
+  /**
+   * The `text` of the object the rows hang off — the term the станок was answering ABOUT.
+   *
+   * A machinery answer carries it (`{items: [{text: "next to", distractors: […]}]}`), and it is the
+   * one fact that turns the reference from a search into a lookup: the JSON already says which term
+   * these sentences are broken versions of, so making a person type that name back into a search box
+   * is asking them to re-enter data they just pasted. Null when the payload is a bare array of rows.
+   */
+  termText: string | null
   /** Keys that were seen on candidate objects but are not the ones needed. */
   sawKeys: string[]
   /** The required keys that were missing from the closest candidate. */
@@ -58,18 +67,28 @@ function toItem(v: Record<string, unknown>): DistractorItem {
  * deeper one. Returns an empty `items` with a diagnosis when there is none.
  */
 export function findDistractorItems(root: unknown): ItemsFound {
-  const queue: { value: unknown; path: string; depth: number }[] = [{ value: root, path: '', depth: 0 }]
+  // `parent` is carried so a match can report the term it hangs off — see ItemsFound.termText.
+  const queue: { value: unknown; path: string; depth: number; parent: Record<string, unknown> | null }[] = [
+    { value: root, path: '', depth: 0, parent: null },
+  ]
   let bestSaw: string[] = []
   let bestMissing: string[] = REQUIRED.slice()
 
   while (queue.length > 0) {
-    const { value, path, depth } = queue.shift()!
+    const { value, path, depth, parent } = queue.shift()!
 
     if (Array.isArray(value)) {
       const objects = value.filter(isRecord)
       if (objects.length > 0) {
         if (objects.every(isItem)) {
-          return { items: objects.map(toItem), path, sawKeys: [], missing: [] }
+          const text = parent === null ? null : parent.text
+          return {
+            items: objects.map(toItem),
+            path,
+            termText: typeof text === 'string' && text.trim() !== '' ? text.trim() : null,
+            sawKeys: [],
+            missing: [],
+          }
         }
         // Not a match — but remember what it DID have, so the hint can name the rename.
         const saw = Object.keys(objects[0])
@@ -85,15 +104,20 @@ export function findDistractorItems(root: unknown): ItemsFound {
 
     if (isRecord(value)) {
       for (const [key, child] of Object.entries(value)) {
-        queue.push({ value: child, path: path === '' ? key : `${path}.${key}`, depth: depth + 1 })
+        queue.push({
+          value: child,
+          path: path === '' ? key : `${path}.${key}`,
+          depth: depth + 1,
+          parent: value,
+        })
       }
     } else if (Array.isArray(value)) {
       // Arrays of arrays are rare but free to walk.
-      value.forEach((child, i) => queue.push({ value: child, path: `${path}[${i}]`, depth: depth + 1 }))
+      value.forEach((child, i) => queue.push({ value: child, path: `${path}[${i}]`, depth: depth + 1, parent }))
     }
   }
 
-  return { items: [], path: '', sawKeys: bestSaw, missing: bestMissing }
+  return { items: [], path: '', termText: null, sawKeys: bestSaw, missing: bestMissing }
 }
 
 /** One sentence for the screen: what to fix so the Validate button lights up. */

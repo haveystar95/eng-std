@@ -3,6 +3,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { flushPromises, mount } from '@vue/test-utils'
 import PlaygroundView from '@/views/PlaygroundView.vue'
 import { findDistractorItems, itemsHint } from '@/utils/distractorItems'
+import { camelizeKeys } from '@/api/mapping'
 
 function makeRouter() {
   return createRouter({
@@ -50,6 +51,13 @@ describe('findDistractorItems', () => {
     expect(found.items).toHaveLength(1)
   })
 
+  it('reports the term the rows hang off, and null when there is none', () => {
+    expect(findDistractorItems({ items: [{ text: 'next to', distractors: [row] }] }).termText).toBe('next to')
+    expect(findDistractorItems({ text: 'next to', distractors: [row] }).termText).toBe('next to')
+    expect(findDistractorItems([row]).termText).toBeNull()
+    expect(findDistractorItems({ items: [{ text: '  ', distractors: [row] }] }).termText).toBeNull()
+  })
+
   it('keeps error_type when present and leaves it out when not', () => {
     expect(findDistractorItems([row]).items[0].error_type).toBe('article')
     expect(findDistractorItems([{ sentence: 'a', error_span: 'b', correction: 'c' }]).items[0].error_type).toBeUndefined()
@@ -66,6 +74,44 @@ describe('findDistractorItems', () => {
   it('reports plainly when there is no array of objects at all', () => {
     const found = findDistractorItems({ text: 'no json here' })
     expect(itemsHint(found)).toContain('нет массива объектов')
+  })
+
+  // The seam, on a real answer: the BE envelope is snake_case and gets camelized, the model's own
+  // payload under `parsed_json` must NOT. It did once — every row came back as `errorSpan` and the
+  // screen told the operator «Не хватает: error_span» about an answer that was letter-perfect.
+  it('survives the API camelization boundary intact', () => {
+    const envelope = camelizeKeys<{ parsedJson: unknown; latencyMs: number }>({
+      latency_ms: 2516,
+      parsed_json: {
+        items: [
+          {
+            text: 'next to',
+            forms: [],
+            distractors: [
+              {
+                sentence: 'The post office is next the museum.',
+                error_type: 'preposition',
+                error_span: 'next the',
+                correction: 'next to the',
+              },
+              {
+                sentence: 'The post office is near to the museum.',
+                error_type: 'false_friend',
+                error_span: 'near to',
+                correction: 'next to',
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    expect(envelope.latencyMs).toBe(2516)
+    const found = findDistractorItems(envelope.parsedJson)
+    expect(found.path).toBe('items[0].distractors')
+    expect(found.items).toHaveLength(2)
+    expect(found.items[0].error_span).toBe('next the')
+    expect(found.items[1].error_type).toBe('false_friend')
   })
 })
 
@@ -164,5 +210,113 @@ describe('PlaygroundView', () => {
   it('explains what is missing when the answer has no usable rows', async () => {
     const found = findDistractorItems({ items: [{ sentence: 'a' }] })
     expect(itemsHint(found)).toContain('Не хватает')
+  })
+
+  // ── Валидатор без вызова модели ────────────────────────────────────────────────────────────────
+
+  const PASTED = JSON.stringify({
+    items: [
+      {
+        text: 'next to',
+        distractors: [
+          {
+            sentence: 'The post office is next the museum.',
+            error_type: 'preposition',
+            error_span: 'next the',
+            correction: 'next to the',
+          },
+        ],
+      },
+    ],
+  })
+
+  it('offers the validator before any model call', async () => {
+    const { w } = await mountView()
+
+    expect(w.text()).toContain('Прогнать через валидатор')
+    expect(w.text()).toContain('Пока пусто')
+    expect((button(w, 'Валидировать').element as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('validates pasted JSON with no request to the model', async () => {
+    const { w } = await mountView()
+
+    await w.find('textarea.rows').setValue(PASTED)
+    expect(w.text()).toContain('Нашли 1 строку')
+
+    await w.findAll('input[type="radio"]')[1].setValue()
+    await flushPromises()
+    const inputs = w.findAll('.manual input[type="text"]')
+    await inputs[0].setValue('next to')
+    await inputs[1].setValue('The post office is next to the museum.')
+
+    await button(w, 'Валидировать').trigger('click')
+    await flushPromises()
+
+    expect(w.text()).toContain('Выжило')
+    // Никакого «Ответа» на экране нет — модель не вызывали.
+    expect(w.text()).not.toContain('задержка')
+  })
+
+  // Термин, который есть в демо-базе моков.
+  function pastedFor(term: string): string {
+    return JSON.stringify({
+      items: [
+        {
+          text: term,
+          distractors: [
+            { sentence: 'a wrong one', error_type: 'article', error_span: 'wrong', correction: 'right' },
+          ],
+        },
+      ],
+    })
+  }
+
+  it('adopts the reference from the JSON, so no search is needed', async () => {
+    const { w } = await mountView()
+
+    await w.find('textarea.rows').setValue(pastedFor('overdraft'))
+    await flushPromises()
+
+    expect(w.text()).toContain('Эталон:')
+    expect(w.text()).toContain('overdraft')
+    expect(w.text()).toContain('подставлен из JSON')
+    // И этого достаточно: кнопка живая, поиском никто не пользовался.
+    expect((button(w, 'Валидировать').element as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('does not guess a reference when the term is not in the base', async () => {
+    const { w } = await mountView()
+
+    await w.find('textarea.rows').setValue(pastedFor('несуществующий термин'))
+    await flushPromises()
+
+    expect(w.text()).not.toContain('подставлен из JSON')
+    expect(w.text()).toContain('ничего не нашли')
+    expect((button(w, 'Валидировать').element as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('names the JSON error instead of «нет массива объектов»', async () => {
+    const { w } = await mountView()
+    await w.find('textarea.rows').setValue('{ битый')
+
+    expect(w.text()).toContain('Не разбирается как JSON')
+    expect(w.text()).not.toContain('нет массива объектов')
+  })
+
+  it('drops a model answer into the field, where it stays editable', async () => {
+    const { w } = await mountView()
+    await w.find('textarea').setValue('верни json')
+    await button(w, 'Отправить').trigger('click')
+    await flushPromises()
+
+    const box = w.find('textarea.rows').element as HTMLTextAreaElement
+    expect(box.value).toContain('error_span')
+    expect(w.text()).toContain('Нашли 3 строк')
+    expect(localStorage.getItem('wt_admin.playground.rows')).toContain('error_span')
+
+    // Правка руками — и валидатор считает уже её, без нового вызова.
+    await w.find('textarea.rows').setValue(PASTED)
+    expect(w.text()).toContain('Нашли 1 строку')
   })
 })
