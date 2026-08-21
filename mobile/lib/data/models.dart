@@ -172,6 +172,18 @@ enum ExerciseMode {
   dictation('dictation'),
   pickCorrect('pick_correct'),
 
+  /// DESCRIPTION → WORD: the card shows what a word MEANS, in the language being learned, and asks
+  /// which of four words it is describing.
+  ///
+  /// The one card in the app that never shows the learner's own language: the prompt is the
+  /// description, the options are words, and the whole question is answered inside English. That is
+  /// also the only way to separate two words the learner has collapsed onto one Russian gloss.
+  ///
+  /// Tapped, so it grades like an ordinary multiple_choice — by TEXT against the term's own forms,
+  /// not by option id: its correct option is the WORD, so nothing here needs identity grading (that
+  /// exists for the rung-1 card, whose correct option is a translation).
+  descriptionMatch('description_match'),
+
   /// SPEAKING RECALL: the card is read, the answer is SAID OUT LOUD, and the device recognises the
   /// speech on-device (nothing is uploaded but the recognised text).
   ///

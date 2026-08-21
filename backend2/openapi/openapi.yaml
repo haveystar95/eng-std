@@ -1011,7 +1011,7 @@ paths:
                     properties:
                       id: { type: string, minLength: 26, maxLength: 26 }
                       term_id: { type: string, minLength: 26, maxLength: 26 }
-                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking] }
+                      exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, description_match] }
                       response: { type: string, description: The user's raw answer text }
                       answered_at:
                         type: string
@@ -1337,7 +1337,7 @@ paths:
                               The trainers this user has switched on, IN ROTATION ORDER (their own
                               override, or the product default). The client mirrors this into its
                               offline practice builder, so a toggle takes effect on the next sync.
-                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, intro] }
+                            items: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, description_match, intro] }
                           mode_admission:
                             type: array
                             description: >
@@ -1425,6 +1425,15 @@ paths:
                                 translation: { type: string, nullable: true }
                                 example: { type: string, nullable: true }
                                 example_translation: { type: string, nullable: true }
+                                description:
+                                  type: string
+                                  nullable: true
+                                  description: >
+                                    What the word MEANS, in the language BEING LEARNED — the whole question of a
+                                    `description_match` card. It rides the mirror rather than only the card because
+                                    the device builds its own practice sessions offline. Null on content written
+                                    before descriptions existed (the store catalogue), which is not being backfilled;
+                                    the trainer refuses such a term by content, like every other trainer.
                                 image_url: { type: string, nullable: true, description: 'Pexels photo; null = none, show a placeholder' }
                                 image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
                                 image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
@@ -1838,7 +1847,7 @@ components:
       type: object
       properties:
         term_id: { type: string }
-        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, intro] }
+        exercise_mode: { type: string, enum: [multiple_choice, word_bank, typing, listening, cloze, scramble, dictation, pick_correct, speaking, description_match, intro] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb], nullable: true }
         prompt: { type: string, nullable: true, description: "The cue, in the user's language — the term's translation, or for `scramble` the example sentence's translation. NULL for `dictation`: the task is the audio, and a written cue would turn it into a translation exercise. On ladder rung 1 the direction is REVERSED: the prompt is the TERM and the options are translations" }
         answer: { type: string, description: "What a correct answer must match. The target-language term, except for: the sentence modes (`scramble`, `dictation`), where this is the example sentence itself; and ladder rung 1, where the card is graded by identity and this is the card's own TERM ID. The client must not display it before the answer is committed. On `intro` it is the term, and it is never compared against anything" }

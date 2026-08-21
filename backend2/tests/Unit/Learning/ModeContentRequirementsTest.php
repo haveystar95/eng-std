@@ -82,10 +82,17 @@ it('agrees with the playability gate on every mode, for every term shape', funct
         $verdict = $assessment->for($mode);
 
         if (ModeContentRequirements::isPoolDependent($mode)) {
-            // A pool-dependent mode must never be hiding a content gap behind that status: the gate
-            // has to consider it buildable, or `pool_dependent` would be a way of not answering.
-            expect($playable->supports($mode))->toBeTrue("{$mode->value} is pool-dependent but gated out by content")
-                ->and($verdict->status)->toBe(ContentStatus::PoolDependent);
+            // `pool_dependent` must never be a way of NOT answering a content question — but which
+            // question it is dodging changed when description_match arrived. While multiple_choice
+            // was the only pool-dependent mode, «has no content gap» and «is pool-dependent» were
+            // the same statement, because that mode fits every term. description_match is
+            // pool-dependent (its options are other pool words) AND genuinely refusable by the term
+            // (no description, no question), so the rule is now the conditional one: content is
+            // asked FIRST, and `pool_dependent` is only reported once the term has passed it.
+            expect($verdict->status)->toBe(
+                $playable->supports($mode) ? ContentStatus::PoolDependent : ContentStatus::Blocked,
+                "{$mode->value}: pool-dependence must not hide a content refusal",
+            );
 
             continue;
         }
@@ -111,6 +118,25 @@ it('carries a machine reason exactly when the card cannot be built, and a human 
         }
     }
 })->with('content fixtures');
+
+it('blocks description_match without a description and defers to the pool with one', function () {
+    $without = contentRequirements()->assess('account', 'I opened a bank account.', 'Я открыл счёт.', ['a bank']);
+    $with = contentRequirements()->assess(
+        'account', 'I opened a bank account.', 'Я открыл счёт.', ['a bank'],
+        description: 'A place in a bank where your money is kept, with your name on it.',
+    );
+
+    $blocked = $without->for(ExerciseMode::DescriptionMatch);
+    expect($blocked->status)->toBe(ContentStatus::Blocked)
+        ->and($blocked->gap)->toBe(ContentGap::NoDescription);
+
+    // With one, the term has done its part and the rest is a fact about the session.
+    expect($with->for(ExerciseMode::DescriptionMatch)->status)->toBe(ContentStatus::PoolDependent);
+
+    // …and nothing else moved: multiple_choice fits every term, so it stays pool-dependent in both.
+    expect($without->for(ExerciseMode::MultipleChoice)->status)->toBe(ContentStatus::PoolDependent)
+        ->and($with->for(ExerciseMode::MultipleChoice)->status)->toBe(ContentStatus::PoolDependent);
+});
 
 it('covers every exercise mode this build knows, with no gaps', function () {
     $assessment = contentRequirements()->assess('account', 'I opened a bank account.', 'Я открыл счёт.', ['a bank']);

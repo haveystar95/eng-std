@@ -17,7 +17,9 @@ it('lists the global matrix, one row per mode, all tagged as the global source',
         ->assertOk()
         ->json('rows'))->keyBy('mode');
 
-    expect($rows)->toHaveCount(10)
+    // Count derived from the enum, not retyped: every new trainer gets a row in every scope, and a
+    // literal here means each one of them lands as a red test that says nothing useful.
+    expect($rows)->toHaveCount(count(\App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases()))
         ->and($rows['typing']['source'])->toBe('global')
         ->and($rows['typing']['min_acquisition'])->toBe('graduated')
         ->and($rows['typing']['min_successful_reviews'])->toBe(4)

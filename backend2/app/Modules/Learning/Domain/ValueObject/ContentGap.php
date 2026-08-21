@@ -39,6 +39,14 @@ enum ContentGap: string
     /** pick_correct: fewer span-distinct distractors than the card's floor. THE станок's job. */
     case TooFewDistractors = 'too_few_distractors';
 
+    /**
+     * description_match: the term has no description in the language being learned, and the
+     * description IS the card's question. Cured by the станок / a search lookup, never by content
+     * the term already has — which is why the showcase, written before descriptions existed, is
+     * blocked on this and is deliberately not being backfilled.
+     */
+    case NoDescription = 'no_description';
+
     /** Not a gap in the term: the wrong options come from other words in the pool. */
     case OptionsFromPool = 'options_from_pool';
 }

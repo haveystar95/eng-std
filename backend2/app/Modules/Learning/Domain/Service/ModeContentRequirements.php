@@ -55,18 +55,20 @@ final readonly class ModeContentRequirements
      * @param  string|null  $example             the PINNED example sentence, if the term has one
      * @param  string|null  $exampleTranslation  that sentence in the learner's language
      * @param  list<string> $distractorSpans     `error_span` of every distractor on the pinned example
+     * @param  string|null  $description         what the word MEANS, in the language being learned
      */
     public function assess(
         string $answer,
         ?string $example,
         ?string $exampleTranslation,
         array $distractorSpans = [],
+        ?string $description = null,
     ): ContentAssessment {
         $hasExample = $example !== null && $example !== '';
         // Distractors hang off the pinned example; with no example there is nothing they could hang
         // off, so they cannot stock the term on their own. Same rule as the assessor's.
         $indexes = $hasExample ? $this->spans->usableIndexes($distractorSpans) : [];
-        $playable = $this->playability->assess($answer, $example, $exampleTranslation, count($indexes));
+        $playable = $this->playability->assess($answer, $example, $exampleTranslation, count($indexes), $description);
 
         $modes = [];
         foreach (ExerciseMode::cases() as $mode) {
@@ -86,7 +88,13 @@ final readonly class ModeContentRequirements
         return match ($mode) {
             // Its options ARE other words: the session's neighbours at rungs 1–2, the distractor
             // reader's pool at rung 3 and above.
-            ExerciseMode::MultipleChoice => true,
+            //
+            // `description_match` is pool-dependent for the same reason and NOT for the same
+            // question: its four options are other pool words, so whether the card assembles is a
+            // fact about the session. Its own CONTENT question — «does this term have a
+            // description» — is answered separately and first (see verdict()), because unlike
+            // multiple_choice this mode genuinely can be blocked by the term.
+            ExerciseMode::MultipleChoice, ExerciseMode::DescriptionMatch => true,
             // pick_correct also shows wrong options, but they are this term's OWN distractors —
             // written by the станок against this term's own example. That is a content question.
             ExerciseMode::PickCorrect,
@@ -101,8 +109,25 @@ final readonly class ModeContentRequirements
         };
     }
 
+    /**
+     * CONTENT FIRST, then the pool — and the order is what `description_match` changed.
+     *
+     * It used to be the other way round, which was correct while `multiple_choice` was the only
+     * pool-dependent mode: that one fits every term, so «content» had no answer worth giving and
+     * «depends on the pool» was the whole truth. `description_match` is pool-dependent AND can be
+     * refused outright by the term (no description, no question), so a screen that reported it as
+     * merely pool-dependent would tell the owner to look at their session when the cure is the
+     * станок. Asking `supports()` first costs multiple_choice nothing — it always passes — and
+     * gives the new mode the honest answer.
+     */
     private function verdict(ExerciseMode $mode, TermPlayability $playable, bool $hasExample): ModeContentVerdict
     {
+        if (! $playable->supports($mode)) {
+            $gap = $this->gapFor($mode, $playable, $hasExample);
+
+            return new ModeContentVerdict($mode, ContentStatus::Blocked, $gap, $this->gapReason($gap, $playable));
+        }
+
         if (self::isPoolDependent($mode)) {
             return new ModeContentVerdict(
                 $mode,
@@ -112,13 +137,7 @@ final readonly class ModeContentRequirements
             );
         }
 
-        if ($playable->supports($mode)) {
-            return new ModeContentVerdict($mode, ContentStatus::Ok, null, $this->okReason($mode, $playable));
-        }
-
-        $gap = $this->gapFor($mode, $playable, $hasExample);
-
-        return new ModeContentVerdict($mode, ContentStatus::Blocked, $gap, $this->gapReason($gap, $playable));
+        return new ModeContentVerdict($mode, ContentStatus::Ok, null, $this->okReason($mode, $playable));
     }
 
     /**
@@ -151,6 +170,8 @@ final readonly class ModeContentRequirements
                 ! $playable->hasExampleTranslation => ContentGap::NoExampleTranslation,
                 default => ContentGap::TooFewDistractors,
             },
+            // The one gate with nothing to fall back on: the description is the card's question.
+            ExerciseMode::DescriptionMatch => ContentGap::NoDescription,
             // These four fit EVERY term — they ask for the term itself, or (intro) for nothing at
             // all — so `supports()` never refuses them and this arm is unreachable. A throw rather
             // than a placeholder: a gap invented for a mode that has none would be printed on a
@@ -175,6 +196,7 @@ final readonly class ModeContentRequirements
             ContentGap::ExampleTooLong => "в примере {$playable->exampleTokenCount} слов — длиннее потолка этого тренажёра.",
             ContentGap::TooFewDistractors => "годных дистракторов {$playable->distractorCount}, а карточке нужно минимум "
                 . TermPlayability::MIN_PICK_CORRECT_DISTRACTORS . ' (эталон + 2 неверных предложения).',
+            ContentGap::NoDescription => 'у термина нет описания на изучаемом языке, а описание — это и есть вопрос карточки; показать нечего.',
             ContentGap::OptionsFromPool => 'варианты берутся из других слов пула, а не из контента термина.',
         };
     }
@@ -193,6 +215,9 @@ final readonly class ModeContentRequirements
             ExerciseMode::Dictation => "пример на {$playable->exampleTokenCount} слов — есть что диктовать.",
             ExerciseMode::PickCorrect => "годных дистракторов {$playable->distractorCount} — хватает на эталон + 2 неверных.",
             ExerciseMode::MultipleChoice => 'подходит любому термину, но опции берутся из пула.',
+            // Unreachable: a supported pool-dependent mode is reported as pool-dependent, not ok.
+            // Stated anyway so adding a mode cannot skip the question.
+            ExerciseMode::DescriptionMatch => 'описание есть, но опции берутся из пула.',
         };
     }
 }

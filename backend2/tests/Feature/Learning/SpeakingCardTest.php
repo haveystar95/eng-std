@@ -86,11 +86,19 @@ it('ships switched off, with a row on the assembly rung', function () {
         ->and($row->min_successful_reviews)->toBeNull();
 });
 
-it('sits at the END of the rotation, so switching it on renumbers nothing', function () {
+it('sits AFTER every trainer that shipped before it, so switching it on renumbers nothing', function () {
     $rows = DB::table('learning_mode_settings')->whereNull('user_id')->orderBy('position')->pluck('mode')->all();
+    $at = array_search('speaking', $rows, true);
 
-    expect($rows)->not->toBeEmpty()
-        ->and(end($rows))->toBe('speaking');
+    // Not «last», which is what this asserted while speaking WAS the newest trainer. Every trainer
+    // added since goes on the end too — that is the rule — so «last» would make each new one break
+    // this test and tempt someone into walking speaking back up the list, renumbering the rotation
+    // of every word already partway through it. What the rule actually promises is the statement
+    // below: nothing that existed before speaking sits after it.
+    expect($rows)->not->toBeEmpty()->and($at)->not->toBeFalse();
+    foreach (['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'intro'] as $older) {
+        expect(array_search($older, $rows, true))->toBeLessThan($at, "{$older} shipped before speaking and must not sit after it");
+    }
 });
 
 it('reaches the device through /sync as a matrix row, still switched off', function () {

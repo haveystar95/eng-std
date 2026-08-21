@@ -17,7 +17,7 @@ it('lists every mode this build can deal, plus the current default', function ()
         ->assertOk()
         // `available` comes from the enum, so a newly built mode shows up in the panel the moment
         // it exists — switched off, per the release rule.
-        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'speaking', 'intro'])
+        ->assertJsonPath('available', ['multiple_choice', 'word_bank', 'typing', 'listening', 'cloze', 'scramble', 'dictation', 'pick_correct', 'description_match', 'speaking', 'intro'])
         ->assertJsonPath('global', config('learning.enabled_modes'))
         ->assertJsonPath('inherits', true);
 

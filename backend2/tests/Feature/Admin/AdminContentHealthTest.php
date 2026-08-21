@@ -198,7 +198,9 @@ it('simulates every trainer against one term’s own content', function () {
         ->json();
 
     $byMode = collect($body['simulation'])->keyBy('mode');
-    expect($byMode)->toHaveCount(10)
+    // Derived from the enum: the simulator must answer for EVERY trainer this build knows, which
+    // is the actual claim — a hard-coded count only ever restates the enum's length a version late.
+    expect($byMode)->toHaveCount(count(\App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases()))
         // The four that ask for the term itself (or for nothing) fit every term.
         ->and($byMode['typing']['status'])->toBe('ok')
         ->and($byMode['listening']['status'])->toBe('ok')

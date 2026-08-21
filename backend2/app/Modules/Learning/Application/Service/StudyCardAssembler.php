@@ -107,6 +107,7 @@ final readonly class StudyCardAssembler
             $content->example,
             $content->exampleTranslation,
             count($usableDistractors),
+            $content->description,
         );
         // Toggles are per-user data, so "nothing fits this term" is now reachable by configuration.
         // The selector still returns a playable card; this is what stops that being silent.
@@ -203,6 +204,33 @@ final readonly class StudyCardAssembler
                 ],
                 $wrong,
             );
+        } elseif ($mode === ExerciseMode::DescriptionMatch) {
+            // The description IS the question, so the prompt is not the translation — this is the
+            // one card in the app that never shows the learner's own language at all.
+            //
+            // The answer stays the TERM's own text and is graded as text, exactly like an ordinary
+            // multiple_choice: the options here are WORDS, not translations, so there is nothing
+            // that would need identity grading and nothing that would put a translation into an
+            // answer key. (The rung-1 recognition card needs identity grading precisely because its
+            // correct option IS a translation; that reason does not apply here.) Keeping it on the
+            // text path is also what lets `acceptedVariants` mean something and keeps the device's
+            // instant check from being stricter than the server's.
+            $prompt = $content->description;
+            if ($prompt === null || trim($prompt) === '') {
+                // Unreachable while the playability gate holds — it is the only thing that admits
+                // this mode. Refused rather than dealt promptless: a card with no question would
+                // write an answer nobody was asked for.
+                $this->fallbacks->tooFewOptions($user, $view->termId, $mode->value, 0);
+
+                return null;
+            }
+            // Other POOL words, through the same reader multiple_choice uses — which already
+            // excludes candidates whose translations overlap the target's. That exclusion matters
+            // more here than there: a description separates two words a single Russian gloss has
+            // collapsed, and offering both of them would put two correct answers on the card.
+            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, self::OPTION_COUNT - 1);
+            /** @var list<string> $options */
+            $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::Speaking) {
             // Two forms, one mode, chosen by the rung the card is dealt at — the same shape as the
             // recognition card's two directions ({@see ExerciseMode::gradesAgainstExample}).
@@ -331,6 +359,7 @@ final readonly class StudyCardAssembler
             $content->example,
             $content->exampleTranslation,
             count($this->spanDistinct($content->exampleDistractors)),
+            $content->description,
         );
         // A `known` pair is OUTSIDE the ladder, not at the bottom of it — its verification is decided
         // elsewhere — so it reads as the top rung rather than as rung 0. Same rule, same words, as

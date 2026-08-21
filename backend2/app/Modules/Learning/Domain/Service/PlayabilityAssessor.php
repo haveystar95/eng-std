@@ -25,12 +25,14 @@ final readonly class PlayabilityAssessor
      * @param  string|null  $example             the term's pinned example sentence, if it has one
      * @param  string|null  $exampleTranslation  that sentence in the user's language
      * @param  int          $distractorCount     validated wrong versions of that sentence
+     * @param  string|null  $description         what the word MEANS, in the language being learned
      */
     public function assess(
         string $answer,
         ?string $example,
         ?string $exampleTranslation = null,
         int $distractorCount = 0,
+        ?string $description = null,
     ): TermPlayability {
         $hasExample = $example !== null && $example !== '';
 
@@ -46,6 +48,9 @@ final readonly class PlayabilityAssessor
             // Distractors belong to the PINNED example; with no example there is nothing they could
             // hang off, so they cannot make the term playable on their own.
             distractorCount: $hasExample ? $distractorCount : 0,
+            // Unlike the distractors, this hangs off nothing: a description is about the WORD, so a
+            // term with no example still has one and description_match still plays.
+            hasDescription: $description !== null && trim($description) !== '',
         );
     }
 }

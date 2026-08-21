@@ -24,6 +24,29 @@ enum ExerciseMode: string
     case PickCorrect = 'pick_correct';
 
     /**
+     * DESCRIPTION → WORD: the card shows what a word MEANS, in the language being learned, and asks
+     * which of four words it is describing.
+     *
+     * The one recognition card in the app whose prompt is neither the term nor its translation, and
+     * that is the whole point of it. Every other trainer asks the learner to cross the bridge
+     * between two languages; this one asks a question entirely inside English and answers it in
+     * English — which is what "knowing a word" eventually has to mean, and what a translation pair
+     * can never test. It is also the only card that can distinguish two words the learner has
+     * collapsed onto one Russian gloss, because the description separates them and the gloss does
+     * not.
+     *
+     * What it needs is the one piece of content nothing else in this app uses: a DESCRIPTION
+     * ({@see \App\Modules\Learning\Domain\ValueObject\ContentGap::NoDescription}). A term without
+     * one is refused rather than degraded — there is nothing to degrade to, since the prompt IS the
+     * description.
+     *
+     * Its options are OTHER WORDS from the learner's own pool, so like `multiple_choice` it is
+     * pool-dependent and its ceiling is `good`: a one-in-four tap is the weakest evidence the app
+     * collects, and sending it to a month-long interval is a word quietly forgotten.
+     */
+    case DescriptionMatch = 'description_match';
+
+    /**
      * SPEAKING RECALL: the learner reads the card and SAYS the answer out loud; the device
      * recognises the speech on-device and uploads the recognised text as the answer.
      *
@@ -88,7 +111,12 @@ enum ExerciseMode: string
             // recogniser's as much as the learner's: the tap, the utterance and the recogniser's
             // own settling time all land in the same latency. Capping is the conservative
             // direction — the rule forbids being more generous than the evidence, never less.
-            self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble, self::PickCorrect, self::Speaking => Grade::Good,
+            //
+            // `description_match` is a four-way tap like multiple_choice, and caps for exactly the
+            // same reason: the learner recognised a word among four, which is not evidence that
+            // they could produce it.
+            self::MultipleChoice, self::WordBank, self::Cloze, self::Scramble, self::PickCorrect,
+            self::Speaking, self::DescriptionMatch => Grade::Good,
         };
     }
 
@@ -127,7 +155,10 @@ enum ExerciseMode: string
             // term's forms would fail every correct pick.
             self::Scramble, self::Dictation, self::PickCorrect => true,
             self::Speaking => $ladderStep !== null && $ladderStep >= LearningLadder::STEP_DICTATION,
-            self::MultipleChoice, self::WordBank, self::Typing, self::Listening, self::Cloze => false,
+            // The description IS the question, and the answer is the TERM — the example is not on
+            // this card at all.
+            self::MultipleChoice, self::WordBank, self::Typing, self::Listening, self::Cloze,
+            self::DescriptionMatch => false,
         };
     }
 
@@ -159,7 +190,10 @@ enum ExerciseMode: string
             // that would mark «bare» correct for «bear». What gets forgiven on this trainer is the
             // CHANNEL, and that is forgiven on the device, by retrying and then skipping without
             // uploading anything. See the case docblock: the leniency is inverted, not removed.
-            self::MultipleChoice, self::WordBank, self::Scramble, self::PickCorrect, self::Speaking => false,
+            self::MultipleChoice, self::WordBank, self::Scramble, self::PickCorrect, self::Speaking,
+            // Tapped, so there is no typing to forgive — and the four options are whole different
+            // words, never one character apart.
+            self::DescriptionMatch => false,
             self::Intro => throw new \LogicException('intro accepts no answer, so there is no typo to forgive.'),
         };
     }

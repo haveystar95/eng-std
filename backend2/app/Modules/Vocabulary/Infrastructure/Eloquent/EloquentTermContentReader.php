@@ -48,6 +48,14 @@ final class EloquentTermContentReader implements TermContentReader
             $variants[(string) $row->term_id][] = (string) $row->text;
         }
 
+        // The description is written in the language BEING LEARNED — it is the question of the
+        // description_match card, not a gloss for the learner's own language, so it is picked by
+        // the TERM's language and not by `$lang`.
+        $descriptions = [];
+        foreach (DB::table('term_descriptions')->whereIn('term_id', $ids)->get(['term_id', 'lang', 'text']) as $row) {
+            $descriptions[(string) $row->term_id][(string) $row->lang] = (string) $row->text;
+        }
+
         // Distractors hang off the PINNED example's id, so only that example's rows are shipped.
         $exampleIds = [];
         foreach ($examples as $termId => $row) {
@@ -80,6 +88,7 @@ final class EloquentTermContentReader implements TermContentReader
                 translation: $translations[$id]['text'] ?? null,
                 example: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
                 exampleTranslation: $example !== null && $example->sentence_translation !== null ? (string) $example->sentence_translation : null,
+                description: $descriptions[$id][(string) $term->lang] ?? null,
                 imageUrl: $term->image_url !== null ? (string) $term->image_url : null,
                 imageAuthor: $term->image_author !== null ? (string) $term->image_author : null,
                 imageAuthorUrl: $term->image_author_url !== null ? (string) $term->image_author_url : null,

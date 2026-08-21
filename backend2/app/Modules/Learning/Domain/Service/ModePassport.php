@@ -45,7 +45,13 @@ final class ModePassport
             ExerciseMode::Typing,
             ExerciseMode::Listening,
             ExerciseMode::Dictation,
-            ExerciseMode::Speaking => Acquisition::Graduated,
+            ExerciseMode::Speaking,
+            // `description_match` is recognition, like multiple_choice — but its question is a
+            // SENTENCE in the language being learned, about a word met minutes ago. Reading it is
+            // itself the exercise, and a pair that has not yet been through the recognition rungs
+            // is being asked to parse an unknown definition to find an unknown word. Graduated,
+            // beside the other trainers that assume the pair is stable.
+            ExerciseMode::DescriptionMatch => Acquisition::Graduated,
         };
     }
 
@@ -76,6 +82,7 @@ final class ModePassport
             ExerciseMode::WordBank,
             ExerciseMode::Cloze,
             ExerciseMode::Scramble,
+            ExerciseMode::DescriptionMatch => 'description_match спрашивает определением на изучаемом языке — до выпуска это чтение незнакомого текста ради незнакомого слова.',
             ExerciseMode::PickCorrect,
             ExerciseMode::Typing,
             ExerciseMode::Listening,

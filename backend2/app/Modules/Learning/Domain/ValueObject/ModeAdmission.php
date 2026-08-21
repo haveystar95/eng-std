@@ -152,6 +152,13 @@ final readonly class ModeAdmission
             // which is why there is ONE row here and not two. A row per form would put the same
             // trainer in the registry twice and give the owner two toggles for one thing to switch on.
             ExerciseMode::Speaking->value => new ModeRule(Acquisition::Graduated),
+            // `description_match` opens on graduation too — its passport floor, beside the other
+            // trainers that assume a stable pair. `standard` options and not `distant`: `distant`
+            // exists for the recognition rungs, where a near-miss at a first meeting is a spelling
+            // test; this card's options come from the distractor reader, which already refuses a
+            // candidate whose translations overlap the target's — the failure that actually matters
+            // when the prompt is a description rather than a gloss.
+            ExerciseMode::DescriptionMatch->value => new ModeRule(Acquisition::Graduated),
         ]);
     }
 }

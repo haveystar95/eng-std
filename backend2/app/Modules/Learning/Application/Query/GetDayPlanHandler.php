@@ -90,7 +90,12 @@ final readonly class GetDayPlanHandler
             $answer = $termContent->text;
             // Same derivation as the live session (StudyCardAssembler) — a plan that disagrees with
             // the session it simulates is worse than no plan, so both go through the one assessor.
-            $playable = $this->playability->assess($answer, $termContent->example);
+            // NOTE: this call still omits `exampleTranslation` and the distractor count, so the plan
+            // over-reports scramble/pick_correct — a pre-existing gap in the "same derivation"
+            // promise above, left alone here rather than fixed in passing. The description IS passed,
+            // because without it the simulator would report description_match for every term and be
+            // wrong about the one trainer this change adds.
+            $playable = $this->playability->assess($answer, $termContent->example, description: $termContent->description);
 
             $progress = TermProgress::reconstitute(
                 $query->userId, $view->termId, $view->state, TermProgress::DEFAULT_EASE,

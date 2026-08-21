@@ -154,6 +154,10 @@ final class SyncController
             'translation' => $c?->translation,
             'example' => $c?->example,
             'example_translation' => $c?->exampleTranslation,
+            // What the word MEANS, in the language being learned. It rides the mirror rather than
+            // only the card because the device builds its own PRACTICE sessions offline, and a
+            // description_match card it cannot build is a trainer that silently never appears.
+            'description' => $c?->description,
             'image_url' => $c?->imageUrl,
             'image_author' => $c?->imageAuthor,
             'image_author_url' => $c?->imageAuthorUrl,

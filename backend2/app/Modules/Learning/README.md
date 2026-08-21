@@ -75,6 +75,38 @@ The admission matrix is **data**, in `learning_mode_settings` beside the on/off 
 same global-plus-per-user-override mechanism — one row per `(scope, mode)`, carrying
 `min_acquisition`, `min_learning_step`, `min_reps` and `options_policy`.
 
+## The 11th trainer: `description_match`
+
+Read what a word MEANS, in the language being learned, and pick the word from four. The one card in
+the app that shows no Russian at all — its prompt is neither the term nor its translation, so it
+asks a question no translation pair can ask, and it is the only card that separates two words the
+learner has collapsed onto one gloss.
+
+Where it sits, and why each of these is what it is:
+
+- **Content**: it needs a DESCRIPTION (`term_descriptions`, in the term's own language). This is the
+  one gate with nothing to degrade to — the description *is* the question — so a term without one is
+  refused (`ContentGap::NoDescription`), never dealt a lesser card. The store catalogue has no
+  descriptions and is deliberately not being backfilled.
+- **Pool**: its options are other pool words, through the same `DistractorReader` an ordinary
+  `multiple_choice` uses. That reader already refuses a candidate whose translations overlap the
+  target's, which matters more here than anywhere else: offering two words that share one Russian
+  gloss would put two right answers under a description that separates them.
+- **Grading**: as TEXT, against the term's own forms — like an ordinary `multiple_choice` and *not*
+  like the rung-1 card. Identity grading exists because that card's correct option is a
+  TRANSLATION; here the option is the WORD, so the text path is both available and correct, and it
+  is what keeps `accepted_variants` meaningful and the device's check no stricter than the server's.
+- **Ceiling** `good`, `forgivesTypos` false: a four-way tap is the weakest evidence the app collects.
+- **Passport** `graduated`: its question is a sentence to READ about a word met minutes ago.
+
+`ModeContentRequirements` now asks CONTENT FIRST and pool-dependence second. That order was
+invisible while `multiple_choice` was the only pool-dependent mode (it fits every term); this mode
+is pool-dependent *and* refusable by the term, and reporting it as merely pool-dependent would send
+the owner to look at their session when the cure is the станок.
+
+Born switched OFF in every scope, like every trainer since `dictation` — код в main ≠ режим у
+пользователей.
+
 ## Scheduling
 
 `Scheduler` is a domain port; `Sm2Scheduler` is the pure SM-2 implementation (day-based

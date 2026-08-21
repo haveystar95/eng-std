@@ -122,6 +122,10 @@ final class ExerciseSelector
                 // On the END, like every rung added since: switching speaking on must not renumber
                 // the rotation for words already partway through it.
                 ExerciseMode::Speaking,
+                // Same rule, one trainer later. `description_match` is recognition and therefore
+                // cheap evidence, so it sits at the far end of the review rotation rather than
+                // competing with typing for a word already producing.
+                ExerciseMode::DescriptionMatch,
             ];
             $offset = $progress->reps();
         } else {
@@ -131,7 +135,10 @@ final class ExerciseSelector
             // `speaking` joins the learning rung too — saying a word you have just graduated on is
             // the same act the typed trainers ask for, only out loud, and unlike dictation it does
             // not need the pair to have been through the scheduler several times first.
-            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::PickCorrect, ExerciseMode::Speaking];
+            // `description_match` joins the learning rung too, and last: like pick_correct it is
+            // recognition, which a freshly graduated pair can do — but its question is a sentence
+            // to READ, so it comes after the trainers that ask for the word itself.
+            $ladder = [$base, ExerciseMode::Listening, ExerciseMode::Cloze, ExerciseMode::Scramble, ExerciseMode::PickCorrect, ExerciseMode::Speaking, ExerciseMode::DescriptionMatch];
             $offset = max(0, $progress->reps() - 1);
         }
 

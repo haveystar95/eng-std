@@ -64,6 +64,9 @@ final readonly class TermPlayability
      *                                       it would deal the same tiles word_bank already deals
      * @param  int   $distractorCount        validated wrong versions of the pinned example that the
      *                                       enrichment станок wrote — pick_correct's options
+     * @param  bool  $hasDescription         the term has a description in the language being learned
+     *                                       — the PROMPT of the description_match card, so without
+     *                                       one there is no card rather than a lesser one
      */
     public function __construct(
         public int $answerWordCount,
@@ -72,6 +75,7 @@ final readonly class TermPlayability
         public bool $hasExampleTranslation = false,
         public bool $exampleIsAnswer = false,
         public int $distractorCount = 0,
+        public bool $hasDescription = false,
     ) {}
 
     /** Can this term be drilled in this mode at all? The ONE place applicability is decided. */
@@ -97,6 +101,11 @@ final readonly class TermPlayability
             ExerciseMode::PickCorrect => ! $this->exampleIsAnswer
                 && $this->hasExampleTranslation
                 && $this->distractorCount >= self::MIN_PICK_CORRECT_DISTRACTORS,
+            // The description IS the prompt, so this is the one gate with nothing to fall back on:
+            // a card with no question is not a lesser card, it is not a card. Note this says
+            // nothing about the OPTIONS — those are other pool words, which is a fact about the
+            // session, not about this term (see ModeContentRequirements::isPoolDependent).
+            ExerciseMode::DescriptionMatch => $this->hasDescription,
             // multiple_choice / typing / listening fit any term — they ask for the term itself.
             // `intro` asks for nothing at all, so there is no content it could lack: a term with no
             // example and no transcription still has a text and a translation to be shown.

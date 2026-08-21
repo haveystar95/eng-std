@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Presentation\Http\Request;
 
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class SubmitReviewsRequest extends FormRequest
 {
@@ -22,7 +24,15 @@ final class SubmitReviewsRequest extends FormRequest
             'reviews' => ['sometimes', 'array', 'max:200'],
             'reviews.*.id' => ['required', 'string', 'size:26'],       // client-generated ULID
             'reviews.*.term_id' => ['required', 'string', 'size:26'],
-            'reviews.*.exercise_mode' => ['required', 'string', 'in:multiple_choice,word_bank,typing,listening,cloze,scramble,dictation,pick_correct,speaking'],
+            // Derived from the enum, not retyped. This list was a hand-written string until
+            // `description_match` arrived and failed validation on a card the server itself had
+            // dealt — the same drift the openapi enum and the Dart enum have each had once. Only
+            // GRADED modes: an `intro` produces no answer and rides the `exposures` list instead,
+            // which is what the filter (rather than a shorter literal) says out loud.
+            'reviews.*.exercise_mode' => ['required', 'string', Rule::in(array_map(
+                static fn (ExerciseMode $mode): string => $mode->value,
+                array_filter(ExerciseMode::cases(), static fn (ExerciseMode $mode): bool => $mode->isGraded()),
+            ))],
             // Raw answer; the server grades it. NULLABLE: a «не помню» / blank answer legitimately
             // has no text and the client may send null — the controller coalesces it to '' (an empty
             // answer grades as a miss). Rejecting null 422'd and silently lost the review (F21).
