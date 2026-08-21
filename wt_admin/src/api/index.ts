@@ -32,6 +32,11 @@ import type {
   ModeSettingsRowInput,
   Paginated,
   PageQuery,
+  PlaygroundGenerateInput,
+  PlaygroundProvider,
+  PlaygroundResult,
+  PlaygroundValidateInput,
+  PlaygroundValidation,
   RequestLog,
   RequestLogDetail,
   Review,
@@ -179,6 +184,26 @@ export const api = {
     useMocks ? mock.getCollectionContentHealth(id) : httpGet(`/content-health/collections/${id}`),
   getTermContentPassport: (id: string): Promise<TermContentPassport> =>
     useMocks ? mock.getTermContentPassport(id) : httpGet(`/content-health/terms/${id}`),
+
+  // ── Playground («Песочница») ──
+  // Writes nothing on the server: `generate` calls a vendor and returns the text, `validate` runs
+  // the REAL enrichment validator in memory. There is deliberately no endpoint that saves either.
+  getPlaygroundProviders: async (): Promise<PlaygroundProvider[]> =>
+    useMocks
+      ? mock.getPlaygroundProviders()
+      : (await httpGet<{ data: PlaygroundProvider[] }>('/playground/providers')).data,
+  playgroundGenerate: (input: PlaygroundGenerateInput): Promise<PlaygroundResult> =>
+    useMocks ? mock.playgroundGenerate(input) : httpPost('/playground/generate', input),
+  // NOT snakeized: `items` carries the wire keys already (sentence/error_span/correction), and the
+  // generic mapper would rewrite the values' keys along with the envelope's.
+  playgroundValidate: (input: PlaygroundValidateInput): Promise<PlaygroundValidation> =>
+    useMocks
+      ? mock.playgroundValidate(input)
+      : httpPost('/playground/validate', {
+          items: input.items,
+          term_id: input.termId ?? null,
+          manual: input.manual,
+        }),
 
   // ── Logs ──
   listLogs: (q: LogsQuery = {}): Promise<Paginated<RequestLog>> =>

@@ -769,3 +769,100 @@ export interface TermContentPassport {
   minDistractors: number
   costPerTermUsd: number
 }
+
+// ── Playground («Песочница») ──
+/**
+ * A sandbox provider. `available: false` is a normal state with a named cause — the picker greys the
+ * option and repeats `reason`, which names the env var that would fix it.
+ */
+export interface PlaygroundProvider {
+  provider: string
+  label: string
+  /** A closed list: for OpenAI, exactly the models this project already runs. */
+  models: string[]
+  available: boolean
+  reason: string
+}
+
+/**
+ * `error` and `parseError` are different failures and must not be merged: `error` means the vendor
+ * never answered (key, credits, timeout, refusal) and there is nothing to read; `parseError` means
+ * it answered fine and simply not in JSON, which is an ordinary result in a prompt sandbox.
+ */
+export interface PlaygroundResult {
+  provider: string
+  model: string
+  rawText: string
+  parsedJson: unknown
+  parseError: string | null
+  usage: {
+    tokensIn: number | null
+    tokensOut: number | null
+    /** Priced by the backend's one pricing table; null = unpriced model, never free. */
+    costUsd: string | null
+  }
+  latencyMs: number
+  error: string | null
+}
+
+/** Which check of the real validator decided a row. `duplicate_*` are the dry run's refinements. */
+export type ValidationGate =
+  | 'kept'
+  | 'no_example'
+  | 'empty_sentence'
+  | 'duplicate'
+  | 'duplicate_stored'
+  | 'duplicate_suppressed'
+  | 'duplicate_in_batch'
+  | 'equals_accepted_answer'
+  | 'variant_conflict'
+  | 'unknown_error_type'
+  | 'span_not_found'
+  | 'span_inside_accepted_form'
+  | 'empty_correction'
+  | 'correction_carries_sentence_end'
+  | 'equals_example'
+  | 'no_op_correction'
+  | 'repair_does_not_match_example'
+  | 'cap_reached'
+
+export interface PlaygroundValidationRow {
+  index: number
+  sentence: string
+  errorSpan: string
+  correction: string
+  errorType: string
+  verdict: 'KEEP' | 'REJECT'
+  gate: ValidationGate
+  /** Already in Russian — the backend states the rule in words so the panel cannot re-phrase it. */
+  reason: string
+  errorTypeDefaulted: boolean
+}
+
+export interface PlaygroundValidation {
+  items: PlaygroundValidationRow[]
+  kept: number
+  total: number
+  source: 'term' | 'manual'
+  termId: string | null
+  termText: string
+  exampleSentence: string | null
+  existingCount: number
+  suppressedCount: number
+  matchedTermId: string | null
+  /** Always false — the sandbox writes nothing, ever. */
+  persisted: boolean
+}
+
+export interface PlaygroundGenerateInput {
+  provider: string
+  model: string
+  prompt: string
+  temperature?: number | null
+}
+
+export interface PlaygroundValidateInput {
+  items: { sentence: string; error_span: string; correction: string; error_type?: string }[]
+  termId?: string | null
+  manual?: { term_text: string; example_text: string }
+}

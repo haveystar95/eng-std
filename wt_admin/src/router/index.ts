@@ -77,6 +77,10 @@ export const router = createRouter({
           name: 'mode-settings',
           component: () => import('@/views/ModeSettingsMatrixView.vue'),
         },
+        // «Песочница»: промпт → модель → настоящий валидатор. Ничего не пишет в базу, поэтому у
+        // экрана нет ни состояния в URL, ни истории — эксперимент живёт в текущей вкладке.
+        { path: 'playground', name: 'playground', component: () => import('@/views/PlaygroundView.vue') },
+
         { path: 'generations', name: 'generations', component: () => import('@/views/GenerationsView.vue') },
         { path: 'logs', name: 'logs', component: () => import('@/views/LogsView.vue') },
       ],

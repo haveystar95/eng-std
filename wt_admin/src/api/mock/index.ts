@@ -30,6 +30,11 @@ import type {
   ModeSettingsRowInput,
   PageQuery,
   Paginated,
+  PlaygroundGenerateInput,
+  PlaygroundProvider,
+  PlaygroundResult,
+  PlaygroundValidateInput,
+  PlaygroundValidation,
   RequestLog,
   RequestLogDetail,
   Review,
@@ -46,6 +51,7 @@ import type {
   UserRow,
 } from '../types'
 import { mockCollectionContentHealth, mockContentHealthSummary, mockTermContentPassport } from './contentHealth'
+import { mockPlaygroundGenerate, mockPlaygroundProviders, mockPlaygroundValidate } from './playground'
 import {
   MOCK_NOW,
   collectionRows,
@@ -451,6 +457,19 @@ export const mock = {
   async getTerm(id: string): Promise<TermDetail> {
     const t = termDetails.find((x) => x.id === id)
     return t ?? notFound('Термин')
+  },
+
+  // ── Playground («Песочница») ──
+  async getPlaygroundProviders(): Promise<PlaygroundProvider[]> {
+    return mockPlaygroundProviders()
+  },
+
+  async playgroundGenerate(input: PlaygroundGenerateInput): Promise<PlaygroundResult> {
+    return mockPlaygroundGenerate(input.provider, input.model)
+  },
+
+  async playgroundValidate(input: PlaygroundValidateInput): Promise<PlaygroundValidation> {
+    return mockPlaygroundValidate(input)
   },
 
   // ── Content health («Здоровье контента») ──

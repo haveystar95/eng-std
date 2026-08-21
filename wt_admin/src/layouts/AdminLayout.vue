@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { Activity, LayoutDashboard, Users, Library, Type, Sparkles,
-  SlidersHorizontal, Table2, ScrollText, LogOut, HeartPulse } from 'lucide-vue-next'
+  SlidersHorizontal, Table2, ScrollText, LogOut, HeartPulse, FlaskConical } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { useMocks } from '@/api'
 import CommandPalette from '@/components/CommandPalette.vue'
@@ -20,6 +20,7 @@ const nav = [
   { to: { name: 'content' }, label: 'Контент', icon: HeartPulse, section: '/content' },
   { to: { name: 'exercise-modes' }, label: 'Тренажёры', icon: SlidersHorizontal, section: '/exercise-modes' },
   { to: { name: 'mode-settings' }, label: 'Матрица режимов', icon: Table2, section: '/mode-settings' },
+  { to: { name: 'playground' }, label: 'Песочница', icon: FlaskConical, section: '/playground' },
   { to: { name: 'generations' }, label: 'Генерации', icon: Sparkles, section: '/generations' },
   { to: { name: 'logs' }, label: 'Логи', icon: ScrollText, section: '/logs' },
 ]
