@@ -88,6 +88,25 @@ return [
         'generate_model' => env('GEMINI_GENERATE_MODEL', 'gemini-3.7-flash'),
     ],
 
+    'deepl' => [
+        // Machine translation for the search field's instant hint — and for NOTHING else. It never
+        // writes card content: a term's translation, its example and its description are written by
+        // the lookup model against a prompt that knows about CEFR level, register and isomorphism,
+        // none of which a general-purpose translator knows.
+        //
+        // Absent by default. No key = the feature reports itself disabled and search carries on
+        // exactly as before; it is a garnish, not a dependency.
+        'api_key' => env('DEEPL_API_KEY'),
+        // The FREE plan's host. A key ending in `:fx` is a free key and belongs here; a paid key
+        // uses api.deepl.com and this has to move with it.
+        'base_url' => env('DEEPL_BASE_URL', 'https://api-free.deepl.com/v2'),
+        // Characters per month the plan allows. The app stops at 95% of this — see
+        // TranslationMonthlyBudget for why it does not run the meter to zero.
+        'monthly_characters' => (int) env('DEEPL_MONTHLY_CHARACTERS', 500000),
+        // 'deepl' (default) or 'fake' — the deterministic translator for tests and offline dev.
+        'driver' => env('TRANSLATION_DRIVER', 'deepl'),
+    ],
+
     'pexels' => [
         // Stock-image search for AI-generated collections (A3). Key from the Pexels dashboard.
         'key' => env('PEXELS_API_KEY'),

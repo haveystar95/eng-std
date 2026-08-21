@@ -19,6 +19,11 @@ Route::middleware(['throttle:60,1', 'auth:sanctum'])->group(function (): void {
     // POSTs stay on the group's 60/min — they write, and one of them spends money.
     Route::get('/search', [SearchController::class, 'index'])->withoutMiddleware('throttle:60,1')
         ->middleware('throttle:240,1');
+    // The instant hint. Like `GET /search` it rides a debounce, so it gets the same looser throttle
+    // rather than the group's 60/min — and unlike the lookup below, most of its answers cost
+    // nothing at all (the catalogue and the cache are checked before the vendor).
+    Route::get('/search/instant', [SearchController::class, 'instant'])
+        ->withoutMiddleware('throttle:60,1')->middleware('throttle:120,1');
     Route::post('/search/lookup', [SearchController::class, 'lookup']);
     Route::post('/search/add', [SearchController::class, 'add']);
 

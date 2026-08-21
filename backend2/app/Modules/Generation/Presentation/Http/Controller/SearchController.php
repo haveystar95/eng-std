@@ -10,6 +10,8 @@ use App\Modules\Generation\Application\Command\LookupWord;
 use App\Modules\Generation\Application\Command\LookupWordHandler;
 use App\Modules\Generation\Application\Dto\CachedLookup;
 use App\Modules\Generation\Application\Dto\SearchHitView;
+use App\Modules\Generation\Application\Query\InstantTranslate;
+use App\Modules\Generation\Application\Query\InstantTranslateHandler;
 use App\Modules\Generation\Application\Query\SearchTerms;
 use App\Modules\Generation\Application\Query\SearchTermsHandler;
 use App\Modules\Generation\Presentation\Http\Request\AddSearchResultRequest;
@@ -39,6 +41,7 @@ final class SearchController
         private readonly SearchTermsHandler $search,
         private readonly LookupWordHandler $lookup,
         private readonly AddSearchResultHandler $add,
+        private readonly InstantTranslateHandler $instant,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -53,6 +56,32 @@ final class SearchController
             ));
 
         return response()->json(['data' => array_map($this->hit(...), $results)]);
+    }
+
+    /**
+     * The grey line under the field: one word, one translation, as fast as it can be had.
+     *
+     * ALWAYS 200, and always the same shape. This is a hint on a debounced field — there is no
+     * failure here worth interrupting somebody who is typing, so «no key», «no budget», «no answer»
+     * and «dead vendor» are all just a null translation. The client renders a line when there is one
+     * and nothing when there is not; it has no error path at all.
+     */
+    public function instant(Request $request): JsonResponse
+    {
+        $hint = ($this->instant)(new InstantTranslate(
+            actorId: $this->actorId($request),
+            query: trim($request->string('q')->toString()),
+        ));
+
+        return response()->json(['data' => [
+            'query' => $hint->query,
+            'translation' => $hint->translation,
+            // Internal: which rung answered. The client does not show it — where a translation came
+            // from is this app's business, not the learner's — but the ledger and the tests need it.
+            'source' => $hint->source,
+            'feature_disabled' => $hint->featureDisabled,
+            'limit_reached' => $hint->limitReached,
+        ]]);
     }
 
     public function lookup(LookupWordRequest $request): JsonResponse

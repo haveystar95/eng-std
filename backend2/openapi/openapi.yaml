@@ -473,6 +473,52 @@ paths:
                     items: { $ref: '#/components/schemas/SearchHit' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /search/instant:
+    get:
+      tags: [Search]
+      summary: The grey hint line — one word, one translation, as fast as it can be had
+      description: >
+        A first, cheap guess at what a word means, shown while the learner is still typing. It does
+        NOT replace `POST /search/lookup`: that one writes the card (translation, description,
+        example, level, image query) with a model that knows the content rules; this one is a
+        garnish and never becomes card content.
+
+        THREE RUNGS, each reached only because the one above had nothing: (1) our own catalogue —
+        free, and the exact string the card will show if the word is saved; (2) the shared cache —
+        bought once by whoever typed the word first, free for everybody after; (3) the vendor. On a
+        debounced field the same few hundred words are typed over and over, so rungs 1–2 answer
+        almost everything.
+
+        ALWAYS 200, always the same shape. There is no failure here worth interrupting somebody who
+        is typing: no key (`feature_disabled`), no budget (`limit_reached`), a dead or slow vendor,
+        or simply no answer all come back as a null `translation`. The client renders a line when
+        there is one and nothing when there is not — it has no error path at all.
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: A hint, or an honest nothing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      query: { type: string, description: the normalized query the answer is about }
+                      translation: { type: string, nullable: true }
+                      source:
+                        type: string
+                        nullable: true
+                        enum: [vocabulary, cache, deepl]
+                        description: >
+                          Which rung answered. INTERNAL — the client does not show it; where a
+                          translation came from is the app's business, not the learner's.
+                      feature_disabled: { type: boolean, description: no translation provider is configured }
+                      limit_reached: { type: boolean, description: the month's character budget is spent }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /search/lookup:
     post:
       tags: [Search]

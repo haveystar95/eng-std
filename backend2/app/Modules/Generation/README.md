@@ -37,9 +37,36 @@ The economics, stated once:
 - **`DescriptionSelfReference`** is the rule the `description_match` trainer depends on: a
   description containing its own headword answers the card before it is asked.
 
+### The instant hint (`GET /search/instant`)
+
+A machine translation shown under the search field while the learner is still typing — a garnish on
+top of the lookup, never a replacement for it. Three rungs, each reached only because the one above
+had nothing: **our own catalogue** (free, and the exact string the word's card will show), **the
+shared cache** (`instant_translations`, bought once for everybody), **the vendor** (DeepL, behind
+`TranslationProvider`). On a debounced field the same few hundred words are typed over and over, so
+the first two rungs answer nearly everything and the free plan stretches far past the request count.
+
+Things worth not re-deciding:
+
+- **It never writes card content.** A term's translation, example and description are written by the
+  lookup model against a prompt that knows about CEFR level, register and isomorphism. A
+  general-purpose translator knows none of that, and letting it near the catalogue would fill it
+  with plausible rows nobody reviewed.
+- **A 2-second timeout and no retry.** The hint's value is landing while the learner still looks at
+  the field; a second attempt could only arrive later than the first. Slow is treated as absent.
+- **Nothing throws.** No key → `feature_disabled`; no budget → `limit_reached`; dead vendor → an
+  empty line. Search and the lookup are untouched by all three.
+- **The budget stops at 95%,** not 100% (`TranslationMonthlyBudget`): the last calls of the month
+  should fail as a decision we made, not as a vendor 456 in the middle of somebody's search. The
+  month's spend is a `SUM(characters)` over cache rows, so it cannot drift from what was bought.
+- **A cached word is served even past the budget** — it costs nothing, and withholding it would
+  enforce a limit on money nobody is spending.
+
 `search_lookup` is on the Observability purpose whitelist — added in the SAME change as the adapter,
 because the two migrations before it (`translation_repair`, `playground`) are the same hole found
-after a month of untracked spend.
+after a month of untracked spend. `instant_translation` is there for the same reason and one better:
+those calls cost no dollars at all, so the request log is the ONLY place the app's approach to its
+character ceiling is visible.
 
 ## Pipeline
 

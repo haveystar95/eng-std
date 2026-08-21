@@ -25,7 +25,14 @@ use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
+use App\Modules\Generation\Application\Port\InstantTranslationCache;
 use App\Modules\Generation\Application\Port\SearchLookupCache;
+use App\Modules\Generation\Application\Port\TranslationProvider;
+use App\Modules\Generation\Domain\Service\TranslationMonthlyBudget;
+use App\Modules\Generation\Infrastructure\Adapter\DeepLTranslator;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
+use App\Modules\Generation\Infrastructure\Adapter\UnavailableTranslator;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentInstantTranslationCache;
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
@@ -182,6 +189,32 @@ final class GenerationServiceProvider extends ServiceProvider
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );
         });
+
+        // ---- instant translation (the search field's grey line) ------------------------------
+        $this->app->bind(InstantTranslationCache::class, EloquentInstantTranslationCache::class);
+
+        $this->app->bind(TranslationProvider::class, function (): TranslationProvider {
+            if (config('services.deepl.driver') === 'fake') {
+                return new FakeTranslator();
+            }
+
+            $key = (string) config('services.deepl.api_key', '');
+            // A NULL OBJECT and not a null binding: «no key» is a state the endpoint reports, and
+            // a deployment without one must behave, not break. See UnavailableTranslator.
+            if (trim($key) === '') {
+                return new UnavailableTranslator();
+            }
+
+            return new DeepLTranslator(
+                context: $this->app->make(OutboundCallContext::class),
+                apiKey: $key,
+                baseUrl: (string) config('services.deepl.base_url', 'https://api-free.deepl.com/v2'),
+            );
+        });
+
+        $this->app->bind(TranslationMonthlyBudget::class, fn (): TranslationMonthlyBudget => new TranslationMonthlyBudget(
+            (int) config('services.deepl.monthly_characters', TranslationMonthlyBudget::FREE_PLAN_CHARACTERS),
+        ));
 
         // ---- word search -------------------------------------------------------------------
         $this->app->bind(SearchLookupCache::class, EloquentSearchLookupCache::class);

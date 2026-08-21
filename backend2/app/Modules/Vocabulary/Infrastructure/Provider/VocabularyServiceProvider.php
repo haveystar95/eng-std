@@ -51,8 +51,10 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditRead
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
 use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
+use App\Modules\Vocabulary\Application\Query\ExactTermTranslationReader;
 use App\Modules\Vocabulary\Application\Query\TermSearchReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermDescriptionWriter;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentExactTermTranslationReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermSearchReader;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -69,6 +71,8 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermChangeReader::class, EloquentTermChangeReader::class);
         // Search: the free half — exact and prefix matches over terms we already have.
         $this->app->bind(TermSearchReader::class, EloquentTermSearchReader::class);
+        // «Do we already know this exact word» — the free first rung of the instant hint.
+        $this->app->bind(ExactTermTranslationReader::class, EloquentExactTermTranslationReader::class);
         // A term's description («what this word means», in the language being learned).
         $this->app->bind(TermDescriptionWriter::class, EloquentTermDescriptionWriter::class);
         // The language audit: every learner-language string a user can actually reach.
