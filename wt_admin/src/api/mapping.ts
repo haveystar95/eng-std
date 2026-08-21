@@ -10,15 +10,29 @@ function toSnake(key: string): string {
   return key.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase())
 }
 
+// Contract fields whose VALUE is FOREIGN JSON — a model's own answer, a logged HTTP body or
+// header set. The key itself is part of the contract and is camelized like any other; what is
+// inside it is not ours to rename.
+//
+// This used to be a shrug ("JSON blobs are converted too — acceptable, the only such field is log
+// bodies and it is not in the contract"), and it was wrong twice over. The log viewer exists to
+// show what we actually sent and received, and it was showing `errorSpan` where the wire carried
+// `error_span`. Worse, the playground: `parsed_json` is the model's answer, the screen prints it as
+// proof, and the sandbox re-parses it looking for the three fields a distractor IS. Renaming the
+// keys on the way in made a correct answer look malformed («Не хватает: error_span») and would have
+// sent someone rewriting a prompt the model had already obeyed.
+//
+// Matched on the WIRE key, before conversion.
+const OPAQUE_VALUES = new Set(['parsed_json', 'request_body', 'response_body', 'request_headers'])
+
 // Deep-convert every object key snake_case → camelCase. Arrays and primitives pass
-// through; JSON blobs that happen to be nested objects are converted too (acceptable
-// for this admin console — the only such field, log bodies, is not in the contract).
+// through; the values under OPAQUE_VALUES pass through verbatim.
 export function camelizeKeys<T = unknown>(input: unknown): T {
   if (Array.isArray(input)) return input.map((v) => camelizeKeys(v)) as unknown as T
   if (input && typeof input === 'object') {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
-      out[toCamel(k)] = camelizeKeys(v)
+      out[toCamel(k)] = OPAQUE_VALUES.has(k) ? v : camelizeKeys(v)
     }
     return out as T
   }

@@ -15,6 +15,33 @@ describe('camelizeKeys', () => {
     const out = camelizeKeys<{ items: { itemId: string }[] }>({ items: [{ item_id: 'a' }, { item_id: 'b' }] })
     expect(out.items.map((i) => i.itemId)).toEqual(['a', 'b'])
   })
+  // A model's answer is not our contract: the playground prints it as proof and re-parses it
+  // looking for `error_span`, so renaming the keys inside makes a correct answer look malformed.
+  it('leaves foreign JSON under parsed_json untouched', () => {
+    const out = camelizeKeys<{ parsedJson: { items: { distractors: Record<string, string>[] }[] } }>({
+      parsed_json: {
+        items: [{ text: 'next to', distractors: [{ sentence: 'x', error_span: 'next the', error_type: 'preposition' }] }],
+      },
+    })
+    const row = out.parsedJson.items[0].distractors[0]
+    expect(Object.keys(row)).toEqual(['sentence', 'error_span', 'error_type'])
+  })
+  // Same rule for the log viewer: it exists to show what was actually sent and received.
+  it('leaves logged request/response bodies and headers untouched', () => {
+    const out = camelizeKeys<{
+      requestBody: Record<string, unknown>
+      responseBody: Record<string, unknown>
+      requestHeaders: Record<string, unknown>
+    }>({
+      request_body: { max_tokens: 256, response_format: { json_schema: { name: 'cards' } } },
+      response_body: { finish_reason: 'stop' },
+      request_headers: { content_type: 'application/json' },
+    })
+    expect(Object.keys(out.requestBody)).toEqual(['max_tokens', 'response_format'])
+    expect(Object.keys(out.requestBody.response_format as object)).toEqual(['json_schema'])
+    expect(Object.keys(out.responseBody)).toEqual(['finish_reason'])
+    expect(Object.keys(out.requestHeaders)).toEqual(['content_type'])
+  })
 })
 
 describe('snakeizeParams', () => {
