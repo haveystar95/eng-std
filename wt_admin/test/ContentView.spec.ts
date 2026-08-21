@@ -39,7 +39,7 @@ describe('ContentView — сводка', () => {
 
     expect(w.text()).toContain('Здоровье контента')
     expect(w.text()).toContain('Терминов всего')
-    expect(w.text()).toContain('Требуют станка')
+    expect(w.text()).toContain('Без запаса')
     expect(w.text()).toContain(String(summary.scopes.all.terms))
     // The three slices are shown AND explained as non-additive — the sentence is the point.
     expect(w.text()).toContain('Не разбиение и не складывается')
@@ -51,7 +51,7 @@ describe('ContentView — сводка', () => {
     const needy = summary.collections.filter((c) => c.needsEnrichment > 0)
 
     if (needy.length > 0) {
-      expect(w.text()).toContain(`${needy[0].needsEnrichment} терминов требуют станка`)
+      expect(w.text()).toContain(`${needy[0].needsEnrichment} терминов без запаса`)
     }
   })
 
@@ -59,7 +59,7 @@ describe('ContentView — сводка', () => {
     const { w, router } = await mountAt('')
     const id = await someCollectionId()
 
-    const row = w.findAll('tbody tr').find((r) => r.text().includes('терминов требуют станка') || r.html().includes(id))
+    const row = w.findAll('tbody tr').find((r) => r.text().includes('терминов без запаса') || r.html().includes(id))
     await row!.trigger('click')
     await flushPromises()
 

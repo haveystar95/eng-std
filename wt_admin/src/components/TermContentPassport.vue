@@ -160,7 +160,7 @@ async function copyCommand(): Promise<void> {
       <PaperCard class="block">
         <h3 class="serif">Дистракторы «найди ошибку»</h3>
         <p class="faint sub">
-          Годных {{ data.usableDistractors }} из {{ data.distractors.length }} строк. Карточка берёт
+          Пригодных {{ data.usableDistractors }} из {{ data.distractors.length }} строк. Карточка берёт
           <strong>по одной на фрагмент ошибки</strong>: два варианта, сломанных в одном месте,
           превращают вопрос «какое предложение верное» в «какое написание мы имели в виду».
         </p>
@@ -254,7 +254,7 @@ async function copyCommand(): Promise<void> {
             <span v-for="(r, i) in data.needsEnrichmentReasons" :key="r">
               <template v-if="i > 0">, </template>{{ NEEDS_ENRICHMENT_REASON_LABEL[r] ?? r }}
             </span>.
-            Цель укомплектованности — {{ data.minDistractors }} годных дистрактора; догон одного
+            Цель укомплектованности — {{ data.minDistractors }} пригодных дистрактора; догон одного
             термина стоит примерно ${{ data.costPerTermUsd.toFixed(3) }}.
           </p>
         </template>

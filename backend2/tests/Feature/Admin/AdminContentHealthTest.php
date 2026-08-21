@@ -156,7 +156,7 @@ it('lists a collection most under-stocked first, counting spans and not rows', f
         ->and($thin['usable_distractors'])->toBe(1)
         ->and($thin['pick_correct_ready'])->toBeFalse()
         ->and($thin['needs_enrichment'])->toBeTrue()
-        ->and($thin['needs_enrichment_reasons'])->toBe(['few_distractors', 'no_variants']);
+        ->and($thin['needs_enrichment_reasons'])->toBe(['few_distractors']);
 
     $bare = collect($body['terms'])->firstWhere('term_id', $ids['bare']);
     expect($bare['missing_example'])->toBeTrue()
@@ -251,7 +251,7 @@ it('marks which distractors a card would deal, and keeps suppressions in their o
         ->and(collect($body['suppressed'])->pluck('source')->sort()->values()->all())->toBe(['audit', 'review']);
 
     expect($body['needs_enrichment'])->toBeTrue()
-        ->and($body['needs_enrichment_reasons'])->toBe(['few_distractors', 'no_variants'])
+        ->and($body['needs_enrichment_reasons'])->toBe(['few_distractors'])
         ->and($body['missing_example'])->toBeFalse();
 });
 

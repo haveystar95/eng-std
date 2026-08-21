@@ -171,8 +171,11 @@ export const CONTENT_GAP_LABEL: Record<ContentGap, string> = {
   options_from_pool: 'опции из пула',
 }
 
+// `no_variants` больше не приходит: пустой список форм — норма для большинства терминов, а не
+// дефект, и флаг на каждой строке навсегда учил не смотреть в эту колонку. Ключ оставлен в типе и
+// здесь, потому что старый ответ сервера может его ещё нести.
 export const NEEDS_ENRICHMENT_REASON_LABEL: Record<NeedsEnrichmentReason, string> = {
-  few_distractors: 'мало годных дистракторов',
+  few_distractors: 'нет запаса дистракторов',
   no_variants: 'нет принимаемых вариантов',
 }
 

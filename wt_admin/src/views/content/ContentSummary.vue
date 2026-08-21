@@ -60,7 +60,7 @@ const collectionColumns: Column[] = [
   { key: 'terms', label: 'Терминов', align: 'right', tnum: true, width: '100px' },
   { key: 'without_example', label: 'Без примера', align: 'right', tnum: true, width: '110px' },
   { key: 'pick_correct_ready', label: 'pick_correct', align: 'right', tnum: true, width: '110px' },
-  { key: 'needs_enrichment', label: 'Требуют станка', width: '190px' },
+  { key: 'needs_enrichment', label: 'Без запаса', width: '190px' },
   { key: 'estimated', label: 'Догон ≈', align: 'right', tnum: true, width: '100px' },
 ]
 
@@ -86,9 +86,9 @@ function collectionRows(s: ContentHealthSummary): ContentHealthCollection[] {
         <StatCard label="Терминов всего" :value="count(data.scopes.all.terms)" />
         <StatCard label="Без примера" :value="count(data.scopes.all.withoutExample)" hint="лечится перегенерацией примера, не станком" />
         <StatCard
-          label="Требуют станка"
+          label="Без запаса"
           :value="count(data.scopes.all.needsEnrichment)"
-          :hint="`годных дистракторов < ${data.minDistractors} или нет вариантов`"
+          :hint="`пригодных дистракторов < ${data.minDistractors}`"
         />
         <StatCard
           label="Догон ≈"
@@ -176,7 +176,7 @@ function collectionRows(s: ContentHealthSummary): ContentHealthCollection[] {
           <template #cell-pick_correct_ready="{ row }">{{ count(row.pickCorrectReady) }}</template>
           <template #cell-needs_enrichment="{ row }">
             <Badge v-if="row.needsEnrichment > 0" tone="unsure">
-              {{ row.needsEnrichment }} терминов требуют станка
+              {{ row.needsEnrichment }} терминов без запаса
             </Badge>
             <span v-else class="faint">укомплектована</span>
           </template>

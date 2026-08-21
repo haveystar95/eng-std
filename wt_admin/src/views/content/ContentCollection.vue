@@ -1,11 +1,17 @@
 <script setup lang="ts">
 /**
  * «Контент» → одна коллекция: её термины, самые неукомплектованные сверху (порядок приходит с
- * сервера — сначала «нет примера», затем меньше всего годных дистракторов, затем вариантов).
+ * сервера — сначала «нет примера», затем меньше всего пригодных дистракторов).
  *
- * «Годных дистракторов» — не число строк в таблице: карточка берёт по одному дистрактору на
+ * «Пригодных дистракторов» — не число строк в таблице: карточка берёт по одному дистрактору на
  * фрагмент ошибки, поэтому три строки с одним и тем же фрагментом дают одну опцию. Колонка
  * показывает оба числа, когда они расходятся, иначе догон выглядит уже сделанным.
+ *
+ * И «пригодных», а не «годных», намеренно. Это число говорит ровно одно: карточка СОБЕРЁТСЯ —
+ * span находится в своём предложении, correction чинит его до эталона, строка не дубль и не наш же
+ * верный ответ. Все проверки за ним — сравнение строк. Грамматичен ли «неверный» вариант, код не
+ * знает и знать не может: «The post office was next to the museum» пройдёт их все и накажет ученика
+ * за верный выбор. Колонка, названная «годными», обещала качество, которого никто не проверял.
  */
 import { onMounted, ref, watch } from 'vue'
 import { api } from '@/api'
@@ -58,11 +64,11 @@ const columns: Column[] = [
   { key: 'text', label: 'Термин' },
   { key: 'translation', label: 'Перевод', truncate: '260px' },
   { key: 'example', label: 'Пример', width: '90px' },
-  { key: 'distractors', label: 'Годных дистр.', align: 'right', width: '130px' },
+  { key: 'distractors', label: 'Пригодных дистр.', align: 'right', width: '150px' },
   { key: 'pick_correct', label: 'pick_correct', width: '120px' },
   { key: 'variants', label: 'Вариантов', align: 'right', tnum: true, width: '100px' },
   { key: 'version', label: 'Версия станка', width: '130px' },
-  { key: 'needs', label: 'Нужен станок', width: '230px' },
+  { key: 'needs', label: 'Что догнать', width: '230px' },
 ]
 </script>
 
@@ -75,7 +81,11 @@ const columns: Column[] = [
       <div class="stats">
         <StatCard label="Терминов" :value="count(data.terms.length)" />
         <StatCard label="Без примера" :value="count(data.withoutExample)" hint="перегенерация примера, не станок" />
-        <StatCard label="Требуют станка" :value="count(data.needsEnrichment)" :hint="`цель — ${data.minDistractors} годных дистрактора`" />
+        <StatCard
+          label="Без запаса"
+          :value="count(data.needsEnrichment)"
+          :hint="`меньше ${data.minDistractors} пригодных — карточка держится на грани`"
+        />
         <StatCard label="pick_correct собирается" :value="count(data.pickCorrectReady)" />
         <StatCard label="Догон ≈" :value="money(data.estimatedTopupUsd)" :hint="`${money(data.costPerTermUsd)} за термин`" />
       </div>

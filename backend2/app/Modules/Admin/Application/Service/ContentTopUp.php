@@ -33,33 +33,35 @@ final readonly class ContentTopUp
     public const COST_PER_TERM_USD = 0.004;
 
     /**
-     * A live example and something missing from it. Both halves matter:
+     * A live example, and fewer than {@see MIN_DISTRACTORS} usable distractors on it.
      *
-     *  * no example → the станок has nothing to write against, so this is NOT a догон case (it is
-     *    fixed by regenerating the example) and must not be counted into the bill;
-     *  * fewer than {@see MIN_DISTRACTORS} usable, or no accepted variants at all → money well spent.
+     * No example → the станок has nothing to write against, so this is NOT a догон case (it is fixed
+     * by regenerating the example) and must not be counted into the bill.
+     *
+     * **An empty variant list is deliberately NOT a reason.** It was one until the prompt learned
+     * what a `form` is: an alternative SPELLING of the same term («organise»/«organize»,
+     * «check-in»/«check in»), not a synonym. Most terms genuinely have none — the prompt says so to
+     * the model in as many words — so treating zero as a defect lit the flag on every term in the
+     * dictionary, permanently, and quoted a bill for re-running terms that will never produce one.
+     * A report that asks for money on every row teaches the reader to stop looking at the column.
      */
     public function needsEnrichment(bool $hasExample, int $usableDistractors, int $variants): bool
     {
-        return $hasExample && ($usableDistractors < self::MIN_DISTRACTORS || $variants === 0);
+        return $hasExample && $usableDistractors < self::MIN_DISTRACTORS;
     }
 
-    /** @return list<string> the machine reasons behind {@see needsEnrichment()}, in report order */
+    /**
+     * @param  int  $variants  kept in the signature: the caller has it, and the day a variant deficit
+     *         becomes diagnosable again this is where it belongs. See {@see needsEnrichment()}.
+     * @return list<string>  the machine reasons behind {@see needsEnrichment()}, in report order
+     */
     public function reasons(bool $hasExample, int $usableDistractors, int $variants): array
     {
-        if (! $hasExample) {
+        if (! $hasExample || $usableDistractors >= self::MIN_DISTRACTORS) {
             return [];
         }
 
-        $reasons = [];
-        if ($usableDistractors < self::MIN_DISTRACTORS) {
-            $reasons[] = 'few_distractors';
-        }
-        if ($variants === 0) {
-            $reasons[] = 'no_variants';
-        }
-
-        return $reasons;
+        return ['few_distractors'];
     }
 
     public function estimateUsd(int $terms): float
