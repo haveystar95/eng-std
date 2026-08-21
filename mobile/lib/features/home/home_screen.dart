@@ -82,6 +82,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void _select(int i) {
     if (i == _index) return;
     AppHaptics.light();
+    // Put the keyboard away FIRST.
+    //
+    // The tabs live in an IndexedStack, so leaving Search does not dispose its text field — it just
+    // stops being drawn, holding focus, and iOS keeps the keyboard up over whatever tab you landed
+    // on. There is no field on that screen to tap out of, so it stayed until the app was
+    // backgrounded. Unfocusing here rather than in the search screen's `deactivate` because THIS is
+    // the moment the learner said they were done with it, and it covers every tab, not just the one
+    // that happens to have a field today.
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _index = i);
     // Refresh on tab entry. Reads come from the local DB (a background sync keeps it
     // fresh); only the network-backed study count is invalidated here.

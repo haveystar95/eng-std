@@ -217,6 +217,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       body: SafeArea(
         bottom: false,
         child: ListView(
+          // Scrolling the results puts the keyboard away, the way every list with a search field
+          // behaves. The alternative — reaching for the tiny «done» key — is the reason a keyboard
+          // ends up covering half the results the learner is trying to read.
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.screenH,
             AppSpacing.s16,
