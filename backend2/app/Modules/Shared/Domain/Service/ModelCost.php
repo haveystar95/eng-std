@@ -113,10 +113,17 @@ final class ModelCost
      * Strip the dated snapshot suffix: a response says `gpt-4o-mini-2024-07-18`, we price
      * `gpt-4o-mini`. Without this, every call read back out of the request log came out unpriced —
      * what we ASK for and what the API says it USED are different strings.
+     *
+     * TWO date shapes, because the vendors disagree: OpenAI dashes them (`-2024-07-18`), Anthropic
+     * runs them together (`claude-haiku-4-5-20251001`). Only the first was stripped, so every
+     * Anthropic call priced as null — «стоимость не тарифицируется» in the sandbox, and a станок run
+     * on Anthropic would have written a spend row of nothing at all. Anchored to `20\d{6}` rather
+     * than any eight digits: a version number is a plausible model-name suffix, a 21st-century date
+     * is not.
      */
     public static function baseModel(string $model): string
     {
-        return (string) preg_replace('/-\d{4}-\d{2}-\d{2}$/', '', $model);
+        return (string) preg_replace('/-(\d{4}-\d{2}-\d{2}|20\d{6})$/', '', $model);
     }
 
     /**

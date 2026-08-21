@@ -16,6 +16,18 @@ it('prices a dated snapshot at its base model rate', function () {
         ->toBe((new ModelCost())->estimate('gpt-4o-mini', 1000, 500));
 });
 
+it('prices an Anthropic snapshot, whose date carries no dashes', function () {
+    // `claude-haiku-4-5-20251001`. The dashed-date rule did not match it, so every Anthropic call
+    // came back unpriced — the sandbox said «не тарифицируется» and a run would have logged $0.
+    expect((new ModelCost())->estimate('claude-haiku-4-5-20251001', 1000, 500))
+        ->toBe((new ModelCost())->estimate('claude-haiku-4-5', 1000, 500));
+});
+
+it('leaves a version-like suffix alone', function () {
+    // Only a 21st-century date is stripped: `-20251001` is a date, `-12345678` is not.
+    expect(ModelCost::baseModel('some-model-12345678'))->toBe('some-model-12345678');
+});
+
 it('returns null for an unknown model or missing token counts', function () {
     $cost = new ModelCost();
 
