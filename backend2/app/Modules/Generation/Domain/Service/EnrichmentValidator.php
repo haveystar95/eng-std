@@ -678,33 +678,60 @@ final class EnrichmentValidator
     }
 
     /**
-     * Does the span [position, position+len) overlap an occurrence of one of the term's accepted
-     * answers in this sentence? Case-insensitive; every occurrence of every form is checked, not
-     * just the first, because a phrase can legitimately appear more than once in a sentence.
+     * Is the span a FRAGMENT OF the term's own accepted wording — «mute the phone» → span «the»?
+     * That is the defect this check exists for: part of the canonical answer marked as a mistake,
+     * with a fake correction grafted on. Containment, so a span equal to the whole form counts too.
+     *
+     * It used to ask whether the span merely OVERLAPPED the term anywhere in the sentence, and that
+     * is a different, much wider question — one that catches the ordinary case where an error simply
+     * happens to sit next to the word being taught. On single-word terms it fires on almost every
+     * article and agreement error there is: for `deposit`, «asked for one-month deposit» → «a
+     * one-month deposit»; for `furnished`, «an furnished apartment» → «a furnished apartment». Both
+     * are exactly the mistakes a Russian speaker makes, and the term appearing inside the broken
+     * fragment is a coincidence of where the error lives, not a claim that the term is wrong.
+     *
+     * Measured on a live top-up run (2026-08-21, «Аренда жилья», 5 terms): 9 of 21 candidates died
+     * here, 43% of the batch, and re-reading them by hand found NINE good distractors and no true
+     * positives. Under containment all nine survive and the "mute the phone" row still dies.
+     *
+     * Word-boundary aware, so span «the» is a fragment of «mute the phone» but not of «theatre».
      *
      * @param  list<string>  $acceptedForms
      */
     private function spanIsInsideAcceptedForm(string $sentence, string $span, array $acceptedForms): bool
     {
-        $spanAt = $this->spanPosition($sentence, $span);
-        if ($spanAt === false) {
+        // The span still has to be a real fragment of its own sentence; a span that is not there at
+        // all is somebody else's problem (SpanNotFound, checked before this).
+        if ($this->spanPosition($sentence, $span) === false) {
             return false;
         }
-        $spanEnd = $spanAt + mb_strlen($span);
 
         foreach ($acceptedForms as $form) {
             $form = trim($form);
-            if ($form === '') {
-                continue;
+            if ($form !== '' && $this->containsWholeWords($form, $span)) {
+                return true;
             }
-            $offset = 0;
-            while (($at = mb_stripos($sentence, $form, $offset)) !== false) {
-                $end = $at + mb_strlen($form);
-                if ($at < $spanEnd && $spanAt < $end) {
-                    return true;
-                }
-                $offset = $at + 1;
+        }
+
+        return false;
+    }
+
+    /**
+     * Does `$needle` occur in `$haystack` on word boundaries? Deliberately NOT
+     * {@see spanPosition()}, whose last line falls back to a boundary-less match — that fallback is
+     * right where it is used (a span the model wrote mid-word still has to be underlined somewhere)
+     * and wrong here, where it would read «the» as a fragment of «theatre» and scrap a good row.
+     */
+    private function containsWholeWords(string $haystack, string $needle): bool
+    {
+        $offset = 0;
+        while (($at = mb_stripos($haystack, $needle, $offset)) !== false) {
+            $before = $at > 0 ? mb_substr($haystack, $at - 1, 1) : ' ';
+            $after = mb_substr($haystack, $at + mb_strlen($needle), 1);
+            if (! $this->isWordChar($before) && ! $this->isWordChar($after)) {
+                return true;
             }
+            $offset = $at + 1;
         }
 
         return false;

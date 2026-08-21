@@ -17,8 +17,15 @@ interface DispatchesEnrichment
      *
      * @param  list<string>  $termIds
      * @param  string  $translationLang  the language whose translation the станок reads for each term.
+     * @param  bool  $ignoreVersionMark  these ids come from a TOP-UP (chosen by coverage), so the
+     *        worker must not re-filter them by the journal — see BuildTermEnrichments.
      */
-    public function enrichTerms(array $termIds, string $generatorVersion, string $translationLang = 'ru'): void;
+    public function enrichTerms(
+        array $termIds,
+        string $generatorVersion,
+        string $translationLang = 'ru',
+        bool $ignoreVersionMark = false,
+    ): void;
 
     /** Queue a whole collection: resolve its pending terms on the worker, then chunk them. */
     public function enrichCollection(string $collectionId, string $generatorVersion): void;

@@ -389,6 +389,36 @@ it("scraps a distractor whose error span sits inside the term's own accepted for
         ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
+// The other half of that rule, and the one it used to get wrong. The check asks whether the span is
+// a FRAGMENT OF the term, not whether it touches the term: on a single-word term almost every
+// article or agreement error sits right next to the word being taught, and reading that as "the
+// term is being marked wrong" scrapped 9 of 21 candidates in one live run — every one of them good.
+it('keeps an error whose span merely contains the term, rather than being part of it', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [
+            new RawDistractor('The landlord asked for one-month deposit.', 'article', 'one-month deposit', 'a one-month deposit'),
+            new RawDistractor('The landlord asked for a one-month deposits.', 'article', 'deposits', 'deposit'),
+        ],
+        acceptedForms: ['deposit'],
+        example: 'The landlord asked for a one-month deposit.',
+        backTranslation: 'deposit',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(2);
+});
+
+it('does not read a span as part of the term when it only shares letters with it', function () {
+    // Word boundaries: «the» is a fragment of «mute the phone» and NOT of «theatre».
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('We went to theatre last night.', 'article', 'to theatre', 'to the theatre')],
+        acceptedForms: ['theatre'],
+        example: 'We went to the theatre last night.',
+        backTranslation: 'theatre',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
 it("keeps a distractor whose span sits outside the term's own accepted form", function () {
     // The ordinary, valid case the check above must not touch: the claimed error is elsewhere in the
     // sentence, not inside the term's own wording.

@@ -45,12 +45,16 @@ final class EnrichTermsChunkJob implements ShouldQueue
      *                                 whole dictionary belongs to no collection and passes null.
      * @param  string  $translationLang  the deck's language: which of a term's translations is put in
      *                                   front of the model.
+     * @param  bool  $ignoreVersionMark  a queued TOP-UP: these ids were chosen by coverage and must
+     *                                   not be filtered by the journal on the worker — otherwise
+     *                                   `--topup --queue` silently enriches nothing.
      */
     public function __construct(
         private readonly array $termIds,
         private readonly string $generatorVersion,
         private readonly ?string $collectionId = null,
         private readonly string $translationLang = 'ru',
+        private readonly bool $ignoreVersionMark = false,
     ) {}
 
     public function handle(BuildTermEnrichmentsHandler $handler, OutboundCallContext $context): void
@@ -58,7 +62,12 @@ final class EnrichTermsChunkJob implements ShouldQueue
         $metrics = $context->run(
             null,
             $this->collectionId,
-            fn () => $handler(new BuildTermEnrichments($this->termIds, $this->generatorVersion, $this->translationLang)),
+            fn () => $handler(new BuildTermEnrichments(
+                $this->termIds,
+                $this->generatorVersion,
+                $this->translationLang,
+                $this->ignoreVersionMark,
+            )),
         );
 
         // A chunk where EVERY term threw is the shape of "the provider is down", not "the content is

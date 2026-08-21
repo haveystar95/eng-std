@@ -121,7 +121,7 @@ final class EnrichBackfillCommand extends Command
         }
 
         if ((bool) $this->option('queue')) {
-            $this->dispatcher->enrichTerms($termIds, $version, $lang);
+            $this->dispatcher->enrichTerms($termIds, $version, $lang, $topUp !== null);
             $this->info('Queued ' . count($termIds) . ' term(s) as chunk jobs.');
 
             return self::SUCCESS;
@@ -131,7 +131,7 @@ final class EnrichBackfillCommand extends Command
         $bar = $this->output->createProgressBar(count($termIds));
         $bar->start();
         foreach (array_chunk($termIds, self::CHUNK) as $chunk) {
-            $metrics = $metrics->plus($build(new BuildTermEnrichments($chunk, $version, $lang)));
+            $metrics = $metrics->plus($build(new BuildTermEnrichments($chunk, $version, $lang, $topUp !== null)));
             $bar->advance(count($chunk));
         }
         $bar->finish();
