@@ -23,6 +23,7 @@ function lookupAnswer(
         exampleTranslation: $exampleTranslation,
         cefr: 'B1',
         transcription: null,
+        imageApiPrompt: 'office desk paperwork',
         model: 'test',
         promptVersion: 'lookup.test',
     );

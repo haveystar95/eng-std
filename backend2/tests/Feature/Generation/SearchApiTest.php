@@ -125,6 +125,83 @@ it('serves a cached word even when the cap is spent — nothing is bought', func
         ->assertJsonPath('data.lookup.text', 'alpha');
 });
 
+it('re-asks for a word cached before the illustration question existed, and replaces the row', function () {
+    [, $token] = learner();
+
+    // A v1 row: a perfectly good card, written before the prompt asked whether the word can be
+    // illustrated. Its `image_api_prompt` key is ABSENT — which is not the same as an empty one.
+    DB::table('search_lookups')->insert([
+        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+        'user_id' => null,
+        'normalized_query' => 'reimbursement',
+        'lang' => 'en',
+        'native_lang' => 'ru',
+        'payload' => json_encode([
+            'text' => 'reimbursement', 'type' => 'word', 'translation' => 'возмещение',
+            'description' => 'Money you get back.', 'example' => null,
+            'example_translation' => null, 'cefr' => 'B2', 'transcription' => null,
+        ], JSON_UNESCAPED_UNICODE),
+        'model' => 'gpt-4o-mini',
+        'prompt_version' => 'lookup.v1',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $card = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->assertOk()
+        ->assertJsonPath('data.lookup.fresh', true)   // paid for, because the old row could not answer
+        ->json('data.lookup');
+
+    // ONE row still — the refresh REPLACED it rather than piling a second answer beside it, so the
+    // cache key keeps meaning «the answer for this word».
+    expect(DB::table('search_lookups')->where('normalized_query', 'reimbursement')->count())->toBe(1);
+    expect(DB::table('search_lookups')->where('normalized_query', 'reimbursement')->value('prompt_version'))
+        ->not->toBe('lookup.v1');
+    expect($card['text'])->toBe('reimbursement');
+});
+
+it('serves a stale cached row rather than nothing when the cap is spent', function () {
+    $this->app->bind(SearchLookupDailyLimit::class, fn () => new SearchLookupDailyLimit(0));
+    [, $token] = learner();
+
+    DB::table('search_lookups')->insert([
+        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+        'user_id' => null,
+        'normalized_query' => 'reimbursement',
+        'lang' => 'en',
+        'native_lang' => 'ru',
+        'payload' => json_encode(['text' => 'reimbursement', 'type' => 'word',
+            'translation' => 'возмещение', 'description' => 'Money you get back.'], JSON_UNESCAPED_UNICODE),
+        'model' => 'gpt-4o-mini',
+        'prompt_version' => 'lookup.v1',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // A missing photo is not worth withholding a readable card over.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->assertOk()
+        ->assertJsonPath('data.limit_reached', false)
+        ->assertJsonPath('data.lookup.text', 'reimbursement');
+});
+
+it('gives a saved word an image query, so its photo can be fetched', function () {
+    [, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $termId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId])
+        ->assertCreated()->json('data.term_id');
+
+    // The query is what makes the term PENDING for a photo; without it the image job would skip it
+    // forever and the card would keep its placeholder. That was the live defect this pins.
+    expect(DB::table('terms')->where('id', $termId)->value('image_api_prompt'))->not->toBeEmpty();
+});
+
 it('saves a looked-up word into «Сохранённые» and enrols it', function () {
     [$user, $token] = learner();
     $lookupId = $this->withHeader('Authorization', "Bearer {$token}")

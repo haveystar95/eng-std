@@ -9,6 +9,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/pending_content_refresher.dart';
 import '../../data/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
@@ -50,6 +51,11 @@ class CollectionDetailScreen extends ConsumerStatefulWidget {
 class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen> {
   final _pronouncer = Pronouncer();
   late bool _showTriagePrompt = widget.offerTriage;
+
+  /// Pulls `/sync` on a widening backoff while a word here is still waiting for its photo, so the
+  /// picture appears on its own instead of after a swipe-down nobody should have to think of.
+  PendingContentRefresher? _refresher;
+
   @override
   void initState() {
     super.initState();
@@ -65,11 +71,24 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 
   @override
   void dispose() {
+    _refresher?.dispose();
     // Hand the session back. Symmetric with the warm-up: this screen owns it only while it is on
     // screen, exactly like the training screen.
     unawaited(_pronouncer.release());
     super.dispose();
   }
+
+  /// Is anything on this screen still waiting on the server?
+  ///
+  /// A missing PHOTO is the honest signal: it is the last thing to land (an image search after an
+  /// enrichment after a save) and the only one the learner can see missing. A missing translation
+  /// counts too — that is a word added bare, still being filled in.
+  ///
+  /// A word whose photo never arrives is not a bug and not a loop: the refresher's budget ends on
+  /// its own, because a word the model refused to illustrate has nothing to wait for.
+  bool _awaitingContent(List<Word> items) => items.any(
+        (w) => (w.imageUrl == null || w.imageUrl!.isEmpty) || w.translation.trim().isEmpty,
+      );
 
   /// Pronounce in the COLLECTION's language, not the profile's — a ru→de set must speak German even
   /// when the profile targets English (language lives on the collection; device-batch F16).
@@ -316,16 +335,24 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
         error: (e, _) => _CoverScaffold(
           imageUrl: collection?.imageUrl,
+          isDefault: collection?.isDefault ?? false,
           child: Center(
             child: Text(l.triageLoadError(e.toString()),
                 textAlign: TextAlign.center, style: AppText.translation),
           ),
         ),
-        data: (items) => ListView(
+        data: (items) {
+          // Every rebuild says whether anything is still missing; the refresher decides whether
+          // that is worth another look and stops on its own when it is not.
+          (_refresher ??= PendingContentRefresher(ref.read(syncServiceProvider)))
+              .nudge(pending: _awaitingContent(items));
+
+          return ListView(
           padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26),
           children: [
             _Cover(
               imageUrl: collection?.imageUrl,
+              isDefault: collection?.isDefault ?? false,
               onBack: () => Navigator.of(context).maybePop(),
               onMenu: _openCollectionMenu,
             ),
@@ -410,7 +437,8 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                 child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
               ),
           ],
-        ),
+          );
+        },
       ),
       ),
     );
@@ -425,8 +453,9 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 /// Cover photo header with a top scrim + back chip. Monochrome placeholder when
 /// the collection has no cover.
 class _Cover extends StatelessWidget {
-  const _Cover({required this.imageUrl, required this.onBack, this.onMenu});
+  const _Cover({required this.imageUrl, required this.onBack, this.onMenu, this.isDefault = false});
   final String? imageUrl;
+  final bool isDefault;
   final VoidCallback onBack;
 
   /// Opens the collection ⋯ menu, anchored at the button's own context.
@@ -436,16 +465,20 @@ class _Cover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
+    final hasImage = !isDefault && imageUrl != null && imageUrl!.isNotEmpty;
     return SizedBox(
       height: _height,
       child: Stack(
         fit: StackFit.expand,
         children: [
           if (hasImage)
-            Image(image: CachedNetworkImage(imageUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const _CoverPlaceholder())
+            Image(
+              image: CachedNetworkImage(imageUrl!),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _CoverPlaceholder(isDefault: isDefault),
+            )
           else
-            const _CoverPlaceholder(),
+            _CoverPlaceholder(isDefault: isDefault),
           // Top scrim so the white status bar + back chip read over any photo.
           DecoratedBox(
             decoration: BoxDecoration(
@@ -478,12 +511,22 @@ class _Cover extends StatelessWidget {
 }
 
 class _CoverPlaceholder extends StatelessWidget {
-  const _CoverPlaceholder();
+  const _CoverPlaceholder({this.isDefault = false});
+
+  /// «Сохранённые» has a cover of its OWN rather than an empty frame waiting for a photo that is
+  /// never coming — see [CollectionCover] for why this folder is drawn and not photographed.
+  final bool isDefault;
+
   @override
-  Widget build(BuildContext context) => const ColoredBox(
-        color: AppColors.track,
-        child: Center(child: Icon(LucideIcons.image, size: 34, color: AppColors.tertiary)),
-      );
+  Widget build(BuildContext context) => isDefault
+      ? const ColoredBox(
+          color: AppColors.ink,
+          child: Center(child: Icon(LucideIcons.bookmark, size: 44, color: AppColors.paper)),
+        )
+      : const ColoredBox(
+          color: AppColors.track,
+          child: Center(child: Icon(LucideIcons.image, size: 34, color: AppColors.tertiary)),
+        );
 }
 
 /// Translucent dark round button over the cover (white glyph on the photo).
@@ -1116,15 +1159,16 @@ class _TypeBadge extends StatelessWidget {
 
 /// Cover + centred child, used for the error state.
 class _CoverScaffold extends StatelessWidget {
-  const _CoverScaffold({required this.imageUrl, required this.child});
+  const _CoverScaffold({required this.imageUrl, required this.child, this.isDefault = false});
   final String? imageUrl;
+  final bool isDefault;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _Cover(imageUrl: imageUrl, onBack: () => Navigator.of(context).maybePop()),
+        _Cover(imageUrl: imageUrl, isDefault: isDefault, onBack: () => Navigator.of(context).maybePop()),
         Expanded(child: child),
       ],
     );

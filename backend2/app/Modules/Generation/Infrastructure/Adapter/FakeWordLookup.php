@@ -32,6 +32,7 @@ final class FakeWordLookup implements WordLookupPort
             exampleTranslation: 'Мы обсуждали это на работе вчера.',
             cefr: 'B1',
             transcription: null,
+            imageApiPrompt: 'office desk paperwork',
             model: 'fake',
             promptVersion: 'lookup.fake',
             tokensIn: 420,

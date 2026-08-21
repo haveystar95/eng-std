@@ -54,7 +54,10 @@ final class EloquentSearchLookupCache implements SearchLookupCache
         // outcome — the two answers are about the same word, and one of them is already the one the
         // cache will serve everybody. Note the loser is NOT charged a quota slot for a row they did
         // not write; countPaidSince counts rows, and theirs does not exist.
-        $written = DB::table('search_lookups')->insertOrIgnore([
+        // upsert, not insertOrIgnore: a re-lookup of a word cached by an OLDER prompt has to be
+        // able to replace that row, or the stale answer would win forever and the money spent
+        // refreshing it would buy nothing. The conflict target is the cache key itself.
+        $written = DB::table('search_lookups')->upsert([
             'id' => $id,
             'user_id' => $payerId->value,
             'normalized_query' => $normalizedQuery,
@@ -68,6 +71,8 @@ final class EloquentSearchLookupCache implements SearchLookupCache
             'cost_usd' => $result->costUsd,
             'created_at' => now(),
             'updated_at' => now(),
+        ], ['normalized_query', 'lang', 'native_lang'], [
+            'payload', 'model', 'prompt_version', 'tokens_in', 'tokens_out', 'cost_usd', 'updated_at',
         ]) > 0;
 
         $stored = $this->find($normalizedQuery, $lang, $nativeLang)
@@ -77,8 +82,9 @@ final class EloquentSearchLookupCache implements SearchLookupCache
         return new CachedLookup(
             $stored->id, $stored->normalizedQuery, $stored->lang, $stored->nativeLang, $stored->text,
             $stored->type, $stored->translation, $stored->description, $stored->example,
-            $stored->exampleTranslation, $stored->cefr, $stored->transcription, $stored->model,
-            $stored->promptVersion, $stored->createdAt, fresh: $written,
+            $stored->exampleTranslation, $stored->cefr, $stored->transcription,
+            $stored->imageApiPrompt, $stored->model, $stored->promptVersion, $stored->createdAt,
+            fresh: $written, illustrationDecided: $stored->illustrationDecided,
         );
     }
 
@@ -100,9 +106,13 @@ final class EloquentSearchLookupCache implements SearchLookupCache
             exampleTranslation: $this->str($payload, 'example_translation'),
             cefr: $this->str($payload, 'cefr'),
             transcription: $this->str($payload, 'transcription'),
+            imageApiPrompt: $this->str($payload, 'image_api_prompt'),
             model: (string) $row->model,
             promptVersion: (string) $row->prompt_version,
             createdAt: new DateTimeImmutable((string) $row->created_at),
+            // The KEY, not the value: an empty query is a decision, a missing key is a row from
+            // before the question was asked.
+            illustrationDecided: array_key_exists('image_api_prompt', $payload),
         );
     }
 

@@ -31,7 +31,7 @@ final class OpenAiWordLookup implements WordLookupPort
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
-        private readonly string $promptVersion = 'v1',
+        private readonly string $promptVersion = 'v2',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
         private readonly ModelCost $cost = new ModelCost(),
     ) {}
@@ -81,6 +81,10 @@ final class OpenAiWordLookup implements WordLookupPort
             exampleTranslation: $this->optional($decoded, 'example_translation'),
             cefr: $this->optional($decoded, 'cefr'),
             transcription: $this->optional($decoded, 'transcription'),
+            // Blank is a DELIBERATE answer here, not a missing one: the prompt asks for an empty
+            // query when the word cannot honestly be illustrated, and `optional()` turns that into
+            // null — which the pending-image reader reads as «no photo», never as «guess one».
+            imageApiPrompt: $this->optional($decoded, 'image_api_prompt'),
             model: $this->model,
             promptVersion: 'lookup.' . $this->promptVersion,
             tokensIn: $tokensIn,
@@ -137,8 +141,9 @@ final class OpenAiWordLookup implements WordLookupPort
                 'example_translation' => ['type' => 'string'],
                 'cefr' => ['type' => 'string'],
                 'transcription' => ['type' => 'string'],
+                'image_api_prompt' => ['type' => 'string'],
             ],
-            'required' => ['text', 'type', 'translation', 'description', 'example', 'example_translation', 'cefr', 'transcription'],
+            'required' => ['text', 'type', 'translation', 'description', 'example', 'example_translation', 'cefr', 'transcription', 'image_api_prompt'],
         ];
     }
 }

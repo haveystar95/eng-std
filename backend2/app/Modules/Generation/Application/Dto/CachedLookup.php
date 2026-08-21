@@ -29,10 +29,26 @@ final readonly class CachedLookup
         public ?string $exampleTranslation,
         public ?string $cefr,
         public ?string $transcription,
+        /** The model's image-search query. Null on rows cached before the v2 prompt existed. */
+        public ?string $imageApiPrompt,
         public string $model,
         public string $promptVersion,
         public DateTimeImmutable $createdAt,
         /** True when this call was paid for right now rather than served from the cache. */
         public bool $fresh = false,
+        /**
+         * Was the word's ILLUSTRATION question asked at all when this row was written?
+         *
+         * Not «does it have a photo query» — `imageApiPrompt` being null answers that, and null is a
+         * legitimate answer: the prompt asks for an empty query when a word has no honest picture.
+         * This is the older, sharper question: rows written before the v2 prompt existed were never
+         * asked, so their null means «unknown», not «refused».
+         *
+         * The distinction earns its keep because the cache is GLOBAL and permanent: without it, the
+         * first person ever to look a word up freezes that word's card at whatever the prompt could
+         * produce that day, for everybody, forever. A cache should hold answers, not the shape of
+         * the question that happened to be asked first.
+         */
+        public bool $illustrationDecided = true,
     ) {}
 }

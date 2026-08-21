@@ -24,12 +24,24 @@ class CollectionCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final br = BorderRadius.circular(radius);
-    final placeholder = DecoratedBox(
-      decoration: BoxDecoration(color: AppColors.track, borderRadius: br),
-      child: Icon(collection.isAi ? LucideIcons.sparkles : LucideIcons.image,
-          size: size < 64 ? 20 : 26, color: AppColors.tertiary),
-    );
-    final url = collection.imageUrl;
+    // «Сохранённые» gets a cover of its OWN, not a placeholder waiting for a photo — because no
+    // photo is ever coming. Every other collection is ABOUT something a camera can point at; this
+    // one is about the act of saving, and a stock image of anything at all would be arbitrary. So
+    // it is drawn: ink ground, paper bookmark. It also costs no image search and works offline,
+    // which the folder that exists on every account should.
+    final placeholder = collection.isDefault
+        ? DecoratedBox(
+            decoration: BoxDecoration(color: AppColors.ink, borderRadius: br),
+            child: Icon(LucideIcons.bookmark, size: size < 64 ? 20 : 30, color: AppColors.paper),
+          )
+        : DecoratedBox(
+            decoration: BoxDecoration(color: AppColors.track, borderRadius: br),
+            child: Icon(collection.isAi ? LucideIcons.sparkles : LucideIcons.image,
+                size: size < 64 ? 20 : 26, color: AppColors.tertiary),
+          );
+    // …and it is never overridden by one either: the default folder keeps its drawn identity even
+    // if a photo somehow lands on the row.
+    final url = collection.isDefault ? null : collection.imageUrl;
     return SizedBox(
       width: size,
       height: size,

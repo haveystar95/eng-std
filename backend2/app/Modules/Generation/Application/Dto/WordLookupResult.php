@@ -23,6 +23,12 @@ final readonly class WordLookupResult
         public ?string $exampleTranslation,
         public ?string $cefr,          // A1..C2, or null when the model would not commit
         public ?string $transcription, // IPA
+        /**
+         * The model's own image-search query for this word — English, concrete, and EMPTY when the
+         * word is genuinely un-illustratable. Null/empty means «no photo», never «guess one»: the
+         * pending-image reader treats a blank query as a deliberate refusal.
+         */
+        public ?string $imageApiPrompt,
         public string $model,
         public string $promptVersion,
         public ?int $tokensIn = null,
@@ -42,6 +48,7 @@ final readonly class WordLookupResult
             'example_translation' => $this->exampleTranslation,
             'cefr' => $this->cefr,
             'transcription' => $this->transcription,
+            'image_api_prompt' => $this->imageApiPrompt,
         ];
     }
 }

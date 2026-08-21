@@ -12,6 +12,7 @@ use App\Modules\Collections\Application\Port\TermFolderMembershipReader;
 use App\Modules\Generation\Application\Dto\CachedLookup;
 use App\Modules\Generation\Application\Dto\SavedSearchResult;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
+use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\SearchLookupCache;
 use App\Modules\Generation\Application\Service\LearnerLanguages;
 use App\Modules\Generation\Domain\Exception\LookupNotFound;
@@ -52,6 +53,7 @@ final readonly class AddSearchResultHandler
         private TermFolderMembershipReader $folders,
         private EnrollTermHandler $enroll,
         private DispatchesEnrichment $enrichment,
+        private DispatchesImageAttachment $imageAttachment,
         private LearnerLanguages $languages,
         private TransactionManager $tx,
         /** `GENERATION_AUTO_ENRICH` — the same switch that governs the post-generation chain. */
@@ -95,9 +97,21 @@ final readonly class AddSearchResultHandler
             },
         );
 
-        // Outside the transaction: the станок is a queue job, and a job dispatched inside a
-        // transaction that then rolls back is a worker looking for a term that does not exist.
-        if ($this->autoEnrich && $added) {
+        // Outside the transaction: these are queue jobs, and a job dispatched inside a transaction
+        // that then rolls back is a worker looking for a term that does not exist.
+        // The PHOTO, on EVERY save and not only the first one. Not gated on `added`, deliberately:
+        // a word saved before its image query existed has just had one filled in by `ImportTerm`
+        // (`ensureImageApiPrompt` never overwrites, so this only ever completes a gap), and gating
+        // on «is this new» would leave exactly those words with a placeholder forever. Costing
+        // nothing to repeat is what makes that safe — the attach job's readers return only terms
+        // that lack an image AND carry a query, so a folder of a hundred imaged words is zero
+        // searches. Not gated on `auto_enrich` either: that switch governs the paid станок, and an
+        // image search is a different vendor and a different budget.
+        $this->imageAttachment->dispatch($collectionId);
+
+        // The станок, on the other hand, IS one paid model call per term — so it fires once, when
+        // the word is genuinely new to this folder.
+        if ($added && $this->autoEnrich) {
             $this->enrichment->enrichTerms(
                 [$termId->value],
                 BuildTermEnrichmentsHandler::VERSION,
@@ -142,6 +156,11 @@ final readonly class AddSearchResultHandler
                 ? [new ExampleInput($lookup->example, $lookup->exampleTranslation)]
                 : [],
             cefr: $lookup->cefr,
+            // The model's own image-search query, so a word saved from search gets a photo the same
+            // way a generated one does. Null on a cache row written before the v2 prompt existed —
+            // and null on a word the model refused to illustrate, which is the same outcome by
+            // design: no query, no photo, never a guessed one.
+            imageApiPrompt: $lookup->imageApiPrompt,
             promptVersion: $lookup->promptVersion,
             generationModel: $lookup->model,
         ));

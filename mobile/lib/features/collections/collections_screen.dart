@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/feature_flags.dart';
 import '../../data/local/app_database.dart';
 import '../../data/models.dart';
+import '../../data/pending_content_refresher.dart';
 import '../../data/providers.dart';
 import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
@@ -41,7 +42,18 @@ class CollectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
+  /// Covers land asynchronously after a generation; this pulls `/sync` on a widening backoff while
+  /// any of them is still missing, so the shelf fills in on its own. Ends on its own budget — a
+  /// collection that never gets a cover is a settled fact, not a thing to keep waiting for.
+  PendingContentRefresher? _refresher;
+
   late int _segment = widget.initialSegment; // 0 = Мои, 1 = Готовые (store)
+
+  @override
+  void dispose() {
+    _refresher?.dispose();
+    super.dispose();
+  }
 
   double get _bottomInset =>
       AppTabBarMetrics.height +
@@ -114,6 +126,12 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
       collections,
     );
     final empty = collections.isEmpty && pending.isEmpty;
+    // A cover still missing means an image job is probably still running; keep looking briefly.
+    // A generation still in flight is already polled by the generation controller, so it is not
+    // counted here — two pollers on one fact is how a screen ends up refreshing forever.
+    (_refresher ??= PendingContentRefresher(ref.read(syncServiceProvider))).nudge(
+      pending: collections.any((c) => !c.isDefault && (c.imageUrl == null || c.imageUrl!.isEmpty)),
+    );
 
     return RefreshIndicator(
       color: AppColors.ink,

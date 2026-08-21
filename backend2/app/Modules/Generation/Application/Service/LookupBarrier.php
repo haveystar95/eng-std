@@ -78,6 +78,10 @@ final readonly class LookupBarrier
             exampleTranslation: $exampleTranslation,
             cefr: $result->cefr,
             transcription: $result->transcription,
+            // Carried through untouched: the barrier screens LANGUAGE and self-reference, and an
+            // image query is neither the learner's language nor the target one — it is always
+            // English by contract, so screening it here would reject every correct answer.
+            imageApiPrompt: $result->imageApiPrompt,
             model: $result->model,
             promptVersion: $result->promptVersion,
             tokensIn: $result->tokensIn,

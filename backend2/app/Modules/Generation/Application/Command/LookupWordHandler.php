@@ -51,12 +51,21 @@ final readonly class LookupWordHandler
         }
 
         $cached = $this->cache->find($normalized, $langs->target->value, $langs->native->value);
-        if ($cached !== null) {
+        // A row written before a field the card now needs existed is a STALE hit, not a hit: the
+        // cache is global and permanent, so honouring it would let whoever looked a word up first
+        // freeze that word's card for everybody, forever. Re-asking costs one cheap call and
+        // replaces the row — see CachedLookup::$illustrationDecided.
+        if ($cached !== null && $cached->illustrationDecided) {
             // Free, for this learner and every other one, forever. The cap is not even read.
             return LookupOutcome::answered($cached, $cap, $this->usedToday($command));
         }
 
         $used = $this->usedToday($command);
+        // …but a stale row still beats nothing. With the cap spent, serve what we already have
+        // rather than withholding a perfectly readable card over a missing photo.
+        if ($cached !== null && ! $this->limit->allows($used)) {
+            return LookupOutcome::answered($cached, $cap, $used);
+        }
         if (! $this->limit->allows($used)) {
             return LookupOutcome::capReached($cap, $used);
         }
