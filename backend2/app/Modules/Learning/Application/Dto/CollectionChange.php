@@ -28,5 +28,6 @@ final readonly class CollectionChange
         public ?string $imageUrl = null,
         public ?string $imageAuthor = null,
         public ?string $imageAuthorUrl = null,
+        public bool $isDefault = false,
     ) {}
 }

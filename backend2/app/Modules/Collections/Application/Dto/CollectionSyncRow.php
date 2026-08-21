@@ -24,5 +24,8 @@ final readonly class CollectionSyncRow
         public ?string $imageUrl = null,        // Pexels cover (null = none/placeholder)
         public ?string $imageAuthor = null,     // photographer credit
         public ?string $imageAuthorUrl = null,  // link to the photographer
+        // «Сохранённые»: the folder a one-tap save lands in. The client greys out its delete action
+        // and names it in the save confirmation, so it has to ride the delta like any other fact.
+        public bool $isDefault = false,
     ) {}
 }

@@ -25,6 +25,7 @@ final class CollectionResource extends JsonResource
             'target_lang' => $this->resource->targetLang,
             'visibility' => $this->resource->visibility,
             'items_count' => $this->resource->itemsCount,
+            'is_default' => $this->resource->isDefault,
             'created_at' => $this->resource->createdAt->format(DateTimeInterface::ATOM),
             'items' => CollectionItemResource::collection($this->resource->items)->resolve($request),
         ];

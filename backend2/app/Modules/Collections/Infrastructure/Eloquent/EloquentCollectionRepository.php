@@ -8,6 +8,7 @@ use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentCollectionRepository implements CollectionRepository
@@ -17,6 +18,17 @@ final class EloquentCollectionRepository implements CollectionRepository
     public function findById(CollectionId $id): ?Collection
     {
         $model = CollectionModel::query()->with('items')->find($id->value);
+
+        return $model !== null ? $this->mapper->toDomain($model) : null;
+    }
+
+    public function findDefaultFor(UserId $ownerId): ?Collection
+    {
+        $model = CollectionModel::query()
+            ->with('items')
+            ->where('owner_id', $ownerId->value)
+            ->where('is_default', true)
+            ->first();
 
         return $model !== null ? $this->mapper->toDomain($model) : null;
     }

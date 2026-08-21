@@ -160,7 +160,7 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
         }
 
         $rows = $q->orderBy('updated_at')->orderBy('id')
-            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count', 'source', 'type', 'image_url', 'image_author', 'image_author_url']);
+            ->get(['id', 'deleted_at', 'updated_at', 'title', 'description', 'topic', 'source_lang', 'target_lang', 'items_count', 'source', 'type', 'image_url', 'image_author', 'image_author_url', 'is_default']);
 
         return array_values($rows->map(fn ($r): CollectionSyncRow => $this->toCollectionRow(
             id: (string) $r->id,
@@ -180,7 +180,7 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
             ->where('uc.user_id', $userId->value)
             ->selectRaw(
                 'c.id, c.title, c.description, c.topic, c.source_lang, c.target_lang, c.items_count, '
-                . 'c.source, c.type, c.image_url, c.image_author, c.image_author_url, c.deleted_at, '
+                . 'c.source, c.type, c.image_url, c.image_author, c.image_author_url, c.is_default, c.deleted_at, '
                 . 'CASE WHEN uc.unsubscribed_at IS NOT NULL THEN 1 ELSE 0 END as unsub, '
                 . 'CASE WHEN uc.unsubscribed_at IS NULL THEN GREATEST(c.updated_at, uc.added_at) ELSE uc.unsubscribed_at END as effective_at'
             );
@@ -220,6 +220,7 @@ final class EloquentCollectionSyncReader implements CollectionSyncReader
             imageUrl: $r->image_url !== null ? (string) $r->image_url : null,
             imageAuthor: $r->image_author !== null ? (string) $r->image_author : null,
             imageAuthorUrl: $r->image_author_url !== null ? (string) $r->image_author_url : null,
+            isDefault: (bool) $r->is_default,
         );
     }
 

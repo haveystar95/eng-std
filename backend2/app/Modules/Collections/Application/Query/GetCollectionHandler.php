@@ -76,6 +76,7 @@ final readonly class GetCollectionHandler
             itemsCount: $collection->itemsCount(),
             createdAt: $collection->createdAt(),
             items: $items,
+            isDefault: $collection->isDefault(),
         );
     }
 }

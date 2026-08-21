@@ -48,6 +48,7 @@ final class EloquentUserCollectionsReader implements UserCollectionsReader
             visibility: $model->visibility,
             itemsCount: $model->items_count,
             createdAt: $model->created_at->toDateTimeImmutable(),
+            isDefault: $model->is_default,
         );
     }
 }

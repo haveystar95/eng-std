@@ -41,6 +41,7 @@ final class CollectionMapper
             imageAuthor: $model->image_author,
             imageAuthorUrl: $model->image_author_url,
             isPremium: (bool) $model->is_premium,
+            isDefault: (bool) $model->is_default,
         );
     }
 
@@ -63,6 +64,7 @@ final class CollectionMapper
             'image_author' => $collection->imageAuthor(),
             'image_author_url' => $collection->imageAuthorUrl(),
             'is_premium' => $collection->isPremium(),
+            'is_default' => $collection->isDefault(),
             'created_at' => $collection->createdAt(),
         ];
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Domain\Entity;
 
+use App\Modules\Collections\Domain\Exception\DefaultCollectionNotDeletable;
 use App\Modules\Collections\Domain\Exception\NotCollectionOwner;
 use App\Modules\Collections\Domain\ValueObject\CollectionSource;
 use App\Modules\Collections\Domain\ValueObject\CollectionType;
@@ -48,6 +49,16 @@ final class Collection
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
         private bool $isPremium = false,
+        /**
+         * «Сохранённые» — the one folder of this owner's that an unaddressed save lands in.
+         *
+         * Everything else about it is an ordinary custom collection: it is renameable, it is
+         * practised over, its words are pool words. The flag buys exactly two behaviours, and both
+         * are stated here rather than inferred from the title, which the owner may change:
+         * {@see assertDeletableBy()} refuses to remove it, and the search's «+ Сохранённые» finds
+         * it by this flag.
+         */
+        private readonly bool $isDefault = false,
     ) {
         $this->items = $items;
         $this->imageUrl = self::clean($imageUrl);
@@ -69,6 +80,28 @@ final class Collection
         return new self(
             $id, $ownerId, CollectionType::Custom, self::cleanTitle($title), $description, $topic,
             $sourceLang, $targetLang, Visibility::Private, CollectionSource::User, $createdAt, [],
+        );
+    }
+
+    /**
+     * The learner's «Сохранённые» folder — a custom collection carrying the default flag.
+     *
+     * Created LAZILY, on the first save that names no folder, so a learner who never uses search
+     * never gets an empty shelf item. There is exactly one per owner, and the database says so
+     * (a partial unique index), not just this factory.
+     */
+    public static function createDefault(
+        CollectionId $id,
+        UserId $ownerId,
+        string $title,
+        LanguageCode $sourceLang,
+        LanguageCode $targetLang,
+        DateTimeImmutable $createdAt,
+    ): self {
+        return new self(
+            $id, $ownerId, CollectionType::Custom, self::cleanTitle($title), null, null,
+            $sourceLang, $targetLang, Visibility::Private, CollectionSource::User, $createdAt, [],
+            isDefault: true,
         );
     }
 
@@ -114,11 +147,12 @@ final class Collection
         ?string $imageAuthor = null,
         ?string $imageAuthorUrl = null,
         bool $isPremium = false,
+        bool $isDefault = false,
     ): self {
         return new self(
             $id, $ownerId, $type, $title, $description, $topic,
             $sourceLang, $targetLang, $visibility, $source, $createdAt, $items,
-            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl, $isPremium,
+            $imageUrl, $imageApiPrompt, $imageAuthor, $imageAuthorUrl, $isPremium, $isDefault,
         );
     }
 
@@ -126,6 +160,25 @@ final class Collection
     {
         if ($this->type !== CollectionType::Custom || $this->ownerId === null || ! $this->ownerId->equals($actor)) {
             throw NotCollectionOwner::make();
+        }
+    }
+
+    /**
+     * Deleting is editing PLUS one thing: «Сохранённые» stays.
+     *
+     * Not because the rows are precious — deleting a folder never touched the pool or the review
+     * log, and still does not — but because it is the destination the app promises when it says
+     * «сохранено в Сохранённые». A one-tap save with nowhere to land is a broken button, and
+     * re-creating the folder silently on the next save would mean the rename the owner made is
+     * quietly gone. Renaming it is allowed and does not move the flag: the flag is the destination,
+     * the title is the label.
+     */
+    public function assertDeletableBy(UserId $actor): void
+    {
+        $this->assertEditableBy($actor);
+
+        if ($this->isDefault) {
+            throw DefaultCollectionNotDeletable::make();
         }
     }
 
@@ -250,6 +303,12 @@ final class Collection
     public function isPremium(): bool
     {
         return $this->isPremium;
+    }
+
+    /** Is this the owner's «Сохранённые» folder — the destination of an unaddressed save? */
+    public function isDefault(): bool
+    {
+        return $this->isDefault;
     }
 
     public function createdAt(): DateTimeImmutable

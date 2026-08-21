@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $visibility
  * @property string $source
  * @property bool $is_premium
+ * @property bool $is_default
  * @property int $items_count
  * @property string|null $image_url
  * @property string|null $image_api_prompt
@@ -39,7 +40,7 @@ final class CollectionModel extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['items_count' => 'int', 'is_premium' => 'bool'];
+    protected $casts = ['items_count' => 'int', 'is_premium' => 'bool', 'is_default' => 'bool'];
 
     /** @return HasMany<CollectionItemModel, $this> */
     public function items(): HasMany

@@ -22,5 +22,7 @@ final readonly class CollectionView
         public int $itemsCount,
         public DateTimeImmutable $createdAt,
         public array $items,
+        /** «Сохранённые»: the folder an unaddressed save lands in. Renameable, never deletable. */
+        public bool $isDefault = false,
     ) {}
 }

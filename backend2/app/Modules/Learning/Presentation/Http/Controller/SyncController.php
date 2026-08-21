@@ -116,6 +116,7 @@ final class SyncController
             'image_url' => $r->imageUrl,
             'image_author' => $r->imageAuthor,
             'image_author_url' => $r->imageAuthorUrl,
+            'is_default' => $r->isDefault,
         ];
     }
 

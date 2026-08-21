@@ -15,10 +15,13 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
 
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::post('/collections', [CollectionController::class, 'store']);
+    // Before /collections/{id}: «default» is a name, not a ULID, and the id route would swallow it.
+    Route::get('/collections/default', [CollectionController::class, 'defaultCollection']);
     Route::get('/collections/{id}', [CollectionController::class, 'show']);
     Route::patch('/collections/{id}', [CollectionController::class, 'update']);
     Route::delete('/collections/{id}', [CollectionController::class, 'destroy']);
 
     Route::post('/collections/{id}/items', [CollectionController::class, 'addItem']);
     Route::delete('/collections/{id}/items/{termId}', [CollectionController::class, 'removeItem']);
+    Route::post('/collections/{id}/items/{termId}/move', [CollectionController::class, 'moveItem']);
 });

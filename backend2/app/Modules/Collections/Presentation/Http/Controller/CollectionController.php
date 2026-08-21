@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Presentation\Http\Controller;
 
+use App\Modules\Collections\Application\Command\AddTermToCollection;
+use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
 use App\Modules\Collections\Application\Command\DeleteCollection;
 use App\Modules\Collections\Application\Command\DeleteCollectionHandler;
+use App\Modules\Collections\Application\Command\EnsureDefaultCollection;
+use App\Modules\Collections\Application\Command\EnsureDefaultCollectionHandler;
+use App\Modules\Collections\Application\Command\MoveTermBetweenCollections;
+use App\Modules\Collections\Application\Command\MoveTermBetweenCollectionsHandler;
 use App\Modules\Collections\Application\Command\RemoveTermFromCollection;
 use App\Modules\Collections\Application\Command\RemoveTermFromCollectionHandler;
 use App\Modules\Collections\Application\Command\UpdateCollection;
@@ -20,6 +26,7 @@ use App\Modules\Collections\Application\Query\ListUserCollections;
 use App\Modules\Collections\Application\Query\ListUserCollectionsHandler;
 use App\Modules\Collections\Presentation\Http\Request\AddWordRequest;
 use App\Modules\Collections\Presentation\Http\Request\CreateCollectionRequest;
+use App\Modules\Collections\Presentation\Http\Request\MoveItemRequest;
 use App\Modules\Collections\Presentation\Http\Request\UpdateCollectionRequest;
 use App\Modules\Collections\Presentation\Http\Resource\CollectionResource;
 use App\Modules\Collections\Presentation\Http\Resource\CollectionSummaryResource;
@@ -44,7 +51,10 @@ final class CollectionController
         private readonly UpdateCollectionHandler $update,
         private readonly DeleteCollectionHandler $delete,
         private readonly AddWordToCollectionHandler $addWord,
+        private readonly AddTermToCollectionHandler $addTerm,
         private readonly RemoveTermFromCollectionHandler $removeTerm,
+        private readonly MoveTermBetweenCollectionsHandler $moveTerm,
+        private readonly EnsureDefaultCollectionHandler $ensureDefault,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -113,22 +123,64 @@ final class CollectionController
         return response()->noContent();
     }
 
+    /**
+     * Put a word in this folder — either an EXISTING term by id, or a new one from typed text.
+     * The request object guarantees exactly one of the two arrived.
+     */
     public function addItem(AddWordRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
         $actor = $this->actorId($request);
         $collectionId = $this->collectionId($id);
 
-        ($this->addWord)(new AddWordToCollection(
-            collectionId: $collectionId,
-            actorId: $actor,
-            text: (string) $data['text'],
-            translation: isset($data['translation']) ? (string) $data['translation'] : null,
-            type: isset($data['type']) ? (string) $data['type'] : 'word',
-        ));
+        if (isset($data['term_id'])) {
+            ($this->addTerm)(new AddTermToCollection(
+                collectionId: $collectionId,
+                termId: TermId::fromString((string) $data['term_id']),
+                actorId: $actor,
+            ));
+        } else {
+            ($this->addWord)(new AddWordToCollection(
+                collectionId: $collectionId,
+                actorId: $actor,
+                text: (string) $data['text'],
+                translation: isset($data['translation']) ? (string) $data['translation'] : null,
+                type: isset($data['type']) ? (string) $data['type'] : 'word',
+            ));
+        }
 
         return CollectionResource::make(($this->get)(new GetCollection($collectionId, $actor)))
             ->response()->setStatusCode(Response::HTTP_CREATED);
+    }
+
+    /**
+     * «Сохранённые» — created on first ask. A GET that may write, deliberately: the folder's whole
+     * point is to exist by the time something is put in it, and making the client create it would
+     * put the "one per owner" rule on the phone.
+     */
+    public function defaultCollection(Request $request): CollectionResource
+    {
+        $actor = $this->actorId($request);
+        $id = ($this->ensureDefault)(new EnsureDefaultCollection($actor));
+
+        return CollectionResource::make(($this->get)(new GetCollection($id, $actor)));
+    }
+
+    /** Move one term between two of the actor's OWN folders. Both ends are ownership-checked. */
+    public function moveItem(MoveItemRequest $request, string $id, string $termId): Response
+    {
+        if (! Ulid::isValid($termId)) {
+            throw new NotFoundHttpException();
+        }
+
+        ($this->moveTerm)(new MoveTermBetweenCollections(
+            fromCollectionId: $this->collectionId($id),
+            toCollectionId: $this->collectionId((string) $request->validated()['to_collection_id']),
+            termId: TermId::fromString($termId),
+            actorId: $this->actorId($request),
+        ));
+
+        return response()->noContent();
     }
 
     public function removeItem(Request $request, string $id, string $termId): Response
