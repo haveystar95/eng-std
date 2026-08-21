@@ -641,29 +641,78 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchTitle => 'Поиск слова';
 
   @override
-  String get searchFieldHint => 'Слово или перевод';
+  String get searchFieldHint => 'Найти слово';
 
   @override
-  String get searchEmptyHint =>
-      'Наберите слово — сначала посмотрим, что уже есть в базе.';
+  String get searchRecentLabel => 'Вы искали';
 
   @override
-  String get searchNothingFound => 'В базе такого нет';
+  String searchBaseSize(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'В базе $countString слов. Если слова нет — карточку соберёт модель.';
+  }
 
   @override
-  String get searchAskAi => 'Найти с ИИ';
+  String get searchInBaseLabel => 'Слова в базе';
 
   @override
-  String get searchAskAiNote =>
-      'Один запрос к модели. Повторно это слово будет бесплатным.';
+  String searchPressEnter(String query) {
+    return 'Нажмите Enter, чтобы искать «$query» целиком';
+  }
+
+  @override
+  String get searchOpenCard => 'Открыть карточку';
+
+  @override
+  String get searchMoreInBase => 'Ещё в базе';
+
+  @override
+  String searchMissTitle(String query) {
+    return '«$query» ещё нет в базе';
+  }
+
+  @override
+  String get searchMissBody =>
+      'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.';
+
+  @override
+  String get searchSimilarInBase => 'Похожее в базе';
+
+  @override
+  String get searchAskAi => 'Find with AI';
+
+  @override
+  String get searchAskAiNote => 'Один вызов модели. Повторный поиск бесплатный';
 
   @override
   String get searchLooking => 'Ищем…';
 
   @override
-  String searchLimitReached(int cap) {
-    return 'На сегодня лимит поиска исчерпан ($cap за день). Вот что нашлось в базе.';
+  String get searchBuildTranslation => 'перевод';
+
+  @override
+  String get searchBuildMeaning => 'значение';
+
+  @override
+  String get searchBuildExample => 'пример';
+
+  @override
+  String get searchBuildNote =>
+      'Пара секунд. Можно закрыть — карточка появится в поиске.';
+
+  @override
+  String searchLimitUsed(int used, int cap) {
+    return '$used из $cap на сегодня';
   }
+
+  @override
+  String get searchLimitTitle => 'Сборки с моделью вернутся в полночь';
+
+  @override
+  String get searchLimitBody => 'Поиск по базе работает как обычно.';
 
   @override
   String get searchLookupFailed => 'Не удалось найти это слово';
@@ -689,6 +738,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchSaveFailed => 'Не удалось сохранить';
+
+  @override
+  String get wordCardExampleLabel => 'Пример';
+
+  @override
+  String get wordCardFolderHint => 'Справа — выбрать другую папку';
+
+  @override
+  String wordCardSavedIn(String folder) {
+    return 'В папке «$folder»';
+  }
+
+  @override
+  String get wordCardAddToAnother => 'Добавить в другую папку';
+
+  @override
+  String get wordCardProgressLabel => 'Прогресс слова';
+
+  @override
+  String wordCardProgressCount(int step, int total) {
+    return '$step из $total';
+  }
+
+  @override
+  String wordCardPhotoCredit(String author) {
+    return 'Фото: $author';
+  }
+
+  @override
+  String get wordCardSpeak => 'Произнести';
+
+  @override
+  String get wordCardBack => 'Назад';
+
+  @override
+  String get wordCardMenu => 'Ещё';
+
+  @override
+  String get wordCardNoPhoto => 'Без фото';
 
   @override
   String get tabProgress => 'Прогресс';

@@ -19,6 +19,8 @@ import '../home/limit_reached_card.dart';
 import '../practice_dialog/dialog_entry_button.dart';
 import '../training/session_screen.dart';
 import '../training/triage_screen.dart';
+import '../word_card/word_card_screen.dart';
+import '../word_card/word_card_subject.dart';
 import 'collection_cta.dart';
 import 'collection_edit_dialog.dart';
 import 'word_edit_dialog.dart';
@@ -419,6 +421,14 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   word: items[i],
                   showDivider: i < items.length - 1,
                   onSpeak: () => _speak(items[i]),
+                  // Own folder → the full card; a store deck stays on the compact sheet.
+                  folder: readOnly
+                      ? null
+                      : SavedFolder(
+                          id: widget.collectionId,
+                          title: widget.title,
+                          isDefault: collection?.isDefault ?? false,
+                        ),
                   // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
                   onEdit: readOnly ? null : () => _edit(items[i]),
                   onDelete: readOnly ? null : () => _confirmDelete(items[i]),
@@ -856,6 +866,7 @@ class _WordRow extends StatefulWidget {
     required this.onSpeak,
     required this.onEdit,
     required this.onDelete,
+    required this.folder,
     this.onMove,
     this.onTrain,
     this.onEnroll,
@@ -865,6 +876,10 @@ class _WordRow extends StatefulWidget {
   final Word word;
   final bool showDivider;
   final VoidCallback onSpeak;
+
+  /// The folder this row is being read IN, or null on a read-only store deck. Non-null is what
+  /// opens the full word card (кадр 09) instead of the compact sheet — see [_WordRowState._openCard].
+  final SavedFolder? folder;
 
   /// «Тренировать слово» from the expanded card: a practice session filtered to this term.
   final VoidCallback? onTrain;
@@ -900,8 +915,16 @@ class _WordRowState extends State<_WordRow> {
 
   void _close() => setState(() => _offset = 0);
 
-  /// The expanded word card (кадр 16e) — the labelled ladder, the example, and «Тренировать слово».
-  void _openCard() => showWordLadderSheet(
+  /// The word's card.
+  ///
+  /// From the learner's OWN folder it is the full screen (кадр 09): a photo, the article, and the
+  /// ladder cut in as a band under the head — a word they own is worth a page. A store deck's word
+  /// keeps the compact sheet (кадр 16e): it is a catalogue entry being browsed, its ladder is empty
+  /// by definition, and none of the folder actions apply to it.
+  void _openCard() {
+    final folder = widget.folder;
+    if (folder == null) {
+      showWordLadderSheet(
         context: context,
         word: widget.word,
         onSpeak: widget.onSpeak,
@@ -909,6 +932,21 @@ class _WordRowState extends State<_WordRow> {
         onEnroll: widget.onEnroll,
         onUnenroll: widget.onUnenroll,
       );
+
+      return;
+    }
+
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => WordCardScreen(
+        subject: WordCardSubject.fromWord(widget.word, folders: [folder]),
+        mode: WordCardMode.folder,
+        onSpeak: widget.onSpeak,
+        onTrain: () => widget.onTrain?.call(),
+        onEnroll: widget.onEnroll,
+        onUnenroll: widget.onUnenroll,
+      ),
+    ));
+  }
 
   Future<void> _menu() async {
     AppHaptics.light();

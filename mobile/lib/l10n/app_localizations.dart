@@ -1016,34 +1016,76 @@ abstract class AppLocalizations {
   /// **'Поиск слова'**
   String get searchTitle;
 
-  /// Плейсхолдер поля поиска.
+  /// Плейсхолдер поля поиска (кадр 01).
   ///
   /// In ru, this message translates to:
-  /// **'Слово или перевод'**
+  /// **'Найти слово'**
   String get searchFieldHint;
 
-  /// Пустое состояние экрана поиска, до ввода.
+  /// Лейбл над тремя последними запросами на пустом экране поиска (кадр 01).
   ///
   /// In ru, this message translates to:
-  /// **'Наберите слово — сначала посмотрим, что уже есть в базе.'**
-  String get searchEmptyHint;
+  /// **'Вы искали'**
+  String get searchRecentLabel;
 
-  /// Ничего не нашлось по запросу.
+  /// Строка под списком недавних: размер базы и что будет, если слова в ней нет (кадр 01).
   ///
   /// In ru, this message translates to:
-  /// **'В базе такого нет'**
-  String get searchNothingFound;
+  /// **'В базе {count} слов. Если слова нет — карточку соберёт модель.'**
+  String searchBaseSize(int count);
 
-  /// Кнопка платного поиска через модель. Явный тап, никогда не автозапуск.
+  /// Лейбл над списком слов базы во время набора (кадр 02).
   ///
   /// In ru, this message translates to:
-  /// **'Найти с ИИ'**
+  /// **'Слова в базе'**
+  String get searchInBaseLabel;
+
+  /// Подсказка под списком во время набора (кадр 02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажмите Enter, чтобы искать «{query}» целиком'**
+  String searchPressEnter(String query);
+
+  /// Ссылка терракотой под найденным словом (кадр 03).
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть карточку'**
+  String get searchOpenCard;
+
+  /// Лейбл над остальными совпадениями (кадр 03).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё в базе'**
+  String get searchMoreInBase;
+
+  /// Заголовок состояния «слова нет» (кадр 04).
+  ///
+  /// In ru, this message translates to:
+  /// **'«{query}» ещё нет в базе'**
+  String searchMissTitle(String query);
+
+  /// Пояснение под заголовком (кадр 04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.'**
+  String get searchMissBody;
+
+  /// Лейбл над близкими совпадениями, когда точного нет (кадр 04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Похожее в базе'**
+  String get searchSimilarInBase;
+
+  /// Кнопка платного поиска через модель. Явный тап, никогда не автозапуск (кадр 04). По макету — латиницей в обеих локалях.
+  ///
+  /// In ru, this message translates to:
+  /// **'Find with AI'**
   String get searchAskAi;
 
-  /// Подпись под кнопкой «Найти с ИИ».
+  /// Подпись под кнопкой «Find with AI» (кадр 04).
   ///
   /// In ru, this message translates to:
-  /// **'Один запрос к модели. Повторно это слово будет бесплатным.'**
+  /// **'Один вызов модели. Повторный поиск бесплатный'**
   String get searchAskAiNote;
 
   /// Состояние во время вызова модели.
@@ -1052,11 +1094,47 @@ abstract class AppLocalizations {
   /// **'Ищем…'**
   String get searchLooking;
 
-  /// Дневной потолок платных lookup-ов.
+  /// Строка чек-листа сборки карточки (кадр 05).
   ///
   /// In ru, this message translates to:
-  /// **'На сегодня лимит поиска исчерпан ({cap} за день). Вот что нашлось в базе.'**
-  String searchLimitReached(int cap);
+  /// **'перевод'**
+  String get searchBuildTranslation;
+
+  /// Строка чек-листа сборки карточки (кадр 05).
+  ///
+  /// In ru, this message translates to:
+  /// **'значение'**
+  String get searchBuildMeaning;
+
+  /// Строка чек-листа сборки карточки (кадр 05).
+  ///
+  /// In ru, this message translates to:
+  /// **'пример'**
+  String get searchBuildExample;
+
+  /// Строка под чек-листом сборки (кадр 05).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пара секунд. Можно закрыть — карточка появится в поиске.'**
+  String get searchBuildNote;
+
+  /// Подпись рядом с пятью точками лимита (кадр 08).
+  ///
+  /// In ru, this message translates to:
+  /// **'{used} из {cap} на сегодня'**
+  String searchLimitUsed(int used, int cap);
+
+  /// Заголовок плашки исчерпанного дневного лимита (кадр 08).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сборки с моделью вернутся в полночь'**
+  String get searchLimitTitle;
+
+  /// Пояснение под заголовком лимита (кадр 08).
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по базе работает как обычно.'**
+  String get searchLimitBody;
 
   /// Модель ответила, но ответ не прошёл гейты, либо сеть не дала.
   ///
@@ -1099,6 +1177,72 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Не удалось сохранить'**
   String get searchSaveFailed;
+
+  /// Лейбл над примером на карточке слова (кадры 06/09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Пример'**
+  String get wordCardExampleLabel;
+
+  /// Подпись под парой кнопок на карточке слова (кадр 06).
+  ///
+  /// In ru, this message translates to:
+  /// **'Справа — выбрать другую папку'**
+  String get wordCardFolderHint;
+
+  /// Контурная кнопка-состояние после сохранения (кадр 07).
+  ///
+  /// In ru, this message translates to:
+  /// **'В папке «{folder}»'**
+  String wordCardSavedIn(String folder);
+
+  /// Второе действие отдельной строкой терракотой (кадры 07/09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить в другую папку'**
+  String get wordCardAddToAnother;
+
+  /// Лейбл лестницы на карточке, открытой из папки (кадр 09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Прогресс слова'**
+  String get wordCardProgressLabel;
+
+  /// Счётчик ступени рядом с лейблом лестницы (кадр 09).
+  ///
+  /// In ru, this message translates to:
+  /// **'{step} из {total}'**
+  String wordCardProgressCount(int step, int total);
+
+  /// Атрибуция фотографа поверх фото-героя (лицензия Pexels).
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото: {author}'**
+  String wordCardPhotoCredit(String author);
+
+  /// Кнопка-динамик у термина — подпись для VoiceOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Произнести'**
+  String get wordCardSpeak;
+
+  /// Кнопка «назад» поверх фото — подпись для VoiceOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get wordCardBack;
+
+  /// Кнопка «…» поверх фото — подпись для VoiceOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ещё'**
+  String get wordCardMenu;
+
+  /// Подпись на нейтральной подложке, когда у слова нет картинки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без фото'**
+  String get wordCardNoPhoto;
 
   /// Таб-бар: прогресс (между Коллекциями и Профилем).
   ///

@@ -9,9 +9,13 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
 
-/// The grey line's contract in one sentence: it appears when there is something to say, it never
-/// appears under a word it is not about, and it can never produce an error the learner sees.
+/// The instant translation, after «Фаза 3» moved it INSIDE the field.
+///
+/// Its contract in one sentence: it appears when there is something to say, it never appears beside
+/// a word it is not about, it can never produce an error the learner sees — and it is feedback about
+/// the INPUT, so it is set smaller, italic and grey, and it never competes with the list of results.
 class _Api implements ApiClient {
   _Api({this.hint, this.throwOnHint = false});
 
@@ -36,7 +40,7 @@ class _Api implements ApiClient {
   Future<LookupOutcome> lookupWord(String query) async {
     lookupCalls++;
 
-    return const LookupOutcome(dailyCap: 30);
+    return const LookupOutcome(dailyCap: 5);
   }
 
   @override
@@ -44,13 +48,11 @@ class _Api implements ApiClient {
 }
 
 Future<void> _pump(WidgetTester tester, _Api api) async {
+  final db = AppDatabase.forTesting(NativeDatabase.memory());
+  addTearDown(db.close);
   await tester.pumpWidget(ProviderScope(
     overrides: [
-      appDatabaseProvider.overrideWith((ref) {
-        final db = AppDatabase.forTesting(NativeDatabase.memory());
-        ref.onDispose(db.close);
-        return db;
-      }),
+      appDatabaseProvider.overrideWithValue(db),
       apiClientProvider.overrideWithValue(api),
       collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
     ],
@@ -63,6 +65,7 @@ Future<void> _pump(WidgetTester tester, _Api api) async {
   ));
   await tester.pump();
   await tester.pump();
+  await tester.pump();
 }
 
 Future<void> _type(WidgetTester tester, String text) async {
@@ -73,14 +76,30 @@ Future<void> _type(WidgetTester tester, String text) async {
 }
 
 void main() {
-  testWidgets('shows «слово — перевод» once the answer arrives', (tester) async {
+  testWidgets('the echo is the translation alone, set italic and grey', (tester) async {
     final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
     await _pump(tester, api);
 
     await _type(tester, 'significant');
 
-    expect(find.text('significant — значительный'), findsOneWidget);
+    final echo = tester.widget<Text>(find.text('значительный'));
+    expect(echo.style?.fontStyle, FontStyle.italic);
+    expect(echo.style?.color, AppColors.tertiary);
     expect(api.hintCalls, 1);
+  });
+
+  testWidgets('it lives INSIDE the field, not on a line of its own', (tester) async {
+    // The mockup's own summary: while somebody types, the only thing that leads anywhere is the
+    // list of words. An instant gloss on its own line would sit at the same level as a result.
+    final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
+    await _pump(tester, api);
+
+    await _type(tester, 'significant');
+
+    final field = tester.getRect(find.byType(TextField));
+    final echo = tester.getRect(find.text('значительный'));
+    expect(echo.left, greaterThan(field.left), reason: 'it sits to the RIGHT of the input');
+    expect(echo.center.dy, closeTo(field.center.dy, 12));
   });
 
   testWidgets('says nothing when the feature is off server-side', (tester) async {
@@ -89,10 +108,10 @@ void main() {
 
     await _type(tester, 'significant');
 
-    // No key configured. Not an error, not a placeholder — the line is simply not drawn, and the
-    // rest of the screen is untouched.
-    expect(find.textContaining('—'), findsNothing);
+    // No key configured. Not an error, not a placeholder — nothing is drawn, and the rest of the
+    // screen is untouched.
     expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('значительный'), findsNothing);
   });
 
   testWidgets('says nothing when the monthly budget is spent', (tester) async {
@@ -101,7 +120,7 @@ void main() {
 
     await _type(tester, 'significant');
 
-    expect(find.textContaining('—'), findsNothing);
+    expect(find.text('значительный'), findsNothing);
   });
 
   testWidgets('a failed request is silent — never an error the learner sees', (tester) async {
@@ -111,36 +130,30 @@ void main() {
     await _type(tester, 'significant');
 
     expect(tester.takeException(), isNull);
-    expect(find.textContaining('—'), findsNothing);
   });
 
-  testWidgets('the line never sits under a word it is not about', (tester) async {
+  testWidgets('the echo never sits beside a word it is not about', (tester) async {
     final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
     await _pump(tester, api);
 
     await _type(tester, 'significant');
-    expect(find.text('significant — значительный'), findsOneWidget);
+    expect(find.text('значительный'), findsOneWidget);
 
     // Typing on invalidates the answer immediately, without waiting for the next one to land.
     await tester.enterText(find.byType(TextField), 'significantl');
     await tester.pump();
 
-    expect(find.text('significant — значительный'), findsNothing);
+    expect(find.text('значительный'), findsNothing);
   });
 
-  testWidgets('tapping the line opens the full card', (tester) async {
+  testWidgets('the echo never spends a model call by itself', (tester) async {
     final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
     await _pump(tester, api);
 
     await _type(tester, 'significant');
-    expect(api.lookupCalls, 0, reason: 'a hint must never spend the lookup by itself');
 
-    await tester.tap(find.text('significant — значительный'));
-    await tester.pump();
-    await tester.pump();
-
-    // The learner has just been told what the word means; «show me the rest» is the obvious next
-    // question, and it is the same paid flow the «Найти с ИИ» button runs.
-    expect(api.lookupCalls, 1);
+    // It is input feedback, not an offer. The paid call has exactly one door and it is «Find with
+    // AI» on кадр 04.
+    expect(api.lookupCalls, 0);
   });
 }

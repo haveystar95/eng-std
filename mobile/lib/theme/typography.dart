@@ -267,6 +267,164 @@ abstract final class AppText {
     color: AppColors.tertiary,
   );
 
+  // ── поиск и карточка слова (макет «Слова · фаза 3») ───────────────────────
+  //
+  // Направление 1a («Словарная статья») для поиска, 1b («Фото-герой») для карточки. Мокап набран
+  // IBM Plex Mono там, где стоят транскрипция, уровень и счётчики; в приложении моноширинного
+  // шрифта нет и не будет (правило 04 + IPA живёт только в Inter), поэтому эти роли —
+  // Inter с табличными цифрами. Всё англоязычное, как и везде, — Literata.
+
+  /// Поле поиска. Literata 20 — строка словаря, а не поле формы.
+  static const searchInput = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 20,
+    color: AppColors.ink,
+  );
+
+  /// Эхо ввода СПРАВА ВНУТРИ поля («holl → холл»). Курсив и тише всего на экране: это обратная
+  /// связь набора, а не строка результата, и спорить с полем ей нельзя.
+  static const searchEcho = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w400,
+    fontSize: 13.5,
+    color: AppColors.tertiary,
+  );
+
+  /// Термин в строке списка поиска. Literata 21; кадр 02 даёт 23, вторичные списки — 19.
+  static const searchRowTerm = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 21,
+    height: 1.2,
+    color: AppColors.ink,
+  );
+
+  /// Перевод в той же строке. Inter 14.5 secondary.
+  static const searchRowTranslation = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 14.5,
+    color: AppColors.secondary,
+  );
+
+  /// Уровень (A1…C2) в строке списка. Табличные цифры, tertiary, без рамки.
+  static const levelMark = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 11,
+    color: AppColors.tertiary,
+    fontFeatures: _tabular,
+  );
+
+  /// Заголовок «„слово“ ещё нет в базе». Literata 22 / 1.35.
+  static const searchMissTitle = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 22,
+    height: 1.35,
+    color: AppColors.ink,
+  );
+
+  /// Пояснение абзацем под заголовком или в плашке лимита. Inter 14.5 / 1.55 ink-body.
+  static const searchMissBody = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 14.5,
+    height: 1.55,
+    color: AppColors.inkBody,
+  );
+
+  /// Служебная строка под кнопкой или под списком. Inter 12.5 / 1.5 tertiary.
+  static const searchFootnote = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 12.5,
+    height: 1.5,
+    color: AppColors.tertiary,
+  );
+
+  /// Строка «В базе N слов…» и «Нажмите Enter…». Inter 13.5 / 1.55 secondary.
+  static const searchNote = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 13.5,
+    height: 1.55,
+    color: AppColors.secondary,
+  );
+
+  /// Термин на карточке слова. Literata 42 / 500 / 1.02 · −.025em — первое, что видит глаз.
+  static const cardTerm = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w500,
+    fontSize: 42,
+    height: 1.02,
+    letterSpacing: -1.05,
+    color: AppColors.ink,
+  );
+
+  /// Транскрипция на карточке. Inter 14.5 secondary (IPA — только Inter).
+  static const cardTranscription = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 14.5,
+    color: AppColors.secondary,
+  );
+
+  /// Уровень на карточке — плашка с заливкой ink-body и бумажной подписью.
+  static const cardLevelBadge = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w500,
+    fontSize: 11.5,
+    color: AppColors.paper,
+  );
+
+  /// Перевод на карточке. Literata 26 / 1.2 — вторая по величине строка после термина.
+  static const cardTranslation = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 26,
+    height: 1.2,
+    color: AppColors.ink,
+  );
+
+  /// Значение — по-английски, курсивом, на отдельном поднятом листе.
+  static const cardDefinition = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.w400,
+    fontSize: 16.5,
+    height: 1.55,
+    color: AppColors.inkBody,
+  );
+
+  /// Пример употребления на карточке. Literata 19 / 1.45 ink (сам термин внутри — полужирным).
+  static const cardExample = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 19,
+    height: 1.45,
+    color: AppColors.ink,
+  );
+
+  /// Перевод примера — под ним, тише. Inter 14.5 / 1.5 secondary.
+  static const cardExampleTranslation = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 14.5,
+    height: 1.5,
+    color: AppColors.secondary,
+  );
+
+  /// Атрибуция фотографа поверх фото-героя. Мельче всего, на [AppColors.plateLabel].
+  static const photoCredit = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 10.5,
+    color: AppColors.plateLabel,
+  );
+
   /// Таб-бар — активный. 9.5 / 700.
   static const tabActive = TextStyle(
     fontFamily: AppFonts.inter,

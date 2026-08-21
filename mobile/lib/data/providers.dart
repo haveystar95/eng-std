@@ -460,6 +460,8 @@ Word _toWord(CollectionTermRow r) {
     translation: r.term.translation ?? '',
     transcription: r.term.transcription,
     example: r.term.example,
+    exampleTranslation: r.term.exampleTranslation,
+    description: r.term.description,
     type: r.term.type,
     status: status,
     imageUrl: r.term.imageUrl, // Pexels photo (docks in via sync)

@@ -94,6 +94,13 @@ class Word {
   final String translation;
   final String? transcription;
   final String? example;
+
+  /// The example's translation, and what the word MEANS in the language being learned. Both are
+  /// mirrored on the local term row, and both are what the word CARD (кадр 06/09) is made of — the
+  /// list rows never showed them, which is why they were not carried here before.
+  final String? exampleTranslation;
+  final String? description;
+
   final String type; // word | phrase | idiom | phrasal_verb
   final String? audioUrl; // optional override; null → system TTS
   final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
@@ -125,6 +132,8 @@ class Word {
     required this.translation,
     this.transcription,
     this.example,
+    this.exampleTranslation,
+    this.description,
     required this.type,
     this.audioUrl,
     this.ttsHint,
@@ -151,6 +160,8 @@ class Word {
         translation: (j['translation'] as String?) ?? '',
         transcription: j['transcription'] as String?,
         example: j['example'] as String?,
+        exampleTranslation: j['example_translation'] as String?,
+        description: j['description'] as String?,
         type: (j['type'] as String?) ?? 'word',
         audioUrl: j['audio_url'] as String?,
         ttsHint: j['tts_hint'] as String?,

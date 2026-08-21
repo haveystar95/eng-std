@@ -618,28 +618,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchTitle => 'Word search';
 
   @override
-  String get searchFieldHint => 'A word or its translation';
+  String get searchFieldHint => 'Find a word';
 
   @override
-  String get searchEmptyHint => 'Type a word — we look in the database first.';
+  String get searchRecentLabel => 'You searched';
 
   @override
-  String get searchNothingFound => 'Not in the database';
+  String searchBaseSize(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'The database has $countString words. If yours is missing, the model will write its card.';
+  }
+
+  @override
+  String get searchInBaseLabel => 'Words in the database';
+
+  @override
+  String searchPressEnter(String query) {
+    return 'Press Enter to search for “$query” whole';
+  }
+
+  @override
+  String get searchOpenCard => 'Open the card';
+
+  @override
+  String get searchMoreInBase => 'More in the database';
+
+  @override
+  String searchMissTitle(String query) {
+    return '“$query” is not in the database yet';
+  }
+
+  @override
+  String get searchMissBody =>
+      'Check the spelling — or have the card written: translation, meaning, example, photo.';
+
+  @override
+  String get searchSimilarInBase => 'Similar in the database';
 
   @override
   String get searchAskAi => 'Find with AI';
 
   @override
-  String get searchAskAiNote =>
-      'One model call. Looking this word up again is free.';
+  String get searchAskAiNote => 'One model call. Searching again is free';
 
   @override
   String get searchLooking => 'Looking…';
 
   @override
-  String searchLimitReached(int cap) {
-    return 'Today\'s search limit is spent ($cap a day). Here is what the database has.';
+  String get searchBuildTranslation => 'translation';
+
+  @override
+  String get searchBuildMeaning => 'meaning';
+
+  @override
+  String get searchBuildExample => 'example';
+
+  @override
+  String get searchBuildNote =>
+      'A couple of seconds. You can close this — the card will be in search.';
+
+  @override
+  String searchLimitUsed(int used, int cap) {
+    return '$used of $cap today';
   }
+
+  @override
+  String get searchLimitTitle => 'Model-written cards come back at midnight';
+
+  @override
+  String get searchLimitBody => 'Searching the database works as usual.';
 
   @override
   String get searchLookupFailed => 'Could not look this word up';
@@ -665,6 +715,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchSaveFailed => 'Could not save';
+
+  @override
+  String get wordCardExampleLabel => 'Example';
+
+  @override
+  String get wordCardFolderHint => 'On the right — pick another folder';
+
+  @override
+  String wordCardSavedIn(String folder) {
+    return 'In “$folder”';
+  }
+
+  @override
+  String get wordCardAddToAnother => 'Add to another folder';
+
+  @override
+  String get wordCardProgressLabel => 'Word progress';
+
+  @override
+  String wordCardProgressCount(int step, int total) {
+    return '$step of $total';
+  }
+
+  @override
+  String wordCardPhotoCredit(String author) {
+    return 'Photo: $author';
+  }
+
+  @override
+  String get wordCardSpeak => 'Speak';
+
+  @override
+  String get wordCardBack => 'Back';
+
+  @override
+  String get wordCardMenu => 'More';
+
+  @override
+  String get wordCardNoPhoto => 'No photo';
 
   @override
   String get tabProgress => 'Progress';
