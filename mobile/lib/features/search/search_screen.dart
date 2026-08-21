@@ -11,6 +11,8 @@ import 'package:eng_std/ui/ui.dart';
 import '../../data/models.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
+import '../../data/search/suggestions.dart';
+import '../../data/search/word_list.dart';
 import 'search_result_card.dart';
 
 /// «Поиск» — the fifth tab.
@@ -38,6 +40,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _pronouncer = Pronouncer();
   Timer? _timer;
 
+  /// The offline dictionary, read once, the first time this screen opens. It fills the silence
+  /// between a keystroke and a server round trip — see [WordList].
+  final _words = WordListLoader();
+  List<String> _dictionaryHits = const [];
+
   /// Guards against an out-of-order response overwriting a newer one: every dispatch takes the next
   /// number and only the latest is allowed to land.
   int _generation = 0;
@@ -53,6 +60,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String? _lookupError;
 
   @override
+  void initState() {
+    super.initState();
+    // Lazily, and only now: most sessions never open search, and the parse is not worth paying for
+    // on app start. A first keystroke that beats the read simply gets no dictionary row yet.
+    _words.ensureLoaded().then((_) {
+      if (mounted && _query.isNotEmpty) setState(() => _dictionaryHits = _suggestFor(_query));
+    });
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     _controller.dispose();
@@ -65,6 +82,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final query = raw.trim();
     setState(() {
       _query = query;
+      // Straight away, with no await anywhere: the dictionary is in memory, so the suggestion row
+      // paints in the same frame as the character that was typed. That immediacy IS the feature —
+      // everything else on this screen has to wait for a server.
+      _dictionaryHits = _suggestFor(query);
       // A new query invalidates the old model answer — leaving it on screen under a different word
       // is the one thing this screen must never do.
       _lookup = null;
@@ -76,6 +97,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     });
     if (query.isEmpty) return;
     _timer = Timer(_debounce, () => _runFreeSearch(query));
+  }
+
+  List<String> _suggestFor(String query) => _words.loaded?.startingWith(query) ?? const [];
+
+  /// Tapping a suggestion completes the word and searches for it at once — the learner has said
+  /// which word they meant, so making them press anything else would be asking twice.
+  void _acceptSuggestion(String word) {
+    AppHaptics.light();
+    _controller.value = TextEditingValue(
+      text: word,
+      selection: TextSelection.collapsed(offset: word.length),
+    );
+    _timer?.cancel();
+    setState(() {
+      _query = word;
+      _dictionaryHits = const [];
+      _lookup = null;
+      _lookupError = null;
+    });
+    unawaited(_runFreeSearch(word));
   }
 
   Future<void> _runFreeSearch(String query) async {
@@ -155,6 +196,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Text(l.searchTitle, style: AppText.screenTitle),
             const SizedBox(height: AppSpacing.s16),
             _field(l),
+            ..._suggestionRow(),
             const SizedBox(height: AppSpacing.s16),
             ..._results(l),
           ],
@@ -195,6 +237,34 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ],
       ),
     );
+  }
+
+  /// The suggestion chips, directly under the field.
+  ///
+  /// Hidden as soon as the database has answered: once real results are on screen, a row of
+  /// spellings is noise between the learner and the thing they were looking for. It exists to fill
+  /// the gap BEFORE that, which is exactly where the screen used to be blank.
+  List<Widget> _suggestionRow() {
+    if (_query.isEmpty || _hits.isNotEmpty) return const [];
+
+    final suggestions = mergeSuggestions(known: _hits, dictionary: _dictionaryHits);
+    if (suggestions.isEmpty) return const [];
+
+    return [
+      const SizedBox(height: AppSpacing.s12),
+      ChipScrollRow(
+        children: [
+          for (final suggestion in suggestions)
+            AppChip(
+              label: suggestion.word,
+              // A word we already have is marked, so the two kinds of suggestion do not read as
+              // one list of equals: this one can be saved, the others still need looking up.
+              selected: suggestion.isKnown,
+              onTap: () => _acceptSuggestion(suggestion.word),
+            ),
+        ],
+      ),
+    ];
   }
 
   List<Widget> _results(AppLocalizations l) {

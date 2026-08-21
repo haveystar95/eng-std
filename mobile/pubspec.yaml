@@ -119,6 +119,9 @@ flutter:
   # Played natively through AudioServices (ios/Runner/AppDelegate.swift), not by a pub package.
   assets:
     - assets/sounds/
+    # The offline autocomplete dictionary (~47k words, 363 KB). Regenerate with
+    # scripts/build_wordlist.sh — the source and the filtering rules live in its header.
+    - assets/wordlist/
 
   # Bundled fonts — offline-first, no runtime fetch. Instanced from the OFL
   # variable fonts down to exactly the token-list weights (no extra weights);
