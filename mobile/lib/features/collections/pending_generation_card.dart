@@ -5,9 +5,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../data/feature_flags.dart';
+import '../../data/generation_controller.dart';
 import '../../data/local/app_database.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../paywall/paywall_screen.dart';
 import 'collection_cover.dart';
 import 'collection_detail_screen.dart';
 
@@ -30,10 +33,11 @@ List<PendingGeneration> visiblePendingGenerations(
 }
 
 /// One in-flight / finished generation as a flat list row (кадр 2.5 / 7a), driven entirely by its
-/// drift row (survives an app kill AND an offline start; reconciled on launch). Three faces:
+/// drift row (survives an app kill AND an offline start; reconciled on launch). Four faces:
 /// generating (shimmer in the cover slot + «обычно 20–30 секунд»), failed («Генерация не потрачена»
-/// + Повторить/Скрыть), and ready (the synced cover/title, a контурный недобор-бейдж «13 из 15»
-/// when under-delivered, tap to open with a «Разобрать» nudge).
+/// + Повторить/Скрыть), **quota spent** (the day's allowance is gone — when it resets + Premium,
+/// and «Повторить» only once it actually has), and ready (the synced cover/title, a контурный
+/// недобор-бейдж «13 из 15» when under-delivered, tap to open with a «Разобрать» nudge).
 class PendingGenerationCard extends ConsumerWidget {
   const PendingGenerationCard({super.key, required this.row, this.showDivider = true});
 
@@ -45,6 +49,7 @@ class PendingGenerationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final body = switch (row.status) {
+      'failed' when row.error == GenerationController.quotaExceededError => _quotaSpent(context, ref),
       'failed' => _failed(context, ref),
       'succeeded' => _ready(context, ref),
       _ => _generating(context),
@@ -158,6 +163,87 @@ class PendingGenerationCard extends ConsumerWidget {
       ],
     );
   }
+
+  /// The day's allowance is spent (429 `generation_quota_exceeded`). NOT the error face: nothing
+  /// broke and nothing was lost — the prompt simply has to wait for the reset, so the card says when
+  /// that is and offers the way around it. «Повторить» appears only once the quota really has reset
+  /// (or when there is no paywall to offer), because a retry before that just fails again.
+  Widget _quotaSpent(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final ctrl = ref.read(generationControllerProvider);
+    final quota = ref.watch(generationQuotaProvider).value;
+    final canRetry = quota != null && !quota.exhausted;
+    final paywall = ref.watch(featureFlagsProvider).paywallEnabled;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: _cover,
+          height: _cover,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadii.thumb),
+              border: Border.all(color: AppColors.hairline),
+            ),
+            child: const Icon(LucideIcons.clock, size: 26, color: AppColors.tertiary),
+          ),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.generationQuotaTitle, style: AppText.sheetButton.copyWith(fontSize: 16.5)),
+              const SizedBox(height: 5),
+              Text(
+                quota == null
+                    ? l.generationQuotaBodyNoTime(row.topic)
+                    : l.generationQuotaBody(row.topic, _hhmm(quota.resetsAt)),
+                style: AppText.translation.copyWith(fontSize: 13, height: 1.4, color: AppColors.secondary),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (canRetry || !paywall)
+                    _InkPill(
+                      label: l.generationRetry,
+                      onTap: () {
+                        AppHaptics.light();
+                        ctrl.retry(row);
+                      },
+                    )
+                  else
+                    _InkPill(
+                      label: l.generationQuotaPremium,
+                      onTap: () {
+                        AppHaptics.light();
+                        showPaywall(context, ref, const PaywallArgs(PaywallEntry.quota));
+                      },
+                    ),
+                  const SizedBox(width: 14),
+                  InkWell(
+                    onTap: () => ctrl.dismiss(row.id),
+                    borderRadius: BorderRadius.circular(AppRadii.small),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      child: Text(l.generationHide,
+                          style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.tertiary)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Device-local HH:mm — the reset instant is absolute (next UTC midnight), rendered where the user
+  /// is, exactly as the create screen's footer renders it.
+  static String _hhmm(DateTime t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   Widget _ready(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);

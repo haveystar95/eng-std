@@ -118,6 +118,19 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
 
   String get _sourceLang => ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
 
+  /// Leave the screen with the keyboard closed.
+  ///
+  /// Popping a route whose field still holds focus does NOT always tear the text-input connection
+  /// down on iOS: the owner left this screen (Отмена, and again after the generation was refused)
+  /// and the keyboard stayed up over the Collections/Profile tabs for the rest of the session. The
+  /// unfocus has to happen BEFORE the pop — after it the node is already detached and nothing
+  /// tells the platform to hide. `primaryFocus` covers the case where focus sits somewhere else
+  /// on the screen (the topic field is not the only focusable thing here).
+  void _dismissKeyboard() {
+    _topicFocus.unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   // ── Voice ──
 
   Future<void> _toggleVoice() async {
@@ -227,6 +240,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     }
     final navigator = Navigator.of(context);
     if (_listening) await _stopListening();
+    _dismissKeyboard(); // the screen is about to pop — the keyboard must not outlive it
     setState(() => _submitting = true);
     try {
       // Enqueue: a client-ULID pending row (survives an app kill and an offline start); the durable
@@ -285,63 +299,70 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     final quota = ref.watch(generationQuotaProvider).value;
     final exhausted = quota?.exhausted ?? false;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: AppColors.paper,
-        // The footer lives inside the body (not bottomNavigationBar) so it docks above the keyboard.
-        resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              _TopBar(onCancel: () => Navigator.of(context).maybePop()),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 18),
-                  children: [
-                    _situationField(l),
-                    const SizedBox(height: 8),
-                    if (!_listening)
-                      Text(l.generateSituationHelper,
-                          style: AppText.translation.copyWith(fontSize: 12.5))
-                    else
-                      Text(l.generateVoiceHelper, style: AppText.translation.copyWith(fontSize: 12.5)),
-                    const SizedBox(height: AppSpacing.s22),
-                    _sectionLabel(l.generateSizeLabel),
-                    const SizedBox(height: 9),
-                    _sizeRow(l),
-                    const SizedBox(height: AppSpacing.s22),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(child: _sectionLabel(l.generateLevelLabel)),
-                        Text(l.generateLevelMulti, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
-                      ],
-                    ),
-                    const SizedBox(height: 9),
-                    _levelRow(),
-                    const SizedBox(height: AppSpacing.s22),
-                    _sectionLabel(l.generateLanguageLabel),
-                    const SizedBox(height: 9),
-                    _languageRow(l),
-                  ],
+    return PopScope(
+      // Covers the exits that don't go through «Отмена» — the iOS back-swipe and the system back.
+      onPopInvokedWithResult: (_, _) => _dismissKeyboard(),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.dark,
+        child: Scaffold(
+          backgroundColor: AppColors.paper,
+          // The footer lives inside the body (not bottomNavigationBar) so it docks above the keyboard.
+          resizeToAvoidBottomInset: true,
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _TopBar(onCancel: () {
+                  _dismissKeyboard();
+                  Navigator.of(context).maybePop();
+                }),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 18),
+                    children: [
+                      _situationField(l),
+                      const SizedBox(height: 8),
+                      if (!_listening)
+                        Text(l.generateSituationHelper,
+                            style: AppText.translation.copyWith(fontSize: 12.5))
+                      else
+                        Text(l.generateVoiceHelper, style: AppText.translation.copyWith(fontSize: 12.5)),
+                      const SizedBox(height: AppSpacing.s22),
+                      _sectionLabel(l.generateSizeLabel),
+                      const SizedBox(height: 9),
+                      _sizeRow(l),
+                      const SizedBox(height: AppSpacing.s22),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(child: _sectionLabel(l.generateLevelLabel)),
+                          Text(l.generateLevelMulti, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                        ],
+                      ),
+                      const SizedBox(height: 9),
+                      _levelRow(),
+                      const SizedBox(height: AppSpacing.s22),
+                      _sectionLabel(l.generateLanguageLabel),
+                      const SizedBox(height: 9),
+                      _languageRow(l),
+                    ],
+                  ),
                 ),
-              ),
-              _Footer(
-                quota: quota,
-                exhausted: exhausted,
-                submitting: _submitting,
-                onSubmit: _submit,
-                onManual: () => showCollectionEditor(context, ref),
-                // Premium upsell tap (кадр 15c) — only wired when the paywall flag is on; otherwise
-                // the row stays inert exactly as before A3.9.
-                onPremium: ref.watch(featureFlagsProvider).paywallEnabled
-                    ? () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.quota))
-                    : null,
-              ),
-            ],
+                _Footer(
+                  quota: quota,
+                  exhausted: exhausted,
+                  submitting: _submitting,
+                  onSubmit: _submit,
+                  onManual: () => showCollectionEditor(context, ref),
+                  // Premium upsell tap (кадр 15c) — only wired when the paywall flag is on; otherwise
+                  // the row stays inert exactly as before A3.9.
+                  onPremium: ref.watch(featureFlagsProvider).paywallEnabled
+                      ? () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.quota))
+                      : null,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -573,20 +594,31 @@ class _SizeChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9),
+          // Horizontal padding is not decoration: the hint is a translated string («примерно 15
+          // слов», «about 15 words») inside a third of the screen width, and with no inset it ran
+          // to the very edge of the chip — in English it wrapped and spilled over the ink fill.
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
           child: Column(
             children: [
               Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontFamily: AppFonts.inter,
                       fontSize: 13.5,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       color: selected ? AppColors.paper : AppColors.ink)),
               const SizedBox(height: 2),
-              Text(hint,
-                  style: AppText.counterSmall.copyWith(
-                      fontSize: 11.5,
-                      color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary)),
+              // One line, always — a longer translation shrinks to fit instead of wrapping, so the
+              // three chips stay the same height and read as one row.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(hint,
+                    maxLines: 1,
+                    style: AppText.counterSmall.copyWith(
+                        fontSize: 11.5,
+                        color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary)),
+              ),
             ],
           ),
         ),

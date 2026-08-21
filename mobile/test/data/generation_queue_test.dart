@@ -30,6 +30,31 @@ class _OfflineApi extends ApiClient {
   }
 }
 
+/// Answers every POST with one status + body — used for the two different 429s.
+class _RefusingApi extends ApiClient {
+  _RefusingApi(this.status, this.body) : super(TokenStore());
+
+  final int status;
+  final Object? body;
+
+  @override
+  Future<String> generateCollection({
+    String? id,
+    required String topic,
+    required List<String> levels,
+    required int size,
+    String? sourceLang,
+    String? targetLang,
+  }) {
+    final req = RequestOptions(path: '/generations');
+    throw DioException.badResponse(
+      statusCode: status,
+      requestOptions: req,
+      response: Response<Object?>(requestOptions: req, statusCode: status, data: body),
+    );
+  }
+}
+
 void main() {
   late AppDatabase db;
   setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
@@ -128,6 +153,54 @@ void main() {
 
     await pending;
     expect(syncs, 1);
+  });
+
+  test('the daily-quota refusal fails the card instead of queueing it forever', () async {
+    // The owner's report: a 429 «больше трёх коллекций в бесплатном режиме» left the card spinning
+    // on «Отправим, как только появится сеть» — the queue treated it as a network hiccup and
+    // re-sent it for ever, so the refusal was never said out loud.
+    var quotaRefreshes = 0;
+    final ctrl = GenerationController(
+      _RefusingApi(429, {
+        'code': 'generation_quota_exceeded',
+        'status': 429,
+        'meta': {'limit': 3},
+      }),
+      db,
+      () async {},
+      onQuotaChanged: () => quotaRefreshes++,
+    );
+
+    await ctrl.start(
+      topic: 'ремонт в квартире', levels: ['B1'], size: 10,
+      sourceLang: 'ru', targetLang: 'en', targetLangExplicit: false,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    final row = (await db.allPendingGenerations()).single;
+    expect(row.status, 'failed');
+    expect(row.error, GenerationController.quotaExceededError);
+    expect(row.sent, isFalse, reason: 'nothing was created server-side');
+    expect(quotaRefreshes, 1, reason: 'the create screen must now know the allowance is gone');
+
+    // And a flush must not resurrect it: a failed row is never re-sent.
+    await ctrl.flushQueue();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect((await db.allPendingGenerations()).single.status, 'failed');
+  });
+
+  test('a bare 429 (transport rate limit) is still transient and stays queued', () async {
+    final ctrl = GenerationController(_RefusingApi(429, 'Too Many Attempts.'), db, () async {});
+
+    await ctrl.start(
+      topic: 'у врача', levels: ['B1'], size: 10,
+      sourceLang: 'ru', targetLang: 'en', targetLangExplicit: false,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    final row = (await db.allPendingGenerations()).single;
+    expect(row.status, 'pending', reason: 'a per-minute ceiling clears by itself — keep the prompt');
+    expect(row.sent, isFalse);
   });
 
   test('reconcileCollections still reaps a genuine ghost with no pending reference', () async {

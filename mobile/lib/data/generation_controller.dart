@@ -25,11 +25,28 @@ import 'models.dart';
 /// arrives via /sync); failed → keep as an error card with «повторить»; pending/running → resume
 /// polling; a row older than 24h or a 404 → drop with a log note.
 class GenerationController {
-  GenerationController(this._api, this._db, this._sync, {this.coverResyncDelay = _defaultCoverResync});
+  GenerationController(
+    this._api,
+    this._db,
+    this._sync, {
+    this.coverResyncDelay = _defaultCoverResync,
+    this.onQuotaChanged,
+  });
 
   final ApiClient _api;
   final AppDatabase _db;
   final SyncFn _sync;
+
+  /// Called once the server has actually ACCEPTED or REFUSED a POST — i.e. the moment the day's
+  /// generation count can have moved. The create screen's quota is fetched from `/auth/me`, and
+  /// invalidating it at enqueue time (as the screen used to) reads the count BEFORE the request
+  /// exists server-side: the footer kept saying «осталось 1» after the allowance was gone, which is
+  /// how a 4-й запрос got through to a 429 at all.
+  final VoidCallback? onQuotaChanged;
+
+  /// [PendingGeneration.error] for a row the server refused on the daily allowance — the card shows
+  /// its own face for it (a limit is not a breakage, and «Повторить» today changes nothing).
+  static const quotaExceededError = 'generation_quota_exceeded';
 
   /// How long after a success to sync ONE more time, for the covers — see [resyncForCovers].
   /// Injectable so a test doesn't have to wait it out.
@@ -135,8 +152,9 @@ class GenerationController {
   }
 
   /// Send one queued row's POST (idempotent by its client ULID). On success mark it sent and start
-  /// polling; on a permanent reject (422/413) surface a failed card; on a transient failure (offline
-  /// / timeout / 5xx / 429) leave it queued for the next flush.
+  /// polling; on a permanent reject (422/413) surface a failed card; on the daily-quota refusal
+  /// (429 `generation_quota_exceeded`) surface the quota card; on a transient failure (offline /
+  /// timeout / 5xx / a bare 429) leave it queued for the next flush.
   Future<void> _send(String id) async {
     if (_sending.contains(id)) return;
     _sending.add(id);
@@ -157,7 +175,17 @@ class GenerationController {
           targetLang: r.targetLangExplicit ? r.targetLang : null,
         );
       } on DioException catch (e) {
-        if (isPermanentReject(e)) {
+        if (isGenerationQuotaExceeded(e)) {
+          // The day's allowance is spent. Nothing about resending fixes that, so the row becomes a
+          // spoken-out-loud card instead of sitting in the offline queue forever.
+          debugPrint('[gen] $id refused — daily generation quota spent');
+          await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
+            status: const Value('failed'),
+            error: const Value(quotaExceededError),
+            updatedAt: Value(DateTime.now()),
+          ));
+          onQuotaChanged?.call(); // the create screen must now grey its button
+        } else if (isPermanentReject(e)) {
           debugPrint('[gen] $id rejected (${e.response?.statusCode}) — failing the card');
           await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
             status: const Value('failed'),
@@ -170,6 +198,7 @@ class GenerationController {
         sent: const Value(true),
         updatedAt: Value(DateTime.now()),
       ));
+      onQuotaChanged?.call(); // accepted → one generation less for today
       _poll(id);
     } finally {
       _sending.remove(id);

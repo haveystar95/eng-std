@@ -35,7 +35,12 @@ PendingGeneration _row({
       updatedAt: DateTime(2026, 8, 4),
     );
 
-Future<void> _pump(WidgetTester tester, PendingGeneration row, {List<WordCollection> collections = const []}) async {
+Future<void> _pump(
+  WidgetTester tester,
+  PendingGeneration row, {
+  List<WordCollection> collections = const [],
+  GenerationQuota? quota,
+}) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWith((ref) {
@@ -44,6 +49,7 @@ Future<void> _pump(WidgetTester tester, PendingGeneration row, {List<WordCollect
         return db;
       }),
       collectionsProvider.overrideWith((ref) => Stream.value(collections)),
+      generationQuotaProvider.overrideWith((ref) async => quota),
     ],
     child: MaterialApp(
       locale: const Locale('ru'),
@@ -68,6 +74,36 @@ void main() {
     expect(find.textContaining('Генерация не потрачена'), findsOneWidget);
     expect(find.text('Повторить'), findsOneWidget);
     expect(find.text('Скрыть'), findsOneWidget);
+  });
+
+  testWidgets('the daily limit gets its own face — when it resets, and a way past it', (tester) async {
+    // The 429 «не больше трёх коллекций в бесплатном режиме» used to leave the card promising
+    // «Отправим, как только появится сеть» for ever. It is not a breakage and not a network wait:
+    // say what happened, when it lifts, and offer Premium instead of a retry that fails again.
+    await _pump(
+      tester,
+      _row(status: 'failed', error: 'generation_quota_exceeded', sent: false),
+      quota: GenerationQuota(limit: 3, used: 3, remaining: 0, resetsAt: DateTime(2026, 8, 22, 3)),
+    );
+    await tester.pump(); // the quota future resolves
+
+    expect(find.text('Генерации на сегодня закончились'), findsOneWidget);
+    expect(find.textContaining('03:00'), findsOneWidget);
+    expect(find.text('Открыть Premium'), findsOneWidget);
+    expect(find.text('Повторить'), findsNothing, reason: 'retrying today gets the same refusal');
+    expect(find.text('Скрыть'), findsOneWidget);
+  });
+
+  testWidgets('once the allowance has reset, the same card offers the retry', (tester) async {
+    await _pump(
+      tester,
+      _row(status: 'failed', error: 'generation_quota_exceeded', sent: false),
+      quota: GenerationQuota(limit: 3, used: 0, remaining: 3, resetsAt: DateTime(2026, 8, 23, 3)),
+    );
+    await tester.pump();
+
+    expect(find.text('Повторить'), findsOneWidget);
+    expect(find.text('Открыть Premium'), findsNothing);
   });
 
   testWidgets('ready state shows the collection and an under-delivery badge', (tester) async {
