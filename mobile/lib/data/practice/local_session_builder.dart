@@ -241,6 +241,7 @@ abstract final class LocalPracticeSessionBuilder {
         example: example,
         exampleTranslation: term.exampleTranslation,
         distractorCount: usableDistractors.length,
+        description: term.description,
       ),
     );
 
@@ -297,6 +298,19 @@ abstract final class LocalPracticeSessionBuilder {
       // The task is the audio: no written cue at all, or it becomes a translation exercise.
       answer = example!;
       prompt = null;
+    } else if (mode == ExerciseMode.descriptionMatch) {
+      // The description IS the question — the one card that shows no Russian at all. The answer
+      // stays the TERM and is compared as TEXT, exactly like an ordinary multiple_choice: the
+      // options here are words, so nothing needs identity grading. The gate only lets this mode
+      // through when the description is present, hence the `!`.
+      prompt = term.description!;
+      // Other pool words, through the same meaning-aware picker multiple_choice uses. That filter
+      // matters more here: a description separates two words one Russian gloss has collapsed, so
+      // offering both would put two right answers on the card.
+      options = [
+        answer,
+        ...PracticeDistractors.forTarget(target: term, pool: [...pool]..shuffle(random), count: optionCount - 1),
+      ]..shuffle(random);
     }
 
     // The rung this card is dealt at, echoed back with the answer like a server-built card's.

@@ -716,6 +716,30 @@ abstract class AppLocalizations {
   /// **'Сервис не ответил на запросе «{topic}». Генерация не потрачена.'**
   String generationFailedBody(String topic);
 
+  /// Заголовок карточки генерации, отклонённой по дневному лимиту (429 generation_quota_exceeded).
+  ///
+  /// In ru, this message translates to:
+  /// **'Генерации на сегодня закончились'**
+  String get generationQuotaTitle;
+
+  /// Текст карточки дневного лимита, когда известно время сброса.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.'**
+  String generationQuotaBody(String topic, String time);
+
+  /// Текст карточки дневного лимита, когда время сброса неизвестно (офлайн).
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.'**
+  String generationQuotaBodyNoTime(String topic);
+
+  /// Кнопка перехода на пейволл с карточки дневного лимита генераций.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть Premium'**
+  String get generationQuotaPremium;
+
   /// Кнопка повтора генерации (кадр 2.5).
   ///
   /// In ru, this message translates to:
@@ -943,6 +967,102 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Создать'**
   String get collectionSheetCreateButton;
+
+  /// Таб-бар: поиск слова (между Коллекциями и Прогрессом).
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск'**
+  String get tabSearch;
+
+  /// Заголовок экрана поиска.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск слова'**
+  String get searchTitle;
+
+  /// Плейсхолдер поля поиска.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово или перевод'**
+  String get searchFieldHint;
+
+  /// Пустое состояние экрана поиска, до ввода.
+  ///
+  /// In ru, this message translates to:
+  /// **'Наберите слово — сначала посмотрим, что уже есть в базе.'**
+  String get searchEmptyHint;
+
+  /// Ничего не нашлось по запросу.
+  ///
+  /// In ru, this message translates to:
+  /// **'В базе такого нет'**
+  String get searchNothingFound;
+
+  /// Кнопка платного поиска через модель. Явный тап, никогда не автозапуск.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти с ИИ'**
+  String get searchAskAi;
+
+  /// Подпись под кнопкой «Найти с ИИ».
+  ///
+  /// In ru, this message translates to:
+  /// **'Один запрос к модели. Повторно это слово будет бесплатным.'**
+  String get searchAskAiNote;
+
+  /// Состояние во время вызова модели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ищем…'**
+  String get searchLooking;
+
+  /// Дневной потолок платных lookup-ов.
+  ///
+  /// In ru, this message translates to:
+  /// **'На сегодня лимит поиска исчерпан ({cap} за день). Вот что нашлось в базе.'**
+  String searchLimitReached(int cap);
+
+  /// Модель ответила, но ответ не прошёл гейты, либо сеть не дала.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось найти это слово'**
+  String get searchLookupFailed;
+
+  /// Главная кнопка карточки: сохранить в личную папку по умолчанию.
+  ///
+  /// In ru, this message translates to:
+  /// **'+ Сохранённые'**
+  String get searchSaveToDefault;
+
+  /// Кнопка неактивна: слово уже в этой папке.
+  ///
+  /// In ru, this message translates to:
+  /// **'В «{folder}»'**
+  String searchAlreadyIn(String folder);
+
+  /// Подтверждение после сохранения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранено в «{folder}» — слово учится'**
+  String searchSavedTo(String folder);
+
+  /// Меню выбора папки рядом с главной кнопкой.
+  ///
+  /// In ru, this message translates to:
+  /// **'в коллекцию…'**
+  String get searchAddToCollection;
+
+  /// Пункт меню: создать папку и сохранить туда.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая коллекция'**
+  String get searchNewCollection;
+
+  /// Ошибка сохранения слова из поиска.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить'**
+  String get searchSaveFailed;
 
   /// Таб-бар: прогресс (между Коллекциями и Профилем).
   ///
@@ -1525,6 +1645,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'выбери верное предложение'**
   String get sessionInstrPickCorrect;
+
+  /// Инструкция description_match: описание на изучаемом языке, четыре слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'выбери слово по описанию'**
+  String get sessionInstrDescriptionMatch;
 
   /// Под неверным выбором в pick_correct: чем должен был быть подчёркнутый фрагмент.
   ///

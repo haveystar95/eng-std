@@ -49,6 +49,7 @@ class WordCollection {
     this.imageAuthor,
     this.imageAuthorUrl,
     this.isSubscribed = false,
+    this.isDefault = false,
   });
 
   bool get isAi => source == 'ai';
@@ -59,6 +60,13 @@ class WordCollection {
   /// A store set in «Мои»: full learning cycle (triage/session/progress) but no editing — no
   /// rename, no add/edit/delete words; removing it means unsubscribe, not delete.
   bool get readOnly => isSubscribed || !isOwned;
+
+  /// «Сохранённые»: the folder a one-tap save from search lands in. Exactly one per owner. It is an
+  /// ordinary custom collection in every other respect — practisable, renameable — and the only two
+  /// things this flag changes are that the shelf greys its delete action out and that the save
+  /// confirmation can name it. Read from the flag rather than from the TITLE, which the owner may
+  /// have changed.
+  final bool isDefault;
 
   factory WordCollection.fromJson(Map<String, dynamic> j) => WordCollection(
         id: j['id'] as String,
@@ -74,6 +82,7 @@ class WordCollection {
         imageAuthor: j['image_author'] as String?,
         imageAuthorUrl: j['image_author_url'] as String?,
         isSubscribed: (j['is_subscribed'] as bool?) ?? false,
+        isDefault: (j['is_default'] as bool?) ?? false,
       );
 }
 
@@ -835,4 +844,183 @@ class TriageDeck {
   final int remaining;
 
   const TriageDeck({required this.cards, required this.remaining});
+}
+
+// ---- Search -----------------------------------------------------------------
+
+/// One hit of the FREE search over terms that already exist, plus the one fact that makes the save
+/// button honest: [folders], the caller's own folders this word is already in.
+class SearchHit {
+  final String termId;
+  final String text;
+  final String type; // word | phrase | idiom | phrasal_verb
+  final String? transcription;
+  final String? translation;
+
+  /// What the word MEANS, in the language being learned. Null on the store catalogue, which has no
+  /// descriptions and is not being backfilled.
+  final String? description;
+
+  final String? example;
+  final String? exampleTranslation;
+  final String? cefr;
+
+  /// The caller's OWN folders holding this word. Empty = not saved yet, so the main button offers
+  /// «+ Сохранённые»; non-empty and the button reads «В „…"» and does nothing.
+  final List<SavedFolder> folders;
+
+  const SearchHit({
+    required this.termId,
+    required this.text,
+    required this.type,
+    this.transcription,
+    this.translation,
+    this.description,
+    this.example,
+    this.exampleTranslation,
+    this.cefr,
+    this.folders = const [],
+  });
+
+  bool get isSaved => folders.isNotEmpty;
+
+  factory SearchHit.fromJson(Map<String, dynamic> j) => SearchHit(
+        termId: j['term_id'] as String,
+        text: (j['text'] as String?) ?? '',
+        type: (j['type'] as String?) ?? 'word',
+        transcription: j['transcription'] as String?,
+        translation: j['translation'] as String?,
+        description: j['description'] as String?,
+        example: j['example'] as String?,
+        exampleTranslation: j['example_translation'] as String?,
+        cefr: j['cefr'] as String?,
+        folders: ((j['folders'] as List?) ?? const [])
+            .map((e) => SavedFolder.fromJson(e as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+}
+
+/// A folder a word sits in, as named on a search card.
+class SavedFolder {
+  final String id;
+  final String title;
+  final bool isDefault;
+
+  const SavedFolder({required this.id, required this.title, required this.isDefault});
+
+  factory SavedFolder.fromJson(Map<String, dynamic> j) => SavedFolder(
+        id: j['id'] as String,
+        title: (j['title'] as String?) ?? '',
+        isDefault: (j['is_default'] as bool?) ?? false,
+      );
+}
+
+/// A word the model looked up. NOT a term yet — nothing exists in the database until the learner
+/// saves it, which is what keeps the catalogue free of words nobody wanted.
+class LookupCard {
+  final String lookupId;
+  final String text;
+  final String type;
+  final String? transcription;
+  final String? translation;
+
+  /// One or two A2–B1 sentences in the language being learned, guaranteed by a server-side barrier
+  /// never to contain the word itself.
+  final String description;
+
+  final String? example;
+  final String? exampleTranslation;
+  final String? cefr;
+
+  /// True when THIS call paid for the answer rather than being served from the shared cache.
+  final bool fresh;
+
+  const LookupCard({
+    required this.lookupId,
+    required this.text,
+    required this.type,
+    this.transcription,
+    this.translation,
+    this.description = '',
+    this.example,
+    this.exampleTranslation,
+    this.cefr,
+    this.fresh = false,
+  });
+
+  factory LookupCard.fromJson(Map<String, dynamic> j) => LookupCard(
+        lookupId: j['lookup_id'] as String,
+        text: (j['text'] as String?) ?? '',
+        type: (j['type'] as String?) ?? 'word',
+        transcription: j['transcription'] as String?,
+        translation: j['translation'] as String?,
+        description: (j['description'] as String?) ?? '',
+        example: j['example'] as String?,
+        exampleTranslation: j['example_translation'] as String?,
+        cefr: j['cefr'] as String?,
+        fresh: (j['fresh'] as bool?) ?? false,
+      );
+}
+
+/// What came of a lookup: an answer, or an honest «not today».
+///
+/// The cap is not an error and this type is why. «На сегодня лимит» is a state the screen has a
+/// face for — it shows the free results beside it — and modelling it as a thrown exception would
+/// make the honest answer the exceptional path.
+class LookupOutcome {
+  final LookupCard? card;
+  final bool limitReached;
+  final int dailyCap;
+  final int usedToday;
+
+  const LookupOutcome({
+    this.card,
+    this.limitReached = false,
+    this.dailyCap = 0,
+    this.usedToday = 0,
+  });
+
+  factory LookupOutcome.fromJson(Map<String, dynamic> j) {
+    final raw = j['lookup'] as Map<String, dynamic>?;
+    return LookupOutcome(
+      card: raw == null ? null : LookupCard.fromJson(raw),
+      limitReached: (j['limit_reached'] as bool?) ?? false,
+      dailyCap: (j['daily_cap'] as int?) ?? 0,
+      usedToday: (j['used_today'] as int?) ?? 0,
+    );
+  }
+}
+
+/// What the one-tap save actually did. [collectionTitle] rides along because the confirmation NAMES
+/// the folder and the learner may have renamed it — a hardcoded «Сохранённые» would lie to exactly
+/// the person who changed it.
+class SavedSearchResult {
+  final String termId;
+  final String collectionId;
+  final String collectionTitle;
+  final bool collectionIsDefault;
+
+  /// False when the word was already in this folder — the tap was a replay, not a save.
+  final bool added;
+
+  /// False when the pair was already in the pool; the word resumes, it does not restart.
+  final bool enrolled;
+
+  const SavedSearchResult({
+    required this.termId,
+    required this.collectionId,
+    required this.collectionTitle,
+    required this.collectionIsDefault,
+    required this.added,
+    required this.enrolled,
+  });
+
+  factory SavedSearchResult.fromJson(Map<String, dynamic> j) => SavedSearchResult(
+        termId: j['term_id'] as String,
+        collectionId: j['collection_id'] as String,
+        collectionTitle: (j['collection_title'] as String?) ?? '',
+        collectionIsDefault: (j['collection_is_default'] as bool?) ?? false,
+        added: (j['added'] as bool?) ?? false,
+        enrolled: (j['enrolled'] as bool?) ?? false,
+      );
 }

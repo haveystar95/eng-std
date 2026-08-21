@@ -383,8 +383,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'approximately $count words',
-      one: 'approximately $count word',
+      other: 'about $count words',
+      one: 'about $count word',
     );
     return '$_temp0';
   }
@@ -435,6 +435,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String generationFailedBody(String topic) {
     return 'The service didn\'t answer “$topic”. No generation was spent.';
   }
+
+  @override
+  String get generationQuotaTitle => 'Out of generations for today';
+
+  @override
+  String generationQuotaBody(String topic, String time) {
+    return '“$topic” wasn\'t created. The limit resets at $time — you can retry then.';
+  }
+
+  @override
+  String generationQuotaBodyNoTime(String topic) {
+    return '“$topic” wasn\'t created: today\'s generation limit is spent.';
+  }
+
+  @override
+  String get generationQuotaPremium => 'Get Premium';
 
   @override
   String get generationRetry => 'Retry';
@@ -572,6 +588,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionSheetCreateButton => 'Create';
+
+  @override
+  String get tabSearch => 'Search';
+
+  @override
+  String get searchTitle => 'Word search';
+
+  @override
+  String get searchFieldHint => 'A word or its translation';
+
+  @override
+  String get searchEmptyHint => 'Type a word — we look in the database first.';
+
+  @override
+  String get searchNothingFound => 'Not in the database';
+
+  @override
+  String get searchAskAi => 'Find with AI';
+
+  @override
+  String get searchAskAiNote =>
+      'One model call. Looking this word up again is free.';
+
+  @override
+  String get searchLooking => 'Looking…';
+
+  @override
+  String searchLimitReached(int cap) {
+    return 'Today\'s search limit is spent ($cap a day). Here is what the database has.';
+  }
+
+  @override
+  String get searchLookupFailed => 'Could not look this word up';
+
+  @override
+  String get searchSaveToDefault => '+ Saved';
+
+  @override
+  String searchAlreadyIn(String folder) {
+    return 'In “$folder”';
+  }
+
+  @override
+  String searchSavedTo(String folder) {
+    return 'Saved to “$folder” — it is being studied now';
+  }
+
+  @override
+  String get searchAddToCollection => 'to a collection…';
+
+  @override
+  String get searchNewCollection => 'New collection';
+
+  @override
+  String get searchSaveFailed => 'Could not save';
 
   @override
   String get tabProgress => 'Progress';
@@ -952,6 +1023,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionInstrPickCorrect => 'pick the correct sentence';
+
+  @override
+  String get sessionInstrDescriptionMatch => 'pick the word this describes';
 
   @override
   String sessionPickCorrectShouldBe(String correction) {

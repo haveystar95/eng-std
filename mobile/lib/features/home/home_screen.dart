@@ -14,6 +14,7 @@ import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
 import '../profile/profile_screen.dart';
 import '../progress/progress_screen.dart';
+import '../search/search_screen.dart';
 import '../training/training_home_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -91,15 +92,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Search sits between Collections and Progress: the two library tabs together, then the two
+    // «about me» ones. Adding it in the MIDDLE moves Progress and Profile one place right, which is
+    // the reason _select's indices are read from this list rather than written as literals anywhere.
     final pages = [
       TrainingHomeScreen(onOpenCollections: () => _select(1)),
       const CollectionsScreen(),
+      const SearchScreen(),
       const ProgressScreen(),
       const ProfileScreen(),
     ];
     final items = [
       FloatingTabItem(icon: LucideIcons.house, label: l.tabHome),
       FloatingTabItem(icon: LucideIcons.layoutGrid, label: l.tabCollections),
+      FloatingTabItem(icon: LucideIcons.search, label: l.tabSearch),
       FloatingTabItem(icon: LucideIcons.barChart3, label: l.tabProgress),
       FloatingTabItem(icon: LucideIcons.user, label: l.tabProfile),
     ];

@@ -593,7 +593,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // though its options are whole sentences — that only changes how they read, not how they
         // are answered. Leaving it out was the device-batch bug: prompt and photo rendered, and
         // there was nothing on screen to tap.
-        if (_mode == ExerciseMode.multipleChoice || _mode.isSentenceChoice || _isRecognitionListening) ...[
+        if (_mode == ExerciseMode.multipleChoice ||
+            _mode == ExerciseMode.descriptionMatch ||
+            _mode.isSentenceChoice ||
+            _isRecognitionListening) ...[
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
@@ -649,6 +652,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (_isSpeaking) return _speakingPrompt(l);
     if (_isScramble) return _scramblePrompt(l);
     if (_mode.isSentenceChoice) return _pickCorrectPrompt(l);
+    if (_mode == ExerciseMode.descriptionMatch) return _descriptionPrompt(l);
     if (_mode == ExerciseMode.wordBank) return _wordBankPrompt(l);
     if (_mode == ExerciseMode.typing) return _typingPrompt(l);
     return _choicePrompt(l); // multiple_choice
@@ -671,6 +675,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         ExerciseMode.scramble => l.sessionInstrAssembleSentence,
         ExerciseMode.dictation => l.sessionInstrDictation,
         ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
+        // The prompt above is a DESCRIPTION, not a translation, so the instruction has to say so —
+        // «выбери английский эквивалент» under an English sentence would describe the wrong task.
+        ExerciseMode.descriptionMatch => l.sessionInstrDescriptionMatch,
         // The mode's two forms read as two different tasks, because they ARE two different tasks —
         // recall the word, or read the sentence you can see.
         ExerciseMode.speaking =>
@@ -725,6 +732,28 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         children: [
           Text(_card.prompt ?? '', style: AppTextExercise.taskPromptRu),
           const SizedBox(height: AppSpacing.s4),
+          _instructionLine(l, withType: false),
+        ],
+      ),
+    );
+  }
+
+  // description_match — the DESCRIPTION is the question, and it is in the language being learned.
+  //
+  // No photo and no translation, both deliberately. The photo is the strongest hint the app has and
+  // would answer the card outright; the translation would turn «read this and recognise the word»
+  // into the ordinary translation card that already exists. This is the one screen in the session
+  // that shows no Russian at all, and that is the whole point of the trainer.
+  //
+  // Literata rather than the Inter prompt style: this is a sentence to READ, in the target language,
+  // like the example and the pick_correct options — not a Russian cue to glance at.
+  Widget _descriptionPrompt(AppLocalizations l) {
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_card.prompt ?? '', style: AppTextExercise.answerOption),
+          const SizedBox(height: AppSpacing.s8),
           _instructionLine(l, withType: false),
         ],
       ),

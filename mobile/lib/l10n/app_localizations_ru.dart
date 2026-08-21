@@ -459,6 +459,22 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get generationQuotaTitle => 'Генерации на сегодня закончились';
+
+  @override
+  String generationQuotaBody(String topic, String time) {
+    return 'Коллекцию «$topic» не создали. Лимит обновится в $time — тогда можно повторить.';
+  }
+
+  @override
+  String generationQuotaBodyNoTime(String topic) {
+    return 'Коллекцию «$topic» не создали: дневной лимит генераций исчерпан.';
+  }
+
+  @override
+  String get generationQuotaPremium => 'Открыть Premium';
+
+  @override
   String get generationRetry => 'Повторить';
 
   @override
@@ -595,6 +611,62 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionSheetCreateButton => 'Создать';
+
+  @override
+  String get tabSearch => 'Поиск';
+
+  @override
+  String get searchTitle => 'Поиск слова';
+
+  @override
+  String get searchFieldHint => 'Слово или перевод';
+
+  @override
+  String get searchEmptyHint =>
+      'Наберите слово — сначала посмотрим, что уже есть в базе.';
+
+  @override
+  String get searchNothingFound => 'В базе такого нет';
+
+  @override
+  String get searchAskAi => 'Найти с ИИ';
+
+  @override
+  String get searchAskAiNote =>
+      'Один запрос к модели. Повторно это слово будет бесплатным.';
+
+  @override
+  String get searchLooking => 'Ищем…';
+
+  @override
+  String searchLimitReached(int cap) {
+    return 'На сегодня лимит поиска исчерпан ($cap за день). Вот что нашлось в базе.';
+  }
+
+  @override
+  String get searchLookupFailed => 'Не удалось найти это слово';
+
+  @override
+  String get searchSaveToDefault => '+ Сохранённые';
+
+  @override
+  String searchAlreadyIn(String folder) {
+    return 'В «$folder»';
+  }
+
+  @override
+  String searchSavedTo(String folder) {
+    return 'Сохранено в «$folder» — слово учится';
+  }
+
+  @override
+  String get searchAddToCollection => 'в коллекцию…';
+
+  @override
+  String get searchNewCollection => 'Новая коллекция';
+
+  @override
+  String get searchSaveFailed => 'Не удалось сохранить';
 
   @override
   String get tabProgress => 'Прогресс';
@@ -988,6 +1060,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionInstrPickCorrect => 'выбери верное предложение';
+
+  @override
+  String get sessionInstrDescriptionMatch => 'выбери слово по описанию';
 
   @override
   String sessionPickCorrectShouldBe(String correction) {

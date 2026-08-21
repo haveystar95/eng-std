@@ -90,6 +90,7 @@ class TermPlayability {
     this.hasExampleTranslation = false,
     this.exampleIsAnswer = false,
     this.distractorCount = 0,
+    this.hasDescription = false,
   });
 
   /// Derive it from a term's own content, exactly as the server's `PlayabilityAssessor` does.
@@ -98,6 +99,7 @@ class TermPlayability {
     String? example,
     String? exampleTranslation,
     int distractorCount = 0,
+    String? description,
   }) {
     final hasExample = example != null && example.isNotEmpty;
     return TermPlayability(
@@ -108,6 +110,9 @@ class TermPlayability {
       exampleIsAnswer: hasExample && SentenceTokenizer.sameTokens(example, answer),
       // Distractors hang off the pinned example; with no example they cannot make a term playable.
       distractorCount: hasExample ? distractorCount : 0,
+      // Unlike the distractors, this hangs off nothing: a description is about the WORD, so a term
+      // with no example still has one and description_match still plays.
+      hasDescription: description != null && description.trim().isNotEmpty,
     );
   }
 
@@ -136,6 +141,10 @@ class TermPlayability {
   /// Validated wrong versions of the pinned example, as mirrored by `/sync`.
   final int distractorCount;
 
+  /// The term has a description in the language being learned — the PROMPT of a description_match
+  /// card, so without one there is no card rather than a lesser one.
+  final bool hasDescription;
+
   /// Can this term be drilled in this mode at all?
   bool supports(ExerciseMode mode) => switch (mode) {
         ExerciseMode.wordBank => answerWordCount >= minWordBankWords,
@@ -154,6 +163,10 @@ class TermPlayability {
         ExerciseMode.pickCorrect => !exampleIsAnswer &&
             hasExampleTranslation &&
             distractorCount >= minPickCorrectDistractors,
+        // The description IS the prompt, so this is the one gate with nothing to fall back on: a
+        // card with no question is not a lesser card, it is not a card. Says nothing about the
+        // OPTIONS — those are other pool words, a fact about the session, not about this term.
+        ExerciseMode.descriptionMatch => hasDescription,
         // multiple_choice / typing / listening fit any term — they ask for the term itself.
         // `intro` asks for nothing at all, so there is no content it could lack: a term with no
         // example and no transcription still has a text and a translation to be SHOWN.

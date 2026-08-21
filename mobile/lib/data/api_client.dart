@@ -18,6 +18,22 @@ bool isPermanentReject(DioException e) {
   return status == 422 || status == 413;
 }
 
+/// The RFC 7807 `code` backend2 puts on every domain error (`application/problem+json`), or null
+/// when the answer isn't one of ours (a proxy 502, Laravel's own 422 shape, an offline failure).
+String? problemCode(DioException e) {
+  final body = e.response?.data;
+  return (body is Map && body['code'] is String) ? body['code'] as String : null;
+}
+
+/// The user's daily generation allowance is spent (429 `generation_quota_exceeded`).
+///
+/// A bare 429 IS transient — a per-minute transport ceiling that clears by itself, so the durable
+/// queues keep it. This one is not: re-sending the same prompt today gets the same refusal, and the
+/// prompt queue must stop and SAY SO instead of promising «отправим, как только появится сеть»
+/// forever (the owner's report: the collection card span indefinitely after a quota 429).
+bool isGenerationQuotaExceeded(DioException e) =>
+    e.response?.statusCode == 429 && problemCode(e) == 'generation_quota_exceeded';
+
 /// The request never reached the server: no network, a dead tunnel, a timeout. Worth telling the
 /// user plainly («нет соединения») instead of showing them a stack of Dio internals — and worth
 /// distinguishing from a server that answered but answered badly.
@@ -178,6 +194,65 @@ class ApiClient {
 
   Future<void> removeWord(String collectionId, String termId) async {
     await _dio.delete('/collections/$collectionId/items/$termId');
+  }
+
+  /// Move a term between two of the user's OWN folders. One call, not remove+add: the two halves
+  /// must not be able to half-happen and leave the word in neither folder.
+  Future<void> moveWord({
+    required String fromCollectionId,
+    required String toCollectionId,
+    required String termId,
+  }) async {
+    await _dio.post(
+      '/collections/$fromCollectionId/items/$termId/move',
+      data: {'to_collection_id': toCollectionId},
+    );
+  }
+
+  /// «Сохранённые» — the folder a one-tap save lands in, created server-side on first ask.
+  Future<WordCollection> defaultCollection() async {
+    final r = await _dio.get('/collections/default');
+    return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  // ---- Search ---------------------------------------------------------------
+
+  /// The FREE half: what the database already has. Safe on a debounced keystroke — it costs nothing
+  /// and calls no model. Every hit says which of the user's own folders already hold it, which is
+  /// what lets the save button tell the truth instead of offering a save that would do nothing.
+  Future<List<SearchHit>> search(String query, {int limit = 20}) async {
+    final r = await _dio.get('/search', queryParameters: {'q': query, 'limit': limit});
+    return (_data(r) as List)
+        .map((e) => SearchHit.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  /// The PAID half: one cheap model call for a word the database does not have. Never fired by a
+  /// debounce — the learner taps «Найти с ИИ», because this spends money.
+  ///
+  /// A spent daily cap is a normal 200 with [LookupOutcome.limitReached], not an error: the screen
+  /// shows the free results beside an honest line. A cached word is served free and does not touch
+  /// the cap at all.
+  Future<LookupOutcome> lookupWord(String query) async {
+    final r = await _dio.post('/search/lookup', data: {'query': query});
+    return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Save a search result: term → folder → POOL. [collectionId] null means «Сохранённые».
+  ///
+  /// Exactly one of [lookupId] / [termId]: the first saves a freshly looked-up word, the second one
+  /// the database already had. Idempotent — `added`/`enrolled` say what actually happened.
+  Future<SavedSearchResult> addSearchResult({
+    String? lookupId,
+    String? termId,
+    String? collectionId,
+  }) async {
+    final r = await _dio.post('/search/add', data: {
+      'lookup_id': ?lookupId,
+      'term_id': ?termId,
+      'collection_id': ?collectionId,
+    });
+    return SavedSearchResult.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   // ---- Store (B5) -----------------------------------------------------------

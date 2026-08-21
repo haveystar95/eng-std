@@ -211,6 +211,7 @@ class SyncService {
           imageUrl: Value(c['image_url'] as String?),
           imageAuthor: Value(c['image_author'] as String?),
           imageAuthorUrl: Value(c['image_author_url'] as String?),
+          isDefault: Value((c['is_default'] as bool?) ?? false),
         ));
       }
     }
@@ -246,6 +247,7 @@ class SyncService {
         translation: Value(t['translation'] as String?),
         example: Value(t['example'] as String?),
         exampleTranslation: Value(t['example_translation'] as String?),
+        description: Value(t['description'] as String?),
         imageUrl: Value(t['image_url'] as String?),
         imageAuthor: Value(t['image_author'] as String?),
         imageAuthorUrl: Value(t['image_author_url'] as String?),

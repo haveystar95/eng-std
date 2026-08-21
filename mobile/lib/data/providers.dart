@@ -395,6 +395,9 @@ final generationControllerProvider = Provider<GenerationController>((ref) {
     ref.watch(apiClientProvider),
     ref.watch(appDatabaseProvider),
     sync.sync,
+    // Refresh the allowance when the SERVER has answered, not when the row is enqueued: the count
+    // only moves once the POST lands, so an invalidation at enqueue time re-read the old number.
+    onQuotaChanged: () => ref.invalidate(generationQuotaProvider),
   );
 });
 
@@ -428,6 +431,7 @@ WordCollection _toCollection(Collection r) => WordCollection(
       imageUrl: r.imageUrl, // Pexels cover (docks in via sync; null → gradient placeholder)
       imageAuthor: r.imageAuthor,
       imageAuthorUrl: r.imageAuthorUrl,
+      isDefault: r.isDefault, // «Сохранённые» — the shelf greys its delete action out on this
     );
 
 /// The stored admission matrix, decoded. Anything unreadable falls back to the shipped matrix —

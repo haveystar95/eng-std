@@ -433,6 +433,9 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
       // as review rather than as the recognition→production step.
       // speaking opens on the assembly rung and only gets harder from there, so it reads as review
       // — never as the recognition→production step the header calls «assemble».
+      // description_match opens on graduation and asks a question the learner must READ in the
+      // language they are learning — a review-phase card, never the recognition→production step.
+      ExerciseMode.descriptionMatch ||
       ExerciseMode.speaking ||
       ExerciseMode.pickCorrect ||
       ExerciseMode.typing ||

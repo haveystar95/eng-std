@@ -29,6 +29,10 @@ class Collections extends Table {
   TextColumn get imageUrl => text().nullable()();
   TextColumn get imageAuthor => text().nullable()();
   TextColumn get imageAuthorUrl => text().nullable()();
+  /// «Сохранённые»: the one folder a one-tap save from search lands in. Exactly one per owner,
+  /// renameable, never deletable — the shelf greys its delete action out on this flag rather than
+  /// on the title, which the owner may have changed.
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -57,6 +61,12 @@ class Terms extends Table {
   TextColumn get translation => text().nullable()();
   TextColumn get example => text().nullable()();
   TextColumn get exampleTranslation => text().nullable()();
+  /// What the word MEANS, written in the language BEING LEARNED — the whole question of a
+  /// `description_match` card. Mirrored rather than only carried on the card, because the device
+  /// builds its own practice sessions offline: a trainer whose content never reaches the phone is a
+  /// trainer that silently never appears there. Null on everything written before descriptions
+  /// existed (the store catalogue), and the gate refuses those terms by content.
+  TextColumn get description => text().nullable()();
   // Pexels photo + attribution (A3). Populated by sync; the card image is Part B.
   TextColumn get imageUrl => text().nullable()();
   TextColumn get imageAuthor => text().nullable()();
@@ -396,7 +406,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   /// `addColumn`, but a no-op when the column is already there (QA-23).
   ///
@@ -530,6 +540,19 @@ class AppDatabase extends _$AppDatabase {
             // session completions do: they are the only way a word reaches the trainer, so one
             // made in airplane mode must not be lost.
             await m.createTable(poolQueueRows);
+          }
+          if (from < 16) {
+            // The word's DESCRIPTION (the description_match trainer's question) and the flag that
+            // says which folder is «Сохранённые».
+            await _addColumnIfMissing(m, terms, terms.description);
+            await _addColumnIfMissing(m, collections, collections.isDefault);
+            // …and a full snapshot on the next sync, for the same reason as v10, v11, v14 and v15:
+            // a delta carries only rows whose `updated_at` moved, so every term and folder already
+            // mirrored here would keep the column default forever. There is no offline stand-in for
+            // either value — the server is the only place they exist.
+            await m.database.customStatement(
+              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
+            );
           }
         },
       );

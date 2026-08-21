@@ -391,6 +391,24 @@
     "placeholders": { "topic": { "type": "String" } }
   },
 
+  "generationQuotaTitle": "Генерации на сегодня закончились",
+  "@generationQuotaTitle": { "description": "Заголовок карточки генерации, отклонённой по дневному лимиту (429 generation_quota_exceeded)." },
+
+  "generationQuotaBody": "Коллекцию «{topic}» не создали. Лимит обновится в {time} — тогда можно повторить.",
+  "@generationQuotaBody": {
+    "description": "Текст карточки дневного лимита, когда известно время сброса.",
+    "placeholders": { "topic": { "type": "String" }, "time": { "type": "String" } }
+  },
+
+  "generationQuotaBodyNoTime": "Коллекцию «{topic}» не создали: дневной лимит генераций исчерпан.",
+  "@generationQuotaBodyNoTime": {
+    "description": "Текст карточки дневного лимита, когда время сброса неизвестно (офлайн).",
+    "placeholders": { "topic": { "type": "String" } }
+  },
+
+  "generationQuotaPremium": "Открыть Premium",
+  "@generationQuotaPremium": { "description": "Кнопка перехода на пейволл с карточки дневного лимита генераций." },
+
   "generationRetry": "Повторить",
   "@generationRetry": { "description": "Кнопка повтора генерации (кадр 2.5)." },
 
@@ -523,6 +541,38 @@
   "collectionSheetCreateButton": "Создать",
   "@collectionSheetCreateButton": { "description": "Кнопка создания коллекции." },
 
+  "tabSearch": "Поиск",
+  "@tabSearch": { "description": "Таб-бар: поиск слова (между Коллекциями и Прогрессом)." },
+  "searchTitle": "Поиск слова",
+  "@searchTitle": { "description": "Заголовок экрана поиска." },
+  "searchFieldHint": "Слово или перевод",
+  "@searchFieldHint": { "description": "Плейсхолдер поля поиска." },
+  "searchEmptyHint": "Наберите слово — сначала посмотрим, что уже есть в базе.",
+  "@searchEmptyHint": { "description": "Пустое состояние экрана поиска, до ввода." },
+  "searchNothingFound": "В базе такого нет",
+  "@searchNothingFound": { "description": "Ничего не нашлось по запросу." },
+  "searchAskAi": "Найти с ИИ",
+  "@searchAskAi": { "description": "Кнопка платного поиска через модель. Явный тап, никогда не автозапуск." },
+  "searchAskAiNote": "Один запрос к модели. Повторно это слово будет бесплатным.",
+  "@searchAskAiNote": { "description": "Подпись под кнопкой «Найти с ИИ»." },
+  "searchLooking": "Ищем…",
+  "@searchLooking": { "description": "Состояние во время вызова модели." },
+  "searchLimitReached": "На сегодня лимит поиска исчерпан ({cap} за день). Вот что нашлось в базе.",
+  "@searchLimitReached": { "description": "Дневной потолок платных lookup-ов.", "placeholders": { "cap": { "type": "int" } } },
+  "searchLookupFailed": "Не удалось найти это слово",
+  "@searchLookupFailed": { "description": "Модель ответила, но ответ не прошёл гейты, либо сеть не дала." },
+  "searchSaveToDefault": "+ Сохранённые",
+  "@searchSaveToDefault": { "description": "Главная кнопка карточки: сохранить в личную папку по умолчанию." },
+  "searchAlreadyIn": "В «{folder}»",
+  "@searchAlreadyIn": { "description": "Кнопка неактивна: слово уже в этой папке.", "placeholders": { "folder": { "type": "String" } } },
+  "searchSavedTo": "Сохранено в «{folder}» — слово учится",
+  "@searchSavedTo": { "description": "Подтверждение после сохранения.", "placeholders": { "folder": { "type": "String" } } },
+  "searchAddToCollection": "в коллекцию…",
+  "@searchAddToCollection": { "description": "Меню выбора папки рядом с главной кнопкой." },
+  "searchNewCollection": "Новая коллекция",
+  "@searchNewCollection": { "description": "Пункт меню: создать папку и сохранить туда." },
+  "searchSaveFailed": "Не удалось сохранить",
+  "@searchSaveFailed": { "description": "Ошибка сохранения слова из поиска." },
   "tabProgress": "Прогресс",
   "@tabProgress": { "description": "Таб-бар: прогресс (между Коллекциями и Профилем)." },
 
@@ -776,6 +826,8 @@
   "sessionInstrDictation": "прослушай и запиши предложение",
   "sessionInstrPickCorrect": "выбери верное предложение",
   "@sessionInstrPickCorrect": { "description": "Инструкция pick_correct: три предложения, одно верное." },
+  "sessionInstrDescriptionMatch": "выбери слово по описанию",
+  "@sessionInstrDescriptionMatch": { "description": "Инструкция description_match: описание на изучаемом языке, четыре слова." },
   "sessionPickCorrectShouldBe": "должно быть: {correction}",
   "@sessionPickCorrectShouldBe": { "description": "Под неверным выбором в pick_correct: чем должен был быть подчёркнутый фрагмент.", "placeholders": { "correction": { "type": "String" } } },
   "@sessionInstrDictation": { "description": "Инструкция диктанта: звучит предложение-пример целиком (dictation)." },

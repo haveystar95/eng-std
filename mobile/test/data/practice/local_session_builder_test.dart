@@ -149,6 +149,14 @@ void main() {
           expect(card.options, isNull);
           expect(card.chips, isNull);
           expect(card.answer, card.asksForExample ? card.example : isNot(card.example));
+        case ExerciseMode.descriptionMatch:
+          // The description IS the question, so the prompt must be it and not the translation —
+          // and the answer stays the TERM, tapped from among other words.
+          expect(card.prompt, isNotNull);
+          expect(card.prompt, isNotEmpty);
+          expect(card.options, isNotNull);
+          expect(card.options, contains(card.answer));
+          expect(card.chips, isNull);
         case ExerciseMode.intro:
           fail('practice introduces nothing — an intro card must never be dealt here');
       }

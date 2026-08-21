@@ -48,9 +48,22 @@ class FloatingTabBar extends StatelessWidget {
     ];
   }
 
+  /// The width one tab gets — the design's 62pt, unless that many tabs would not fit the screen.
+  ///
+  /// Added with the fifth tab: 5 × 62 + padding is 330pt, which is wider than a 320pt device. The
+  /// pill is width-by-content and centred, so it would have overflowed rather than shrunk. Nothing
+  /// changes at four tabs or on any phone wide enough — the design width is the cap, not a target.
+  double _itemWidth(double available) {
+    const chrome = AppTabBarMetrics.padH * 2 + AppSpacing.s16; // padding + a breath on each side
+    final room = (available - chrome) / items.length;
+
+    return room < AppTabBarMetrics.item ? room.clamp(44.0, AppTabBarMetrics.item) : AppTabBarMetrics.item;
+  }
+
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppRadii.pill);
+    final itemWidth = _itemWidth(MediaQuery.sizeOf(context).width);
     return DecoratedBox(
       decoration: BoxDecoration(borderRadius: radius, boxShadow: AppShadows.pill),
       child: ClipRRect(
@@ -71,6 +84,7 @@ class FloatingTabBar extends StatelessWidget {
                   _TabButton(
                     item: items[i],
                     active: i == currentIndex,
+                    width: itemWidth,
                     onTap: () => onTap(i),
                   ),
               ],
@@ -83,16 +97,17 @@ class FloatingTabBar extends StatelessWidget {
 }
 
 class _TabButton extends StatelessWidget {
-  const _TabButton({required this.item, required this.active, required this.onTap});
+  const _TabButton({required this.item, required this.active, required this.width, required this.onTap});
   final FloatingTabItem item;
   final bool active;
+  final double width;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = active ? AppColors.ink : AppColors.secondary;
     return SizedBox(
-      width: AppTabBarMetrics.item,
+      width: width,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -101,7 +116,15 @@ class _TabButton extends StatelessWidget {
           children: [
             Icon(item.icon, size: 17, color: color),
             const SizedBox(height: 3),
-            Text(item.label, style: active ? AppText.tabActive : AppText.tabInactive),
+            // The label shrinks with the pill rather than wrapping: a two-line tab would change the
+            // bar's height, and the bar's height is what every screen's bottom padding is built on.
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              style: active ? AppText.tabActive : AppText.tabInactive,
+            ),
           ],
         ),
       ),
