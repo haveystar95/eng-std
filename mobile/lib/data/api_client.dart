@@ -227,6 +227,16 @@ class ApiClient {
         .toList(growable: false);
   }
 
+  /// The grey hint line: one word, one translation, as fast as it can be had.
+  ///
+  /// Safe on a debounce — most answers cost nothing (our own catalogue and a shared cache are
+  /// checked before any vendor), and it never fails in a way the screen has to render: no key, no
+  /// budget, no answer and a dead vendor all come back as a null translation.
+  Future<InstantHint> instantHint(String query) async {
+    final r = await _dio.get('/search/instant', queryParameters: {'q': query});
+    return InstantHint.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
   /// The PAID half: one cheap model call for a word the database does not have. Never fired by a
   /// debounce — the learner taps «Найти с ИИ», because this spends money.
   ///

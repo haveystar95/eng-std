@@ -1024,3 +1024,39 @@ class SavedSearchResult {
         enrolled: (j['enrolled'] as bool?) ?? false,
       );
 }
+
+/// The grey line under the search field: a first, cheap guess at what a word means.
+///
+/// It is NOT the word's card. The card (translation, description, example, level) is written by the
+/// lookup model against rules about register and level that a general-purpose translator knows
+/// nothing about — this is a hint that arrives first and is replaced by the real thing.
+///
+/// Every «nothing to show» is a field rather than an error, because there is no failure here worth
+/// interrupting somebody who is typing: [translation] is simply null and the line is not drawn.
+class InstantHint {
+  final String query;
+  final String? translation;
+
+  /// No provider configured server-side. Nothing to retry, nothing to tell the learner.
+  final bool featureDisabled;
+
+  /// The month's translation budget is spent. The full lookup is unaffected.
+  final bool limitReached;
+
+  const InstantHint({
+    required this.query,
+    this.translation,
+    this.featureDisabled = false,
+    this.limitReached = false,
+  });
+
+  /// Is there a line to draw at all?
+  bool get hasText => (translation ?? '').trim().isNotEmpty;
+
+  factory InstantHint.fromJson(Map<String, dynamic> j) => InstantHint(
+        query: (j['query'] as String?) ?? '',
+        translation: j['translation'] as String?,
+        featureDisabled: (j['feature_disabled'] as bool?) ?? false,
+        limitReached: (j['limit_reached'] as bool?) ?? false,
+      );
+}

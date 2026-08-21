@@ -45,6 +45,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _words = WordListLoader();
   List<String> _dictionaryHits = const [];
 
+  /// The grey line under the field. Null until an answer arrives for the CURRENT query — it is
+  /// never shown under a word it is not about.
+  InstantHint? _hint;
+
   /// Guards against an out-of-order response overwriting a newer one: every dispatch takes the next
   /// number and only the latest is allowed to land.
   int _generation = 0;
@@ -86,6 +90,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       // paints in the same frame as the character that was typed. That immediacy IS the feature —
       // everything else on this screen has to wait for a server.
       _dictionaryHits = _suggestFor(query);
+      // The old hint belonged to the old word. Clearing it here rather than when the new one lands
+      // is what stops «significant — значительный» sitting under «signif» for a beat.
+      _hint = null;
       // A new query invalidates the old model answer — leaving it on screen under a different word
       // is the one thing this screen must never do.
       _lookup = null;
@@ -96,7 +103,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       }
     });
     if (query.isEmpty) return;
-    _timer = Timer(_debounce, () => _runFreeSearch(query));
+    _timer = Timer(_debounce, () {
+      _runFreeSearch(query);
+      _fetchHint(query);
+    });
   }
 
   List<String> _suggestFor(String query) => _words.loaded?.startingWith(query) ?? const [];
@@ -113,10 +123,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {
       _query = word;
       _dictionaryHits = const [];
+      _hint = null;
       _lookup = null;
       _lookupError = null;
     });
     unawaited(_runFreeSearch(word));
+    // A tap says which word they meant, so the hint is worth fetching at once rather than waiting
+    // for a debounce that will never fire — there is no further typing coming.
+    unawaited(_fetchHint(word));
+  }
+
+  /// Ask for the grey line. Fire-and-forget by design: it has no spinner, no error path and no
+  /// retry — the line either appears or it does not, and everything else on the screen is
+  /// indifferent to which. A failure here must never reach the learner.
+  Future<void> _fetchHint(String query) async {
+    final generation = _generation;
+    try {
+      final hint = await ref.read(apiClientProvider).instantHint(query);
+      // The same out-of-order guard the search uses: a slow answer for an old word must not paint
+      // under a new one.
+      if (!mounted || generation != _generation || hint.query.isEmpty) return;
+      if (!hint.hasText) return;
+      setState(() => _hint = hint);
+    } catch (_) {
+      // Offline, throttled, dead tunnel — all the same thing here: no line.
+    }
   }
 
   Future<void> _runFreeSearch(String query) async {
@@ -196,6 +227,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Text(l.searchTitle, style: AppText.screenTitle),
             const SizedBox(height: AppSpacing.s16),
             _field(l),
+            ..._hintLine(),
             ..._suggestionRow(),
             const SizedBox(height: AppSpacing.s16),
             ..._results(l),
@@ -237,6 +269,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ],
       ),
     );
+  }
+
+  /// «significant — значительный», in grey, directly under the field.
+  ///
+  /// No spinner and no source label. A spinner would promise something is coming, and this is a
+  /// hint that is allowed not to arrive; a source label («from DeepL», «from cache») is the app's
+  /// internal kitchen and means nothing to the person reading it. The line simply appears when it
+  /// is ready, or never, and both are fine.
+  ///
+  /// Tapping it opens the full card — the learner has just been told what the word means and the
+  /// obvious next question is «show me the rest», which is exactly what «Найти с ИИ» does.
+  List<Widget> _hintLine() {
+    final hint = _hint;
+    if (hint == null || !hint.hasText || _lookup != null) return const [];
+
+    return [
+      const SizedBox(height: AppSpacing.s12),
+      InkWell(
+        onTap: _lookingUp ? null : _askAi,
+        borderRadius: BorderRadius.circular(AppRadii.thumb),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
+          child: Text(
+            '${hint.query} — ${hint.translation}',
+            style: AppText.translation.copyWith(color: AppColors.secondary),
+          ),
+        ),
+      ),
+    ];
   }
 
   /// The suggestion chips, directly under the field.
