@@ -124,6 +124,68 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     }
   }
 
+  /// Move a word to ANOTHER of the learner's own folders.
+  ///
+  /// One server call, not remove+add: the two halves must not be able to half-happen offline and
+  /// leave the word in neither folder. It is a change of shelf and nothing else — the word keeps its
+  /// rung, its due date and its place in the pool, which is why this is not a destructive action and
+  /// asks for no confirmation.
+  Future<void> _moveWord(Word word) async {
+    final l = AppLocalizations.of(context);
+    final all = ref.read(collectionsProvider).value ?? const <WordCollection>[];
+    // Own, editable folders, minus the one we are standing in. A store deck is a catalogue nobody
+    // can put a word into.
+    final targets = all
+        .where((c) => c.isOwned && !c.isSubscribed && c.id != widget.collectionId)
+        .toList();
+
+    if (targets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.collectionMoveWordNowhere)),
+      );
+
+      return;
+    }
+
+    final target = await showAppBottomSheet<WordCollection>(
+      context: context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+            child: Text(l.collectionMoveWordTitle, style: AppText.sectionLabel),
+          ),
+          for (final folder in targets)
+            ListTile(
+              title: Text(folder.title, style: AppText.translation),
+              onTap: () => Navigator.of(sheet).pop(folder),
+            ),
+        ],
+      ),
+    );
+    if (target == null || !mounted) return;
+
+    try {
+      await ref.read(apiClientProvider).moveWord(
+            fromCollectionId: widget.collectionId,
+            toCollectionId: target.id,
+            termId: word.termId,
+          );
+      ref.read(syncServiceProvider).sync();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.collectionMoveWordDone(target.title))),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.collectionMoveWordFailed)),
+      );
+    }
+  }
+
   void _edit(Word word) => showWordEditor(
         context,
         ref,
@@ -162,12 +224,14 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                 label: l.collectionMenuRename,
                 onSelected: () => showCollectionEditor(context, ref, existing: _collection),
               ),
-              ContextMenuAction(
-                icon: LucideIcons.trash2,
-                label: l.collectionMenuDelete,
-                destructive: true,
-                onSelected: _confirmDeleteCollection,
-              ),
+              // Same rule as on the shelf: «Сохранённые» is renameable and undeletable.
+              if (!(_collection?.isDefault ?? false))
+                ContextMenuAction(
+                  icon: LucideIcons.trash2,
+                  label: l.collectionMenuDelete,
+                  destructive: true,
+                  onSelected: _confirmDeleteCollection,
+                ),
             ],
     );
   }
@@ -331,6 +395,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                   // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
                   onEdit: readOnly ? null : () => _edit(items[i]),
                   onDelete: readOnly ? null : () => _confirmDelete(items[i]),
+                  onMove: readOnly ? null : () => _moveWord(items[i]),
                   // Practice, narrowed to this word. Practice and not a study session: drilling one
                   // word on demand must not spend the day's new-term quota on it.
                   onTrain: () => _openSession(true, onlyTermId: items[i].termId),
@@ -748,6 +813,7 @@ class _WordRow extends StatefulWidget {
     required this.onSpeak,
     required this.onEdit,
     required this.onDelete,
+    this.onMove,
     this.onTrain,
     this.onEnroll,
     this.onUnenroll,
@@ -767,6 +833,9 @@ class _WordRow extends StatefulWidget {
   /// Null on a read-only (store-subscribed) collection — the row then has no swipe actions and no
   /// long-press menu, only tap-to-speak.
   final VoidCallback? onEdit, onDelete;
+
+  /// «Перенести в…» — a change of shelf. Absent on a read-only store deck, like edit and delete.
+  final VoidCallback? onMove;
 
   @override
   State<_WordRow> createState() => _WordRowState();
@@ -807,6 +876,14 @@ class _WordRowState extends State<_WordRow> {
       barrierLabel: l.commonCloseMenu,
       actions: [
         ContextMenuAction(icon: LucideIcons.pencil, label: l.actionEdit, onSelected: () => widget.onEdit?.call()),
+        // Not destructive: the word keeps its rung, its due date and its place in the pool — only
+        // the shelf changes. Styling it in red would say the opposite.
+        if (widget.onMove != null)
+          ContextMenuAction(
+            icon: LucideIcons.folderInput,
+            label: l.collectionMoveWord,
+            onSelected: () => widget.onMove?.call(),
+          ),
         ContextMenuAction(
           icon: LucideIcons.trash2,
           label: l.actionDelete,

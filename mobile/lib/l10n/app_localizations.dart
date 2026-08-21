@@ -590,6 +590,42 @@ abstract class AppLocalizations {
   /// **'Удалить из коллекции'**
   String get wordSheetDeleteLink;
 
+  /// Пункт меню слова: перенести в другую свою папку.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перенести в…'**
+  String get collectionMoveWord;
+
+  /// Заголовок листа выбора папки при переносе слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'Куда перенести'**
+  String get collectionMoveWordTitle;
+
+  /// Подтверждение переноса.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перенесено в «{folder}»'**
+  String collectionMoveWordDone(String folder);
+
+  /// Ошибка переноса слова между папками.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось перенести'**
+  String get collectionMoveWordFailed;
+
+  /// Переносить некуда — у пользователя одна папка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Других своих коллекций пока нет'**
+  String get collectionMoveWordNowhere;
+
+  /// Почему у папки по умолчанию нет удаления.
+  ///
+  /// In ru, this message translates to:
+  /// **'«{title}» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.'**
+  String collectionDefaultUndeletable(String title);
+
   /// Пункт меню коллекции: переименовать.
   ///
   /// In ru, this message translates to:
@@ -629,7 +665,7 @@ abstract class AppLocalizations {
   /// Текст подтверждения удаления коллекции.
   ///
   /// In ru, this message translates to:
-  /// **'Коллекция удалится. Прогресс по словам сохранится.'**
+  /// **'Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.'**
   String get collectionDeleteMessage;
 
   /// Кнопка отмены в подтверждениях.

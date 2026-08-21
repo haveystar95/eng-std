@@ -346,6 +346,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordSheetDeleteLink => 'Remove from set';
 
   @override
+  String get collectionMoveWord => 'Move to…';
+
+  @override
+  String get collectionMoveWordTitle => 'Move where';
+
+  @override
+  String collectionMoveWordDone(String folder) {
+    return 'Moved to “$folder”';
+  }
+
+  @override
+  String get collectionMoveWordFailed => 'Could not move it';
+
+  @override
+  String get collectionMoveWordNowhere => 'You have no other collections yet';
+
+  @override
+  String collectionDefaultUndeletable(String title) {
+    return '“$title” is where saved words land, so it cannot be deleted. Renaming it is fine.';
+  }
+
+  @override
   String get collectionMenuRename => 'Rename';
 
   @override
@@ -370,7 +392,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collectionDeleteMessage =>
-      'The set is deleted. Your word progress is kept.';
+      'The collection goes; the words stay in training. A word leaves training only from its own card.';
 
   @override
   String get commonCancel => 'Cancel';

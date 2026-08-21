@@ -364,6 +364,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wordSheetDeleteLink => 'Удалить из коллекции';
 
   @override
+  String get collectionMoveWord => 'Перенести в…';
+
+  @override
+  String get collectionMoveWordTitle => 'Куда перенести';
+
+  @override
+  String collectionMoveWordDone(String folder) {
+    return 'Перенесено в «$folder»';
+  }
+
+  @override
+  String get collectionMoveWordFailed => 'Не удалось перенести';
+
+  @override
+  String get collectionMoveWordNowhere => 'Других своих коллекций пока нет';
+
+  @override
+  String collectionDefaultUndeletable(String title) {
+    return '«$title» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.';
+  }
+
+  @override
   String get collectionMenuRename => 'Переименовать';
 
   @override
@@ -388,7 +410,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get collectionDeleteMessage =>
-      'Коллекция удалится. Прогресс по словам сохранится.';
+      'Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.';
 
   @override
   String get commonCancel => 'Отмена';

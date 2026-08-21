@@ -309,6 +309,18 @@
   "wordSheetDeleteLink": "Удалить из коллекции",
   "@wordSheetDeleteLink": { "description": "Деструктивная ссылка внизу шита редактирования (кадр 5c)." },
 
+  "collectionMoveWord": "Перенести в…",
+  "@collectionMoveWord": { "description": "Пункт меню слова: перенести в другую свою папку." },
+  "collectionMoveWordTitle": "Куда перенести",
+  "@collectionMoveWordTitle": { "description": "Заголовок листа выбора папки при переносе слова." },
+  "collectionMoveWordDone": "Перенесено в «{folder}»",
+  "@collectionMoveWordDone": { "description": "Подтверждение переноса.", "placeholders": { "folder": { "type": "String" } } },
+  "collectionMoveWordFailed": "Не удалось перенести",
+  "@collectionMoveWordFailed": { "description": "Ошибка переноса слова между папками." },
+  "collectionMoveWordNowhere": "Других своих коллекций пока нет",
+  "@collectionMoveWordNowhere": { "description": "Переносить некуда — у пользователя одна папка." },
+  "collectionDefaultUndeletable": "«{title}» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.",
+  "@collectionDefaultUndeletable": { "description": "Почему у папки по умолчанию нет удаления.", "placeholders": { "title": { "type": "String" } } },
   "collectionMenuRename": "Переименовать",
   "@collectionMenuRename": { "description": "Пункт меню коллекции: переименовать." },
 
@@ -330,7 +342,7 @@
     "placeholders": { "title": { "type": "String" } }
   },
 
-  "collectionDeleteMessage": "Коллекция удалится. Прогресс по словам сохранится.",
+  "collectionDeleteMessage": "Коллекция удалится, слова останутся в тренировке. Убрать слово из тренировки можно только на его карточке.",
   "@collectionDeleteMessage": { "description": "Текст подтверждения удаления коллекции." },
 
   "commonCancel": "Отмена",

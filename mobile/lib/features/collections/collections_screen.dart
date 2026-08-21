@@ -311,12 +311,17 @@ class _CollectionRow extends ConsumerWidget {
                 label: l.collectionMenuRename,
                 onSelected: () => showCollectionEditor(anchor, ref, existing: collection),
               ),
-              ContextMenuAction(
-                icon: LucideIcons.trash2,
-                label: l.collectionMenuDelete,
-                destructive: true,
-                onSelected: () => _confirmDelete(anchor, ref),
-              ),
+              // «Сохранённые» keeps rename and loses delete: it is the destination the app promises
+              // when it says «сохранено в …», and a one-tap save with nowhere to land is a broken
+              // button. The server refuses it too (409) — this is the honest face of that rule, not
+              // the rule itself.
+              if (!collection.isDefault)
+                ContextMenuAction(
+                  icon: LucideIcons.trash2,
+                  label: l.collectionMenuDelete,
+                  destructive: true,
+                  onSelected: () => _confirmDelete(anchor, ref),
+                ),
             ],
     );
   }
