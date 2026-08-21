@@ -54,6 +54,11 @@ return [
         'compare_model' => env('OPENAI_COMPARE_MODEL', env('OPENAI_GENERATE_MODEL', 'gpt-4o')),
         // Enriching a single bare term is a small task — the cheaper model is plenty.
         'enrich_model' => env('OPENAI_ENRICH_MODEL', 'gpt-4o-mini'),
+        // Looking up ONE word for the search screen: a dictionary entry, mechanically produced.
+        // The cheap model on purpose and by decision, not by default — the strong model costs two
+        // hundred times more for an answer the learner cannot tell apart, and this is the one paid
+        // call a learner can trigger by typing.
+        'search_model' => env('OPENAI_SEARCH_MODEL', 'gpt-4o-mini'),
         // Recapping a finished practice dialog is a tiny task — the cheap text model is plenty.
         'summary_model' => env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
     ],
@@ -132,6 +137,11 @@ return [
         // in-container finds nothing. Empty falls back to a git call (a local checkout) and then to
         // an explicit "не определён" — a header that admits the hole still dates the data.
         'git_sha' => env('APP_GIT_SHA'),
+        // How many PAID search lookups one learner may trigger per day. A runaway guard rather than
+        // a plan differentiator: a lookup costs a fraction of a cent, and gating the app's cheapest
+        // useful surface by tier would turn the search field into a paywall pitch. Cache hits do not
+        // count — nothing was bought. 0 switches paid lookups off entirely.
+        'search_lookup_daily_cap' => (int) env('SEARCH_LOOKUP_DAILY_CAP', 30),
         // Per-call timeout for the multi-provider comparison stack, seconds. 180 is generous for a
         // model that answers directly and NOT enough for a reasoning model on a long prompt —
         // grok-4.6 exceeded it on a 12-item collection. It is a knob rather than a constant so a

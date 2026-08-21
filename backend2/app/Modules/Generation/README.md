@@ -1,12 +1,45 @@
 # Generation
 
 **Owns:** AI collection generation — requests, prompts, quotas, cost tracking — plus AI-powered
-add-ons over a collection: term enrichment, "New example" regeneration, and **realtime
-conversation-practice dialogs**.
+add-ons over a collection: term enrichment, "New example" regeneration, **realtime
+conversation-practice dialogs**, and **word search** (`/search*`).
 
 The app's differentiator: a user types an intent ("иду в банк", "job interview") and gets a
 collection of the words and phrases they'd actually need. Treated as a first-class,
 **always-async** subsystem.
+
+## Word search — why it lives here
+
+`GET /search` costs nothing and reads Vocabulary; `POST /search/lookup` spends money; `POST
+/search/add` writes a term, puts it in a folder and enrols it. Three modules' data, one feature.
+
+It is Generation's because of what the free half is the first half OF: the whole reason to run the
+database search is to decide whether to buy a lookup, so «found / not found» is a spending
+decision, and the two halves must normalise a query identically or the cache key drifts from the
+search. Generation's Application is also the only layer deptrac already lets reach all four
+collaborators it needs (Vocabulary, Collections, Learning, Identity) — no new boundary was opened
+for this.
+
+The economics, stated once:
+
+- **cache → cap → call.** A cached answer is free and does not consult the cap. `search_lookups` is
+  keyed on (normalized query, target lang, native lang) and is GLOBAL — the second learner to type a
+  word pays nothing, forever. `user_id` on the row is *who paid*, and it exists so the cap has
+  something to count.
+- **`SEARCH_LOOKUP_DAILY_CAP`** (default 30/user/day) is a runaway guard, not a plan feature. A spent
+  cap is a **200** with `limit_reached: true` — the app shows the free results beside it.
+- **the cheap model**, by decision (`OPENAI_SEARCH_MODEL`, gpt-4o-mini). A lookup is a dictionary
+  entry; the strong model costs ~200× more for an answer nobody can tell apart.
+- **`LookupBarrier`** is `LanguageBarrier`'s shape for a synchronous call: no repair pass (the
+  learner is watching a spinner), so an unstorable answer is refused outright. One thing degrades
+  instead of refusing — an example that does not contain its term is dropped and the card is served
+  without it.
+- **`DescriptionSelfReference`** is the rule the `description_match` trainer depends on: a
+  description containing its own headword answers the card before it is asked.
+
+`search_lookup` is on the Observability purpose whitelist — added in the SAME change as the adapter,
+because the two migrations before it (`translation_repair`, `playground`) are the same hole found
+after a month of untracked spend.
 
 ## Pipeline
 

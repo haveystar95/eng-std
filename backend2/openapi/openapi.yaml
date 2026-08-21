@@ -23,6 +23,7 @@ tags:
   - name: Collections
   - name: Study
   - name: Generation
+  - name: Search
 
 paths:
   /auth/google:
@@ -444,6 +445,147 @@ paths:
                       collection_id: { type: string }
                       subscribed: { type: boolean }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /search:
+    get:
+      tags: [Search]
+      summary: Search the terms that already exist (free, instant)
+      description: >
+        Exact and prefix matches over the term's own text and over its translations in the learner's
+        language, ranked exact-term → exact-translation → prefix-term → prefix-translation. Costs
+        nothing and touches no model, so it is safe to call on a debounced keystroke. Every hit says
+        which of the CALLER'S OWN folders already hold it (`folders`), which is what lets the save
+        button tell the truth. Deliberately not fuzzy: the question is «do we already have the word
+        you typed», and a plausible near-miss would stop the learner generating the word they meant.
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/SearchHit' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /search/lookup:
+    post:
+      tags: [Search]
+      summary: Look one word up with the model (paid, capped, cached forever)
+      description: >
+        ONE call to the cheap model for a word the database does not have. A POST the learner taps —
+        never something a debounce fires — because it spends money.
+
+        The order is cache → cap → call. A cached answer is served FREE and does not consult the cap
+        at all: the answer is a fact about the word, not about who asked, so the second person to
+        type it (and the same person tomorrow) pays nothing. Only a genuine miss counts against
+        `SEARCH_LOOKUP_DAILY_CAP` (default 30/user/day).
+
+        A spent cap is a **200**, not a 429: `limit_reached: true`, `lookup: null`. It is a normal
+        answer the app has a screen for — the client shows the free `/search` results beside it.
+
+        The term is NOT created. It appears only when the learner explicitly saves it via
+        `/search/add`, which is what keeps the catalogue free of words nobody wanted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '200':
+          description: An answer, or an honest «not today»
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      lookup:
+                        allOf: [{ $ref: '#/components/schemas/LookupCard' }]
+                        nullable: true
+                      limit_reached: { type: boolean }
+                      daily_cap: { type: integer }
+                      used_today: { type: integer, description: paid lookups this UTC day }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: >
+            Either the input (`code: validation_error`) or the ANSWER (`code: lookup_refused`,
+            `meta.reason` = `wrong_language` | `description_gives_away` | `empty_query` |
+            `model_unavailable`). There is no repair pass: a lookup is a person watching a spinner,
+            and a second call to fix the first would double both the wait and the cost.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /search/add:
+    post:
+      tags: [Search]
+      summary: Save a search result — term, folder, POOL
+      description: >
+        Names either `lookup_id` (a freshly looked-up word: the cached answer becomes a term, with
+        its description) or `term_id` (a word the database already had) — never both. `collection_id`
+        omitted means «Сохранённые», created on the spot if this is the first save.
+
+        It ENROLS the word. That obeys the pool rule rather than bending it: going looking for a
+        word, typing it out and reading its card is as deliberate an act as «Учить это слово», and
+        it is the same door. What the rule forbids is enrolling by side effect, which this is not.
+        The enrichment станок is chained exactly as it is after a generation (`GENERATION_AUTO_ENRICH`).
+
+        Idempotent throughout — the term dedups on its normalized text, the folder add is a no-op
+        when the word is already there, the description is write-once, and re-enrolling an enrolled
+        pair changes neither its rung nor its due date. `added`/`enrolled` say what actually happened.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lookup_id: { type: string, minLength: 26, maxLength: 26 }
+                term_id: { type: string, minLength: 26, maxLength: 26 }
+                collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+              oneOf:
+                - required: [lookup_id]
+                - required: [term_id]
+      responses:
+        '201':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      term_id: { type: string }
+                      collection_id: { type: string }
+                      collection_title: { type: string, description: the folder's CURRENT name — the learner may have renamed it }
+                      collection_is_default: { type: boolean }
+                      added: { type: boolean, description: false when the word was already in this folder }
+                      enrolled: { type: boolean, description: false when the pair was already in the pool }
+        '403':
+          description: The folder is not the caller's (code `collection_not_editable`) — nothing is enrolled
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: No such cached lookup (code `lookup_not_found`)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /collections:
     get:
@@ -1586,6 +1728,54 @@ components:
         cost_usd: { type: string, nullable: true }
         created_at: { type: string, format: date-time }
         finished_at: { type: string, format: date-time, nullable: true }
+
+    SearchHit:
+      type: object
+      description: One term the database already has, plus where it lives for THIS learner.
+      properties:
+        term_id: { type: string }
+        text: { type: string }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
+        transcription: { type: string, nullable: true }
+        translation: { type: string, nullable: true }
+        description:
+          type: string
+          nullable: true
+          description: >
+            What the word means, written in the language BEING LEARNED. Null on the store
+            catalogue — those terms have no description and are not being backfilled.
+        example: { type: string, nullable: true }
+        example_translation: { type: string, nullable: true }
+        cefr: { type: string, nullable: true }
+        folders:
+          type: array
+          description: The caller's OWN folders holding this term. Empty = not saved yet.
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              is_default: { type: boolean }
+
+    LookupCard:
+      type: object
+      description: A word the model looked up. Not a term yet — nothing is written until `/search/add`.
+      properties:
+        lookup_id: { type: string, description: the handle `/search/add` takes }
+        text: { type: string }
+        type: { type: string, enum: [word, phrase] }
+        transcription: { type: string, nullable: true }
+        translation: { type: string, nullable: true }
+        description:
+          type: string
+          description: >
+            One or two A2–B1 sentences in the language being learned, never containing the word
+            itself — a description that names its headword answers the `description_match` card
+            before it is asked, and the barrier refuses one that does.
+        example: { type: string, nullable: true, description: contains the term verbatim, or is absent }
+        example_translation: { type: string, nullable: true }
+        cefr: { type: string, nullable: true }
+        fresh: { type: boolean, description: true when THIS call paid for the answer }
 
     CollectionSummary:
       type: object

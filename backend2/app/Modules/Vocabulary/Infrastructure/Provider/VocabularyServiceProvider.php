@@ -50,6 +50,10 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationLabelWrite
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
+use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
+use App\Modules\Vocabulary\Application\Query\TermSearchReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermDescriptionWriter;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermSearchReader;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -63,6 +67,10 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermExistenceReader::class, EloquentTermExistenceReader::class);
         $this->app->bind(TermContentReader::class, EloquentTermContentReader::class);
         $this->app->bind(TermChangeReader::class, EloquentTermChangeReader::class);
+        // Search: the free half — exact and prefix matches over terms we already have.
+        $this->app->bind(TermSearchReader::class, EloquentTermSearchReader::class);
+        // A term's description («what this word means», in the language being learned).
+        $this->app->bind(TermDescriptionWriter::class, EloquentTermDescriptionWriter::class);
         // The language audit: every learner-language string a user can actually reach.
         $this->app->bind(TermLanguageAuditReader::class, EloquentTermLanguageAuditReader::class);
         $this->app->bind(TranslationKeyReader::class, EloquentTranslationKeyReader::class);

@@ -1,0 +1,245 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Modules\Generation\Application\Port\WordLookupPort;
+use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
+use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
+use App\Modules\Identity\Infrastructure\Eloquent\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    // No network in tests: the deterministic lookup, whose answer deliberately passes the barrier.
+    $this->app->bind(WordLookupPort::class, FakeWordLookup::class);
+});
+
+it('finds an existing term by its own text, for free', function () {
+    [$user, $token] = learner();
+    [, $termId] = seedCollectionWith($user, 'invoice', 'счёт');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=invoice')
+        ->assertOk()
+        ->assertJsonPath('data.0.term_id', $termId)
+        ->assertJsonPath('data.0.text', 'invoice');
+
+    // Free means free: nothing was bought.
+    expect(DB::table('search_lookups')->count())->toBe(0);
+});
+
+it('finds a term by its translation and by a prefix', function () {
+    [$user, $token] = learner();
+    seedCollectionWith($user, 'invoice', 'счёт');
+
+    $byTranslation = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=счёт')->assertOk()->json('data');
+    $byPrefix = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=invo')->assertOk()->json('data');
+
+    expect($byTranslation)->toHaveCount(1)->and($byPrefix)->toHaveCount(1);
+});
+
+it('says which of the user\'s own folders already hold a hit', function () {
+    [$user, $token] = learner();
+    [$collectionId, ] = seedCollectionWith($user, 'ledger', 'книга учёта');
+
+    $hit = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=ledger')->assertOk()->json('data.0');
+
+    expect($hit['folders'])->toHaveCount(1)
+        ->and($hit['folders'][0]['id'])->toBe($collectionId);
+});
+
+it("does not leak another user's folders into the membership flag", function () {
+    $owner = User::factory()->create();
+    seedCollectionWith($owner, 'ledger', 'книга учёта');
+
+    [, $token] = learner();
+    $hit = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=ledger')->assertOk()->json('data.0');
+
+    expect($hit['folders'])->toBe([]);
+});
+
+it('looks a new word up once and serves every later ask from the cache', function () {
+    [, $token] = learner();
+    [, $otherToken] = learner();
+
+    $first = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'Reimbursement'])
+        ->assertOk()
+        ->assertJsonPath('data.limit_reached', false)
+        ->assertJsonPath('data.lookup.text', 'reimbursement')
+        ->assertJsonPath('data.lookup.fresh', true)
+        ->json('data.lookup.lookup_id');
+
+    // A DIFFERENT user, same word: the answer is a fact about the word, so it costs nobody anything.
+    $second = $this->withHeader('Authorization', "Bearer {$otherToken}")
+        ->postJson('/api/v1/search/lookup', ['query' => '  reimbursement '])
+        ->assertOk()
+        ->assertJsonPath('data.lookup.fresh', false)
+        ->json('data.lookup.lookup_id');
+
+    expect($second)->toBe($first);
+    expect(DB::table('search_lookups')->count())->toBe(1);
+    // The lookup created no term: a word is only written when the learner says «save this».
+    expect(DB::table('terms')->where('text', 'reimbursement')->count())->toBe(0);
+});
+
+it('answers honestly when the daily cap is spent, and still costs nothing', function () {
+    config()->set('services.generation.search_lookup_daily_cap', 2);
+    $this->app->bind(SearchLookupDailyLimit::class, fn () => new SearchLookupDailyLimit(2));
+
+    [, $token] = learner();
+    foreach (['alpha', 'bravo'] as $word) {
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/search/lookup', ['query' => $word])
+            ->assertOk()->assertJsonPath('data.limit_reached', false);
+    }
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'charlie'])
+        ->assertOk()
+        ->assertJsonPath('data.limit_reached', true)
+        ->assertJsonPath('data.lookup', null)
+        ->assertJsonPath('data.daily_cap', 2);
+
+    expect(DB::table('search_lookups')->count())->toBe(2);
+});
+
+it('serves a cached word even when the cap is spent — nothing is bought', function () {
+    [, $token] = learner();
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'alpha'])->assertOk();
+
+    // Cap drops to zero AFTER the word is in the cache.
+    $this->app->bind(SearchLookupDailyLimit::class, fn () => new SearchLookupDailyLimit(0));
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'alpha'])
+        ->assertOk()
+        ->assertJsonPath('data.limit_reached', false)
+        ->assertJsonPath('data.lookup.text', 'alpha');
+});
+
+it('saves a looked-up word into «Сохранённые» and enrols it', function () {
+    [$user, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $saved = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId])
+        ->assertCreated()
+        ->assertJsonPath('data.collection_is_default', true)
+        ->assertJsonPath('data.added', true)
+        ->assertJsonPath('data.enrolled', true)
+        ->json('data');
+
+    $this->assertDatabaseHas('terms', ['id' => $saved['term_id'], 'text' => 'reimbursement']);
+    // The description is stored as content, in the language being learned.
+    $this->assertDatabaseHas('term_descriptions', ['term_id' => $saved['term_id'], 'lang' => 'en']);
+    // In the folder…
+    expect(DB::table('collection_items')
+        ->where('collection_id', $saved['collection_id'])->where('term_id', $saved['term_id'])
+        ->whereNull('deleted_at')->count())->toBe(1);
+    // …and in the pool: saving a word you went looking for IS the deliberate act.
+    expect(DB::table('user_term_progress')
+        ->where('user_id', $user->id)->where('term_id', $saved['term_id'])
+        ->whereNotNull('enrolled_at')->count())->toBe(1);
+});
+
+it('is idempotent: saving the same word twice makes one term and one item', function () {
+    [, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $save = fn () => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId])->assertCreated();
+
+    $first = $save()->json('data');
+    $second = $save()->json('data');
+
+    expect($second['term_id'])->toBe($first['term_id'])
+        ->and($second['added'])->toBeFalse()   // already there — the tap was a replay
+        ->and($second['enrolled'])->toBeFalse();
+    expect(DB::table('terms')->where('text', 'reimbursement')->count())->toBe(1);
+    expect(DB::table('collection_items')->where('term_id', $first['term_id'])->count())->toBe(1);
+});
+
+it('saves an existing term into a named folder', function () {
+    [$user, $token] = learner();
+    [, $termId] = seedCollectionWith($user, 'invoice', 'счёт', enroll: false);
+    $folder = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/collections', ['title' => 'Банк'])->json('data.id');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['term_id' => $termId, 'collection_id' => $folder])
+        ->assertCreated()
+        ->assertJsonPath('data.collection_id', $folder)
+        ->assertJsonPath('data.collection_title', 'Банк')
+        ->assertJsonPath('data.collection_is_default', false)
+        ->assertJsonPath('data.enrolled', true);
+});
+
+it("refuses to save into another user's folder, and enrols nothing", function () {
+    [$user, $token] = learner();
+    [, $termId] = seedCollectionWith($user, 'invoice', 'счёт', enroll: false);
+    $foreign = app(\App\Modules\Collections\Application\Command\CreateCustomCollectionHandler::class)(
+        new \App\Modules\Collections\Application\Command\CreateCustomCollection(
+            \App\Modules\Shared\Domain\ValueObject\UserId::fromString(User::factory()->create()->id),
+            'Чужая',
+            new \App\Modules\Shared\Domain\ValueObject\LanguageCode('ru'),
+            new \App\Modules\Shared\Domain\ValueObject\LanguageCode('en'),
+        ),
+    )->value;
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['term_id' => $termId, 'collection_id' => $foreign])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'collection_not_editable');
+
+    expect(DB::table('user_term_progress')
+        ->where('user_id', $user->id)->where('term_id', $termId)
+        ->whereNotNull('enrolled_at')->count())->toBe(0);
+});
+
+it('refuses a save that names both a lookup and a term', function () {
+    [, $token] = learner();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', [
+            'lookup_id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+            'term_id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+        ])
+        ->assertStatus(422);
+});
+
+it('404s a save pointing at a lookup that is not in the cache', function () {
+    [, $token] = learner();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate()])
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'lookup_not_found');
+});
+
+it('shows a saved word\'s description on the next free search', function () {
+    [, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId])->assertCreated();
+
+    $hit = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=reimbursement')->assertOk()->json('data.0');
+
+    expect($hit['description'])->not->toBeNull()
+        ->and($hit['folders'])->toHaveCount(1)
+        ->and($hit['folders'][0]['is_default'])->toBeTrue();
+});

@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Generation\Application\Dto;
+
+use DateTimeImmutable;
+
+/**
+ * A stored lookup answer, as it is handed to the client and later turned into a term.
+ *
+ * The `id` is the handle `POST /search/add` takes: the learner looks at a card and then says «save
+ * this one», and pointing at the row we already have is what keeps the two steps from being two
+ * different words (a re-generation between the two calls could legitimately word things
+ * differently, and the learner would save something they never read).
+ */
+final readonly class CachedLookup
+{
+    public function __construct(
+        public string $id,
+        public string $normalizedQuery,
+        public string $lang,
+        public string $nativeLang,
+        public string $text,
+        public string $type,
+        public string $translation,
+        public string $description,
+        public ?string $example,
+        public ?string $exampleTranslation,
+        public ?string $cefr,
+        public ?string $transcription,
+        public string $model,
+        public string $promptVersion,
+        public DateTimeImmutable $createdAt,
+        /** True when this call was paid for right now rather than served from the cache. */
+        public bool $fresh = false,
+    ) {}
+}

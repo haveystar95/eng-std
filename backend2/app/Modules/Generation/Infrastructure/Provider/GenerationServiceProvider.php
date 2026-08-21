@@ -25,6 +25,13 @@ use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\DialogSummarizerPort;
 use App\Modules\Generation\Application\Port\PracticeQuota;
 use App\Modules\Generation\Application\Port\RealtimeTokenPort;
+use App\Modules\Generation\Application\Port\SearchLookupCache;
+use App\Modules\Generation\Application\Port\WordLookupPort;
+use App\Modules\Generation\Application\Command\AddSearchResultHandler;
+use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
+use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiWordLookup;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentSearchLookupCache;
 use App\Modules\Generation\Application\Port\RecordsExampleRegeneration;
 use App\Modules\Generation\Application\Port\RecordsGenerationRejections;
 use App\Modules\Generation\Application\Port\TranslationRepairPort;
@@ -175,6 +182,33 @@ final class GenerationServiceProvider extends ServiceProvider
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );
         });
+
+        // ---- word search -------------------------------------------------------------------
+        $this->app->bind(SearchLookupCache::class, EloquentSearchLookupCache::class);
+
+        $this->app->bind(WordLookupPort::class, function (): WordLookupPort {
+            if (config('services.generation.driver') === 'fake') {
+                return new FakeWordLookup();
+            }
+
+            return new OpenAiWordLookup(
+                context: $this->app->make(OutboundCallContext::class),
+                apiKey: (string) config('services.openai.api_key'),
+                model: (string) config('services.openai.search_model', 'gpt-4o-mini'),
+            );
+        });
+
+        // The cap is a value, resolved once from config, so the handler that enforces it and the
+        // response that reports it cannot read two different numbers.
+        $this->app->bind(SearchLookupDailyLimit::class, fn (): SearchLookupDailyLimit => new SearchLookupDailyLimit(
+            (int) config('services.generation.search_lookup_daily_cap', SearchLookupDailyLimit::DEFAULT_CAP),
+        ));
+
+        // Saving a searched word chains the станок exactly as a finished generation does — same
+        // switch, read here rather than in the handler so Application stays clear of config().
+        $this->app->when(AddSearchResultHandler::class)
+            ->needs('$autoEnrich')
+            ->give(fn (): bool => config('services.generation.auto_enrich') === true);
 
         $this->app->bind(ExampleRegeneratorPort::class, function (): ExampleRegeneratorPort {
             if (config('services.generation.driver') === 'fake') {
