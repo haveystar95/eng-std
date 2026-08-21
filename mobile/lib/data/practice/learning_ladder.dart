@@ -309,6 +309,12 @@ class ModeAdmission {
     // the mode ([ExerciseMode.asksForExample]), so there is one row here and not two — the same
     // shape the server's `ModeAdmission::shipped()` has.
     ExerciseMode.speaking: ModeRule(mode: ExerciseMode.speaking, minStep: LearningLadder.stepAssembly),
+    // description_match opens with the assembly trainers too. `standard` options, not `distant`:
+    // distant exists for the recognition rungs, and this card's wrong options come from the pool
+    // through the ordinary picker — which already refuses a candidate sharing the target's meaning,
+    // the failure that actually matters when the prompt is a definition rather than a gloss.
+    ExerciseMode.descriptionMatch:
+        ModeRule(mode: ExerciseMode.descriptionMatch, minStep: LearningLadder.stepAssembly),
   });
 
   final Map<ExerciseMode, ModeRule> rules;
