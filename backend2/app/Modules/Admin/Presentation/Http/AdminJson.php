@@ -39,6 +39,10 @@ use App\Modules\Admin\Application\Dto\GenerationRow;
 use App\Modules\Admin\Application\Dto\ModeSimulationRow;
 use App\Modules\Admin\Application\Dto\PassportDistractorRow;
 use App\Modules\Admin\Application\Dto\Page;
+use App\Modules\Admin\Application\Dto\PlaygroundProviderRow;
+use App\Modules\Admin\Application\Dto\PlaygroundResult;
+use App\Modules\Admin\Application\Dto\PlaygroundValidation;
+use App\Modules\Admin\Application\Dto\PlaygroundValidationRow;
 use App\Modules\Admin\Application\Dto\PurposeCost;
 use App\Modules\Admin\Application\Dto\RequestLogDetail;
 use App\Modules\Admin\Application\Dto\RequestLogRow;
@@ -641,6 +645,72 @@ final class AdminJson
             'current_generator_version' => $p->currentGeneratorVersion,
             'min_distractors' => $p->minDistractors,
             'cost_per_term_usd' => $p->costPerTermUsd,
+        ];
+    }
+
+    // ── «Песочница» ─────────────────────────────────────────────────────────────────────────────
+
+    /** @return array<string, mixed> */
+    public static function playgroundProvider(PlaygroundProviderRow $p): array
+    {
+        return [
+            'provider' => $p->provider,
+            'label' => $p->label,
+            'models' => $p->models,
+            'available' => $p->available,
+            // Names the env var when unavailable — the one thing needed to fix it.
+            'reason' => $p->reason,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function playgroundResult(PlaygroundResult $r): array
+    {
+        return [
+            'provider' => $r->provider,
+            'model' => $r->model,
+            'raw_text' => $r->rawText,
+            'parsed_json' => $r->parsedJson,
+            // The model answered but not in JSON — an ordinary result in a prompt sandbox.
+            'parse_error' => $r->parseError,
+            'usage' => [
+                'tokens_in' => $r->tokensIn,
+                'tokens_out' => $r->tokensOut,
+                // Priced by the app's one pricing table; null = unpriced model, never free.
+                'cost_usd' => $r->costUsd,
+            ],
+            'latency_ms' => $r->latencyMs,
+            // The vendor never answered at all: auth, credits, timeout, a refusal.
+            'error' => $r->error,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function playgroundValidation(PlaygroundValidation $v): array
+    {
+        return [
+            'items' => array_map(static fn (PlaygroundValidationRow $r): array => [
+                'index' => $r->index,
+                'sentence' => $r->sentence,
+                'error_span' => $r->errorSpan,
+                'correction' => $r->correction,
+                'error_type' => $r->errorType,
+                'verdict' => $r->kept ? 'KEEP' : 'REJECT',
+                'gate' => $r->gate,
+                'reason' => $r->reason,
+                'error_type_defaulted' => $r->errorTypeDefaulted,
+            ], $v->items),
+            'kept' => $v->kept,
+            'total' => $v->total,
+            'source' => $v->source,
+            'term_id' => $v->termId,
+            'term_text' => $v->termText,
+            'example_sentence' => $v->exampleSentence,
+            'existing_count' => $v->existingCount,
+            'suppressed_count' => $v->suppressedCount,
+            'matched_term_id' => $v->matchedTermId,
+            // Said in the payload as well as on the screen: this endpoint writes nothing, ever.
+            'persisted' => false,
         ];
     }
 

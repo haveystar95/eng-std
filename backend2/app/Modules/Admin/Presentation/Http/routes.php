@@ -11,6 +11,7 @@ use App\Modules\Admin\Presentation\Http\Controller\ExerciseModeController;
 use App\Modules\Admin\Presentation\Http\Controller\GenerationController;
 use App\Modules\Admin\Presentation\Http\Controller\LadderController;
 use App\Modules\Admin\Presentation\Http\Controller\ModeSettingsController;
+use App\Modules\Admin\Presentation\Http\Controller\PlaygroundController;
 use App\Modules\Admin\Presentation\Http\Controller\PracticeDialogController;
 use App\Modules\Admin\Presentation\Http\Controller\RequestLogController;
 use App\Modules\Admin\Presentation\Http\Controller\TermController;
@@ -92,6 +93,13 @@ Route::middleware('auth:admin')->group(function (): void {
     Route::get('/logs', [RequestLogController::class, 'index']);
     Route::get('/logs/{id}', [RequestLogController::class, 'show']);
     Route::get('/request-logs', [RequestLogController::class, 'index']);
+
+    // «Песочница»: try a prompt on a model, then run what came back past the REAL distractor
+    // validator. Writes nothing — no distractors, no suppressions, no version marks. POST because
+    // both spend or compute on a body, not because either mutates anything.
+    Route::get('/playground/providers', [PlaygroundController::class, 'providers']);
+    Route::post('/playground/generate', [PlaygroundController::class, 'generateAction']);
+    Route::post('/playground/validate', [PlaygroundController::class, 'validateAction']);
 
     Route::get('/practice-dialogs', [PracticeDialogController::class, 'index']);
     Route::get('/practice-dialogs/{id}', [PracticeDialogController::class, 'show']);

@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Command\RequestCollectionGenerationHandle
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Generation\Application\Port\BakeoffJournal;
 use App\Modules\Generation\Application\Port\ContentModelCatalog;
+use App\Modules\Generation\Application\Port\PlaygroundModelCatalog;
 use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Application\Service\ContentContract;
 use App\Modules\Generation\Application\Service\VocabularyKeyIsomorphism;
@@ -41,6 +42,7 @@ use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\ConfiguredPlaygroundCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\MachineryEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
@@ -95,6 +97,10 @@ final class GenerationServiceProvider extends ServiceProvider
         // The multi-vendor seam. Bound unconditionally: which providers can actually be called is a
         // runtime fact about keys, which the catalogue reports rather than a driver switch decides.
         $this->app->bind(ContentModelCatalog::class, ConfiguredContentModelCatalog::class);
+        // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening
+        // of it: this one hands out adapters that send no system prompt and demand no schema, which
+        // is exactly what nothing on the production path may ever get.
+        $this->app->bind(PlaygroundModelCatalog::class, ConfiguredPlaygroundCatalog::class);
         // Prompts are files, so reading them is Infrastructure's job; deciding which version to run
         // is Application's. The port is what keeps that direction one-way.
         $this->app->bind(PromptSource::class, PromptLibrary::class);

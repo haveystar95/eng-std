@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Domain\Service;
 
+use App\Modules\Generation\Domain\ValueObject\DistractorGate;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentCandidate;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentFinding;
 use App\Modules\Generation\Domain\ValueObject\EnrichmentVerdict;
@@ -118,7 +119,13 @@ final class EnrichmentValidator
         private readonly BackTranslationTolerance $tolerance = new BackTranslationTolerance(),
     ) {}
 
-    public function validate(EnrichmentCandidate $candidate): EnrichmentVerdict
+    /**
+     * @param  DistractorGateLog|null  $gates  a notepad, never a decision. Passing one makes the
+     *        distractor loop name the check it took for each row and changes nothing else — see
+     *        {@see DistractorGateLog} for why the reason is recorded here instead of being derived
+     *        by a second implementation of these conditions elsewhere.
+     */
+    public function validate(EnrichmentCandidate $candidate, ?DistractorGateLog $gates = null): EnrichmentVerdict
     {
         $findings = [];
 
@@ -134,7 +141,9 @@ final class EnrichmentValidator
             $variantSet[$this->normalizer->normalize($variant->text)] = true;
         }
 
-        [$distractors, $proposed, $rejected, $conflicts] = $this->validDistractors($candidate, $accepted, $variantSet);
+        [$distractors, $proposed, $rejected, $conflicts] = $this->validDistractors($candidate, $accepted, $variantSet, $gates);
+        // Rows the loop never reached, because the example already had its full set of keepers.
+        $gates?->fillUnexamined($proposed);
 
         foreach ($conflicts as $sentence) {
             $findings[] = new EnrichmentFinding(
@@ -226,9 +235,10 @@ final class EnrichmentValidator
     /**
      * @param  array<string, true>  $accepted  normalised target forms (incl. previously stored variants)
      * @param  array<string, true>  $variantSet  normalised variants proposed by THIS pack
+     * @param  DistractorGateLog|null  $gates  records WHICH branch each row took; never consulted
      * @return array{0: list<RawDistractor>, 1: int, 2: int, 3: list<string>}  kept, proposed, rejected, conflicting
      */
-    private function validDistractors(EnrichmentCandidate $candidate, array $accepted, array $variantSet): array
+    private function validDistractors(EnrichmentCandidate $candidate, array $accepted, array $variantSet, ?DistractorGateLog $gates = null): array
     {
         $correct = $accepted + $variantSet;
         $proposed = count($candidate->distractors);
@@ -236,6 +246,8 @@ final class EnrichmentValidator
         // No pinned example means nothing to hang a distractor on — every row is scrap, and the
         // count says so rather than the run silently reporting a clean sheet.
         if ($candidate->exampleId === null || $this->nullIfBlank($candidate->exampleSentence) === null) {
+            $gates?->fillUnexamined($proposed, DistractorGate::NoExample);
+
             return [[], $proposed, $proposed, []];
         }
 
@@ -249,7 +261,7 @@ final class EnrichmentValidator
         // differing in the apostrophe glyph, because the twin lived in the database and not in the pack.
         $seen = $this->normalizedSet($candidate->existingDistractors);
 
-        foreach ($candidate->distractors as $raw) {
+        foreach ($candidate->distractors as $index => $raw) {
             // Emphasis first: the span has to be findable in its own sentence, and stripping both
             // sides keeps that true instead of failing a row the model merely over-decorated.
             $text = $this->stripEmphasis($raw->sentence);
@@ -257,6 +269,8 @@ final class EnrichmentValidator
             $key = $this->normalizer->normalize($text);
 
             if ($text === '' || $key === '' || isset($seen[$key])) {
+                $gates?->record($index, $text === '' || $key === '' ? DistractorGate::EmptySentence : DistractorGate::Duplicate);
+
                 continue;
             }
             $seen[$key] = true;
@@ -267,16 +281,21 @@ final class EnrichmentValidator
                 if (isset($variantSet[$key])) {
                     $conflicts[] = $text;
                 }
+                $gates?->record($index, isset($variantSet[$key]) ? DistractorGate::VariantConflict : DistractorGate::EqualsAcceptedAnswer);
 
                 continue;
             }
             if (ErrorType::tryFromWire($raw->errorType) === null) {
+                $gates?->record($index, DistractorGate::UnknownErrorType);
+
                 continue;
             }
             // The span has to be findable in the sentence it claims to be a fragment of, or the
             // reveal ("this bit is the mistake") has nothing to underline. Case-insensitive so a
             // sentence-initial capital doesn't fail an otherwise good row.
             if ($span === '' || mb_stripos($text, $span) === false) {
+                $gates?->record($index, DistractorGate::SpanNotFound);
+
                 continue;
             }
             // The error span must not fall inside an occurrence of the term's OWN accepted answer —
@@ -287,10 +306,14 @@ final class EnrichmentValidator
             // not wrong — the example just phrased the sentence with a possessive instead. Live on the
             // topup-3 store, case #40 (docs/enrich-v1-topup3-full-store.md).
             if ($this->spanIsInsideAcceptedForm($text, $span, $candidate->acceptedForms)) {
+                $gates?->record($index, DistractorGate::SpanInsideAcceptedForm);
+
                 continue;
             }
             $correction = $this->stripEmphasis($raw->correction);
             if ($correction === '') {
+                $gates?->record($index, DistractorGate::EmptyCorrection);
+
                 continue;
             }
             // A correction that swallowed the sentence's final mark. The card prints it literally —
@@ -299,10 +322,14 @@ final class EnrichmentValidator
             // «organic?». The circular check below cannot see it, because canonicalize() strips
             // punctuation on both sides and the repair matches the example either way.
             if ($this->carriesSentenceEnd($span, $correction)) {
+                $gates?->record($index, DistractorGate::CorrectionCarriesSentenceEnd);
+
                 continue;
             }
             // A distractor identical to the pinned example is not a distractor.
             if ($this->sentenceEquals($text, $sentence)) {
+                $gates?->record($index, DistractorGate::EqualsExample);
+
                 continue;
             }
             // A correction that corrects nothing. «has been» → «has been» is the whole feedback the
@@ -311,6 +338,8 @@ final class EnrichmentValidator
             // normalize(), because the leading article normalize() drops is precisely what an
             // `article` row corrects — «bank account» → «a bank account» is the class working.
             if ($this->normalizer->canonicalize($span) === $this->normalizer->canonicalize($correction)) {
+                $gates?->record($index, DistractorGate::NoOpCorrection);
+
                 continue;
             }
             // The circular check: apply the row's OWN repair and see whether it lands on the example.
@@ -326,10 +355,13 @@ final class EnrichmentValidator
             // leading article, or «Delivery must arrive…» would repair to itself and still match
             // «The delivery must arrive…» with the article thrown away on both sides.
             if (! $this->repairsTo($text, $span, $correction, $sentence)) {
+                $gates?->record($index, DistractorGate::RepairDoesNotMatchExample);
+
                 continue;
             }
 
             $kept[] = new RawDistractor($text, strtolower(trim($raw->errorType)), $span, $correction);
+            $gates?->record($index, DistractorGate::Kept);
             if (count($kept) === self::MAX_DISTRACTORS) {
                 break;
             }

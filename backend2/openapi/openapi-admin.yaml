@@ -36,6 +36,7 @@ tags:
   - name: Collections
   - name: Terms
   - name: Content health
+  - name: Playground
   - name: Logs
   - name: Costs
   - name: Curation
@@ -998,6 +999,121 @@ paths:
                       data: { type: array, items: { $ref: '#/components/schemas/RequestLog' } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /playground/providers:
+    get:
+      tags: [Playground]
+      summary: Which providers and models the sandbox offers
+      description: >
+        Config-driven, not a table. A provider with no key is listed as `available: false` with the
+        env var named in `reason` — the picker greys it and repeats the sentence, so «почему нельзя
+        выбрать» is answered on the screen.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PlaygroundProvider' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /playground/generate:
+    post:
+      tags: [Playground]
+      summary: Send one prompt to one model, verbatim
+      description: >
+        The prompt goes AS WRITTEN — no system message, no template, no JSON schema. That is the
+        point of the sandbox: anything this endpoint added would be measured as the model's
+        behaviour.
+
+        A vendor failure is an ANSWER, not a 500. Expired keys, exhausted credits, stale model names
+        and timeouts all come back as 200 with `error` set, because each of them is a result the
+        person running the experiment needs to read.
+
+        `error` (nothing came back) and `parse_error` (something came back, just not JSON) are
+        different fields on purpose. Writes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, model, prompt]
+              properties:
+                provider: { type: string, description: wire name from /playground/providers }
+                model: { type: string, description: must be one the registry offers for that provider }
+                prompt: { type: string, maxLength: 32000 }
+                temperature:
+                  type: [number, 'null']
+                  minimum: 0
+                  maximum: 2
+                  description: >
+                    Omitted from the vendor request entirely when absent — several current models
+                    accept only their default and refuse the parameter.
+      responses:
+        '200':
+          description: The answer, or the reason there is none
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlaygroundResult' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /playground/validate:
+    post:
+      tags: [Playground]
+      summary: Dry-run distractor rows past the REAL enrichment validator
+      description: >
+        The verdicts come from the same `EnrichmentValidator` the станок runs, on a reference built
+        the same way — so a row that survives here survives there. Nothing is written: no
+        distractors, no suppressions, no version marks (`persisted` is always false).
+
+        The reference is a term (`term_id`) or a hand-typed pair (`manual`); the term wins when both
+        arrive, because a real term brings the real dedup set and the real suppressions with it. The
+        manual path is narrower by design — sibling terms are not consulted — and `matched_term_id`
+        says which term, if any, its dedup set came from.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
+                    type: object
+                    required: [sentence, error_span, correction]
+                    properties:
+                      sentence: { type: string }
+                      error_span: { type: string }
+                      correction: { type: string }
+                      error_type:
+                        type: [string, 'null']
+                        description: >
+                          Optional. When absent a valid type is substituted so the other checks still
+                          get to speak, and the row comes back with `error_type_defaulted: true`.
+                term_id: { type: [string, 'null'] }
+                manual:
+                  type: object
+                  properties:
+                    term_text: { type: [string, 'null'] }
+                    example_text: { type: [string, 'null'] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlaygroundValidation' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /practice-dialogs:
     get:
       tags: [Practice]
@@ -1943,6 +2059,96 @@ components:
         current_generator_version: { type: string }
         min_distractors: { type: integer }
         cost_per_term_usd: { type: number }
+
+    PlaygroundProvider:
+      type: object
+      properties:
+        provider: { type: string, description: 'wire name: openai | anthropic | xai | gemini' }
+        label: { type: string, description: "the vendor's own spelling, for the picker" }
+        models:
+          type: array
+          description: >
+            A closed list. For OpenAI it is exactly the models this project already runs, read from
+            the same config keys production reads; a model outside it is refused by name.
+          items: { type: string }
+        available: { type: boolean }
+        reason: { type: string, description: 'empty when available; otherwise names the missing env var' }
+
+    PlaygroundResult:
+      type: object
+      properties:
+        provider: { type: string }
+        model: { type: string, description: 'what the vendor says it used, which is not always what was asked for' }
+        raw_text: { type: string, description: 'the answer verbatim; empty when the call itself failed' }
+        parsed_json:
+          type: [object, array, 'null']
+          description: >
+            The answer decoded, when it decodes. A fenced ```json block is unwrapped first — models
+            fence constantly — and the raw text is shown beside it either way.
+        parse_error:
+          type: [string, 'null']
+          description: >
+            The model answered but not in JSON. An ordinary result in a prompt sandbox, and NOT the
+            same thing as `error`.
+        usage:
+          type: object
+          properties:
+            tokens_in: { type: [integer, 'null'] }
+            tokens_out: { type: [integer, 'null'] }
+            cost_usd:
+              type: [string, 'null']
+              description: 'priced by the app one pricing table; null = unpriced model, never free'
+        latency_ms: { type: integer, description: 'the vendor call alone' }
+        error:
+          type: [string, 'null']
+          description: 'the vendor never answered: auth, credits, timeout, a refusal, an unknown model'
+
+    PlaygroundValidation:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PlaygroundValidationRow' }
+        kept: { type: integer, description: 'how many rows the станок would have written' }
+        total: { type: integer }
+        source: { type: string, enum: [term, manual] }
+        term_id: { type: [string, 'null'] }
+        term_text: { type: string }
+        example_sentence: { type: [string, 'null'] }
+        existing_count:
+          type: integer
+          description: 'sentences already in the dedup set — the reason a good row can still be a dupe'
+        suppressed_count: { type: integer }
+        matched_term_id:
+          type: [string, 'null']
+          description: 'manual mode only: the term whose dedup set and suppressions were used'
+        persisted:
+          type: boolean
+          description: 'always false — this endpoint writes nothing, ever'
+
+    PlaygroundValidationRow:
+      type: object
+      properties:
+        index: { type: integer }
+        sentence: { type: string }
+        error_span: { type: string }
+        correction: { type: string }
+        error_type: { type: string }
+        verdict: { type: string, enum: [KEEP, REJECT] }
+        gate:
+          type: string
+          description: >
+            Which check decided it — a validator gate, or one of the dry run own refinements of
+            `duplicate` (`duplicate_stored`, `duplicate_suppressed`, `duplicate_in_batch`).
+          enum: [kept, no_example, empty_sentence, duplicate, duplicate_stored, duplicate_suppressed,
+                 duplicate_in_batch, equals_accepted_answer, variant_conflict, unknown_error_type,
+                 span_not_found, span_inside_accepted_form, empty_correction,
+                 correction_carries_sentence_end, equals_example, no_op_correction,
+                 repair_does_not_match_example, cap_reached]
+        reason: { type: string, description: 'the same thing as one Russian sentence' }
+        error_type_defaulted:
+          type: boolean
+          description: 'the row had no error_type, so a valid one was substituted before the run'
 
     TermImpact:
       type: object
