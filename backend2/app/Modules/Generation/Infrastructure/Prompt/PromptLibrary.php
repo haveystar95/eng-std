@@ -144,6 +144,54 @@ final class PromptLibrary implements PromptSource
                 '93-self-check-machinery', '99-closing',
             ],
         ],
+        // v13 is v12.1 rewritten around WHERE the losses actually are, measured rather than assumed.
+        //
+        // Replaying a whole run's model answers through the validator (13 terms, 44 candidates) put
+        // every scrapped row against the check that scrapped it. Nothing died of the rule the long
+        // prompt spends half its length on — `equals_accepted_answer`, the "secretly correct"
+        // distractor, killed ZERO rows. A third died on the three mechanical fields (span not in its
+        // own sentence, correction that does not repair, correction swallowing the final mark), which
+        // v12.1 explains in a hundred and fifty words at the end of a list of thirty rules.
+        //
+        // So this version leads with the mechanical contract and gives it a worked example, and it
+        // states as rules only what a real run has been observed to get wrong. gpt-4o-mini on v12.1
+        // broke that prompt's own explicit prohibitions — markdown around the error in four rows of
+        // five — and produced zero usable distractors for `next to`; on a short prompt of this shape
+        // the same model produced three. The length was not buying compliance, it was drowning it.
+        //
+        // What survives from v12.1 is the part that turned out to be load-bearing, kept as five short
+        // counter-rules instead of essays: a different TENSE is not an error (dropping this rule
+        // immediately produced «The post office was next to the museum» as a "distractor"), a swapped
+        // determiner usually is not, a changed meaning is not, a typo is not, a re-spelled
+        // contraction is not.
+        //
+        // `forms` loses its section: v12/v12.1 wrote ZERO accepted forms across 81 terms, so 311
+        // words were being bought on every call for a product that never arrives. The field stays in
+        // the schema and gets three lines saying an empty list is the normal answer.
+        'v13' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '61-distractors', '99-closing',
+            ],
+        ],
+        // v13.1 fixes ONE thing, and the thing was ours. v13's worked example laid the fields out as
+        // a pseudo-table with the values in quotes:
+        //
+        //     error_span:  "next the"
+        //
+        // and the model copied the quotes INTO the value — `"error_span": "\"place to\""`. A span
+        // wrapped in a character that is not in the sentence cannot be found in it, so the row died
+        // at `span_not_found`: 12 of 45 candidates in the first v13 run, 27%, every one of them a
+        // perfectly good wrong sentence thrown away over punctuation we taught it to add.
+        //
+        // The example is now the JSON object the answer actually consists of, where quotes are
+        // unambiguously syntax, plus one line saying the three fields are plain text. v13 is not
+        // edited in place: 22 live rows already record it as their prompt version, and a version that
+        // names two different texts is worse than an extra directory.
+        'v13.1' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '61-distractors', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}

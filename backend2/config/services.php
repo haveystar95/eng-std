@@ -114,7 +114,7 @@ return [
         // the price of re-generating the core inside a full enrichment.
         'mechanics_provider' => env('GENERATION_MECHANICS_PROVIDER', 'openai'),
         'mechanics_model' => env('GENERATION_MECHANICS_MODEL', 'gpt-4o-mini'),
-        'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v12.1'),
+        'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v13.1'),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
         // Chain the enrichment станок onto a finished generation (accepted variants + distractors).

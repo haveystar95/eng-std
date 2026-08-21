@@ -142,5 +142,39 @@ it('puts the old four-product packer back on GENERATION_STACK=v1', function () {
 });
 
 it('bumps the станок version, so every already-marked term is pending at the new one', function () {
-    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v12.1');
+    // The pin is the point: a prompt change that does NOT move this constant is invisible to the
+    // journal, and every term already marked done is skipped by the very run meant to fix it.
+    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v13.1');
+});
+
+it('shows the worked example as JSON, so the model cannot copy quotes into a field', function () {
+    packLive();
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, '{"sentence": "The post office is next the museum.",')
+            && str_contains($system, 'All three are PLAIN TEXT')
+            // The pseudo-table that taught `"error_span": "\"place to\""` must be gone.
+            && ! str_contains($system, 'error_span:  "next the"');
+    });
+});
+
+it('runs the machinery on the measured prompt, not on the one it replaced', function () {
+    packLive();
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return
+            // v13 leads with the mechanical contract — the third of all rows that died there.
+            str_contains($system, 'copied character for character out of **your own `sentence`**')
+            && str_contains($system, 'Worked example')
+            // The five counter-rules that a real run paid for, kept from v12.1's essays.
+            && str_contains($system, 'A different tense is not an error')
+            && str_contains($system, 'A typo is not a grammar mistake')
+            // And the section that bought nothing across 81 terms is gone.
+            && ! str_contains($system, 'other {{target_lang}} spellings of THIS term')
+            && ! str_contains($system, 'Return an empty list rather than padding');
+    });
 });

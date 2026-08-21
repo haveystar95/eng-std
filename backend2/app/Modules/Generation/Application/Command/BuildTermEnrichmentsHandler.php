@@ -62,8 +62,20 @@ final readonly class BuildTermEnrichmentsHandler
      * run-in collections came out unable to host a `pick_correct` at all. v12.1 asks for four or five
      * candidates against the same rules. Worth re-paying for: an example short of options is a rung
      * of the course the learner never reaches.
+     *
+     * `mech-v12.1` → `mech-v13` is the prompt rewritten around the measured losses instead of the
+     * assumed ones — the mechanical span/correction contract first and with a worked example, the
+     * essays cut to five counter-rules, `forms` reduced to three lines. The numbers that decided
+     * each cut are in the prompt catalogue, beside the version they describe. Worth re-paying for at the same reason as the last
+     * bump, and this time the alternative is known: the run this replaces left 4 of 13 terms in a
+     * live collection unable to host the card at all.
+     *
+     * `mech-v13` → `mech-v13.1` is one formatting fix in that prompt's worked example, worth a
+     * re-run on its own: the example quoted its field values, the model copied the quotes into them,
+     * and 27% of the first v13 run's candidates were discarded as unfindable spans — good sentences,
+     * lost to punctuation the prompt taught the model to add.
      */
-    public const VERSION = 'mech-v12.1';
+    public const VERSION = 'mech-v13.1';
 
     public function __construct(
         private EnrichmentTargetReader $targets,
@@ -78,7 +90,11 @@ final readonly class BuildTermEnrichmentsHandler
 
     public function __invoke(BuildTermEnrichments $command): EnrichmentRunMetrics
     {
-        $pending = $this->journal->pending($command->termIds, $command->generatorVersion);
+        // A top-up hands over terms chosen BY COVERAGE and says so; re-filtering them by the version
+        // mark would drop exactly the ones it means to fix. See BuildTermEnrichments::$ignoreVersionMark.
+        $pending = $command->ignoreVersionMark
+            ? $command->termIds
+            : $this->journal->pending($command->termIds, $command->generatorVersion);
         if ($pending === []) {
             return new EnrichmentRunMetrics();
         }
