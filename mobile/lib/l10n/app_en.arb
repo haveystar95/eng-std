@@ -178,6 +178,8 @@
   "@searchLimitUsed": { "placeholders": { "used": { "type": "int" }, "cap": { "type": "int" } } },
   "searchLimitTitle": "Model-written cards come back at midnight",
   "searchLookupFailed": "Could not look this word up",
+  "searchNotRecognized": "Couldn’t make that out — check the spelling",
+  "searchQueryTooLong": "Search is for words and short phrases",
   "searchSaveToDefault": "+ Saved",
   "searchAlreadyIn": "In “{folder}”",
   "@searchAlreadyIn": { "placeholders": { "folder": { "type": "String" } } },

@@ -63,6 +63,35 @@ void main() {
     expect(await history.load(), isEmpty);
   });
 
+  test('a word that «means itself» is not a line', () async {
+    // «случай — случай» is a hint that failed, not a search result: the translator was asked to
+    // turn a Russian word into Russian and handed it back. Nothing to salvage — the word alone
+    // would be a log entry, and this section is a way back in.
+    await history.remember(const RecentSearch(word: 'случай', translation: 'случай'));
+
+    expect(await history.load(), isEmpty);
+  });
+
+  test('the same junk already on the device is filtered on the way out', () async {
+    // Written by a build that did not know which way it was translating. Filtered rather than
+    // migrated: three lines of local cache have no history worth preserving, and the filter also
+    // catches whatever a bad answer writes tomorrow.
+    await db.setMeta(
+      SearchHistory.metaKey,
+      '[{"w":"случай","t":"случай"},{"w":"invoice","t":"счёт"}]',
+    );
+
+    expect((await history.load()).map((r) => r.word), ['invoice']);
+  });
+
+  test('a word with no translation at all still earns its line', () async {
+    // The rule is «it does not say the word means itself», not «it has an answer». A word opened
+    // from the catalogue with no translation on hand is still somewhere the learner has been.
+    await history.remember(const RecentSearch(word: 'hollow'));
+
+    expect((await history.load()).single.word, 'hollow');
+  });
+
   test('a corrupted key reads as «no history», never as a crash', () async {
     await db.setMeta(SearchHistory.metaKey, '{"not":"a list"');
     expect(await history.load(), isEmpty);

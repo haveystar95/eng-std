@@ -1112,6 +1112,18 @@ abstract class AppLocalizations {
   /// **'Не удалось найти это слово'**
   String get searchLookupFailed;
 
+  /// Модель не нашла в запросе слова ни на одном языке пары. Совет, а не ошибка: про приложение здесь ничего не сломалось.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось распознать, проверьте написание'**
+  String get searchNotRecognized;
+
+  /// Запрос длиннее 120 символов. Спокойная строка вместо запрета: говорит, для чего поле, а не что человек сделал не так.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск — для слов и коротких фраз'**
+  String get searchQueryTooLong;
+
   /// Главная кнопка карточки: сохранить в личную папку по умолчанию.
   ///
   /// In ru, this message translates to:

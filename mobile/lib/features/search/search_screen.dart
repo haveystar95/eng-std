@@ -77,6 +77,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   bool _lookingUp = false;
   bool _limitReached = false;
+
+  /// The model could not name a word for what was typed. An answer, not an error — so it is a flag
+  /// the small card reads, not a thrown failure.
+  bool _notRecognized = false;
   int _dailyCap = 0;
   int _usedToday = 0;
   String? _lookupError;
@@ -130,6 +134,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _hint = null;
       _lookupError = null;
       _limitReached = false;
+      _notRecognized = false;
       if (query.isEmpty) {
         _hits = const [];
         _searching = false;
@@ -166,11 +171,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _hint = null;
       _lookupError = null;
       _limitReached = false;
+      _notRecognized = false;
     });
     unawaited(_fetchHint(query));
     await _runFreeSearch(query);
     await _loadMirrored(_exactHit?.termId);
-    await _remember(query);
   }
 
   /// Read one term out of the local mirror, if it is there. Cheap, offline, and the whole reason
@@ -194,7 +199,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<void> _fetchHint(String query) async {
     try {
       final hint = await ref.read(apiClientProvider).instantHint(query);
-      if (!mounted || hint.query.isEmpty || !hint.hasText) return;
+      // Kept when there is something to SAY — a translation, or the one honest «this is too long
+      // to be a word» the field does put a line up for. An answerless hint is still dropped: it
+      // has nothing to add and would only overwrite one that had.
+      if (!mounted || hint.query.isEmpty || !(hint.hasText || hint.queryTooLong)) return;
       if (query.toLowerCase() != _query.toLowerCase()) return;
       setState(() => _hint = hint);
     } catch (_) {
@@ -220,15 +228,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
-  /// «Вы искали» remembers the word WITH what it turned out to mean, when that is known — three
-  /// bare spellings would be a log, three dictionary lines are a way back in.
-  Future<void> _remember(String query) async {
-    final hit = _exactHit;
-    final recent = await _history.remember(RecentSearch(
-      word: hit?.text ?? query,
-      translation: hit?.translation ?? _hint?.translation,
-      cefr: hit?.cefr,
-    ));
+  /// «Вы искали» remembers a search that ENDED somewhere — a card opened, or a card built.
+  ///
+  /// Not every submitted string, which is what it used to be: typing is cheap and most of it leads
+  /// nowhere, so remembering it filled the section with words the learner glanced at and abandoned.
+  /// Three lines of that are a log of keystrokes; three lines of words they actually opened are a
+  /// way back in, which is the only reason the section exists.
+  ///
+  /// [word] is always the word being LEARNED — the English one — whichever language the query that
+  /// found it was typed in. A row is a way back to a WORD, and «случай» is not one.
+  Future<void> _remember({required String word, String? translation, String? cefr}) async {
+    final recent = await _history.remember(
+      RecentSearch(word: word, translation: translation, cefr: cefr),
+    );
     if (mounted) setState(() => _recent = recent);
   }
 
@@ -244,6 +256,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {
       _lookingUp = true;
       _lookupError = null;
+      _notRecognized = false;
     });
     try {
       final outcome = await ref.read(apiClientProvider).lookupWord(query);
@@ -251,12 +264,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       setState(() {
         _lookingUp = false;
         _limitReached = outcome.limitReached;
+        _notRecognized = outcome.notRecognized;
         _dailyCap = outcome.dailyCap;
         _usedToday = outcome.usedToday;
       });
       final card = outcome.card;
-      if (card == null) return; // кадр 08 — the cap, which is an answer and not an error.
-      await _remember(query);
+      // кадр 08 — the cap; or a query the model could not place. Both are answers and neither is
+      // an error, so both are drawn by _missing()/_body() rather than thrown.
+      if (card == null) return;
+      // The word that was actually built, not the string that found it: a Russian query ends in an
+      // English card, and the English word is what the learner would want to get back to.
+      await _remember(word: card.text, translation: card.translation, cefr: card.cefr);
       if (!mounted) return;
       await _openCard(WordCardSubject.fromLookup(card));
     } catch (_) {
@@ -301,6 +319,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<void> _openHitCard(SearchHit hit) async {
     await _loadMirrored(hit.termId);
     if (!mounted) return;
+    // The search ended somewhere, which is the only kind of search «Вы искали» keeps.
+    unawaited(_remember(word: hit.text, translation: hit.translation, cefr: hit.cefr));
     await _openCard(_subjectFor(hit));
   }
 
@@ -441,10 +461,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   List<Widget> _body(AppLocalizations l) {
+    // The word the card is BEING BUILT FOR, and the line that confirms it — the same two strings
+    // кадр 04 showed a moment ago, in the same order, so the small card grows into the assembling
+    // one instead of being replaced by a different word.
+    final headline = _hint?.headline(_query) ?? _query;
+
     if (_lookingUp) {
       return [
         const SizedBox(height: 30),
-        AssemblingCard(term: _query, translation: _hint?.translation),
+        AssemblingCard(term: headline, translation: _hint?.support(_query)),
       ];
     }
     if (_query.isEmpty) return _empty(l);
@@ -453,8 +478,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return [
         const SizedBox(height: 34),
         AiLimitCard(
-          query: _submitted!,
-          translation: _hint?.translation,
+          query: _hint?.headline(_submitted!) ?? _submitted!,
+          translation: _hint?.support(_submitted!),
           used: _usedToday,
           cap: _dailyCap,
         ),
@@ -559,8 +584,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Кадр 04 — a word we do not hold yet. A SMALL CARD of it, not a refusal.
   ///
   /// The instant translation is a full answer and is set as one: the term large in the antiqua the
-  /// word card uses, the translation under it in ink. The learner asked what a word means and has
-  /// been told, free, in the time it took to press Enter.
+  /// word card uses, the confirming line under it in ink. The learner asked what a word means and
+  /// has been told, free, in the time it took to press Enter.
+  ///
+  /// THE HEADLINE IS ALWAYS THE ENGLISH WORD, whichever half of the pair was typed. Somebody who
+  /// types «случай» is reaching for a word they cannot yet name, and the name is the thing they
+  /// came for; the query goes underneath, as confirmation that we understood it. Somebody who
+  /// types «occasion» sees their own word large and its meaning underneath. Same layout, same
+  /// hierarchy, no announcement — the screen says nothing about languages, direction or detection.
+  /// It just answers.
   ///
   /// What the button then sells is honestly what is missing — meaning, example, photo — rather than
   /// «find», which would be selling something already delivered. And nothing on this screen says
@@ -568,14 +600,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// between a word we hold and a new one is expressed by ONE thing, the presence of this button.
   List<Widget> _missing(AppLocalizations l) {
     final near = _hits;
-    final translation = _hint?.translation?.trim() ?? '';
+    final asked = _submitted!;
+    final hint = _hint;
+
+    // Too long to be a word or a phrase. A calm line about what the field is FOR, and no button:
+    // there is nothing here to build a card out of.
+    if (hint?.queryTooLong ?? false) {
+      return [
+        const SizedBox(height: 34),
+        Text(l.searchQueryTooLong, style: AppText.searchNote),
+      ];
+    }
+
+    final headline = hint?.headline(asked) ?? asked;
+    final support = hint?.support(asked);
 
     return [
       const SizedBox(height: 34),
-      Text(_submitted!, style: AppText.cardTerm),
-      if (translation.isNotEmpty) ...[
+      Text(headline, style: AppText.cardTerm),
+      if ((support ?? '').isNotEmpty) ...[
         const SizedBox(height: AppSpacing.s12),
-        Text(translation, style: AppText.cardTranslation),
+        Text(support!, style: AppText.cardTranslation),
       ],
       const SizedBox(height: AppSpacing.s26),
       PrimaryButton(
@@ -587,6 +632,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ),
       const SizedBox(height: 10),
       Text(l.searchBuildCardNote, textAlign: TextAlign.center, style: AppText.searchFootnote),
+      // Advice, in the same quiet footnote the other outcomes use. Not red, not a banner: the app
+      // did not break, the spelling did.
+      if (_notRecognized) ...[
+        const SizedBox(height: AppSpacing.s12),
+        Text(l.searchNotRecognized, textAlign: TextAlign.center, style: AppText.searchFootnote),
+      ],
       if (_lookupError != null) ...[
         const SizedBox(height: AppSpacing.s12),
         Text(_lookupError!, textAlign: TextAlign.center, style: AppText.searchFootnote),

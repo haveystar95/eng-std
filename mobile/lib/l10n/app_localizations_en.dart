@@ -671,6 +671,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLookupFailed => 'Could not look this word up';
 
   @override
+  String get searchNotRecognized =>
+      'Couldn’t make that out — check the spelling';
+
+  @override
+  String get searchQueryTooLong => 'Search is for words and short phrases';
+
+  @override
   String get searchSaveToDefault => '+ Saved';
 
   @override

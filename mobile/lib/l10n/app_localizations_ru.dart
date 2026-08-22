@@ -695,6 +695,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchLookupFailed => 'Не удалось найти это слово';
 
   @override
+  String get searchNotRecognized =>
+      'Не получилось распознать, проверьте написание';
+
+  @override
+  String get searchQueryTooLong => 'Поиск — для слов и коротких фраз';
+
+  @override
   String get searchSaveToDefault => '+ Сохранённые';
 
   @override

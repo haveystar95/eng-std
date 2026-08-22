@@ -146,12 +146,25 @@ void main() {
       expect(api.searchCalls, 1, reason: 'a recent line re-runs the search, it does not just fill the field');
     });
 
-    testWidgets('a search is remembered', (tester) async {
+    testWidgets('typing a word is not yet a search worth remembering', (tester) async {
+      // Most typing leads nowhere. Remembering every submitted string filled this section with
+      // words the learner glanced at and abandoned — a log of keystrokes rather than a way back.
       await _pump(tester, _SpyApi(hits: [_hit()]));
       await _submit(tester, 'invoice');
 
+      expect(await _db.getMeta(SearchHistory.metaKey), isNull);
+    });
+
+    testWidgets('a search that ENDED somewhere is remembered', (tester) async {
+      await _pump(tester, _SpyApi(hits: [_hit()]));
+      await _submit(tester, 'invoice');
+
+      await tester.tap(find.text('Открыть карточку'));
+      await tester.pumpAndSettle();
+
       final stored = await _db.getMeta(SearchHistory.metaKey);
       expect(stored, contains('invoice'));
+      expect(stored, contains('счёт'), reason: 'the line carries what the word turned out to mean');
     });
   });
 

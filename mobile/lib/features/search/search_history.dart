@@ -33,6 +33,19 @@ class RecentSearch {
       cefr: raw['c'] as String?,
     );
   }
+
+  /// Is this line worth showing at all?
+  ///
+  /// «случай — случай» is not a search result, it is a hint that failed: the instant translator was
+  /// asked to turn a Russian word into Russian and returned it unchanged. Lines like that were
+  /// written by builds before the field knew which way round it was translating, and there is
+  /// nothing to salvage in them — the word alone would be a log entry, and this section is a way
+  /// back in, not a log.
+  bool get isUseful {
+    final meaning = (translation ?? '').trim();
+
+    return meaning.isEmpty || meaning.toLowerCase() != word.toLowerCase();
+  }
 }
 
 /// The last few searches, kept on the device and nowhere else.
@@ -44,6 +57,18 @@ class RecentSearch {
 ///
 /// Every read is defensive: a key that was hand-edited, truncated or written by an older build must
 /// degrade to «no history», never to a crash on the empty search screen.
+///
+/// ## Two rules about what gets in
+///
+/// WHEN: only a search that ENDED somewhere — a card opened, or a card built. Remembering every
+/// submitted string filled the section with words the learner glanced at and abandoned, which is a
+/// log of keystrokes rather than a way back to something.
+///
+/// WHAT: never a line whose translation is its own word. See [RecentSearch.isUseful] — those were
+/// written before the field knew which way it was translating, and they are filtered on READ rather
+/// than migrated away. A filter is the honest fix here: the store is three lines of local cache
+/// with no history worth preserving, a migration would need its own version key and its own
+/// failure mode, and the filter also catches a junk line the next bad answer writes tomorrow.
 class SearchHistory {
   const SearchHistory(this._db);
 
@@ -63,7 +88,8 @@ class SearchHistory {
       if (decoded is! List) return const [];
 
       return [
-        for (final entry in decoded) ?RecentSearch.fromJson(entry),
+        for (final entry in decoded)
+          if (RecentSearch.fromJson(entry) case final row? when row.isUseful) row,
       ].take(limit).toList(growable: false);
     } catch (_) {
       return const [];
@@ -76,7 +102,9 @@ class SearchHistory {
   /// been», and the same word twice says nothing the one line did not.
   Future<List<RecentSearch>> remember(RecentSearch entry) async {
     final word = entry.word.trim();
-    if (word.isEmpty) return load();
+    // A line that says a word means itself is not worth a row — same rule on the way in as on the
+    // way out, so a bad answer cannot become tomorrow's junk.
+    if (word.isEmpty || !entry.isUseful) return load();
 
     final existing = await load();
     final kept = existing.where((r) => r.word.toLowerCase() != word.toLowerCase());

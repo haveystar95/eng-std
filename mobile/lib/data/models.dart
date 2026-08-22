@@ -984,11 +984,16 @@ class LookupOutcome {
   final int dailyCap;
   final int usedToday;
 
+  /// The model could not name a word for what was typed. [card] is null and nothing was refused —
+  /// the screen says «не получилось распознать, проверьте написание», which is advice, not an error.
+  final bool notRecognized;
+
   const LookupOutcome({
     this.card,
     this.limitReached = false,
     this.dailyCap = 0,
     this.usedToday = 0,
+    this.notRecognized = false,
   });
 
   factory LookupOutcome.fromJson(Map<String, dynamic> j) {
@@ -998,6 +1003,7 @@ class LookupOutcome {
       limitReached: (j['limit_reached'] as bool?) ?? false,
       dailyCap: (j['daily_cap'] as int?) ?? 0,
       usedToday: (j['used_today'] as int?) ?? 0,
+      notRecognized: (j['not_recognized'] as bool?) ?? false,
     );
   }
 }
@@ -1054,20 +1060,54 @@ class InstantHint {
   /// The month's translation budget is spent. The full lookup is unaffected.
   final bool limitReached;
 
+  /// The query was in the learner's own language, so [translation] holds the ENGLISH word.
+  ///
+  /// Used for one thing only: deciding which of the two strings is the headline on the small card.
+  /// The screen never mentions languages, directions or detection — it just answers.
+  final bool reversed;
+
+  /// Longer than a phrase. Nothing was asked and nothing was bought.
+  final bool queryTooLong;
+
   const InstantHint({
     required this.query,
     this.translation,
     this.featureDisabled = false,
     this.limitReached = false,
+    this.reversed = false,
+    this.queryTooLong = false,
   });
 
   /// Is there a line to draw at all?
   bool get hasText => (translation ?? '').trim().isNotEmpty;
+
+  /// The word being LEARNED, whichever side of the pair it arrived on — or null when we have none.
+  ///
+  /// This is the string the learner asked for: they typed «случай» to find out it is «occasion»,
+  /// and they typed «occasion» already knowing how it is spelled. Either way the English word is
+  /// the answer and everything else on the card is support for it.
+  String? headline(String query) {
+    final answer = (translation ?? '').trim();
+
+    return reversed ? (answer.isEmpty ? null : answer) : query.trim();
+  }
+
+  /// The other string — what confirms the headline. Null when there is nothing to confirm it with.
+  String? support(String query) {
+    final answer = (translation ?? '').trim();
+    final asked = query.trim();
+    if (reversed) return asked.isEmpty ? null : asked;
+
+    // A translation identical to the query says nothing; that is a hint that failed, not an answer.
+    return answer.isEmpty || answer.toLowerCase() == asked.toLowerCase() ? null : answer;
+  }
 
   factory InstantHint.fromJson(Map<String, dynamic> j) => InstantHint(
         query: (j['query'] as String?) ?? '',
         translation: j['translation'] as String?,
         featureDisabled: (j['feature_disabled'] as bool?) ?? false,
         limitReached: (j['limit_reached'] as bool?) ?? false,
+        reversed: (j['reversed'] as bool?) ?? false,
+        queryTooLong: (j['query_too_long'] as bool?) ?? false,
       );
 }

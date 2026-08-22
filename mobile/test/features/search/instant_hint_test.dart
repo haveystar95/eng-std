@@ -19,7 +19,12 @@ import 'package:eng_std/theme/theme.dart';
 /// a word it is not about, it can never produce an error the learner sees — and it is feedback about
 /// the INPUT, so it is set smaller, italic and grey, and it never competes with the list of results.
 class _Api implements ApiClient {
-  _Api({this.hint, this.throwOnHint = false, this.holdLookup = false});
+  _Api({
+    this.hint,
+    this.throwOnHint = false,
+    this.holdLookup = false,
+    this.outcome = const LookupOutcome(dailyCap: 5),
+  });
 
   final InstantHint? hint;
   final bool throwOnHint;
@@ -27,6 +32,9 @@ class _Api implements ApiClient {
   /// Keeps the model call in flight, so the assembling frame can be observed.
   final bool holdLookup;
   final lookupGate = Completer<void>();
+
+  /// What the paid call comes back with. Every «no» it can answer is a normal 200.
+  final LookupOutcome outcome;
 
   int hintCalls = 0;
   int lookupCalls = 0;
@@ -47,7 +55,7 @@ class _Api implements ApiClient {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 
-    return const LookupOutcome(dailyCap: 5);
+    return outcome;
   }
 
   @override
@@ -234,6 +242,77 @@ void main() {
 
       expect(find.text('root'), findsWidgets, reason: 'the term still stands');
       expect(find.text('Собрать карточку'), findsOneWidget);
+    });
+
+    testWidgets('a Russian question puts the ENGLISH word in the headline', (tester) async {
+      // The learner typed «случай» because they cannot yet name it. The name is what they came
+      // for, so it is the thing set large; the query goes underneath as confirmation we understood.
+      await _pump(tester, _Api(
+        hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
+      ));
+      await ask(tester, 'случай');
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && w.data == 'occasion' && w.style?.fontSize == AppText.cardTerm.fontSize,
+        ),
+        findsOneWidget,
+      );
+      final support = tester.widget<Text>(find.byWidgetPredicate(
+        (w) => w is Text && w.data == 'случай' && w.style?.fontSize == AppText.cardTranslation.fontSize,
+      ));
+      expect(support.style?.color, AppColors.ink);
+    });
+
+    testWidgets('says nothing about languages, direction or detection', (tester) async {
+      await _pump(tester, _Api(
+        hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
+      ));
+      await ask(tester, 'случай');
+
+      for (final word in ['язык', 'Язык', 'перевод с', 'английск', 'русск', 'направлен']) {
+        expect(find.textContaining(word), findsNothing, reason: 'the screen just answers');
+      }
+    });
+
+    testWidgets('a phrase behaves exactly like a word', (tester) async {
+      await _pump(tester, _Api(
+        hint: const InstantHint(query: 'как дела', translation: 'how are you', reversed: true),
+      ));
+      await ask(tester, 'как дела');
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && w.data == 'how are you' && w.style?.fontSize == AppText.cardTerm.fontSize,
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Собрать карточку'), findsOneWidget);
+    });
+
+    testWidgets('a paragraph gets a calm line about what the field is for, and no button', (tester) async {
+      await _pump(tester, _Api(hint: const InstantHint(query: 'x', queryTooLong: true)));
+      await ask(tester, 'x');
+
+      expect(find.text('Поиск — для слов и коротких фраз'), findsOneWidget);
+      // Nothing here to build a card out of, so nothing offers to.
+      expect(find.text('Собрать карточку'), findsNothing);
+    });
+
+    testWidgets('an unrecognisable query gets advice, not an error', (tester) async {
+      final api = _Api(
+        hint: const InstantHint(query: 'asdfgh'),
+        outcome: const LookupOutcome(dailyCap: 5, notRecognized: true),
+      );
+      await _pump(tester, api);
+      await ask(tester, 'asdfgh');
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Не получилось распознать, проверьте написание'), findsOneWidget);
+      // Not the failure line: the app did not break, the spelling did.
+      expect(find.text('Не удалось найти это слово'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
   });
 
