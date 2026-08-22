@@ -35,34 +35,58 @@ describe('the alphabet\'s guess', function () {
         // be bought again as en→ro. That second call is the price of never showing somebody their
         // own language back.
         $guess = $direction->guess('occasion', 'ro', 'en');
+        $resolved = $direction->resolve('en', 'ro', 'en', $guess);
 
         expect($guess->pair())->toBe('ro:en')
-            ->and($direction->resolve('en', 'ro', 'en')->pair())->toBe('en:ro')
-            ->and($direction->resolve('en', 'ro', 'en')->equals($guess))->toBeFalse();
+            ->and($resolved->pair())->toBe('en:ro')
+            ->and($resolved->equals($guess))->toBeFalse();
     });
 });
 
 describe('the detector\'s verdict', function () {
     $direction = new TranslationDirection();
 
-    it('flips the direction only for the learner\'s own language', function () use ($direction) {
-        $resolved = $direction->resolve('RU', 'ru', 'en');
+    it('answers in English when the learner typed their own language', function () use ($direction) {
+        $resolved = $direction->resolve('RU', 'ru', 'en', $direction->guess('случай', 'ru', 'en'));
 
-        expect($resolved->source)->toBe('ru')->and($resolved->target)->toBe('en');
+        expect($resolved->pair())->toBe('ru:en');
     });
 
     it('answers in the learner\'s language for the language being learned', function () use ($direction) {
-        expect($direction->resolve('en', 'ru', 'en')->pair())->toBe('en:ru');
+        expect($direction->resolve('en', 'ru', 'en', $direction->guess('occasion', 'ru', 'en'))->pair())
+            ->toBe('en:ru');
     });
 
-    it('treats a third language as the language being learned', function () use ($direction) {
-        // Somebody who typed something we cannot place still gets told what it means, in the
-        // language they read. That is the useful failure.
-        expect($direction->resolve('ro', 'ru', 'en')->pair())->toBe('en:ru');
+    it('overrules the alphabet, which is the whole reason it is asked', function () use ($direction) {
+        // Latin script, but the detector says it is the learner's own language. The script loses.
+        $guess = $direction->guess('ocazie', 'ro', 'en');
+
+        expect($direction->resolve('ro', 'ro', 'en', $guess)->pair())->toBe('ro:en');
     });
 
-    it('treats silence the same way', function () use ($direction) {
-        expect($direction->resolve(null, 'ru', 'en')->pair())->toBe('en:ru');
+    describe('a language that is neither half of the pair', function () use ($direction) {
+        it('falls back to the alphabet rather than to a fixed side', function () use ($direction) {
+            // DeepL detects «случай» as BULGARIAN — it is also a Bulgarian word. Found on the first
+            // live call against the real vendor. A fixed «third language means answer in Russian»
+            // rule handed a Russian speaker their own word back, which is the main use case of the
+            // feature broken by a detector being right about a language nobody asked about.
+            $guess = $direction->guess('случай', 'ru', 'en');
+
+            expect($direction->resolve('bg', 'ru', 'en', $guess)->pair())->toBe('ru:en');
+        });
+
+        it('still answers in the learner\'s language for a Latin-script third language', function () use ($direction) {
+            // The outcome the old fixed rule was actually describing, kept intact: somebody who
+            // typed something we cannot place gets told what it means, in the language they read.
+            $guess = $direction->guess('Gelegenheit', 'ru', 'en');
+
+            expect($direction->resolve('de', 'ru', 'en', $guess)->pair())->toBe('en:ru');
+        });
+
+        it('treats a silent detector the same way', function () use ($direction) {
+            expect($direction->resolve(null, 'ru', 'en', $direction->guess('случай', 'ru', 'en'))->pair())
+                ->toBe('ru:en');
+        });
     });
 });
 

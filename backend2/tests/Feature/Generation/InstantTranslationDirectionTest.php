@@ -136,7 +136,88 @@ it('lets the DETECTOR overrule the alphabet, and buys the answer again the right
         ->and((int) $row->characters)->toBe(mb_strlen('ocazie') * 2);
 });
 
-it('treats a third language as the language being learned, and answers in the learner\'s own', function () {
+/** A provider that always claims the input was `$detected`, whatever it actually was. */
+function detectingAs(string $detected, string $answer): TranslationProvider
+{
+    return new class($detected, $answer) implements TranslationProvider
+    {
+        public function __construct(private string $detected, private string $answer) {}
+
+        public function isAvailable(): bool
+        {
+            return true;
+        }
+
+        public function name(): string
+        {
+            return DeepLTranslator::NAME;
+        }
+
+        public function translate(string $text, string $source, string $target): ?InstantTranslation
+        {
+            return new InstantTranslation(
+                text: $this->answer,
+                provider: DeepLTranslator::NAME,
+                characters: mb_strlen($text),
+                detectedSource: $this->detected,
+            );
+        }
+    };
+}
+
+it('answers a Latin-script third language in the learner\'s own language', function () {
+    app()->instance(TranslationProvider::class, detectingAs('de', 'случай'));
+    [, $token] = learner();
+
+    $hint = instant($this, $token, 'Gelegenheit');
+
+    // Somebody who typed something we cannot place still gets told what it means, in the language
+    // they read. That is the useful failure.
+    expect($hint['translation'])->toBe('случай')->and($hint['reversed'])->toBeFalse();
+    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('en:ru');
+});
+
+it('does not hand a Russian word back because the detector called it Bulgarian', function () {
+    // The real DeepL detects «случай» as BULGARIAN, because it is also a Bulgarian word — caught on
+    // the first live call. A fixed «third language means answer in Russian» rule turned the main use
+    // case of this whole feature into an echo. The alphabet is the better signal once the detector
+    // has said it does not recognise either half of the pair.
+    app()->instance(TranslationProvider::class, detectingAs('bg', 'case'));
+    [, $token] = learner();
+
+    $hint = instant($this, $token, 'случай');
+
+    expect($hint['translation'])->toBe('case')->and($hint['reversed'])->toBeTrue();
+    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('ru:en');
+});
+
+it('never serves a cached row that says a word means itself', function () {
+    // The rows this guard exists for are real: a build that only ever translated one way asked
+    // DeepL to turn «случай» into Russian, got it straight back, and cached it. Permanently, on the
+    // one screen whose whole job is to name a word the learner cannot name yet.
+    $fake = fakeTranslator();
+    [, $token] = learner();
+    DB::table('instant_translations')->insert([
+        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+        'normalized_text' => 'случай',
+        'lang_pair' => 'en:ru',
+        'translation' => 'случай',
+        'provider' => DeepLTranslator::NAME,
+        'characters' => 6,
+        'created_at' => now(),
+    ]);
+
+    $hint = instant($this, $token, 'случай');
+
+    // Skipped, bought properly, and stored under the right key — self-healing, nothing deleted.
+    expect($hint['translation'])->toBe('occasion')
+        ->and($hint['source'])->toBe(DeepLTranslator::NAME)
+        ->and($hint['reversed'])->toBeTrue();
+    expect($fake->calls)->toBe(1);
+    expect(DB::table('instant_translations')->where('lang_pair', 'ru:en')->count())->toBe(1);
+});
+
+it('does not teach the cache a non-answer when the vendor echoes the query back', function () {
     app()->instance(TranslationProvider::class, new class implements TranslationProvider
     {
         public function isAvailable(): bool
@@ -151,22 +232,13 @@ it('treats a third language as the language being learned, and answers in the le
 
         public function translate(string $text, string $source, string $target): ?InstantTranslation
         {
-            return new InstantTranslation(
-                text: 'случай',
-                provider: DeepLTranslator::NAME,
-                characters: mb_strlen($text),
-                detectedSource: 'ro',
-            );
+            return new InstantTranslation($text, DeepLTranslator::NAME, mb_strlen($text), 'en');
         }
     });
     [, $token] = learner();
 
-    $hint = instant($this, $token, 'ocazie');
-
-    // Somebody who typed something we cannot place still gets told what it means, in the language
-    // they read. That is the useful failure.
-    expect($hint['translation'])->toBe('случай')->and($hint['reversed'])->toBeFalse();
-    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('en:ru');
+    expect(instant($this, $token, 'occasion')['translation'])->toBeNull();
+    expect(DB::table('instant_translations')->count())->toBe(0);
 });
 
 it('refuses a paragraph before it reaches the vendor', function () {

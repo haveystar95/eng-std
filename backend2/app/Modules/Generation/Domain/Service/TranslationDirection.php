@@ -31,10 +31,22 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  *
  * ## The third language
  *
- * A query detected as neither half of the pair — Romanian, German, a proper noun the detector
- * shrugged at — is treated as the language being LEARNED, so the answer comes back in the learner's
- * own language. That is the useful failure: somebody who typed something we cannot place still gets
- * told what it means, in the language they read.
+ * A query detected as neither half of the pair falls back to the alphabet's guess — the one case
+ * where the guess is the best signal left, because the detector has just said it does not recognise
+ * either language we care about.
+ *
+ * This is not the rule this class was first written with, and the reason it changed is worth
+ * keeping. The original rule said «a third language is treated as the language being LEARNED», so
+ * an unplaceable query would at least be explained in the language the learner reads. That is right
+ * for a third language written in the TARGET's alphabet — Romanian, German, a proper noun — and it
+ * is wrong in the way that matters most: DeepL detects «случай» as **Bulgarian**, because it is
+ * also a Bulgarian word, and the fixed rule then answered a Russian speaker's Russian query in
+ * Russian. The main use case of the whole feature, broken by a detector being right about a
+ * language nobody asked about (found on the first live call against the real vendor).
+ *
+ * Falling back to the alphabet keeps the original outcome everywhere it was actually describing —
+ * a Latin-script third language still lands on «answer in the learner's own language» — and fixes
+ * the Cyrillic-sibling case, where the script says plainly what the label could not.
  */
 final readonly class TranslationDirection
 {
@@ -56,17 +68,22 @@ final readonly class TranslationDirection
     }
 
     /**
-     * What the provider detected, turned into a direction. `$detected` null = it would not say.
+     * What the provider detected, turned into a direction.
      *
-     * Only the learner's OWN language flips the direction; everything else — the target language,
-     * a third language, silence — means «answer in the language they read».
+     * The detector decides whenever it named either half of the pair, and only then. A third
+     * language or a silent detector falls back to `$fallback` — the alphabet's guess — for the
+     * reason in the class docblock.
      */
-    public function resolve(?string $detected, string $native, string $target): SearchDirection
-    {
-        $seen = strtolower(trim((string) $detected));
-
-        return $seen === strtolower($native)
-            ? new SearchDirection($native, $target)
-            : new SearchDirection($target, $native);
+    public function resolve(
+        ?string $detected,
+        string $native,
+        string $target,
+        SearchDirection $fallback,
+    ): SearchDirection {
+        return match (strtolower(trim((string) $detected))) {
+            strtolower($native) => new SearchDirection($native, $target),
+            strtolower($target) => new SearchDirection($target, $native),
+            default => $fallback,
+        };
     }
 }

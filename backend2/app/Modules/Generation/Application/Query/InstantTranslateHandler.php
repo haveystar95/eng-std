@@ -44,10 +44,10 @@ use Throwable;
  *
  * WHICH way is not decided here and not decided by the alphabet. It is decided by the provider's
  * own detection, because Cyrillic-versus-Latin is the only thing an alphabet can tell us and it
- * says nothing at all about Romanian, Polish or German. The alphabet gets one job — picking which
+ * says nothing at all about Romanian, Polish or German. The alphabet gets two jobs — picking which
  * direction to ASK for, since a target language has to be named before a source one can be
- * reported — and its answer is thrown away the moment the real one arrives. See
- * {@see TranslationDirection}.
+ * reported, and standing in when the detector names a language that is neither half of the pair.
+ * See {@see TranslationDirection}, whose docblock explains why that second job exists.
  */
 final readonly class InstantTranslateHandler
 {
@@ -126,7 +126,7 @@ final readonly class InstantTranslateHandler
             return InstantHintView::nothing($normalized);
         }
 
-        $resolved = $this->direction->resolve($translated->detectedSource, $native, $target);
+        $resolved = $this->direction->resolve($translated->detectedSource, $native, $target, $guess);
         $spent = $translated->characters;
 
         // The guess was wrong — the learner's own language written in a script that does not betray
@@ -150,6 +150,13 @@ final readonly class InstantTranslateHandler
 
             $translated = $corrected;
             $spent += $corrected->characters;
+        }
+
+        // Checked once, after any correction, so neither call can teach the cache a non-answer.
+        // The characters are spent either way; a stored echo would go on returning nothing for as
+        // long as the deployment lives, which is how the rows this guard was written for got there.
+        if (self::isEcho($normalized, $translated->text)) {
+            return InstantHintView::nothing($normalized);
         }
 
         // Written before it is returned, so the very next keystroke that re-sends the same word is
@@ -199,7 +206,7 @@ final readonly class InstantTranslateHandler
 
         foreach ([$guess, $other] as $direction) {
             $cached = $this->cache->find($normalized, $direction->pair());
-            if ($cached !== null) {
+            if ($cached !== null && ! self::isEcho($normalized, $cached)) {
                 return InstantHintView::hit(
                     $normalized,
                     $cached,
@@ -210,6 +217,25 @@ final readonly class InstantTranslateHandler
         }
 
         return null;
+    }
+
+    /**
+     * A «translation» that is the query back again is not an answer, and must never be served.
+     *
+     * This is a guard on the CACHE and on the vendor, never on our own catalogue: a curated term
+     * whose translation really is its own spelling («taxi» → «такси» is not this, but «kiwi» →
+     * «kiwi» could be) is content somebody wrote on purpose.
+     *
+     * It earns its place because the cache is permanent and was filled by a version of this code
+     * that only ever translated one way: asked to turn «случай» into Russian, DeepL handed it
+     * straight back, and the row was stored. Those rows would answer «случай — случай» forever, on
+     * the one screen whose whole job is to name a word the learner cannot name yet. Skipping them
+     * costs one vendor call and replaces them with a real answer under the right key — self-healing,
+     * with no migration and nothing deleted.
+     */
+    private static function isEcho(string $query, string $translation): bool
+    {
+        return mb_strtolower(trim($translation)) === mb_strtolower(trim($query));
     }
 
     /**
