@@ -624,18 +624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchRecentLabel => 'You searched';
 
   @override
-  String searchBaseSize(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    return 'The database has $countString words. If yours is missing, the model will write its card.';
-  }
-
-  @override
-  String get searchInBaseLabel => 'Words in the database';
-
-  @override
   String searchPressEnter(String query) {
     return 'Press Enter to search for “$query” whole';
   }
@@ -644,30 +632,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchOpenCard => 'Open the card';
 
   @override
-  String get searchMoreInBase => 'More in the database';
+  String get searchSimilar => 'Similar';
 
   @override
-  String searchMissTitle(String query) {
-    return '“$query” is not in the database yet';
-  }
+  String get searchBuildCard => 'Build the card';
 
   @override
-  String get searchMissBody =>
-      'Check the spelling — or have the card written: translation, meaning, example, photo.';
-
-  @override
-  String searchDraftTranslation(String translation) {
-    return 'draft translation — $translation';
-  }
-
-  @override
-  String get searchSimilarInBase => 'Similar in the database';
-
-  @override
-  String get searchAskAi => 'Find with AI';
-
-  @override
-  String get searchAskAiNote => 'One model call. Searching again is free';
+  String get searchBuildCardNote => 'Meaning, example and photo. Again — free';
 
   @override
   String get searchLooking => 'Looking…';
@@ -682,6 +653,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchBuildExample => 'example';
 
   @override
+  String get searchBuildPhoto => 'photo';
+
+  @override
   String get searchBuildNote =>
       'A couple of seconds. You can close this — the card will be in search.';
 
@@ -692,9 +666,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchLimitTitle => 'Model-written cards come back at midnight';
-
-  @override
-  String get searchLimitBody => 'Searching the database works as usual.';
 
   @override
   String get searchLookupFailed => 'Could not look this word up';

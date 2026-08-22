@@ -12,12 +12,16 @@ import 'package:eng_std/theme/theme.dart';
 /// word, and the grey hint's translation when there is one — is set immediately and stays put; the
 /// rest of the article fills in top to bottom.
 ///
-/// HONESTY, because this is the easy place to lie. There is exactly ONE model call and no streaming,
-/// so the app cannot know that «значение» is finished before «пример» is. Therefore nothing is ever
-/// TICKED before the answer lands: a row ahead of the wave carries a pale ring, the row the wave is
-/// on carries an ink ring, and every ring becomes a tick at the same moment — when the response
-/// actually arrives. The wave is the real elapsed time of the request and nothing else, and if the
-/// request is slow the wave simply stops on the last row instead of finishing without it.
+/// The TRANSLATION is not one of the things being written: it arrived free, before the button was
+/// pressed, and it stands ticked from the first frame. What the call is actually fetching is the
+/// three rows under it — which is the same promise the button made.
+///
+/// HONESTY about those three, because this is the easy place to lie. There is exactly ONE model
+/// call and no streaming, so the app cannot know that «значение» is finished before «пример» is.
+/// Therefore none of them is ever TICKED before the answer lands: a row ahead of the wave carries a
+/// pale ring, the row the wave is on carries an ink ring, and every ring becomes a tick at the same
+/// moment — when the response actually arrives. The wave is the real elapsed time of the request
+/// and nothing else, and if the request is slow it simply stops on the last row.
 class AssemblingCard extends StatefulWidget {
   const AssemblingCard({
     super.key,
@@ -46,6 +50,7 @@ class _AssemblingCardState extends State<AssemblingCard> {
   Timer? _timer;
   int _wave = 0;
 
+  /// The rows the CALL is responsible for. The translation row sits above them, already done.
   static const _rows = 3;
 
   @override
@@ -118,9 +123,12 @@ class _AssemblingCardState extends State<AssemblingCard> {
           ],
         ),
         const SizedBox(height: AppSpacing.s26),
-        _row(0, l.searchBuildTranslation, widget.translation),
-        _row(1, l.searchBuildMeaning, null),
-        _row(2, l.searchBuildExample, null, last: true),
+        // Ticked from the first frame and never part of the wave — it was answered for free before
+        // the button was pressed.
+        _row(-1, l.searchBuildTranslation, widget.translation),
+        _row(0, l.searchBuildMeaning, null),
+        _row(1, l.searchBuildExample, null),
+        _row(2, l.searchBuildPhoto, null, last: true),
         const SizedBox(height: AppSpacing.s22),
         Text(l.searchBuildNote, style: AppText.searchNote),
       ],
@@ -188,27 +196,43 @@ class _AssemblingCardState extends State<AssemblingCard> {
 
 /// Кадр 08 — the day's model calls are spent.
 ///
-/// Not one red pixel and not one «вы израсходовали». Five grey dots state the fact, then the card
-/// says WHEN it comes back and what still works meanwhile. The mockup's «Отложить на завтра» and
-/// «Без лимита — в подписке» are deliberately absent: neither exists in this app, and a button that
+/// The head is the SAME small card кадр 04 shows — term, then its translation — because the free
+/// half of the answer is unaffected by the cap and withholding it would punish the learner for the
+/// app's accounting. Only the button is replaced: instead of an offer, a plate saying when the
+/// model comes back.
+///
+/// Not one red pixel and not one «вы израсходовали». The mockup's «Отложить на завтра» and «Без
+/// лимита — в подписке» are deliberately absent: neither exists in this app, and a button that
 /// promises a queue nobody implemented is worse than no button.
 class AiLimitCard extends StatelessWidget {
-  const AiLimitCard({super.key, required this.query, required this.used, required this.cap});
+  const AiLimitCard({
+    super.key,
+    required this.query,
+    required this.used,
+    required this.cap,
+    this.translation,
+  });
 
   final String query;
   final int used;
   final int cap;
+  final String? translation;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final dots = cap > 0 && cap <= 8 ? cap : 5;
+    final meaning = translation?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l.searchMissTitle(query), style: AppText.searchMissTitle),
-        const SizedBox(height: AppSpacing.s22),
+        Text(query, style: AppText.cardTerm),
+        if (meaning.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.s12),
+          Text(meaning, style: AppText.cardTranslation),
+        ],
+        const SizedBox(height: AppSpacing.s26),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(18),
@@ -240,8 +264,6 @@ class AiLimitCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.s12),
               Text(l.searchLimitTitle,
                   style: AppText.searchMissTitle.copyWith(fontSize: 19, height: 1.35)),
-              const SizedBox(height: AppSpacing.s8),
-              Text(l.searchLimitBody, style: AppText.searchMissBody.copyWith(fontSize: 14)),
             ],
           ),
         ),

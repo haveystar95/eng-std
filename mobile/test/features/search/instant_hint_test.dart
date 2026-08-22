@@ -170,7 +170,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    await tester.tap(find.text('Find with AI'));
+    await tester.tap(find.text('Собрать карточку'));
     await tester.pump();
     await tester.pump();
 
@@ -181,57 +181,59 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  group('кадр 04 · черновой перевод', () {
-    testWidgets('a word the database does not have still says what it probably means',
-        (tester) async {
-      // The one frame where the draft earns a line of its own: there is no result for it to be
-      // mistaken for, and this is the second somebody decides whether to spend a model call.
-      final api = _Api(hint: const InstantHint(query: 'root', translation: 'корень'));
-      await _pump(tester, api);
-
-      await tester.enterText(find.byType(TextField), 'root');
+  group('кадр 04 · слово, которого у нас ещё нет', () {
+    Future<void> ask(WidgetTester tester, String word) async {
+      await tester.enterText(find.byType(TextField), word);
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pump();
       await tester.pump();
       await tester.pump();
+    }
 
-      expect(find.textContaining('черновой перевод'), findsOneWidget);
-      expect(find.textContaining('корень'), findsOneWidget);
+    testWidgets('the translation is a RESULT here, set as the card sets it', (tester) async {
+      // Not a draft, not a garnish, not a grey aside: the learner asked what a word means and has
+      // been answered, free, in the time it took to press Enter. So it is typeset like an answer —
+      // the term in the antiqua the word card uses, the translation under it in ink.
+      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await ask(tester, 'root');
+
+      // «root» is on screen twice — the field's own editable text and the headword. It is the
+      // headword that has to be typeset like a card's term.
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && w.data == 'root' && w.style?.fontSize == AppText.cardTerm.fontSize,
+        ),
+        findsOneWidget,
+      );
+
+      final translation = tester.widget<Text>(find.text('корень'));
+      expect(translation.style?.fontSize, AppText.cardTranslation.fontSize);
+      expect(translation.style?.color, AppColors.ink);
+      expect(translation.style?.fontStyle, isNot(FontStyle.italic));
     });
 
-    testWidgets('it is MARKED a draft — it must not read as a finished card', (tester) async {
-      final api = _Api(hint: const InstantHint(query: 'root', translation: 'корень'));
-      await _pump(tester, api);
+    testWidgets('the word «черновой» is gone from the screen entirely', (tester) async {
+      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await ask(tester, 'root');
 
-      await tester.enterText(find.byType(TextField), 'root');
-      await tester.testTextInput.receiveAction(TextInputAction.search);
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
+      expect(find.textContaining('черновой'), findsNothing);
+      expect(find.textContaining('Черновой'), findsNothing);
+    });
 
-      final line = tester.widget<Text>(find.byWidgetPredicate(
-        (w) => w is Text && (w.textSpan?.toPlainText() ?? '').startsWith('черновой перевод'),
-      ));
-      expect(line.style?.color, AppColors.tertiary, reason: 'quieter than the body above it');
-      // The word itself carries the same italic the field's echo uses, so the two read as one
-      // draft rather than as two different claims.
-      final spans = (line.textSpan! as TextSpan).children!.cast<TextSpan>();
-      final word = spans.firstWhere((s) => s.text == 'корень');
-      expect(word.style?.fontStyle, FontStyle.italic);
+    testWidgets('the button sells what is MISSING, not what was already given', (tester) async {
+      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await ask(tester, 'root');
+
+      expect(find.text('Собрать карточку'), findsOneWidget);
+      expect(find.textContaining('Значение, пример и фото'), findsOneWidget);
     });
 
     testWidgets('no answer, no line — the frame does not reserve space for it', (tester) async {
-      final api = _Api(hint: const InstantHint(query: 'root'));
-      await _pump(tester, api);
+      await _pump(tester, _Api(hint: const InstantHint(query: 'root')));
+      await ask(tester, 'root');
 
-      await tester.enterText(find.byType(TextField), 'root');
-      await tester.testTextInput.receiveAction(TextInputAction.search);
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.textContaining('черновой перевод'), findsNothing);
-      expect(find.text('Find with AI'), findsOneWidget);
+      expect(find.text('root'), findsWidgets, reason: 'the term still stands');
+      expect(find.text('Собрать карточку'), findsOneWidget);
     });
   });
 

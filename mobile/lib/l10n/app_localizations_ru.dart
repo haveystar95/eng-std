@@ -647,18 +647,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchRecentLabel => 'Вы искали';
 
   @override
-  String searchBaseSize(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    return 'В базе $countString слов. Если слова нет — карточку соберёт модель.';
-  }
-
-  @override
-  String get searchInBaseLabel => 'Слова в базе';
-
-  @override
   String searchPressEnter(String query) {
     return 'Нажмите Enter, чтобы искать «$query» целиком';
   }
@@ -667,30 +655,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchOpenCard => 'Открыть карточку';
 
   @override
-  String get searchMoreInBase => 'Ещё в базе';
+  String get searchSimilar => 'Похожие';
 
   @override
-  String searchMissTitle(String query) {
-    return '«$query» ещё нет в базе';
-  }
+  String get searchBuildCard => 'Собрать карточку';
 
   @override
-  String get searchMissBody =>
-      'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.';
-
-  @override
-  String searchDraftTranslation(String translation) {
-    return 'черновой перевод — $translation';
-  }
-
-  @override
-  String get searchSimilarInBase => 'Похожее в базе';
-
-  @override
-  String get searchAskAi => 'Find with AI';
-
-  @override
-  String get searchAskAiNote => 'Один вызов модели. Повторный поиск бесплатный';
+  String get searchBuildCardNote =>
+      'Значение, пример и фото. Повторно — бесплатно';
 
   @override
   String get searchLooking => 'Ищем…';
@@ -705,6 +677,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchBuildExample => 'пример';
 
   @override
+  String get searchBuildPhoto => 'фото';
+
+  @override
   String get searchBuildNote =>
       'Пара секунд. Можно закрыть — карточка появится в поиске.';
 
@@ -715,9 +690,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchLimitTitle => 'Сборки с моделью вернутся в полночь';
-
-  @override
-  String get searchLimitBody => 'Поиск по базе работает как обычно.';
 
   @override
   String get searchLookupFailed => 'Не удалось найти это слово';

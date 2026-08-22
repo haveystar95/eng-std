@@ -1028,18 +1028,6 @@ abstract class AppLocalizations {
   /// **'Вы искали'**
   String get searchRecentLabel;
 
-  /// Строка под списком недавних: размер базы и что будет, если слова в ней нет (кадр 01).
-  ///
-  /// In ru, this message translates to:
-  /// **'В базе {count} слов. Если слова нет — карточку соберёт модель.'**
-  String searchBaseSize(int count);
-
-  /// Лейбл над списком слов базы во время набора (кадр 02).
-  ///
-  /// In ru, this message translates to:
-  /// **'Слова в базе'**
-  String get searchInBaseLabel;
-
   /// Подсказка под списком во время набора (кадр 02).
   ///
   /// In ru, this message translates to:
@@ -1052,47 +1040,23 @@ abstract class AppLocalizations {
   /// **'Открыть карточку'**
   String get searchOpenCard;
 
-  /// Лейбл над остальными совпадениями (кадр 03).
+  /// Лейбл над остальными совпадениями (кадры 03 и 04). Про хранилище не говорит: где слово лежит — кухня приложения, а не дело читателя.
   ///
   /// In ru, this message translates to:
-  /// **'Ещё в базе'**
-  String get searchMoreInBase;
+  /// **'Похожие'**
+  String get searchSimilar;
 
-  /// Заголовок состояния «слова нет» (кадр 04).
+  /// Главное действие на слове, которого у нас ещё нет (кадр 04). Продаёт не поиск — перевод уже показан — а то, чего нет: значение, пример, фото.
   ///
   /// In ru, this message translates to:
-  /// **'«{query}» ещё нет в базе'**
-  String searchMissTitle(String query);
+  /// **'Собрать карточку'**
+  String get searchBuildCard;
 
-  /// Пояснение под заголовком (кадр 04).
+  /// Подпись под кнопкой «Собрать карточку» (кадр 04).
   ///
   /// In ru, this message translates to:
-  /// **'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.'**
-  String get searchMissBody;
-
-  /// Мгновенный перевод на кадре 04: слова в базе нет, но черновик уже есть. Помечен «черновой», чтобы не читался как готовая карточка.
-  ///
-  /// In ru, this message translates to:
-  /// **'черновой перевод — {translation}'**
-  String searchDraftTranslation(String translation);
-
-  /// Лейбл над близкими совпадениями, когда точного нет (кадр 04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Похожее в базе'**
-  String get searchSimilarInBase;
-
-  /// Кнопка платного поиска через модель. Явный тап, никогда не автозапуск (кадр 04). По макету — латиницей в обеих локалях.
-  ///
-  /// In ru, this message translates to:
-  /// **'Find with AI'**
-  String get searchAskAi;
-
-  /// Подпись под кнопкой «Find with AI» (кадр 04).
-  ///
-  /// In ru, this message translates to:
-  /// **'Один вызов модели. Повторный поиск бесплатный'**
-  String get searchAskAiNote;
+  /// **'Значение, пример и фото. Повторно — бесплатно'**
+  String get searchBuildCardNote;
 
   /// Состояние во время вызова модели.
   ///
@@ -1118,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'пример'**
   String get searchBuildExample;
 
+  /// Строка чек-листа сборки карточки (кадр 05).
+  ///
+  /// In ru, this message translates to:
+  /// **'фото'**
+  String get searchBuildPhoto;
+
   /// Строка под чек-листом сборки (кадр 05).
   ///
   /// In ru, this message translates to:
@@ -1135,12 +1105,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сборки с моделью вернутся в полночь'**
   String get searchLimitTitle;
-
-  /// Пояснение под заголовком лимита (кадр 08).
-  ///
-  /// In ru, this message translates to:
-  /// **'Поиск по базе работает как обычно.'**
-  String get searchLimitBody;
 
   /// Модель ответила, но ответ не прошёл гейты, либо сеть не дала.
   ///

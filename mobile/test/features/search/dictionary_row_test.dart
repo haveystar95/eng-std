@@ -72,9 +72,9 @@ void main() {
   });
 
   testWidgets('the label above a list is set in caps', (tester) async {
-    await _pump(tester, const SearchSectionLabel('Ещё в базе'));
+    await _pump(tester, const SearchSectionLabel('Похожие'));
 
-    expect(find.text('ЕЩЁ В БАЗЕ'), findsOneWidget);
+    expect(find.text('ПОХОЖИЕ'), findsOneWidget);
     final text = tester.widget<Text>(find.byType(Text));
     expect(text.style?.color, AppColors.tertiary);
   });

@@ -452,7 +452,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (_limitReached) {
       return [
         const SizedBox(height: 34),
-        AiLimitCard(query: _submitted!, used: _usedToday, cap: _dailyCap),
+        AiLimitCard(
+          query: _submitted!,
+          translation: _hint?.translation,
+          used: _usedToday,
+          cap: _dailyCap,
+        ),
       ];
     }
 
@@ -461,35 +466,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return exact != null ? _found(l, exact) : _missing(l);
   }
 
-  /// Кадр 01 — nothing typed yet.
+  /// Кадр 01 — nothing typed yet: three words the learner has been to before, and nothing else.
+  ///
+  /// No line about how many words we hold. WHERE a word lives — our catalogue, the offline
+  /// dictionary, a model call — is the app's kitchen, and a count of it is a number the learner
+  /// cannot use for anything.
   List<Widget> _empty(AppLocalizations l) {
-    final size = _words.loaded?.length ?? 0;
+    if (_recent.isEmpty) return const [];
 
     return [
       const SizedBox(height: AppSpacing.s26),
-      if (_recent.isNotEmpty) ...[
-        SearchSectionLabel(l.searchRecentLabel),
-        const SizedBox(height: AppSpacing.s8),
-        for (var i = 0; i < _recent.length; i++)
-          DictionaryRow(
-            term: _recent[i].word,
-            translation: _recent[i].translation,
-            level: _recent[i].cefr,
-            trailing: RowTrailing.level,
-            // No rule under the last line: the block below already opens with one, and two
-            // hairlines with air between them read as an empty fourth row.
-            showDivider: i < _recent.length - 1,
-            onTap: () => _submit(_recent[i].word),
-          ),
-        const SizedBox(height: 30),
-      ],
-      if (size > 0)
-        Container(
-          padding: const EdgeInsets.only(top: AppSpacing.s16),
-          decoration: _recent.isEmpty
-              ? null
-              : const BoxDecoration(border: Border(top: BorderSide(color: AppColors.dividerFaint))),
-          child: Text(l.searchBaseSize(size), style: AppText.searchNote),
+      SearchSectionLabel(l.searchRecentLabel),
+      const SizedBox(height: AppSpacing.s8),
+      for (var i = 0; i < _recent.length; i++)
+        DictionaryRow(
+          term: _recent[i].word,
+          translation: _recent[i].translation,
+          level: _recent[i].cefr,
+          trailing: RowTrailing.level,
+          showDivider: i < _recent.length - 1,
+          onTap: () => _submit(_recent[i].word),
         ),
     ];
   }
@@ -497,14 +493,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Кадр 02 — mid-typing. The list of words is the main object on the page: it is the only thing
   /// that leads anywhere, so it is set at reading size with translations, and the pills it replaced
   /// are gone. Same two sources as before — catalogue first, dictionary after.
+  ///
+  /// UNLABELLED, and that is the point. The rows come from two places and the learner has no use
+  /// for the difference: one opens its card, the other becomes the query, and both are just words.
   List<Widget> _typing(AppLocalizations l) {
     final suggestions = mergeSuggestions(known: _hits, dictionary: _dictionaryHits);
 
     return [
       const SizedBox(height: 20),
       if (suggestions.isNotEmpty) ...[
-        SearchSectionLabel(l.searchInBaseLabel),
-        const SizedBox(height: 6),
         for (var i = 0; i < suggestions.length; i++)
           DictionaryRow(
             term: suggestions[i].word,
@@ -544,7 +541,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ),
       if (rest.isNotEmpty) ...[
         const SizedBox(height: 14),
-        SearchSectionLabel(l.searchMoreInBase),
+        SearchSectionLabel(l.searchSimilar),
         const SizedBox(height: 2),
         for (var i = 0; i < rest.length; i++)
           DictionaryRow(
@@ -559,36 +556,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ];
   }
 
-  /// Кадр 04 — the word is not in the database. The offer to have it written, what it costs in one
-  /// grey line UNDER the button, and the near misses below a rule.
+  /// Кадр 04 — a word we do not hold yet. A SMALL CARD of it, not a refusal.
+  ///
+  /// The instant translation is a full answer and is set as one: the term large in the antiqua the
+  /// word card uses, the translation under it in ink. The learner asked what a word means and has
+  /// been told, free, in the time it took to press Enter.
+  ///
+  /// What the button then sells is honestly what is missing — meaning, example, photo — rather than
+  /// «find», which would be selling something already delivered. And nothing on this screen says
+  /// the word is «not in the database»: where a word lives is the app's kitchen. The difference
+  /// between a word we hold and a new one is expressed by ONE thing, the presence of this button.
   List<Widget> _missing(AppLocalizations l) {
     final near = _hits;
+    final translation = _hint?.translation?.trim() ?? '';
 
     return [
-      const SizedBox(height: 38),
-      Text(l.searchMissTitle(_submitted!), style: AppText.searchMissTitle),
-      const SizedBox(height: 10),
-      ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 300),
-        child: Text(l.searchMissBody, style: AppText.searchMissBody),
-      ),
-      // The instant translation, and the ONE frame where it earns a line of its own.
-      //
-      // Everywhere else it is input feedback and lives inside the field, because a draft must never
-      // read as a result. Here there is no result to be mistaken for — the word is not in the
-      // database — and this is the exact second somebody decides whether to spend a model call. So
-      // it says what the word probably means, and says out loud that it is a draft.
-      ...?_draftLine(l),
+      const SizedBox(height: 34),
+      Text(_submitted!, style: AppText.cardTerm),
+      if (translation.isNotEmpty) ...[
+        const SizedBox(height: AppSpacing.s12),
+        Text(translation, style: AppText.cardTranslation),
+      ],
       const SizedBox(height: AppSpacing.s26),
       PrimaryButton(
-        label: _searching ? l.searchLooking : l.searchAskAi,
+        label: _searching ? l.searchLooking : l.searchBuildCard,
         minHeight: 54,
         trailingIcon: LucideIcons.sparkles,
         enabled: !_searching,
         onPressed: _askAi,
       ),
       const SizedBox(height: 10),
-      Text(l.searchAskAiNote, textAlign: TextAlign.center, style: AppText.searchFootnote),
+      Text(l.searchBuildCardNote, textAlign: TextAlign.center, style: AppText.searchFootnote),
       if (_lookupError != null) ...[
         const SizedBox(height: AppSpacing.s12),
         Text(_lookupError!, textAlign: TextAlign.center, style: AppText.searchFootnote),
@@ -600,7 +598,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           decoration: const BoxDecoration(
             border: Border(top: BorderSide(color: AppColors.dividerFaint)),
           ),
-          child: SearchSectionLabel(l.searchSimilarInBase),
+          child: SearchSectionLabel(l.searchSimilar),
         ),
         for (var i = 0; i < near.length; i++)
           DictionaryRow(
@@ -612,35 +610,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onTap: () => _openHitCard(near[i]),
           ),
       ],
-    ];
-  }
-
-  /// «черновой перевод — корень»: the label flat and grey, the word itself italic — the same italic
-  /// the field's echo uses, so the two are visibly the same draft rather than two different claims.
-  List<Widget>? _draftLine(AppLocalizations l) {
-    final translation = _hint?.translation?.trim() ?? '';
-    if (translation.isEmpty) return null;
-
-    final line = l.searchDraftTranslation(translation);
-    final at = line.indexOf(translation);
-    final style = AppText.searchNote.copyWith(color: AppColors.tertiary);
-
-    return [
-      const SizedBox(height: 14),
-      if (at < 0)
-        Text(line, style: style)
-      else
-        Text.rich(
-          TextSpan(children: [
-            TextSpan(text: line.substring(0, at)),
-            TextSpan(
-              text: translation,
-              style: const TextStyle(fontStyle: FontStyle.italic),
-            ),
-            TextSpan(text: line.substring(at + translation.length)),
-          ]),
-          style: style,
-        ),
     ];
   }
 

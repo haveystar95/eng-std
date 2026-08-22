@@ -20,11 +20,14 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// The six faces of the search screen (кадры 01–05, 08), plus the one rule that outranks all of
 /// them: typing is free and may run on a debounce, the model costs money and runs ONLY on a tap.
 class _SpyApi implements ApiClient {
-  _SpyApi({this.hits = const [], LookupOutcome? outcome, this.holdLookup = false})
+  _SpyApi({this.hits = const [], LookupOutcome? outcome, this.holdLookup = false, this.hint})
       : outcome = outcome ?? const LookupOutcome(dailyCap: 5);
 
   final List<SearchHit> hits;
   final LookupOutcome outcome;
+
+  /// What the free instant translation answers, if anything.
+  final String? hint;
 
   /// Keeps the model call in flight so кадр 05 can be observed.
   final bool holdLookup;
@@ -41,7 +44,8 @@ class _SpyApi implements ApiClient {
   }
 
   @override
-  Future<InstantHint> instantHint(String query) async => InstantHint(query: query);
+  Future<InstantHint> instantHint(String query) async =>
+      InstantHint(query: query, translation: hint);
 
   @override
   Future<LookupOutcome> lookupWord(String query) async {
@@ -114,12 +118,14 @@ SearchHit _hit({String text = 'invoice', String? translation = 'счёт'}) => S
 
 void main() {
   group('кадр 01 · пустой поиск', () {
-    testWidgets('says how big the database is, and what happens when a word is not in it',
-        (tester) async {
-      await _pump(tester, _SpyApi());
+    testWidgets('an empty search is three words and nothing else', (tester) async {
+      final api = _SpyApi();
+      final db = _open();
+      await db.setMeta(SearchHistory.metaKey, '[{"w":"hollow","t":"пустой","c":"B2"}]');
+      await _pump(tester, api, db: db);
 
-      expect(find.textContaining('В базе'), findsOneWidget);
-      expect(find.textContaining('карточку соберёт модель'), findsOneWidget);
+      expect(find.text('Вы искали'.toUpperCase()), findsOneWidget);
+      expect(find.widgetWithText(DictionaryRow, 'hollow'), findsOneWidget);
     });
 
     testWidgets('«Вы искали» lists what was searched before, and re-searching is one tap',
@@ -157,7 +163,6 @@ void main() {
 
       expect(find.byType(DictionaryRow), findsWidgets);
       expect(find.text('счёт'), findsOneWidget);
-      expect(find.text('Слова в базе'.toUpperCase()), findsOneWidget);
     });
 
     testWidgets('offers dictionary words before any server has answered', (tester) async {
@@ -197,7 +202,7 @@ void main() {
       expect(find.text('Открыть карточку'), findsOneWidget);
     });
 
-    testWidgets('the other matches are demoted to flat lines under «Ещё в базе»', (tester) async {
+    testWidgets('the other matches are demoted to flat lines under «Похожие»', (tester) async {
       await _pump(tester, _SpyApi(hits: [
         _hit(),
         _hit(text: 'invoicing', translation: 'выставление счетов'),
@@ -205,7 +210,7 @@ void main() {
       await _submit(tester, 'invoice');
 
       expect(find.byType(SearchResultCard), findsOneWidget);
-      expect(find.text('Ещё в базе'.toUpperCase()), findsOneWidget);
+      expect(find.text('Похожие'.toUpperCase()), findsOneWidget);
       expect(find.widgetWithText(DictionaryRow, 'invoicing'), findsOneWidget);
     });
 
@@ -222,27 +227,37 @@ void main() {
     });
   });
 
-  group('кадр 04 · нет в базе', () {
-    testWidgets('names the missing word and offers the model — but only a tap spends it',
-        (tester) async {
-      final api = _SpyApi(hits: const []);
+  group('кадр 04 · слово, которого у нас ещё нет', () {
+    testWidgets('is a small CARD of the word — term, then what it means', (tester) async {
+      final api = _SpyApi(hits: const [], hint: 'возмещение');
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
 
-      expect(find.text('«reimbursement» ещё нет в базе'), findsOneWidget);
-      expect(find.text('Find with AI'), findsOneWidget);
-      expect(find.textContaining('Один вызов модели'), findsOneWidget);
-      expect(api.lookupCalls, 0);
+      // The answer to «what does this mean» is already on screen, free. Only the rest is for sale.
+      expect(find.text('возмещение'), findsOneWidget);
+      expect(find.text('Собрать карточку'), findsOneWidget);
+      expect(find.textContaining('Значение, пример и фото'), findsOneWidget);
+      expect(api.lookupCalls, 0, reason: 'the model is a tap, never a consequence of searching');
     });
 
-    testWidgets('a near miss is «Похожее в базе», never the answer', (tester) async {
+    testWidgets('never mentions a database — that is the app\'s kitchen', (tester) async {
+      // The difference between a word we hold and a new one is expressed by ONE thing: the button.
+      final api = _SpyApi(hits: const [], hint: 'возмещение');
+      await _pump(tester, api);
+      await _submit(tester, 'reimbursement');
+
+      expect(find.textContaining('баз'), findsNothing);
+      expect(find.textContaining('нет'), findsNothing);
+    });
+
+    testWidgets('a near miss is «Похожие», never the answer', (tester) async {
       // Deliberately not fuzzy: «invoicing» is not an answer to «invoic», and presenting it as one
       // would stop the learner generating the word they actually meant.
       await _pump(tester, _SpyApi(hits: [_hit(text: 'invoicing', translation: 'выставление счетов')]));
       await _submit(tester, 'invoic');
 
       expect(find.byType(SearchResultCard), findsNothing);
-      expect(find.text('Похожее в базе'.toUpperCase()), findsOneWidget);
+      expect(find.text('Похожие'.toUpperCase()), findsOneWidget);
       expect(find.widgetWithText(DictionaryRow, 'invoicing'), findsOneWidget);
     });
   });
@@ -253,7 +268,7 @@ void main() {
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
 
-      await tester.tap(find.text('Find with AI'));
+      await tester.tap(find.text('Собрать карточку'));
       await tester.pump();
 
       expect(find.byType(AssemblingCard), findsOneWidget);
@@ -263,6 +278,24 @@ void main() {
       expect(find.text('перевод'), findsOneWidget);
       expect(find.text('значение'), findsOneWidget);
       expect(find.text('пример'), findsOneWidget);
+      expect(find.text('фото'), findsOneWidget);
+
+      api.lookupGate.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('the translation is NOT being fetched — it stands ticked from the first frame',
+        (tester) async {
+      // It arrived free, before the button was pressed. What the call is paying for is the three
+      // rows under it, which is exactly what the button promised.
+      final api = _SpyApi(hits: const [], holdLookup: true, hint: 'возмещение');
+      await _pump(tester, api);
+      await _submit(tester, 'reimbursement');
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('возмещение'), findsOneWidget);
 
       api.lookupGate.complete();
       await tester.pumpAndSettle();
@@ -272,7 +305,7 @@ void main() {
       final api = _SpyApi(hits: const [], holdLookup: true);
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
-      await tester.tap(find.text('Find with AI'));
+      await tester.tap(find.text('Собрать карточку'));
       await tester.pump();
 
       // The wave has moved twice by now; with a single non-streaming call the app cannot know that
@@ -302,7 +335,7 @@ void main() {
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
 
-      await tester.tap(find.text('Find with AI'));
+      await tester.tap(find.text('Собрать карточку'));
       await tester.pumpAndSettle();
 
       expect(api.lookupCalls, 1);
@@ -316,16 +349,20 @@ void main() {
       final api = _SpyApi(
         hits: const [],
         outcome: const LookupOutcome(limitReached: true, dailyCap: 5, usedToday: 5),
+        hint: 'возмещение',
       );
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
-      await tester.tap(find.text('Find with AI'));
+      await tester.tap(find.text('Собрать карточку'));
       await tester.pumpAndSettle();
 
       expect(find.byType(AiLimitCard), findsOneWidget);
       expect(find.text('5 из 5 на сегодня'), findsOneWidget);
       expect(find.text('Сборки с моделью вернутся в полночь'), findsOneWidget);
-      expect(find.textContaining('Поиск по базе работает'), findsOneWidget);
+      // The free half of the answer is unaffected by the cap, so it stays: withholding it would
+      // punish the learner for the app's own accounting.
+      expect(find.text('возмещение'), findsOneWidget);
+      expect(find.textContaining('баз'), findsNothing);
     });
 
     testWidgets('promises nothing the app does not have', (tester) async {
@@ -337,7 +374,7 @@ void main() {
       );
       await _pump(tester, api);
       await _submit(tester, 'reimbursement');
-      await tester.tap(find.text('Find with AI'));
+      await tester.tap(find.text('Собрать карточку'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Отложить'), findsNothing);
