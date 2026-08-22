@@ -13,7 +13,8 @@ import '../../data/practice/learning_ladder.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
 import '../training/session_screen.dart';
-import 'word_ladder_sheet.dart';
+import '../word_card/word_card_screen.dart';
+import '../word_card/word_card_subject.dart';
 
 /// «Мои слова» — the POOL, which is the list this app was missing.
 ///
@@ -176,25 +177,31 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
   String get _speakLang =>
       ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
 
-  /// The same expanded card the collection screen opens — one card for a word, wherever it is met.
+  /// The same card the collection screen opens — one card for a word, wherever it is met.
+  ///
+  /// No folder is named here on purpose: the pool mixes collections, and a word may have come from
+  /// several or from one that no longer exists. «Добавить в другую папку» still works — it simply
+  /// has no «current» shelf to contrast with.
   void _openCard(PoolWordRow row) {
     final word = _toWord(row);
-    showWordLadderSheet(
-      context: context,
-      word: word,
-      onSpeak: () {
-        AppHaptics.light();
-        _pronouncer.speak(word, targetLang: _speakLang);
-      },
-      onTrain: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => SessionScreen(
-          title: word.term,
-          practice: true,
-          onlyTermId: word.termId,
-        ),
-      )),
-      onUnenroll: () => ref.read(poolSyncProvider).unenroll(word.termId),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => WordCardScreen(
+        subject: WordCardSubject.fromWord(word),
+        mode: WordCardMode.folder,
+        onSpeak: () {
+          AppHaptics.light();
+          _pronouncer.speak(word, targetLang: _speakLang);
+        },
+        onTrain: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => SessionScreen(
+            title: word.term,
+            practice: true,
+            onlyTermId: word.termId,
+          ),
+        )),
+        onUnenroll: () => ref.read(poolSyncProvider).unenroll(word.termId),
+      ),
+    ));
   }
 
   Word _toWord(PoolWordRow r) => Word(

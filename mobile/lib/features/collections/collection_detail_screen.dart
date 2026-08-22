@@ -24,7 +24,6 @@ import '../word_card/word_card_subject.dart';
 import 'collection_cta.dart';
 import 'collection_edit_dialog.dart';
 import 'word_edit_dialog.dart';
-import 'word_ladder_sheet.dart';
 import '../../data/local/cached_image_provider.dart';
 
 /// Collection screen (кадр 2.3): cover photo, three ink-density segments, a
@@ -877,8 +876,9 @@ class _WordRow extends StatefulWidget {
   final bool showDivider;
   final VoidCallback onSpeak;
 
-  /// The folder this row is being read IN, or null on a read-only store deck. Non-null is what
-  /// opens the full word card (кадр 09) instead of the compact sheet — see [_WordRowState._openCard].
+  /// The folder this row is being read IN, or null on a read-only store deck — a catalogue is not
+  /// one of the learner's shelves and the card must not name it as one. It says WHERE the word is,
+  /// never whether it gets a card.
   final SavedFolder? folder;
 
   /// «Тренировать слово» from the expanded card: a practice session filtered to this term.
@@ -915,30 +915,21 @@ class _WordRowState extends State<_WordRow> {
 
   void _close() => setState(() => _offset = 0);
 
-  /// The word's card.
+  /// The word's card — the same full screen wherever the word was met.
   ///
-  /// From the learner's OWN folder it is the full screen (кадр 09): a photo, the article, and the
-  /// ladder cut in as a band under the head — a word they own is worth a page. A store deck's word
-  /// keeps the compact sheet (кадр 16e): it is a catalogue entry being browsed, its ladder is empty
-  /// by definition, and none of the folder actions apply to it.
+  /// It used to be the full card from an own folder and the old compact sheet from a store deck.
+  /// That split was a rule about OUR shelves, and the learner reading a word has no use for it: the
+  /// same word deserves the same page. [folder] now says only WHERE the word is — non-null when it
+  /// is one of the learner's own folders, so the card can name it — and never whether a card opens.
   void _openCard() {
     final folder = widget.folder;
-    if (folder == null) {
-      showWordLadderSheet(
-        context: context,
-        word: widget.word,
-        onSpeak: widget.onSpeak,
-        onTrain: () => widget.onTrain?.call(),
-        onEnroll: widget.onEnroll,
-        onUnenroll: widget.onUnenroll,
-      );
-
-      return;
-    }
 
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => WordCardScreen(
-        subject: WordCardSubject.fromWord(widget.word, folders: [folder]),
+        subject: WordCardSubject.fromWord(
+          widget.word,
+          folders: folder == null ? const [] : [folder],
+        ),
         mode: WordCardMode.folder,
         onSpeak: widget.onSpeak,
         onTrain: () => widget.onTrain?.call(),

@@ -261,9 +261,11 @@ void main() {
 
       expect(find.text('Учить это слово'), findsOneWidget);
       expect(find.text('Тренировать слово'), findsNothing);
-      // …and the ladder says where it stands instead of drawing five pale dots, which would claim
-      // «at the very beginning» about a word that never started.
+      // No ladder — it has not started one. And no sentence about being «in the catalogue» either:
+      // the button says that by existing, and the note used to push the translation down the page
+      // to repeat it.
       expect(find.byType(LadderTrack), findsNothing);
+      expect(find.textContaining('каталоге'), findsNothing);
     });
 
     testWidgets('a word at rung 0 cannot be drilled, and the button says why', (tester) async {
@@ -275,6 +277,109 @@ void main() {
         find.text('Слово откроется для практики после знакомства с ним в учебной тренировке.'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('tapping the disabled action starts nothing', (tester) async {
+      var trained = 0;
+      await _pump(
+        tester,
+        subject: fromFolder(step: 0),
+        mode: WordCardMode.folder,
+        onTrain: () => trained++,
+      );
+
+      await tester.tap(find.text('Тренировать слово'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(trained, 0);
+    });
+
+    testWidgets('a «знаю» word is OUTSIDE the ladder, not at the bottom of it — and it trains',
+        (tester) async {
+      // Five pale dots would say «at the very beginning», which is the opposite of what «знаю»
+      // means. A dash says it in one mark, and the training run stays available.
+      var trained = 0;
+      await _pump(
+        tester,
+        subject: WordCardSubject(
+          termId: 'ID',
+          text: 'hole',
+          type: 'word',
+          translation: 'дыра',
+          ladderStep: null,
+          isKnown: true,
+          enrolled: true,
+        ),
+        mode: WordCardMode.folder,
+        onTrain: () => trained++,
+      );
+
+      expect(find.byType(LadderTrack), findsNothing);
+      expect(find.byType(LadderKnownDash), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Тренировать слово'));
+      await tester.pump();
+      await tester.tap(find.text('Тренировать слово'));
+      await tester.pumpAndSettle();
+      expect(trained, 1);
+    });
+
+    group('«Убрать из изучения»', () {
+      Future<void> openMenu(WidgetTester tester) async {
+        await tester.tap(find.bySemanticsLabel('Ещё'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Убрать из изучения'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('is confirmed, and the confirmation says it is a PAUSE', (tester) async {
+        // The word keeps its rung and its due date. Wording that reads as a delete is wording the
+        // learner never presses.
+        var unenrolled = 0;
+        await _pump(
+          tester,
+          subject: fromFolder(),
+          mode: WordCardMode.folder,
+          onTrain: () {},
+          onUnenroll: () => unenrolled++,
+        );
+
+        await openMenu(tester);
+        expect(find.textContaining('Прогресс и история сохранятся'), findsOneWidget);
+
+        await tester.tap(find.text('Убрать'));
+        await tester.pumpAndSettle();
+        expect(unenrolled, 1);
+      });
+
+      testWidgets('cancelling leaves the word in the pool', (tester) async {
+        var unenrolled = 0;
+        await _pump(
+          tester,
+          subject: fromFolder(),
+          mode: WordCardMode.folder,
+          onTrain: () {},
+          onUnenroll: () => unenrolled++,
+        );
+
+        await openMenu(tester);
+        await tester.tap(find.text('Отмена'));
+        await tester.pumpAndSettle();
+
+        expect(unenrolled, 0);
+      });
+
+      testWidgets('a word outside the pool has nothing to pause — no menu at all', (tester) async {
+        await _pump(
+          tester,
+          subject: fromFolder(step: 0, enrolled: false),
+          mode: WordCardMode.folder,
+          onEnroll: () {},
+          onUnenroll: () {},
+        );
+
+        expect(find.bySemanticsLabel('Ещё'), findsNothing);
+      });
     });
   });
 }

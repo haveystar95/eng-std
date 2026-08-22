@@ -541,7 +541,11 @@ class _Article extends StatelessWidget {
           ],
           // Кадр 09: the ladder is the FIRST sheet under the head. Opening a word from a folder,
           // the first question is «where am I with it», not «what does it mean».
-          if (fromFolder) ...[
+          //
+          // Only when there IS a standing to report. A word still in the catalogue has none, and
+          // the sentence that used to sit here — «слово в каталоге, ты его пока не учишь» — pushed
+          // the translation down the page to say what the button below already says by existing.
+          if (fromFolder && (subject.isKnown || subject.enrolled)) ...[
             const SizedBox(height: 18),
             _LadderStrip(subject: subject, l: l),
           ],
@@ -606,14 +610,11 @@ class _LadderStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A «знаю» word never walked the ladder and a word outside the pool has not started it. Both
-    // say so in one line — five pale dots would claim «at the very beginning», which is wrong in
-    // opposite directions for the two of them.
+    // A «знаю» word never walked the ladder, and five pale dots would claim «at the very
+    // beginning» — the opposite of what «знаю» means. A dash says it instead, and unlike a word
+    // still in the catalogue this IS a standing worth reporting: no action on the card implies it.
     if (subject.isKnown) {
       return _RaisedSheet(child: Row(children: [LadderKnownDash(label: l.ladderKnownDash)]));
-    }
-    if (!subject.enrolled) {
-      return _RaisedSheet(child: Text(l.poolNotStudyingNote, style: AppText.ladderLockedNote));
     }
 
     final step = subject.ladderStep;

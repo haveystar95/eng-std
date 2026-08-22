@@ -157,6 +157,7 @@ class _Menu extends StatelessWidget {
               _entry(context, '05 · медленная сборка', () => _search(cap: false, slow: true)),
               _entry(context, '08 · дневной лимит', () => _search(cap: true, slow: false)),
               _entry(context, '09 · карточка из папки', () => const _FromFolder()),
+              _entry(context, '09 · слово из каталога (не в пуле)', () => const _FromCatalogue()),
             ],
           ),
         ),
@@ -209,6 +210,34 @@ class _FromFolder extends StatelessWidget {
             folders: const [SavedFolder(id: 'F', title: 'Сохранённые', isDefault: true)],
           ),
         );
+}
+
+/// The same card opened from a STORE set — a word in the catalogue the learner has not taken into
+/// study. No folder to name (a catalogue is not one of their shelves), no ladder to draw, and the
+/// one move on offer is the decision. This is the case that used to fall back to the old sheet.
+class _FromCatalogue extends StatelessWidget {
+  const _FromCatalogue();
+
+  @override
+  Widget build(BuildContext context) => WordCardScreen(
+        mode: WordCardMode.folder,
+        onSpeak: () {},
+        onTrain: () {},
+        onEnroll: () {},
+        subject: WordCardSubject.fromWord(
+          Word(
+            termId: '01WEATHER',
+            term: 'How is the weather?',
+            translation: 'Как погода?',
+            transcription: 'haʊ ɪz ðə ˈwɛðər',
+            example: 'How is the weather in your city right now?',
+            type: 'phrase',
+            imageUrl: _formPhoto,
+            imageAuthor: 'Pixabay',
+            ladderStep: 0,
+          ),
+        ),
+      );
 }
 
 /// The one API the scope hands out; which fake it forwards to is switched per preview entry.

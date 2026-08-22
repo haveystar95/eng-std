@@ -1,6 +1,7 @@
 import 'package:eng_std/data/models.dart';
-import 'package:eng_std/features/collections/word_ladder_sheet.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
+import 'package:eng_std/features/word_card/word_card_screen.dart';
+import 'package:eng_std/features/word_card/word_card_subject.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
@@ -227,7 +228,10 @@ class _PreviewRow extends StatelessWidget {
   }
 }
 
-/// 16e — the expanded card: the same dots, captioned and joined by a line.
+/// 16e — the word's card: the same dots, captioned and joined by a line.
+///
+/// The compact sheet this used to open is gone — a word gets the full card wherever it is met
+/// («Фаза 3»), so the preview opens that.
 class _CardFrame extends StatelessWidget {
   const _CardFrame();
 
@@ -238,12 +242,14 @@ class _CardFrame extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.screenH),
         child: PrimaryButton(
           label: 'Открыть карточку слова',
-          onPressed: () => showWordLadderSheet(
-            context: context,
-            word: _fillOut,
-            onSpeak: () {},
-            onTrain: () {},
-          ),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => WordCardScreen(
+              subject: WordCardSubject.fromWord(_fillOut),
+              mode: WordCardMode.folder,
+              onSpeak: () {},
+              onTrain: () {},
+            ),
+          )),
         ),
       ),
     );
