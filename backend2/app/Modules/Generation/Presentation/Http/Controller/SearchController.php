@@ -81,6 +81,12 @@ final class SearchController
             'source' => $hint->source,
             'feature_disabled' => $hint->featureDisabled,
             'limit_reached' => $hint->limitReached,
+            // Internal, like `source`: which of the two strings is the word being learned. The
+            // screen needs it to know which one is the headline — never to say anything about
+            // languages or detection, which are this app's business and not the learner's.
+            'reversed' => $hint->reversed,
+            // The one state the client does render a line for: «поиск — для слов и коротких фраз».
+            'query_too_long' => $hint->queryTooLong,
         ]]);
     }
 

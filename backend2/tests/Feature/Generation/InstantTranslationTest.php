@@ -5,32 +5,15 @@ declare(strict_types=1);
 use App\Modules\Generation\Application\Port\TranslationProvider;
 use App\Modules\Generation\Domain\Service\TranslationMonthlyBudget;
 use App\Modules\Generation\Infrastructure\Adapter\DeepLTranslator;
-use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
 use App\Modules\Generation\Infrastructure\Adapter\UnavailableTranslator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-/** Bind the counting translator and hand it back, so a test can assert the vendor was NOT called. */
-function fakeTranslator(): FakeTranslator
-{
-    $fake = new FakeTranslator();
-    // `app()` and not `$ctx->app`: the container property is protected, and a free function shared
-    // across test files (see tests/Pest.php's note) is outside the TestCase's scope.
-    app()->instance(TranslationProvider::class, $fake);
-
-    return $fake;
-}
-
-/** @return array<string, mixed> */
-function instant(object $ctx, string $token, string $query): array
-{
-    return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/search/instant?q=' . urlencode($query))
-        ->assertOk()
-        ->json('data');
-}
+// `fakeTranslator()` and `instant()` live in tests/Pest.php — the only file Pest loads for the
+// whole run. A helper two test files share cannot be declared in one of them: under
+// `vendor/bin/pest --parallel` a worker can run this file without ever loading its sibling.
 
 it('answers from OUR OWN catalogue first, without touching the vendor', function () {
     $fake = fakeTranslator();

@@ -61,14 +61,20 @@ final class DeepLTranslator implements TranslationProvider
             return null;
         }
 
+        $payload = [
+            'text' => [$clean],
+            'target_lang' => strtoupper($target),
+        ];
+        // DeepL detects when `source_lang` is simply ABSENT — there is no «AUTO» value to send, and
+        // sending one is a 400. The key is omitted rather than nulled for the same reason.
+        if ($source !== TranslationProvider::SOURCE_AUTO && trim($source) !== '') {
+            $payload['source_lang'] = strtoupper($source);
+        }
+
         $response = $this->context->run('instant_translation', null, fn () => Http::asJson()
             ->withHeaders(['Authorization' => 'DeepL-Auth-Key ' . $this->apiKey])
             ->timeout(self::TIMEOUT_SECONDS)
-            ->post(rtrim($this->baseUrl, '/') . '/translate', [
-                'text' => [$clean],
-                'source_lang' => strtoupper($source),
-                'target_lang' => strtoupper($target),
-            ]));
+            ->post(rtrim($this->baseUrl, '/') . '/translate', $payload));
 
         // 456 is DeepL's «quota exceeded». It should be unreachable — the monthly budget stops us
         // at 95% precisely so the vendor never has to — but if it is ever reached, it is still just
@@ -82,6 +88,14 @@ final class DeepLTranslator implements TranslationProvider
             return null;
         }
 
+        // DeepL reports the detected language as an upper-case code («RU»), and for a couple of
+        // languages a regional one («EN-GB» on some plans). Lower-cased and cut at the dash, because
+        // the caller compares it against the learner's own `ru`/`en`.
+        $detected = $response->json('translations.0.detected_source_language');
+        $detected = is_string($detected) && trim($detected) !== ''
+            ? strtolower(explode('-', trim($detected))[0])
+            : null;
+
         return new InstantTranslation(
             text: trim($translated),
             provider: self::NAME,
@@ -89,6 +103,7 @@ final class DeepLTranslator implements TranslationProvider
             // because DeepL counts characters and not bytes, and a Cyrillic query would otherwise
             // meter at double its real cost.
             characters: mb_strlen($clean),
+            detectedSource: $detected,
         );
     }
 }

@@ -25,11 +25,30 @@ final readonly class InstantHintView
         public bool $featureDisabled = false,
         /** The month's character budget is spent. The full lookup keeps working. */
         public bool $limitReached = false,
+        /**
+         * The query was in the learner's OWN language, so `translation` is the word being learned.
+         *
+         * Internal, exactly like `source`: the screen uses it to decide which of the two strings is
+         * the headline — the English one always is, because it is what was asked for — and it never
+         * says a word about languages, directions or detection. A learner types and gets an answer.
+         */
+        public bool $reversed = false,
+        /**
+         * Longer than a phrase. Nothing was bought and nothing was asked; the screen says «поиск —
+         * для слов и коротких фраз» and stops there.
+         */
+        public bool $queryTooLong = false,
     ) {}
 
-    public static function hit(string $query, string $translation, string $source): self
+    public static function hit(string $query, string $translation, string $source, bool $reversed = false): self
     {
-        return new self($query, $translation, $source);
+        return new self($query, $translation, $source, reversed: $reversed);
+    }
+
+    /** A paragraph is not a query. See {@see \App\Modules\Generation\Domain\Service\SearchQueryLength}. */
+    public static function tooLong(string $query): self
+    {
+        return new self($query, null, null, queryTooLong: true);
     }
 
     public static function nothing(string $query): self

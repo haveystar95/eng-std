@@ -36,6 +36,7 @@ use App\Modules\Generation\Infrastructure\Eloquent\EloquentInstantTranslationCac
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
+use App\Modules\Generation\Domain\Service\SearchQueryLength;
 use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiWordLookup;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentSearchLookupCache;
@@ -235,6 +236,12 @@ final class GenerationServiceProvider extends ServiceProvider
         // response that reports it cannot read two different numbers.
         $this->app->bind(SearchLookupDailyLimit::class, fn (): SearchLookupDailyLimit => new SearchLookupDailyLimit(
             (int) config('services.generation.search_lookup_daily_cap', SearchLookupDailyLimit::DEFAULT_CAP),
+        ));
+
+        // Same reason: the instant hint and the paid lookup both refuse a paragraph, and they have
+        // to refuse the SAME paragraph — one number, read in one place.
+        $this->app->bind(SearchQueryLength::class, fn (): SearchQueryLength => new SearchQueryLength(
+            (int) config('services.generation.search_query_max_chars', SearchQueryLength::DEFAULT_MAX),
         ));
 
         // Saving a searched word chains the станок exactly as a finished generation does — same

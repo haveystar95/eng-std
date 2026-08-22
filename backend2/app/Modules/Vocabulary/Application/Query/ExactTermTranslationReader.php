@@ -24,4 +24,21 @@ interface ExactTermTranslationReader
      * @return string|null              the translation, or null if we do not have this exact word
      */
     public function translationFor(string $normalizedText, string $lang, string $nativeLang): ?string;
+
+    /**
+     * The other way round: the learner typed their OWN language, and the answer is the word.
+     *
+     * «случай» → «occasion». Same exactness and the same reasoning as above — this decides whether
+     * a vendor call is bought — but the match runs over `term_translations` instead of over the
+     * term, and what comes back is the term's own text.
+     *
+     * Deterministic when several terms share a translation («счёт» is both `invoice` and `score`):
+     * the lowest term id wins, so the field does not answer one word today and another tomorrow.
+     *
+     * @param  string  $normalizedText  the query, already casefolded and whitespace-collapsed
+     * @param  string  $lang            the language being learned — what comes back
+     * @param  string  $nativeLang      the language the query is in
+     * @return string|null              the term's text, or null if no exact translation matches
+     */
+    public function termForTranslation(string $normalizedText, string $lang, string $nativeLang): ?string;
 }

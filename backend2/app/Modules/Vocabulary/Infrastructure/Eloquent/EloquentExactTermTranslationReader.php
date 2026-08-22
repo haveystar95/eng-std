@@ -48,4 +48,25 @@ final class EloquentExactTermTranslationReader implements ExactTermTranslationRe
 
         return null;
     }
+
+    public function termForTranslation(string $normalizedText, string $lang, string $nativeLang): ?string
+    {
+        if ($normalizedText === '') {
+            return null;
+        }
+
+        // `lower(tt.text)` and not a stored normalized column: translations have none, and the free
+        // search already matches them exactly this way — the two must agree, or the hint and the
+        // list under it would disagree about whether we hold the word.
+        $text = DB::table('term_translations as tt')
+            ->join('terms as t', 't.id', '=', 'tt.term_id')
+            ->whereNull('t.deleted_at')
+            ->where('t.lang', $lang)
+            ->where('tt.lang', $nativeLang)
+            ->whereRaw('lower(tt.text) = ?', [$normalizedText])
+            ->orderBy('t.id')
+            ->value('t.text');
+
+        return is_string($text) && trim($text) !== '' ? $text : null;
+    }
 }

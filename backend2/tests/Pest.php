@@ -7,6 +7,8 @@ use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
+use App\Modules\Generation\Application\Port\TranslationProvider;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Learning\Application\Command\EnrollTerm;
 use App\Modules\Learning\Application\Command\EnrollTermHandler;
@@ -224,4 +226,31 @@ function buildSubmitHandler(object $ctx, ?array $known = null): SubmitReviewsHan
         tx: new ImmediateTransactionManager(),
         clock: new FixedClock(new DateTimeImmutable('2026-07-27T12:00:00Z')),
     );
+}
+
+/**
+ * Bind the counting translator and hand it back, so a test can assert the vendor was NOT called.
+ *
+ * `app()` and not `$ctx->app`: the container property is protected, and this lives outside the
+ * TestCase's scope by design (see the note at the top of this file).
+ */
+function fakeTranslator(): FakeTranslator
+{
+    $fake = new FakeTranslator();
+    app()->instance(TranslationProvider::class, $fake);
+
+    return $fake;
+}
+
+/**
+ * `GET /search/instant`, unwrapped. Always a 200 — the endpoint has no error path at all.
+ *
+ * @return array<string, mixed>
+ */
+function instant(object $ctx, string $token, string $query): array
+{
+    return $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search/instant?q=' . urlencode($query))
+        ->assertOk()
+        ->json('data');
 }

@@ -493,6 +493,14 @@ paths:
         is typing: no key (`feature_disabled`), no budget (`limit_reached`), a dead or slow vendor,
         or simply no answer all come back as a null `translation`. The client renders a line when
         there is one and nothing when there is not — it has no error path at all.
+
+        BOTH DIRECTIONS. The field takes either half of the learner's pair: `occasion` is answered
+        in their own language, `случай` is answered in English — and the second is the point, since
+        a word they cannot yet name is exactly the word worth turning into a card. There is no
+        language parameter and there never will be one: the pair is the profile's `native_language`
+        and the language being learned, and WHICH way round a given query goes is decided by the
+        provider's own detection, not by the alphabet. `reversed` reports the outcome for layout
+        only; nothing about languages, directions or detection is ever shown to the learner.
       parameters:
         - { name: q, in: query, required: true, schema: { type: string } }
       responses:
@@ -517,6 +525,20 @@ paths:
                           translation came from is the app's business, not the learner's.
                       feature_disabled: { type: boolean, description: no translation provider is configured }
                       limit_reached: { type: boolean, description: the month's character budget is spent }
+                      reversed:
+                        type: boolean
+                        description: >
+                          The query was in the learner's own language, so `translation` holds the
+                          word being LEARNED. INTERNAL, like `source`: the screen uses it to decide
+                          which of the two strings is the headline (the English one always is) and
+                          never to say anything about languages or detection.
+                      query_too_long:
+                        type: boolean
+                        description: >
+                          Longer than `services.generation.search_query_max_chars` (120). Nothing
+                          was asked and nothing was bought — this app catches words and phrases, and
+                          the vendor bills by the character. The one state the client renders a line
+                          for: «Поиск — для слов и коротких фраз».
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /search/lookup:

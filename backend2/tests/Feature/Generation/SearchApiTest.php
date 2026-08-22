@@ -42,6 +42,23 @@ it('finds a term by its translation and by a prefix', function () {
     expect($byTranslation)->toHaveCount(1)->and($byPrefix)->toHaveCount(1);
 });
 
+it('finds a word by the RUSSIAN the learner was reaching for', function () {
+    [$user, $token] = learner();
+    [, $termId] = seedCollectionWith($user, 'occasion', 'случай');
+
+    // The free half of search already works both ways round — a learner who cannot name the word in
+    // English types what they can, and the word they meant comes back. Pinned because the reverse
+    // direction is now the feature and not a side effect of matching translations.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search?q=' . urlencode('Случай'))
+        ->assertOk()
+        ->assertJsonPath('data.0.term_id', $termId)
+        ->assertJsonPath('data.0.text', 'occasion')
+        ->assertJsonPath('data.0.translation', 'случай');
+
+    expect(DB::table('search_lookups')->count())->toBe(0);
+});
+
 it('says which of the user\'s own folders already hold a hit', function () {
     [$user, $token] = learner();
     [$collectionId, ] = seedCollectionWith($user, 'ledger', 'книга учёта');

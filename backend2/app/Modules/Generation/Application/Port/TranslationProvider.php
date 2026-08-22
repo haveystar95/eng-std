@@ -30,6 +30,16 @@ use App\Modules\Generation\Application\Dto\InstantTranslation;
  */
 interface TranslationProvider
 {
+    /**
+     * Pass as `$source` to let the provider decide what language the text is in.
+     *
+     * The search field is typed in EITHER half of the learner's pair, and there is no honest local
+     * way to tell which: the alphabet separates Russian from English and nothing else — Romanian,
+     * Polish and English are one script. So the provider detects, and its verdict comes back on
+     * {@see \App\Modules\Generation\Application\Dto\InstantTranslation::$detectedSource}.
+     */
+    public const SOURCE_AUTO = 'auto';
+
     /** Can this provider be called at all? False when unconfigured — never an exception. */
     public function isAvailable(): bool;
 

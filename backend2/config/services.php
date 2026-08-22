@@ -161,6 +161,11 @@ return [
         // useful surface by tier would turn the search field into a paywall pitch. Cache hits do not
         // count — nothing was bought. 0 switches paid lookups off entirely.
         'search_lookup_daily_cap' => (int) env('SEARCH_LOOKUP_DAILY_CAP', 30),
+        // The longest thing the search field will treat as a query, in characters. This app catches
+        // WORDS and PHRASES: a card, a description, an example and a place in the pool all mean
+        // nothing for a paragraph, and a field that accepted one would be a translator. Enforced
+        // before the vendor, which bills by the character. See SearchQueryLength.
+        'search_query_max_chars' => (int) env('SEARCH_QUERY_MAX_CHARS', 120),
         // Per-call timeout for the multi-provider comparison stack, seconds. 180 is generous for a
         // model that answers directly and NOT enough for a reasoning model on a long prompt —
         // grok-4.6 exceeded it on a 12-item collection. It is a knob rather than a constant so a
