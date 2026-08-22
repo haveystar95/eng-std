@@ -6,6 +6,7 @@ namespace App\Modules\Identity\Infrastructure\Provider;
 
 use App\Modules\Identity\Application\Port\AccountEraser;
 use App\Modules\Identity\Application\Port\DefaultTargetLangReader;
+use App\Modules\Identity\Application\Port\DevSignIn;
 use App\Modules\Identity\Application\Port\GoogleSignIn;
 use App\Modules\Identity\Application\Port\GoogleTokenVerifier;
 use App\Modules\Identity\Application\Port\NativeLangReader;
@@ -15,6 +16,7 @@ use App\Modules\Identity\Application\Port\UserReader;
 use App\Modules\Identity\Application\Port\UserTierReader;
 use App\Modules\Identity\Application\Port\UserTierWriter;
 use App\Modules\Identity\Infrastructure\Adapter\GoogleAuthTokenVerifier;
+use App\Modules\Identity\Infrastructure\Auth\SanctumDevSignIn;
 use App\Modules\Identity\Infrastructure\Auth\SanctumGoogleSignIn;
 use App\Modules\Identity\Infrastructure\Eloquent\CrossModuleAccountEraser;
 use App\Modules\Identity\Infrastructure\Auth\SanctumSignOut;
@@ -39,6 +41,9 @@ final class IdentityServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(GoogleSignIn::class, SanctumGoogleSignIn::class);
+        // Bound unconditionally; the implementation itself refuses when the gate is shut, so a
+        // binding that exists is not a door that is open.
+        $this->app->bind(DevSignIn::class, SanctumDevSignIn::class);
         $this->app->bind(UserReader::class, EloquentUserReader::class);
         $this->app->bind(UserTierReader::class, EloquentUserTierReader::class);
         $this->app->bind(UserTierWriter::class, EloquentUserTierWriter::class);

@@ -1,3 +1,28 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
+
+/// Whether the QA dev sign-in exists in THIS build.
+///
+/// `kDebugMode` and nothing else — deliberately not a `bool.fromEnvironment`, because every other
+/// flag in this file is one, and a `--dart-define` is exactly how a dev door reaches a shipped
+/// build. The canonical device build is `--release` (see mobile/CLAUDE.md), so the door is absent
+/// from the build that goes on the owner's phone and present on the simulator, which is the only
+/// place it is needed: Google and Apple sign-in cannot be completed there at all.
+///
+/// The constant is `const`, so `if (kDevLoginEnabled)` is folded away at compile time in release
+/// and the guarded widgets and calls are tree-shaken out with it. Pinned by
+/// `test/data/dev_login_release_guard_test.dart`, which fails if this definition ever grows a
+/// second term or if a dev-login reference appears outside a guard.
+///
+/// The server has its own, independent locks (`DevLoginGate`: not production AND
+/// `DEV_LOGIN_ENABLED`), so a leaked client would still find no door.
+const bool kDevLoginEnabled = kDebugMode;
+
+/// The QA account the dev door signs into. One address, hard-coded, because the point of the QA
+/// bench is that every run happens under the SAME account — the one `qa:time-travel` and
+/// `qa:reset` are allowed to touch. A text field here would mean a run could quietly happen
+/// somewhere else.
+const String kDevLoginEmail = 'qa@wt.test';
+
 /// Feature flags.
 ///
 /// Photo attribution ("Фото: Author · Pexels") is hidden for now — the data (author + author_url)

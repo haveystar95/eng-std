@@ -7,6 +7,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/auth_repository.dart';
+import '../../data/config.dart';
 import '../../data/providers.dart';
 
 /// Localised copy for a sign-in failure. The data layer throws an [AuthError] code (no
@@ -108,6 +109,21 @@ class LoginScreen extends ConsumerWidget {
                         label: l.authContinueGoogle,
                         onTap: () => ref.read(authControllerProvider.notifier).signIn(),
                       ),
+                      // The QA door — DEBUG BUILDS ONLY. `kDevLoginEnabled` is a compile-time
+                      // `kDebugMode`, so this branch and the widget behind it are folded out of a
+                      // release build entirely (the canonical device build is `--release`). It is
+                      // here because neither button above can be completed on a simulator, which
+                      // is the only place QA can run the app. Deliberately unlocalised: it is not
+                      // product copy and it must not enter the ARB deck.
+                      if (kDevLoginEnabled) ...[
+                        const SizedBox(height: 12),
+                        _DevLoginButton(
+                          email: kDevLoginEmail,
+                          onTap: () => ref
+                              .read(authControllerProvider.notifier)
+                              .signInWithDev(kDevLoginEmail),
+                        ),
+                      ],
                     ],
                     const SizedBox(height: 26),
                     Row(
@@ -125,6 +141,41 @@ class LoginScreen extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The QA dev-login button (debug builds only — see [kDevLoginEnabled]).
+///
+/// Deliberately ugly next to the two real buttons: dashed border, monospace-ish label, the account
+/// spelled out. It should never be mistaken for a shipped surface in a screenshot, and the address
+/// is on it so a QA screenshot always says which account the run happened under.
+class _DevLoginButton extends StatelessWidget {
+  const _DevLoginButton({required this.email, required this.onTap});
+  final String email;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        side: const BorderSide(color: AppColors.dashed),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: 44,
+          child: Center(
+            child: Text(
+              'Dev login · $email',
+              style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary),
+            ),
           ),
         ),
       ),

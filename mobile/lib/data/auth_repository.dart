@@ -193,6 +193,33 @@ class AuthRepository {
     return result.user;
   }
 
+  /// QA dev sign-in (debug builds only, кадр 10a → «Dev login»).
+  ///
+  /// Exists because neither real door opens on a simulator: Google Sign-In needs a device account
+  /// and Apple's needs a paid team, so before this there was no way to reach a signed-in app
+  /// anywhere but the owner's phone — which is what had been blocking live QA runs.
+  ///
+  /// Everything AFTER the token exchange is identical to [signInWithGoogle] (token stored, user
+  /// cached for offline restore, seq counters seeded), so a QA run exercises the real session and
+  /// not a parallel one.
+  Future<AppUser> signInWithDev(String email) async {
+    if (!kDevLoginEnabled) {
+      throw StateError('dev login is a debug-only door');
+    }
+
+    final ({String token, AppUser user}) result;
+    try {
+      result = await _api.devLogin(email, timezone: await deviceTimezone());
+    } on DioException catch (e) {
+      if (e.response == null) throw AuthException(AuthError.offline);
+      throw AuthException(AuthError.loginFailed);
+    }
+    await _tokens.save(result.token);
+    await _tokens.saveUser(jsonEncode(result.user.toJson()));
+    await _seedSeqCounters();
+    return result.user;
+  }
+
   /// Permanently delete the account (B3) and clear the local session. The server cascade (204)
   /// removes all remote data; the caller wipes the local mirror.
   Future<void> deleteAccount() async {

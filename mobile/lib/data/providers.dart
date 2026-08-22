@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'auth_repository.dart';
+import 'config.dart';
 import 'device_timezone.dart';
 import 'exposure_sync.dart';
 import 'generation_controller.dart';
@@ -215,6 +216,16 @@ class AuthController extends AsyncNotifier<AppUser?> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
       () => ref.read(authRepositoryProvider).signInWithApple(),
+    );
+  }
+
+  /// QA dev sign-in — debug builds only (see [kDevLoginEnabled]). No-op if somehow reached in a
+  /// release build, rather than throwing into the UI: the button that calls it does not exist there.
+  Future<void> signInWithDev(String email) async {
+    if (!kDevLoginEnabled) return;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithDev(email),
     );
   }
 

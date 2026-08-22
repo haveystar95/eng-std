@@ -24,6 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $email
  * @property string|null $google_id
  * @property string|null $avatar
+ * @property bool $is_qa
  */
 class User extends Authenticatable
 {
@@ -39,7 +40,7 @@ class User extends Authenticatable
     public $incrementing = false;
 
     /** @var list<string> */
-    protected $fillable = ['name', 'email', 'google_id', 'avatar'];
+    protected $fillable = ['name', 'email', 'google_id', 'avatar', 'is_qa'];
 
     /** @var list<string> */
     protected $hidden = ['password', 'remember_token'];
@@ -62,6 +63,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // The QA mark. Cast so `$user->is_qa` is a bool on every driver — the guards that read
+            // it are `if (! $user->is_qa)`, and a string '0' would open every one of them.
+            'is_qa' => 'boolean',
         ];
     }
 

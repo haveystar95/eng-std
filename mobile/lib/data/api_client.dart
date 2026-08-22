@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 
+import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
@@ -117,6 +118,29 @@ class ApiClient {
     );
   }
 
+  /// QA dev sign-in: an email, no credential, a Sanctum token back. Same response shape as
+  /// [googleLogin], so the caller's flow is one branch.
+  ///
+  /// Guarded twice on purpose. [kDevLoginEnabled] is `kDebugMode`, so in a release build this
+  /// method is unreachable AND the compiler drops it; the explicit throw is the belt for the
+  /// moment somebody calls it from a path the compiler could not prove dead. The server refuses
+  /// independently (production, or `DEV_LOGIN_ENABLED` off → 404).
+  Future<({String token, AppUser user})> devLogin(String email, {String? timezone}) async {
+    if (!kDevLoginEnabled) {
+      throw StateError('devLogin is a debug-only door');
+    }
+    final r = await _dio.post('/auth/dev', data: {
+      'email': email,
+      'device_name': 'simulator',
+      'timezone': ?timezone,
+    });
+    final body = r.data as Map<String, dynamic>;
+    return (
+      token: body['token'] as String,
+      user: AppUser.fromJson(body['user'] as Map<String, dynamic>),
+    );
+  }
+
   Future<AppUser> me() async {
     final r = await _dio.get('/auth/me');
     return AppUser.fromJson(_data(r) as Map<String, dynamic>);
@@ -220,11 +244,28 @@ class ApiClient {
   /// The FREE half: what the database already has. Safe on a debounced keystroke — it costs nothing
   /// and calls no model. Every hit says which of the user's own folders already hold it, which is
   /// what lets the save button tell the truth instead of offering a save that would do nothing.
-  Future<List<SearchHit>> search(String query, {int limit = 20}) async {
-    final r = await _dio.get('/search', queryParameters: {'q': query, 'limit': limit});
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async {
+    final r = await _dio.get('/search', queryParameters: {
+      'q': query,
+      'limit': limit,
+      'source': ?source,
+      'target': ?target,
+    });
     return (_data(r) as List)
         .map((e) => SearchHit.fromJson(e as Map<String, dynamic>))
         .toList(growable: false);
+  }
+
+  /// Which language pairs the search pill may offer. Read once when the screen opens: this changes
+  /// by deployment, not by session, so the device caches whatever it last saw.
+  Future<SearchLanguages> searchLanguages() async {
+    final r = await _dio.get('/search/languages');
+    return SearchLanguages.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   /// The grey hint line: one word, one translation, as fast as it can be had.
@@ -232,8 +273,12 @@ class ApiClient {
   /// Safe on a debounce — most answers cost nothing (our own catalogue and a shared cache are
   /// checked before any vendor), and it never fails in a way the screen has to render: no key, no
   /// budget, no answer and a dead vendor all come back as a null translation.
-  Future<InstantHint> instantHint(String query) async {
-    final r = await _dio.get('/search/instant', queryParameters: {'q': query});
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
+    final r = await _dio.get('/search/instant', queryParameters: {
+      'q': query,
+      'source': ?source,
+      'target': ?target,
+    });
     return InstantHint.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -243,8 +288,12 @@ class ApiClient {
   /// A spent daily cap is a normal 200 with [LookupOutcome.limitReached], not an error: the screen
   /// shows the free results beside an honest line. A cached word is served free and does not touch
   /// the cap at all.
-  Future<LookupOutcome> lookupWord(String query) async {
-    final r = await _dio.post('/search/lookup', data: {'query': query});
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+    final r = await _dio.post('/search/lookup', data: {
+      'query': query,
+      'source': ?source,
+      'target': ?target,
+    });
     return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 

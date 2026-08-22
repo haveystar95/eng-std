@@ -1,6 +1,9 @@
 <?php
 
 use App\Console\Commands\BatchAgeProgressCommand;
+use App\Console\Commands\QaCostCommand;
+use App\Console\Commands\QaResetCommand;
+use App\Console\Commands\QaTimeTravelCommand;
 use App\Modules\Admin\Presentation\Console\AdminCreateCommand;
 use App\Modules\Collections\Presentation\Console\StorePublishCommand;
 use App\Modules\Generation\Presentation\Console\ApplyEnrichmentReviewCommand;
@@ -56,6 +59,11 @@ return Application::configure(basePath: dirname(__DIR__))
         VerificationStatsCommand::class,
         StorePublishCommand::class,
         BatchAgeProgressCommand::class,
+        // The QA bench: forced-time, reset and the budget read. All three refuse in production;
+        // the two that write refuse on any account not marked `users.is_qa`.
+        QaTimeTravelCommand::class,
+        QaResetCommand::class,
+        QaCostCommand::class,
         AdminCreateCommand::class,
         RelabelRepairedTranslationsCommand::class,
     ])
