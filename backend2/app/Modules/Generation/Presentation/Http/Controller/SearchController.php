@@ -103,6 +103,9 @@ final class SearchController
         return response()->json([
             'data' => [
                 'lookup' => $outcome->lookup !== null ? $this->lookupCard($outcome->lookup) : null,
+                // Also a 200, and for the same reason as the cap: «не получилось распознать,
+                // проверьте написание» is advice, and advice on an error path reads as a broken app.
+                'not_recognized' => $outcome->notRecognized,
                 'limit_reached' => $outcome->capReached,
                 'daily_cap' => $outcome->dailyCap,
                 'used_today' => $outcome->usedToday,

@@ -19,15 +19,27 @@ final readonly class LookupOutcome
         public bool $capReached,
         public int $dailyCap,
         public int $usedToday,
+        /**
+         * The model could not name a word for this query. Also not an error, and for the same
+         * reason: «проверьте написание» is advice, and advice does not belong on an error path.
+         */
+        public bool $notRecognized = false,
     ) {}
 
     public static function answered(CachedLookup $lookup, int $dailyCap, int $usedToday): self
     {
-        return new self($lookup, false, $dailyCap, $usedToday);
+        return $lookup->notRecognized
+            ? self::notRecognized($dailyCap, $usedToday)
+            : new self($lookup, false, $dailyCap, $usedToday);
     }
 
     public static function capReached(int $dailyCap, int $usedToday): self
     {
         return new self(null, true, $dailyCap, $usedToday);
+    }
+
+    public static function notRecognized(int $dailyCap, int $usedToday): self
+    {
+        return new self(null, false, $dailyCap, $usedToday, notRecognized: true);
     }
 }

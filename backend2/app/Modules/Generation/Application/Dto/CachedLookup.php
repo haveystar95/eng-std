@@ -50,5 +50,14 @@ final readonly class CachedLookup
          * the question that happened to be asked first.
          */
         public bool $illustrationDecided = true,
+        /**
+         * The model could not place this query in either language.
+         *
+         * Cached exactly like a card, because it is the same kind of fact: `asdfgh` will not become
+         * a word tomorrow. Caching it is also what keeps the daily cap honest — the cap counts rows,
+         * so a refusal that wrote none would be a paid call nobody was charged for, and a field
+         * that costs nothing to abuse is a field that gets abused.
+         */
+        public bool $notRecognized = false,
     ) {}
 }

@@ -34,11 +34,29 @@ final readonly class WordLookupResult
         public ?int $tokensIn = null,
         public ?int $tokensOut = null,
         public ?string $costUsd = null,
+        /**
+         * The model could not name a word for this query at all — keystrokes, a fragment, nothing
+         * it could place in either language.
+         *
+         * An honest FIELD and not an exception, for the same reason the daily cap is one: «не
+         * получилось распознать, проверьте написание» is a normal answer the app has a line for,
+         * and modelling it as a failure would send it down the error path, where it would read as
+         * «the app is broken» instead of «check the spelling». Every other field is meaningless
+         * when this is true and none of them is screened.
+         */
+        public bool $notRecognized = false,
     ) {}
 
     /** @return array<string, mixed> the cacheable half — everything except what the call cost */
     public function toPayload(): array
     {
+        // «This is not a word» is a fact about the query and just as permanent as a card, so it is
+        // cached like one: the next person to paste the same keystrokes pays nothing, and the daily
+        // cap — which counts rows — still sees that a call was bought.
+        if ($this->notRecognized) {
+            return ['not_recognized' => true];
+        }
+
         return [
             'text' => $this->text,
             'type' => $this->type,

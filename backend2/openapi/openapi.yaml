@@ -559,6 +559,18 @@ paths:
 
         The term is NOT created. It appears only when the learner explicitly saves it via
         `/search/add`, which is what keeps the catalogue free of words nobody wanted.
+
+        EITHER LANGUAGE, one card. `query` may be in the language being learned or in the learner's
+        own; `lookup.text` is ALWAYS the former and `lookup.translation` always the latter, so
+        `случай` and `occasion` produce the same word. They are two cache rows — the key is the
+        query, and they really were two different questions — but they deduplicate to ONE term on
+        save, because the term is the English word both questions were about.
+
+        A query the model cannot place at all — keystrokes, a fragment — is also a **200**:
+        `not_recognized: true`, `lookup: null`. The client's line is «не получилось распознать,
+        проверьте написание», which is advice, and advice does not belong on an error path. The
+        verdict is cached like a card (`asdfgh` will not become a word tomorrow) and counts against
+        the day's cap like any other bought call.
       requestBody:
         required: true
         content:
@@ -567,7 +579,13 @@ paths:
               type: object
               required: [query]
               properties:
-                query: { type: string, minLength: 1, maxLength: 100 }
+                query:
+                  type: string
+                  minLength: 1
+                  # The SAME ceiling `GET /search/instant` refuses at — services.generation
+                  # .search_query_max_chars. A field that said «слишком длинно» while the button
+                  # behind it bought the paragraph would be two products on one screen.
+                  maxLength: 120
       responses:
         '200':
           description: An answer, or an honest «not today»
@@ -582,6 +600,11 @@ paths:
                       lookup:
                         allOf: [{ $ref: '#/components/schemas/LookupCard' }]
                         nullable: true
+                      not_recognized:
+                        type: boolean
+                        description: >
+                          The model could not name a word for this query. `lookup` is null and this
+                          is not an error — see the description above.
                       limit_reached: { type: boolean }
                       daily_cap: { type: integer }
                       used_today: { type: integer, description: paid lookups this UTC day }

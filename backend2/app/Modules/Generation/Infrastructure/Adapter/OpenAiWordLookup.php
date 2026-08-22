@@ -31,7 +31,7 @@ final class OpenAiWordLookup implements WordLookupPort
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
-        private readonly string $promptVersion = 'v2',
+        private readonly string $promptVersion = 'v3',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
         private readonly ModelCost $cost = new ModelCost(),
     ) {}
@@ -68,9 +68,28 @@ final class OpenAiWordLookup implements WordLookupPort
             throw new RuntimeException('OpenAI returned malformed lookup JSON: ' . $content);
         }
 
-        $text = $this->required($decoded, 'text');
         $tokensIn = is_int($response->json('usage.prompt_tokens')) ? $response->json('usage.prompt_tokens') : null;
         $tokensOut = is_int($response->json('usage.completion_tokens')) ? $response->json('usage.completion_tokens') : null;
+
+        // «Not a word» is an ANSWER, so the missing-field checks below are skipped rather than
+        // tripped: the prompt asks for empty strings in that case, and `required()` would turn a
+        // correct refusal into a RuntimeException the learner would meet as «не удалось найти».
+        // Absent on v2 rows, where every answer was a card by construction.
+        if (array_key_exists('recognized', $decoded) && $decoded['recognized'] === false) {
+            return new WordLookupResult(
+                text: '', type: 'word', translation: '', description: '',
+                example: null, exampleTranslation: null, cefr: null, transcription: null,
+                imageApiPrompt: null,
+                model: $this->model,
+                promptVersion: 'lookup.' . $this->promptVersion,
+                tokensIn: $tokensIn,
+                tokensOut: $tokensOut,
+                costUsd: $this->cost->estimate($this->model, $tokensIn, $tokensOut),
+                notRecognized: true,
+            );
+        }
+
+        $text = $this->required($decoded, 'text');
 
         return new WordLookupResult(
             text: $text,
@@ -126,13 +145,22 @@ final class OpenAiWordLookup implements WordLookupPort
         ]);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Strict Structured Outputs: every declared property must also be `required`, so a version that
+     * does not ask about recognition must not declare it either. v2 stays exactly as it was.
+     *
+     * @return array<string, mixed>
+     */
     private function schema(): array
     {
+        $recognition = $this->promptVersion === 'v2'
+            ? []
+            : ['recognized' => ['type' => 'boolean']];
+
         return [
             'type' => 'object',
             'additionalProperties' => false,
-            'properties' => [
+            'properties' => $recognition + [
                 'text' => ['type' => 'string'],
                 'type' => ['type' => 'string', 'enum' => ['word', 'phrase']],
                 'translation' => ['type' => 'string'],
@@ -143,7 +171,10 @@ final class OpenAiWordLookup implements WordLookupPort
                 'transcription' => ['type' => 'string'],
                 'image_api_prompt' => ['type' => 'string'],
             ],
-            'required' => ['text', 'type', 'translation', 'description', 'example', 'example_translation', 'cefr', 'transcription', 'image_api_prompt'],
+            'required' => array_merge(
+                array_keys($recognition),
+                ['text', 'type', 'translation', 'description', 'example', 'example_translation', 'cefr', 'transcription', 'image_api_prompt'],
+            ),
         ];
     }
 }

@@ -51,6 +51,12 @@ final readonly class LookupWordHandler
         }
 
         $cached = $this->cache->find($normalized, $langs->target->value, $langs->native->value);
+        // «Not a word» is as permanent as a card and is served the same way — free, forever, for
+        // everybody. Checked before the staleness rule below, which is about a photo question this
+        // row never had.
+        if ($cached !== null && $cached->notRecognized) {
+            return LookupOutcome::notRecognized($cap, $this->usedToday($command));
+        }
         // A row written before a field the card now needs existed is a STALE hit, not a hit: the
         // cache is global and permanent, so honouring it would let whoever looked a word up first
         // freeze that word's card for everybody, forever. Re-asking costs one cheap call and
@@ -84,7 +90,11 @@ final readonly class LookupWordHandler
             throw LookupRefused::modelUnavailable();
         }
 
-        $screened = $this->barrier->screen($answer, $langs->target->value, $langs->native->value);
+        // Nothing to screen and nothing to show. Still STORED, so the day's cap counts the call that
+        // was actually bought and the next paste of the same keystrokes is free.
+        $screened = $answer->notRecognized
+            ? $answer
+            : $this->barrier->screen($answer, $langs->target->value, $langs->native->value);
 
         $stored = $this->cache->store(
             $command->actorId,

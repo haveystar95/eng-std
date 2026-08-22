@@ -85,6 +85,7 @@ final class EloquentSearchLookupCache implements SearchLookupCache
             $stored->exampleTranslation, $stored->cefr, $stored->transcription,
             $stored->imageApiPrompt, $stored->model, $stored->promptVersion, $stored->createdAt,
             fresh: $written, illustrationDecided: $stored->illustrationDecided,
+            notRecognized: $stored->notRecognized,
         );
     }
 
@@ -113,6 +114,9 @@ final class EloquentSearchLookupCache implements SearchLookupCache
             // The KEY, not the value: an empty query is a decision, a missing key is a row from
             // before the question was asked.
             illustrationDecided: array_key_exists('image_api_prompt', $payload),
+            // A refusal row carries this and nothing else — every field above degraded to its
+            // fallback, and none of them is ever read for such a row.
+            notRecognized: ($payload['not_recognized'] ?? false) === true,
         );
     }
 
