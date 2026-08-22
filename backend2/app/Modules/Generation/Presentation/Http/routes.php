@@ -24,6 +24,9 @@ Route::middleware(['throttle:60,1', 'auth:sanctum'])->group(function (): void {
     // nothing at all (the catalogue and the cache are checked before the vendor).
     Route::get('/search/instant', [SearchController::class, 'instant'])
         ->withoutMiddleware('throttle:60,1')->middleware('throttle:120,1');
+    // Which pairs the pill may offer. Read once when the search screen opens and cached on the
+    // device; it changes by deployment, not by session, so it rides the group's throttle.
+    Route::get('/search/languages', [SearchController::class, 'languages']);
     Route::post('/search/lookup', [SearchController::class, 'lookup']);
     Route::post('/search/add', [SearchController::class, 'add']);
 

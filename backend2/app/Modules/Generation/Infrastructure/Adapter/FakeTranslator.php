@@ -56,29 +56,22 @@ final class FakeTranslator implements TranslationProvider
             return null;
         }
 
-        // The same detection DeepL does, in the only form a fake honestly can: the alphabet. It is
-        // enough for the pair the tests use, and a fake that pretended to more would be testing a
-        // language model nobody wrote.
-        $detected = $source === self::SOURCE_AUTO || trim($source) === ''
-            ? ($this->isCyrillic($clean) ? 'ru' : 'en')
-            : strtolower(trim($source));
-
         return new InstantTranslation(
             text: self::LEXICON[$clean] ?? $this->generic($clean, $target),
             provider: DeepLTranslator::NAME,
             characters: mb_strlen($clean),
-            detectedSource: $detected,
         );
     }
 
-    /** A word the lexicon does not carry, marked so a test can tell which way it came out. */
+    /**
+     * A word the lexicon does not carry, answered in the language it was ASKED for.
+     *
+     * Keyed on the target and not on the input's alphabet, which is the whole point of the fake
+     * now: the real translator is told both languages and obeys, so a fake that guessed from the
+     * script would pass tests the vendor would fail.
+     */
     private function generic(string $clean, string $target): string
     {
         return strtolower(trim($target)) === 'en' ? 'translated: ' . $clean : 'перевод: ' . $clean;
-    }
-
-    private function isCyrillic(string $text): bool
-    {
-        return preg_match('/\p{Cyrillic}/u', $text) === 1;
     }
 }

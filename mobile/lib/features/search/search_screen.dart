@@ -18,7 +18,9 @@ import '../../data/search/word_list.dart';
 import '../word_card/word_card_screen.dart';
 import '../word_card/word_card_subject.dart';
 import 'dictionary_row.dart';
+import 'language_pill.dart';
 import 'search_history.dart';
+import 'search_pair.dart';
 import 'search_result_card.dart';
 import 'search_states.dart';
 
@@ -87,6 +89,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   List<RecentSearch> _recent = const [];
 
+  /// Which way the field is pointing, and what the pill may offer.
+  ///
+  /// Null until the first read lands. The screen is fully usable meanwhile — every call simply
+  /// omits the pair and the server answers in the learner's profile one, which is where the pill
+  /// would have started anyway.
+  SearchLanguages? _languages;
+  SearchPair? _pair;
+
+  SearchPairStore get _pairs => SearchPairStore(ref.read(appDatabaseProvider));
+
   /// Terms the LOCAL mirror already holds, keyed by id — the only place a search result can get a
   /// photo from, since `/search` carries none. Filled for the word that was actually asked for, so
   /// its 88 pt plate in кадр 03 is a picture rather than an empty rectangle.
@@ -106,6 +118,61 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _history.load().then((recent) {
       if (mounted) setState(() => _recent = recent);
     });
+    unawaited(_loadPair());
+  }
+
+  /// Ask the server which pairs exist, then restore the one this device was last set to.
+  ///
+  /// Deliberately silent on failure: offline, the pill simply does not appear and every request
+  /// omits the pair, which the server reads as «the learner's own». A search screen that refused to
+  /// work because it could not draw a language label would be trading the feature for the setting.
+  Future<void> _loadPair() async {
+    try {
+      final languages = await ref.read(apiClientProvider).searchLanguages();
+      final pair = await _pairs.load(languages);
+      if (!mounted) return;
+      setState(() {
+        _languages = languages;
+        _pair = pair;
+      });
+    } catch (_) {
+      // No pill this session.
+    }
+  }
+
+  /// A tap on the pill. The direction changes, so anything on screen answers the old question —
+  /// the results are re-asked at once rather than left to look current.
+  void _swapPair() {
+    final pair = _pair;
+    if (pair == null) return;
+    setState(() => _pair = pair.swapped);
+    unawaited(_pairs.save(pair.swapped));
+    _reaskCurrentQuery();
+  }
+
+  /// A long press on the pill: the other half of the pair.
+  void _pickOther(String code) {
+    final pair = _pair;
+    final languages = _languages;
+    if (pair == null || languages == null) return;
+    final next = pair.withOther(languages.taught, code);
+    setState(() => _pair = next);
+    unawaited(_pairs.save(next));
+    _reaskCurrentQuery();
+  }
+
+  /// Re-run whatever is on screen in the new pair. The echo is dropped first: a translation from
+  /// the previous direction sitting under a freshly flipped pill is the one thing this control
+  /// must never show.
+  void _reaskCurrentQuery() {
+    if (_query.isEmpty) return;
+    setState(() {
+      _hint = null;
+      _lookupError = null;
+      _notRecognized = false;
+    });
+    unawaited(_runFreeSearch(_query));
+    unawaited(_fetchHint(_query));
   }
 
   @override
@@ -198,7 +265,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// beside a word it is not about», and that is a comparison of words.
   Future<void> _fetchHint(String query) async {
     try {
-      final hint = await ref.read(apiClientProvider).instantHint(query);
+      final hint = await ref.read(apiClientProvider).instantHint(
+            query,
+            source: _pair?.source,
+            target: _pair?.target,
+          );
       // Kept when there is something to SAY — a translation, or the one honest «this is too long
       // to be a word» the field does put a line up for. An answerless hint is still dropped: it
       // has nothing to add and would only overwrite one that had.
@@ -214,7 +285,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final generation = ++_generation;
     setState(() => _searching = true);
     try {
-      final hits = await ref.read(apiClientProvider).search(query);
+      final hits = await ref.read(apiClientProvider).search(
+            query,
+            source: _pair?.source,
+            target: _pair?.target,
+          );
       if (!mounted || generation != _generation) return;
       setState(() {
         _hits = hits;
@@ -259,7 +334,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _notRecognized = false;
     });
     try {
-      final outcome = await ref.read(apiClientProvider).lookupWord(query);
+      final outcome = await ref.read(apiClientProvider).lookupWord(
+            query,
+            source: _pair?.source,
+            target: _pair?.target,
+          );
       if (!mounted || generation != _generation) return;
       setState(() {
         _lookingUp = false;
@@ -373,7 +452,30 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 18, AppSpacing.s22, 0),
-              child: _field(l),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _field(l),
+                  // UNDER the field rather than beside it: the right-hand end of the field is
+                  // already spoken for by the echo and the clear button, and a third thing there
+                  // would make the busiest corner of the screen the one nobody looks at.
+                  if (_pair case final pair? when _languages != null)
+                    Padding(
+                      // Pulled back by the pill's own padding so its text lines up with the
+                      // field's, which is what makes it read as a caption and not a control.
+                      padding: const EdgeInsets.only(top: 2, left: 18),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: LanguagePill(
+                          pair: pair,
+                          languages: _languages!,
+                          onSwap: _swapPair,
+                          onPick: _pickOther,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: ListView(

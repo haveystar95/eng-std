@@ -67,10 +67,17 @@ final readonly class AddSearchResultHandler
             ? ($this->cache->findById($command->lookupId) ?? throw LookupNotFound::withId($command->lookupId))
             : null;
 
+        // The language the word is being SAVED in — the lookup row's own, not the profile's. The
+        // learner may have searched in a pair their profile does not name (that is what the pill is
+        // for), and writing the translation under their profile language would file a Romanian
+        // gloss as Russian. The profile only stands in when there is no lookup to ask, and it is
+        // still what names the folder.
+        $savedLang = $lookup !== null ? $lookup->nativeLang : $langs->native->value;
+
         [$termId, $collectionId, $added, $enrolled] = $this->tx->run(
-            function () use ($command, $lookup, $langs): array {
+            function () use ($command, $lookup, $langs, $savedLang): array {
                 $termId = $lookup !== null
-                    ? $this->termFromLookup($lookup, $langs->native->value)
+                    ? $this->termFromLookup($lookup, $savedLang)
                     : ($command->termId ?? throw LookupNotFound::nothingToAdd());
 
                 // Ownership is asserted by the add itself, so an unowned folder never reaches the
@@ -115,7 +122,10 @@ final readonly class AddSearchResultHandler
             $this->enrichment->enrichTerms(
                 [$termId->value],
                 BuildTermEnrichmentsHandler::VERSION,
-                $langs->native->value,
+                // The language the word was SAVED in, so the станок writes its distractors and
+                // notes beside the translation that already exists rather than beside a second one
+                // in whatever the profile happens to say.
+                $savedLang,
             );
         }
 

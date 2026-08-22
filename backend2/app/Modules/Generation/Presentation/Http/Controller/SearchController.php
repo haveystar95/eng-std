@@ -14,6 +14,8 @@ use App\Modules\Generation\Application\Query\InstantTranslate;
 use App\Modules\Generation\Application\Query\InstantTranslateHandler;
 use App\Modules\Generation\Application\Query\SearchTerms;
 use App\Modules\Generation\Application\Query\SearchTermsHandler;
+use App\Modules\Generation\Application\Service\SearchPair;
+use App\Modules\Generation\Domain\Service\SupportedLanguages;
 use App\Modules\Generation\Presentation\Http\Request\AddSearchResultRequest;
 use App\Modules\Generation\Presentation\Http\Request\LookupWordRequest;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
@@ -42,6 +44,8 @@ final class SearchController
         private readonly LookupWordHandler $lookup,
         private readonly AddSearchResultHandler $add,
         private readonly InstantTranslateHandler $instant,
+        private readonly SupportedLanguages $supported,
+        private readonly SearchPair $pair,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -52,6 +56,8 @@ final class SearchController
             : ($this->search)(new SearchTerms(
                 actorId: $this->actorId($request),
                 query: $query,
+                source: $this->lang($request, 'source'),
+                target: $this->lang($request, 'target'),
                 limit: min(50, max(1, $request->integer('limit', 20))),
             ));
 
@@ -71,6 +77,8 @@ final class SearchController
         $hint = ($this->instant)(new InstantTranslate(
             actorId: $this->actorId($request),
             query: trim($request->string('q')->toString()),
+            source: $this->lang($request, 'source'),
+            target: $this->lang($request, 'target'),
         ));
 
         return response()->json(['data' => [
@@ -92,9 +100,13 @@ final class SearchController
 
     public function lookup(LookupWordRequest $request): JsonResponse
     {
+        $data = $request->validated();
+
         $outcome = ($this->lookup)(new LookupWord(
             actorId: $this->actorId($request),
-            query: (string) $request->validated()['query'],
+            query: (string) $data['query'],
+            source: isset($data['source']) ? (string) $data['source'] : null,
+            target: isset($data['target']) ? (string) $data['target'] : null,
         ));
 
         // The cap is a 200, not a 429. It is a normal answer the app has a screen for — «на сегодня
@@ -174,6 +186,32 @@ final class SearchController
             // «сколько lookup-ов сегодня стоило денег» has to be answerable without reading the log.
             'fresh' => $lookup->fresh,
         ];
+    }
+
+    /**
+     * The pairs this deployment searches in, so the pill offers what the server will accept.
+     *
+     * Codes only. What each one is CALLED, and in whose language, is the client's business — it
+     * already ships endonyms and flags, and a server that also held them would be a second list to
+     * keep in step with the first.
+     */
+    public function languages(Request $request): JsonResponse
+    {
+        return response()->json(['data' => [
+            'target' => $this->supported->target(),
+            'natives' => $this->supported->natives(),
+            // Where the pill starts on a device that has never been set: the taught language into
+            // the learner's own. Their profile, not the first entry of the list.
+            'default_native' => $this->pair->fromProfile($this->actorId($request))->translationLang,
+        ]]);
+    }
+
+    /** A query-string language code, or null when it was not given. Blank is «not given». */
+    private function lang(Request $request, string $key): ?string
+    {
+        $value = trim($request->string($key)->toString());
+
+        return $value !== '' ? $value : null;
     }
 
     private function actorId(Request $request): UserId

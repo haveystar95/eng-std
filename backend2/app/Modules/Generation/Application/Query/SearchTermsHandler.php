@@ -6,7 +6,7 @@ namespace App\Modules\Generation\Application\Query;
 
 use App\Modules\Collections\Application\Port\TermFolderMembershipReader;
 use App\Modules\Generation\Application\Dto\SearchHitView;
-use App\Modules\Generation\Application\Service\LearnerLanguages;
+use App\Modules\Generation\Application\Service\SearchPair;
 use App\Modules\Vocabulary\Application\Dto\TermSearchRow;
 use App\Modules\Vocabulary\Application\Query\TermSearchReader;
 
@@ -26,18 +26,21 @@ final readonly class SearchTermsHandler
     public function __construct(
         private TermSearchReader $terms,
         private TermFolderMembershipReader $folders,
-        private LearnerLanguages $languages,
+        private SearchPair $pair,
     ) {}
 
     /** @return list<SearchHitView> */
     public function __invoke(SearchTerms $query): array
     {
-        $langs = $this->languages->forUser($query->actorId);
+        $pair = $this->pair->resolve($query->actorId, $query->source, $query->target);
 
+        // The CATALOGUE sides, not the direction. «Похожие» are the same rows whichever way the
+        // learner is asking — `case` is an English term with a Russian translation either way — and
+        // a reader handed the direction would go looking for Russian terms and find none.
         $hits = $this->terms->search(
             $query->query,
-            $langs->target->value,
-            $langs->native->value,
+            $pair->termLang,
+            $pair->translationLang,
             $query->limit,
         );
         if ($hits === []) {

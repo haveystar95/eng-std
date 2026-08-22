@@ -19,5 +19,14 @@ final readonly class InstantTranslate
     public function __construct(
         public UserId $actorId,
         public string $query,
+        /**
+         * The pair the learner set on the pill: what they typed in, what they want back.
+         *
+         * Null for a caller with no pill — the learner's profile pair stands in. Both or neither;
+         * half a pair is treated as none, because a direction nobody chose is worse than the
+         * default one.
+         */
+        public ?string $source = null,
+        public ?string $target = null,
     ) {}
 }

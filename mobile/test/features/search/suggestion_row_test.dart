@@ -24,17 +24,17 @@ class _Api implements ApiClient {
   int searchCalls = 0;
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20}) async {
+  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
     searchCalls++;
 
     return hits;
   }
 
   @override
-  Future<InstantHint> instantHint(String query) async => InstantHint(query: query);
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) async => InstantHint(query: query);
 
   @override
-  Future<LookupOutcome> lookupWord(String query) async => const LookupOutcome(dailyCap: 5);
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async => const LookupOutcome(dailyCap: 5);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

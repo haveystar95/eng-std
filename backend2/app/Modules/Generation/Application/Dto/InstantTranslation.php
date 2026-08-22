@@ -16,15 +16,5 @@ final readonly class InstantTranslation
         public string $text,
         public string $provider,
         public int $characters,
-        /**
-         * What language the provider decided the INPUT was in, lowercased («ru», «en»), or null
-         * when it was not asked or would not say.
-         *
-         * The authority on direction, and deliberately the provider's answer rather than ours: a
-         * search field is typed in either half of the learner's pair, and the only local clue —
-         * the alphabet — is wrong for every language that shares the Latin one. See
-         * {@see \App\Modules\Generation\Domain\Service\TranslationDirection}.
-         */
-        public ?string $detectedSource = null,
     ) {}
 }

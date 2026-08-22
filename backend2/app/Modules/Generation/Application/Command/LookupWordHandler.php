@@ -8,11 +8,12 @@ use App\Modules\Generation\Application\Dto\LookupOutcome;
 use App\Modules\Generation\Application\Dto\WordLookupBrief;
 use App\Modules\Generation\Application\Port\SearchLookupCache;
 use App\Modules\Generation\Application\Port\WordLookupPort;
-use App\Modules\Generation\Application\Service\LearnerLanguages;
 use App\Modules\Generation\Application\Service\LookupBarrier;
+use App\Modules\Generation\Application\Service\SearchPair;
 use App\Modules\Generation\Domain\Exception\LookupRefused;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use Throwable;
 
 /**
@@ -34,13 +35,13 @@ final readonly class LookupWordHandler
         private WordLookupPort $model,
         private LookupBarrier $barrier,
         private SearchLookupDailyLimit $limit,
-        private LearnerLanguages $languages,
+        private SearchPair $pair,
         private Clock $clock,
     ) {}
 
     public function __invoke(LookupWord $command): LookupOutcome
     {
-        $langs = $this->languages->forUser($command->actorId);
+        $pair = $this->pair->resolve($command->actorId, $command->source, $command->target);
         $normalized = self::normalize($command->query);
         $cap = $this->limit->cap();
 
@@ -50,7 +51,7 @@ final readonly class LookupWordHandler
             throw LookupRefused::emptyQuery();
         }
 
-        $cached = $this->cache->find($normalized, $langs->target->value, $langs->native->value);
+        $cached = $this->cache->find($normalized, $pair->termLang, $pair->translationLang);
         // «Not a word» is as permanent as a card and is served the same way — free, forever, for
         // everybody. Checked before the staleness rule below, which is about a photo question this
         // row never had.
@@ -79,8 +80,8 @@ final readonly class LookupWordHandler
         try {
             $answer = $this->model->lookUp(new WordLookupBrief(
                 query: $command->query,
-                targetLang: $langs->target,
-                nativeLang: $langs->native,
+                targetLang: new LanguageCode($pair->termLang),
+                nativeLang: new LanguageCode($pair->translationLang),
             ));
         } catch (LookupRefused $e) {
             throw $e;
@@ -94,13 +95,13 @@ final readonly class LookupWordHandler
         // was actually bought and the next paste of the same keystrokes is free.
         $screened = $answer->notRecognized
             ? $answer
-            : $this->barrier->screen($answer, $langs->target->value, $langs->native->value);
+            : $this->barrier->screen($answer, $pair->termLang, $pair->translationLang);
 
         $stored = $this->cache->store(
             $command->actorId,
             $normalized,
-            $langs->target->value,
-            $langs->native->value,
+            $pair->termLang,
+            $pair->translationLang,
             $screened,
         );
 

@@ -31,16 +31,12 @@ use App\Modules\Generation\Application\Dto\InstantTranslation;
 interface TranslationProvider
 {
     /**
-     * Pass as `$source` to let the provider decide what language the text is in.
+     * Can this provider be called at all? False when unconfigured — never an exception.
      *
-     * The search field is typed in EITHER half of the learner's pair, and there is no honest local
-     * way to tell which: the alphabet separates Russian from English and nothing else — Romanian,
-     * Polish and English are one script. So the provider detects, and its verdict comes back on
-     * {@see \App\Modules\Generation\Application\Dto\InstantTranslation::$detectedSource}.
+     * NOTE ON `$source`: it is always a real language and never «detect it for me». The learner
+     * names the direction on the search screen, and an implementation that let the vendor guess
+     * instead would answer some words in the wrong language — see {@see translate()}.
      */
-    public const SOURCE_AUTO = 'auto';
-
-    /** Can this provider be called at all? False when unconfigured — never an exception. */
     public function isAvailable(): bool;
 
     /** A short human name for the ledger («deepl»). Stable: it is written into cache rows. */
@@ -52,6 +48,11 @@ interface TranslationProvider
      * Null and not an exception for an empty or unusable answer: the caller is a search field, and
      * «no hint» is a perfectly good outcome there. A TRANSPORT failure may throw — the caller
      * catches it and shows nothing, which is the same outcome by a different route.
+     *
+     * `$source` and `$target` are BOTH given and both are real languages. Auto-detection was tried
+     * and removed: on a single word the vendor is confidently wrong often enough to matter («gate»
+     * → Norwegian → «улица»), and a hint that is right nine times in ten is worse than none on a
+     * screen where the tenth answer becomes a card the learner then studies.
      */
     public function translate(string $text, string $source, string $target): ?InstantTranslation;
 }

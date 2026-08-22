@@ -40,10 +40,10 @@ class _Api implements ApiClient {
   int lookupCalls = 0;
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20}) async => const [];
+  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async => const [];
 
   @override
-  Future<InstantHint> instantHint(String query) async {
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
     hintCalls++;
     if (throwOnHint) throw Exception('offline');
 
@@ -51,7 +51,7 @@ class _Api implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 

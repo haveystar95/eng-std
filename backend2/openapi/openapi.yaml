@@ -55,6 +55,54 @@ paths:
         '422':
           $ref: '#/components/responses/Problem'
 
+  /auth/dev:
+    post:
+      tags: [Auth]
+      summary: "QA sign-in by email (NON-PRODUCTION ONLY — not part of the shipped surface)"
+      description: >
+        Password-less sign-in for QA runs, documented here so the contract is complete rather than
+        because a client should call it: only the debug build's «Dev login» button does.
+        The route is not registered at all unless the environment is non-production AND
+        DEV_LOGIN_ENABLED is set (App\Modules\Identity\Domain\Service\DevLoginGate), and the
+        handler asks the same question again per request. It can only enter or create an account
+        marked `users.is_qa`; an address belonging to a real account is refused with 403
+        `not_a_qa_account`. A shut gate answers 404, not 403 — a closed door does not admit it is
+        a door.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email, description: "The QA address; created as an is_qa account if it does not exist." }
+                device_name: { type: string, maxLength: 100 }
+                timezone: { type: string, description: "Device IANA timezone, seeded on the profile exactly as at Google sign-in." }
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '403':
+          description: The address belongs to an account that is not marked is_qa
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: The gate is shut (production, or DEV_LOGIN_ENABLED off)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          $ref: '#/components/responses/Problem'
+
   /auth/me:
     get:
       tags: [Auth]
@@ -457,8 +505,15 @@ paths:
         which of the CALLER'S OWN folders already hold it (`folders`), which is what lets the save
         button tell the truth. Deliberately not fuzzy: the question is «do we already have the word
         you typed», and a plausible near-miss would stop the learner generating the word they meant.
+
+        `source`/`target` are the search pill, and they select the PAIR rather than a direction:
+        «Похожие» are the same rows whichever way the learner is asking — `case` is an English term
+        with a Russian translation either way — so both are searched and the translations shown are
+        the pair's. Omit both for the learner's profile pair; an unserved pair is a 422.
       parameters:
         - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: source, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 } }
+        - { name: target, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 } }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
       responses:
         '200':
@@ -494,15 +549,26 @@ paths:
         or simply no answer all come back as a null `translation`. The client renders a line when
         there is one and nothing when there is not — it has no error path at all.
 
-        BOTH DIRECTIONS. The field takes either half of the learner's pair: `occasion` is answered
-        in their own language, `случай` is answered in English — and the second is the point, since
-        a word they cannot yet name is exactly the word worth turning into a card. There is no
-        language parameter and there never will be one: the pair is the profile's `native_language`
-        and the language being learned, and WHICH way round a given query goes is decided by the
-        provider's own detection, not by the alphabet. `reversed` reports the outcome for layout
-        only; nothing about languages, directions or detection is ever shown to the learner.
+        BOTH DIRECTIONS, and the LEARNER states which. `source`/`target` are the pill on the search
+        screen: `occasion` asked as `en→ru` is answered in Russian, `случай` asked as `ru→en` is
+        answered in English — and the second is the point, since a word they cannot yet name is
+        exactly the word worth turning into a card.
+
+        The vendor's own language detection does NOT decide. It was tried and removed: on a single
+        word it is confidently wrong often enough to matter (`gate` → Norwegian → «улица»), and a
+        wrong answer looks exactly like a right one. A stated direction is always honoured, even
+        when the query is in the other language — that is a mistake the learner can see and flip in
+        one tap.
+
+        Omit both to get the learner's profile pair (taught language → their own). A pair this
+        deployment does not serve is a **422**, never a quiet swap: the pill on screen says which
+        way the answer comes back, and a server answering in a different pair would make that label
+        a lie. `reversed` reports the outcome for layout only; nothing about languages, directions
+        or detection is ever shown to the learner.
       parameters:
         - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: source, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: the language the query is written in }
+        - { name: target, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: the language the answer comes back in }
       responses:
         '200':
           description: A hint, or an honest nothing
@@ -541,6 +607,46 @@ paths:
                           for: «Поиск — для слов и коротких фраз».
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /search/languages:
+    get:
+      tags: [Search]
+      summary: Which language pairs this deployment searches in
+      description: >
+        What the search pill may offer. Read once when the screen opens and cached on the device —
+        it changes by deployment, not by session.
+
+        CODES ONLY. What each language is called, and in whose language, is the client's business:
+        it already ships endonyms and flags, and a server that also held them would be a second
+        list to keep in step with the first.
+
+        In v1 every pair is `target` ↔ one of `natives`, so the pill is always «EN → X» or «X → EN».
+        That is a limit of the product and not of the schema — `terms.lang` and
+        `term_translations.lang` are real columns and the live database already holds Polish terms
+        with Russian translations. See `docs/search-language-pair.md` for what a pair without
+        English would need.
+      responses:
+        '200':
+          description: The pairs on offer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      target: { type: string, description: the language being taught — the fixed half of every pair }
+                      natives:
+                        type: array
+                        items: { type: string }
+                        description: the languages a learner may read, in the order the pill offers them
+                      default_native:
+                        type: string
+                        description: >
+                          Where the pill starts on a device that has never been set — the learner's
+                          own language from their profile, not the first entry of `natives`.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /search/lookup:
     post:
       tags: [Search]
@@ -571,6 +677,11 @@ paths:
         проверьте написание», which is advice, and advice does not belong on an error path. The
         verdict is cached like a card (`asdfgh` will not become a word tomorrow) and counts against
         the day's cap like any other bought call.
+
+        `source`/`target` are the same pill as on `GET /search/instant`, with the same rules: omit
+        both for the learner's profile pair, and an unserved pair is a 422. The pair also decides
+        what language the SAVED translation is written in — `/search/add` reads it off the cached
+        lookup row rather than off the learner's profile.
       requestBody:
         required: true
         content:
@@ -586,6 +697,8 @@ paths:
                   # .search_query_max_chars. A field that said «слишком длинно» while the button
                   # behind it bought the paragraph would be two products on one screen.
                   maxLength: 120
+                source: { type: string, minLength: 2, maxLength: 2 }
+                target: { type: string, minLength: 2, maxLength: 2 }
       responses:
         '200':
           description: An answer, or an honest «not today»

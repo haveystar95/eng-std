@@ -61,20 +61,19 @@ final class DeepLTranslator implements TranslationProvider
             return null;
         }
 
-        $payload = [
-            'text' => [$clean],
-            'target_lang' => strtoupper($target),
-        ];
-        // DeepL detects when `source_lang` is simply ABSENT — there is no «AUTO» value to send, and
-        // sending one is a 400. The key is omitted rather than nulled for the same reason.
-        if ($source !== TranslationProvider::SOURCE_AUTO && trim($source) !== '') {
-            $payload['source_lang'] = strtoupper($source);
-        }
-
+        // BOTH sides, always. DeepL will happily detect a source when the key is absent, and that
+        // is exactly what this must not do: on a single word the detector is confidently wrong
+        // often enough to matter — «gate» reads as Norwegian and comes back «улица», «случай» as
+        // Bulgarian — and a hint that is right nine times in ten is worse than none on a screen
+        // where the tenth answer becomes a card. The learner's pill says the direction; we send it.
         $response = $this->context->run('instant_translation', null, fn () => Http::asJson()
             ->withHeaders(['Authorization' => 'DeepL-Auth-Key ' . $this->apiKey])
             ->timeout(self::TIMEOUT_SECONDS)
-            ->post(rtrim($this->baseUrl, '/') . '/translate', $payload));
+            ->post(rtrim($this->baseUrl, '/') . '/translate', [
+                'text' => [$clean],
+                'source_lang' => strtoupper(trim($source)),
+                'target_lang' => strtoupper(trim($target)),
+            ]));
 
         // 456 is DeepL's «quota exceeded». It should be unreachable — the monthly budget stops us
         // at 95% precisely so the vendor never has to — but if it is ever reached, it is still just
@@ -88,14 +87,11 @@ final class DeepLTranslator implements TranslationProvider
             return null;
         }
 
-        // DeepL reports the detected language as an upper-case code («RU»), and for a couple of
-        // languages a regional one («EN-GB» on some plans). Lower-cased and cut at the dash, because
-        // the caller compares it against the learner's own `ru`/`en`.
-        $detected = $response->json('translations.0.detected_source_language');
-        $detected = is_string($detected) && trim($detected) !== ''
-            ? strtolower(explode('-', trim($detected))[0])
-            : null;
-
+        // DeepL still reports `detected_source_language` even when it was told the source, and it
+        // is still worth having — but as an OBSERVATION, not an input. It is already in the
+        // outbound request log with the rest of the response, which is where somebody comparing
+        // «what we said it was» against «what DeepL thought» would look. Deliberately not carried
+        // on the DTO: a field nothing reads is a field that grows a reader.
         return new InstantTranslation(
             text: trim($translated),
             provider: self::NAME,
@@ -103,7 +99,6 @@ final class DeepLTranslator implements TranslationProvider
             // because DeepL counts characters and not bytes, and a Cyrillic query would otherwise
             // meter at double its real cost.
             characters: mb_strlen($clean),
-            detectedSource: $detected,
         );
     }
 }

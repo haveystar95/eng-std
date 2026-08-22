@@ -243,14 +243,22 @@ function fakeTranslator(): FakeTranslator
 }
 
 /**
- * `GET /search/instant`, unwrapped. Always a 200 — the endpoint has no error path at all.
+ * `GET /search/instant`, unwrapped. Always a 200 for a supported pair — the endpoint has no error
+ * path of its own; only an unserved language pair is refused, and that is a 422 the client cannot
+ * reach through the pill.
+ *
+ * `$source`/`$target` are the pill. Omit both to let the learner's profile pair stand in.
  *
  * @return array<string, mixed>
  */
-function instant(object $ctx, string $token, string $query): array
+function instant(object $ctx, string $token, string $query, ?string $source = null, ?string $target = null): array
 {
     return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/search/instant?q=' . urlencode($query))
+        ->getJson('/api/v1/search/instant?' . http_build_query(array_filter([
+            'q' => $query,
+            'source' => $source,
+            'target' => $target,
+        ], static fn (?string $v): bool => $v !== null)))
         ->assertOk()
         ->json('data');
 }

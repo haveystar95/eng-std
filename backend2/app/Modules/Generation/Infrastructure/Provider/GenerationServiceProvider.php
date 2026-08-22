@@ -37,6 +37,7 @@ use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Generation\Domain\Service\SearchQueryLength;
+use App\Modules\Generation\Domain\Service\SupportedLanguages;
 use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiWordLookup;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentSearchLookupCache;
@@ -242,6 +243,14 @@ final class GenerationServiceProvider extends ServiceProvider
         // to refuse the SAME paragraph — one number, read in one place.
         $this->app->bind(SearchQueryLength::class, fn (): SearchQueryLength => new SearchQueryLength(
             (int) config('services.generation.search_query_max_chars', SearchQueryLength::DEFAULT_MAX),
+        ));
+
+        // And again for the pair: the endpoint that TELLS the client which languages exist and the
+        // one that refuses a pair must read the same list, or the pill would offer a language the
+        // search then rejects.
+        $this->app->bind(SupportedLanguages::class, fn (): SupportedLanguages => new SupportedLanguages(
+            (string) config('languages.target', 'en'),
+            array_values(array_map(strval(...), (array) config('languages.natives', ['ru']))),
         ));
 
         // Saving a searched word chains the станок exactly as a finished generation does — same

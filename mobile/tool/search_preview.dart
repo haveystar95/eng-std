@@ -10,6 +10,7 @@ import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/search/search_history.dart';
+import 'package:eng_std/features/search/search_pair.dart';
 import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/features/word_card/word_card_screen.dart';
 import 'package:eng_std/features/word_card/word_card_subject.dart';
@@ -179,7 +180,7 @@ class _Menu extends StatelessWidget {
       );
 
   Widget _search({required bool cap, required bool slow}) {
-    _RoutingApi.target = _FakeApi(capReached: cap, slow: slow);
+    _RoutingApi.delegate = _FakeApi(capReached: cap, slow: slow);
 
     return const SearchScreen();
   }
@@ -245,18 +246,27 @@ class _FromCatalogue extends StatelessWidget {
 }
 
 /// The one API the scope hands out; which fake it forwards to is switched per preview entry.
+///
+/// The field is `delegate` and not `target`, which it used to be: `target` is now also the name of
+/// a language parameter on three of these methods, and a parameter shadowing the field it delegates
+/// to compiles into an infinite silence.
 class _RoutingApi implements ApiClient {
-  static ApiClient target = _FakeApi();
+  static ApiClient delegate = _FakeApi();
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20}) =>
-      target.search(query, limit: limit);
+  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) =>
+      delegate.search(query, limit: limit, source: source, target: target);
 
   @override
-  Future<InstantHint> instantHint(String query) => target.instantHint(query);
+  Future<SearchLanguages> searchLanguages() => delegate.searchLanguages();
 
   @override
-  Future<LookupOutcome> lookupWord(String query) => target.lookupWord(query);
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) =>
+      delegate.instantHint(query, source: source, target: target);
+
+  @override
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) =>
+      delegate.lookupWord(query, source: source, target: target);
 
   @override
   Future<SavedSearchResult> addSearchResult({
@@ -264,7 +274,7 @@ class _RoutingApi implements ApiClient {
     String? termId,
     String? collectionId,
   }) =>
-      target.addSearchResult(lookupId: lookupId, termId: termId, collectionId: collectionId);
+      delegate.addSearchResult(lookupId: lookupId, termId: termId, collectionId: collectionId);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -317,7 +327,14 @@ class _FakeApi implements ApiClient {
   static const _gibberish = 'asdfgh';
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20}) async {
+  Future<SearchLanguages> searchLanguages() async => const SearchLanguages(
+        taught: 'en',
+        natives: ['ru', 'ro'],
+        defaultNative: 'ru',
+      );
+
+  @override
+  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
     final q = query.trim().toLowerCase();
 
@@ -325,7 +342,7 @@ class _FakeApi implements ApiClient {
   }
 
   @override
-  Future<InstantHint> instantHint(String query) async {
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
     await Future<void>.delayed(const Duration(milliseconds: 150));
     // The one line the field puts up without a translation behind it: a paragraph is not a query.
     if (query.trim().length > 120) return InstantHint(query: query, queryTooLong: true);
@@ -336,7 +353,7 @@ class _FakeApi implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
     await Future<void>.delayed(Duration(seconds: slow ? 5 : 2));
     if (capReached) return const LookupOutcome(limitReached: true, dailyCap: 5, usedToday: 5);
     if (query.trim().toLowerCase().contains(_gibberish)) {

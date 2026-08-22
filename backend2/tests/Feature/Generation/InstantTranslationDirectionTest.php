@@ -6,52 +6,109 @@ use App\Modules\Generation\Application\Dto\InstantTranslation;
 use App\Modules\Generation\Application\Port\TranslationProvider;
 use App\Modules\Generation\Domain\Service\SearchQueryLength;
 use App\Modules\Generation\Infrastructure\Adapter\DeepLTranslator;
-use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 /**
- * The search field takes BOTH halves of the learner's pair, and the reverse direction is the one
- * that matters: «случай» → «occasion» is somebody reaching for a word they cannot yet name, which
- * is the whole reason to open this screen.
+ * The search field takes BOTH halves of the pair, and the LEARNER says which way.
  *
- * What these tests pin is that the DETECTOR decides and the alphabet does not. The alphabet gets to
- * pick which direction we ask for first — somebody has to go first — and is overruled the moment
- * the provider says otherwise.
+ * These tests pin the decision that replaced an earlier design: the vendor's own language detection
+ * does not get a vote. On a single word it is confidently wrong often enough to matter — «gate»
+ * reads as Norwegian and comes back «улица», «случай» as Bulgarian — and there is no repair for
+ * that, because a wrong answer looks exactly like a right one. So the direction comes from the pill
+ * and the provider is told both languages, every time.
  */
-it('answers a native-language query with the ENGLISH word', function () {
+it('answers a native-language query with the word being taught', function () {
     $fake = fakeTranslator();
     [, $token] = learner();
 
-    $hint = instant($this, $token, 'случай');
+    $hint = instant($this, $token, 'случай', 'ru', 'en');
 
     expect($hint['translation'])->toBe('occasion')
         // Internal: it tells the screen which of the two strings is the headline. The screen never
         // says a word about languages or direction — it just answers.
         ->and($hint['reversed'])->toBeTrue();
-    // Asked with the source left to the provider, and asked for English.
-    expect($fake->directions)->toBe(['auto→en']);
+    // BOTH sides named. Never «auto», which is the whole point.
+    expect($fake->directions)->toBe(['ru→en']);
 });
 
-it('still answers an English query in the learner\'s own language', function () {
+it('answers the other way when the pill is the other way', function () {
+    $fake = fakeTranslator();
+    [, $token] = learner();
+
+    $hint = instant($this, $token, 'occasion', 'en', 'ru');
+
+    expect($hint['translation'])->toBe('перевод: occasion')
+        ->and($hint['reversed'])->toBeFalse();
+    expect($fake->directions)->toBe(['en→ru']);
+});
+
+it('honours a stated direction even when the query is in the other language', function () {
+    // The learner left the pill on EN → RU and typed Russian. We translate what they asked for
+    // rather than second-guessing them: a direction they can see and flip in one tap is a mistake
+    // that fixes itself, and a silent override is the failure this design exists to avoid.
+    $fake = fakeTranslator();
+    [, $token] = learner();
+
+    instant($this, $token, 'случай', 'en', 'ru');
+
+    expect($fake->directions)->toBe(['en→ru']);
+});
+
+it('falls back to the learner\'s own pair when no pill is sent', function () {
     $fake = fakeTranslator();
     [, $token] = learner();
 
     $hint = instant($this, $token, 'occasion');
 
-    expect($hint['translation'])->toBe('перевод: occasion')
-        ->and($hint['reversed'])->toBeFalse();
-    expect($fake->directions)->toBe(['auto→ru']);
+    // Taught language into their own — where the pill starts, and what a caller with no pill means.
+    expect($fake->directions)->toBe(['en→ru'])->and($hint['reversed'])->toBeFalse();
+});
+
+it('refuses a pair this deployment does not serve, rather than quietly swapping it', function () {
+    fakeTranslator();
+    [, $token] = learner();
+
+    // The pill only ever offers what `GET /search/languages` returned, so this is a stale client or
+    // a hand-made request. Answering it in a DIFFERENT pair would make the label on the screen a
+    // lie, on the one screen whose whole job is to be believed.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search/instant?q=word&source=en&target=de')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'unsupported_language_pair');
+});
+
+it('refuses a pair with no taught language in it at all', function () {
+    fakeTranslator();
+    [, $token] = learner();
+
+    // v1 pairs are «taught ↔ read». ru → ro is representable in the schema and not yet served —
+    // see docs/search-language-pair.md.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search/instant?q=word&source=ru&target=ro')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'unsupported_language_pair');
+});
+
+it('serves the second language of the pair when the pill is set to it', function () {
+    $fake = fakeTranslator();
+    [, $token] = learner();
+
+    $hint = instant($this, $token, 'occasion', 'en', 'ro');
+
+    expect($hint['translation'])->not->toBeNull()->and($hint['reversed'])->toBeFalse();
+    expect($fake->directions)->toBe(['en→ro']);
+    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('en:ro');
 });
 
 it('caches each direction under its own key, so one never answers for the other', function () {
     fakeTranslator();
     [, $token] = learner();
 
-    instant($this, $token, 'случай');
-    instant($this, $token, 'occasion');
+    instant($this, $token, 'случай', 'ru', 'en');
+    instant($this, $token, 'occasion', 'en', 'ru');
 
     $pairs = DB::table('instant_translations')->orderBy('lang_pair')->pluck('lang_pair')->all();
     expect($pairs)->toBe(['en:ru', 'ru:en']);
@@ -62,8 +119,8 @@ it('serves a reversed word from the cache without touching the vendor again', fu
     [, $token] = learner();
     [, $otherToken] = learner();
 
-    $first = instant($this, $token, 'случай');
-    $second = instant($this, $otherToken, '  Случай ');
+    $first = instant($this, $token, 'случай', 'ru', 'en');
+    $second = instant($this, $otherToken, '  Случай ', 'ru', 'en');
 
     expect($second['translation'])->toBe($first['translation'])
         ->and($second['source'])->toBe('cache')
@@ -76,7 +133,7 @@ it('answers a native-language query from OUR OWN catalogue, free, before any ven
     [$user, $token] = learner();
     seedCollectionWith($user, 'invoice', 'счёт');
 
-    $hint = instant($this, $token, 'Счёт');
+    $hint = instant($this, $token, 'Счёт', 'ru', 'en');
 
     // The term's own text, not a machine translation of the word for it: this is what the card
     // says, and a hint that disagreed with its own card would be worse than none.
@@ -87,134 +144,28 @@ it('answers a native-language query from OUR OWN catalogue, free, before any ven
     expect(DB::table('instant_translations')->count())->toBe(0);
 });
 
-it('lets the DETECTOR overrule the alphabet, and buys the answer again the right way round', function () {
-    // A native language written in the Latin alphabet — the case the alphabet heuristic cannot see.
-    // The provider says «this is the learner's own language», so the answer must come back in the
-    // language being learned even though the script suggested the opposite.
-    $provider = new class implements TranslationProvider
-    {
-        /** @var list<string> */
-        public array $targets = [];
-
-        public function isAvailable(): bool
-        {
-            return true;
-        }
-
-        public function name(): string
-        {
-            return DeepLTranslator::NAME;
-        }
-
-        public function translate(string $text, string $source, string $target): ?InstantTranslation
-        {
-            $this->targets[] = $target;
-
-            return new InstantTranslation(
-                text: $target === 'en' ? 'occasion' : 'ocazie',
-                provider: DeepLTranslator::NAME,
-                characters: mb_strlen($text),
-                // Whatever we asked for, the input was the learner's own language.
-                detectedSource: 'ru',
-            );
-        }
-    };
-    app()->instance(TranslationProvider::class, $provider);
-    [, $token] = learner();
-
-    $hint = instant($this, $token, 'ocazie');
-
-    // The alphabet said «Latin, so they typed English, answer in Russian» and was wrong; the
-    // detector's verdict is the one that reaches the learner.
-    expect($provider->targets)->toBe(['ru', 'en']);
-    expect($hint['translation'])->toBe('occasion')->and($hint['reversed'])->toBeTrue();
-
-    $row = DB::table('instant_translations')->first();
-    expect((string) $row->lang_pair)->toBe('ru:en')
-        // BOTH calls were billed by the vendor, so both are on the meter — a counter that forgot
-        // the wasted one would drift from the real quota.
-        ->and((int) $row->characters)->toBe(mb_strlen('ocazie') * 2);
-});
-
-/** A provider that always claims the input was `$detected`, whatever it actually was. */
-function detectingAs(string $detected, string $answer): TranslationProvider
-{
-    return new class($detected, $answer) implements TranslationProvider
-    {
-        public function __construct(private string $detected, private string $answer) {}
-
-        public function isAvailable(): bool
-        {
-            return true;
-        }
-
-        public function name(): string
-        {
-            return DeepLTranslator::NAME;
-        }
-
-        public function translate(string $text, string $source, string $target): ?InstantTranslation
-        {
-            return new InstantTranslation(
-                text: $this->answer,
-                provider: DeepLTranslator::NAME,
-                characters: mb_strlen($text),
-                detectedSource: $this->detected,
-            );
-        }
-    };
-}
-
-it('answers a Latin-script third language in the learner\'s own language', function () {
-    app()->instance(TranslationProvider::class, detectingAs('de', 'случай'));
-    [, $token] = learner();
-
-    $hint = instant($this, $token, 'Gelegenheit');
-
-    // Somebody who typed something we cannot place still gets told what it means, in the language
-    // they read. That is the useful failure.
-    expect($hint['translation'])->toBe('случай')->and($hint['reversed'])->toBeFalse();
-    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('en:ru');
-});
-
-it('does not hand a Russian word back because the detector called it Bulgarian', function () {
-    // The real DeepL detects «случай» as BULGARIAN, because it is also a Bulgarian word — caught on
-    // the first live call. A fixed «third language means answer in Russian» rule turned the main use
-    // case of this whole feature into an echo. The alphabet is the better signal once the detector
-    // has said it does not recognise either half of the pair.
-    app()->instance(TranslationProvider::class, detectingAs('bg', 'case'));
-    [, $token] = learner();
-
-    $hint = instant($this, $token, 'случай');
-
-    expect($hint['translation'])->toBe('case')->and($hint['reversed'])->toBeTrue();
-    expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('ru:en');
-});
-
 it('never serves a cached row that says a word means itself', function () {
-    // The rows this guard exists for are real: a build that only ever translated one way asked
-    // DeepL to turn «случай» into Russian, got it straight back, and cached it. Permanently, on the
-    // one screen whose whole job is to name a word the learner cannot name yet.
+    // Rows like this are real: for a while this code let the vendor detect the source, so «случай»
+    // asked for in Russian came straight back and was cached. The cache is permanent, so without a
+    // guard they would answer «случай — случай» forever on the one screen whose job is to name a
+    // word the learner cannot name yet.
     $fake = fakeTranslator();
     [, $token] = learner();
     DB::table('instant_translations')->insert([
         'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
         'normalized_text' => 'случай',
-        'lang_pair' => 'en:ru',
+        'lang_pair' => 'ru:en',
         'translation' => 'случай',
         'provider' => DeepLTranslator::NAME,
         'characters' => 6,
         'created_at' => now(),
     ]);
 
-    $hint = instant($this, $token, 'случай');
+    $hint = instant($this, $token, 'случай', 'ru', 'en');
 
-    // Skipped, bought properly, and stored under the right key — self-healing, nothing deleted.
-    expect($hint['translation'])->toBe('occasion')
-        ->and($hint['source'])->toBe(DeepLTranslator::NAME)
-        ->and($hint['reversed'])->toBeTrue();
+    // Skipped, bought properly, stored under the same key — self-healing, nothing deleted.
+    expect($hint['translation'])->toBe('occasion')->and($hint['source'])->toBe(DeepLTranslator::NAME);
     expect($fake->calls)->toBe(1);
-    expect(DB::table('instant_translations')->where('lang_pair', 'ru:en')->count())->toBe(1);
 });
 
 it('does not teach the cache a non-answer when the vendor echoes the query back', function () {
@@ -232,12 +183,12 @@ it('does not teach the cache a non-answer when the vendor echoes the query back'
 
         public function translate(string $text, string $source, string $target): ?InstantTranslation
         {
-            return new InstantTranslation($text, DeepLTranslator::NAME, mb_strlen($text), 'en');
+            return new InstantTranslation($text, DeepLTranslator::NAME, mb_strlen($text));
         }
     });
     [, $token] = learner();
 
-    expect(instant($this, $token, 'occasion')['translation'])->toBeNull();
+    expect(instant($this, $token, 'occasion', 'en', 'ru')['translation'])->toBeNull();
     expect(DB::table('instant_translations')->count())->toBe(0);
 });
 
@@ -245,7 +196,7 @@ it('refuses a paragraph before it reaches the vendor', function () {
     $fake = fakeTranslator();
     [, $token] = learner();
 
-    $hint = instant($this, $token, str_repeat('слово ', 40));
+    $hint = instant($this, $token, str_repeat('слово ', 40), 'ru', 'en');
 
     expect($hint['query_too_long'])->toBeTrue()
         ->and($hint['translation'])->toBeNull()
@@ -261,8 +212,8 @@ it('lets a long phrase through, right up to the limit', function () {
     [, $token] = learner();
     $max = app(SearchQueryLength::class)->max();
 
-    expect(instant($this, $token, str_repeat('a', $max))['query_too_long'])->toBeFalse();
-    expect(instant($this, $token, str_repeat('b', $max + 1))['query_too_long'])->toBeTrue();
+    expect(instant($this, $token, str_repeat('a', $max), 'en', 'ru')['query_too_long'])->toBeFalse();
+    expect(instant($this, $token, str_repeat('b', $max + 1), 'en', 'ru')['query_too_long'])->toBeTrue();
     expect($fake->calls)->toBe(1);
 });
 
@@ -272,4 +223,37 @@ it('refuses the same paragraph at the PAID lookup, so the two agree', function (
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/search/lookup', ['query' => str_repeat('a', 121)])
         ->assertStatus(422);
+});
+
+describe('GET /search/languages', function () {
+    it('tells the client which pairs the pill may offer', function () {
+        [, $token] = learner();
+
+        $data = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/search/languages')->assertOk()->json('data');
+
+        expect($data['target'])->toBe('en')
+            ->and($data['natives'])->toContain('ru')
+            ->and($data['natives'])->toContain('ro')
+            // Where the pill starts on a fresh device: the learner's own language, from their
+            // profile — not the first entry of the list.
+            ->and($data['default_native'])->toBe('ru');
+    });
+
+    it('offers nothing the search would then refuse', function () {
+        fakeTranslator();
+        [, $token] = learner();
+
+        $data = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/search/languages')->assertOk()->json('data');
+
+        foreach ($data['natives'] as $native) {
+            $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson("/api/v1/search/instant?q=word&source={$data['target']}&target={$native}")
+                ->assertOk();
+            $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson("/api/v1/search/instant?q=word&source={$native}&target={$data['target']}")
+                ->assertOk();
+        }
+    });
 });
