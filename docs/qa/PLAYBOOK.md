@@ -1564,8 +1564,26 @@ docker compose exec app php artisan qa:cost qa@wt.test --period=day
 - **Dev-вход умеет ровно две вещи:** войти в `is_qa`-аккаунт и создать новый `is_qa`-аккаунт. В
   чужой аккаунт им попасть нельзя — 403 `not_a_qa_account`.
 - **В release-сборке dev-входа нет.** Флаг `kDevLoginEnabled` — это `kDebugMode` и ничего больше;
-  проверяется тестом `mobile/test/data/dev_login_release_guard_test.dart`. На телефон собирается
-  `--release`, значит там двери нет.
+  на каждом коммите это держит `mobile/test/data/dev_login_release_guard_test.dart` (определение
+  флага, единственный файл с `/auth/dev`, каждое упоминание за guard'ом).
+
+  Раз в релиз это стоит подтвердить **на артефакте**, а не на исходниках:
+
+  ```bash
+  cd mobile && PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter build ios --release --no-codesign
+  ```
+
+  ```bash
+  grep -rac 'qa@wt.test' mobile/build/ios/iphoneos/Runner.app
+  ```
+
+  Должно быть **0** — и то же для `auth/dev`, `Dev login`, `debug-only door`. Контроль обязателен:
+  тот же grep по debug-сборке (`build/ios/iphonesimulator/Runner.app`) должен дать НЕ ноль, иначе
+  проверка ничего не доказывает — она просто не умеет читать этот артефакт. Строки Dart в debug
+  лежат в `flutter_assets/kernel_blob.bin`, в release их выкидывает tree-shaker.
+
+  Прогон 2026-08-22: debug — `auth/dev` ×2, `Dev login` ×3, `qa@wt.test` ×2; release — 0/0/0/0;
+  контрольная строка `greedily-thermos-finer` (это `apiBaseUrl`) нашлась в обеих сборках.
 - **Прогон можно вести и без экрана.** Всё, что делает приложение, — это те же вызовы `/api/v1`;
   первый прогон этого плейбука (2026-08-22) прошёл сценарий 3 целиком через `curl` под токеном
   dev-входа, потому что панель симулятора в тот момент не отвечала. Сверки по БД от этого не
