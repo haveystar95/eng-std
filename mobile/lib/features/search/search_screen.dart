@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -8,6 +9,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/local/app_database.dart' show Term;
 import '../../data/models.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
@@ -80,6 +82,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String? _lookupError;
 
   List<RecentSearch> _recent = const [];
+
+  /// Terms the LOCAL mirror already holds, keyed by id — the only place a search result can get a
+  /// photo from, since `/search` carries none. Filled for the word that was actually asked for, so
+  /// its 88 pt plate in кадр 03 is a picture rather than an empty rectangle.
+  final Map<String, Term> _mirrored = {};
 
   SearchHistory get _history => SearchHistory(ref.read(appDatabaseProvider));
 
@@ -162,16 +169,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     });
     unawaited(_fetchHint(query));
     await _runFreeSearch(query);
+    await _loadMirrored(_exactHit?.termId);
     await _remember(query);
+  }
+
+  /// Read one term out of the local mirror, if it is there. Cheap, offline, and the whole reason
+  /// кадр 03 can show a photo at all.
+  Future<void> _loadMirrored(String? termId) async {
+    if (termId == null || _mirrored.containsKey(termId)) return;
+    final term = await ref.read(appDatabaseProvider).termById(termId);
+    if (term == null || !mounted) return;
+    setState(() => _mirrored[termId] = term);
   }
 
   /// Ask for the grey echo. Fire-and-forget by design: it has no spinner, no error path and no
   /// retry — the line either appears or it does not, and everything else is indifferent to which.
+  ///
+  /// The out-of-order guard is the QUERY, not the search's generation counter. Keying it on the
+  /// counter looked equivalent and was not: submitting fires the hint first and the free search
+  /// second, the search bumps the counter, and the hint that arrived afterwards was thrown away
+  /// every single time — so кадр 05 opened with an empty «перевод» row even though the answer was
+  /// in hand (caught on the simulator, DSN-2). What the guard actually has to enforce is «never
+  /// beside a word it is not about», and that is a comparison of words.
   Future<void> _fetchHint(String query) async {
-    final generation = _generation;
     try {
       final hint = await ref.read(apiClientProvider).instantHint(query);
-      if (!mounted || generation != _generation || hint.query.isEmpty || !hint.hasText) return;
+      if (!mounted || hint.query.isEmpty || !hint.hasText) return;
+      if (query.toLowerCase() != _query.toLowerCase()) return;
       setState(() => _hint = hint);
     } catch (_) {
       // Offline, throttled, dead tunnel — all the same thing here: no echo.
@@ -246,41 +270,45 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   // ── the card ──────────────────────────────────────────────────────────────
 
-  /// Open the word's own screen (кадр 06).
+  /// A hit as the screen draws it: the server's answer, plus whatever the LOCAL mirror already
+  /// knows about the same term.
   ///
-  /// A hit's photo is fetched from the LOCAL term mirror first: `/search` carries no image, so the
-  /// only picture a search result can have is one already on the device — which is exactly the case
-  /// for a word the learner has met before, and exactly the case where they would notice it missing.
-  Future<void> _openCard(WordCardSubject subject) async {
-    var enriched = subject;
-    final termId = subject.termId;
-    if (termId != null && !subject.hasPhoto) {
-      final term = await ref.read(appDatabaseProvider).termById(termId);
-      if (term != null) {
-        enriched = WordCardSubject(
-          termId: subject.termId,
-          lookupId: subject.lookupId,
-          text: subject.text,
-          type: subject.type,
-          transcription: subject.transcription ?? term.transcription,
-          translation: subject.translation ?? term.translation,
-          description: subject.description ?? term.description,
-          example: subject.example ?? term.example,
-          exampleTranslation: subject.exampleTranslation ?? term.exampleTranslation,
-          cefr: subject.cefr,
-          imageUrl: term.imageUrl,
-          imageAuthor: term.imageAuthor,
-          imageAuthorUrl: term.imageAuthorUrl,
-          folders: subject.folders,
-        );
-      }
-    }
-    if (!mounted) return;
+  /// `/search` carries no image, so the only picture a search result can have is one already on
+  /// the device — which is exactly the case for a word the learner has met before, and exactly the
+  /// case where they would notice it missing.
+  WordCardSubject _subjectFor(SearchHit hit) {
+    final term = _mirrored[hit.termId];
+    if (term == null) return WordCardSubject.fromHit(hit);
 
+    return WordCardSubject(
+      termId: hit.termId,
+      text: hit.text,
+      type: hit.type,
+      transcription: hit.transcription ?? term.transcription,
+      translation: hit.translation ?? term.translation,
+      description: hit.description ?? term.description,
+      example: hit.example ?? term.example,
+      exampleTranslation: hit.exampleTranslation ?? term.exampleTranslation,
+      cefr: hit.cefr,
+      imageUrl: term.imageUrl,
+      imageAuthor: term.imageAuthor,
+      imageAuthorUrl: term.imageAuthorUrl,
+      folders: hit.folders,
+    );
+  }
+
+  /// Open the word's own screen (кадр 06).
+  Future<void> _openHitCard(SearchHit hit) async {
+    await _loadMirrored(hit.termId);
+    if (!mounted) return;
+    await _openCard(_subjectFor(hit));
+  }
+
+  Future<void> _openCard(WordCardSubject subject) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => WordCardScreen(
-        subject: enriched,
-        onSpeak: () => _speak(enriched.text, enriched.type),
+        subject: subject,
+        onSpeak: () => _speak(subject.text, subject.type),
         onSaved: _afterSave,
       ),
     ));
@@ -312,7 +340,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    return Scaffold(
+    // Stated, not inherited: coming back from a word card that had a photo, the light glyphs it
+    // asked for would otherwise stay on this screen's paper and vanish into it.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
       backgroundColor: AppColors.paper,
       body: SafeArea(
         bottom: false,
@@ -339,6 +371,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -437,13 +470,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       if (_recent.isNotEmpty) ...[
         SearchSectionLabel(l.searchRecentLabel),
         const SizedBox(height: AppSpacing.s8),
-        for (final recent in _recent)
+        for (var i = 0; i < _recent.length; i++)
           DictionaryRow(
-            term: recent.word,
-            translation: recent.translation,
-            level: recent.cefr,
+            term: _recent[i].word,
+            translation: _recent[i].translation,
+            level: _recent[i].cefr,
             trailing: RowTrailing.level,
-            onTap: () => _submit(recent.word),
+            // No rule under the last line: the block below already opens with one, and two
+            // hairlines with air between them read as an empty fourth row.
+            showDivider: i < _recent.length - 1,
+            onTap: () => _submit(_recent[i].word),
           ),
         const SizedBox(height: 30),
       ],
@@ -503,8 +539,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return [
       const SizedBox(height: AppSpacing.s26),
       SearchResultCard(
-        subject: WordCardSubject.fromHit(exact),
-        onOpen: () => _openCard(WordCardSubject.fromHit(exact)),
+        subject: _subjectFor(exact),
+        onOpen: () => _openHitCard(exact),
       ),
       if (rest.isNotEmpty) ...[
         const SizedBox(height: 14),
@@ -517,7 +553,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             height: 52,
             termStyle: AppText.searchRowTerm.copyWith(fontSize: 19),
             showDivider: i < rest.length - 1,
-            onTap: () => _openCard(WordCardSubject.fromHit(rest[i])),
+            onTap: () => _openHitCard(rest[i]),
           ),
       ],
     ];
@@ -566,7 +602,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             height: 52,
             termStyle: AppText.searchRowTerm.copyWith(fontSize: 19),
             showDivider: i < near.length - 1,
-            onTap: () => _openCard(WordCardSubject.fromHit(near[i])),
+            onTap: () => _openHitCard(near[i]),
           ),
       ],
     ];
@@ -575,7 +611,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _openHit(String termId) {
     for (final hit in _hits) {
       if (hit.termId == termId) {
-        unawaited(_openCard(WordCardSubject.fromHit(hit)));
+        unawaited(_openHitCard(hit));
 
         return;
       }

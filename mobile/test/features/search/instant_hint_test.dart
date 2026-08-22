@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,10 +19,14 @@ import 'package:eng_std/theme/theme.dart';
 /// a word it is not about, it can never produce an error the learner sees — and it is feedback about
 /// the INPUT, so it is set smaller, italic and grey, and it never competes with the list of results.
 class _Api implements ApiClient {
-  _Api({this.hint, this.throwOnHint = false});
+  _Api({this.hint, this.throwOnHint = false, this.holdLookup = false});
 
   final InstantHint? hint;
   final bool throwOnHint;
+
+  /// Keeps the model call in flight, so the assembling frame can be observed.
+  final bool holdLookup;
+  final lookupGate = Completer<void>();
 
   int hintCalls = 0;
   int lookupCalls = 0;
@@ -39,6 +45,7 @@ class _Api implements ApiClient {
   @override
   Future<LookupOutcome> lookupWord(String query) async {
     lookupCalls++;
+    if (holdLookup) await lookupGate.future;
 
     return const LookupOutcome(dailyCap: 5);
   }
@@ -144,6 +151,34 @@ void main() {
     await tester.pump();
 
     expect(find.text('значительный'), findsNothing);
+  });
+
+  testWidgets('submitting does not throw the answer away — кадр 05 shows it', (tester) async {
+    // The guard is the WORD, not a counter. Keyed on the search's generation counter it looked
+    // equivalent and was not: submit fires the hint first and the free search second, the search
+    // bumps the counter, and the hint that arrived afterwards was discarded every time — which
+    // left the assembling frame's «перевод» row empty with the answer already in hand.
+    final api = _Api(
+      hint: const InstantHint(query: 'significant', translation: 'значительный'),
+      holdLookup: true,
+    );
+    await _pump(tester, api);
+
+    await tester.enterText(find.byType(TextField), 'significant');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Find with AI'));
+    await tester.pump();
+    await tester.pump();
+
+    // The one row the app CAN honestly tick before the model answers, because it already has it.
+    expect(find.text('значительный'), findsOneWidget);
+
+    api.lookupGate.complete();
+    await tester.pumpAndSettle();
   });
 
   testWidgets('the echo never spends a model call by itself', (tester) async {

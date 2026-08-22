@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -354,6 +356,7 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
   Future<void> _save(String? collectionId) async {
     final l = AppLocalizations.of(context);
     setState(() => _saving = true);
+    SavedSearchResult? done;
     try {
       final saved = await ref.read(apiClientProvider).addSearchResult(
             lookupId: _subject.lookupId,
@@ -376,11 +379,23 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
         ]);
       });
       AppHaptics.light();
-      await widget.onSaved?.call(saved);
+      done = saved;
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
       _failed(l);
+    }
+
+    // OUTSIDE the try, deliberately. What follows a save is bookkeeping — a sync nudge, a re-run
+    // of the free search — and the word is already in the folder by the time any of it runs.
+    // Letting those failures fall into the catch above made an offline device answer a SUCCESSFUL
+    // save with «Не удалось сохранить», which is the one lie this screen must not tell (caught on
+    // the simulator, DSN-2).
+    if (done == null) return;
+    try {
+      await widget.onSaved?.call(done);
+    } catch (_) {
+      // The save stands. Nothing to tell the learner.
     }
   }
 
@@ -443,7 +458,10 @@ class _Hero extends StatelessWidget {
           if (subject.hasPhoto && (author ?? '').isNotEmpty)
             Positioned(
               left: AppSpacing.s22,
-              bottom: AppWordCard.heroOverlap + AppSpacing.s8,
+              // Clear of the paper that rides up onto the photo — an attribution half-covered by
+              // the article is an attribution nobody can read, and the licence asks for a readable
+              // one.
+              bottom: AppWordCard.heroOverlap + AppSpacing.s16,
               child: _PhotoCredit(author: author!, url: subject.imageAuthorUrl, l: l),
             ),
         ],
@@ -528,7 +546,7 @@ class _Article extends StatelessWidget {
             _LadderStrip(subject: subject, l: l),
           ],
           if (translation.isNotEmpty) ...[
-            SizedBox(height: fromFolder ? AppSpacing.s16 : AppSpacing.s16),
+            const SizedBox(height: AppSpacing.s16),
             Text(translation, style: AppText.cardTranslation),
           ],
           if (description.isNotEmpty) ...[
@@ -743,8 +761,10 @@ class _SquareButton extends StatelessWidget {
         button: true,
         label: label,
         child: Material(
+          // The same radius the main button carries — the pair has to read as one control split
+          // in two, and two different corner radii side by side read as two unrelated buttons.
           color: AppColors.surfaceRaised,
-          borderRadius: BorderRadius.circular(AppRadii.sheet),
+          borderRadius: BorderRadius.circular(AppRadii.button),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
@@ -753,7 +773,7 @@ class _SquareButton extends StatelessWidget {
               height: AppWordCard.actionHeight,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadii.sheet),
+                borderRadius: BorderRadius.circular(AppRadii.button),
                 border: Border.all(color: AppColors.track),
               ),
               child: Icon(icon, size: 21, color: AppColors.ink),
@@ -777,7 +797,7 @@ class _OutlineState extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppColors.surfaceRaised,
-          borderRadius: BorderRadius.circular(AppRadii.sheet),
+          borderRadius: BorderRadius.circular(AppRadii.button),
           border: Border.all(color: AppColors.dashed, width: 1.5),
         ),
         child: Row(
