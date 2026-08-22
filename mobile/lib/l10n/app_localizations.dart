@@ -1070,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.'**
   String get searchMissBody;
 
+  /// Мгновенный перевод на кадре 04: слова в базе нет, но черновик уже есть. Помечен «черновой», чтобы не читался как готовая карточка.
+  ///
+  /// In ru, this message translates to:
+  /// **'черновой перевод — {translation}'**
+  String searchDraftTranslation(String translation);
+
   /// Лейбл над близкими совпадениями, когда точного нет (кадр 04).
   ///
   /// In ru, this message translates to:

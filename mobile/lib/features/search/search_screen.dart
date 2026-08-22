@@ -572,6 +572,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         constraints: const BoxConstraints(maxWidth: 300),
         child: Text(l.searchMissBody, style: AppText.searchMissBody),
       ),
+      // The instant translation, and the ONE frame where it earns a line of its own.
+      //
+      // Everywhere else it is input feedback and lives inside the field, because a draft must never
+      // read as a result. Here there is no result to be mistaken for — the word is not in the
+      // database — and this is the exact second somebody decides whether to spend a model call. So
+      // it says what the word probably means, and says out loud that it is a draft.
+      ...?_draftLine(l),
       const SizedBox(height: AppSpacing.s26),
       PrimaryButton(
         label: _searching ? l.searchLooking : l.searchAskAi,
@@ -605,6 +612,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             onTap: () => _openHitCard(near[i]),
           ),
       ],
+    ];
+  }
+
+  /// «черновой перевод — корень»: the label flat and grey, the word itself italic — the same italic
+  /// the field's echo uses, so the two are visibly the same draft rather than two different claims.
+  List<Widget>? _draftLine(AppLocalizations l) {
+    final translation = _hint?.translation?.trim() ?? '';
+    if (translation.isEmpty) return null;
+
+    final line = l.searchDraftTranslation(translation);
+    final at = line.indexOf(translation);
+    final style = AppText.searchNote.copyWith(color: AppColors.tertiary);
+
+    return [
+      const SizedBox(height: 14),
+      if (at < 0)
+        Text(line, style: style)
+      else
+        Text.rich(
+          TextSpan(children: [
+            TextSpan(text: line.substring(0, at)),
+            TextSpan(
+              text: translation,
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
+            TextSpan(text: line.substring(at + translation.length)),
+          ]),
+          style: style,
+        ),
     ];
   }
 

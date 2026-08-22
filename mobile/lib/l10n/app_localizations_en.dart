@@ -656,6 +656,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check the spelling — or have the card written: translation, meaning, example, photo.';
 
   @override
+  String searchDraftTranslation(String translation) {
+    return 'draft translation — $translation';
+  }
+
+  @override
   String get searchSimilarInBase => 'Similar in the database';
 
   @override

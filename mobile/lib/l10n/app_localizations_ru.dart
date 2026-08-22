@@ -679,6 +679,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверьте написание — или соберите карточку: перевод, значение, пример, фото.';
 
   @override
+  String searchDraftTranslation(String translation) {
+    return 'черновой перевод — $translation';
+  }
+
+  @override
   String get searchSimilarInBase => 'Похожее в базе';
 
   @override

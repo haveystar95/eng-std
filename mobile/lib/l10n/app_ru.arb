@@ -584,6 +584,11 @@
   },
   "searchMissBody": "Проверьте написание — или соберите карточку: перевод, значение, пример, фото.",
   "@searchMissBody": { "description": "Пояснение под заголовком (кадр 04)." },
+  "searchDraftTranslation": "черновой перевод — {translation}",
+  "@searchDraftTranslation": {
+    "description": "Мгновенный перевод на кадре 04: слова в базе нет, но черновик уже есть. Помечен «черновой», чтобы не читался как готовая карточка.",
+    "placeholders": { "translation": { "type": "String" } }
+  },
   "searchSimilarInBase": "Похожее в базе",
   "@searchSimilarInBase": { "description": "Лейбл над близкими совпадениями, когда точного нет (кадр 04)." },
   "searchAskAi": "Find with AI",

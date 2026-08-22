@@ -172,6 +172,8 @@
   "searchMissTitle": "“{query}” is not in the database yet",
   "@searchMissTitle": { "placeholders": { "query": { "type": "String" } } },
   "searchMissBody": "Check the spelling — or have the card written: translation, meaning, example, photo.",
+  "searchDraftTranslation": "draft translation — {translation}",
+  "@searchDraftTranslation": { "placeholders": { "translation": { "type": "String" } } },
   "searchSimilarInBase": "Similar in the database",
   "searchAskAi": "Find with AI",
   "searchAskAiNote": "One model call. Searching again is free",

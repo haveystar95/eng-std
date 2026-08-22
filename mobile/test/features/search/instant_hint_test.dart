@@ -181,6 +181,60 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  group('кадр 04 · черновой перевод', () {
+    testWidgets('a word the database does not have still says what it probably means',
+        (tester) async {
+      // The one frame where the draft earns a line of its own: there is no result for it to be
+      // mistaken for, and this is the second somebody decides whether to spend a model call.
+      final api = _Api(hint: const InstantHint(query: 'root', translation: 'корень'));
+      await _pump(tester, api);
+
+      await tester.enterText(find.byType(TextField), 'root');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('черновой перевод'), findsOneWidget);
+      expect(find.textContaining('корень'), findsOneWidget);
+    });
+
+    testWidgets('it is MARKED a draft — it must not read as a finished card', (tester) async {
+      final api = _Api(hint: const InstantHint(query: 'root', translation: 'корень'));
+      await _pump(tester, api);
+
+      await tester.enterText(find.byType(TextField), 'root');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      final line = tester.widget<Text>(find.byWidgetPredicate(
+        (w) => w is Text && (w.textSpan?.toPlainText() ?? '').startsWith('черновой перевод'),
+      ));
+      expect(line.style?.color, AppColors.tertiary, reason: 'quieter than the body above it');
+      // The word itself carries the same italic the field's echo uses, so the two read as one
+      // draft rather than as two different claims.
+      final spans = (line.textSpan! as TextSpan).children!.cast<TextSpan>();
+      final word = spans.firstWhere((s) => s.text == 'корень');
+      expect(word.style?.fontStyle, FontStyle.italic);
+    });
+
+    testWidgets('no answer, no line — the frame does not reserve space for it', (tester) async {
+      final api = _Api(hint: const InstantHint(query: 'root'));
+      await _pump(tester, api);
+
+      await tester.enterText(find.byType(TextField), 'root');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('черновой перевод'), findsNothing);
+      expect(find.text('Find with AI'), findsOneWidget);
+    });
+  });
+
   testWidgets('the echo never spends a model call by itself', (tester) async {
     final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
     await _pump(tester, api);
