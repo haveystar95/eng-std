@@ -24,6 +24,10 @@ import 'package:eng_std/theme/theme.dart';
 /// assembly (кадр 05) — and a design that is only ever reviewed on the states the server happens
 /// to be in is a design nobody has actually seen.
 ///
+/// The reverse search (RS-1) added three more of those: a query typed in the learner's own
+/// language, one too long to be a query, and one the model cannot place. Type «случай», «как дела»,
+/// a pasted paragraph or «asdfgh» into the first entry to reach them.
+///
 /// ```bash
 /// flutter run --debug -d <simulator-udid> --target tool/search_preview.dart
 /// ```
@@ -295,12 +299,22 @@ class _FakeApi implements ApiClient {
     SearchHit(termId: '01FG', text: 'filling', type: 'word', translation: 'начинка', cefr: 'B2'),
   ];
 
+  /// Every answer keyed by what is typed, in BOTH directions.
+  ///
+  /// The Russian rows are not invented: they are what the live backend returned on the real DeepL
+  /// and the real lookup model («случай» → `case`, «как дела» → `how are you`). A preview that made
+  /// up prettier answers than the server gives would be reviewing a screen nobody will see.
   static const _hints = {
-    'holl': 'холл',
-    'hole': 'дыра',
-    'fill out': 'заполнить',
-    'fill ou': 'заполнить',
+    'holl': (text: 'холл', reversed: false),
+    'hole': (text: 'дыра', reversed: false),
+    'fill out': (text: 'заполнить', reversed: false),
+    'fill ou': (text: 'заполнить', reversed: false),
+    'случай': (text: 'case', reversed: true),
+    'как дела': (text: 'how are you', reversed: true),
   };
+
+  /// What the lookup model refuses to place. Typing it reaches кадр 04's «проверьте написание».
+  static const _gibberish = 'asdfgh';
 
   @override
   Future<List<SearchHit>> search(String query, {int limit = 20}) async {
@@ -313,14 +327,41 @@ class _FakeApi implements ApiClient {
   @override
   Future<InstantHint> instantHint(String query) async {
     await Future<void>.delayed(const Duration(milliseconds: 150));
+    // The one line the field puts up without a translation behind it: a paragraph is not a query.
+    if (query.trim().length > 120) return InstantHint(query: query, queryTooLong: true);
 
-    return InstantHint(query: query, translation: _hints[query.trim().toLowerCase()]);
+    final hint = _hints[query.trim().toLowerCase()];
+
+    return InstantHint(query: query, translation: hint?.text, reversed: hint?.reversed ?? false);
   }
 
   @override
   Future<LookupOutcome> lookupWord(String query) async {
     await Future<void>.delayed(Duration(seconds: slow ? 5 : 2));
     if (capReached) return const LookupOutcome(limitReached: true, dailyCap: 5, usedToday: 5);
+    if (query.trim().toLowerCase().contains(_gibberish)) {
+      return const LookupOutcome(dailyCap: 5, usedToday: 3, notRecognized: true);
+    }
+    // Asked in Russian, built in English — the card is about the word, never about the question.
+    if (query.trim().toLowerCase() == 'случай') {
+      return const LookupOutcome(
+        dailyCap: 5,
+        usedToday: 2,
+        card: LookupCard(
+          lookupId: '01CASE',
+          text: 'case',
+          type: 'word',
+          transcription: 'keɪs',
+          translation: 'случай',
+          description:
+              'It is a particular situation or example. People often discuss different situations using this word.',
+          example: 'In this case, you should listen to the advice of your friends.',
+          exampleTranslation: 'В этом случае вам следует послушать советы ваших друзей.',
+          cefr: 'A2',
+          fresh: true,
+        ),
+      );
+    }
 
     return const LookupOutcome(
       dailyCap: 5,
