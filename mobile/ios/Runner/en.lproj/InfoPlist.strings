@@ -1,0 +1,6 @@
+/* Permission prompts — English (development language). The same keys live in Info.plist as the
+   fallback value; a localized copy here is what the system dialog actually shows. */
+
+"NSMicrophoneUsageDescription" = "The microphone is used in two places: dictating a situation for a new collection, and saying words out loud during training. We only ask when you tap record yourself.";
+
+"NSSpeechRecognitionUsageDescription" = "Speech recognition turns your dictation into text and, during training, hears the word you said. We check whether you remembered the word, not how you pronounce it. Everything is computed on the phone itself: audio is never sent anywhere and never stored.";

@@ -14,10 +14,15 @@
 			</array>
 		</dict>
 	</array>
+	<!-- The permission copy is LOCALIZED: the shown text comes from <lang>.lproj/InfoPlist.strings
+	     (en + ru), and these values are only the development-language fallback for a system whose
+	     language the app does not ship. The keys must stay here — iOS reads the KEY from Info.plist
+	     and looks the string up afterwards; a key present only in the .strings file is not a
+	     declared permission and the OS kills the app on the first microphone call. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Микрофон нужен в двух местах: надиктовать ситуацию для новой коллекции и проговаривать слова вслух на тренировке. Спросим, только когда вы сами нажмёте запись.</string>
+	<string>The microphone is used in two places: dictating a situation for a new collection, and saying words out loud during training. We only ask when you tap record yourself.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Распознавание речи превращает надиктовку в текст, а на тренировке — слышит слово, которое вы произнесли. Проверяем, вспомнили ли вы слово, а не ваше произношение. Всё считается прямо на телефоне: аудио никуда не отправляется и не сохраняется.</string>
+	<string>Speech recognition turns your dictation into text and, during training, hears the word you said. We check whether you remembered the word, not how you pronounce it. Everything is computed on the phone itself: audio is never sent anywhere and never stored.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
