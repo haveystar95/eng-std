@@ -350,10 +350,10 @@ abstract class AppLocalizations {
   /// **'Все'**
   String get homeSeeAll;
 
-  /// Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural).
+  /// Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).
   ///
   /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} из {total} слово} few{{done} из {total} слова} many{{done} из {total} слов} other{{done} из {total} слов}}'**
+  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
   String homeCollectionProgress(int done, int total);
 
   /// Таб-бар: главная.
@@ -1910,7 +1910,7 @@ abstract class AppLocalizations {
   /// **'Микрофон недоступен. Можно пропустить эту карточку.'**
   String get sessionSpeakNoMic;
 
-  /// Пропуск карточки говорения после нескольких неудач микрофона: ничего не записывается, слово вернётся своим чередом.
+  /// Пропуск карточки говорения — с первой же неудачи микрофона, вместе с сообщением о ней (QA-OBS-7): ничего не записывается, слово вернётся своим чередом.
   ///
   /// In ru, this message translates to:
   /// **'Пропустить'**

@@ -428,10 +428,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final total = _cards.length;
     final phaseLabel = widget.practice
         ? l.sessionPhasePractice
-        : switch (phaseFor(_card.mode)) {
-            SessionPhase.intro => l.sessionPhaseIntro,
-            SessionPhase.assemble => l.sessionPhaseAssemble,
-            SessionPhase.review => l.sessionPhaseReview,
+        : switch (sessionHeaderFor(mode: _card.mode, ladderStep: _card.ladderStep)) {
+            SessionHeader.intro => l.sessionHeaderIntro,
+            SessionHeader.recognition => l.sessionHeaderRecognition,
+            SessionHeader.phaseIntro => l.sessionPhaseIntro,
+            SessionHeader.phaseAssemble => l.sessionPhaseAssemble,
+            SessionHeader.phaseReview => l.sessionPhaseReview,
           };
 
     final autoPronounce = ref.watch(appSettingsProvider).value?.autoPronounce ?? true;

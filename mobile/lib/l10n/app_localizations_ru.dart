@@ -209,8 +209,8 @@ class AppLocalizationsRu extends AppLocalizations {
       locale: localeName,
       other: '$done из $total слов',
       many: '$done из $total слов',
-      few: '$done из $total слова',
-      one: '$done из $total слово',
+      few: '$done из $total слов',
+      one: '$done из $total слова',
     );
     return '$_temp0';
   }
