@@ -141,6 +141,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                   return _CenteredMessage(
                     text: isOffline(e) ? l.sessionOffline : l.sessionLoadFailed,
                     icon: isOffline(e) ? LucideIcons.cloudOff : LucideIcons.triangleAlert,
+                    // Not the green of a right answer: this screen is a failure, and the warning
+                    // triangle was drawn in the success colour (QA-OBS-30).
+                    iconColor: AppColors.destructiveText,
                     actionLabel: l.generationRetry,
                     onAction: () => ref.invalidate(studySessionProvider(args)),
                   );
@@ -1044,9 +1047,19 @@ class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
 }
 
 class _CenteredMessage extends StatelessWidget {
-  const _CenteredMessage({required this.text, this.icon, this.actionLabel, this.onAction});
+  const _CenteredMessage({
+    required this.text,
+    this.icon,
+    this.iconColor = AppColors.verdictKnown,
+    this.actionLabel,
+    this.onAction,
+  });
   final String text;
   final IconData? icon;
+
+  /// Green by default — the empty states this screen shows are «всё сделано», not faults. A
+  /// failure passes its own colour (QA-OBS-30).
+  final Color iconColor;
 
   /// Optional recovery action — «Повторить» on a failed session build. Absent for the empty
   /// states, where there is nothing to retry.
@@ -1081,7 +1094,7 @@ class _CenteredMessage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 48, color: AppColors.verdictKnown),
+                  Icon(icon, size: 48, color: iconColor),
                   const SizedBox(height: 12),
                 ],
                 Text(text, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 20)),

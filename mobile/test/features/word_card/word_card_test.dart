@@ -195,6 +195,12 @@ void main() {
 
       expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
       expect(find.text('Справа — выбрать другую коллекцию'), findsNothing);
+
+      // Ink, not terracotta: adding a word to one more collection destroys nothing, and the delete
+      // colour on the safest action read as a warning (QA-OBS-19).
+      final link = tester.widget<Text>(find.text('Добавить в другую коллекцию'));
+      expect(link.style?.color, AppColors.ink);
+      expect(link.style?.color, isNot(AppColors.destructiveText));
     });
 
     testWidgets('a word that arrives already saved opens in the saved state', (tester) async {

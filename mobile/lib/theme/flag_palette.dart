@@ -5,7 +5,8 @@ import 'package:flutter/painting.dart';
 /// theme, rather than as raw hex scattered through `lib/ui/`. Values mirror the
 /// token frames' simplified renderings.
 abstract final class FlagPalette {
-  // en · Великобритания (упрощённо: тёмно-синий фон, белый+красный крест)
+  // en · Великобритания (Union Jack: тёмно-синее поле, белый+красный косой
+  // крест, поверх — белый+красный прямой)
   static const gbNavy = Color(0xFF1A3A6B);
   static const gbWhite = Color(0xFFFFFFFF);
   static const gbRed = Color(0xFFC8102E);

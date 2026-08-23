@@ -76,15 +76,39 @@ class _NeutralFlag extends StatelessWidget {
 
 // ── painters ── (упрощённые версии из кадров §4б)
 
+/// Union Jack. Диагонали обязательны: без них на 22 px это читается как флаг
+/// Исландии, а не Великобритании (QA-OBS-14).
+///
+/// Порядок ровно как у настоящего флага — белая косая (Андреевский крест),
+/// красная косая тоньше поверх неё, затем белый прямой крест и красный поверх
+/// него. Единственное упрощение: красные диагонали идут по центру белых, а не
+/// со смещением (контршефование) — на 22 px этот сдвиг меньше пикселя.
 class _GbPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size s) {
     final w = s.width, h = s.height;
     canvas.drawRect(Offset.zero & s, Paint()..color = FlagPalette.gbNavy);
+
+    // Диагонали рисуются линиями «через углы», поэтому их надо обрезать полем —
+    // иначе штрих вылезает за квадрат по углам.
+    canvas.save();
+    canvas.clipRect(Offset.zero & s);
+    final whiteDiag = Paint()
+      ..color = FlagPalette.gbWhite
+      ..strokeWidth = w * 0.26;
+    final redDiag = Paint()
+      ..color = FlagPalette.gbRed
+      ..strokeWidth = w * 0.10;
+    for (final paint in [whiteDiag, redDiag]) {
+      canvas.drawLine(Offset.zero, Offset(w, h), paint);
+      canvas.drawLine(Offset(w, 0), Offset(0, h), paint);
+    }
+    canvas.restore();
+
     final white = Paint()..color = FlagPalette.gbWhite;
     final red = Paint()..color = FlagPalette.gbRed;
-    final barW = w * 0.18, barR = w * 0.09;
-    // белый крест
+    final barW = w * 0.32, barR = w * 0.18;
+    // белый прямой крест
     canvas.drawRect(Rect.fromLTWH(0, h / 2 - barW / 2, w, barW), white);
     canvas.drawRect(Rect.fromLTWH(w / 2 - barW / 2, 0, barW, h), white);
     // красный крест поверх, тоньше

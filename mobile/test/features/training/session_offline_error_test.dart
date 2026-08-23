@@ -5,9 +5,11 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Sessions are still built server-side, so «нет сети» is a state the user WILL hit — and it used
 /// to appear as `Не удалось загрузить сессию: DioException [connection error] …`, with no way out
@@ -73,6 +75,11 @@ void main() {
     expect(find.text('Не удалось загрузить сессию'), findsOneWidget);
     expect(find.text('Нет соединения'), findsNothing);
     expect(find.textContaining('DioException'), findsNothing);
+
+    // …and the mark above the sentence is not the green of a right answer (QA-OBS-30).
+    final mark = tester.widget<Icon>(find.byIcon(LucideIcons.triangleAlert));
+    expect(mark.color, AppColors.destructiveText);
+    expect(mark.color, isNot(AppColors.verdictKnown));
   });
 
   testWidgets('«Повторить» rebuilds the session', (tester) async {

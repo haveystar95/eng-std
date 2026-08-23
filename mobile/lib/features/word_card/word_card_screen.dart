@@ -816,6 +816,12 @@ class _OutlineState extends StatelessWidget {
 
 /// The second action, as a line rather than a button — it is still there, it just no longer argues
 /// with the state above it (кадры 07/09).
+/// The second action under the main button — «Добавить в другую коллекцию».
+///
+/// Set in INK, not terracotta. Rule 01 keeps the interface monochrome and terracotta is reserved
+/// for what destroys: «Удалить аккаунт», the «Не то» verdict. Adding a word to one more collection
+/// destroys nothing, and painting it in the delete colour made the safest action on the card look
+/// like the dangerous one (QA-OBS-19).
 class _QuietLink extends StatelessWidget {
   const _QuietLink({required this.icon, required this.label, required this.onTap});
 
@@ -834,11 +840,11 @@ class _QuietLink extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 18, color: AppColors.destructiveText),
+                Icon(icon, size: 18, color: AppColors.ink),
                 const SizedBox(width: AppSpacing.s8),
                 Text(
                   label,
-                  style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.destructiveText, fontSize: 15),
+                  style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.ink, fontSize: 15),
                 ),
               ],
             ),
