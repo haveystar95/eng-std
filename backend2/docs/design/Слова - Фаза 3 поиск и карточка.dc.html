@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400;1,7..72,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EFECE6; font-family:Inter,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#9A4430; text-decoration:none; }
+  a:hover { color:#7E3524; }
+</style>
+</helmet>
+
+<section style="padding:56px 56px 140px;color:#2E2620">
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8A857E">Слова · фаза 3 · поиск и карточка слова</div>
+  <div style="font-family:Literata,Georgia,serif;font-size:44px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin-top:12px">Две композиции одной поверхности</div>
+  <div style="font-size:15px;line-height:1.6;color:#4A443D;margin-top:14px;max-width:720px;text-wrap:pretty">Палитра, шрифты и акцент одинаковые во всех кадрах — различие только в композиции. Вьюпорт 390&nbsp;pt, минимальная зона тапа 44&nbsp;pt. Слова: <span style="font-family:Literata,Georgia,serif">hole</span> и <span style="font-family:Literata,Georgia,serif">fill out</span>.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:72px;margin-top:52px;align-items:flex-start">
+
+    <!-- ============================== A ============================== -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:baseline;gap:14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#F6F3EC;background:#2E2620;padding:5px 9px;border-radius:6px">1a</div>
+        <div style="font-family:Literata,Georgia,serif;font-size:26px;font-weight:500">Словарная статья</div>
+        <div style="font-size:13.5px;color:#6E6862;max-width:420px;line-height:1.5">Плотная типографика, фото — небольшая врезка. Слово читается как строка в бумажном словаре.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,390px);gap:28px 30px">
+
+        <!-- A1 empty -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">01 · пустой поиск</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:18px 22px 0">
+              <div style="display:flex;align-items:center;gap:10px;height:48px;border-bottom:1.5px solid rgba(46,38,32,.28)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:20px;color:#8A857E">Найти слово</div>
+              </div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Вы искали</div>
+              <div style="margin-top:8px;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:center;justify-content:space-between;height:56px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:21px">hollow</div><div style="font-size:14.5px;color:#6E6862">пустой</div></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B2</div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:56px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:21px">invoice</div><div style="font-size:14.5px;color:#6E6862">счёт</div></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B1</div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:56px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:21px">withdraw</div><div style="font-size:14.5px;color:#6E6862">снимать</div></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B2</div>
+                </div>
+              </div>
+              <div style="margin-top:30px;padding:16px 0 0;border-top:1px solid rgba(46,38,32,.12);font-size:13.5px;line-height:1.55;color:#6E6862;text-wrap:pretty">В базе 12&nbsp;400 слов. Если слова нет — карточку соберёт модель.</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Недавние вместо подсказок: три строки, каждая — повторный вход в уже знакомое слово. Одна фраза про базу снимает вопрос «а если слова нет».</div>
+        </div>
+
+        <!-- A2 typing -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">02 · набор в процессе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:18px 22px 0">
+              <div style="display:flex;align-items:center;gap:10px;height:48px;border-bottom:1.5px solid #2E2620">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:20px;display:flex;align-items:center;gap:1px">holl<span style="display:inline-block;width:1.5px;height:22px;background:#B5533C"></span></div>
+                <div style="margin-left:auto;font-size:13.5px;font-style:italic;color:#8A857E">холл</div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Слова в базе</div>
+              <div style="margin-top:6px">
+                <div style="display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>ywood</div><div style="font-size:14.5px;color:#6E6862">Голливуд</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>y</div><div style="font-size:14.5px;color:#6E6862">омела</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>ow</div><div style="font-size:14.5px;color:#6E6862">пустой</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:58px;border-bottom:1px solid rgba(46,38,32,.12)">
+                  <div style="display:flex;align-items:baseline;gap:12px"><div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>er</div><div style="font-size:14.5px;color:#6E6862">кричать</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+              </div>
+              <div style="margin-top:22px;font-size:13.5px;color:#6E6862;line-height:1.5">Нажмите <span style="color:#2E2620;font-weight:600">Enter</span>, чтобы искать «holl» целиком</div>
+            </div>
+            <div style="height:26px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Иерархия: главное — <b>список слов базы</b>, он ведёт к карточке. Мгновенный перевод набранного не строка результата, а эхо ввода: мельче, курсивом, справа <i>внутри</i> поля. Пилюли заменены строками — та же информация, но с переводом и без конкуренции с полем.</div>
+        </div>
+
+        <!-- A3 found -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">03 · слово найдено в базе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:18px 22px 0">
+              <div style="display:flex;align-items:center;gap:10px;height:48px;border-bottom:1.5px solid #2E2620">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:20px">hole</div>
+                <div style="margin-left:auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div style="padding:24px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px;display:flex;gap:16px;align-items:center">
+                <div style="width:88px;height:88px;flex:0 0 88px;border-radius:10px;background:#E7E2D7;border:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E;text-align:center;line-height:1.4">фото<br>hole</div>
+                <div style="min-width:0">
+                  <div style="display:flex;align-items:baseline;gap:10px">
+                    <div style="font-family:Literata,Georgia,serif;font-size:29px;letter-spacing:-.01em">hole</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6862;border:1px solid rgba(46,38,32,.18);border-radius:5px;padding:2px 5px">A1</div>
+                  </div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#8A857E;margin-top:4px">/hoʊl/</div>
+                  <div style="font-size:16px;color:#2E2620;margin-top:7px">дыра</div>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;align-items:center;justify-content:center;height:46px;font-size:14px;color:#9A4430;font-weight:600">Открыть карточку</div>
+              <div style="margin-top:14px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Ещё в базе</div>
+              <div style="margin-top:2px">
+                <div style="display:flex;align-items:baseline;gap:12px;height:52px;border-bottom:1px solid rgba(46,38,32,.12)"><div style="font-family:Literata,Georgia,serif;font-size:19px">hole punch</div><div style="font-size:14px;color:#6E6862">дырокол</div></div>
+                <div style="display:flex;align-items:baseline;gap:12px;height:52px"><div style="font-family:Literata,Georgia,serif;font-size:19px">pothole</div><div style="font-size:14px;color:#6E6862">выбоина</div></div>
+              </div>
+            </div>
+            <div style="height:24px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Результат — единственный поднятый лист на странице. Фото 88&nbsp;pt: узнать, не рассматривать.</div>
+        </div>
+
+        <!-- A4 not found -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">04 · слова нет в базе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:18px 22px 0">
+              <div style="display:flex;align-items:center;gap:10px;height:48px;border-bottom:1.5px solid #2E2620">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:20px">fill out</div>
+              </div>
+            </div>
+            <div style="padding:38px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:22px;line-height:1.35;letter-spacing:-.01em;text-wrap:pretty">«fill out» ещё нет в базе</div>
+              <div style="font-size:14.5px;line-height:1.55;color:#4A443D;margin-top:10px;max-width:300px;text-wrap:pretty">Проверьте написание — или соберите карточку: перевод, значение, пример, фото.</div>
+              <div style="margin-top:26px;height:54px;border-radius:14px;background:#2E2620;display:flex;align-items:center;justify-content:center;gap:9px">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.7"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"></path></svg>
+                <div style="font-size:16px;font-weight:600;color:#F6F3EC">Find with AI</div>
+              </div>
+              <div style="margin-top:10px;font-size:12.5px;line-height:1.5;color:#8A857E;text-align:center">Один вызов модели. Повторный поиск бесплатный</div>
+              <div style="margin-top:34px;padding-top:16px;border-top:1px solid rgba(46,38,32,.12)">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Похожее в базе</div>
+                <div style="display:flex;align-items:baseline;gap:12px;height:52px;border-bottom:1px solid rgba(46,38,32,.12)"><div style="font-family:Literata,Georgia,serif;font-size:19px">fill in</div><div style="font-size:14px;color:#6E6862">вписать</div></div>
+                <div style="display:flex;align-items:baseline;gap:12px;height:52px"><div style="font-family:Literata,Georgia,serif;font-size:19px">filling</div><div style="font-size:14px;color:#6E6862">начинка</div></div>
+              </div>
+            </div>
+            <div style="height:26px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Подпись живёт под кнопкой, как выходные данные под текстом: 12,5&nbsp;pt, серый. Она отвечает на «сколько это стоит», а не предупреждает.</div>
+        </div>
+
+        <!-- A5 generating -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">05 · идёт сборка (~2 с)</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:30px 22px 0">
+              <div style="height:2px;background:rgba(46,38,32,.14);border-radius:2px;overflow:hidden"><div style="width:62%;height:2px;background:#B5533C"></div></div>
+              <div style="margin-top:26px;display:flex;gap:16px;align-items:flex-start">
+                <div style="width:88px;height:88px;flex:0 0 88px;border-radius:10px;background:#E7E2D7;border:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#A8A29A">фото…</div>
+                <div>
+                  <div style="font-family:Literata,Georgia,serif;font-size:32px;letter-spacing:-.01em">fill out</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#8A857E;margin-top:5px">/fɪl aʊt/</div>
+                </div>
+              </div>
+              <div style="margin-top:28px;display:flex;flex-direction:column;gap:0">
+                <div style="display:flex;align-items:center;gap:12px;height:46px;border-bottom:1px solid rgba(46,38,32,.10)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4E6B52" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>
+                  <div style="font-size:15px;color:#2E2620">перевод</div>
+                  <div style="margin-left:auto;font-size:15px;color:#4A443D">заполнять (форму)</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;height:46px;border-bottom:1px solid rgba(46,38,32,.10)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4E6B52" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>
+                  <div style="font-size:15px;color:#2E2620">значение</div>
+                  <div style="margin-left:auto;width:120px;height:9px;border-radius:5px;background:rgba(46,38,32,.12)"></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;height:46px;border-bottom:1px solid rgba(46,38,32,.10)">
+                  <div style="width:15px;height:15px;border-radius:50%;border:1.6px solid #B5533C;box-sizing:border-box"></div>
+                  <div style="font-size:15px;color:#2E2620">пример</div>
+                  <div style="margin-left:auto;width:74px;height:9px;border-radius:5px;background:rgba(46,38,32,.12)"></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;height:46px">
+                  <div style="width:15px;height:15px;border-radius:50%;border:1.6px solid rgba(46,38,32,.22);box-sizing:border-box"></div>
+                  <div style="font-size:15px;color:#8A857E">фото</div>
+                </div>
+              </div>
+              <div style="margin-top:22px;font-size:13.5px;color:#6E6862;line-height:1.5">Пара секунд. Можно закрыть — карточка появится в поиске.</div>
+            </div>
+            <div style="height:28px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Вместо спиннера — карточка, которая пишет себя: то, что уже известно (термин, транскрипция, перевод), стоит на месте; остальное дописывается сверху вниз.</div>
+        </div>
+
+        <!-- A6 full card -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">06 · главный экран · карточка слова</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 18px 44px rgba(46,38,32,.10)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:10px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><path d="M14 5l-7 7 7 7"></path></svg>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.9"><circle cx="12" cy="5.5" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="12" cy="18.5" r="1.3"></circle></svg>
+            </div>
+            <div style="padding:14px 22px 0">
+              <div style="display:flex;gap:18px;align-items:flex-start">
+                <div style="min-width:0;flex:1">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="font-family:Literata,Georgia,serif;font-size:40px;font-weight:500;line-height:1.05;letter-spacing:-.02em">fill out</div>
+                    <div style="width:44px;height:44px;flex:0 0 44px;border-radius:50%;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;margin-top:9px">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#6E6862">/fɪl aʊt/</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;color:#4A443D;border:1px solid rgba(46,38,32,.20);border-radius:5px;padding:2px 6px">B1</div>
+                  </div>
+                </div>
+                <div style="width:104px;height:104px;flex:0 0 104px;border-radius:12px;background:#E7E2D7;border:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E;text-align:center;line-height:1.4">фото<br>заявка</div>
+              </div>
+
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(46,38,32,.16)">
+                <div style="font-family:Literata,Georgia,serif;font-size:24px;line-height:1.25">заполнять (форму)</div>
+                <div style="font-family:Literata,Georgia,serif;font-style:italic;font-size:16px;line-height:1.55;color:#4A443D;margin-top:12px;text-wrap:pretty">When you fill out a form, you write your information in the empty spaces. You do this for applications and documents.</div>
+              </div>
+
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(46,38,32,.16)">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Пример</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.45;margin-top:9px;text-wrap:pretty">Please <span style="font-weight:600">fill out</span> this application to proceed.</div>
+                <div style="font-size:14.5px;line-height:1.5;color:#6E6862;margin-top:7px;text-wrap:pretty">Пожалуйста, заполните эту заявку, чтобы продолжить.</div>
+              </div>
+            </div>
+
+            <div style="padding:26px 22px 26px;margin-top:8px">
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;height:54px;border-radius:14px;background:#2E2620;display:flex;align-items:center;justify-content:center;gap:8px">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.9"><path d="M12 5v14M5 12h14"></path></svg>
+                  <div style="font-size:16px;font-weight:600;color:#F6F3EC">Сохранённые</div>
+                </div>
+                <div style="width:54px;height:54px;border-radius:14px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.6"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                </div>
+              </div>
+              <div style="margin-top:9px;font-size:12.5px;color:#8A857E;text-align:center">Справа — выбрать другую папку</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Четыре линейки делят статью на смысловые полосы. Фото рядом с термином, а не над ним: слово остаётся первым, что видит глаз.</div>
+        </div>
+
+        <!-- A7 saved -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">07 · слово уже сохранено</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:26px 22px 0">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:36px;font-weight:500;letter-spacing:-.02em">fill out</div>
+                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#6E6862;margin-top:8px">/fɪl aʊt/</div>
+              <div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(46,38,32,.16);font-family:Literata,Georgia,serif;font-size:22px">заполнять (форму)</div>
+              <div style="margin-top:20px;height:1px;background:rgba(46,38,32,.16)"></div>
+              <div style="margin-top:20px;font-size:13.5px;color:#8A857E;line-height:1.5">…статья без изменений…</div>
+            </div>
+            <div style="padding:30px 22px 26px">
+              <div style="height:54px;border-radius:14px;border:1.5px solid rgba(46,38,32,.24);background:#FCFAF5;display:flex;align-items:center;justify-content:center;gap:9px">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4E6B52" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>
+                <div style="font-size:15.5px;font-weight:600;color:#2E2620">В папке «Сохранённые»</div>
+              </div>
+              <div style="margin-top:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:8px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A4430" stroke-width="1.7"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                <div style="font-size:15px;font-weight:600;color:#9A4430">Добавить в другую папку</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Кнопка гаснет до состояния — контур на слоёной бумаге, галочка зелёная. Второе действие переезжает под неё отдельной строкой на 46&nbsp;pt: оно осталось, но больше не спорит.</div>
+        </div>
+
+        <!-- A8 limit -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">08 · дневной лимит AI исчерпан</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:18px 22px 0">
+              <div style="display:flex;align-items:center;gap:10px;height:48px;border-bottom:1.5px solid #2E2620">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:20px">fill out</div>
+              </div>
+            </div>
+            <div style="padding:34px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:22px;line-height:1.35;text-wrap:pretty">«fill out» ещё нет в базе</div>
+              <div style="margin-top:22px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:18px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="display:flex;gap:4px">
+                    <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                    <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                  </div>
+                  <div style="font-size:13px;color:#6E6862">5 из 5 на сегодня</div>
+                </div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.35;margin-top:12px;text-wrap:pretty">Сборки с моделью вернутся в полночь</div>
+                <div style="font-size:14px;line-height:1.55;color:#4A443D;margin-top:8px;text-wrap:pretty">Поиск по базе работает как обычно. Слово можно сохранить сейчас — карточка соберётся завтра.</div>
+                <div style="margin-top:16px;height:48px;border-radius:12px;border:1.5px solid rgba(46,38,32,.24);display:flex;align-items:center;justify-content:center">
+                  <div style="font-size:15px;font-weight:600;color:#2E2620">Отложить «fill out» на завтра</div>
+                </div>
+              </div>
+              <div style="margin-top:20px;font-size:13.5px;color:#8A857E;line-height:1.5;text-align:center">Без лимита — в подписке</div>
+            </div>
+            <div style="height:28px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Ни одного красного пикселя и ни одного «вы израсходовали». Пять серых точек показывают факт, дальше — что <i>можно</i> сделать. Про подписку — одна строка внизу, мельче всего.</div>
+        </div>
+
+        <!-- A9 from folder -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">09 · бонус · открыто из папки</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:10px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><path d="M14 5l-7 7 7 7"></path></svg>
+                <div style="font-size:14.5px;font-weight:600;color:#4A443D">Сохранённые</div>
+              </div>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.9"><circle cx="12" cy="5.5" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="12" cy="18.5" r="1.3"></circle></svg>
+            </div>
+            <div style="padding:12px 22px 0">
+              <div style="display:flex;gap:18px;align-items:flex-start">
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="font-family:Literata,Georgia,serif;font-size:38px;font-weight:500;letter-spacing:-.02em">hole</div>
+                    <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;margin-top:9px">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#6E6862">/hoʊl/</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#4A443D;border:1px solid rgba(46,38,32,.20);border-radius:5px;padding:2px 6px">A1</div>
+                  </div>
+                </div>
+                <div style="width:104px;height:104px;flex:0 0 104px;border-radius:12px;background:#E7E2D7;border:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E">фото</div>
+              </div>
+
+              <div style="margin-top:20px;padding:14px 0;border-top:1px solid rgba(46,38,32,.16);border-bottom:1px solid rgba(46,38,32,.16)">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Прогресс слова</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6E6862">2 из 5</div>
+                </div>
+                <div style="margin-top:12px;display:flex;align-items:center;gap:0">
+                  <div style="width:11px;height:11px;border-radius:50%;background:#2E2620"></div>
+                  <div style="flex:1;height:1.5px;background:#2E2620"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;background:#2E2620"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                </div>
+                <div style="margin-top:7px;display:flex;justify-content:space-between;font-size:10.5px;color:#8A857E">
+                  <div style="width:66px">знакомство</div>
+                  <div style="width:66px;text-align:center;color:#2E2620;font-weight:600">узнавание</div>
+                  <div style="width:60px;text-align:center">сборка</div>
+                  <div style="width:56px;text-align:center">письмо</div>
+                  <div style="width:56px;text-align:right">диктант</div>
+                </div>
+              </div>
+
+              <div style="margin-top:18px;font-family:Literata,Georgia,serif;font-size:24px">дыра</div>
+              <div style="font-family:Literata,Georgia,serif;font-style:italic;font-size:16px;line-height:1.55;color:#4A443D;margin-top:11px;text-wrap:pretty">This is a space or opening in a solid object or surface. Air, water or light can pass through it.</div>
+              <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(46,38,32,.16)">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Пример</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.45;margin-top:9px;text-wrap:pretty">I found a <span style="font-weight:600">hole</span> in my shirt after playing outside.</div>
+                <div style="font-size:14.5px;line-height:1.5;color:#6E6862;margin-top:7px;text-wrap:pretty">Я нашёл дыру в своей рубашке после игры на улице.</div>
+              </div>
+            </div>
+            <div style="padding:26px 22px 26px">
+              <div style="height:54px;border-radius:14px;background:#2E2620;display:flex;align-items:center;justify-content:center">
+                <div style="font-size:16px;font-weight:600;color:#F6F3EC">Тренировать слово</div>
+              </div>
+              <div style="margin-top:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:8px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A4430" stroke-width="1.7"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                <div style="font-size:15px;font-weight:600;color:#9A4430">Добавить в другую папку</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Просмотр, а не поиск: главная кнопка меняется на «Тренировать». Лестница врезана полосой между шапкой и статьёй — текущая ступень подписана чернилами.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================== B ============================== -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:baseline;gap:14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#F6F3EC;background:#2E2620;padding:5px 9px;border-radius:6px">1b</div>
+        <div style="font-family:Literata,Georgia,serif;font-size:26px;font-weight:500">Фото-герой</div>
+        <div style="font-size:13.5px;color:#6E6862;max-width:420px;line-height:1.5">Фото во всю ширину сверху, крупный термин на его нижнем крае, контент — слоями поднятой бумаги.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,390px);gap:28px 30px">
+
+        <!-- B1 empty -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">01 · пустой поиск</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:22px 20px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;font-weight:500;letter-spacing:-.02em">Поиск слова</div>
+              <div style="margin-top:16px;height:52px;border-radius:14px;background:#FCFAF5;border:1px solid rgba(46,38,32,.16);display:flex;align-items:center;gap:10px;padding:0 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-size:16px;color:#8A857E">Например, hole</div>
+              </div>
+            </div>
+            <div style="padding:26px 20px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Вы искали</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;padding:12px;display:flex;align-items:center;gap:14px">
+                  <div style="width:56px;height:56px;border-radius:10px;background:#E7E2D7;border:1px solid rgba(46,38,32,.10);flex:0 0 56px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#A8A29A">фото</div>
+                  <div>
+                    <div style="font-family:Literata,Georgia,serif;font-size:21px">hollow</div>
+                    <div style="font-size:14px;color:#6E6862;margin-top:2px">пустой</div>
+                  </div>
+                  <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B2</div>
+                </div>
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;padding:12px;display:flex;align-items:center;gap:14px">
+                  <div style="width:56px;height:56px;border-radius:10px;background:#E7E2D7;border:1px solid rgba(46,38,32,.10);flex:0 0 56px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#A8A29A">фото</div>
+                  <div>
+                    <div style="font-family:Literata,Georgia,serif;font-size:21px">invoice</div>
+                    <div style="font-size:14px;color:#6E6862;margin-top:2px">счёт</div>
+                  </div>
+                  <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B1</div>
+                </div>
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;padding:12px;display:flex;align-items:center;gap:14px">
+                  <div style="width:56px;height:56px;border-radius:10px;background:#E7E2D7;border:1px solid rgba(46,38,32,.10);flex:0 0 56px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#A8A29A">фото</div>
+                  <div>
+                    <div style="font-family:Literata,Georgia,serif;font-size:21px">withdraw</div>
+                    <div style="font-size:14px;color:#6E6862;margin-top:2px">снимать</div>
+                  </div>
+                  <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">B2</div>
+                </div>
+              </div>
+              <div style="margin-top:22px;font-size:13.5px;line-height:1.55;color:#6E6862">Нет в базе — соберём карточку моделью.</div>
+            </div>
+            <div style="height:28px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Те же недавние, но карточками с миниатюрой — направление B везде опирается на изображение как на опору памяти.</div>
+        </div>
+
+        <!-- B2 typing -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">02 · набор в процессе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:22px 20px 0">
+              <div style="height:52px;border-radius:14px;background:#FCFAF5;border:1.5px solid #2E2620;display:flex;align-items:center;gap:10px;padding:0 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-size:17px;display:flex;align-items:center;gap:1px;font-family:Literata,Georgia,serif">holl<span style="display:inline-block;width:1.5px;height:20px;background:#B5533C"></span></div>
+                <div style="margin-left:auto;font-size:13.5px;font-style:italic;color:#8A857E">холл</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:#8A857E;padding-left:2px">черновой перевод набранного</div>
+            </div>
+            <div style="padding:22px 0 0">
+              <div style="padding:0 20px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">4 слова в базе</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;padding:0 20px">
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;min-height:60px;display:flex;align-items:center;gap:14px;padding:10px 14px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>ywood</div>
+                  <div style="font-size:15px;color:#6E6862;margin-left:auto">Голливуд</div>
+                </div>
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;min-height:60px;display:flex;align-items:center;gap:14px;padding:10px 14px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>y</div>
+                  <div style="font-size:15px;color:#6E6862;margin-left:auto">омела</div>
+                </div>
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;min-height:60px;display:flex;align-items:center;gap:14px;padding:10px 14px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>ow</div>
+                  <div style="font-size:15px;color:#6E6862;margin-left:auto">пустой</div>
+                </div>
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;min-height:60px;display:flex;align-items:center;gap:14px;padding:10px 14px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:23px"><span style="font-weight:600">holl</span>er</div>
+                  <div style="font-size:15px;color:#6E6862;margin-left:auto">кричать</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:28px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Пилюли в один ряд не влезают без скролла и теряют переводы, поэтому здесь они развёрнуты в вертикальный стек карточек-целей 60&nbsp;pt. Мгновенный перевод остаётся внутри поля с явной подписью «черновой»: это статус ввода, а не результат.</div>
+        </div>
+
+        <!-- B3 found -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">03 · слово найдено в базе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:22px 20px 0">
+              <div style="height:52px;border-radius:14px;background:#FCFAF5;border:1.5px solid #2E2620;display:flex;align-items:center;gap:10px;padding:0 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:17px">hole</div>
+                <div style="margin-left:auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-right:-8px">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 20px 0">
+              <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(46,38,32,.14);background:#FCFAF5">
+                <div style="height:148px;background:#E7E2D7;display:flex;align-items:flex-end;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E">фото · дыра в ткани · 350×148</div>
+                <div style="padding:14px 16px 16px">
+                  <div style="display:flex;align-items:baseline;gap:10px">
+                    <div style="font-family:Literata,Georgia,serif;font-size:30px;letter-spacing:-.01em">hole</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#6E6862">/hoʊl/</div>
+                    <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A443D;border:1px solid rgba(46,38,32,.20);border-radius:5px;padding:2px 5px">A1</div>
+                  </div>
+                  <div style="font-size:17px;margin-top:8px">дыра</div>
+                </div>
+              </div>
+              <div style="margin-top:14px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Ещё в базе</div>
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+                <div style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:16px">hole punch</span><span style="font-size:13.5px;color:#6E6862">дырокол</span></div>
+                <div style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:16px">pothole</span><span style="font-size:13.5px;color:#6E6862">выбоина</span></div>
+              </div>
+            </div>
+            <div style="height:26px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Результат — уже мини-версия главного экрана: фото сверху, слово под ним. Тап по карточке разворачивает её в полную.</div>
+        </div>
+
+        <!-- B4 not found -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">04 · слова нет в базе</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:22px 20px 0">
+              <div style="height:52px;border-radius:14px;background:#FCFAF5;border:1.5px solid #2E2620;display:flex;align-items:center;gap:10px;padding:0 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:17px">fill out</div>
+              </div>
+            </div>
+            <div style="padding:20px 20px 0">
+              <div style="border-radius:16px;border:1px dashed rgba(46,38,32,.26);background:#FCFAF5;overflow:hidden">
+                <div style="height:120px;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed rgba(46,38,32,.20)">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A8A29A">место для фото</div>
+                </div>
+                <div style="padding:16px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:30px;letter-spacing:-.01em">fill out</div>
+                  <div style="font-size:14.5px;line-height:1.55;color:#4A443D;margin-top:8px;text-wrap:pretty">Этого слова у нас пока нет. Модель соберёт перевод, значение, пример и фото.</div>
+                </div>
+              </div>
+              <div style="margin-top:16px;height:54px;border-radius:14px;background:#2E2620;display:flex;align-items:center;justify-content:center;gap:9px">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.7"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"></path></svg>
+                <div style="font-size:16px;font-weight:600;color:#F6F3EC">Find with AI</div>
+              </div>
+              <div style="margin-top:10px;font-size:12.5px;color:#8A857E;text-align:center;line-height:1.5">Один вызов модели. Повторный поиск бесплатный</div>
+              <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <div style="font-size:13px;color:#8A857E;width:100%">Возможно, вы искали</div>
+                <div style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:16px">fill in</span><span style="font-size:13.5px;color:#6E6862">вписать</span></div>
+                <div style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:16px">filling</span><span style="font-size:13.5px;color:#6E6862">начинка</span></div>
+              </div>
+            </div>
+            <div style="height:26px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Пустая карточка с пунктиром показывает <i>форму</i> будущего результата — кнопка заполняет ровно этот силуэт. Подпись под кнопкой, тем же серым, что и остальные служебные строки.</div>
+        </div>
+
+        <!-- B5 generating -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">05 · идёт сборка (~2 с)</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:20px 20px 0">
+              <div style="border-radius:16px;border:1px solid rgba(46,38,32,.14);background:#FCFAF5;overflow:hidden">
+                <div style="height:150px;background:#E7E2D7;position:relative;display:flex;align-items:center;justify-content:center">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A8A29A">подбираем фото…</div>
+                  <div style="position:absolute;left:0;bottom:0;width:58%;height:2px;background:#B5533C"></div>
+                </div>
+                <div style="padding:16px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:32px;letter-spacing:-.01em">fill out</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#6E6862;margin-top:6px">/fɪl aʊt/</div>
+                  <div style="margin-top:16px;font-size:18px;color:#2E2620">заполнять (форму)</div>
+                  <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+                    <div style="height:11px;border-radius:6px;background:rgba(46,38,32,.13);width:100%"></div>
+                    <div style="height:11px;border-radius:6px;background:rgba(46,38,32,.13);width:86%"></div>
+                    <div style="height:11px;border-radius:6px;background:rgba(46,38,32,.10);width:54%"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:18px;display:flex;align-items:center;gap:10px;justify-content:center">
+                <div style="width:7px;height:7px;border-radius:50%;background:#4E6B52"></div>
+                <div style="font-size:13.5px;color:#6E6862">перевод готов · дописываем значение и пример</div>
+              </div>
+              <div style="margin-top:8px;font-size:13px;color:#8A857E;text-align:center">Пара секунд. Можно закрыть — карточка сохранится</div>
+            </div>
+            <div style="height:28px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Тот же приём в композиции B: карточка стоит на месте и заполняется сверху вниз. Полоска прогресса — на нижнем крае фото, вместо крутящегося круга.</div>
+        </div>
+
+        <!-- B6 full card -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">06 · главный экран · карточка слова</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 18px 44px rgba(46,38,32,.10)">
+            <div style="height:246px;background:#E7E2D7;position:relative;display:flex;align-items:flex-start;justify-content:space-between;padding:20px">
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(246,243,236,.86);display:flex;align-items:center;justify-content:center">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.9"><path d="M14 5l-7 7 7 7"></path></svg>
+              </div>
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(246,243,236,.86);display:flex;align-items:center;justify-content:center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="2"><circle cx="12" cy="5.5" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="12" cy="18.5" r="1.3"></circle></svg>
+              </div>
+              <div style="position:absolute;left:20px;bottom:16px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E">фото · заполнение заявки · 390×246</div>
+            </div>
+            <div style="margin-top:-22px;background:#F6F3EC;border-radius:22px 22px 0 0;padding:22px 20px 0;position:relative">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:42px;font-weight:500;line-height:1.02;letter-spacing:-.025em">fill out</div>
+                <div style="width:46px;height:46px;flex:0 0 46px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:#6E6862">/fɪl aʊt/</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;color:#F6F3EC;background:#4A443D;border-radius:5px;padding:3px 7px">B1</div>
+              </div>
+              <div style="margin-top:16px;font-family:Literata,Georgia,serif;font-size:26px;line-height:1.2">заполнять (форму)</div>
+
+              <div style="margin-top:20px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px">
+                <div style="font-family:Literata,Georgia,serif;font-style:italic;font-size:16.5px;line-height:1.55;color:#4A443D;text-wrap:pretty">When you fill out a form, you write your information in the empty spaces. You do this for applications and documents.</div>
+              </div>
+
+              <div style="margin-top:12px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Пример</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.45;margin-top:9px;text-wrap:pretty">Please <span style="font-weight:600">fill out</span> this application to proceed.</div>
+                <div style="font-size:14.5px;line-height:1.5;color:#6E6862;margin-top:8px;text-wrap:pretty">Пожалуйста, заполните эту заявку, чтобы продолжить.</div>
+              </div>
+            </div>
+            <div style="padding:22px 20px 24px">
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;height:56px;border-radius:16px;background:#2E2620;display:flex;align-items:center;justify-content:center;gap:8px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.9"><path d="M12 5v14M5 12h14"></path></svg>
+                  <div style="font-size:16.5px;font-weight:600;color:#F6F3EC">Сохранённые</div>
+                </div>
+                <div style="width:56px;height:56px;border-radius:16px;border:1px solid rgba(46,38,32,.20);background:#FCFAF5;display:flex;align-items:center;justify-content:center">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.6"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                </div>
+              </div>
+              <div style="margin-top:9px;font-size:12.5px;color:#8A857E;text-align:center">Справа — выбрать другую папку</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Фото 246&nbsp;pt, лист бумаги заезжает на него на 22&nbsp;pt — термин садится на стык. Значение и пример — два поднятых листа, читаются как две отдельные мысли.</div>
+        </div>
+
+        <!-- B7 saved -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">07 · слово уже сохранено</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="height:180px;background:#E7E2D7;display:flex;align-items:flex-start;padding:20px">
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(246,243,236,.86);display:flex;align-items:center;justify-content:center">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.9"><path d="M14 5l-7 7 7 7"></path></svg>
+              </div>
+            </div>
+            <div style="margin-top:-22px;background:#F6F3EC;border-radius:22px 22px 0 0;padding:22px 20px 0">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-.025em">fill out</div>
+                <div style="width:46px;height:46px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:#6E6862;margin-top:10px">/fɪl aʊt/</div>
+              <div style="margin-top:14px;font-family:Literata,Georgia,serif;font-size:26px">заполнять (форму)</div>
+              <div style="margin-top:18px;font-size:13.5px;color:#8A857E">…значение и пример без изменений…</div>
+            </div>
+            <div style="padding:28px 20px 24px">
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;height:56px;border-radius:16px;background:#FCFAF5;border:1.5px solid rgba(46,38,32,.24);display:flex;align-items:center;justify-content:center;gap:9px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4E6B52" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>
+                  <div style="font-size:15.5px;font-weight:600;color:#2E2620">В папке «Сохранённые»</div>
+                </div>
+                <div style="width:56px;height:56px;border-radius:16px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#9A4430" stroke-width="1.6"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                </div>
+              </div>
+              <div style="margin-top:9px;font-size:12.5px;color:#8A857E;text-align:center">Справа — добавить в другую папку</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Пара кнопок сохраняет геометрию, меняется только заливка левой. Правая перекрашивает иконку в терракоту — теперь это единственное активное действие.</div>
+        </div>
+
+        <!-- B8 limit -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">08 · дневной лимит AI исчерпан</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center;height:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="display:flex;align-items:center;gap:5px"><svg width="16" height="10" viewBox="0 0 16 10" fill="#8A857E"><rect x="0" y="6" width="2.6" height="4" rx="1"></rect><rect x="4" y="4" width="2.6" height="6" rx="1"></rect><rect x="8" y="2" width="2.6" height="8" rx="1"></rect><rect x="12" y="0" width="2.6" height="10" rx="1"></rect></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none"><rect x="0.5" y="0.5" width="15" height="9" rx="2.5" stroke="#8A857E"></rect><rect x="2" y="2" width="10" height="6" rx="1.5" fill="#8A857E"></rect><path d="M17.4 3.6v2.8a1.8 1.8 0 000-2.8z" fill="#8A857E"></path></svg></span></div>
+            <div style="padding:22px 20px 0">
+              <div style="height:52px;border-radius:14px;background:#FCFAF5;border:1.5px solid #2E2620;display:flex;align-items:center;gap:10px;padding:0 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+                <div style="font-family:Literata,Georgia,serif;font-size:17px">fill out</div>
+              </div>
+            </div>
+            <div style="padding:20px 20px 0">
+              <div style="border-radius:16px;border:1px dashed rgba(46,38,32,.26);background:#FCFAF5;overflow:hidden">
+                <div style="height:104px;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed rgba(46,38,32,.20);font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A8A29A">место для фото</div>
+                <div style="padding:16px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:28px">fill out</div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:12px">
+                    <div style="display:flex;gap:4px">
+                      <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                      <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                      <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                      <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                      <div style="width:7px;height:7px;border-radius:50%;background:rgba(46,38,32,.22)"></div>
+                    </div>
+                    <div style="font-size:13px;color:#6E6862">5 из 5 сборок на сегодня</div>
+                  </div>
+                  <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.35;margin-top:12px;text-wrap:pretty">Модель вернётся в полночь</div>
+                  <div style="font-size:14px;line-height:1.55;color:#4A443D;margin-top:8px;text-wrap:pretty">Поиск по базе работает как обычно. Слово можно отложить — соберём первым делом завтра.</div>
+                </div>
+              </div>
+              <div style="margin-top:14px;height:54px;border-radius:14px;border:1.5px solid rgba(46,38,32,.24);background:#FCFAF5;display:flex;align-items:center;justify-content:center">
+                <div style="font-size:15.5px;font-weight:600;color:#2E2620">Отложить «fill out» на завтра</div>
+              </div>
+              <div style="margin-top:12px;font-size:13px;color:#8A857E;text-align:center">Без лимита — в подписке</div>
+            </div>
+            <div style="height:26px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Плашка живёт внутри того же пунктирного силуэта, что и кнопка «Find with AI» в кадре 04: место действия не пропало, оно просто ждёт. Тон — расписание, а не отказ.</div>
+        </div>
+
+        <!-- B9 from folder -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">09 · бонус · открыто из папки</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="height:230px;background:#E7E2D7;position:relative;display:flex;align-items:flex-start;justify-content:space-between;padding:20px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(246,243,236,.86);display:flex;align-items:center;justify-content:center">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="1.9"><path d="M14 5l-7 7 7 7"></path></svg>
+                </div>
+                <div style="height:40px;display:flex;align-items:center;padding:0 12px;border-radius:20px;background:rgba(246,243,236,.86);font-size:13.5px;font-weight:600;color:#2E2620">Сохранённые</div>
+              </div>
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(246,243,236,.86);display:flex;align-items:center;justify-content:center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E2620" stroke-width="2"><circle cx="12" cy="5.5" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="12" cy="18.5" r="1.3"></circle></svg>
+              </div>
+              <div style="position:absolute;left:20px;bottom:16px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A857E">фото · дыра в ткани</div>
+            </div>
+            <div style="margin-top:-22px;background:#F6F3EC;border-radius:22px 22px 0 0;padding:22px 20px 0">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:42px;font-weight:500;letter-spacing:-.025em">hole</div>
+                <div style="width:46px;height:46px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.6"><path d="M4 10v4h3l4 3V7L7 10H4z"></path><path d="M15.5 9.5a3.5 3.5 0 010 5"></path><path d="M18.2 7a7 7 0 010 10"></path></svg>
+                </div>
+                <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;color:#F6F3EC;background:#4A443D;border-radius:5px;padding:3px 7px">A1</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:#6E6862;margin-top:10px">/hoʊl/</div>
+
+              <div style="margin-top:18px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:14px 16px 16px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Прогресс слова</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6E6862">2 из 5</div>
+                </div>
+                <div style="margin-top:12px;display:flex;align-items:center">
+                  <div style="width:11px;height:11px;border-radius:50%;background:#2E2620"></div>
+                  <div style="flex:1;height:1.5px;background:#2E2620"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;background:#2E2620"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                  <div style="flex:1;height:1.5px;background:rgba(46,38,32,.18)"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(46,38,32,.28);box-sizing:border-box"></div>
+                </div>
+                <div style="margin-top:7px;display:flex;justify-content:space-between;font-size:10.5px;color:#8A857E">
+                  <div style="width:62px">знакомство</div>
+                  <div style="width:62px;text-align:center;color:#2E2620;font-weight:600">узнавание</div>
+                  <div style="width:56px;text-align:center">сборка</div>
+                  <div style="width:52px;text-align:center">письмо</div>
+                  <div style="width:52px;text-align:right">диктант</div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;font-family:Literata,Georgia,serif;font-size:26px">дыра</div>
+              <div style="margin-top:12px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px">
+                <div style="font-family:Literata,Georgia,serif;font-style:italic;font-size:16.5px;line-height:1.55;color:#4A443D;text-wrap:pretty">This is a space or opening in a solid object or surface. Air, water or light can pass through it.</div>
+              </div>
+              <div style="margin-top:12px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px">
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Пример</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.45;margin-top:9px;text-wrap:pretty">I found a <span style="font-weight:600">hole</span> in my shirt after playing outside.</div>
+                <div style="font-size:14.5px;line-height:1.5;color:#6E6862;margin-top:8px;text-wrap:pretty">Я нашёл дыру в своей рубашке после игры на улице.</div>
+              </div>
+            </div>
+            <div style="padding:22px 20px 24px">
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;height:56px;border-radius:16px;background:#2E2620;display:flex;align-items:center;justify-content:center">
+                  <div style="font-size:16.5px;font-weight:600;color:#F6F3EC">Тренировать слово</div>
+                </div>
+                <div style="width:56px;height:56px;border-radius:16px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center">
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#9A4430" stroke-width="1.6"><path d="M3.5 7.5h6l1.6 2h9.4v9.5h-17z"></path><path d="M15.5 12.5v4M13.5 14.5h4"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Лестница — первый лист под шапкой: открывая слово из папки, человек сначала хочет знать, где он с ним. Уровень переехал вправо к термину, чтобы освободить строку под транскрипцию.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:64px;padding-top:22px;border-top:1px solid rgba(46,38,32,.16);max-width:760px">
+    <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Общее решение по иерархии набора</div>
+    <div style="font-size:14.5px;line-height:1.6;color:#4A443D;margin-top:10px;text-wrap:pretty">Пока человек печатает, главный объект — <b>список слов базы</b>: это единственное, что ведёт дальше. Мгновенный перевод набранного фрагмента («holl — холл») не результат, а обратная связь ввода, поэтому в обоих направлениях он живёт внутри поля: мельче, курсивом, серым. Ни в одном кадре они не занимают один уровень.</div>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2680,&quot;height&quot;:1600}}"></script>
+</body>
+</html>

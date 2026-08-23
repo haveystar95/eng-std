@@ -19,7 +19,11 @@ final class GoogleLoginRequest extends FormRequest
         return [
             'id_token' => ['required', 'string'],
             'device_name' => ['sometimes', 'string', 'max:100'],
-            'timezone' => ['sometimes', 'timezone'], // device IANA zone → seeds the profile for F19 due rounding
+            // Device IANA zone → seeds the profile for F19 due rounding. `all_with_bc` because a
+            // device may still report a LEGACY alias (iOS sends `Europe/Kiev`, not `Europe/Kyiv`);
+            // the bare `timezone` rule only knows canonical names and 422'd every Ukrainian phone.
+            // PHP resolves an alias to the same rules, so the stored value stays usable as-is.
+            'timezone' => ['sometimes', 'timezone:all_with_bc'],
         ];
     }
 }

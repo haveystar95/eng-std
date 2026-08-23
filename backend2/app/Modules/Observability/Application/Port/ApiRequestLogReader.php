@@ -12,9 +12,10 @@ namespace App\Modules\Observability\Application\Port;
 interface ApiRequestLogReader
 {
     /**
-     * The decoded `response_body` of one log row, or null if the row doesn't exist or the body
-     * was dropped at log time — a body over the size cap is replaced with a
-     * `{"_truncated":true,"bytes":N}` placeholder, see
+     * The decoded `response_body` of one log row, or null if the row doesn't exist. A body over
+     * the size cap is stored as `{"_truncated":true,"bytes":N,"preview":"<head slice of raw
+     * JSON>"}` instead of its decoded self — so a caller that wants the real structure must
+     * check for `_truncated` rather than assume the vendor's shape, see
      * {@see \App\Modules\Observability\Infrastructure\Eloquent\EloquentApiLogWriter::prepareBody()}.
      *
      * @return array<string, mixed>|null
