@@ -306,15 +306,45 @@ void main() {
       expect(recordButton(), findsWidgets);
     });
 
-    testWidgets('offers «Пропустить» only after the microphone has really failed', (tester) async {
+    testWidgets('offers «Пропустить» from the FIRST channel failure, not before (QA-OBS-7)',
+        (tester) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.silent()]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
 
       // An escape hatch offered before it is needed reads as «this probably won't work».
       expect(find.text('Пропустить'), findsNothing);
+
+      await record(tester);
+
+      // …but the moment the card says the channel let them down, the way out is on screen with it:
+      // the message and the button are the same fact. Two more taps to reach it left «Не помню» —
+      // a lapse — as the only action, which is the scheduler punishing a hardware refusal.
+      expect(find.textContaining('Не расслышал'), findsOneWidget);
+      expect(find.text('Пропустить'), findsOneWidget);
+    });
+
+    testWidgets('a denied microphone offers the way out with its first message', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.unavailable()], isReady: false);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await record(tester);
+
+      // The copy promises «Можно пропустить эту карточку» — the button has to be there to keep it.
+      expect(find.textContaining('Микрофон недоступен'), findsOneWidget);
+      expect(find.text('Пропустить'), findsOneWidget);
+      // The other exit is still «Не помню», untouched: a learner who HAS forgotten may still say so.
+      expect(find.text('Не помню'), findsOneWidget);
+      expect(answers, isEmpty);
+    });
+
+    testWidgets('the escape hatch stays put once the attempt budget is spent', (tester) async {
+      final recognizer = _FakeRecognizer([const SpeechAttempt.silent()]);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
       for (var i = 0; i < SpokenAnswer.maxChannelAttempts; i++) {
-        expect(find.text('Пропустить'), findsNothing, reason: 'attempt ${i + 1} of the budget');
         await record(tester);
       }
       expect(find.text('Пропустить'), findsOneWidget);
@@ -325,9 +355,7 @@ void main() {
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
 
-      for (var i = 0; i < SpokenAnswer.maxChannelAttempts; i++) {
-        await record(tester);
-      }
+      await record(tester);
       await tester.tap(find.text('Пропустить'));
       await tester.pumpAndSettle();
 

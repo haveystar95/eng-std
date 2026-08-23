@@ -231,9 +231,22 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// microphone, and reading a provider from a widget that is already coming down is not allowed.
   SpeechRecognizer? _recognizer;
 
-  /// May the learner set this card aside? Offered only once the microphone has actually let them
-  /// down — an escape hatch that appears before it is needed reads as «this probably won't work».
-  bool get _canSkip => _attempts >= SpokenAnswer.maxChannelAttempts && widget.onSkipped != null;
+  /// May the learner set this card aside?
+  ///
+  /// Offered once the microphone has actually let them down — an escape hatch that appears before
+  /// it is needed reads as «this probably won't work» — but from the FIRST failure, not the third
+  /// (QA-OBS-7). The card already says «микрофон недоступен, карточку можно пропустить» on that
+  /// first failure, and it said it with no button on screen: between the promise and the button sat
+  /// two more useless taps whose only other exit was «Не помню» — a LAPSE, i.e. the scheduler
+  /// punishing the learner for hardware they were never given. The message and the button are the
+  /// same fact and now appear together.
+  ///
+  /// [_channelFailure] is cleared while a retry is listening, so the attempt count is kept as the
+  /// second half: once the budget is spent the escape hatch stays put instead of blinking away
+  /// under the finger.
+  bool get _canSkip =>
+      widget.onSkipped != null &&
+      (_channelFailure != null || _attempts >= SpokenAnswer.maxChannelAttempts);
 
   /// The words the recogniser is listening for, and what the answer is graded against.
   List<String> get _spokenTargets =>
