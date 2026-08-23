@@ -168,18 +168,30 @@ class LadderTrack extends StatelessWidget {
               children: [
                 for (var i = 0; i < labels.length; i++)
                   Expanded(
-                    child: Align(
-                      // First and last captions hug the ends so they don't overhang the card.
-                      alignment: i == 0
-                          ? Alignment.centerLeft
-                          : i == labels.length - 1
-                              ? Alignment.centerRight
-                              : Alignment.center,
-                      child: Text(
-                        labels[i],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: i == current ? AppText.ladderLabelCurrent : AppText.ladderLabel,
+                    // 2pt of air on each side: a caption that shrinks to its whole column would
+                    // otherwise touch its neighbour.
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Align(
+                        // First and last captions hug the ends so they don't overhang the card.
+                        alignment: i == 0
+                            ? Alignment.centerLeft
+                            : i == labels.length - 1
+                                ? Alignment.centerRight
+                                : Alignment.center,
+                        // A fifth of the card is not enough for «знакомство», and it was drawn
+                        // «знакомст…» (QA-OBS-27). A caption cut in half explains nothing, and a
+                        // single Russian word has nowhere to wrap — so it SHRINKS to fit, the same
+                        // move the size chips make with their translated hints. Only the captions
+                        // that need it shrink; the rest keep the type size.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            labels[i],
+                            maxLines: 1,
+                            style: i == current ? AppText.ladderLabelCurrent : AppText.ladderLabel,
+                          ),
+                        ),
                       ),
                     ),
                   ),

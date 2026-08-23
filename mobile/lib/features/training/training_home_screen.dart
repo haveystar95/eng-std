@@ -175,27 +175,33 @@ class _PoolEntries extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: QuietButton(
-            label: l.myWordsTitle,
-            icon: LucideIcons.bookMarked,
-            onPressed: () {
-              AppHaptics.light();
-              onMyWords();
-            },
+    // «Тренировка по теме» is the longest of the two and takes a second line at half a screen;
+    // IntrinsicHeight + stretch keeps the pair the same height instead of letting one grow past
+    // the other (QA-OBS-10 — the Russian label used to overflow the row outright).
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: QuietButton(
+              label: l.myWordsTitle,
+              icon: LucideIcons.bookMarked,
+              onPressed: () {
+                AppHaptics.light();
+                onMyWords();
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.s8),
-        Expanded(
-          child: QuietButton(
-            label: l.topicSessionAction,
-            icon: LucideIcons.layers,
-            onPressed: () => _pickTopic(context, l),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: QuietButton(
+              label: l.topicSessionAction,
+              icon: LucideIcons.layers,
+              onPressed: () => _pickTopic(context, l),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -546,20 +552,24 @@ class _ExampleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.chip),
-        side: const BorderSide(color: AppColors.hairline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-          child: Text(
-            label,
-            style: AppText.translation.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.inkBody),
+    // Same 44pt tap zone around a 29pt chip as every other chip in the app (QA-OBS-15).
+    return MinTapHeight(
+      onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.chip),
+          side: const BorderSide(color: AppColors.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+            child: Text(
+              label,
+              style: AppText.translation.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.inkBody),
+            ),
           ),
         ),
       ),
@@ -743,7 +753,7 @@ class _CollectionsStrip extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.s8),
         SizedBox(
-          height: 168,
+          height: _CollectionCard.height,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
@@ -765,6 +775,17 @@ class _CollectionCard extends StatelessWidget {
   final WordCollection collection;
   final CollectionProgress? progress;
 
+  static const _titleSize = 15.0;
+
+  /// Two lines of the title, always — the carousel is a fixed-height row, and a title that grew
+  /// from one line to two used to push the progress line and its count off the bottom of the card
+  /// («Ordering Takeaway Coffee», overflow 7 px — QA-OBS-11). Reserving the taller of the two
+  /// states costs a blank line under short titles and buys a card whose bottom half never moves.
+  static const _titleHeight = _titleSize * 1.15 * 2; // AppText.collectionNameCard.height = 1.15
+
+  /// Cover + gap + two title lines + gap + count + gap + bar, with a point of slack.
+  static const height = 104 + AppSpacing.s8 + _titleHeight + 3 + 15 + 7 + AppProgress.heightCard + 1;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -781,11 +802,14 @@ class _CollectionCard extends StatelessWidget {
           children: [
             _Cover(imageUrl: collection.imageUrl),
             const SizedBox(height: AppSpacing.s8),
-            Text(
-              collection.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppText.collectionNameCard.copyWith(fontSize: 15),
+            SizedBox(
+              height: _titleHeight,
+              child: Text(
+                collection.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.collectionNameCard.copyWith(fontSize: _titleSize),
+              ),
             ),
             const SizedBox(height: 3),
             Text(l.homeCollectionProgress(done, total),

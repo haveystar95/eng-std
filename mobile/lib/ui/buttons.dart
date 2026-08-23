@@ -123,7 +123,20 @@ class QuietButton extends StatelessWidget {
                   Icon(icon, size: 17, color: foreground),
                   const SizedBox(width: AppSpacing.s8),
                 ],
-                Text(label, style: AppTextExercise.answerAuxButton.copyWith(color: foreground)),
+                // Flexible + a second line, as on the verdict buttons (QA-OBS-3): the label used to
+                // be an unbounded child of a `min` Row, so a button that shares its row with
+                // another one simply overflowed — «Тренировка по теме» beside «Мои слова» on the
+                // home screen (QA-OBS-10) and «Подсказка: первая буква» in cloze (QA-OBS-29).
+                // The 44pt minimum has room for two lines of this type.
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextExercise.answerAuxButton.copyWith(color: foreground),
+                  ),
+                ),
               ],
             ),
           ),

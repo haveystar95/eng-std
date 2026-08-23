@@ -635,24 +635,30 @@ class _LevelPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.ink : Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.chip),
-        side: selected ? BorderSide.none : const BorderSide(color: AppColors.hairline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 7),
-          child: Center(
-            child: Text(label,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                    color: selected ? AppColors.paper : AppColors.ink)),
+    // The pill is drawn at its own 27pt; the tap zone around it is 44 (QA-OBS-15). The CEFR choice
+    // in the profile is made of full-size tiles — this row is the same choice and must be as easy
+    // to hit.
+    return MinTapHeight(
+      onTap: onTap,
+      child: Material(
+        color: selected ? AppColors.ink : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.chip),
+          side: selected ? BorderSide.none : const BorderSide(color: AppColors.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Center(
+              child: Text(label,
+                  style: TextStyle(
+                      fontFamily: AppFonts.inter,
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      color: selected ? AppColors.paper : AppColors.ink)),
+            ),
           ),
         ),
       ),

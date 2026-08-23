@@ -43,6 +43,34 @@ void main() {
     expect(last, greaterThan(first), reason: 'chips must wrap, not clip (rule 16)');
   });
 
+  /// QA-OBS-15 — the chip is drawn at ~29pt, which is a fine chip and an unfair target. The tap
+  /// zone around it is 44 while the paint is untouched.
+  group('the tap zone is 44pt, the chip is not', () {
+    testWidgets('the box is 44 tall and the painted chip stays its own size', (tester) async {
+      await tester.pumpWidget(_host(AppChip(label: 'B1', onTap: () {}), width: 300));
+
+      expect(tester.getSize(find.byType(MinTapHeight)).height, AppSpacing.minTap);
+      final painted = tester.getSize(
+        find.descendant(of: find.byType(AppChip), matching: find.byType(Material)).first,
+      );
+      expect(painted.height, lessThan(AppSpacing.minTap), reason: 'the chip itself must not grow');
+    });
+
+    testWidgets('a tap in the transparent margin counts — and counts once', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(_host(AppChip(label: 'B1', onTap: () => taps++), width: 300));
+
+      final box = tester.getRect(find.byType(MinTapHeight));
+      await tester.tapAt(Offset(box.center.dx, box.top + 2)); // above the painted chip
+      await tester.pump();
+      expect(taps, 1, reason: 'the margin is part of the target');
+
+      await tester.tap(find.byType(AppChip));
+      await tester.pump();
+      expect(taps, 2, reason: 'and the chip itself still fires exactly one tap, not two');
+    });
+  });
+
   testWidgets('selected chip is ink-filled (system selection idiom)', (tester) async {
     await tester.pumpWidget(_host(
       AppChip(label: 'большая', selected: true, onTap: () {}),

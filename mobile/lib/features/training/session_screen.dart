@@ -591,10 +591,15 @@ class _SessionHeader extends StatelessWidget {
             Expanded(
               child: Text(phaseLabel, textAlign: TextAlign.center, style: AppTextExercise.sessionHeader),
             ),
-            SizedBox(
-              width: AppSpacing.minTap,
+            // A MINIMUM width, not a fixed one: «1 из 14» / «1 of 12» does not fit 44pt and was
+            // wrapped to two lines the moment the denominator went double-digit (QA-OBS-28). The
+            // 44pt floor is still there to balance the × on the left when the counter is short.
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
               child: Text(
                 l.triageCounter(current, total),
+                maxLines: 1,
+                softWrap: false,
                 textAlign: TextAlign.right,
                 style: AppTextExercise.sessionHeader,
               ),

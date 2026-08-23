@@ -71,14 +71,50 @@ class AppChip extends StatelessWidget {
       button: onTap != null,
       selected: selected,
       label: label,
-      child: Material(
-        color: bg,
-        shape: border == null ? shape : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(onTap: onTap, child: content),
+      child: MinTapHeight(
+        onTap: onTap,
+        child: Material(
+          color: bg,
+          shape: border == null ? shape : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(onTap: onTap, child: content),
+        ),
       ),
     );
   }
+}
+
+/// Прозрачный хит-бокс: ребёнок рисуется как рисовался, а тап ловится в
+/// [minHeight] по вертикали (QA-OBS-15 — у чипа 28 pt высоты при минимуме 44).
+///
+/// Растёт только вверх-вниз: горизонтальные промежутки между чипами оставлены
+/// как есть, иначе ряд разъезжается. Свой [onTap] нужен потому, что поля
+/// хит-бокса лежат СНАРУЖИ ребёнка — его собственный `InkWell` их не видит; на
+/// самом чипе арена жестов отдаёт тап внутреннему обработчику, так что действие
+/// срабатывает ровно один раз, где бы ни попали.
+class MinTapHeight extends StatelessWidget {
+  const MinTapHeight({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.minHeight = AppSpacing.minTap,
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        // Ребёнок уже несёт свою Semantics-кнопку — второй узел не нужен.
+        excludeFromSemantics: true,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: minHeight),
+          child: Align(widthFactor: 1, heightFactor: 1, child: child),
+        ),
+      );
 }
 
 /// Ряд чипов с переносом на следующую строку (rule 16, первый вариант).

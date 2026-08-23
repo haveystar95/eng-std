@@ -1085,12 +1085,17 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 
   Widget _auxButtons(AppLocalizations l) {
-    return Row(
-      children: [
-        Expanded(child: QuietButton(label: l.sessionHintFirstLetter, onPressed: _usedHint ? null : _useFirstLetter)),
-        const SizedBox(width: AppSpacing.s12),
-        Expanded(child: QuietButton(label: l.sessionDontRemember, onPressed: _giveUp)),
-      ],
+    // «Подсказка: первая буква» takes two lines at half a screen; IntrinsicHeight + stretch keeps
+    // the pair one row of equals instead of a tall button beside a short one (QA-OBS-29).
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: QuietButton(label: l.sessionHintFirstLetter, onPressed: _usedHint ? null : _useFirstLetter)),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(child: QuietButton(label: l.sessionDontRemember, onPressed: _giveUp)),
+        ],
+      ),
     );
   }
 }
