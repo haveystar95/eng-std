@@ -64,7 +64,10 @@ class VerdictButton extends StatelessWidget {
           onTap: onPressed,
           child: Container(
             constraints: BoxConstraints(minHeight: minHeight),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
+            // Tight horizontally, because three of these share one screen row and the longest
+            // label in either locale is English, not Russian: «Don't know» came out as «Don't k…»
+            // while «Не знаю» fitted with room to spare (QA-OBS-3).
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s8),
             alignment: Alignment.center,
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -74,7 +77,11 @@ class VerdictButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     label,
-                    maxLines: 1,
+                    // A second line rather than a smaller type or an ellipsis: the three buttons
+                    // must read as one row of equals, and shrinking one of them (or cutting its
+                    // word) breaks that. The 56pt minimum already has room for two lines.
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.verdictLabel.copyWith(color: _foreground),
                   ),

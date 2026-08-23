@@ -46,8 +46,14 @@ class ProgressLine extends StatelessWidget {
                 if (w > 0)
                   Align(
                     alignment: Alignment.centerLeft,
+                    // The HEIGHT is given explicitly, and that is the whole fix (QA-BUG-3): a
+                    // childless DecoratedBox takes the SMALLEST size its constraints allow, and the
+                    // constraints here are loose vertically — so the fill laid out 8..N wide and
+                    // ZERO tall, and every progress line in the app was a bare track. Measured on
+                    // the device at 15% and at 40%: one flat colour across the whole bar.
                     child: SizedBox(
                       width: w,
+                      height: height,
                       child: DecoratedBox(
                         decoration: BoxDecoration(color: fillColor, borderRadius: radius),
                       ),
