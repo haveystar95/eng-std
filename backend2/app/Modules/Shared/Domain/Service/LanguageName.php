@@ -15,27 +15,14 @@ namespace App\Modules\Shared\Domain\Service;
  *
  * An unknown code falls through as itself rather than being guessed at — a prompt naming `sw` is a
  * visible defect; a prompt naming "Swedish" for `sw` is an invisible one.
+ *
+ * The table itself is {@see LanguageCatalog}, shared with everything else that has to name a
+ * language; this class is the prompt-side reader of its `name` column.
  */
 final class LanguageName
 {
-    /** @var array<string, string> */
-    private const NAMES = [
-        'en' => 'English',
-        'ru' => 'Russian',
-        'uk' => 'Ukrainian',
-        'es' => 'Spanish',
-        'de' => 'German',
-        'fr' => 'French',
-        'it' => 'Italian',
-        'pt' => 'Portuguese',
-        'pl' => 'Polish',
-        'tr' => 'Turkish',
-        'zh' => 'Chinese',
-        'ja' => 'Japanese',
-    ];
-
     public static function of(string $code): string
     {
-        return self::NAMES[$code] ?? $code;
+        return LanguageCatalog::entry($code)['name'] ?? $code;
     }
 }

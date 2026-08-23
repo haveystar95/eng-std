@@ -11,6 +11,7 @@ use App\Modules\Generation\Domain\ValueObject\RawDistractor;
 use App\Modules\Generation\Domain\ValueObject\RawLanguageNote;
 use App\Modules\Generation\Domain\ValueObject\RawVariant;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -26,12 +27,6 @@ use RuntimeException;
  */
 final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
-        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
-        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -160,8 +155,8 @@ final class OpenAiEnrichmentPacker implements EnrichmentPackerPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/enrich_pack.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{term_lang}}' => self::LANGUAGE_NAMES[$brief->termLang] ?? $brief->termLang,
-            '{{translation_lang}}' => self::LANGUAGE_NAMES[$brief->translationLang] ?? $brief->translationLang,
+            '{{term_lang}}' => LanguageName::of($brief->termLang),
+            '{{translation_lang}}' => LanguageName::of($brief->translationLang),
         ]);
     }
 

@@ -9,18 +9,13 @@ use App\Modules\Generation\Application\Dto\ExampleRegenResult;
 use App\Modules\Generation\Application\Port\ExampleRegeneratorPort;
 use App\Modules\Generation\Domain\Service\TermOccurrence;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /** OpenAI adapter for the "New example" action. Structured Outputs; versioned prompt file. */
 final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
-        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
-        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -94,8 +89,8 @@ final class OpenAiExampleRegenerator implements ExampleRegeneratorPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/regenerate_example.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{term_lang}}' => self::LANGUAGE_NAMES[$brief->termLang->value] ?? $brief->termLang->value,
-            '{{translation_lang}}' => self::LANGUAGE_NAMES[$brief->translationLang->value] ?? $brief->translationLang->value,
+            '{{term_lang}}' => LanguageName::of($brief->termLang->value),
+            '{{translation_lang}}' => LanguageName::of($brief->translationLang->value),
         ]);
     }
 

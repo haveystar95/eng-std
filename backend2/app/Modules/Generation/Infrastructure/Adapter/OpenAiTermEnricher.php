@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\TermEnrichmentBrief;
 use App\Modules\Generation\Application\Dto\TermEnrichmentResult;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -18,12 +19,6 @@ use RuntimeException;
  */
 final class OpenAiTermEnricher implements TermEnricherPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
-        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
-        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -85,14 +80,9 @@ final class OpenAiTermEnricher implements TermEnricherPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/enrich_term.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{term_lang}}' => $this->languageName($brief->termLang->value),
-            '{{translation_lang}}' => $this->languageName($brief->translationLang->value),
+            '{{term_lang}}' => LanguageName::of($brief->termLang->value),
+            '{{translation_lang}}' => LanguageName::of($brief->translationLang->value),
         ]);
-    }
-
-    private function languageName(string $code): string
-    {
-        return self::LANGUAGE_NAMES[$code] ?? $code;
     }
 
     /** @return array<string, mixed> */

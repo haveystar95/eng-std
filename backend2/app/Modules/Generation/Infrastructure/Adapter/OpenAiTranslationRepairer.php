@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\RepairedTranslation;
 use App\Modules\Generation\Application\Dto\TranslationRepairBrief;
 use App\Modules\Generation\Application\Port\TranslationRepairPort;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -21,12 +22,6 @@ use RuntimeException;
  */
 final class OpenAiTranslationRepairer implements TranslationRepairPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
-        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
-        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -94,14 +89,9 @@ final class OpenAiTranslationRepairer implements TranslationRepairPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/repair_translation.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{source_lang}}' => $this->languageName($brief->sourceLang->value),
-            '{{target_lang}}' => $this->languageName($brief->targetLang->value),
+            '{{source_lang}}' => LanguageName::of($brief->sourceLang->value),
+            '{{target_lang}}' => LanguageName::of($brief->targetLang->value),
         ]);
-    }
-
-    private function languageName(string $code): string
-    {
-        return self::LANGUAGE_NAMES[$code] ?? $code;
     }
 
     private function nonEmpty(mixed $value): ?string

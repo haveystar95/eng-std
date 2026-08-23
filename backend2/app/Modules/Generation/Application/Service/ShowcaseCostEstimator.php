@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Dto\ShowcaseCostEstimate;
 use App\Modules\Generation\Application\Port\ObservedTokenAverages;
 use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\Service\ModelCost;
 
 /**
@@ -97,8 +98,8 @@ final readonly class ShowcaseCostEstimator
     private function promptTokens(string $version, PromptShape $shape): int
     {
         $rendered = $this->prompts->render($version, $shape, [
-            'source_lang' => 'Russian',
-            'target_lang' => 'English',
+            'source_lang' => LanguageName::of('ru'),
+            'target_lang' => LanguageName::of('en'),
             'levels' => 'A1, A2, B1, B2, C1, C2',
             'size' => '1',
         ]);

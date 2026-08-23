@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Dto\GeneratedItem;
 use App\Modules\Generation\Application\Dto\GenerationBrief;
 use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -19,21 +20,6 @@ use RuntimeException;
  */
 final class OpenAiCollectionGenerator implements CollectionGeneratorPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English',
-        'ru' => 'Russian',
-        'uk' => 'Ukrainian',
-        'es' => 'Spanish',
-        'de' => 'German',
-        'fr' => 'French',
-        'it' => 'Italian',
-        'pt' => 'Portuguese',
-        'pl' => 'Polish',
-        'tr' => 'Turkish',
-        'zh' => 'Chinese',
-        'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -134,16 +120,11 @@ final class OpenAiCollectionGenerator implements CollectionGeneratorPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/generate_collection.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{source_lang}}' => $this->languageName($brief->sourceLang->value),
-            '{{target_lang}}' => $this->languageName($brief->targetLang->value),
+            '{{source_lang}}' => LanguageName::of($brief->sourceLang->value),
+            '{{target_lang}}' => LanguageName::of($brief->targetLang->value),
             '{{levels}}' => implode(', ', $brief->levels),
             '{{size}}' => (string) $brief->size,
         ]);
-    }
-
-    private function languageName(string $code): string
-    {
-        return self::LANGUAGE_NAMES[$code] ?? $code;
     }
 
     /**

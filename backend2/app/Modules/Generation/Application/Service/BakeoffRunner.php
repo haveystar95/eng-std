@@ -9,6 +9,7 @@ use App\Modules\Generation\Application\Dto\BakeoffTask;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Domain\Service\ContentChecks;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use Throwable;
 
@@ -40,8 +41,8 @@ final readonly class BakeoffRunner
     ): BakeoffCallResult {
         $shape = $task->track->shape();
         $prompt = $this->prompts->render($promptVersion, $shape, [
-            'source_lang' => $this->languageName($sourceLang->value),
-            'target_lang' => $this->languageName($targetLang->value),
+            'source_lang' => LanguageName::of($sourceLang->value),
+            'target_lang' => LanguageName::of($targetLang->value),
             'levels' => $levels,
             'size' => (string) ($task->expectedSize ?? count($task->terms)),
         ]);
@@ -68,25 +69,5 @@ final readonly class BakeoffRunner
         return BakeoffCallResult::answered(
             $task->track, $provider->provider(), $answer->model, $task->key, $prompt->sha256, $batch, $answer,
         );
-    }
-
-    /**
-     * The language NAME the prompt is written around — a prompt that said "write in ru" is asking a
-     * model to interpret an ISO code, which is not what it is good at.
-     *
-     * The same table the production adapter uses; kept short deliberately — an unknown code falls
-     * through as itself rather than being guessed at.
-     */
-    private function languageName(string $code): string
-    {
-        return match ($code) {
-            'en' => 'English',
-            'ru' => 'Russian',
-            'uk' => 'Ukrainian',
-            'de' => 'German',
-            'es' => 'Spanish',
-            'fr' => 'French',
-            default => $code,
-        };
     }
 }

@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\WordLookupBrief;
 use App\Modules\Generation\Application\Dto\WordLookupResult;
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Observability\Application\Support\OutboundCallContext;
+use App\Modules\Shared\Domain\Service\LanguageName;
 use App\Modules\Shared\Domain\Service\ModelCost;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -21,12 +22,6 @@ use RuntimeException;
  */
 final class OpenAiWordLookup implements WordLookupPort
 {
-    private const LANGUAGE_NAMES = [
-        'en' => 'English', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'es' => 'Spanish',
-        'de' => 'German', 'fr' => 'French', 'it' => 'Italian', 'pt' => 'Portuguese',
-        'pl' => 'Polish', 'tr' => 'Turkish', 'zh' => 'Chinese', 'ja' => 'Japanese',
-    ];
-
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -140,8 +135,8 @@ final class OpenAiWordLookup implements WordLookupPort
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/lookup_word.{$this->promptVersion}.md");
 
         return strtr($template, [
-            '{{term_lang}}' => self::LANGUAGE_NAMES[$brief->targetLang->value] ?? $brief->targetLang->value,
-            '{{translation_lang}}' => self::LANGUAGE_NAMES[$brief->nativeLang->value] ?? $brief->nativeLang->value,
+            '{{term_lang}}' => LanguageName::of($brief->targetLang->value),
+            '{{translation_lang}}' => LanguageName::of($brief->nativeLang->value),
         ]);
     }
 
