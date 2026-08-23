@@ -26,7 +26,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get triageVerdictKnown => 'Знаю';
 
   @override
-  String get triageUndo => 'Отменить последний';
+  String get triageUndo => 'Вернуть слово';
 
   @override
   String get triageTermTypeWord => 'слово';
@@ -65,13 +65,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get triageSummaryDoneTitle => 'Разбор завершён';
 
   @override
-  String get triageTallyKnown => 'Знакомо';
+  String get triageTallyKnown => 'Знаю';
 
   @override
-  String get triageTallyLearning => 'Учим';
+  String get triageTallyLearning => 'Учу';
 
   @override
-  String get triageTallyUnsure => 'Не уверены';
+  String get triageTallyUnsure => 'Не уверен';
 
   @override
   String triageRemainingAfterSync(int count) {
@@ -382,7 +382,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String collectionDefaultUndeletable(String title) {
-    return '«$title» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.';
+    return '«$title» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.';
   }
 
   @override
@@ -423,10 +423,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'примерно $count слова',
-      many: 'примерно $count слов',
-      few: 'примерно $count слова',
-      one: 'примерно $count слово',
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
     );
     return '$_temp0';
   }
@@ -715,7 +715,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get searchAddToCollection => 'в коллекцию…';
+  String get searchAddToCollection => 'Добавить в коллекцию';
 
   @override
   String get searchNewCollection => 'Новая коллекция';
@@ -727,15 +727,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wordCardExampleLabel => 'Пример';
 
   @override
-  String get wordCardFolderHint => 'Справа — выбрать другую папку';
+  String get wordCardFolderHint => 'Справа — выбрать другую коллекцию';
 
   @override
   String wordCardSavedIn(String folder) {
-    return 'В папке «$folder»';
+    return 'В коллекции «$folder»';
   }
 
   @override
-  String get wordCardAddToAnother => 'Добавить в другую папку';
+  String get wordCardAddToAnother => 'Добавить в другую коллекцию';
 
   @override
   String get wordCardProgressLabel => 'Прогресс слова';
@@ -1323,16 +1323,56 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSummaryTitle => 'Сессия закончена';
 
   @override
-  String get sessionStatReviewed => 'Повторено';
+  String sessionStatReviewed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Повторено',
+      many: 'Повторено',
+      few: 'Повторено',
+      one: 'Повторено',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionStatNew => 'Новых';
+  String sessionStatNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Новых',
+      many: 'Новых',
+      few: 'Новых',
+      one: 'Новое',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionStatErrors => 'Ошибки';
+  String sessionStatErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ошибки',
+      many: 'Ошибок',
+      few: 'Ошибки',
+      one: 'Ошибка',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionPracticeStatDone => 'Пройдено';
+  String sessionPracticeStatDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Пройдено',
+      many: 'Пройдено',
+      few: 'Пройдено',
+      one: 'Пройдено',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get sessionPracticeAgain => 'Ещё раз';
@@ -1723,6 +1763,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devFlagPremium => 'Premium (dev)';
+
+  @override
+  String get perfMonitorTitle => 'Монитор производительности';
+
+  @override
+  String get perfMonitorToggle => 'Записывать подвисания, кадры и тапы';
+
+  @override
+  String get perfMonitorToggleHint =>
+      'По умолчанию выключено — пока выключено, ничего не стоит';
+
+  @override
+  String get perfMonitorEmpty => 'записей нет';
+
+  @override
+  String get perfMonitorCopy => 'Скопировать в буфер';
+
+  @override
+  String get perfMonitorClear => 'Очистить';
+
+  @override
+  String perfMonitorCopied(String path) {
+    return 'Скопировано. Файл: $path';
+  }
 
   @override
   String get sessionOffline => 'Нет соединения';

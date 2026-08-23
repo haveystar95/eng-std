@@ -748,18 +748,21 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              // Every label takes its own count: «1 НОВОЕ», not «1 НОВЫХ» (QA-OBS-12). The four
+              // counter strings are plural-shaped even where the word doesn't inflect, so a call
+              // site can't pass one counter's number with another's label.
               children: practice
                   ? [
-                      _Stat(value: _total, label: l.sessionPracticeStatDone),
+                      _Stat(value: _total, label: l.sessionPracticeStatDone(_total)),
                       const _StatDivider(),
-                      _Stat(value: _errors, label: l.sessionStatErrors),
+                      _Stat(value: _errors, label: l.sessionStatErrors(_errors)),
                     ]
                   : [
-                      _Stat(value: _total, label: l.sessionStatReviewed),
+                      _Stat(value: _total, label: l.sessionStatReviewed(_total)),
                       const _StatDivider(),
-                      _Stat(value: _new, label: l.sessionStatNew),
+                      _Stat(value: _new, label: l.sessionStatNew(_new)),
                       const _StatDivider(),
-                      _Stat(value: _errors, label: l.sessionStatErrors),
+                      _Stat(value: _errors, label: l.sessionStatErrors(_errors)),
                     ],
             ),
           ),

@@ -470,7 +470,7 @@ class _DevFlags extends ConsumerWidget {
         _SwitchRow(label: l.devFlagPremium, value: flags.devPremium, onChanged: notifier.setDevPremium),
         // On-device stall monitor, off by default — the release build has no console to read.
         _ChevronRow(
-          label: 'Perf monitor',
+          label: l.perfMonitorTitle,
           last: true,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const PerfLogScreen()),

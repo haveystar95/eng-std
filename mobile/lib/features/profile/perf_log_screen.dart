@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
 import '../../data/perf_log.dart';
 
 /// Dev screen for the stall monitor (see [PerfLog]). The phone runs RELEASE builds, so there is no
-/// `flutter run` console to read — this is how the numbers get off the device. English-only on
-/// purpose: a debug surface, exempt from the l10n rule by carrying no Cyrillic, and reachable only
-/// when DEV_MENU is on.
+/// `flutter run` console to read — this is how the numbers get off the device.
+///
+/// Reachable only when DEV_MENU is on, but its copy still goes through the ARB deck like every
+/// other screen's: it used to be English literals, which the Cyrillic guard cannot see and which
+/// left a Russian interface printing «Copy to clipboard» (QA-OBS-24).
 class PerfLogScreen extends StatefulWidget {
   const PerfLogScreen({super.key});
 
@@ -20,21 +23,22 @@ class PerfLogScreen extends StatefulWidget {
 class _PerfLogScreenState extends State<PerfLogScreen> {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         backgroundColor: AppColors.paper,
         elevation: 0,
         foregroundColor: AppColors.ink,
-        title: const Text('Perf monitor'),
+        title: Text(l.perfMonitorTitle),
       ),
       body: SafeArea(
         child: Column(
           children: [
             SwitchListTile.adaptive(
               value: PerfLog.enabled,
-              title: const Text('Record stalls, slow frames and slow taps'),
-              subtitle: const Text('Off by default — costs nothing while off'),
+              title: Text(l.perfMonitorToggle),
+              subtitle: Text(l.perfMonitorToggleHint),
               onChanged: (on) => setState(() => PerfLog.instance.setEnabled(on)),
             ),
             const Divider(height: 1, color: AppColors.hairline),
@@ -49,7 +53,7 @@ class _PerfLogScreenState extends State<PerfLogScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: SelectableText(
-                        text.isEmpty ? 'nothing recorded' : text,
+                        text.isEmpty ? l.perfMonitorEmpty : text,
                         style: const TextStyle(fontFamily: 'Courier', fontSize: 10, height: 1.45),
                       ),
                     ),
@@ -62,13 +66,13 @@ class _PerfLogScreenState extends State<PerfLogScreen> {
               child: Column(
                 children: [
                   PrimaryButton(
-                    label: 'Copy to clipboard',
+                    label: l.perfMonitorCopy,
                     onPressed: () async {
                       await Clipboard.setData(ClipboardData(text: PerfLog.instance.text));
                       final path = await PerfLog.instance.dumpToFile();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Copied. File: ${path ?? "n/a"}')),
+                          SnackBar(content: Text(l.perfMonitorCopied(path ?? 'n/a'))),
                         );
                       }
                     },
@@ -76,7 +80,7 @@ class _PerfLogScreenState extends State<PerfLogScreen> {
                   const SizedBox(height: 8),
                   Center(
                     child: QuietButton(
-                      label: 'Clear',
+                      label: l.perfMonitorClear,
                       onPressed: () => setState(PerfLog.instance.clear),
                     ),
                   ),

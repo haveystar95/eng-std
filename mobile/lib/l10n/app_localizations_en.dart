@@ -26,7 +26,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triageVerdictKnown => 'Know';
 
   @override
-  String get triageUndo => 'Undo last';
+  String get triageUndo => 'Undo last word';
 
   @override
   String get triageTermTypeWord => 'word';
@@ -64,13 +64,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triageSummaryDoneTitle => 'Triage complete';
 
   @override
-  String get triageTallyKnown => 'Known';
+  String get triageTallyKnown => 'Know';
 
   @override
   String get triageTallyLearning => 'Learning';
 
   @override
-  String get triageTallyUnsure => 'Unsure';
+  String get triageTallyUnsure => 'Not sure';
 
   @override
   String triageRemainingAfterSync(int count) {
@@ -405,8 +405,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'about $count words',
-      one: 'about $count word',
+      other: '$count words',
+      one: '$count word',
     );
     return '$_temp0';
   }
@@ -691,7 +691,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchAddToCollection => 'to a collection…';
+  String get searchAddToCollection => 'Add to collection';
 
   @override
   String get searchNewCollection => 'New collection';
@@ -703,7 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordCardExampleLabel => 'Example';
 
   @override
-  String get wordCardFolderHint => 'On the right — pick another folder';
+  String get wordCardFolderHint => 'On the right — pick another collection';
 
   @override
   String wordCardSavedIn(String folder) {
@@ -711,7 +711,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get wordCardAddToAnother => 'Add to another folder';
+  String get wordCardAddToAnother => 'Add to another collection';
 
   @override
   String get wordCardProgressLabel => 'Word progress';
@@ -1211,13 +1211,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionRecogniseJustMet => 'you have just met this word';
 
   @override
-  String get ladderStep0 => 'meeting';
+  String get ladderStep0 => 'first look';
 
   @override
   String get ladderStep1 => 'recognition';
 
   @override
-  String get ladderStep3 => 'assembly';
+  String get ladderStep3 => 'practice';
 
   @override
   String get ladderStep4 => 'writing';
@@ -1283,16 +1283,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSummaryTitle => 'Session complete';
 
   @override
-  String get sessionStatReviewed => 'Reviewed';
+  String sessionStatReviewed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reviewed',
+      one: 'Reviewed',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionStatNew => 'New';
+  String sessionStatNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'New',
+      one: 'New',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionStatErrors => 'Mistakes';
+  String sessionStatErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mistakes',
+      one: 'Mistake',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get sessionPracticeStatDone => 'Practiced';
+  String sessionPracticeStatDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Practiced',
+      one: 'Practiced',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get sessionPracticeAgain => 'Again';
@@ -1589,8 +1621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallBenefitModes => 'Future training modes';
 
   @override
-  String get paywallFreeForever =>
-      'Reviews, breakdown and offline — always free.';
+  String get paywallFreeForever => 'Reviews, triage and offline — always free.';
 
   @override
   String get paywallPeriodYear => 'Year';
@@ -1676,6 +1707,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devFlagPremium => 'Premium (dev)';
+
+  @override
+  String get perfMonitorTitle => 'Perf monitor';
+
+  @override
+  String get perfMonitorToggle => 'Record stalls, slow frames and slow taps';
+
+  @override
+  String get perfMonitorToggleHint =>
+      'Off by default — costs nothing while off';
+
+  @override
+  String get perfMonitorEmpty => 'nothing recorded';
+
+  @override
+  String get perfMonitorCopy => 'Copy to clipboard';
+
+  @override
+  String get perfMonitorClear => 'Clear';
+
+  @override
+  String perfMonitorCopied(String path) {
+    return 'Copied. File: $path';
+  }
 
   @override
   String get sessionOffline => 'No connection';

@@ -150,7 +150,7 @@ void main() {
       await _pump(tester, subject: _fillOut());
 
       expect(find.text('+ Сохранённые'), findsOneWidget);
-      expect(find.text('Справа — выбрать другую папку'), findsOneWidget);
+      expect(find.text('Справа — выбрать другую коллекцию'), findsOneWidget);
     });
 
     testWidgets('a word with no photo degrades to a lower plate, not to a hole', (tester) async {
@@ -180,7 +180,7 @@ void main() {
 
       expect(api.addCalls, 1);
       expect(api.lastCollectionId, isNull, reason: 'the one-tap save goes to the default folder');
-      expect(find.text('В папке «Сохранённые»'), findsOneWidget);
+      expect(find.text('В коллекции «Сохранённые»'), findsOneWidget);
       expect(find.text('+ Сохранённые'), findsNothing);
       // The learner opened the card to READ it. A save that closed it would take the article away
       // at the exact moment they decided they wanted it.
@@ -193,8 +193,8 @@ void main() {
         SavedFolder(id: 'FOLDER', title: 'Сохранённые', isDefault: true),
       ]));
 
-      expect(find.text('Добавить в другую папку'), findsOneWidget);
-      expect(find.text('Справа — выбрать другую папку'), findsNothing);
+      expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
+      expect(find.text('Справа — выбрать другую коллекцию'), findsNothing);
     });
 
     testWidgets('a word that arrives already saved opens in the saved state', (tester) async {
@@ -202,7 +202,7 @@ void main() {
         SavedFolder(id: 'F', title: 'Мои находки', isDefault: false),
       ]));
 
-      expect(find.text('В папке «Мои находки»'), findsOneWidget);
+      expect(find.text('В коллекции «Мои находки»'), findsOneWidget);
     });
   });
 
@@ -242,7 +242,7 @@ void main() {
 
       expect(find.text('Тренировать слово'), findsOneWidget);
       expect(find.text('+ Сохранённые'), findsNothing);
-      expect(find.text('Добавить в другую папку'), findsOneWidget);
+      expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
 
       await tester.ensureVisible(find.text('Тренировать слово'));
       await tester.pump();

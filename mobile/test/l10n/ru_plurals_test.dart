@@ -13,9 +13,11 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// here so that stays true.
 void main() {
   late AppLocalizations l;
+  late AppLocalizations en;
 
   setUpAll(() async {
     l = await AppLocalizations.delegate.load(const Locale('ru'));
+    en = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
   group('homeCollectionProgress — «из» takes the genitive', () {
@@ -57,6 +59,59 @@ void main() {
       expect(l.sessionDueInDays(1), 'через 1 день');
       expect(l.sessionDueInDays(2), 'через 2 дня');
       expect(l.sessionDueInDays(7), 'через 7 дней');
+    });
+  });
+
+  /// The session summary prints the number and its label on two lines, so the label has to agree
+  /// with the number above it: the screen said «1 НОВЫХ», «1 ОШИБКИ» and «1 Mistakes» (QA-OBS-12).
+  ///
+  /// All four counters are plural-shaped, including the two whose word never inflects — that way
+  /// the call site cannot print one counter's number under another counter's label.
+  group('session summary counters agree with their number', () {
+    test('«новое / новых»', () {
+      expect(l.sessionStatNew(1), 'Новое');
+      expect(l.sessionStatNew(2), 'Новых');
+      expect(l.sessionStatNew(5), 'Новых');
+      expect(l.sessionStatNew(21), 'Новое'); // «21 новое»
+    });
+
+    test('«ошибка / ошибки / ошибок»', () {
+      expect(l.sessionStatErrors(1), 'Ошибка');
+      expect(l.sessionStatErrors(2), 'Ошибки');
+      expect(l.sessionStatErrors(5), 'Ошибок');
+      expect(l.sessionStatErrors(11), 'Ошибок');
+      expect(l.sessionStatErrors(21), 'Ошибка');
+    });
+
+    test('the impersonal two do not inflect — and say so at every count', () {
+      for (final n in [1, 2, 5, 21]) {
+        expect(l.sessionStatReviewed(n), 'Повторено', reason: 'n = $n');
+        expect(l.sessionPracticeStatDone(n), 'Пройдено', reason: 'n = $n');
+      }
+    });
+
+    test('English: only «Mistake» has a singular', () {
+      expect(en.sessionStatErrors(1), 'Mistake');
+      expect(en.sessionStatErrors(2), 'Mistakes');
+      expect(en.sessionStatNew(1), 'New');
+      expect(en.sessionStatReviewed(1), 'Reviewed');
+      expect(en.sessionPracticeStatDone(1), 'Practiced');
+    });
+  });
+
+  /// The set size is exact — the pipeline slices an over-generated batch down to the requested
+  /// `size`, and an under-delivery carries its own badge. «Примерно» promised a range that no
+  /// longer exists (правка 1.7).
+  group('approxWords — a count, not an estimate', () {
+    test('ru: «1 слово», «3 слова», «11 слов», no «примерно»', () {
+      expect(l.approxWords(1), '1 слово');
+      expect(l.approxWords(3), '3 слова');
+      expect(l.approxWords(11), '11 слов');
+    });
+
+    test('en: «1 word», «8 words», no «about»', () {
+      expect(en.approxWords(1), '1 word');
+      expect(en.approxWords(8), '8 words');
     });
   });
 }

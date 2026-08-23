@@ -61,10 +61,10 @@ void main() {
   }
 
   testWidgets('the size hints fit their chips in English', (tester) async {
-    await check(tester, const Locale('en'), ['about 10 words', 'about 15 words', 'about 22 words']);
+    await check(tester, const Locale('en'), ['10 words', '15 words', '22 words']);
   });
 
   testWidgets('the size hints fit their chips in Russian', (tester) async {
-    await check(tester, const Locale('ru'), ['примерно 10 слов', 'примерно 15 слов', 'примерно 22 слова']);
+    await check(tester, const Locale('ru'), ['10 слов', '15 слов', '22 слова']);
   });
 }

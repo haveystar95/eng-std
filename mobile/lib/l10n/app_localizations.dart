@@ -128,10 +128,10 @@ abstract class AppLocalizations {
   /// **'Знаю'**
   String get triageVerdictKnown;
 
-  /// Третичная кнопка отмены последнего вердикта (кадр 2.2).
+  /// Третичная кнопка отмены последнего вердикта (кадр 2.2). Прежнее «Отменить последний» — прилагательное без существительного (QA-OBS-25).
   ///
   /// In ru, this message translates to:
-  /// **'Отменить последний'**
+  /// **'Вернуть слово'**
   String get triageUndo;
 
   /// Бейдж типа термина на обороте карточки.
@@ -200,22 +200,22 @@ abstract class AppLocalizations {
   /// **'Разбор завершён'**
   String get triageSummaryDoneTitle;
 
-  /// Итог сессии: лейбл счётчика «Знаю».
+  /// Итог сессии: лейбл счётчика «Знаю». Три подписи повторяют три вердикта карточки одной формой — 1 л. ед. ч. (QA-OBS-26).
   ///
   /// In ru, this message translates to:
-  /// **'Знакомо'**
+  /// **'Знаю'**
   String get triageTallyKnown;
 
-  /// Итог сессии: лейбл счётчика «Не знаю».
+  /// Итог сессии: лейбл счётчика «Не знаю» — слово ушло в изучение.
   ///
   /// In ru, this message translates to:
-  /// **'Учим'**
+  /// **'Учу'**
   String get triageTallyLearning;
 
   /// Итог сессии: лейбл счётчика «Не уверен».
   ///
   /// In ru, this message translates to:
-  /// **'Не уверены'**
+  /// **'Не уверен'**
   String get triageTallyUnsure;
 
   /// Итог сессии: сколько терминов ещё придёт после синхронизации (ICU plural).
@@ -590,13 +590,13 @@ abstract class AppLocalizations {
   /// **'Удалить из коллекции'**
   String get wordSheetDeleteLink;
 
-  /// Пункт меню слова: перенести в другую свою папку.
+  /// Пункт меню слова: перенести в другую свою коллекцию.
   ///
   /// In ru, this message translates to:
   /// **'Перенести в…'**
   String get collectionMoveWord;
 
-  /// Заголовок листа выбора папки при переносе слова.
+  /// Заголовок листа выбора коллекции при переносе слова.
   ///
   /// In ru, this message translates to:
   /// **'Куда перенести'**
@@ -608,22 +608,22 @@ abstract class AppLocalizations {
   /// **'Перенесено в «{folder}»'**
   String collectionMoveWordDone(String folder);
 
-  /// Ошибка переноса слова между папками.
+  /// Ошибка переноса слова между коллекциями.
   ///
   /// In ru, this message translates to:
   /// **'Не удалось перенести'**
   String get collectionMoveWordFailed;
 
-  /// Переносить некуда — у пользователя одна папка.
+  /// Переносить некуда — у пользователя одна коллекция.
   ///
   /// In ru, this message translates to:
   /// **'Других своих коллекций пока нет'**
   String get collectionMoveWordNowhere;
 
-  /// Почему у папки по умолчанию нет удаления.
+  /// Почему у коллекции по умолчанию нет удаления.
   ///
   /// In ru, this message translates to:
-  /// **'«{title}» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.'**
+  /// **'«{title}» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.'**
   String collectionDefaultUndeletable(String title);
 
   /// Пункт меню коллекции: переименовать.
@@ -680,10 +680,10 @@ abstract class AppLocalizations {
   /// **'Закрыть меню'**
   String get commonCloseMenu;
 
-  /// Приблизительный размер набора, «примерно 15 слов» (ICU plural).
+  /// Размер набора, «15 слов» (ICU plural). «Примерно» убрано: генерация режется до запрошенного size (GenerationPipeline), недобор подписан отдельным бейджем (QA-OBS-9 / правка 1.7).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{примерно {count} слово} few{примерно {count} слова} many{примерно {count} слов} other{примерно {count} слова}}'**
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
   String approxWords(int count);
 
   /// Заголовок экрана вкладки коллекций (кадр 2.5).
@@ -1142,13 +1142,13 @@ abstract class AppLocalizations {
   /// **'Сохранено в «{folder}» — слово учится'**
   String searchSavedTo(String folder);
 
-  /// Меню выбора папки рядом с главной кнопкой.
+  /// Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20).
   ///
   /// In ru, this message translates to:
-  /// **'в коллекцию…'**
+  /// **'Добавить в коллекцию'**
   String get searchAddToCollection;
 
-  /// Пункт меню: создать папку и сохранить туда.
+  /// Пункт меню: создать коллекцию и сохранить туда.
   ///
   /// In ru, this message translates to:
   /// **'Новая коллекция'**
@@ -1169,19 +1169,19 @@ abstract class AppLocalizations {
   /// Подпись под парой кнопок на карточке слова (кадр 06).
   ///
   /// In ru, this message translates to:
-  /// **'Справа — выбрать другую папку'**
+  /// **'Справа — выбрать другую коллекцию'**
   String get wordCardFolderHint;
 
   /// Контурная кнопка-состояние после сохранения (кадр 07).
   ///
   /// In ru, this message translates to:
-  /// **'В папке «{folder}»'**
+  /// **'В коллекции «{folder}»'**
   String wordCardSavedIn(String folder);
 
-  /// Второе действие отдельной строкой терракотой (кадры 07/09).
+  /// Второе действие отдельной строкой на карточке слова (кадры 07/09). Канон — «коллекция»: кнопка и шит называют один объект одинаково (QA-OBS-21).
   ///
   /// In ru, this message translates to:
-  /// **'Добавить в другую папку'**
+  /// **'Добавить в другую коллекцию'**
   String get wordCardAddToAnother;
 
   /// Лейбл лестницы на карточке, открытой из папки (кадр 09).
@@ -2096,29 +2096,29 @@ abstract class AppLocalizations {
   /// **'Сессия закончена'**
   String get sessionSummaryTitle;
 
-  /// Счётчик итога — сколько карточек пройдено.
+  /// Счётчик итога — сколько карточек пройдено. Безличная форма не склоняется; plural заведён, чтобы все четыре счётчика итога вызывались одинаково — со своим числом (QA-OBS-12).
   ///
   /// In ru, this message translates to:
-  /// **'Повторено'**
-  String get sessionStatReviewed;
+  /// **'{count, plural, one{Повторено} few{Повторено} many{Повторено} other{Повторено}}'**
+  String sessionStatReviewed(int count);
 
-  /// Счётчик итога — сколько новых слов.
+  /// Счётчик итога — сколько новых слов (ICU plural: «1 новое», «2 новых»).
   ///
   /// In ru, this message translates to:
-  /// **'Новых'**
-  String get sessionStatNew;
+  /// **'{count, plural, one{Новое} few{Новых} many{Новых} other{Новых}}'**
+  String sessionStatNew(int count);
 
-  /// Счётчик итога — сколько ошибок.
+  /// Счётчик итога — сколько ошибок (ICU plural: «1 ошибка», «2 ошибки», «5 ошибок»).
   ///
   /// In ru, this message translates to:
-  /// **'Ошибки'**
-  String get sessionStatErrors;
+  /// **'{count, plural, one{Ошибка} few{Ошибки} many{Ошибок} other{Ошибки}}'**
+  String sessionStatErrors(int count);
 
-  /// Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17).
+  /// Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17). Безличная форма не склоняется; plural — ради единого вызова счётчиков итога (QA-OBS-12).
   ///
   /// In ru, this message translates to:
-  /// **'Пройдено'**
-  String get sessionPracticeStatDone;
+  /// **'{count, plural, one{Пройдено} few{Пройдено} many{Пройдено} other{Пройдено}}'**
+  String sessionPracticeStatDone(int count);
 
   /// Кнопка на итоге свободной тренировки — начать новую тренировочную сессию сразу (F17).
   ///
@@ -2755,6 +2755,48 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Premium (dev)'**
   String get devFlagPremium;
+
+  /// Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24).
+  ///
+  /// In ru, this message translates to:
+  /// **'Монитор производительности'**
+  String get perfMonitorTitle;
+
+  /// Переключатель записи на экране монитора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Записывать подвисания, кадры и тапы'**
+  String get perfMonitorToggle;
+
+  /// Подпись под переключателем записи.
+  ///
+  /// In ru, this message translates to:
+  /// **'По умолчанию выключено — пока выключено, ничего не стоит'**
+  String get perfMonitorToggleHint;
+
+  /// Пустой журнал монитора.
+  ///
+  /// In ru, this message translates to:
+  /// **'записей нет'**
+  String get perfMonitorEmpty;
+
+  /// Главная кнопка монитора: копия журнала + дамп в файл.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать в буфер'**
+  String get perfMonitorCopy;
+
+  /// Тихая кнопка монитора: очистить журнал.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить'**
+  String get perfMonitorClear;
+
+  /// Тост после копирования: путь к дампу на устройстве.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировано. Файл: {path}'**
+  String perfMonitorCopied(String path);
 
   /// Сессия не построилась из-за отсутствия сети. Сессии строятся на сервере (пока — см. офлайн-практику).
   ///

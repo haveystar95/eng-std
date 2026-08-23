@@ -24,8 +24,8 @@
   "triageVerdictKnown": "Знаю",
   "@triageVerdictKnown": { "description": "Кнопка/вердикт: свайп вправо." },
 
-  "triageUndo": "Отменить последний",
-  "@triageUndo": { "description": "Третичная кнопка отмены последнего вердикта (кадр 2.2)." },
+  "triageUndo": "Вернуть слово",
+  "@triageUndo": { "description": "Третичная кнопка отмены последнего вердикта (кадр 2.2). Прежнее «Отменить последний» — прилагательное без существительного (QA-OBS-25)." },
 
   "triageTermTypeWord": "слово",
   "@triageTermTypeWord": { "description": "Бейдж типа термина на обороте карточки." },
@@ -63,13 +63,13 @@
   "triageSummaryDoneTitle": "Разбор завершён",
   "@triageSummaryDoneTitle": { "description": "Итог: на сервере ничего не осталось." },
 
-  "triageTallyKnown": "Знакомо",
-  "@triageTallyKnown": { "description": "Итог сессии: лейбл счётчика «Знаю»." },
+  "triageTallyKnown": "Знаю",
+  "@triageTallyKnown": { "description": "Итог сессии: лейбл счётчика «Знаю». Три подписи повторяют три вердикта карточки одной формой — 1 л. ед. ч. (QA-OBS-26)." },
 
-  "triageTallyLearning": "Учим",
-  "@triageTallyLearning": { "description": "Итог сессии: лейбл счётчика «Не знаю»." },
+  "triageTallyLearning": "Учу",
+  "@triageTallyLearning": { "description": "Итог сессии: лейбл счётчика «Не знаю» — слово ушло в изучение." },
 
-  "triageTallyUnsure": "Не уверены",
+  "triageTallyUnsure": "Не уверен",
   "@triageTallyUnsure": { "description": "Итог сессии: лейбл счётчика «Не уверен»." },
 
   "triageRemainingAfterSync": "{count, plural, one{Ещё {count} слово после синхронизации} few{Ещё {count} слова после синхронизации} many{Ещё {count} слов после синхронизации} other{Ещё {count} слов после синхронизации}}",
@@ -310,17 +310,17 @@
   "@wordSheetDeleteLink": { "description": "Деструктивная ссылка внизу шита редактирования (кадр 5c)." },
 
   "collectionMoveWord": "Перенести в…",
-  "@collectionMoveWord": { "description": "Пункт меню слова: перенести в другую свою папку." },
+  "@collectionMoveWord": { "description": "Пункт меню слова: перенести в другую свою коллекцию." },
   "collectionMoveWordTitle": "Куда перенести",
-  "@collectionMoveWordTitle": { "description": "Заголовок листа выбора папки при переносе слова." },
+  "@collectionMoveWordTitle": { "description": "Заголовок листа выбора коллекции при переносе слова." },
   "collectionMoveWordDone": "Перенесено в «{folder}»",
   "@collectionMoveWordDone": { "description": "Подтверждение переноса.", "placeholders": { "folder": { "type": "String" } } },
   "collectionMoveWordFailed": "Не удалось перенести",
-  "@collectionMoveWordFailed": { "description": "Ошибка переноса слова между папками." },
+  "@collectionMoveWordFailed": { "description": "Ошибка переноса слова между коллекциями." },
   "collectionMoveWordNowhere": "Других своих коллекций пока нет",
-  "@collectionMoveWordNowhere": { "description": "Переносить некуда — у пользователя одна папка." },
-  "collectionDefaultUndeletable": "«{title}» — папка для сохранённых слов, её нельзя удалить. Переименовать можно.",
-  "@collectionDefaultUndeletable": { "description": "Почему у папки по умолчанию нет удаления.", "placeholders": { "title": { "type": "String" } } },
+  "@collectionMoveWordNowhere": { "description": "Переносить некуда — у пользователя одна коллекция." },
+  "collectionDefaultUndeletable": "«{title}» — коллекция для сохранённых слов, её нельзя удалить. Переименовать можно.",
+  "@collectionDefaultUndeletable": { "description": "Почему у коллекции по умолчанию нет удаления.", "placeholders": { "title": { "type": "String" } } },
   "collectionMenuRename": "Переименовать",
   "@collectionMenuRename": { "description": "Пункт меню коллекции: переименовать." },
 
@@ -351,9 +351,9 @@
   "commonCloseMenu": "Закрыть меню",
   "@commonCloseMenu": { "description": "A11y-лейбл затемнения плавающего меню." },
 
-  "approxWords": "{count, plural, one{примерно {count} слово} few{примерно {count} слова} many{примерно {count} слов} other{примерно {count} слова}}",
+  "approxWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@approxWords": {
-    "description": "Приблизительный размер набора, «примерно 15 слов» (ICU plural).",
+    "description": "Размер набора, «15 слов» (ICU plural). «Примерно» убрано: генерация режется до запрошенного size (GenerationPipeline), недобор подписан отдельным бейджем (QA-OBS-9 / правка 1.7).",
     "placeholders": { "count": { "type": "int" } }
   },
 
@@ -605,24 +605,24 @@
   "@searchAlreadyIn": { "description": "Кнопка неактивна: слово уже в этой папке.", "placeholders": { "folder": { "type": "String" } } },
   "searchSavedTo": "Сохранено в «{folder}» — слово учится",
   "@searchSavedTo": { "description": "Подтверждение после сохранения.", "placeholders": { "folder": { "type": "String" } } },
-  "searchAddToCollection": "в коллекцию…",
-  "@searchAddToCollection": { "description": "Меню выбора папки рядом с главной кнопкой." },
+  "searchAddToCollection": "Добавить в коллекцию",
+  "@searchAddToCollection": { "description": "Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20)." },
   "searchNewCollection": "Новая коллекция",
-  "@searchNewCollection": { "description": "Пункт меню: создать папку и сохранить туда." },
+  "@searchNewCollection": { "description": "Пункт меню: создать коллекцию и сохранить туда." },
   "searchSaveFailed": "Не удалось сохранить",
   "@searchSaveFailed": { "description": "Ошибка сохранения слова из поиска." },
 
   "wordCardExampleLabel": "Пример",
   "@wordCardExampleLabel": { "description": "Лейбл над примером на карточке слова (кадры 06/09)." },
-  "wordCardFolderHint": "Справа — выбрать другую папку",
+  "wordCardFolderHint": "Справа — выбрать другую коллекцию",
   "@wordCardFolderHint": { "description": "Подпись под парой кнопок на карточке слова (кадр 06)." },
-  "wordCardSavedIn": "В папке «{folder}»",
+  "wordCardSavedIn": "В коллекции «{folder}»",
   "@wordCardSavedIn": {
     "description": "Контурная кнопка-состояние после сохранения (кадр 07).",
     "placeholders": { "folder": { "type": "String" } }
   },
-  "wordCardAddToAnother": "Добавить в другую папку",
-  "@wordCardAddToAnother": { "description": "Второе действие отдельной строкой терракотой (кадры 07/09)." },
+  "wordCardAddToAnother": "Добавить в другую коллекцию",
+  "@wordCardAddToAnother": { "description": "Второе действие отдельной строкой на карточке слова (кадры 07/09). Канон — «коллекция»: кнопка и шит называют один объект одинаково (QA-OBS-21)." },
   "wordCardProgressLabel": "Прогресс слова",
   "@wordCardProgressLabel": { "description": "Лейбл лестницы на карточке, открытой из папки (кадр 09)." },
   "wordCardProgressCount": "{step} из {total}",
@@ -1010,14 +1010,26 @@
 
   "sessionSummaryTitle": "Сессия закончена",
   "@sessionSummaryTitle": { "description": "Заголовок экрана итога (кадр 12e)." },
-  "sessionStatReviewed": "Повторено",
-  "@sessionStatReviewed": { "description": "Счётчик итога — сколько карточек пройдено." },
-  "sessionStatNew": "Новых",
-  "@sessionStatNew": { "description": "Счётчик итога — сколько новых слов." },
-  "sessionStatErrors": "Ошибки",
-  "@sessionStatErrors": { "description": "Счётчик итога — сколько ошибок." },
-  "sessionPracticeStatDone": "Пройдено",
-  "@sessionPracticeStatDone": { "description": "Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17)." },
+  "sessionStatReviewed": "{count, plural, one{Повторено} few{Повторено} many{Повторено} other{Повторено}}",
+  "@sessionStatReviewed": {
+    "description": "Счётчик итога — сколько карточек пройдено. Безличная форма не склоняется; plural заведён, чтобы все четыре счётчика итога вызывались одинаково — со своим числом (QA-OBS-12).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionStatNew": "{count, plural, one{Новое} few{Новых} many{Новых} other{Новых}}",
+  "@sessionStatNew": {
+    "description": "Счётчик итога — сколько новых слов (ICU plural: «1 новое», «2 новых»).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionStatErrors": "{count, plural, one{Ошибка} few{Ошибки} many{Ошибок} other{Ошибки}}",
+  "@sessionStatErrors": {
+    "description": "Счётчик итога — сколько ошибок (ICU plural: «1 ошибка», «2 ошибки», «5 ошибок»).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionPracticeStatDone": "{count, plural, one{Пройдено} few{Пройдено} many{Пройдено} other{Пройдено}}",
+  "@sessionPracticeStatDone": {
+    "description": "Счётчик компактного итога свободной тренировки — сколько карточек пройдено (F17). Безличная форма не склоняется; plural — ради единого вызова счётчиков итога (QA-OBS-12).",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "sessionPracticeAgain": "Ещё раз",
   "@sessionPracticeAgain": { "description": "Кнопка на итоге свободной тренировки — начать новую тренировочную сессию сразу (F17)." },
   "sessionDailyGoal": "Дневная цель",
@@ -1290,6 +1302,24 @@
   "@devFlagPaywall": { "description": "Dev-переключатель: пейволл и его входы." },
   "devFlagPremium": "Premium (dev)",
   "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." },
+
+  "perfMonitorTitle": "Монитор производительности",
+  "@perfMonitorTitle": { "description": "Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24)." },
+  "perfMonitorToggle": "Записывать подвисания, кадры и тапы",
+  "@perfMonitorToggle": { "description": "Переключатель записи на экране монитора." },
+  "perfMonitorToggleHint": "По умолчанию выключено — пока выключено, ничего не стоит",
+  "@perfMonitorToggleHint": { "description": "Подпись под переключателем записи." },
+  "perfMonitorEmpty": "записей нет",
+  "@perfMonitorEmpty": { "description": "Пустой журнал монитора." },
+  "perfMonitorCopy": "Скопировать в буфер",
+  "@perfMonitorCopy": { "description": "Главная кнопка монитора: копия журнала + дамп в файл." },
+  "perfMonitorClear": "Очистить",
+  "@perfMonitorClear": { "description": "Тихая кнопка монитора: очистить журнал." },
+  "perfMonitorCopied": "Скопировано. Файл: {path}",
+  "@perfMonitorCopied": {
+    "description": "Тост после копирования: путь к дампу на устройстве.",
+    "placeholders": { "path": { "type": "String" } }
+  },
   "sessionOffline": "Нет соединения",
   "@sessionOffline": { "description": "Сессия не построилась из-за отсутствия сети. Сессии строятся на сервере (пока — см. офлайн-практику)." },
   "sessionLoadFailed": "Не удалось загрузить сессию",
