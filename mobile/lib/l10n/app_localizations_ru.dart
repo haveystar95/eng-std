@@ -1782,7 +1782,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devFlagPremium => 'Premium (dev)';
 
   @override
-  String get perfMonitorTitle => 'Монитор производительности';
+  String get perfMonitorTitle => 'Подвисания';
 
   @override
   String get perfMonitorToggle => 'Записывать подвисания, кадры и тапы';

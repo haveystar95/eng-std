@@ -1314,8 +1314,8 @@
   "devFlagPremium": "Premium (dev)",
   "@devFlagPremium": { "description": "Dev-переключатель: фейковый premium." },
 
-  "perfMonitorTitle": "Монитор производительности",
-  "@perfMonitorTitle": { "description": "Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24)." },
+  "perfMonitorTitle": "Подвисания",
+  "@perfMonitorTitle": { "description": "Заголовок dev-экрана монитора подвисаний и пункт в секции «Разработка» (QA-OBS-24). Коротко по делу: «Монитор производительности» не влезал в AppBar и печатался как «Монитор производи…» — поймано живым прогоном на симуляторе." },
   "perfMonitorToggle": "Записывать подвисания, кадры и тапы",
   "@perfMonitorToggle": { "description": "Переключатель записи на экране монитора." },
   "perfMonitorToggleHint": "По умолчанию выключено — пока выключено, ничего не стоит",
