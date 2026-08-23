@@ -197,7 +197,7 @@ class _LangStep extends StatelessWidget {
             selected: lang.code == target,
             onTap: () => onPick(lang.code),
             leading: MiniFlag(languageCode: lang.code),
-            title: lang.name,
+            title: lang.endonym,
           ),
       ],
     );

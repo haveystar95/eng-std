@@ -29,4 +29,10 @@ abstract final class FlagPalette {
   static const frBlue = Color(0xFF0055A4);
   static const frWhite = Color(0xFFFFFFFF);
   static const frRed = Color(0xFFEF4135);
+
+  // ro · Румыния (кобальт / хромовый жёлтый / киноварь — вертикальный триколор,
+  // как у Франции, поэтому и рисуется тем же painter'ом)
+  static const roBlue = Color(0xFF002B7F);
+  static const roYellow = Color(0xFFFCD116);
+  static const roRed = Color(0xFFCE1126);
 }

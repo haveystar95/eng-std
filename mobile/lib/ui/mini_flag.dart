@@ -7,7 +7,8 @@ import 'package:eng_std/theme/theme.dart';
 /// (список языков онбординга, дропдаун «Язык изучения», языковая пара в сторе).
 /// На карточках слов и коллекций флагов нет.
 ///
-/// Поддержаны языки из кадров: en, pt, de, es, fr. Прочие → нейтральный кружок
+/// Поддержаны языки из кадров: en, pt, de, es, fr, плюс ro (пикер предлагал
+/// румынский, а флага у него не было — HYG-1). Прочие → нейтральный кружок
 /// с кодом языка (без декоративной краски).
 class MiniFlag extends StatelessWidget {
   const MiniFlag({super.key, required this.languageCode, this.size = 22});
@@ -53,6 +54,7 @@ final Map<String, CustomPainter> _flagPainters = {
   'de': _DePainter(),
   'es': _EsPainter(),
   'fr': _FrPainter(),
+  'ro': _RoPainter(),
 };
 
 class _NeutralFlag extends StatelessWidget {
@@ -165,6 +167,23 @@ class _FrPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, t, h), Paint()..color = FlagPalette.frBlue);
     canvas.drawRect(Rect.fromLTWH(t, 0, t, h), Paint()..color = FlagPalette.frWhite);
     canvas.drawRect(Rect.fromLTWH(2 * t, 0, t, h), Paint()..color = FlagPalette.frRed);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Румыния — тот же вертикальный триколор, что у Франции, но средняя полоса
+/// жёлтая. На 22 px это единственное, что отличает его от чадского и молдавского;
+/// герба Молдовы в этом размере всё равно не было бы видно, а Молдова в списке
+/// языков не участвует.
+class _RoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height, t = w / 3;
+    canvas.drawRect(Rect.fromLTWH(0, 0, t, h), Paint()..color = FlagPalette.roBlue);
+    canvas.drawRect(Rect.fromLTWH(t, 0, t, h), Paint()..color = FlagPalette.roYellow);
+    canvas.drawRect(Rect.fromLTWH(2 * t, 0, t, h), Paint()..color = FlagPalette.roRed);
   }
 
   @override

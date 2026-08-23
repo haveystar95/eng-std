@@ -70,7 +70,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _NavRow(
                 label: l.profileRowTargetLang,
-                value: languageByCode(profile.targetLanguage).name,
+                value: languageByCode(profile.targetLanguage).endonym,
                 onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
                 last: true,
               ),
@@ -774,7 +774,7 @@ class _LanguageSheet extends StatelessWidget {
                     children: [
                       MiniFlag(languageCode: lang.code),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(lang.name, style: _labelStyle)),
+                      Expanded(child: Text(lang.endonym, style: _labelStyle)),
                       if (lang.code == current)
                         const Icon(Icons.check, size: 18, color: AppColors.ink),
                     ],

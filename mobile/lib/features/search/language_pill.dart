@@ -121,7 +121,7 @@ class LanguagePill extends StatelessWidget {
 
   /// The language's name in its OWN language, which is how the app names languages everywhere else.
   static String _name(String code) =>
-      kLanguages.where((l) => l.code == code).firstOrNull?.name ?? code.toUpperCase();
+      kLanguages.where((l) => l.code == code).firstOrNull?.endonym ?? code.toUpperCase();
 
   static String _flag(String code) =>
       kLanguages.where((l) => l.code == code).firstOrNull?.flag ?? '';

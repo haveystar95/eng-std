@@ -38,7 +38,7 @@ class _PrestartSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final words = ref.watch(collectionWordsProvider(collectionId)).value ?? const <Word>[];
-    final langName = languageByCode(targetLang).name;
+    final langName = languageByCode(targetLang).endonym;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

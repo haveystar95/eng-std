@@ -103,13 +103,13 @@ class _LangPairRow extends ConsumerWidget {
           children: [
             MiniFlag(languageCode: pair.source, size: 20),
             const SizedBox(width: 9),
-            Text(languageByCode(pair.source).name, style: _pairName),
+            Text(languageByCode(pair.source).endonym, style: _pairName),
             const SizedBox(width: 9),
             const Icon(LucideIcons.arrowRight, size: 14, color: AppColors.tertiary),
             const SizedBox(width: 9),
             MiniFlag(languageCode: pair.target, size: 20),
             const SizedBox(width: 9),
-            Expanded(child: Text(languageByCode(pair.target).name, style: _pairName)),
+            Expanded(child: Text(languageByCode(pair.target).endonym, style: _pairName)),
             const Icon(LucideIcons.chevronDown, size: 16, color: AppColors.tertiary),
           ],
         ),
@@ -716,7 +716,7 @@ class _TargetLangSheet extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          lang.name,
+                          lang.endonym,
                           style: const TextStyle(
                             fontFamily: AppFonts.inter,
                             fontSize: 15.5,

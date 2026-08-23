@@ -570,7 +570,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                lang.name,
+                lang.endonym,
                 style: const TextStyle(
                   fontFamily: AppFonts.inter,
                   fontSize: 15.5,
@@ -1033,7 +1033,7 @@ class _LanguagePicker extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          lang.name,
+                          lang.endonym,
                           style: const TextStyle(
                             fontFamily: AppFonts.inter,
                             fontSize: 15.5,

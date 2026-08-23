@@ -148,10 +148,11 @@ void main() {
     await tester.pumpAndSettle();
 
     // Both on offer, named in their own language — the way this app names languages everywhere.
+    // «Română», the language; `România` (the country) was the bug HYG-1 fixed.
     expect(find.text('Русский'), findsOneWidget);
-    expect(find.text('România'), findsOneWidget);
+    expect(find.text('Română'), findsOneWidget);
 
-    await tester.tap(find.text('România'));
+    await tester.tap(find.text('Română'));
     await tester.pumpAndSettle();
 
     expect(find.text('RO'), findsOneWidget);
