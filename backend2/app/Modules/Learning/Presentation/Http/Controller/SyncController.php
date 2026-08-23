@@ -11,6 +11,8 @@ use App\Modules\Learning\Application\Dto\SyncCursor;
 use App\Modules\Learning\Application\Dto\SyncDeltaView;
 use App\Modules\Learning\Application\Dto\TermSyncView;
 use App\Modules\Learning\Application\Dto\TriageSyncRow;
+use App\Modules\Learning\Application\Command\RememberDeviceTimezone;
+use App\Modules\Learning\Application\Command\RememberDeviceTimezoneHandler;
 use App\Modules\Learning\Application\Port\SyncCursorReader;
 use App\Modules\Learning\Application\Query\GetSyncDelta;
 use App\Modules\Learning\Application\Query\GetSyncDeltaHandler;
@@ -18,6 +20,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Offline sync for the mobile client. `cursor` returns the client_seq high-water mark (counter
@@ -33,6 +36,7 @@ final class SyncController
     public function __construct(
         private readonly SyncCursorReader $cursor,
         private readonly GetSyncDeltaHandler $sync,
+        private readonly RememberDeviceTimezoneHandler $rememberTimezone,
     ) {}
 
     public function cursor(Request $request): JsonResponse
@@ -57,15 +61,44 @@ final class SyncController
 
         $sinceRaw = $validated['since'] ?? null;
         $cursorRaw = $validated['cursor'] ?? null;
+        $userId = UserId::fromString((string) $request->user()?->getAuthIdentifier());
+
+        $this->rememberDeviceZone($request, $userId);
 
         $view = ($this->sync)(new GetSyncDelta(
-            userId: UserId::fromString((string) $request->user()?->getAuthIdentifier()),
+            userId: $userId,
             since: is_string($sinceRaw) && $sinceRaw !== '' ? new DateTimeImmutable($sinceRaw) : null,
             cursor: is_string($cursorRaw) && $cursorRaw !== '' ? SyncCursor::decode($cursorRaw) : null,
             limit: (int) ($validated['limit'] ?? self::DEFAULT_LIMIT),
         ));
 
         return response()->json(['data' => $this->serialize($view)]);
+    }
+
+    /**
+     * The device's own IANA zone, an OPTIONAL passenger on the sync (`?timezone=Europe/Berlin`).
+     *
+     * Until now the profile learned the zone only at Google sign-in and on a profile edit, so a
+     * learner who MOVED and stayed signed in kept a whole calendar — «сегодня», the streak, the day
+     * a card is floored to — pinned to the country they left. The sync is the one call every device
+     * makes on every launch, which makes it the place a move is noticed without asking anyone.
+     *
+     * Validated here and, if it doesn't hold up, DROPPED here: an unparseable or empty zone must
+     * never fail somebody else's sync — the delta feed is what the request came for, and the client
+     * has no way to recover from a 422 it didn't ask for. Nothing about the RESPONSE changes.
+     */
+    private function rememberDeviceZone(Request $request, UserId $userId): void
+    {
+        $zone = $request->query('timezone');
+        if (! is_string($zone) || $zone === '') {
+            return;
+        }
+
+        if (Validator::make(['timezone' => $zone], ['timezone' => ['timezone']])->fails()) {
+            return;
+        }
+
+        ($this->rememberTimezone)(new RememberDeviceTimezone($userId, $zone));
     }
 
     /** @return array<string, mixed> */

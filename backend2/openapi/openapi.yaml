@@ -1514,6 +1514,17 @@ paths:
           description: A prior response's server_time. Inclusive. Omit for a full snapshot.
         - { name: cursor, in: query, required: false, schema: { type: string }, description: "Opaque, from a previous page's next_cursor." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
+        - name: timezone
+          in: query
+          required: false
+          schema: { type: string, example: Europe/Kyiv }
+          description: >-
+            The device's IANA zone. Optional and purely additive — the response is identical with or
+            without it. Send it on every sync: the profile otherwise learns the zone only at sign-in
+            and on a profile edit, so a learner who moves keeps studying on the old country's
+            calendar. An unrecognised or empty value is ignored silently; it never fails the sync.
+            Changing the zone does NOT reschedule existing cards — they keep the `due_at` they have,
+            and only answers given after the change are planned on the new calendar.
       responses:
         '200':
           description: OK
