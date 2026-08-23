@@ -18,9 +18,9 @@ import {
   CONTENT_STATUS_LABEL,
   NEEDS_ENRICHMENT_REASON_LABEL,
   contentStatusTone,
-  langLabel,
   modeLabel,
 } from '@/utils/labels'
+import { langLabel } from '@/utils/languages'
 import type { PassportDistractor, TermContentPassport } from '@/api/types'
 import Badge from '@/components/Badge.vue'
 import PaperButton from '@/components/PaperButton.vue'

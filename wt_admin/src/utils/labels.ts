@@ -184,7 +184,6 @@ export const TIER_LABEL: Record<Tier, string> = {
   premium: 'Premium',
 }
 
-export function langLabel(code: string): string {
-  const map: Record<string, string> = { en: 'English', ru: 'Русский', de: 'Deutsch', ro: 'Română' }
-  return map[code] ?? code.toUpperCase()
-}
+// `langLabel` used to live here with a four-entry map of its own. It moved to `@/utils/languages`
+// with the rest of the language table (HYG-1) — one catalogue per repository, three repositories
+// with the same columns.
