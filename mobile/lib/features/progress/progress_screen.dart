@@ -24,7 +24,8 @@ class ProgressScreen extends ConsumerWidget {
     final stats = ref.watch(statsProvider).value;
     final best = ref.watch(bestStreakProvider).value ?? 0;
     final activity = ref.watch(dailyActivityProvider).value ?? const <String, int>{};
-    final density = ref.watch(globalDensityProvider).value ??
+    final density =
+        ref.watch(globalDensityProvider).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
 
     final now = DateTime.now();
@@ -33,7 +34,8 @@ class ProgressScreen extends ConsumerWidget {
     final weekCount = weekReviewCount(now, activity);
     final todayCount = todayReviewCount(now, activity);
 
-    final bottomInset = AppTabBarMetrics.height +
+    final bottomInset =
+        AppTabBarMetrics.height +
         AppTabBarMetrics.bottomInset +
         MediaQuery.viewPaddingOf(context).bottom +
         AppSpacing.s8;
@@ -43,7 +45,12 @@ class ProgressScreen extends ConsumerWidget {
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, bottomInset),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            AppSpacing.s8,
+            AppSpacing.screenH,
+            bottomInset,
+          ),
           children: [
             Text(l.progressTitle, style: AppText.screenTitle),
             const SizedBox(height: AppSpacing.s26),
@@ -169,20 +176,22 @@ class _Counters extends StatelessWidget {
   }
 
   Widget _cell(int value, String label) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$value', style: AppText.counterLarge),
-          const SizedBox(height: 5),
-          Text(label.toUpperCase(), style: AppTextExercise.summaryLabel),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('$value', style: AppText.counterLarge),
+      const SizedBox(height: 5),
+      Text(label.toUpperCase(), style: AppTextExercise.summaryLabel),
+    ],
+  );
 }
 
 class _VDivider extends StatelessWidget {
   const _VDivider();
   @override
-  Widget build(BuildContext context) =>
-      const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: SizedBox(width: 1, child: ColoredBox(color: AppColors.hairline)));
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.symmetric(horizontal: 16),
+    child: SizedBox(width: 1, child: ColoredBox(color: AppColors.hairline)),
+  );
 }
 
 /// Month activity chart — one ink bar per day, heights relative to the busiest day; zero days are
@@ -204,7 +213,10 @@ class _ActivityChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(child: Text(l.progressActivityMonth, style: AppText.sectionLabel)),
-            Text(l.progressMonth('$month'), style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+            Text(
+              l.progressMonth('$month'),
+              style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+            ),
           ],
         ),
         const SizedBox(height: 14),
@@ -225,7 +237,10 @@ class _ActivityChart extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             for (final t in const ['1', '15', '31'])
-              Text(t, style: AppText.counterSmall.copyWith(fontSize: 11, color: AppColors.tertiary)),
+              Text(
+                t,
+                style: AppText.counterSmall.copyWith(fontSize: 11, color: AppColors.tertiary),
+              ),
           ],
         ),
       ],
@@ -279,23 +294,26 @@ class _DensityBar extends StatelessWidget {
   }
 
   Widget _item(InkDensity d, String label) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 9,
-            height: 9,
-            child: d == InkDensity.outline
-                ? DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppInkDensity.outlineColor, width: AppInkDensity.outlineWidth),
-                    ),
-                  )
-                : ColoredBox(color: AppInkDensity.solid(d)),
-          ),
-          const SizedBox(width: 6),
-          Text(label, style: AppText.transcription.copyWith(fontSize: 11.5)),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      SizedBox(
+        width: 9,
+        height: 9,
+        child: d == InkDensity.outline
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: AppInkDensity.outlineColor,
+                    width: AppInkDensity.outlineWidth,
+                  ),
+                ),
+              )
+            : ColoredBox(color: AppInkDensity.solid(d)),
+      ),
+      const SizedBox(width: 6),
+      Text(label, style: AppText.transcription.copyWith(fontSize: 11.5)),
+    ],
+  );
 }
 
 /// Full-width hairline with a configurable gap above it (16px below, matching the §2.6 rhythm).
@@ -305,7 +323,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(top: top, bottom: 16),
-        child: const SizedBox(height: 1, child: ColoredBox(color: AppColors.hairline)),
-      );
+    padding: EdgeInsets.only(top: top, bottom: 16),
+    child: const SizedBox(height: 1, child: ColoredBox(color: AppColors.hairline)),
+  );
 }

@@ -91,8 +91,10 @@ class PoolSync {
           // A 404 (the term is gone) or a 422 would never succeed on a retry. The local mirror
           // keeps whatever the learner chose; the next sync is what reconciles it.
           drop.add(row.termId);
-          debugPrint('PoolSync: dropped a rejected pool change '
-              '(${e.response?.statusCode}): ${e.response?.data}');
+          debugPrint(
+            'PoolSync: dropped a rejected pool change '
+            '(${e.response?.statusCode}): ${e.response?.data}',
+          );
         } catch (_) {
           transientFailure = true;
           break;

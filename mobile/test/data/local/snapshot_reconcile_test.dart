@@ -33,11 +33,7 @@ class _SnapshotApi implements ApiClient {
     calls++;
     lastSince = since;
 
-    return {
-      'server_time': '2026-08-19T18:00:00Z',
-      'has_more': false,
-      'changes': _changes,
-    };
+    return {'server_time': '2026-08-19T18:00:00Z', 'has_more': false, 'changes': _changes};
   }
 
   @override
@@ -57,31 +53,29 @@ void main() {
 
   /// Rows mirrored before the server was rebuilt — ids the server can no longer account for.
   Future<void> seedPreRebuildRows() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'oldCol', updatedAt: t0, title: const Value('Аэропорт')),
-        ],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'oldCol', termId: 'oldTerm', updatedAt: t0),
-        ],
-        termUpserts: [
-          TermsCompanion.insert(
-            id: 'oldTerm',
-            updatedAt: t0,
-            termText: const Value('May I join you?'),
-            translation: const Value('Можно присоединиться?'),
-          ),
-        ],
-        progressUpserts: [
-          TermProgressCompanion.insert(
-            termId: 'oldTerm',
-            updatedAt: t0,
-            dueAt: Value(DateTime.utc(2026, 8, 18)), // overdue → would show as «Повторить»
-          ),
-        ],
-        triageUpserts: [
-          TriagedTermsCompanion.insert(termId: 'oldTerm', decidedAt: t0),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'oldCol', updatedAt: t0, title: const Value('Аэропорт')),
+    ],
+    itemUpserts: [
+      CollectionItemsCompanion.insert(collectionId: 'oldCol', termId: 'oldTerm', updatedAt: t0),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(
+        id: 'oldTerm',
+        updatedAt: t0,
+        termText: const Value('May I join you?'),
+        translation: const Value('Можно присоединиться?'),
+      ),
+    ],
+    progressUpserts: [
+      TermProgressCompanion.insert(
+        termId: 'oldTerm',
+        updatedAt: t0,
+        dueAt: Value(DateTime.utc(2026, 8, 18)), // overdue → would show as «Повторить»
+      ),
+    ],
+    triageUpserts: [TriagedTermsCompanion.insert(termId: 'oldTerm', decidedAt: t0)],
+  );
 
   test('an EMPTY snapshot clears every trace of the pre-rebuild data', () async {
     await seedPreRebuildRows();
@@ -106,7 +100,11 @@ void main() {
           {'id': 'oldTerm', 'updated_at': '2026-08-19T00:00:00Z', 'text': 'May I join you?'},
         ],
         'progress': [
-          {'term_id': 'oldTerm', 'updated_at': '2026-08-19T00:00:00Z', 'due_at': '2026-08-18T00:00:00Z'},
+          {
+            'term_id': 'oldTerm',
+            'updated_at': '2026-08-19T00:00:00Z',
+            'due_at': '2026-08-18T00:00:00Z',
+          },
         ],
         'triages': [
           {'term_id': 'oldTerm', 'updated_at': '2026-08-19T00:00:00Z'},

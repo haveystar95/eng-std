@@ -47,8 +47,9 @@ class AuthRepository {
     if (_googleReady) return;
     await GoogleSignIn.instance.initialize(
       clientId: AppConfig.googleIosClientId,
-      serverClientId:
-          AppConfig.googleServerClientId.isEmpty ? null : AppConfig.googleServerClientId,
+      serverClientId: AppConfig.googleServerClientId.isEmpty
+          ? null
+          : AppConfig.googleServerClientId,
     );
     _googleReady = true;
   }
@@ -102,7 +103,9 @@ class AuthRepository {
       final cursor = await _api.syncCursor();
       await _seq.seedAtLeast(SeqCounter.triage, cursor.triage);
       await _seq.seedAtLeast(SeqCounter.review, cursor.review);
-    } catch (_) {/* offline or endpoint unavailable — keep local counters */}
+    } catch (_) {
+      /* offline or endpoint unavailable — keep local counters */
+    }
   }
 
   Future<AppUser> signInWithGoogle() async {
@@ -226,17 +229,23 @@ class AuthRepository {
     await _api.deleteAccount();
     try {
       await GoogleSignIn.instance.signOut();
-    } catch (_) {/* best effort */}
+    } catch (_) {
+      /* best effort */
+    }
     await _tokens.clear();
   }
 
   Future<void> signOut() async {
     try {
       await _api.logout();
-    } catch (_) {/* best effort */}
+    } catch (_) {
+      /* best effort */
+    }
     try {
       await GoogleSignIn.instance.signOut();
-    } catch (_) {/* best effort */}
+    } catch (_) {
+      /* best effort */
+    }
     await _tokens.clear();
   }
 }

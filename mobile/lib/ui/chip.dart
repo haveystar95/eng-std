@@ -75,7 +75,9 @@ class AppChip extends StatelessWidget {
         onTap: onTap,
         child: Material(
           color: bg,
-          shape: border == null ? shape : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
+          shape: border == null
+              ? shape
+              : shape.copyWith(side: BorderSide(color: AppColors.hairline)),
           clipBehavior: Clip.antiAlias,
           child: InkWell(onTap: onTap, child: content),
         ),
@@ -106,20 +108,25 @@ class MinTapHeight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        // Ребёнок уже несёт свою Semantics-кнопку — второй узел не нужен.
-        excludeFromSemantics: true,
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: minHeight),
-          child: Align(widthFactor: 1, heightFactor: 1, child: child),
-        ),
-      );
+    behavior: HitTestBehavior.opaque,
+    // Ребёнок уже несёт свою Semantics-кнопку — второй узел не нужен.
+    excludeFromSemantics: true,
+    onTap: onTap,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: Align(widthFactor: 1, heightFactor: 1, child: child),
+    ),
+  );
 }
 
 /// Ряд чипов с переносом на следующую строку (rule 16, первый вариант).
 class ChipWrap extends StatelessWidget {
-  const ChipWrap({super.key, required this.children, this.spacing = AppSpacing.s8, this.runSpacing = AppSpacing.s8});
+  const ChipWrap({
+    super.key,
+    required this.children,
+    this.spacing = AppSpacing.s8,
+    this.runSpacing = AppSpacing.s8,
+  });
 
   final List<Widget> children;
   final double spacing;

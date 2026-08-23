@@ -93,7 +93,10 @@ class _WordSheetState extends ConsumerState<_WordSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(_isEdit ? l.wordSheetEditTitle : l.wordSheetAddTitle, style: AppText.sheetButton.copyWith(fontSize: 19)),
+        Text(
+          _isEdit ? l.wordSheetEditTitle : l.wordSheetAddTitle,
+          style: AppText.sheetButton.copyWith(fontSize: 19),
+        ),
         const SizedBox(height: 18),
         _Field(
           label: l.wordFieldTerm,
@@ -133,8 +136,10 @@ class _WordSheetState extends ConsumerState<_WordSheet> {
               borderRadius: BorderRadius.circular(AppRadii.small),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Text(l.wordSheetDeleteLink,
-                    style: AppText.verdictLabel.copyWith(color: AppColors.verdictUnknown)),
+                child: Text(
+                  l.wordSheetDeleteLink,
+                  style: AppText.verdictLabel.copyWith(color: AppColors.verdictUnknown),
+                ),
               ),
             ),
           ),
@@ -165,12 +170,20 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inputStyle = isTerm
-        ? const TextStyle(fontFamily: AppFonts.literata, fontWeight: FontWeight.w500, fontSize: 17, color: AppColors.ink)
+        ? const TextStyle(
+            fontFamily: AppFonts.literata,
+            fontWeight: FontWeight.w500,
+            fontSize: 17,
+            color: AppColors.ink,
+          )
         : AppText.translation.copyWith(fontSize: 15, color: AppColors.ink);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label.toUpperCase(), style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary)),
+        Text(
+          label.toUpperCase(),
+          style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary),
+        ),
         const SizedBox(height: 7),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

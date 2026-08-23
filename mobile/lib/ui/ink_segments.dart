@@ -56,7 +56,10 @@ class InkSegments extends StatelessWidget {
         height: height,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            border: Border.all(color: AppInkDensity.outlineColor, width: AppInkDensity.outlineWidth),
+            border: Border.all(
+              color: AppInkDensity.outlineColor,
+              width: AppInkDensity.outlineWidth,
+            ),
           ),
         ),
       );
@@ -100,7 +103,10 @@ class _SegmentBox extends StatelessWidget {
       case InkDensity.outline:
         return DecoratedBox(
           decoration: BoxDecoration(
-            border: Border.all(color: AppInkDensity.outlineColor, width: AppInkDensity.outlineWidth),
+            border: Border.all(
+              color: AppInkDensity.outlineColor,
+              width: AppInkDensity.outlineWidth,
+            ),
           ),
         );
     }

@@ -36,7 +36,8 @@ class TrainingHomeScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final stats = ref.watch(statsProvider).value;
     final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
-    final progress = ref.watch(collectionsProgressProvider).value ?? const <String, CollectionProgress>{};
+    final progress =
+        ref.watch(collectionsProgressProvider).value ?? const <String, CollectionProgress>{};
     final cta = ref.watch(homeCtaProvider);
     final word = ref.watch(wordOfDayProvider).value;
     final online = ref.watch(connectivityProvider).value ?? true;
@@ -52,12 +53,14 @@ class TrainingHomeScreen extends ConsumerWidget {
     // the collection screen — so the card just affirms the goal and points at a new collection.
     // «Met» is asked of the goal counter, not of today's answers: the goal is new words, and a long
     // repeat session used to close it without a single new word in it.
-    final allDone = cta.kind == HomeCtaKind.none &&
+    final allDone =
+        cta.kind == HomeCtaKind.none &&
         collections.isNotEmpty &&
         ring.goal > 0 &&
         ring.done >= ring.goal;
 
-    final bottomInset = AppTabBarMetrics.height +
+    final bottomInset =
+        AppTabBarMetrics.height +
         AppTabBarMetrics.bottomInset +
         MediaQuery.viewPaddingOf(context).bottom +
         AppSpacing.s8;
@@ -68,94 +71,113 @@ class TrainingHomeScreen extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: SafeArea(
-      bottom: false,
-      child: RefreshIndicator(
-        color: AppColors.ink,
-        backgroundColor: AppColors.surfaceRaised,
-        onRefresh: () async {
-          // Full resync (authoritative snapshot) so pull-to-refresh also reaps ghost
-          // collections removed server-side without a tombstone.
-          await ref.read(syncServiceProvider).resync();
-          ref.invalidate(dueCardsProvider);
-        },
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(0, AppSpacing.s8, 0, bottomInset),
-          children: [
-            if (!online) ...[
-              _pad(const _OfflineBanner()),
-              const SizedBox(height: AppSpacing.sectionAiry),
-            ],
-            _pad(_GoalStreak(done: ring.done, goal: ring.goal, streak: streak)),
-            if (allDone) ...[
-              const SizedBox(height: AppSpacing.sectionAiry),
-              _pad(_AllDoneCard(
-                // «N повторений сделано» — the card's own line is about ANSWERS and stays that way;
-                // it is a fact under the headline, not the goal counter above it.
-                done: reviewsToday,
-                onGenerate: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const GenerateScreen(),
-                    )),
-              )),
-            ] else ...[
-              if (cta.kind != HomeCtaKind.none) ...[
+        bottom: false,
+        child: RefreshIndicator(
+          color: AppColors.ink,
+          backgroundColor: AppColors.surfaceRaised,
+          onRefresh: () async {
+            // Full resync (authoritative snapshot) so pull-to-refresh also reaps ghost
+            // collections removed server-side without a tombstone.
+            await ref.read(syncServiceProvider).resync();
+            ref.invalidate(dueCardsProvider);
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(0, AppSpacing.s8, 0, bottomInset),
+            children: [
+              if (!online) ...[
+                _pad(const _OfflineBanner()),
                 const SizedBox(height: AppSpacing.sectionAiry),
-                _pad(_CtaButton(
-                  cta: cta,
+              ],
+              _pad(_GoalStreak(done: ring.done, goal: ring.goal, streak: streak)),
+              if (allDone) ...[
+                const SizedBox(height: AppSpacing.sectionAiry),
+                _pad(
+                  _AllDoneCard(
+                    // «N повторений сделано» — the card's own line is about ANSWERS and stays that way;
+                    // it is a fact under the headline, not the goal counter above it.
+                    done: reviewsToday,
+                    onGenerate: () => Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => const GenerateScreen())),
+                  ),
+                ),
+              ] else ...[
+                if (cta.kind != HomeCtaKind.none) ...[
+                  const SizedBox(height: AppSpacing.sectionAiry),
+                  _pad(
+                    _CtaButton(
+                      cta: cta,
+                      collections: collections,
+                      progress: progress,
+                      onReview: () => _openSession(context, l.homeSessionTitle),
+                      onLearn: () => _openSession(context, l.homeSessionTitle, learn: true),
+                      onTriage: (id, title) => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TriageScreen(collectionId: id, title: title),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                // The two ways into the pool from the main screen, under the primary action and
+                // deliberately quiet. The CTA answers «что делать сейчас»; these answer «что я вообще
+                // учу» and «хочу именно эту тему» — real questions, but not the daily one.
+                if (collections.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.s12),
+                  _pad(
+                    _PoolEntries(
+                      collections: collections,
+                      onMyWords: () => Navigator.of(
+                        context,
+                      ).push(MaterialPageRoute(builder: (_) => const MyWordsScreen())),
+                      onTopic: (id, title) => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => SessionScreen(title: title, collectionId: id),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sectionAiry),
+                _pad(_GenerationCard(showQuotaNote: collections.isEmpty, offline: !online)),
+              ],
+              if (word != null) ...[
+                const SizedBox(height: AppSpacing.sectionAiry),
+                _pad(_WordOfDay(word: word)),
+              ],
+              if (collections.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sectionAiry),
+                _CollectionsStrip(
                   collections: collections,
                   progress: progress,
-                  onReview: () => _openSession(context, l.homeSessionTitle),
-                  onLearn: () => _openSession(context, l.homeSessionTitle, learn: true),
-                  onTriage: (id, title) => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => TriageScreen(collectionId: id, title: title),
-                      )),
-                )),
+                  onSeeAll: onOpenCollections,
+                ),
               ],
-              // The two ways into the pool from the main screen, under the primary action and
-              // deliberately quiet. The CTA answers «что делать сейчас»; these answer «что я вообще
-              // учу» and «хочу именно эту тему» — real questions, but not the daily one.
-              if (collections.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s12),
-                _pad(_PoolEntries(
-                  collections: collections,
-                  onMyWords: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const MyWordsScreen(),
-                      )),
-                  onTopic: (id, title) => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => SessionScreen(title: title, collectionId: id),
-                      )),
-                )),
-              ],
-              const SizedBox(height: AppSpacing.sectionAiry),
-              _pad(_GenerationCard(showQuotaNote: collections.isEmpty, offline: !online)),
             ],
-            if (word != null) ...[
-              const SizedBox(height: AppSpacing.sectionAiry),
-              _pad(_WordOfDay(word: word)),
-            ],
-            if (collections.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sectionAiry),
-              _CollectionsStrip(
-                collections: collections,
-                progress: progress,
-                onSeeAll: onOpenCollections,
-              ),
-            ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
 
   /// Screen-edge padding for a block. The collections strip is exempt (it bleeds).
-  static Widget _pad(Widget child) =>
-      Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH), child: child);
+  static Widget _pad(Widget child) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+    child: child,
+  );
 
-  void _openSession(BuildContext context, String title, {bool practice = false, bool learn = false}) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => SessionScreen(title: title, practice: practice, learn: learn),
-    ));
+  void _openSession(
+    BuildContext context,
+    String title, {
+    bool practice = false,
+    bool learn = false,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(title: title, practice: practice, learn: learn),
+      ),
+    );
   }
 }
 
@@ -345,7 +367,8 @@ class _CtaButton extends StatelessWidget {
       case HomeCtaKind.learn:
         label = l.homeLearnButton(cta.count);
         subtitle = l.homeLearnSubtitle;
-        onTap = onLearn; // a non-practice session introduces the new words (F8); empty ⇒ quota spent
+        onTap =
+            onLearn; // a non-practice session introduces the new words (F8); empty ⇒ quota spent
       case HomeCtaKind.triage:
         label = l.homeTriageButton(cta.count);
         final target = collections.where((c) => c.id == cta.collectionId).firstOrNull;
@@ -379,7 +402,12 @@ class _CtaButton extends StatelessWidget {
                     Text(label, style: AppText.primaryButton),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
-                      Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.primaryButtonSub),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.primaryButtonSub,
+                      ),
                     ],
                   ],
                 ),
@@ -417,9 +445,11 @@ class _GenerationCard extends StatelessWidget {
 
   void _open(BuildContext context, {String? topic, bool startVoice = false}) {
     AppHaptics.light();
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => GenerateScreen(initialTopic: topic, startVoice: startVoice),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GenerateScreen(initialTopic: topic, startVoice: startVoice),
+      ),
+    );
   }
 
   @override
@@ -432,12 +462,19 @@ class _GenerationCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l.homeGenerateTitle,
-                  style: AppText.translation.copyWith(
-                      fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.tertiary)),
+              Text(
+                l.homeGenerateTitle,
+                style: AppText.translation.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.tertiary,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text(l.homeGenerateOfflineNote,
-                  style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+              Text(
+                l.homeGenerateOfflineNote,
+                style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+              ),
             ],
           ),
         ),
@@ -473,7 +510,10 @@ class _GenerationCard extends StatelessWidget {
                       l.homeGeneratePlaceholder,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.translation.copyWith(fontSize: 14.5, color: AppColors.tertiary),
+                      style: AppText.translation.copyWith(
+                        fontSize: 14.5,
+                        color: AppColors.tertiary,
+                      ),
                     ),
                   ),
                   _IconTap(
@@ -511,7 +551,10 @@ class _GenerationCard extends StatelessWidget {
                   l.homeGenerateChipRent,
                   l.homeGenerateChipInterview,
                 ]) ...[
-                  _ExampleChip(label: chip, onTap: () => _open(context, topic: chip)),
+                  _ExampleChip(
+                    label: chip,
+                    onTap: () => _open(context, topic: chip),
+                  ),
                   const SizedBox(width: AppSpacing.s8),
                 ],
               ],
@@ -519,8 +562,10 @@ class _GenerationCard extends StatelessWidget {
           ),
           if (showQuotaNote) ...[
             const SizedBox(height: 11),
-            Text(l.homeGenerateFreeTier,
-                style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+            Text(
+              l.homeGenerateFreeTier,
+              style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+            ),
           ],
         ],
       ),
@@ -568,7 +613,11 @@ class _ExampleChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
             child: Text(
               label,
-              style: AppText.translation.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.inkBody),
+              style: AppText.translation.copyWith(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.inkBody,
+              ),
             ),
           ),
         ),
@@ -603,8 +652,10 @@ class _OfflineBanner extends StatelessWidget {
           ),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(l.homeOfflineBanner,
-                style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody)),
+            child: Text(
+              l.homeOfflineBanner,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
+            ),
           ),
         ],
       ),
@@ -629,18 +680,30 @@ class _AllDoneCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l.homeAllDoneTitle, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 26)),
+          Text(
+            l.homeAllDoneTitle,
+            textAlign: TextAlign.center,
+            style: AppText.stepTitle.copyWith(fontSize: 26),
+          ),
           const SizedBox(height: 9),
           Text(
             l.homeAllDoneSubtitle(done),
             textAlign: TextAlign.center,
-            style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45, color: AppColors.secondary),
+            style: AppText.translation.copyWith(
+              fontSize: 13.5,
+              height: 1.45,
+              color: AppColors.secondary,
+            ),
           ),
           const SizedBox(height: 18),
-          PrimaryButton(label: l.homeAllDoneGenerate, minHeight: 52, onPressed: () {
-            AppHaptics.light();
-            onGenerate();
-          }),
+          PrimaryButton(
+            label: l.homeAllDoneGenerate,
+            minHeight: 52,
+            onPressed: () {
+              AppHaptics.light();
+              onGenerate();
+            },
+          ),
         ],
       ),
     );
@@ -740,8 +803,14 @@ class _CollectionsStrip extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(l.homeSeeAll,
-                          style: AppText.translation.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                      Text(
+                        l.homeSeeAll,
+                        style: AppText.translation.copyWith(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
                       const SizedBox(width: 5),
                       const Icon(LucideIcons.chevronRight, size: 14, color: AppColors.tertiary),
                     ],
@@ -784,7 +853,8 @@ class _CollectionCard extends StatelessWidget {
   static const _titleHeight = _titleSize * 1.15 * 2; // AppText.collectionNameCard.height = 1.15
 
   /// Cover + gap + two title lines + gap + count + gap + bar, with a point of slack.
-  static const height = 104 + AppSpacing.s8 + _titleHeight + 3 + 15 + 7 + AppProgress.heightCard + 1;
+  static const height =
+      104 + AppSpacing.s8 + _titleHeight + 3 + 15 + 7 + AppProgress.heightCard + 1;
 
   @override
   Widget build(BuildContext context) {
@@ -792,9 +862,12 @@ class _CollectionCard extends StatelessWidget {
     final total = progress?.total ?? collection.wordsCount;
     final done = progress?.mastered ?? 0;
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => CollectionDetailScreen(collectionId: collection.id, title: collection.title),
-      )),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              CollectionDetailScreen(collectionId: collection.id, title: collection.title),
+        ),
+      ),
       child: SizedBox(
         width: 150,
         child: Column(
@@ -812,8 +885,10 @@ class _CollectionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 3),
-            Text(l.homeCollectionProgress(done, total),
-                style: AppText.transcription.copyWith(fontSize: 11.5)),
+            Text(
+              l.homeCollectionProgress(done, total),
+              style: AppText.transcription.copyWith(fontSize: 11.5),
+            ),
             const SizedBox(height: 7),
             ProgressLine(value: total > 0 ? done / total : 0, height: AppProgress.heightCard),
           ],

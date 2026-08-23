@@ -35,15 +35,18 @@ void main() {
   tearDown(() => db.close());
 
   DioException offline() => DioException.connectionError(
-        requestOptions: RequestOptions(path: '/study/sessions/x/complete'),
-        reason: 'no network',
-      );
+    requestOptions: RequestOptions(path: '/study/sessions/x/complete'),
+    reason: 'no network',
+  );
 
   DioException rejected(int status) => DioException.badResponse(
-        statusCode: status,
-        requestOptions: RequestOptions(path: '/study/sessions/x/complete'),
-        response: Response(requestOptions: RequestOptions(path: '/'), statusCode: status),
-      );
+    statusCode: status,
+    requestOptions: RequestOptions(path: '/study/sessions/x/complete'),
+    response: Response(
+      requestOptions: RequestOptions(path: '/'),
+      statusCode: status,
+    ),
+  );
 
   test('records durably and sends, then drops the row', () async {
     final api = _FakeApi(TokenStore());
@@ -69,8 +72,11 @@ void main() {
     await SessionCompletionSync(api, db).flush();
 
     expect(api.calls.single.sessionId, 'S1');
-    expect(api.calls.single.endedAt, '2026-08-17T17:49:16.000Z',
-        reason: 'the time the learner stopped, not the time the queue drained');
+    expect(
+      api.calls.single.endedAt,
+      '2026-08-17T17:49:16.000Z',
+      reason: 'the time the learner stopped, not the time the queue drained',
+    );
     expect(await SessionCompletionSync(api, db).pendingCount(), 0);
   });
 
@@ -98,10 +104,18 @@ void main() {
   test('a backlog drains oldest first', () async {
     // Queued directly: this is the state an app that was offline for two sessions wakes up in, and
     // it must go up in the order the runs actually finished.
-    await db.enqueueCompletion(SessionCompletionQueueRowsCompanion.insert(
-      sessionId: 'S2', endedAt: '2026-08-17T18:00:00.000Z'));
-    await db.enqueueCompletion(SessionCompletionQueueRowsCompanion.insert(
-      sessionId: 'S1', endedAt: '2026-08-17T17:00:00.000Z'));
+    await db.enqueueCompletion(
+      SessionCompletionQueueRowsCompanion.insert(
+        sessionId: 'S2',
+        endedAt: '2026-08-17T18:00:00.000Z',
+      ),
+    );
+    await db.enqueueCompletion(
+      SessionCompletionQueueRowsCompanion.insert(
+        sessionId: 'S1',
+        endedAt: '2026-08-17T17:00:00.000Z',
+      ),
+    );
 
     final api = _FakeApi(TokenStore());
     await SessionCompletionSync(api, db).flush();

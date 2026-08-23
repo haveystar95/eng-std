@@ -142,11 +142,9 @@ class Pronouncer {
   Future<void> _configureIosAudioSession() async {
     if (_audioSessionReady || defaultTargetPlatform != TargetPlatform.iOS) return;
     _audioSessionReady = true;
-    await _tts.setIosAudioCategory(
-      IosTextToSpeechAudioCategory.playback,
-      [IosTextToSpeechAudioCategoryOptions.mixWithOthers],
-      IosTextToSpeechAudioMode.defaultMode,
-    );
+    await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+      IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+    ], IosTextToSpeechAudioMode.defaultMode);
   }
 
   Future<void> stop() => _tts.stop();

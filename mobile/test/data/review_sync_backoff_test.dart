@@ -36,7 +36,8 @@ void main() {
     container.read(refProbe);
   });
 
-  ReviewSync build({int maxQueue = 500, Duration backoff = const Duration(seconds: 5)}) => ReviewSync(
+  ReviewSync build({int maxQueue = 500, Duration backoff = const Duration(seconds: 5)}) =>
+      ReviewSync(
         api,
         ReviewQueue(db, _NullStorage()),
         SeqCounter(_NullStorage()),
@@ -50,12 +51,8 @@ void main() {
     return db.close();
   });
 
-  Future<void> answer(ReviewSync sync, {bool practice = true}) => sync.record(
-        termId: 'term',
-        exerciseMode: 'typing',
-        response: 'x',
-        isPractice: practice,
-      );
+  Future<void> answer(ReviewSync sync, {bool practice = true}) =>
+      sync.record(termId: 'term', exerciseMode: 'typing', response: 'x', isPractice: practice);
 
   test('a transient failure keeps the answers and backs off the next attempt', () async {
     final sync = build();
@@ -119,16 +116,22 @@ void main() {
     }
     await Future<void>.delayed(Duration.zero); // let the fire-and-forget flushes settle
 
-    expect(await sync.pendingCount(), 4,
-        reason: 'progress the server has not seen is never dropped to make room');
+    expect(
+      await sync.pendingCount(),
+      4,
+      reason: 'progress the server has not seen is never dropped to make room',
+    );
     expect(sync.stuck.value, isTrue);
   });
 }
 
 DioException _transient(int status) => DioException(
-      requestOptions: RequestOptions(path: '/reviews/batch'),
-      response: Response(requestOptions: RequestOptions(path: '/reviews/batch'), statusCode: status),
-    );
+  requestOptions: RequestOptions(path: '/reviews/batch'),
+  response: Response(
+    requestOptions: RequestOptions(path: '/reviews/batch'),
+    statusCode: status,
+  ),
+);
 
 DioException _permanent(int status) => _transient(status);
 
@@ -137,7 +140,9 @@ class _StubApi implements ApiClient {
   DioException? failWith;
 
   @override
-  Future<({int accepted, int duplicates, int unknown})> submitReviews(List<PendingReview> reviews) async {
+  Future<({int accepted, int duplicates, int unknown})> submitReviews(
+    List<PendingReview> reviews,
+  ) async {
     calls++;
     final failure = failWith;
     if (failure != null) throw failure;
@@ -161,8 +166,7 @@ class _NullStorage implements FlutterSecureStorage {
     WebOptions? webOptions,
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
-  }) async =>
-      _v[key];
+  }) async => _v[key];
 
   @override
   Future<void> write({

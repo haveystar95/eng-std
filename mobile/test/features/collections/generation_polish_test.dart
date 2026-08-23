@@ -26,11 +26,7 @@ void main() {
   });
 
   group('visiblePendingGenerations — one row per collection', () {
-    PendingGeneration row({
-      required String id,
-      required String status,
-      String? collectionId,
-    }) =>
+    PendingGeneration row({required String id, required String status, String? collectionId}) =>
         PendingGeneration(
           id: id,
           topic: 'иду в банк',
@@ -47,14 +43,14 @@ void main() {
         );
 
     WordCollection collection(String id) => WordCollection(
-          id: id,
-          title: 'В банке',
-          source: 'ai',
-          type: 'custom',
-          wordsCount: 12,
-          sourceLang: 'ru',
-          targetLang: 'en',
-        );
+      id: id,
+      title: 'В банке',
+      source: 'ai',
+      type: 'custom',
+      wordsCount: 12,
+      sourceLang: 'ru',
+      targetLang: 'en',
+    );
 
     test('a succeeded row yields once its collection is mirrored', () {
       final pending = [row(id: 'g1', status: 'succeeded', collectionId: 'c1')];
@@ -67,10 +63,7 @@ void main() {
     });
 
     test('an in-flight or failed row has no collection and is always shown', () {
-      final pending = [
-        row(id: 'g1', status: 'pending'),
-        row(id: 'g2', status: 'failed'),
-      ];
+      final pending = [row(id: 'g1', status: 'pending'), row(id: 'g2', status: 'failed')];
       expect(visiblePendingGenerations(pending, [collection('c1')]), hasLength(2));
     });
 

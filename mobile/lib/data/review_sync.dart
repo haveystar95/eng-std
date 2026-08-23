@@ -79,19 +79,21 @@ class ReviewSync {
   }) async {
     await _enforceCap();
     // One insert on the background isolate. Awaited, so the answer is durable before this returns.
-    await _queue.add(PendingReview(
-      id: ApiClient.ulid(),
-      termId: termId,
-      exerciseMode: exerciseMode,
-      response: response,
-      clientSeq: await _seq.next(SeqCounter.review),
-      answeredAt: DateTime.now().toUtc().toIso8601String(),
-      usedHint: usedHint,
-      isPractice: isPractice,
-      latencyMs: latencyMs,
-      sessionId: sessionId,
-      ladderStep: ladderStep,
-    ));
+    await _queue.add(
+      PendingReview(
+        id: ApiClient.ulid(),
+        termId: termId,
+        exerciseMode: exerciseMode,
+        response: response,
+        clientSeq: await _seq.next(SeqCounter.review),
+        answeredAt: DateTime.now().toUtc().toIso8601String(),
+        usedHint: usedHint,
+        isPractice: isPractice,
+        latencyMs: latencyMs,
+        sessionId: sessionId,
+        ladderStep: ladderStep,
+      ),
+    );
     // Count this review toward today's local activity tally (Progress screen / session-summary goal
     // card). Real session reviews only — free practice is excluded (Training Loop v2 / F17: practice
     // has zero influence on the daily goal and activity), as is triage. Local, not synced;
@@ -168,8 +170,10 @@ class ReviewSync {
             break; // transient → keep this + remaining chunks
           }
           drop.addAll(chunk.map((e) => e.id)); // 422/413 → drop with a log, don't block the rest
-          debugPrint('ReviewSync: dropped ${chunk.length} rejected answer(s) '
-              '(${e.response?.statusCode}): ${e.response?.data}');
+          debugPrint(
+            'ReviewSync: dropped ${chunk.length} rejected answer(s) '
+            '(${e.response?.statusCode}): ${e.response?.data}',
+          );
         } catch (_) {
           transientFailure = true;
           break; // unknown → treat as transient

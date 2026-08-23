@@ -9,18 +9,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// says how far the word has come, and the direction a recognition asked in is not that.
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-        theme: buildAppTheme(),
-        home: Scaffold(body: Center(child: child)),
-      );
+    theme: buildAppTheme(),
+    home: Scaffold(body: Center(child: child)),
+  );
 
   /// The colour of each dot, left to right — which is the whole visual contract: transparent means
   /// a passed rung (drawn as an outline), ink means the current one, track means still ahead.
   List<Color?> dotColours(WidgetTester tester) {
     final containers = tester
-        .widgetList<Container>(find.descendant(
-          of: find.byType(LadderDots),
-          matching: find.byType(Container),
-        ))
+        .widgetList<Container>(
+          find.descendant(of: find.byType(LadderDots), matching: find.byType(Container)),
+        )
         .toList();
     return [for (final c in containers) (c.decoration as BoxDecoration?)?.color];
   }
@@ -34,7 +33,9 @@ void main() {
     ]);
   });
 
-  testWidgets('both recognition rungs share one dot — the direction is not progress', (tester) async {
+  testWidgets('both recognition rungs share one dot — the direction is not progress', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap(const LadderDots(step: 1)));
     final forward = dotColours(tester);
 
@@ -62,14 +63,15 @@ void main() {
     expect(dotColours(tester).where((c) => c == AppColors.track), isEmpty);
   });
 
-  testWidgets('the current dot is the larger one — findable at a glance in a long list', (tester) async {
+  testWidgets('the current dot is the larger one — findable at a glance in a long list', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap(const LadderDots(step: 3)));
 
     final sizes = tester
-        .widgetList<Container>(find.descendant(
-          of: find.byType(LadderDots),
-          matching: find.byType(Container),
-        ))
+        .widgetList<Container>(
+          find.descendant(of: find.byType(LadderDots), matching: find.byType(Container)),
+        )
         .map((c) => (c.constraints?.maxWidth ?? 0))
         .toList();
 
@@ -85,11 +87,17 @@ void main() {
     expect(find.byType(LadderDots), findsNothing);
   });
 
-  testWidgets('the expanded card captions the same five dots, current one semibold', (tester) async {
-    await tester.pumpWidget(wrap(const LadderTrack(
-      step: 1,
-      labels: ['знакомство', 'узнавание', 'сборка', 'написание', 'диктант'],
-    )));
+  testWidgets('the expanded card captions the same five dots, current one semibold', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        const LadderTrack(
+          step: 1,
+          labels: ['знакомство', 'узнавание', 'сборка', 'написание', 'диктант'],
+        ),
+      ),
+    );
 
     for (final label in ['знакомство', 'узнавание', 'сборка', 'написание', 'диктант']) {
       expect(find.text(label), findsOneWidget);

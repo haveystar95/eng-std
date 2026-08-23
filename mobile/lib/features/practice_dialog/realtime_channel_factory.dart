@@ -26,7 +26,7 @@ RealtimeChannel channelForProvider(String provider) {
 /// forwarded. Streams from the chosen inner channel are piped through unchanged.
 class DispatchingRealtimeChannel implements RealtimeChannel {
   DispatchingRealtimeChannel({RealtimeChannel Function(String provider)? select})
-      : _select = select ?? channelForProvider;
+    : _select = select ?? channelForProvider;
 
   final RealtimeChannel Function(String provider) _select;
 

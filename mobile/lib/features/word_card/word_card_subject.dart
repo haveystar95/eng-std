@@ -71,39 +71,44 @@ class WordCardSubject {
   /// The folder the card names once the word is in one.
   SavedFolder? get savedIn => folders.isEmpty ? null : folders.first;
 
-  factory WordCardSubject.fromHit(SearchHit hit, {String? imageUrl, String? imageAuthor, String? imageAuthorUrl}) =>
-      WordCardSubject(
-        termId: hit.termId,
-        text: hit.text,
-        type: hit.type,
-        transcription: hit.transcription,
-        translation: hit.translation,
-        description: hit.description,
-        example: hit.example,
-        exampleTranslation: hit.exampleTranslation,
-        cefr: hit.cefr,
-        // `/search` carries no photo (see the findings note in the task report): the only picture a
-        // search result can have is one the local term mirror already holds, and the caller passes
-        // it in when it does.
-        imageUrl: imageUrl,
-        imageAuthor: imageAuthor,
-        imageAuthorUrl: imageAuthorUrl,
-        folders: hit.folders,
-      );
+  factory WordCardSubject.fromHit(
+    SearchHit hit, {
+    String? imageUrl,
+    String? imageAuthor,
+    String? imageAuthorUrl,
+  }) => WordCardSubject(
+    termId: hit.termId,
+    text: hit.text,
+    type: hit.type,
+    transcription: hit.transcription,
+    translation: hit.translation,
+    description: hit.description,
+    example: hit.example,
+    exampleTranslation: hit.exampleTranslation,
+    cefr: hit.cefr,
+    // `/search` carries no photo (see the findings note in the task report): the only picture a
+    // search result can have is one the local term mirror already holds, and the caller passes
+    // it in when it does.
+    imageUrl: imageUrl,
+    imageAuthor: imageAuthor,
+    imageAuthorUrl: imageAuthorUrl,
+    folders: hit.folders,
+  );
 
   factory WordCardSubject.fromLookup(LookupCard card) => WordCardSubject(
-        lookupId: card.lookupId,
-        text: card.text,
-        type: card.type,
-        transcription: card.transcription,
-        translation: card.translation,
-        description: card.description,
-        example: card.example,
-        exampleTranslation: card.exampleTranslation,
-        cefr: card.cefr,
-      );
+    lookupId: card.lookupId,
+    text: card.text,
+    type: card.type,
+    transcription: card.transcription,
+    translation: card.translation,
+    description: card.description,
+    example: card.example,
+    exampleTranslation: card.exampleTranslation,
+    cefr: card.cefr,
+  );
 
-  factory WordCardSubject.fromWord(Word word, {List<SavedFolder> folders = const []}) => WordCardSubject(
+  factory WordCardSubject.fromWord(Word word, {List<SavedFolder> folders = const []}) =>
+      WordCardSubject(
         termId: word.termId,
         text: word.term,
         type: word.type,
@@ -124,22 +129,22 @@ class WordCardSubject {
       );
 
   WordCardSubject copyWith({List<SavedFolder>? folders}) => WordCardSubject(
-        termId: termId,
-        lookupId: lookupId,
-        text: text,
-        type: type,
-        transcription: transcription,
-        translation: translation,
-        description: description,
-        example: example,
-        exampleTranslation: exampleTranslation,
-        cefr: cefr,
-        imageUrl: imageUrl,
-        imageAuthor: imageAuthor,
-        imageAuthorUrl: imageAuthorUrl,
-        ladderStep: ladderStep,
-        isKnown: isKnown,
-        enrolled: enrolled,
-        folders: folders ?? this.folders,
-      );
+    termId: termId,
+    lookupId: lookupId,
+    text: text,
+    type: type,
+    transcription: transcription,
+    translation: translation,
+    description: description,
+    example: example,
+    exampleTranslation: exampleTranslation,
+    cefr: cefr,
+    imageUrl: imageUrl,
+    imageAuthor: imageAuthor,
+    imageAuthorUrl: imageAuthorUrl,
+    ladderStep: ladderStep,
+    isKnown: isKnown,
+    enrolled: enrolled,
+    folders: folders ?? this.folders,
+  );
 }

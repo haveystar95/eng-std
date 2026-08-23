@@ -8,16 +8,18 @@ import 'package:flutter_test/flutter_test.dart';
 /// cap, same empty-first-session shape — because they are the same algorithm and a session dealt
 /// offline must read like one dealt online.
 void main() {
-  List<LadderEntry> introducing(List<String> terms) =>
-      [for (final t in terms) LadderEntry(t, LearningLadder.stepIntro)];
+  List<LadderEntry> introducing(List<String> terms) => [
+    for (final t in terms) LadderEntry(t, LearningLadder.stepIntro),
+  ];
 
-  List<String> readable(List<SessionSlot> slots) =>
-      [for (final s in slots) '${s.termId}:${s.ladderStep ?? "due"}'];
+  List<String> readable(List<SessionSlot> slots) => [
+    for (final s in slots) '${s.termId}:${s.ladderStep ?? "due"}',
+  ];
 
   List<int> positionsOf(List<SessionSlot> slots, String termId) => [
-        for (var i = 0; i < slots.length; i++)
-          if (slots[i].termId == termId) i,
-      ];
+    for (var i = 0; i < slots.length; i++)
+      if (slots[i].termId == termId) i,
+  ];
 
   test('brings every introduced word back TWICE in the same session, at widening gaps', () {
     // Enough repeats that no slot goes unfilled — the gaps are then exactly as laid out.
@@ -34,7 +36,10 @@ void main() {
       final [intro, first, second] = positions;
 
       expect(first - intro, inInclusiveRange(SessionLayout.firstGapMin, SessionLayout.firstGapMax));
-      expect(second - first, inInclusiveRange(SessionLayout.secondGapMin, SessionLayout.secondGapMax));
+      expect(
+        second - first,
+        inInclusiveRange(SessionLayout.secondGapMin, SessionLayout.secondGapMax),
+      );
       expect([for (final p in positions) slots[p].ladderStep], [0, 1, 2]);
     }
   });
@@ -86,7 +91,11 @@ void main() {
   test('defers a whole word rather than introducing one whose recognitions fall off the end', () {
     // Seven slots is room for exactly one chain (0, 2, 6): a word met and then not asked until
     // tomorrow is worse than a word not met, so the second one waits for the next session, whole.
-    final slots = SessionLayout.arrange(ladder: introducing(['a', 'b']), repeats: const [], size: 7);
+    final slots = SessionLayout.arrange(
+      ladder: introducing(['a', 'b']),
+      repeats: const [],
+      size: 7,
+    );
 
     expect(positionsOf(slots, 'a'), hasLength(3));
     expect(positionsOf(slots, 'b'), isEmpty);
@@ -129,11 +138,13 @@ void main() {
 
   test('is deterministic — the same inputs always deal the same order', () {
     // A retried build must not re-deal a session the learner is halfway through.
-    List<String> run() => readable(SessionLayout.arrange(
-          ladder: introducing(['a', 'b', 'c']),
-          repeats: const ['r1', 'r2'],
-          size: 15,
-        ));
+    List<String> run() => readable(
+      SessionLayout.arrange(
+        ladder: introducing(['a', 'b', 'c']),
+        repeats: const ['r1', 'r2'],
+        size: 15,
+      ),
+    );
 
     expect(run(), run());
   });
@@ -150,6 +161,9 @@ void main() {
   });
 
   test('returns nothing for a session with no room', () {
-    expect(SessionLayout.arrange(ladder: introducing(['a']), repeats: const ['r1'], size: 0), isEmpty);
+    expect(
+      SessionLayout.arrange(ladder: introducing(['a']), repeats: const ['r1'], size: 0),
+      isEmpty,
+    );
   });
 }

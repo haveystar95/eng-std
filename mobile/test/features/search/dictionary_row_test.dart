@@ -17,9 +17,11 @@ void main() {
     // the «не знаю» verdict. Weight says «this part is yours» without spending it.
     await _pump(tester, const DictionaryRow(term: 'hollow', translation: 'пустой', prefix: 'holl'));
 
-    final text = tester.widget<Text>(find.byWidgetPredicate(
-      (w) => w is Text && w.textSpan != null && w.textSpan!.toPlainText() == 'hollow',
-    ));
+    final text = tester.widget<Text>(
+      find.byWidgetPredicate(
+        (w) => w is Text && w.textSpan != null && w.textSpan!.toPlainText() == 'hollow',
+      ),
+    );
     final spans = (text.textSpan! as TextSpan).children!.cast<TextSpan>();
 
     expect(spans.map((s) => s.text).join(), 'hollow');
@@ -39,19 +41,26 @@ void main() {
     await _pump(tester, const DictionaryRow(term: 'hollow', level: 'B2'));
     expect(find.text('B2'), findsNothing);
 
-    await _pump(tester, const DictionaryRow(term: 'hollow', level: 'B2', trailing: RowTrailing.level));
+    await _pump(
+      tester,
+      const DictionaryRow(term: 'hollow', level: 'B2', trailing: RowTrailing.level),
+    );
     expect(find.text('B2'), findsOneWidget);
   });
 
-  testWidgets('a row that leads somewhere carries a chevron and is a button to VoiceOver',
-      (tester) async {
+  testWidgets('a row that leads somewhere carries a chevron and is a button to VoiceOver', (
+    tester,
+  ) async {
     var taps = 0;
-    await _pump(tester, DictionaryRow(
-      term: 'hollow',
-      translation: 'пустой',
-      trailing: RowTrailing.chevron,
-      onTap: () => taps++,
-    ));
+    await _pump(
+      tester,
+      DictionaryRow(
+        term: 'hollow',
+        translation: 'пустой',
+        trailing: RowTrailing.chevron,
+        onTap: () => taps++,
+      ),
+    );
 
     await tester.tap(find.text('пустой'));
     await tester.pump();
@@ -64,10 +73,9 @@ void main() {
   testWidgets('the last row of a list has no rule under it', (tester) async {
     await _pump(tester, const DictionaryRow(term: 'hollow', showDivider: false));
 
-    final container = tester.widget<Container>(find.descendant(
-      of: find.byType(DictionaryRow),
-      matching: find.byType(Container),
-    ));
+    final container = tester.widget<Container>(
+      find.descendant(of: find.byType(DictionaryRow), matching: find.byType(Container)),
+    );
     expect(container.decoration, isNull);
   });
 

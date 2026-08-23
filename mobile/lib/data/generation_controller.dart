@@ -77,20 +77,22 @@ class GenerationController {
   }) async {
     final id = ApiClient.ulid();
     final now = DateTime.now();
-    await _db.upsertPendingGeneration(PendingGenerationsCompanion.insert(
-      id: id,
-      topic: topic,
-      createdAt: now,
-      updatedAt: now,
-      status: const Value('pending'),
-      sent: const Value(false),
-      requested: Value(size),
-      sourceLang: Value(sourceLang),
-      targetLang: Value(targetLang),
-      targetLangExplicit: Value(targetLangExplicit),
-      levelsCsv: Value(levels.join(',')),
-      size: Value(size),
-    ));
+    await _db.upsertPendingGeneration(
+      PendingGenerationsCompanion.insert(
+        id: id,
+        topic: topic,
+        createdAt: now,
+        updatedAt: now,
+        status: const Value('pending'),
+        sent: const Value(false),
+        requested: Value(size),
+        sourceLang: Value(sourceLang),
+        targetLang: Value(targetLang),
+        targetLangExplicit: Value(targetLangExplicit),
+        levelsCsv: Value(levels.join(',')),
+        size: Value(size),
+      ),
+    );
     unawaited(_send(id));
     return id;
   }
@@ -145,7 +147,9 @@ class GenerationController {
           if (r.sent) {
             _poll(r.id); // pending / running → resume polling
           } else {
-            unawaited(_send(r.id)); // queued offline → re-send (never poll an un-sent row → no 404 drop)
+            unawaited(
+              _send(r.id),
+            ); // queued offline → re-send (never poll an un-sent row → no 404 drop)
           }
       }
     }
@@ -179,25 +183,31 @@ class GenerationController {
           // The day's allowance is spent. Nothing about resending fixes that, so the row becomes a
           // spoken-out-loud card instead of sitting in the offline queue forever.
           debugPrint('[gen] $id refused — daily generation quota spent');
-          await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
-            status: const Value('failed'),
-            error: const Value(quotaExceededError),
-            updatedAt: Value(DateTime.now()),
-          ));
+          await _db.updatePendingGeneration(
+            id,
+            PendingGenerationsCompanion(
+              status: const Value('failed'),
+              error: const Value(quotaExceededError),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
           onQuotaChanged?.call(); // the create screen must now grey its button
         } else if (isPermanentReject(e)) {
           debugPrint('[gen] $id rejected (${e.response?.statusCode}) — failing the card');
-          await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
-            status: const Value('failed'),
-            updatedAt: Value(DateTime.now()),
-          ));
+          await _db.updatePendingGeneration(
+            id,
+            PendingGenerationsCompanion(
+              status: const Value('failed'),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
         }
         return; // transient → keep queued (sent stays false); the next flush retries
       }
-      await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
-        sent: const Value(true),
-        updatedAt: Value(DateTime.now()),
-      ));
+      await _db.updatePendingGeneration(
+        id,
+        PendingGenerationsCompanion(sent: const Value(true), updatedAt: Value(DateTime.now())),
+      );
       onQuotaChanged?.call(); // accepted → one generation less for today
       _poll(id);
     } finally {
@@ -230,28 +240,36 @@ class GenerationController {
 
       final now = DateTime.now();
       if (s.isSucceeded) {
-        await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
-          status: const Value('succeeded'),
-          collectionId: Value(s.collectionId),
-          requested: Value(s.requested),
-          delivered: Value(s.delivered),
-          updatedAt: Value(now),
-        ));
+        await _db.updatePendingGeneration(
+          id,
+          PendingGenerationsCompanion(
+            status: const Value('succeeded'),
+            collectionId: Value(s.collectionId),
+            requested: Value(s.requested),
+            delivered: Value(s.delivered),
+            updatedAt: Value(now),
+          ),
+        );
         await _sync(); // pull the new collection + terms (and their images as they land)
         unawaited(resyncForCovers());
         return;
       }
       if (s.isFailed) {
-        await _db.updatePendingGeneration(id, PendingGenerationsCompanion(
-          status: const Value('failed'),
-          error: Value(s.error),
-          updatedAt: Value(now),
-        ));
+        await _db.updatePendingGeneration(
+          id,
+          PendingGenerationsCompanion(
+            status: const Value('failed'),
+            error: Value(s.error),
+            updatedAt: Value(now),
+          ),
+        );
         return;
       }
       if (s.status == 'running') {
-        await _db.updatePendingGeneration(id,
-            PendingGenerationsCompanion(status: const Value('running'), updatedAt: Value(now)));
+        await _db.updatePendingGeneration(
+          id,
+          PendingGenerationsCompanion(status: const Value('running'), updatedAt: Value(now)),
+        );
       }
     }
     // Budget spent while still pending: leave the row as-is; the next app launch reconciles it.

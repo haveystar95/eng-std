@@ -29,8 +29,8 @@ abstract final class AppInkDensity {
   /// is a border, not a fill — it returns transparent here; draw it with
   /// [outlineColor] / [outlineWidth].
   static Color solid(InkDensity d) => switch (d) {
-        InkDensity.filled => filled,
-        InkDensity.halftone => halftone,
-        InkDensity.outline => const Color(0x00000000),
-      };
+    InkDensity.filled => filled,
+    InkDensity.halftone => halftone,
+    InkDensity.outline => const Color(0x00000000),
+  };
 }

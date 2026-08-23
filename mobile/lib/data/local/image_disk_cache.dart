@@ -28,10 +28,9 @@ class ImageDiskCache {
     required AppDatabase database,
     this.maxBytes = defaultMaxBytes,
     DateTime Function()? now,
-  })  : _dir = directory,
-        _db = database,
-        _now = now ?? DateTime.now;
-
+  }) : _dir = directory,
+       _db = database,
+       _now = now ?? DateTime.now;
 
   /// ~150 MB. A Pexels photo is 100–400 KB, so this is several hundred terms' worth — more than a
   /// user sees between reinstalls, while staying a rounding error next to a phone's storage.
@@ -106,17 +105,19 @@ class ImageDiskCache {
     }
 
     final previous = _index.containsKey(url)
-        ? (await (_db.select(_db.cachedImages)..where((t) => t.url.equals(url))).getSingleOrNull())?.bytes ?? 0
+        ? (await (_db.select(
+                _db.cachedImages,
+              )..where((t) => t.url.equals(url))).getSingleOrNull())?.bytes ??
+              0
         : 0;
     _index[url] = name;
     _bytesOnDisk += bytes.length - previous;
 
-    await _db.into(_db.cachedImages).insertOnConflictUpdate(CachedImagesCompanion.insert(
-          url: url,
-          file: name,
-          bytes: bytes.length,
-          usedAt: _now(),
-        ));
+    await _db
+        .into(_db.cachedImages)
+        .insertOnConflictUpdate(
+          CachedImagesCompanion.insert(url: url, file: name, bytes: bytes.length, usedAt: _now()),
+        );
 
     if (_bytesOnDisk > maxBytes) await sweep();
   }
@@ -130,9 +131,9 @@ class ImageDiskCache {
     final target = (maxBytes * _sweepTo).round();
     if (_bytesOnDisk <= target) return;
 
-    final rows = await (_db.select(_db.cachedImages)
-          ..orderBy([(t) => OrderingTerm(expression: t.usedAt)]))
-        .get();
+    final rows = await (_db.select(
+      _db.cachedImages,
+    )..orderBy([(t) => OrderingTerm(expression: t.usedAt)])).get();
 
     for (final row in rows) {
       if (_bytesOnDisk <= target) break;
@@ -163,8 +164,11 @@ class ImageDiskCache {
         // the file was already gone; the row still has to go
       }
     }
-    _bytesOnDisk -= sizeHint ??
-        (await (_db.select(_db.cachedImages)..where((t) => t.url.equals(url))).getSingleOrNull())?.bytes ??
+    _bytesOnDisk -=
+        sizeHint ??
+        (await (_db.select(
+          _db.cachedImages,
+        )..where((t) => t.url.equals(url))).getSingleOrNull())?.bytes ??
         0;
     if (_bytesOnDisk < 0) _bytesOnDisk = 0;
     await (_db.delete(_db.cachedImages)..where((t) => t.url.equals(url))).go();
@@ -173,8 +177,9 @@ class ImageDiskCache {
   /// Refresh the LRU stamp. Fire-and-forget: a lost touch costs one image its place in the queue,
   /// which is not worth making the render path wait on a write.
   Future<void> _touch(String url) async {
-    await (_db.update(_db.cachedImages)..where((t) => t.url.equals(url)))
-        .write(CachedImagesCompanion(usedAt: Value(_now())));
+    await (_db.update(
+      _db.cachedImages,
+    )..where((t) => t.url.equals(url))).write(CachedImagesCompanion(usedAt: Value(_now())));
   }
 
   /// A stable, filesystem-safe name. The URL is hashed only to get a short name — the index, not

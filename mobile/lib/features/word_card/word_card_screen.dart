@@ -73,8 +73,8 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
     final heroHeight = !_subject.hasPhoto
         ? AppWordCard.heroHeightPlate
         : fromFolder
-            ? AppWordCard.heroHeightFromFolder
-            : AppWordCard.heroHeight;
+        ? AppWordCard.heroHeightFromFolder
+        : AppWordCard.heroHeight;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: _subject.hasPhoto ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
@@ -101,7 +101,12 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
                         // seam — the single move that makes this composition «фото-герой» and not
                         // «фото, а под ним текст».
                         SizedBox(height: heroHeight - AppWordCard.heroOverlap),
-                        _Article(subject: _subject, fromFolder: fromFolder, onSpeak: widget.onSpeak, l: l),
+                        _Article(
+                          subject: _subject,
+                          fromFolder: fromFolder,
+                          onSpeak: widget.onSpeak,
+                          l: l,
+                        ),
                       ],
                     ),
                   ],
@@ -243,13 +248,13 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
   }
 
   List<ContextMenuAction> _menuActions(AppLocalizations l) => [
-        if (widget.mode == WordCardMode.folder && _subject.enrolled && widget.onUnenroll != null)
-          ContextMenuAction(
-            icon: LucideIcons.pause,
-            label: l.poolUnenrollAction,
-            onSelected: () => _confirmUnenroll(l),
-          ),
-      ];
+    if (widget.mode == WordCardMode.folder && _subject.enrolled && widget.onUnenroll != null)
+      ContextMenuAction(
+        icon: LucideIcons.pause,
+        label: l.poolUnenrollAction,
+        onSelected: () => _confirmUnenroll(l),
+      ),
+  ];
 
   Future<void> _openMenu(BuildContext anchor, AppLocalizations l) async {
     AppHaptics.light();
@@ -358,7 +363,9 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
     setState(() => _saving = true);
     SavedSearchResult? done;
     try {
-      final saved = await ref.read(apiClientProvider).addSearchResult(
+      final saved = await ref
+          .read(apiClientProvider)
+          .addSearchResult(
             lookupId: _subject.lookupId,
             termId: _subject.termId,
             collectionId: collectionId,
@@ -369,14 +376,16 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
         // The card STAYS — кадр 07 is the same card with a different button, not a screen the save
         // dismisses. Folding the answer back into the subject is what turns the pair into its
         // saved state without a second network round trip.
-        _subject = _subject.copyWith(folders: [
-          SavedFolder(
-            id: saved.collectionId,
-            title: saved.collectionTitle,
-            isDefault: saved.collectionIsDefault,
-          ),
-          ..._subject.folders.where((f) => f.id != saved.collectionId),
-        ]);
+        _subject = _subject.copyWith(
+          folders: [
+            SavedFolder(
+              id: saved.collectionId,
+              title: saved.collectionTitle,
+              isDefault: saved.collectionIsDefault,
+            ),
+            ..._subject.folders.where((f) => f.id != saved.collectionId),
+          ],
+        );
       });
       AppHaptics.light();
       done = saved;
@@ -419,9 +428,7 @@ class _Hero extends StatelessWidget {
 
     Widget plate = ColoredBox(
       color: AppColors.photoPlate,
-      child: Center(
-        child: Text(l.wordCardNoPhoto, style: AppText.photoCredit),
-      ),
+      child: Center(child: Text(l.wordCardNoPhoto, style: AppText.photoCredit)),
     );
 
     if (subject.hasPhoto) {
@@ -448,7 +455,10 @@ class _Hero extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [AppColors.ink.withValues(alpha: 0.42), AppColors.ink.withValues(alpha: 0)],
+                  colors: [
+                    AppColors.ink.withValues(alpha: 0.42),
+                    AppColors.ink.withValues(alpha: 0),
+                  ],
                   stops: const [0, 0.5],
                 ),
               ),
@@ -492,7 +502,12 @@ class _PhotoCredit extends StatelessWidget {
 // ── the article ─────────────────────────────────────────────────────────────
 
 class _Article extends StatelessWidget {
-  const _Article({required this.subject, required this.fromFolder, required this.onSpeak, required this.l});
+  const _Article({
+    required this.subject,
+    required this.fromFolder,
+    required this.onSpeak,
+    required this.l,
+  });
 
   final WordCardSubject subject;
   final bool fromFolder;
@@ -563,8 +578,10 @@ class _Article extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.wordCardExampleLabel.toUpperCase(),
-                      style: AppText.sectionLabel.copyWith(color: AppColors.tertiary)),
+                  Text(
+                    l.wordCardExampleLabel.toUpperCase(),
+                    style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+                  ),
                   const SizedBox(height: 9),
                   _ExampleLine(sentence: example, term: subject.text),
                   if ((subject.exampleTranslation ?? '').isNotEmpty) ...[
@@ -590,15 +607,15 @@ class _RaisedSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.s16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
-          borderRadius: BorderRadius.circular(AppRadii.sheet),
-          border: Border.all(color: AppColors.hairline),
-        ),
-        child: child,
-      );
+    width: double.infinity,
+    padding: const EdgeInsets.all(AppSpacing.s16),
+    decoration: BoxDecoration(
+      color: AppColors.surfaceRaised,
+      borderRadius: BorderRadius.circular(AppRadii.sheet),
+      border: Border.all(color: AppColors.hairline),
+    ),
+    child: child,
+  );
 }
 
 /// Кадр 09 — the acquisition ladder, cut in as a band between the head and the article.
@@ -614,7 +631,9 @@ class _LadderStrip extends StatelessWidget {
     // beginning» — the opposite of what «знаю» means. A dash says it instead, and unlike a word
     // still in the catalogue this IS a standing worth reporting: no action on the card implies it.
     if (subject.isKnown) {
-      return _RaisedSheet(child: Row(children: [LadderKnownDash(label: l.ladderKnownDash)]));
+      return _RaisedSheet(
+        child: Row(children: [LadderKnownDash(label: l.ladderKnownDash)]),
+      );
     }
 
     final step = subject.ladderStep;
@@ -627,8 +646,10 @@ class _LadderStrip extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(l.wordCardProgressLabel.toUpperCase(),
-                  style: AppText.sectionLabel.copyWith(color: AppColors.tertiary)),
+              Text(
+                l.wordCardProgressLabel.toUpperCase(),
+                style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+              ),
               Text(
                 l.wordCardProgressCount(position + 1, LadderDots.rungs.length),
                 style: AppText.levelMark.copyWith(color: AppColors.secondary),
@@ -660,14 +681,16 @@ class _ExampleLine extends StatelessWidget {
     if (at < 0) return Text(sentence, style: AppText.cardExample);
 
     return Text.rich(
-      TextSpan(children: [
-        TextSpan(text: sentence.substring(0, at)),
-        TextSpan(
-          text: sentence.substring(at, at + term.length),
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        TextSpan(text: sentence.substring(at + term.length)),
-      ]),
+      TextSpan(
+        children: [
+          TextSpan(text: sentence.substring(0, at)),
+          TextSpan(
+            text: sentence.substring(at, at + term.length),
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          TextSpan(text: sentence.substring(at + term.length)),
+        ],
+      ),
       style: AppText.cardExample,
     );
   }
@@ -682,13 +705,10 @@ class _LevelBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: AppColors.inkBody,
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Text(level, style: AppText.cardLevelBadge),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(color: AppColors.inkBody, borderRadius: BorderRadius.circular(5)),
+    child: Text(level, style: AppText.cardLevelBadge),
+  );
 }
 
 /// The speaker beside the term: an INK disc on the card (кадр 06), not an outline — it is the only
@@ -701,23 +721,23 @@ class _SpeakButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: label,
-        child: InkResponse(
-          onTap: () {
-            AppHaptics.light();
-            onTap();
-          },
-          radius: AppWordCard.speakButton / 2 + 6,
-          child: Container(
-            width: AppWordCard.speakButton,
-            height: AppWordCard.speakButton,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
-            child: const Icon(LucideIcons.volume2, size: 20, color: AppColors.paper),
-          ),
-        ),
-      );
+    button: true,
+    label: label,
+    child: InkResponse(
+      onTap: () {
+        AppHaptics.light();
+        onTap();
+      },
+      radius: AppWordCard.speakButton / 2 + 6,
+      child: Container(
+        width: AppWordCard.speakButton,
+        height: AppWordCard.speakButton,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
+        child: const Icon(LucideIcons.volume2, size: 20, color: AppColors.paper),
+      ),
+    ),
+  );
 }
 
 class _RoundOverlayButton extends StatelessWidget {
@@ -729,23 +749,23 @@ class _RoundOverlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: label,
-        child: InkResponse(
-          onTap: onTap,
-          radius: AppWordCard.overlayButton / 2 + 6,
-          child: Container(
-            width: AppWordCard.overlayButton,
-            height: AppWordCard.overlayButton,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.paper.withValues(alpha: 0.86),
-            ),
-            child: Icon(icon, size: 19, color: AppColors.ink),
-          ),
+    button: true,
+    label: label,
+    child: InkResponse(
+      onTap: onTap,
+      radius: AppWordCard.overlayButton / 2 + 6,
+      child: Container(
+        width: AppWordCard.overlayButton,
+        height: AppWordCard.overlayButton,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.paper.withValues(alpha: 0.86),
         ),
-      );
+        child: Icon(icon, size: 19, color: AppColors.ink),
+      ),
+    ),
+  );
 }
 
 /// The square beside the main button — «в другую папку». Same height as its neighbour, outline
@@ -759,29 +779,29 @@ class _SquareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: label,
-        child: Material(
-          // The same radius the main button carries — the pair has to read as one control split
-          // in two, and two different corner radii side by side read as two unrelated buttons.
-          color: AppColors.surfaceRaised,
-          borderRadius: BorderRadius.circular(AppRadii.button),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              width: AppWordCard.actionHeight,
-              height: AppWordCard.actionHeight,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadii.button),
-                border: Border.all(color: AppColors.track),
-              ),
-              child: Icon(icon, size: 21, color: AppColors.ink),
-            ),
+    button: true,
+    label: label,
+    child: Material(
+      // The same radius the main button carries — the pair has to read as one control split
+      // in two, and two different corner radii side by side read as two unrelated buttons.
+      color: AppColors.surfaceRaised,
+      borderRadius: BorderRadius.circular(AppRadii.button),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: AppWordCard.actionHeight,
+          height: AppWordCard.actionHeight,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.button),
+            border: Border.all(color: AppColors.track),
           ),
+          child: Icon(icon, size: 21, color: AppColors.ink),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Кадр 07 — the button gone out to a STATE: an outline on layered paper with a green tick. It is
@@ -794,24 +814,29 @@ class _OutlineState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        height: AppWordCard.actionHeight,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
-          borderRadius: BorderRadius.circular(AppRadii.button),
-          border: Border.all(color: AppColors.dashed, width: 1.5),
+    height: AppWordCard.actionHeight,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: AppColors.surfaceRaised,
+      borderRadius: BorderRadius.circular(AppRadii.button),
+      border: Border.all(color: AppColors.dashed, width: 1.5),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(LucideIcons.check, size: 18, color: AppColors.verdictKnown),
+        const SizedBox(width: 9),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.sheetButton,
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(LucideIcons.check, size: 18, color: AppColors.verdictKnown),
-            const SizedBox(width: 9),
-            Flexible(
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.sheetButton),
-            ),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }
 
 /// The second action, as a line rather than a button — it is still there, it just no longer argues
@@ -831,24 +856,24 @@ class _QuietLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: label,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: 46,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 18, color: AppColors.ink),
-                const SizedBox(width: AppSpacing.s8),
-                Text(
-                  label,
-                  style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.ink, fontSize: 15),
-                ),
-              ],
+    button: true,
+    label: label,
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 46,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: AppColors.ink),
+            const SizedBox(width: AppSpacing.s8),
+            Text(
+              label,
+              style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.ink, fontSize: 15),
             ),
-          ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }

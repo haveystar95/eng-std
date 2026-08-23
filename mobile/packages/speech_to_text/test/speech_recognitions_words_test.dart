@@ -31,8 +31,8 @@ void main() {
       expect(firstWords, firstWords);
     });
     test('equals true for different object with same values', () {
-      var firstWordsA =
-          const SpeechRecognitionWords(firstRecognizedWords, null, firstConfidence);
+      var firstWordsA = const SpeechRecognitionWords(
+          firstRecognizedWords, null, firstConfidence);
       expect(firstWords, firstWordsA);
     });
     test('equals false for different results', () {
@@ -42,8 +42,8 @@ void main() {
       expect(firstWords.hashCode, firstWords.hashCode);
     });
     test('hash same for different object with same values', () {
-      var firstWordsA =
-          const SpeechRecognitionWords(firstRecognizedWords, null, firstConfidence);
+      var firstWordsA = const SpeechRecognitionWords(
+          firstRecognizedWords, null, firstConfidence);
       expect(firstWords.hashCode, firstWordsA.hashCode);
     });
     test('hash different for different results', () {

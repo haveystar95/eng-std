@@ -26,9 +26,9 @@ void main() {
   const wrongPrep = 'Your workstation is ready of you.';
 
   List<Map<String, String>> distractors({int count = 2}) => [
-        {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
-        {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
-      ].take(count).toList();
+    {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
+    {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
+  ].take(count).toList();
 
   Future<Term> seed({
     int distractorCount = 2,
@@ -47,10 +47,10 @@ void main() {
           type: const Value('word'),
           translation: const Value('рабочее место'),
           example: const Value(right),
-          exampleTranslation:
-              translated ? const Value('Ваше рабочее место готово.') : const Value.absent(),
-          exampleDistractors:
-              Value(jsonEncode(rows ?? distractors(count: distractorCount))),
+          exampleTranslation: translated
+              ? const Value('Ваше рабочее место готово.')
+              : const Value.absent(),
+          exampleDistractors: Value(jsonEncode(rows ?? distractors(count: distractorCount))),
         ),
       ],
       itemUpserts: [
@@ -79,16 +79,20 @@ void main() {
   );
 
   SessionCard cardFor(Term term, {int seed = 1}) => LocalPracticeSessionBuilder.build(
-        terms: [term, decoy],
-        limit: 2,
-        random: Random(seed),
-        enabled: const PracticeModes([ExerciseMode.pickCorrect]),
-        sessionId: 's1',
-        ladder: {
-          for (final t in [term, decoy])
-            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-        },
-      ).cards.firstWhere((c) => c.termId == term.id);
+    terms: [term, decoy],
+    limit: 2,
+    random: Random(seed),
+    enabled: const PracticeModes([ExerciseMode.pickCorrect]),
+    sessionId: 's1',
+    ladder: {
+      for (final t in [term, decoy])
+        t.id: const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ),
+    },
+  ).cards.firstWhere((c) => c.termId == term.id);
 
   test('sync stores the distractors as JSON on the term', () async {
     final term = await seed();
@@ -96,17 +100,19 @@ void main() {
     expect(jsonDecode(term.exampleDistractors!), hasLength(2));
   });
 
-  test('builds three options with the translation as the prompt and the example as the answer',
-      () async {
-    final card = cardFor(await seed());
+  test(
+    'builds three options with the translation as the prompt and the example as the answer',
+    () async {
+      final card = cardFor(await seed());
 
-    expect(card.mode, ExerciseMode.pickCorrect);
-    expect(card.answer, right);
-    expect(card.prompt, 'Ваше рабочее место готово.');
-    expect(card.options, hasLength(3));
-    expect(card.options, contains(right));
-    expect(card.options, contains(wrongTense));
-  });
+      expect(card.mode, ExerciseMode.pickCorrect);
+      expect(card.answer, right);
+      expect(card.prompt, 'Ваше рабочее место готово.');
+      expect(card.options, hasLength(3));
+      expect(card.options, contains(right));
+      expect(card.options, contains(wrongTense));
+    },
+  );
 
   test('carries the explanation for each wrong option and none for the right one', () async {
     final card = cardFor(await seed());
@@ -136,28 +142,41 @@ void main() {
     // Two options differing from the example in the same place stop asking which sentence is right;
     // the underline afterwards points at the same fragment whichever one was picked. Same rule, same
     // trim + lowercase comparison, same first-wins order as the server's StudyCardAssembler.
-    final card = cardFor(await seed(rows: [
-      {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
-      {'sentence': 'Your workstation ARE ready for you now.', 'error_span': 'ARE', 'correction': 'is'},
-      {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
-    ]));
+    final card = cardFor(
+      await seed(
+        rows: [
+          {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
+          {
+            'sentence': 'Your workstation ARE ready for you now.',
+            'error_span': 'ARE',
+            'correction': 'is',
+          },
+          {'sentence': wrongPrep, 'error_span': 'of', 'correction': 'for'},
+        ],
+      ),
+    );
 
     expect(card.mode, ExerciseMode.pickCorrect);
     expect(card.optionFeedback, hasLength(2));
-    expect(
-      card.optionFeedback.map((f) => f.errorSpan.toLowerCase()).toSet(),
-      hasLength(2),
-    );
+    expect(card.optionFeedback.map((f) => f.errorSpan.toLowerCase()).toSet(), hasLength(2));
     expect(card.options, contains(wrongPrep));
   });
 
   test('the gate refuses two distractors that repeat one span — one usable option', () async {
     // The count the gate reads has to be the span-distinct one, or the term passes the ≥2 check and
     // the card is then built from a single wrong option: a two-way choice a coin toss wins half of.
-    final card = cardFor(await seed(rows: [
-      {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
-      {'sentence': 'Your workstation are ready for you now.', 'error_span': 'are', 'correction': 'is'},
-    ]));
+    final card = cardFor(
+      await seed(
+        rows: [
+          {'sentence': wrongTense, 'error_span': 'are', 'correction': 'is'},
+          {
+            'sentence': 'Your workstation are ready for you now.',
+            'error_span': 'are',
+            'correction': 'is',
+          },
+        ],
+      ),
+    );
 
     expect(card.mode, isNot(ExerciseMode.pickCorrect));
   });

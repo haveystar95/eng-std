@@ -17,43 +17,50 @@ void main() {
   // Records each speak call as (text, slow) so the test can assert autoplay + «замедленно».
   late List<({String text, bool slow})> spoken;
 
-  Future<void> onSpeak(String text, {bool slow = false}) async => spoken.add((text: text, slow: slow));
+  Future<void> onSpeak(String text, {bool slow = false}) async =>
+      spoken.add((text: text, slow: slow));
 
   Widget host(SessionCard card) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionExerciseCard(
-                card: card,
-                autoPronounce: true,
-                onAnswered: (_) {},
-                onSpeak: onSpeak,
-              ),
-            ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionExerciseCard(
+            card: card,
+            autoPronounce: true,
+            onAnswered: (_) {},
+            onSpeak: onSpeak,
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   setUp(() => spoken = []);
 
-  testWidgets('listening: no term text, autoplay on appear, and a «замедленно» slow replay', (tester) async {
-    await tester.pumpWidget(host(SessionCard(
-      termId: '01AAAAAAAAAAAAAAAAAAAAAAA1',
-      mode: ExerciseMode.listening,
-      type: 'phrase',
-      prompt: 'снять наличные',
-      answer: 'withdraw cash',
-    )));
+  testWidgets('listening: no term text, autoplay on appear, and a «замедленно» slow replay', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        SessionCard(
+          termId: '01AAAAAAAAAAAAAAAAAAAAAAA1',
+          mode: ExerciseMode.listening,
+          type: 'phrase',
+          prompt: 'снять наличные',
+          answer: 'withdraw cash',
+        ),
+      ),
+    );
     await tester.pump(); // build the card WITHOUT letting the autoplay deferral elapse
 
     expect(tester.takeException(), isNull);
@@ -77,33 +84,40 @@ void main() {
     expect(spoken.last, (text: 'withdraw cash', slow: true));
   });
 
-  testWidgets('cloze: the answer is cut from the example as a blank, translation shown, no autoplay', (tester) async {
-    await tester.pumpWidget(host(SessionCard(
-      termId: '01AAAAAAAAAAAAAAAAAAAAAAA2',
-      mode: ExerciseMode.cloze,
-      type: 'phrase',
-      prompt: 'снять наличные',
-      answer: 'withdraw cash',
-      example: 'I need to withdraw cash before we leave.',
-      exampleTranslation: 'Мне нужно снять наличные, прежде чем мы уйдём.',
-    )));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'cloze: the answer is cut from the example as a blank, translation shown, no autoplay',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          SessionCard(
+            termId: '01AAAAAAAAAAAAAAAAAAAAAAA2',
+            mode: ExerciseMode.cloze,
+            type: 'phrase',
+            prompt: 'снять наличные',
+            answer: 'withdraw cash',
+            example: 'I need to withdraw cash before we leave.',
+            exampleTranslation: 'Мне нужно снять наличные, прежде чем мы уйдём.',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
-    // «Вставь слово» prompt label (upper-cased in the card).
-    expect(find.text('ВСТАВЬ СЛОВО'), findsOneWidget);
-    // The blanked word is gone; the surrounding sentence and the translation remain.
-    expect(find.textContaining('withdraw cash'), findsNothing);
-    expect(find.textContaining('before we leave'), findsOneWidget);
-    expect(find.textContaining('снять наличные'), findsOneWidget);
-    // Cloze is a typed prompt, not audio — nothing was spoken.
-    expect(spoken, isEmpty);
+      expect(tester.takeException(), isNull);
+      // «Вставь слово» prompt label (upper-cased in the card).
+      expect(find.text('ВСТАВЬ СЛОВО'), findsOneWidget);
+      // The blanked word is gone; the surrounding sentence and the translation remain.
+      expect(find.textContaining('withdraw cash'), findsNothing);
+      expect(find.textContaining('before we leave'), findsOneWidget);
+      expect(find.textContaining('снять наличные'), findsOneWidget);
+      // Cloze is a typed prompt, not audio — nothing was spoken.
+      expect(spoken, isEmpty);
 
-    // Typing goes straight INTO the blank so the user sees their answer in the sentence (the fix for
-    // «input не влазит» — the capture field is invisible, the blank shows the live text).
-    await tester.enterText(find.byType(TextField), 'withdr');
-    await tester.pump();
-    // The blank now shows the live text (the invisible capture field holds it too → ≥ 1).
-    expect(find.textContaining('withdr'), findsAtLeastNWidgets(1));
-  });
+      // Typing goes straight INTO the blank so the user sees their answer in the sentence (the fix for
+      // «input не влазит» — the capture field is invisible, the blank shows the live text).
+      await tester.enterText(find.byType(TextField), 'withdr');
+      await tester.pump();
+      // The blank now shows the live text (the invisible capture field holds it too → ≥ 1).
+      expect(find.textContaining('withdr'), findsAtLeastNWidgets(1));
+    },
+  );
 }

@@ -30,29 +30,25 @@ void main() {
   };
 
   Future<void> seedTerm({List<String>? variants}) => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Полёт')),
-        ],
-        termUpserts: [
-          TermsCompanion.insert(
-            id: 't1',
-            updatedAt: t0,
-            termText: const Value('this is my seat'),
-            type: const Value('phrase'),
-            translation: const Value('это моё место'),
-            example: const Value('Excuse me, this is my seat.'),
-            exampleTranslation: const Value('Простите, это моё место.'),
-            acceptedVariants:
-                Value(variants == null ? null : jsonEncode(variants)),
-          ),
-        ],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Полёт')),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(
+        id: 't1',
+        updatedAt: t0,
+        termText: const Value('this is my seat'),
+        type: const Value('phrase'),
+        translation: const Value('это моё место'),
+        example: const Value('Excuse me, this is my seat.'),
+        exampleTranslation: const Value('Простите, это моё место.'),
+        acceptedVariants: Value(variants == null ? null : jsonEncode(variants)),
+      ),
+    ],
+    itemUpserts: [CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0)],
+  );
 
-  Future<Term> readTerm() async =>
-      (await db.watchCollectionTerms('c1').first).single.term;
+  Future<Term> readTerm() async => (await db.watchCollectionTerms('c1').first).single.term;
 
   test('sync stores the variants as JSON on the term', () async {
     await seedTerm(variants: const ['that is my seat']);

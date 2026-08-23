@@ -18,8 +18,12 @@ void main() {
     });
 
     test('is not exhausted with remaining > 0', () {
-      final q = GenerationQuota.fromJson(
-          {'limit': 50, 'used': 3, 'remaining': 47, 'resets_at': '2026-08-05T00:00:00Z'});
+      final q = GenerationQuota.fromJson({
+        'limit': 50,
+        'used': 3,
+        'remaining': 47,
+        'resets_at': '2026-08-05T00:00:00Z',
+      });
       expect(q.exhausted, isFalse);
     });
   });
@@ -38,7 +42,12 @@ void main() {
       final user = AppUser.fromJson({
         'id': 'u1',
         'name': 'Denis',
-        'generation': {'limit': 50, 'used': 1, 'remaining': 49, 'resets_at': '2026-08-05T00:00:00Z'},
+        'generation': {
+          'limit': 50,
+          'used': 1,
+          'remaining': 49,
+          'resets_at': '2026-08-05T00:00:00Z',
+        },
       });
       expect(user.quota, isNotNull);
       expect(user.quota!.remaining, 49);

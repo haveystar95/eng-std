@@ -25,28 +25,28 @@ class VerdictButton extends StatelessWidget {
 
   /// Заливка (только у «Не знаю»), иначе null.
   Color? get _fill => switch (kind) {
-        VerdictKind.unknown => AppColors.verdictUnknown,
-        VerdictKind.unsure => null,
-        VerdictKind.known => null,
-      };
+    VerdictKind.unknown => AppColors.verdictUnknown,
+    VerdictKind.unsure => null,
+    VerdictKind.known => null,
+  };
 
   Color get _verdictColor => switch (kind) {
-        VerdictKind.unknown => AppColors.verdictUnknown,
-        VerdictKind.unsure => AppColors.verdictUnsure,
-        VerdictKind.known => AppColors.verdictKnown,
-      };
+    VerdictKind.unknown => AppColors.verdictUnknown,
+    VerdictKind.unsure => AppColors.verdictUnsure,
+    VerdictKind.known => AppColors.verdictKnown,
+  };
 
   Color get _foreground => switch (kind) {
-        VerdictKind.unknown => AppColors.onVerdictUnknown, // белый на заливке
-        VerdictKind.unsure => AppColors.verdictUnsure,
-        VerdictKind.known => AppColors.verdictKnown,
-      };
+    VerdictKind.unknown => AppColors.onVerdictUnknown, // белый на заливке
+    VerdictKind.unsure => AppColors.verdictUnsure,
+    VerdictKind.known => AppColors.verdictKnown,
+  };
 
   IconData get _sign => switch (kind) {
-        VerdictKind.unknown => LucideIcons.x,
-        VerdictKind.unsure => LucideIcons.minus,
-        VerdictKind.known => LucideIcons.check,
-      };
+    VerdictKind.unknown => LucideIcons.x,
+    VerdictKind.unsure => LucideIcons.minus,
+    VerdictKind.known => LucideIcons.check,
+  };
 
   @override
   Widget build(BuildContext context) {

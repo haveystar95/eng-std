@@ -28,14 +28,26 @@ import 'collection_edit_dialog.dart';
 String sttLocaleFor(String sourceLang) => _sttLocales[sourceLang] ?? 'en_US';
 
 const _sttLocales = {
-  'ru': 'ru_RU', 'en': 'en_US', 'uk': 'uk_UA', 'es': 'es_ES', 'de': 'de_DE',
-  'fr': 'fr_FR', 'it': 'it_IT', 'pt': 'pt_PT', 'pl': 'pl_PL', 'tr': 'tr_TR',
-  'zh': 'zh_CN', 'ja': 'ja_JP',
+  'ru': 'ru_RU',
+  'en': 'en_US',
+  'uk': 'uk_UA',
+  'es': 'es_ES',
+  'de': 'de_DE',
+  'fr': 'fr_FR',
+  'it': 'it_IT',
+  'pt': 'pt_PT',
+  'pl': 'pl_PL',
+  'tr': 'tr_TR',
+  'zh': 'zh_CN',
+  'ja': 'ja_JP',
 };
 
 /// Size presets — the user picks a feel, the system picks the count (decided: no number slider).
 /// 10 / 15 / 22 (маленькая / средняя / большая).
-enum _Size { small(10), medium(15), large(22);
+enum _Size {
+  small(10),
+  medium(15),
+  large(22);
 
   const _Size(this.count);
   final int count;
@@ -90,7 +102,10 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
       // (the home card is an ENTRANCE to this screen, not a form — 2.1↔2.4). autofocus below opens
       // the keyboard on the field unless we're arriving to record.
       final t = widget.initialTopic!;
-      _topicCtrl.value = TextEditingValue(text: t, selection: TextSelection.collapsed(offset: t.length));
+      _topicCtrl.value = TextEditingValue(
+        text: t,
+        selection: TextSelection.collapsed(offset: t.length),
+      );
     }
     _hintTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (mounted && _topicCtrl.text.isEmpty) {
@@ -220,7 +235,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     _endRecordingState();
     AppHaptics.warning();
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.generateVoicePermissionDenied)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.generateVoicePermissionDenied)));
   }
 
   static String _combine(String base, String words) {
@@ -245,7 +262,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     try {
       // Enqueue: a client-ULID pending row (survives an app kill and an offline start); the durable
       // queue re-sends when the network returns. Voice never triggers this — «Сгенерировать» does.
-      await ref.read(generationControllerProvider).start(
+      await ref
+          .read(generationControllerProvider)
+          .start(
             topic: topic,
             levels: _levels.toList(),
             size: _size.count,
@@ -288,7 +307,8 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     if (chosen != null) {
       setState(() {
         _targetLang = chosen;
-        _targetExplicit = true; // an explicit choice → send target_lang (no longer the profile default)
+        _targetExplicit =
+            true; // an explicit choice → send target_lang (no longer the profile default)
       });
     }
   }
@@ -312,21 +332,33 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
             bottom: false,
             child: Column(
               children: [
-                _TopBar(onCancel: () {
-                  _dismissKeyboard();
-                  Navigator.of(context).maybePop();
-                }),
+                _TopBar(
+                  onCancel: () {
+                    _dismissKeyboard();
+                    Navigator.of(context).maybePop();
+                  },
+                ),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 18),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.screenH,
+                      18,
+                      AppSpacing.screenH,
+                      18,
+                    ),
                     children: [
                       _situationField(l),
                       const SizedBox(height: 8),
                       if (!_listening)
-                        Text(l.generateSituationHelper,
-                            style: AppText.translation.copyWith(fontSize: 12.5))
+                        Text(
+                          l.generateSituationHelper,
+                          style: AppText.translation.copyWith(fontSize: 12.5),
+                        )
                       else
-                        Text(l.generateVoiceHelper, style: AppText.translation.copyWith(fontSize: 12.5)),
+                        Text(
+                          l.generateVoiceHelper,
+                          style: AppText.translation.copyWith(fontSize: 12.5),
+                        ),
                       const SizedBox(height: AppSpacing.s22),
                       _sectionLabel(l.generateSizeLabel),
                       const SizedBox(height: 9),
@@ -337,7 +369,13 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                         textBaseline: TextBaseline.alphabetic,
                         children: [
                           Expanded(child: _sectionLabel(l.generateLevelLabel)),
-                          Text(l.generateLevelMulti, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                          Text(
+                            l.generateLevelMulti,
+                            style: AppText.transcription.copyWith(
+                              fontSize: 11.5,
+                              color: AppColors.tertiary,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 9),
@@ -369,8 +407,10 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     );
   }
 
-  Widget _sectionLabel(String text) =>
-      Text(text.toUpperCase(), style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary));
+  Widget _sectionLabel(String text) => Text(
+    text.toUpperCase(),
+    style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary),
+  );
 
   Widget _situationField(AppLocalizations l) {
     final border = _listening
@@ -385,8 +425,10 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           children: [
             Expanded(child: _sectionLabel(l.generateSituationLabel)),
             if (_listening)
-              Text(l.generateVoiceListening(_fmtDuration(_recSeconds)),
-                  style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.secondary)),
+              Text(
+                l.generateVoiceListening(_fmtDuration(_recSeconds)),
+                style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.secondary),
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -397,7 +439,15 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
             color: AppColors.field,
             borderRadius: BorderRadius.circular(AppRadii.field),
             border: border,
-            boxShadow: _listening ? [BoxShadow(color: AppColors.ink.withValues(alpha: 0.06), blurRadius: 0, spreadRadius: 4)] : null,
+            boxShadow: _listening
+                ? [
+                    BoxShadow(
+                      color: AppColors.ink.withValues(alpha: 0.06),
+                      blurRadius: 0,
+                      spreadRadius: 4,
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,10 +459,20 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                 minLines: 1,
                 maxLines: 4,
                 cursorColor: AppColors.ink,
-                style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, height: 1.45, color: AppColors.ink),
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 15.5,
+                  height: 1.45,
+                  color: AppColors.ink,
+                ),
                 decoration: InputDecoration.collapsed(
                   hintText: _placeholderFor(l, _hintIndex),
-                  hintStyle: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, height: 1.45, color: AppColors.tertiary),
+                  hintStyle: const TextStyle(
+                    fontFamily: AppFonts.inter,
+                    fontSize: 15.5,
+                    height: 1.45,
+                    color: AppColors.tertiary,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -427,7 +487,8 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                       radius: 22,
                       onTap: _toggleVoice,
                       child: const SizedBox(
-                        width: 30, height: 30,
+                        width: 30,
+                        height: 30,
                         child: Icon(LucideIcons.mic, size: 19, color: AppColors.secondary),
                       ),
                     ),
@@ -441,7 +502,11 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
   }
 
   Widget _sizeRow(AppLocalizations l) {
-    final labels = {_Size.small: l.generateSizeSmall, _Size.medium: l.generateSizeMedium, _Size.large: l.generateSizeLarge};
+    final labels = {
+      _Size.small: l.generateSizeSmall,
+      _Size.medium: l.generateSizeMedium,
+      _Size.large: l.generateSizeLarge,
+    };
     return Row(
       children: [
         for (final s in _Size.values) ...[
@@ -503,9 +568,21 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           children: [
             MiniFlag(languageCode: _targetLang),
             const SizedBox(width: 12),
-            Expanded(child: Text(lang.name, style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, color: AppColors.ink))),
+            Expanded(
+              child: Text(
+                lang.name,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 15.5,
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
             if (!_targetExplicit) ...[
-              Text(l.generateLanguageDefault, style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+              Text(
+                l.generateLanguageDefault,
+                style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+              ),
               const SizedBox(width: 9),
             ],
             const Icon(LucideIcons.chevronDown, size: 16, color: AppColors.secondary),
@@ -516,12 +593,12 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
   }
 
   String _placeholderFor(AppLocalizations l, int i) => switch (i % _kHintCount) {
-        0 => l.generatePlaceholder0,
-        1 => l.generatePlaceholder1,
-        2 => l.generatePlaceholder2,
-        3 => l.generatePlaceholder3,
-        _ => l.generatePlaceholder4,
-      };
+    0 => l.generatePlaceholder0,
+    1 => l.generatePlaceholder1,
+    2 => l.generatePlaceholder2,
+    3 => l.generatePlaceholder3,
+    _ => l.generatePlaceholder4,
+  };
 
   static String _fmtDuration(int seconds) {
     final m = seconds ~/ 60;
@@ -553,13 +630,23 @@ class _TopBar extends StatelessWidget {
             onTap: onCancel,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-              child: Text(l.commonCancel, style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary)),
+              child: Text(
+                l.commonCancel,
+                style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary),
+              ),
             ),
           ),
           Expanded(
             child: Center(
-              child: Text(l.generateScreenTitle,
-                  style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              child: Text(
+                l.generateScreenTitle,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
             ),
           ),
           // Balances the «Отмена» width so the title stays centred.
@@ -577,7 +664,12 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SizeChip extends StatelessWidget {
-  const _SizeChip({required this.label, required this.hint, required this.selected, required this.onTap});
+  const _SizeChip({
+    required this.label,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
   final String label, hint;
   final bool selected;
   final VoidCallback onTap;
@@ -600,24 +692,30 @@ class _SizeChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
           child: Column(
             children: [
-              Text(label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 13.5,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                      color: selected ? AppColors.paper : AppColors.ink)),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 13.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? AppColors.paper : AppColors.ink,
+                ),
+              ),
               const SizedBox(height: 2),
               // One line, always — a longer translation shrinks to fit instead of wrapping, so the
               // three chips stay the same height and read as one row.
               FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(hint,
-                    maxLines: 1,
-                    style: AppText.counterSmall.copyWith(
-                        fontSize: 11.5,
-                        color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary)),
+                child: Text(
+                  hint,
+                  maxLines: 1,
+                  style: AppText.counterSmall.copyWith(
+                    fontSize: 11.5,
+                    color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -652,12 +750,15 @@ class _LevelPill extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Center(
-              child: Text(label,
-                  style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 13,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                      color: selected ? AppColors.paper : AppColors.ink)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? AppColors.paper : AppColors.ink,
+                ),
+              ),
             ),
           ),
         ),
@@ -693,7 +794,11 @@ class _Footer extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.screenH, 12, AppSpacing.screenH, MediaQuery.viewPaddingOf(context).bottom + 14),
+        AppSpacing.screenH,
+        12,
+        AppSpacing.screenH,
+        MediaQuery.viewPaddingOf(context).bottom + 14,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.paper,
         border: Border(top: BorderSide(color: AppColors.hairline)),
@@ -706,19 +811,30 @@ class _Footer extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 9, height: 9,
-                  decoration: const BoxDecoration(color: AppColors.verdictUnknown, shape: BoxShape.circle),
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(
+                    color: AppColors.verdictUnknown,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(l.generateQuotaExhausted(_time(quota!.resetsAt)),
-                      style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary)),
+                  child: Text(
+                    l.generateQuotaExhausted(_time(quota!.resetsAt)),
+                    style: AppText.transcription.copyWith(
+                      fontSize: 12.5,
+                      color: AppColors.secondary,
+                    ),
+                  ),
                 ),
               ],
             )
           else if (quota != null)
-            Text(l.generateQuotaRemaining(quota!.remaining),
-                style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary)),
+            Text(
+              l.generateQuotaRemaining(quota!.remaining),
+              style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary),
+            ),
           if (quota != null) const SizedBox(height: 10),
           PrimaryButton(
             label: l.generateSubmit,
@@ -737,8 +853,15 @@ class _Footer extends StatelessWidget {
                   final row = Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(l.generatePremiumUpsell,
-                          style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                      Text(
+                        l.generatePremiumUpsell,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.inter,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
                       const SizedBox(width: 5),
                       const Icon(LucideIcons.chevronRight, size: 15, color: AppColors.ink),
                     ],
@@ -750,7 +873,10 @@ class _Footer extends StatelessWidget {
                       onPremium!();
                     },
                     borderRadius: BorderRadius.circular(AppRadii.small),
-                    child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), child: row),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      child: row,
+                    ),
                   );
                 }(),
               ),
@@ -762,8 +888,14 @@ class _Footer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadii.small),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  child: Text(l.generateManual,
-                      style: AppText.translation.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                  child: Text(
+                    l.generateManual,
+                    style: AppText.translation.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.secondary,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -789,8 +921,10 @@ class _Waveform extends StatefulWidget {
 }
 
 class _WaveformState extends State<_Waveform> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
   static const _bars = [0.35, 0.7, 1.0, 0.6, 0.85, 0.5, 0.3];
 
   @override
@@ -848,8 +982,15 @@ class _StopButton extends StatelessWidget {
             children: [
               const SizedBox(width: 9, height: 9, child: ColoredBox(color: AppColors.ink)),
               const SizedBox(width: 7),
-              Text(l.generateVoiceStop,
-                  style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              Text(
+                l.generateVoiceStop,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
             ],
           ),
         ),
@@ -891,8 +1032,14 @@ class _LanguagePicker extends StatelessWidget {
                       MiniFlag(languageCode: lang.code),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(lang.name,
-                            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, color: AppColors.ink)),
+                        child: Text(
+                          lang.name,
+                          style: const TextStyle(
+                            fontFamily: AppFonts.inter,
+                            fontSize: 15.5,
+                            color: AppColors.ink,
+                          ),
+                        ),
                       ),
                       if (selected) const Icon(LucideIcons.check, size: 18, color: AppColors.ink),
                     ],

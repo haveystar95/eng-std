@@ -17,4 +17,5 @@ Word? pickWordOfDay(List<Word> terms, int daySeed) {
 /// Day number since the Unix epoch in UTC — the [pickWordOfDay] seed. UTC so the
 /// pick flips at a single well-defined instant, not per-device-timezone drift.
 int dayNumber(DateTime now) =>
-    DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+    DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/
+    Duration.millisecondsPerDay;

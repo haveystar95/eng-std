@@ -34,8 +34,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     final loader = FontLoader(AppFonts.inter);
     for (final file in ['Inter-Regular.ttf', 'Inter-SemiBold.ttf', 'Inter-Bold.ttf']) {
-      loader.addFont(
-          File('assets/fonts/$file').readAsBytes().then((b) => ByteData.sublistView(b)));
+      loader.addFont(File('assets/fonts/$file').readAsBytes().then((b) => ByteData.sublistView(b)));
     }
     await loader.load();
   });
@@ -43,49 +42,61 @@ void main() {
   /// The row as triage_screen.dart lays it out: three equal columns, 8pt apart, inside the screen's
   /// horizontal padding.
   Widget row(Locale locale) => MaterialApp(
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: const [Locale('ru'), Locale('en')],
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            final l = AppLocalizations.of(context);
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: VerdictButton(
-                        kind: VerdictKind.unknown, label: l.triageVerdictUnknown, minHeight: 56),
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: const [Locale('ru'), Locale('en')],
+    home: Scaffold(
+      body: Builder(
+        builder: (context) {
+          final l = AppLocalizations.of(context);
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+            child: Row(
+              children: [
+                Expanded(
+                  child: VerdictButton(
+                    kind: VerdictKind.unknown,
+                    label: l.triageVerdictUnknown,
+                    minHeight: 56,
                   ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Expanded(
-                    child: VerdictButton(
-                        kind: VerdictKind.unsure, label: l.triageVerdictUnsure, minHeight: 56),
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                Expanded(
+                  child: VerdictButton(
+                    kind: VerdictKind.unsure,
+                    label: l.triageVerdictUnsure,
+                    minHeight: 56,
                   ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Expanded(
-                    child: VerdictButton(
-                        kind: VerdictKind.known, label: l.triageVerdictKnown, minHeight: 56),
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                Expanded(
+                  child: VerdictButton(
+                    kind: VerdictKind.known,
+                    label: l.triageVerdictKnown,
+                    minHeight: 56,
                   ),
-                ],
-              ),
-            );
-          }),
-        ),
-      );
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ),
+  );
 
   /// Every label in the row, with the flag that says the text did not fit the lines it was given.
   List<({String text, bool cut})> labels(WidgetTester tester) => [
-        for (final element in find
+    for (final element
+        in find
             .descendant(of: find.byType(VerdictButton), matching: find.byType(RichText))
             .evaluate())
-          // The icon is a RichText too — one glyph from the icon font's private use area.
-          if (!_isIconGlyph((element.widget as RichText).text.toPlainText()))
-            (
-              text: (element.widget as RichText).text.toPlainText(),
-              cut: (element.renderObject as RenderParagraph).didExceedMaxLines,
-            ),
-      ];
+      // The icon is a RichText too — one glyph from the icon font's private use area.
+      if (!_isIconGlyph((element.widget as RichText).text.toPlainText()))
+        (
+          text: (element.widget as RichText).text.toPlainText(),
+          cut: (element.renderObject as RenderParagraph).didExceedMaxLines,
+        ),
+  ];
 
   for (final (name, size) in [
     ('iPhone 17 Pro (402pt)', const Size(402, 874)),
@@ -114,13 +125,11 @@ void main() {
   // ── the rest of the rows found by the QAB-1 pass ────────────────────────────
 
   Widget host(Locale locale, Widget Function(AppLocalizations l) body) => MaterialApp(
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: const [Locale('ru'), Locale('en')],
-        home: Scaffold(
-          body: Builder(builder: (context) => body(AppLocalizations.of(context))),
-        ),
-      );
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: const [Locale('ru'), Locale('en')],
+    home: Scaffold(body: Builder(builder: (context) => body(AppLocalizations.of(context)))),
+  );
 
   /// Sets the view to a phone width for the length of one test.
   void atWidth(WidgetTester tester, Size size) {
@@ -130,40 +139,53 @@ void main() {
 
   /// Every label drawn under [root] that is not an icon glyph, with the «did not fit» flag.
   List<({String text, bool cut})> labelsUnder(WidgetTester tester, Finder root) => [
-        for (final element
-            in find.descendant(of: root, matching: find.byType(RichText)).evaluate())
-          if (!_isIconGlyph((element.widget as RichText).text.toPlainText()))
-            (
-              text: (element.widget as RichText).text.toPlainText(),
-              cut: (element.renderObject as RenderParagraph).didExceedMaxLines,
-            ),
-      ];
+    for (final element in find.descendant(of: root, matching: find.byType(RichText)).evaluate())
+      if (!_isIconGlyph((element.widget as RichText).text.toPlainText()))
+        (
+          text: (element.widget as RichText).text.toPlainText(),
+          cut: (element.renderObject as RenderParagraph).didExceedMaxLines,
+        ),
+  ];
 
   for (final locale in const [Locale('en'), Locale('ru')]) {
     final lang = locale.languageCode;
 
     /// QA-OBS-10 — «Тренировка по теме» ran a RenderFlex overflow stripe across the home screen
     /// while English «Session by topic» fitted. The pair is the row as _PoolEntries lays it out.
-    testWidgets('$lang: the home pair fits, and the two buttons stay the same height',
-        (tester) async {
+    testWidgets('$lang: the home pair fits, and the two buttons stay the same height', (
+      tester,
+    ) async {
       atWidth(tester, const Size(375, 667)); // the narrowest we ship to
-      await tester.pumpWidget(host(locale, (l) => Padding(
+      await tester.pumpWidget(
+        host(
+          locale,
+          (l) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                      child: QuietButton(
-                          label: l.myWordsTitle, icon: LucideIcons.bookMarked, onPressed: () {})),
+                    child: QuietButton(
+                      label: l.myWordsTitle,
+                      icon: LucideIcons.bookMarked,
+                      onPressed: () {},
+                    ),
+                  ),
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
-                      child: QuietButton(
-                          label: l.topicSessionAction, icon: LucideIcons.layers, onPressed: () {})),
+                    child: QuietButton(
+                      label: l.topicSessionAction,
+                      icon: LucideIcons.layers,
+                      onPressed: () {},
+                    ),
+                  ),
                 ],
               ),
             ),
-          )));
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       final found = labelsUnder(tester, find.byType(QuietButton));
@@ -171,29 +193,42 @@ void main() {
       for (final label in found) {
         expect(label.cut, isFalse, reason: '«${label.text}» is cut off');
       }
-      final heights = tester.widgetList<QuietButton>(find.byType(QuietButton)).map(
-            (b) => tester.getSize(find.byWidget(b)).height,
-          );
-      expect(heights.toSet(), hasLength(1), reason: 'one row of equals, not a tall one and a short one');
+      final heights = tester
+          .widgetList<QuietButton>(find.byType(QuietButton))
+          .map((b) => tester.getSize(find.byWidget(b)).height);
+      expect(
+        heights.toSet(),
+        hasLength(1),
+        reason: 'one row of equals, not a tall one and a short one',
+      );
       expect(tester.takeException(), isNull);
     });
 
     /// QA-OBS-29 — «Подсказка: первая буква» overflowed its half of the cloze card.
     testWidgets('$lang: the cloze aids fit their half of the card', (tester) async {
       atWidth(tester, const Size(375, 667));
-      await tester.pumpWidget(host(locale, (l) => Padding(
+      await tester.pumpWidget(
+        host(
+          locale,
+          (l) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: QuietButton(label: l.sessionHintFirstLetter, onPressed: () {})),
+                  Expanded(
+                    child: QuietButton(label: l.sessionHintFirstLetter, onPressed: () {}),
+                  ),
                   const SizedBox(width: AppSpacing.s12),
-                  Expanded(child: QuietButton(label: l.sessionDontRemember, onPressed: () {})),
+                  Expanded(
+                    child: QuietButton(label: l.sessionDontRemember, onPressed: () {}),
+                  ),
                 ],
               ),
             ),
-          )));
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       for (final label in labelsUnder(tester, find.byType(QuietButton))) {
@@ -206,13 +241,18 @@ void main() {
     /// each: screen − the card's 22pt margins − the sheet's own 16pt padding.
     testWidgets('$lang: no ladder caption is cut in its fifth of the card', (tester) async {
       atWidth(tester, const Size(375, 667));
-      await tester.pumpWidget(host(locale, (l) => Padding(
+      await tester.pumpWidget(
+        host(
+          locale,
+          (l) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22 + AppSpacing.s16),
             child: LadderTrack(
               step: 3,
               labels: [l.ladderStep0, l.ladderStep1, l.ladderStep3, l.ladderStep4, l.ladderStep5],
             ),
-          )));
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       final captions = find.descendant(of: find.byType(LadderTrack), matching: find.byType(Text));
@@ -223,26 +263,36 @@ void main() {
         final column = tester.getSize(find.byType(LadderTrack)).width / 5;
         // Drawn width, not natural width — the FittedBox scales a long caption down, and that is
         // the mechanism under test.
-        expect(drawn.width, lessThanOrEqualTo(column),
-            reason: '«$text» spills out of its column');
-        expect((element.renderObject as RenderParagraph).didExceedMaxLines, isFalse,
-            reason: '«$text» is cut instead of shrunk');
+        expect(drawn.width, lessThanOrEqualTo(column), reason: '«$text» spills out of its column');
+        expect(
+          (element.renderObject as RenderParagraph).didExceedMaxLines,
+          isFalse,
+          reason: '«$text» is cut instead of shrunk',
+        );
       }
       expect(tester.takeException(), isNull);
     });
 
     /// QA-OBS-28 — «1 из 14» / «1 of 12» broke onto a second line the moment the denominator went
     /// double-digit, because the counter sat in a 44pt-wide box.
-    testWidgets('$lang: the session counter stays on one line at a two-digit total', (tester) async {
+    testWidgets('$lang: the session counter stays on one line at a two-digit total', (
+      tester,
+    ) async {
       atWidth(tester, const Size(375, 667));
-      await tester.pumpWidget(host(locale, (l) => Padding(
+      await tester.pumpWidget(
+        host(
+          locale,
+          (l) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
             child: Row(
               children: [
                 const SizedBox(width: AppSpacing.minTap, height: AppSpacing.minTap),
                 Expanded(
-                  child: Text(l.sessionPhaseAssemble,
-                      textAlign: TextAlign.center, style: AppTextExercise.sessionHeader),
+                  child: Text(
+                    l.sessionPhaseAssemble,
+                    textAlign: TextAlign.center,
+                    style: AppTextExercise.sessionHeader,
+                  ),
                 ),
                 ConstrainedBox(
                   constraints: const BoxConstraints(minWidth: AppSpacing.minTap),
@@ -256,17 +306,24 @@ void main() {
                 ),
               ],
             ),
-          )));
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       final counter = find.byWidgetPredicate(
-          (w) => w is Text && w.data != null && w.data!.contains('14'));
+        (w) => w is Text && w.data != null && w.data!.contains('14'),
+      );
       expect(counter, findsOneWidget);
       final paragraph = tester.renderObject<RenderParagraph>(
-          find.descendant(of: counter, matching: find.byType(RichText)));
+        find.descendant(of: counter, matching: find.byType(RichText)),
+      );
       expect(paragraph.didExceedMaxLines, isFalse);
-      expect(tester.getSize(counter).height, lessThan(AppTextExercise.sessionHeader.fontSize! * 2),
-          reason: 'the counter wrapped to a second line');
+      expect(
+        tester.getSize(counter).height,
+        lessThan(AppTextExercise.sessionHeader.fontSize! * 2),
+        reason: 'the counter wrapped to a second line',
+      );
       expect(tester.takeException(), isNull);
     });
   }

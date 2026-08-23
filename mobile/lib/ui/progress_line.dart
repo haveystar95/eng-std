@@ -25,9 +25,7 @@ class ProgressLine extends StatelessWidget {
     final v = value.clamp(0.0, 1.0);
     if (v <= 0) return 0;
     final raw = v * totalWidth;
-    return raw < AppProgress.fillMinWidth
-        ? AppProgress.fillMinWidth.clamp(0.0, totalWidth)
-        : raw;
+    return raw < AppProgress.fillMinWidth ? AppProgress.fillMinWidth.clamp(0.0, totalWidth) : raw;
   }
 
   @override

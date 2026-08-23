@@ -79,10 +79,12 @@ class PerfLog {
     for (final f in timings) {
       final total = f.totalSpan.inMicroseconds / 1000;
       if (total <= _spikeMs) continue;
-      _add('! slow frame ${total.toStringAsFixed(1)}ms @$screen · '
-          'build ${(f.buildDuration.inMicroseconds / 1000).toStringAsFixed(1)} · '
-          'raster ${(f.rasterDuration.inMicroseconds / 1000).toStringAsFixed(1)} · '
-          'vsyncOh ${(f.vsyncOverhead.inMicroseconds / 1000).toStringAsFixed(1)} · rss ${_rss()}MB');
+      _add(
+        '! slow frame ${total.toStringAsFixed(1)}ms @$screen · '
+        'build ${(f.buildDuration.inMicroseconds / 1000).toStringAsFixed(1)} · '
+        'raster ${(f.rasterDuration.inMicroseconds / 1000).toStringAsFixed(1)} · '
+        'vsyncOh ${(f.vsyncOverhead.inMicroseconds / 1000).toStringAsFixed(1)} · rss ${_rss()}MB',
+      );
     }
   }
 

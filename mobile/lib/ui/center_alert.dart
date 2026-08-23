@@ -107,7 +107,10 @@ class _AlertAction extends StatelessWidget {
       child: Container(
         height: 50,
         alignment: Alignment.center,
-        child: Text(label, style: AppText.sheetButton.copyWith(color: color, fontWeight: weight)),
+        child: Text(
+          label,
+          style: AppText.sheetButton.copyWith(color: color, fontWeight: weight),
+        ),
       ),
     );
   }

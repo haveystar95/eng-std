@@ -98,16 +98,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   /// SessionScreen mints a new id → the server reshuffles the whole-collection pool). Replaces the
   /// route so the back stack doesn't fill up with finished sessions.
   void _again() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => SessionScreen(
-        title: widget.title,
-        collectionId: widget.collectionId,
-        practice: widget.practice,
-        learn: widget.learn,
-        limit: widget.limit,
-        targetLang: widget.targetLang,
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(
+          title: widget.title,
+          collectionId: widget.collectionId,
+          practice: widget.practice,
+          learn: widget.learn,
+          limit: widget.limit,
+          targetLang: widget.targetLang,
+        ),
       ),
-    ));
+    );
   }
 
   @override
@@ -168,9 +170,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 height: 1,
                 child: Opacity(
                   opacity: 0,
-                  child: IgnorePointer(
-                    child: TextField(focusNode: _kbWarm, autofocus: false),
-                  ),
+                  child: IgnorePointer(child: TextField(focusNode: _kbWarm, autofocus: false)),
                 ),
               ),
             ],
@@ -313,7 +313,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       if (url != null) precacheSessionImage(context, url);
     }
     _results.add((card: played, verdict: a.verdict));
-    ref.read(reviewSyncProvider).record(
+    ref
+        .read(reviewSyncProvider)
+        .record(
           termId: played.termId,
           exerciseMode: played.mode.wire,
           response: a.response,
@@ -360,10 +362,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     // Deliberately NOT added to [_results]: the summary lists answers, and an intro is not one —
     // a tick beside it would claim the word was got right. The word still reaches the summary,
     // through the recognition cards it comes back as later in this same session.
-    await ref.read(exposureSyncProvider).record(
-          termId: termId,
-          sessionId: widget.session.sessionId,
-        );
+    await ref
+        .read(exposureSyncProvider)
+        .record(termId: termId, sessionId: widget.session.sessionId);
     if (!mounted) return;
     _prepareCard(_pos + 1);
     _prepareCard(_pos + 2);
@@ -485,37 +486,42 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       child: Listener(
         onPointerDown: (_) => PerfLog.instance.pointerDown(),
         child: Column(
-        children: [
-          if (widget.practice && !_bannerDismissed)
-            _PracticeBanner(onClose: () => setState(() => _bannerDismissed = true)),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
-            child: _SessionHeader(
-              phaseLabel: phaseLabel,
-              current: _pos + 1,
-              total: total,
-              onClose: () async {
-                if (await _confirmExit() && context.mounted) Navigator.of(context).pop();
-              },
+          children: [
+            if (widget.practice && !_bannerDismissed)
+              _PracticeBanner(onClose: () => setState(() => _bannerDismissed = true)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
+              child: _SessionHeader(
+                phaseLabel: phaseLabel,
+                current: _pos + 1,
+                total: total,
+                onClose: () async {
+                  if (await _confirmExit() && context.mounted) Navigator.of(context).pop();
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, AppSpacing.s26),
-              child: _SlideSwitcher(index: _pos, child: card),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scroll,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenH,
+                  18,
+                  AppSpacing.screenH,
+                  AppSpacing.s26,
+                ),
+                child: _SlideSwitcher(index: _pos, child: card),
+              ),
             ),
-          ),
-          // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
-          // off-screen (device-batch F9). Appears only once the card is answered.
-          //
-          // The intro's «Понятно →» sits in the same bar and is there from the start: there is
-          // nothing to answer first, so nothing to wait for. One exit, no verdict.
-          if (isIntro)
-            _NextBar(onNext: _acknowledgeIntro, label: l.sessionIntroGot)
-          else if (_answered)
-            _NextBar(onNext: _next),
-        ],
+            // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
+            // off-screen (device-batch F9). Appears only once the card is answered.
+            //
+            // The intro's «Понятно →» sits in the same bar and is there from the start: there is
+            // nothing to answer first, so nothing to wait for. One exit, no verdict.
+            if (isIntro)
+              _NextBar(onNext: _acknowledgeIntro, label: l.sessionIntroGot)
+            else if (_answered)
+              _NextBar(onNext: _next),
+          ],
         ),
       ),
     );
@@ -592,7 +598,11 @@ class _SessionHeader extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text(phaseLabel, textAlign: TextAlign.center, style: AppTextExercise.sessionHeader),
+              child: Text(
+                phaseLabel,
+                textAlign: TextAlign.center,
+                style: AppTextExercise.sessionHeader,
+              ),
             ),
             // A MINIMUM width, not a fixed one: «1 из 14» / «1 of 12» does not fit 44pt and was
             // wrapped to two lines the moment the denominator went double-digit (QA-OBS-28). The
@@ -629,7 +639,10 @@ class _PracticeBanner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 10, AppSpacing.screenH, 0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: AppColors.faintInk, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(
+          color: AppColors.faintInk,
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: Row(
           children: [
             Container(
@@ -639,7 +652,10 @@ class _PracticeBanner extends StatelessWidget {
             ),
             const SizedBox(width: 9),
             Expanded(
-              child: Text(l.sessionPracticeBanner, style: AppText.translation.copyWith(color: AppColors.inkBody)),
+              child: Text(
+                l.sessionPracticeBanner,
+                style: AppText.translation.copyWith(color: AppColors.inkBody),
+              ),
             ),
             InkResponse(
               onTap: onClose,
@@ -662,7 +678,9 @@ class _SlideSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).disableAnimations) return KeyedSubtree(key: ValueKey(index), child: child);
+    if (MediaQuery.of(context).disableAnimations) {
+      return KeyedSubtree(key: ValueKey(index), child: child);
+    }
     return AnimatedSwitcher(
       duration: AppMotion.nextTaskEnter,
       switchInCurve: AppMotion.easeOut,
@@ -673,12 +691,13 @@ class _SlideSwitcher extends StatelessWidget {
           begin: Offset(incoming ? 0.06 : -0.06, 0),
           end: Offset.zero,
         ).animate(anim);
-        return FadeTransition(opacity: anim, child: SlideTransition(position: offset, child: child));
+        return FadeTransition(
+          opacity: anim,
+          child: SlideTransition(position: offset, child: child),
+        );
       },
-      layoutBuilder: (current, previous) => Stack(
-        alignment: Alignment.topCenter,
-        children: [...previous, ?current],
-      ),
+      layoutBuilder: (current, previous) =>
+          Stack(alignment: Alignment.topCenter, children: [...previous, ?current]),
       child: KeyedSubtree(key: ValueKey(index), child: child),
     );
   }
@@ -740,7 +759,12 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
     final practice = widget.practice;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, AppSpacing.s26),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenH,
+        14,
+        AppSpacing.screenH,
+        AppSpacing.s26,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -774,10 +798,7 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
                     ],
             ),
           ),
-          if (!practice) ...[
-            const SizedBox(height: 18),
-            const _GoalCard(),
-          ],
+          if (!practice) ...[const SizedBox(height: 18), const _GoalCard()],
           const SizedBox(height: 20),
           Text(l.sessionSessionWords.toUpperCase(), style: AppText.sectionLabel),
           const SizedBox(height: 6),
@@ -788,7 +809,10 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
           // omit it in practice (compact итог).
           if (!practice && struggling.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _StrugglingCard(termId: struggling.first.card.termId, term: struggling.first.card.answerText),
+            _StrugglingCard(
+              termId: struggling.first.card.termId,
+              term: struggling.first.card.answerText,
+            ),
           ],
           const SizedBox(height: 20),
           if (practice) ...[
@@ -806,10 +830,7 @@ class _SessionSummaryState extends ConsumerState<_SessionSummary> {
               ),
             ),
           ] else
-            PrimaryButton(
-              label: l.sessionDone,
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
+            PrimaryButton(label: l.sessionDone, onPressed: () => Navigator.of(context).maybePop()),
         ],
       ),
     );
@@ -840,10 +861,10 @@ class _StatDivider extends StatelessWidget {
   const _StatDivider();
   @override
   Widget build(BuildContext context) => Container(
-        width: 1,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        color: AppColors.hairline,
-      );
+    width: 1,
+    margin: const EdgeInsets.symmetric(horizontal: 16),
+    color: AppColors.hairline,
+  );
 }
 
 /// Daily-goal card: the day's NEW WORDS against the day's goal, plus the streak. Filled and
@@ -886,7 +907,10 @@ class _GoalCard extends ConsumerWidget {
           ProgressLine(value: goal == 0 ? 1 : today / goal, height: 4),
           if (streak > 0) ...[
             const SizedBox(height: 9),
-            Text(l.sessionStreak(streak), style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody)),
+            Text(
+              l.sessionStreak(streak),
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
+            ),
           ],
         ],
       ),
@@ -914,8 +938,8 @@ class _SummaryWordRow extends ConsumerWidget {
             return days == 0
                 ? l.sessionDueToday
                 : days == 1
-                    ? l.sessionDueTomorrow
-                    : l.sessionDueInDays(days);
+                ? l.sessionDueTomorrow
+                : l.sessionDueInDays(days);
           }();
 
     return Container(
@@ -933,12 +957,22 @@ class _SummaryWordRow extends ConsumerWidget {
               children: [
                 // The reviewed word, as words — a rung-1 card's [answer] is its term id (see
                 // SessionCard.answerText), and the mistakes list is exactly where it would show.
-                Text(card.answerText, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  card.answerText,
+                  style: AppText.termInList,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
                 // The TRANSLATION, never the prompt: on a rung-1 card the prompt is the term itself,
                 // and printing it under the headline gave «cold / cold» — a word explained by itself
                 // (see [SessionCard.translationText]).
-                Text(card.translationText, style: AppText.translation.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  card.translationText,
+                  style: AppText.translation.copyWith(fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -998,8 +1032,11 @@ class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
       if (mounted) setState(() => _done = true);
     } on DioException catch (e) {
       if (mounted) {
-        setState(() => _error =
-            e.response?.statusCode == 429 ? l.sessionNewExampleExhausted : e.message ?? '');
+        setState(
+          () => _error = e.response?.statusCode == 429
+              ? l.sessionNewExampleExhausted
+              : e.message ?? '',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1014,12 +1051,25 @@ class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.sessionStrugglingTitle(widget.term), style: AppText.sheetButton.copyWith(fontSize: 14)),
+          Text(
+            l.sessionStrugglingTitle(widget.term),
+            style: AppText.sheetButton.copyWith(fontSize: 14),
+          ),
           const SizedBox(height: 6),
-          Text(l.sessionStrugglingBody, style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody, height: 1.45)),
+          Text(
+            l.sessionStrugglingBody,
+            style: AppText.translation.copyWith(
+              fontSize: 12.5,
+              color: AppColors.inkBody,
+              height: 1.45,
+            ),
+          ),
           const SizedBox(height: 12),
           if (_error != null) ...[
-            Text(_error!, style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.destructiveText)),
+            Text(
+              _error!,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.destructiveText),
+            ),
             const SizedBox(height: 10),
           ],
           Align(
@@ -1030,7 +1080,12 @@ class _StrugglingCardState extends ConsumerState<_StrugglingCard> {
                     children: [
                       const Icon(LucideIcons.check, size: 17, color: AppColors.verdictKnown),
                       const SizedBox(width: 8),
-                      Text(l.sessionNewExample, style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.verdictKnown)),
+                      Text(
+                        l.sessionNewExample,
+                        style: AppTextExercise.answerAuxButton.copyWith(
+                          color: AppColors.verdictKnown,
+                        ),
+                      ),
                     ],
                   )
                 : QuietButton(
@@ -1097,7 +1152,11 @@ class _CenteredMessage extends StatelessWidget {
                   Icon(icon, size: 48, color: iconColor),
                   const SizedBox(height: 12),
                 ],
-                Text(text, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 20)),
+                Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: AppText.stepTitle.copyWith(fontSize: 20),
+                ),
                 if (actionLabel != null && onAction != null) ...[
                   const SizedBox(height: AppSpacing.s16),
                   QuietButton(label: actionLabel!, icon: LucideIcons.rotateCw, onPressed: onAction),

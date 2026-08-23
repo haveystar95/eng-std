@@ -22,8 +22,12 @@ import 'package:eng_std/theme/theme.dart';
 /// the last line on screen and the strip the tab bar occupies, and checks they do not overlap.
 class _Api implements ApiClient {
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async =>
-      const [];
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async => const [];
 
   @override
   Future<InstantHint> instantHint(String query, {String? source, String? target}) async =>
@@ -38,51 +42,53 @@ Future<void> _pumpUnderTabBar(WidgetTester tester, {required double keyboard}) a
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
 
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-      apiClientProvider.overrideWithValue(_Api()),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      theme: buildAppTheme(),
-      home: Builder(
-        builder: (context) => MediaQuery(
-          // The keyboard, as the framework reports it to everything below.
-          data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.only(bottom: keyboard)),
-          child: Scaffold(
-            extendBody: true,
-            backgroundColor: AppColors.paper,
-            body: Stack(
-              children: [
-                const SearchScreen(),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: SafeArea(
-                    top: false,
-                    minimum: const EdgeInsets.only(bottom: AppTabBarMetrics.bottomInset),
-                    child: Center(
-                      child: Container(
-                        key: const ValueKey('tab-bar'),
-                        height: AppTabBarMetrics.height,
-                        width: 200,
-                        color: AppColors.paper,
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        apiClientProvider.overrideWithValue(_Api()),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        theme: buildAppTheme(),
+        home: Builder(
+          builder: (context) => MediaQuery(
+            // The keyboard, as the framework reports it to everything below.
+            data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.only(bottom: keyboard)),
+            child: Scaffold(
+              extendBody: true,
+              backgroundColor: AppColors.paper,
+              body: Stack(
+                children: [
+                  const SearchScreen(),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: SafeArea(
+                      top: false,
+                      minimum: const EdgeInsets.only(bottom: AppTabBarMetrics.bottomInset),
+                      child: Center(
+                        child: Container(
+                          key: const ValueKey('tab-bar'),
+                          height: AppTabBarMetrics.height,
+                          width: 200,
+                          color: AppColors.paper,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.pump();
   await tester.pump();
   await tester.pump();
@@ -103,8 +109,11 @@ void main() {
     final line = tester.getRect(find.textContaining('Enter'));
     final bar = tester.getRect(find.byKey(const ValueKey('tab-bar')));
 
-    expect(line.bottom, lessThanOrEqualTo(bar.top),
-        reason: 'the line must not sit under the bar it is drawn behind');
+    expect(
+      line.bottom,
+      lessThanOrEqualTo(bar.top),
+      reason: 'the line must not sit under the bar it is drawn behind',
+    );
   });
 
   testWidgets('…and with the keyboard UP, scrolled to the very end', (tester) async {
@@ -123,8 +132,11 @@ void main() {
 
     // Not merely «does not overlap»: flush against the bar is what was reported, and a line the eye
     // reads as touching the chrome is the defect whether or not the rectangles intersect.
-    expect(bar.top - line.bottom, greaterThanOrEqualTo(AppSpacing.s16),
-        reason: 'the last line needs air under it, not just an absence of collision');
+    expect(
+      bar.top - line.bottom,
+      greaterThanOrEqualTo(AppSpacing.s16),
+      reason: 'the last line needs air under it, not just an absence of collision',
+    );
   });
 
   testWidgets('a long list of results ends clear of the bar too', (tester) async {

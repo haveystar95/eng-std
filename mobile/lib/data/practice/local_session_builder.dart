@@ -79,7 +79,15 @@ abstract final class LocalPracticeSessionBuilder {
   /// Common phrasal-verb particles used as decoy chips, so assembling "give up" is a real choice
   /// and not just re-ordering the only two tiles on screen. Mirrors the server's ChipShuffler.
   static const List<String> _particles = [
-    'up', 'on', 'in', 'off', 'out', 'down', 'over', 'away', 'back',
+    'up',
+    'on',
+    'in',
+    'off',
+    'out',
+    'down',
+    'over',
+    'away',
+    'back',
   ];
 
   /// Build a session from [terms] (the collection's whole mirror). Terms with no text are dropped —
@@ -155,11 +163,7 @@ abstract final class LocalPracticeSessionBuilder {
         ),
     ];
 
-    return StudySession(
-      sessionId: sessionId ?? ApiClient.ulid(),
-      cards: cards,
-      builtLocally: true,
-    );
+    return StudySession(sessionId: sessionId ?? ApiClient.ulid(), cards: cards, builtLocally: true);
   }
 
   /// One card per mode this pair may be drilled in right now, in the enabled set's own order.
@@ -191,8 +195,13 @@ abstract final class LocalPracticeSessionBuilder {
 
     if (modes.isEmpty) {
       final floor = _card(
-        term: term, cardIndex: 0, pool: pool, enabled: enabled,
-        random: random, position: position, admission: admission,
+        term: term,
+        cardIndex: 0,
+        pool: pool,
+        enabled: enabled,
+        random: random,
+        position: position,
+        admission: admission,
       );
       return floor == null ? const [] : [floor];
     }
@@ -203,8 +212,13 @@ abstract final class LocalPracticeSessionBuilder {
     return [
       for (var i = 0; i < modes.length; i++)
         ?_card(
-          term: term, cardIndex: i, pool: pool, enabled: enabled,
-          random: random, position: position, admission: admission,
+          term: term,
+          cardIndex: i,
+          pool: pool,
+          enabled: enabled,
+          random: random,
+          position: position,
+          admission: admission,
           forcedMode: modes[i],
         ),
     ];
@@ -226,29 +240,32 @@ abstract final class LocalPracticeSessionBuilder {
     final example = term.example;
     // Span-distinct, because that is what a card can actually use — see _spanDistinct.
     final usableDistractors = _spanDistinct(_distractorsOf(term));
-    final mode = forcedMode ?? PracticeModeSelector.select(
-      // The switched-on trainers, minus `intro` — practice introduces nothing. For a POOL pair the
-      // ladder is NOT a filter here (QA-26): free practice drills every trainer the term's data can
-      // furnish, which is what the server's `selectForPractice` does. What the rung still decides is
-      // the card's SHAPE, below: where a choice card's options come from, and which form `speaking`
-      // asks in. An enrolled rung-0 pair never reaches this method — `build` drops it.
-      //
-      // For a pair OUTSIDE the pool the matrix DOES narrow the set — see [_drillable].
-      enabled: PracticeModes(_drillable(enabled, position, admission)),
-      rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
-      playable: TermPlayability.of(
-        answer: answer,
-        example: example,
-        exampleTranslation: term.exampleTranslation,
-        distractorCount: usableDistractors.length,
-        description: term.description,
-      ),
-    );
+    final mode =
+        forcedMode ??
+        PracticeModeSelector.select(
+          // The switched-on trainers, minus `intro` — practice introduces nothing. For a POOL pair the
+          // ladder is NOT a filter here (QA-26): free practice drills every trainer the term's data can
+          // furnish, which is what the server's `selectForPractice` does. What the rung still decides is
+          // the card's SHAPE, below: where a choice card's options come from, and which form `speaking`
+          // asks in. An enrolled rung-0 pair never reaches this method — `build` drops it.
+          //
+          // For a pair OUTSIDE the pool the matrix DOES narrow the set — see [_drillable].
+          enabled: PracticeModes(_drillable(enabled, position, admission)),
+          rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
+          playable: TermPlayability.of(
+            answer: answer,
+            example: example,
+            exampleTranslation: term.exampleTranslation,
+            distractorCount: usableDistractors.length,
+            description: term.description,
+          ),
+        );
 
     // Far options: on the recognition rungs the wrong answers are the session's own NEIGHBOURS,
     // not the enrichment distractors. Those exist to be nearly right, which is the exercise once
     // the word is known and an unpassable card before it.
-    final farOptions = mode == ExerciseMode.multipleChoice &&
+    final farOptions =
+        mode == ExerciseMode.multipleChoice &&
         admission.optionsPolicyFor(mode, position.acquisition) == OptionsPolicy.distant;
 
     List<String>? options;
@@ -273,11 +290,7 @@ abstract final class LocalPracticeSessionBuilder {
                 if (t.id != term.id && t.type == term.type && (t.termText ?? '').trim().isNotEmpty)
                   (t.termText ?? '').trim(),
             ].take(optionCount - 1).toList()
-          : PracticeDistractors.forTarget(
-              target: term,
-              pool: candidates,
-              count: optionCount - 1,
-            );
+          : PracticeDistractors.forTarget(target: term, pool: candidates, count: optionCount - 1);
       options = [answer, ...distractors]..shuffle(random);
     } else if (mode == ExerciseMode.wordBank) {
       chips = _chips(answer, phrasalVerb: term.type == 'phrasal_verb', random: random);
@@ -309,7 +322,11 @@ abstract final class LocalPracticeSessionBuilder {
       // offering both would put two right answers on the card.
       options = [
         answer,
-        ...PracticeDistractors.forTarget(target: term, pool: [...pool]..shuffle(random), count: optionCount - 1),
+        ...PracticeDistractors.forTarget(
+          target: term,
+          pool: [...pool]..shuffle(random),
+          count: optionCount - 1,
+        ),
       ]..shuffle(random);
     }
 
@@ -319,7 +336,9 @@ abstract final class LocalPracticeSessionBuilder {
     // the rung it was DEALT at, which is the one the matrix narrowed its trainers by.
     final cardStep = position.practiceCardStep;
 
-    if (mode == ExerciseMode.speaking && ExerciseMode.speaking.asksForExample(cardStep) && example != null) {
+    if (mode == ExerciseMode.speaking &&
+        ExerciseMode.speaking.asksForExample(cardStep) &&
+        example != null) {
       // The late form: the pinned example IS the task, read aloud. Decided from `cardStep` — the
       // very value this card UPLOADS — so the form the learner was shown and the key the server
       // grades against cannot come apart. (An offline practice card carries its real rung while a
@@ -350,7 +369,9 @@ abstract final class LocalPracticeSessionBuilder {
       chips: chips,
       // Same rule as the server's StudyCardAssembler: variants belong to the TERM, so they apply
       // only while the answer is the term. On scramble/dictation the answer is the sentence.
-      acceptedVariants: mode.asksForExample(cardStep) && example != null ? const [] : _variantsOf(term),
+      acceptedVariants: mode.asksForExample(cardStep) && example != null
+          ? const []
+          : _variantsOf(term),
       optionFeedback: optionFeedback,
       ladderStep: cardStep,
     );
@@ -376,7 +397,10 @@ abstract final class LocalPracticeSessionBuilder {
     LadderPosition position,
     ModeAdmission admission,
   ) {
-    final graded = [for (final mode in enabled.modes) if (mode.isGraded) mode];
+    final graded = [
+      for (final mode in enabled.modes)
+        if (mode.isGraded) mode,
+    ];
 
     return position.enrolled
         ? graded
@@ -474,7 +498,10 @@ abstract final class LocalPracticeSessionBuilder {
   /// One or two particles that aren't already in the answer, so the decoy is never the real one.
   static List<String> _particleDecoys(List<String> tokens, Random random) {
     final present = tokens.map((t) => t.toLowerCase()).toSet();
-    final candidates = [for (final p in _particles) if (!present.contains(p)) p]..shuffle(random);
+    final candidates = [
+      for (final p in _particles)
+        if (!present.contains(p)) p,
+    ]..shuffle(random);
     if (candidates.isEmpty) return const [];
     return candidates.take(1 + random.nextInt(2)).toList();
   }

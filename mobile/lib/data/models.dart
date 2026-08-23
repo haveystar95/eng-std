@@ -69,21 +69,21 @@ class WordCollection {
   final bool isDefault;
 
   factory WordCollection.fromJson(Map<String, dynamic> j) => WordCollection(
-        id: j['id'] as String,
-        title: j['title'] as String,
-        emoji: j['emoji'] as String?,
-        description: j['description'] as String?,
-        source: (j['source'] as String?) ?? 'user',
-        type: (j['type'] as String?) ?? 'custom',
-        wordsCount: (j['items_count'] as int?) ?? 0,
-        sourceLang: (j['source_lang'] as String?) ?? 'ru',
-        targetLang: (j['target_lang'] as String?) ?? 'en',
-        imageUrl: j['image_url'] as String?,
-        imageAuthor: j['image_author'] as String?,
-        imageAuthorUrl: j['image_author_url'] as String?,
-        isSubscribed: (j['is_subscribed'] as bool?) ?? false,
-        isDefault: (j['is_default'] as bool?) ?? false,
-      );
+    id: j['id'] as String,
+    title: j['title'] as String,
+    emoji: j['emoji'] as String?,
+    description: j['description'] as String?,
+    source: (j['source'] as String?) ?? 'user',
+    type: (j['type'] as String?) ?? 'custom',
+    wordsCount: (j['items_count'] as int?) ?? 0,
+    sourceLang: (j['source_lang'] as String?) ?? 'ru',
+    targetLang: (j['target_lang'] as String?) ?? 'en',
+    imageUrl: j['image_url'] as String?,
+    imageAuthor: j['image_author'] as String?,
+    imageAuthorUrl: j['image_author_url'] as String?,
+    isSubscribed: (j['is_subscribed'] as bool?) ?? false,
+    isDefault: (j['is_default'] as bool?) ?? false,
+  );
 }
 
 /// A collection item / study card. Reads both the collection-item shape and the
@@ -104,7 +104,8 @@ class Word {
   final String type; // word | phrase | idiom | phrasal_verb
   final String? audioUrl; // optional override; null → system TTS
   final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
-  final String? status; // learning state from local progress (new|learning|review|relearning|known); null → not started
+  final String?
+  status; // learning state from local progress (new|learning|review|relearning|known); null → not started
   final String? imageUrl; // Pexels photo; null → type-badge placeholder
   final String? imageAuthor;
   final String? imageAuthorUrl;
@@ -155,17 +156,17 @@ class Word {
   bool get isPhrase => type != 'word';
 
   factory Word.fromJson(Map<String, dynamic> j) => Word(
-        termId: (j['term_id'] ?? j['id']) as String,
-        term: ((j['text'] ?? j['term']) as String?) ?? '',
-        translation: (j['translation'] as String?) ?? '',
-        transcription: j['transcription'] as String?,
-        example: j['example'] as String?,
-        exampleTranslation: j['example_translation'] as String?,
-        description: j['description'] as String?,
-        type: (j['type'] as String?) ?? 'word',
-        audioUrl: j['audio_url'] as String?,
-        ttsHint: j['tts_hint'] as String?,
-      );
+    termId: (j['term_id'] ?? j['id']) as String,
+    term: ((j['text'] ?? j['term']) as String?) ?? '',
+    translation: (j['translation'] as String?) ?? '',
+    transcription: j['transcription'] as String?,
+    example: j['example'] as String?,
+    exampleTranslation: j['example_translation'] as String?,
+    description: j['description'] as String?,
+    type: (j['type'] as String?) ?? 'word',
+    audioUrl: j['audio_url'] as String?,
+    ttsHint: j['tts_hint'] as String?,
+  );
 }
 
 class ReviewCard {
@@ -173,8 +174,7 @@ class ReviewCard {
   ReviewCard({required this.word});
 
   /// backend2 `/study/due` returns flat cards (no `word` wrapper).
-  factory ReviewCard.fromJson(Map<String, dynamic> j) =>
-      ReviewCard(word: Word.fromJson(j));
+  factory ReviewCard.fromJson(Map<String, dynamic> j) => ReviewCard(word: Word.fromJson(j));
 }
 
 /// How a session card is presented (backend2 `SessionCard.exercise_mode`). The mode decides
@@ -262,10 +262,10 @@ enum ExerciseMode {
   /// Content is not consulted here, only the question: use [SessionCard.asksForExample], which also
   /// checks the term actually HAS the sentence, exactly as the server's assembler does.
   bool asksForExample(int? ladderStep) => switch (this) {
-        scramble || dictation || pickCorrect => true,
-        speaking => ladderStep != null && ladderStep >= LearningLadder.stepDictation,
-        _ => false,
-      };
+    scramble || dictation || pickCorrect => true,
+    speaking => ladderStep != null && ladderStep >= LearningLadder.stepDictation,
+    _ => false,
+  };
 
   /// Does this card ask the learner to TAP one of several given sentences? The body renders options
   /// like multiple_choice, but each option is a whole sentence and a wrong tap gets an explanation.
@@ -285,23 +285,19 @@ class OptionFeedback {
   final String errorSpan;
   final String correction;
 
-  const OptionFeedback({
-    required this.sentence,
-    required this.errorSpan,
-    required this.correction,
-  });
+  const OptionFeedback({required this.sentence, required this.errorSpan, required this.correction});
 
   factory OptionFeedback.fromJson(Map<String, dynamic> j) => OptionFeedback(
-        sentence: (j['sentence'] as String?) ?? '',
-        errorSpan: (j['error_span'] as String?) ?? '',
-        correction: (j['correction'] as String?) ?? '',
-      );
+    sentence: (j['sentence'] as String?) ?? '',
+    errorSpan: (j['error_span'] as String?) ?? '',
+    correction: (j['correction'] as String?) ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'sentence': sentence,
-        'error_span': errorSpan,
-        'correction': correction,
-      };
+    'sentence': sentence,
+    'error_span': errorSpan,
+    'correction': correction,
+  };
 }
 
 /// One self-contained card in a study session (`POST /study/sessions`). Carries the prompt (user's
@@ -433,25 +429,26 @@ class SessionCard {
   bool get isPhrase => type != 'word';
 
   factory SessionCard.fromJson(Map<String, dynamic> j) => SessionCard(
-        termId: j['term_id'] as String,
-        mode: ExerciseMode.fromWire(j['exercise_mode'] as String?),
-        type: (j['type'] as String?) ?? 'word',
-        prompt: j['prompt'] as String?,
-        answer: (j['answer'] as String?) ?? '',
-        transcription: j['transcription'] as String?,
-        example: j['example'] as String?,
-        exampleTranslation: j['example_translation'] as String?,
-        options: (j['options'] as List?)?.map((e) => e as String).toList(),
-        chips: (j['chips'] as List?)?.map((e) => e as String).toList(),
-        acceptedVariants:
-            (j['accepted_variants'] as List?)?.map((e) => e as String).toList() ?? const [],
-        optionFeedback: (j['option_feedback'] as List?)
-                ?.map((e) => OptionFeedback.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            const [],
-        ladderStep: (j['ladder_step'] as num?)?.toInt(),
-        optionIds: (j['option_ids'] as List?)?.map((e) => e as String).toList(),
-      );
+    termId: j['term_id'] as String,
+    mode: ExerciseMode.fromWire(j['exercise_mode'] as String?),
+    type: (j['type'] as String?) ?? 'word',
+    prompt: j['prompt'] as String?,
+    answer: (j['answer'] as String?) ?? '',
+    transcription: j['transcription'] as String?,
+    example: j['example'] as String?,
+    exampleTranslation: j['example_translation'] as String?,
+    options: (j['options'] as List?)?.map((e) => e as String).toList(),
+    chips: (j['chips'] as List?)?.map((e) => e as String).toList(),
+    acceptedVariants:
+        (j['accepted_variants'] as List?)?.map((e) => e as String).toList() ?? const [],
+    optionFeedback:
+        (j['option_feedback'] as List?)
+            ?.map((e) => OptionFeedback.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        const [],
+    ladderStep: (j['ladder_step'] as num?)?.toInt(),
+    optionIds: (j['option_ids'] as List?)?.map((e) => e as String).toList(),
+  );
 }
 
 /// A ready-to-play session: the server-fixed composition (one card per exercise) under a
@@ -465,11 +462,7 @@ class StudySession {
   /// arrive; nothing else about the session behaves differently.
   final bool builtLocally;
 
-  const StudySession({
-    required this.sessionId,
-    required this.cards,
-    this.builtLocally = false,
-  });
+  const StudySession({required this.sessionId, required this.cards, this.builtLocally = false});
 }
 
 class Profile {
@@ -509,27 +502,27 @@ class Profile {
   bool get isOnboarded => onboardedAt != null;
 
   factory Profile.fromJson(Map<String, dynamic> j) => Profile(
-        nativeLanguage: (j['native_language'] as String?) ?? 'ru',
-        targetLanguage: (j['target_language'] as String?) ?? 'en',
-        cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
-        dailyGoal: (j['daily_goal'] as int?) ?? 20,
-        tier: (j['tier'] as String?) ?? 'free',
-        onboardedAt: j['onboarded_at'] as String?,
-        timezone: (j['timezone'] as String?) ?? 'UTC',
-      );
+    nativeLanguage: (j['native_language'] as String?) ?? 'ru',
+    targetLanguage: (j['target_language'] as String?) ?? 'en',
+    cefrLevel: (j['cefr_level'] as String?) ?? 'B1',
+    dailyGoal: (j['daily_goal'] as int?) ?? 20,
+    tier: (j['tier'] as String?) ?? 'free',
+    onboardedAt: j['onboarded_at'] as String?,
+    timezone: (j['timezone'] as String?) ?? 'UTC',
+  );
 
   Map<String, dynamic> toJson() => {
-        'native_language': nativeLanguage,
-        'target_language': targetLanguage,
-        'cefr_level': cefrLevel,
-        'daily_goal': dailyGoal,
-        'timezone': timezone,
-        // Persist tier so the cached user keeps premium across restart/refresh — otherwise the
-        // restored user defaults to free and the premium-gated dialog button vanishes until a
-        // re-login. The server still enforces the real gate (403), so mild staleness is safe.
-        'tier': tier,
-        'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
-      };
+    'native_language': nativeLanguage,
+    'target_language': targetLanguage,
+    'cefr_level': cefrLevel,
+    'daily_goal': dailyGoal,
+    'timezone': timezone,
+    // Persist tier so the cached user keeps premium across restart/refresh — otherwise the
+    // restored user defaults to free and the premium-gated dialog button vanishes until a
+    // re-login. The server still enforces the real gate (403), so mild staleness is safe.
+    'tier': tier,
+    'onboarded_at': onboardedAt, // keep the onboarding gate correct on offline cold start
+  };
 }
 
 /// One subscribable store collection (`GET /store/collections`, B5). Public/system sets for a
@@ -572,36 +565,36 @@ class StoreCollection {
   });
 
   StoreCollection copyWith({bool? isSubscribed}) => StoreCollection(
-        id: id,
-        title: title,
-        description: description,
-        topic: topic,
-        sourceLang: sourceLang,
-        targetLang: targetLang,
-        isPremium: isPremium,
-        isSubscribed: isSubscribed ?? this.isSubscribed,
-        itemsCount: itemsCount,
-        cefr: cefr,
-        imageUrl: imageUrl,
-        imageAuthor: imageAuthor,
-        imageAuthorUrl: imageAuthorUrl,
-      );
+    id: id,
+    title: title,
+    description: description,
+    topic: topic,
+    sourceLang: sourceLang,
+    targetLang: targetLang,
+    isPremium: isPremium,
+    isSubscribed: isSubscribed ?? this.isSubscribed,
+    itemsCount: itemsCount,
+    cefr: cefr,
+    imageUrl: imageUrl,
+    imageAuthor: imageAuthor,
+    imageAuthorUrl: imageAuthorUrl,
+  );
 
   factory StoreCollection.fromJson(Map<String, dynamic> j) => StoreCollection(
-        id: j['id'] as String,
-        title: (j['title'] as String?) ?? '',
-        description: j['description'] as String?,
-        topic: j['topic'] as String?,
-        sourceLang: (j['source_lang'] as String?) ?? 'ru',
-        targetLang: (j['target_lang'] as String?) ?? 'en',
-        isPremium: (j['is_premium'] as bool?) ?? false,
-        isSubscribed: (j['is_subscribed'] as bool?) ?? false,
-        itemsCount: (j['items_count'] as int?) ?? 0,
-        cefr: (j['cefr'] ?? j['level']) as String?,
-        imageUrl: j['image_url'] as String?,
-        imageAuthor: j['image_author'] as String?,
-        imageAuthorUrl: j['image_author_url'] as String?,
-      );
+    id: j['id'] as String,
+    title: (j['title'] as String?) ?? '',
+    description: j['description'] as String?,
+    topic: j['topic'] as String?,
+    sourceLang: (j['source_lang'] as String?) ?? 'ru',
+    targetLang: (j['target_lang'] as String?) ?? 'en',
+    isPremium: (j['is_premium'] as bool?) ?? false,
+    isSubscribed: (j['is_subscribed'] as bool?) ?? false,
+    itemsCount: (j['items_count'] as int?) ?? 0,
+    cefr: (j['cefr'] ?? j['level']) as String?,
+    imageUrl: j['image_url'] as String?,
+    imageAuthor: j['image_author'] as String?,
+    imageAuthorUrl: j['image_author_url'] as String?,
+  );
 }
 
 /// One preview row in the store sheet (кадры 8c/8d): «term — translation».
@@ -611,9 +604,9 @@ class StorePreviewItem {
   const StorePreviewItem({required this.term, required this.translation});
 
   factory StorePreviewItem.fromJson(Map<String, dynamic> j) => StorePreviewItem(
-        term: ((j['text'] ?? j['term']) as String?) ?? '',
-        translation: (j['translation'] as String?) ?? '',
-      );
+    term: ((j['text'] ?? j['term']) as String?) ?? '',
+    translation: (j['translation'] as String?) ?? '',
+  );
 }
 
 /// The store preview (`GET /store/collections/{id}/preview`): the first few terms + the full count,
@@ -668,16 +661,16 @@ class Stats {
   });
 
   factory Stats.fromJson(Map<String, dynamic> j) => Stats(
-        totalWords: (j['total_terms'] as int?) ?? 0,
-        learned: (j['learned'] as int?) ?? 0,
-        mastered: (j['mastered'] as int?) ?? 0,
-        dueToday: (j['due_today'] as int?) ?? 0,
-        reviewsTotal: (j['reviews_today'] as int?) ?? 0,
-        streakDays: (j['streak_days'] as int?) ?? 0,
-        activeDays: (j['active_days'] as List?)?.map((e) => e as String).toList() ?? const [],
-        newGoal: (j['new_goal'] as int?) ?? 0,
-        newRemaining: (j['new_remaining'] as int?) ?? 0,
-      );
+    totalWords: (j['total_terms'] as int?) ?? 0,
+    learned: (j['learned'] as int?) ?? 0,
+    mastered: (j['mastered'] as int?) ?? 0,
+    dueToday: (j['due_today'] as int?) ?? 0,
+    reviewsTotal: (j['reviews_today'] as int?) ?? 0,
+    streakDays: (j['streak_days'] as int?) ?? 0,
+    activeDays: (j['active_days'] as List?)?.map((e) => e as String).toList() ?? const [],
+    newGoal: (j['new_goal'] as int?) ?? 0,
+    newRemaining: (j['new_remaining'] as int?) ?? 0,
+  );
 }
 
 /// Derived learning progress for one collection (from `GET /study/progress`).
@@ -700,12 +693,12 @@ class CollectionProgress {
   double get ratio => total == 0 ? 0 : (learned / total).clamp(0, 1);
 
   factory CollectionProgress.fromJson(Map<String, dynamic> j) => CollectionProgress(
-        collectionId: j['collection_id'] as String,
-        total: (j['total'] as int?) ?? 0,
-        learned: (j['learned'] as int?) ?? 0,
-        mastered: (j['mastered'] as int?) ?? 0,
-        due: (j['due'] as int?) ?? 0,
-      );
+    collectionId: j['collection_id'] as String,
+    total: (j['total'] as int?) ?? 0,
+    learned: (j['learned'] as int?) ?? 0,
+    mastered: (j['mastered'] as int?) ?? 0,
+    due: (j['due'] as int?) ?? 0,
+  );
 }
 
 /// Daily AI-generation allowance, from `/auth/me`'s `generation` block. `resetsAt` is an absolute
@@ -726,12 +719,11 @@ class GenerationQuota {
   bool get exhausted => remaining <= 0;
 
   factory GenerationQuota.fromJson(Map<String, dynamic> j) => GenerationQuota(
-        limit: (j['limit'] as int?) ?? 0,
-        used: (j['used'] as int?) ?? 0,
-        remaining: (j['remaining'] as int?) ?? 0,
-        resetsAt: DateTime.tryParse((j['resets_at'] as String?) ?? '')?.toLocal() ??
-            DateTime.now(),
-      );
+    limit: (j['limit'] as int?) ?? 0,
+    used: (j['used'] as int?) ?? 0,
+    remaining: (j['remaining'] as int?) ?? 0,
+    resetsAt: DateTime.tryParse((j['resets_at'] as String?) ?? '')?.toLocal() ?? DateTime.now(),
+  );
 }
 
 class AppUser {
@@ -755,25 +747,23 @@ class AppUser {
   });
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
-        id: j['id'] as String,
-        name: (j['name'] as String?) ?? 'Learner',
-        email: j['email'] as String?,
-        avatar: j['avatar'] as String?,
-        profile: j['profile'] != null
-            ? Profile.fromJson(j['profile'] as Map<String, dynamic>)
-            : null,
-        quota: j['generation'] != null
-            ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
-            : null,
-      );
+    id: j['id'] as String,
+    name: (j['name'] as String?) ?? 'Learner',
+    email: j['email'] as String?,
+    avatar: j['avatar'] as String?,
+    profile: j['profile'] != null ? Profile.fromJson(j['profile'] as Map<String, dynamic>) : null,
+    quota: j['generation'] != null
+        ? GenerationQuota.fromJson(j['generation'] as Map<String, dynamic>)
+        : null,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': ?email,
-        'avatar': ?avatar,
-        'profile': ?profile?.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'email': ?email,
+    'avatar': ?avatar,
+    'profile': ?profile?.toJson(),
+  };
 }
 
 /// The pollable state of a generation request (`GET /generations/{id}`).
@@ -836,15 +826,15 @@ class TriageCard {
   bool get isPhrase => type != 'word';
 
   factory TriageCard.fromJson(Map<String, dynamic> j) => TriageCard(
-        termId: j['term_id'] as String,
-        text: (j['text'] as String?) ?? '',
-        translation: (j['translation'] as String?) ?? '',
-        type: (j['type'] as String?) ?? 'word',
-        transcription: j['transcription'] as String?,
-        example: j['example'] as String?,
-        exampleTranslation: j['example_translation'] as String?,
-        imageUrl: j['image_url'] as String?,
-      );
+    termId: j['term_id'] as String,
+    text: (j['text'] as String?) ?? '',
+    translation: (j['translation'] as String?) ?? '',
+    type: (j['type'] as String?) ?? 'word',
+    transcription: j['transcription'] as String?,
+    example: j['example'] as String?,
+    exampleTranslation: j['example_translation'] as String?,
+    imageUrl: j['image_url'] as String?,
+  );
 }
 
 /// One page of the triage queue: the cards to swipe now, plus [remaining] — how many eligible
@@ -896,19 +886,19 @@ class SearchHit {
   bool get isSaved => folders.isNotEmpty;
 
   factory SearchHit.fromJson(Map<String, dynamic> j) => SearchHit(
-        termId: j['term_id'] as String,
-        text: (j['text'] as String?) ?? '',
-        type: (j['type'] as String?) ?? 'word',
-        transcription: j['transcription'] as String?,
-        translation: j['translation'] as String?,
-        description: j['description'] as String?,
-        example: j['example'] as String?,
-        exampleTranslation: j['example_translation'] as String?,
-        cefr: j['cefr'] as String?,
-        folders: ((j['folders'] as List?) ?? const [])
-            .map((e) => SavedFolder.fromJson(e as Map<String, dynamic>))
-            .toList(growable: false),
-      );
+    termId: j['term_id'] as String,
+    text: (j['text'] as String?) ?? '',
+    type: (j['type'] as String?) ?? 'word',
+    transcription: j['transcription'] as String?,
+    translation: j['translation'] as String?,
+    description: j['description'] as String?,
+    example: j['example'] as String?,
+    exampleTranslation: j['example_translation'] as String?,
+    cefr: j['cefr'] as String?,
+    folders: ((j['folders'] as List?) ?? const [])
+        .map((e) => SavedFolder.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false),
+  );
 }
 
 /// A folder a word sits in, as named on a search card.
@@ -920,10 +910,10 @@ class SavedFolder {
   const SavedFolder({required this.id, required this.title, required this.isDefault});
 
   factory SavedFolder.fromJson(Map<String, dynamic> j) => SavedFolder(
-        id: j['id'] as String,
-        title: (j['title'] as String?) ?? '',
-        isDefault: (j['is_default'] as bool?) ?? false,
-      );
+    id: j['id'] as String,
+    title: (j['title'] as String?) ?? '',
+    isDefault: (j['is_default'] as bool?) ?? false,
+  );
 }
 
 /// A word the model looked up. NOT a term yet — nothing exists in the database until the learner
@@ -960,17 +950,17 @@ class LookupCard {
   });
 
   factory LookupCard.fromJson(Map<String, dynamic> j) => LookupCard(
-        lookupId: j['lookup_id'] as String,
-        text: (j['text'] as String?) ?? '',
-        type: (j['type'] as String?) ?? 'word',
-        transcription: j['transcription'] as String?,
-        translation: j['translation'] as String?,
-        description: (j['description'] as String?) ?? '',
-        example: j['example'] as String?,
-        exampleTranslation: j['example_translation'] as String?,
-        cefr: j['cefr'] as String?,
-        fresh: (j['fresh'] as bool?) ?? false,
-      );
+    lookupId: j['lookup_id'] as String,
+    text: (j['text'] as String?) ?? '',
+    type: (j['type'] as String?) ?? 'word',
+    transcription: j['transcription'] as String?,
+    translation: j['translation'] as String?,
+    description: (j['description'] as String?) ?? '',
+    example: j['example'] as String?,
+    exampleTranslation: j['example_translation'] as String?,
+    cefr: j['cefr'] as String?,
+    fresh: (j['fresh'] as bool?) ?? false,
+  );
 }
 
 /// What came of a lookup: an answer, or an honest «not today».
@@ -1033,13 +1023,13 @@ class SavedSearchResult {
   });
 
   factory SavedSearchResult.fromJson(Map<String, dynamic> j) => SavedSearchResult(
-        termId: j['term_id'] as String,
-        collectionId: j['collection_id'] as String,
-        collectionTitle: (j['collection_title'] as String?) ?? '',
-        collectionIsDefault: (j['collection_is_default'] as bool?) ?? false,
-        added: (j['added'] as bool?) ?? false,
-        enrolled: (j['enrolled'] as bool?) ?? false,
-      );
+    termId: j['term_id'] as String,
+    collectionId: j['collection_id'] as String,
+    collectionTitle: (j['collection_title'] as String?) ?? '',
+    collectionIsDefault: (j['collection_is_default'] as bool?) ?? false,
+    added: (j['added'] as bool?) ?? false,
+    enrolled: (j['enrolled'] as bool?) ?? false,
+  );
 }
 
 /// The grey line under the search field: a first, cheap guess at what a word means.
@@ -1103,11 +1093,11 @@ class InstantHint {
   }
 
   factory InstantHint.fromJson(Map<String, dynamic> j) => InstantHint(
-        query: (j['query'] as String?) ?? '',
-        translation: j['translation'] as String?,
-        featureDisabled: (j['feature_disabled'] as bool?) ?? false,
-        limitReached: (j['limit_reached'] as bool?) ?? false,
-        reversed: (j['reversed'] as bool?) ?? false,
-        queryTooLong: (j['query_too_long'] as bool?) ?? false,
-      );
+    query: (j['query'] as String?) ?? '',
+    translation: j['translation'] as String?,
+    featureDisabled: (j['feature_disabled'] as bool?) ?? false,
+    limitReached: (j['limit_reached'] as bool?) ?? false,
+    reversed: (j['reversed'] as bool?) ?? false,
+    queryTooLong: (j['query_too_long'] as bool?) ?? false,
+  );
 }

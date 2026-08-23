@@ -15,19 +15,39 @@ void main() {
   final t0 = DateTime.utc(2026, 8, 3, 12);
 
   Future<void> upsertOne() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Метро'), itemsCount: const Value(1)),
-        ],
-        termUpserts: [
-          TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('ticket'), translation: const Value('билет')),
-        ],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0, position: const Value(0)),
-        ],
-        progressUpserts: [
-          TermProgressCompanion.insert(termId: 't1', updatedAt: t0, state: const Value('review'), intervalDays: const Value(30)),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(
+        id: 'c1',
+        updatedAt: t0,
+        title: const Value('Метро'),
+        itemsCount: const Value(1),
+      ),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(
+        id: 't1',
+        updatedAt: t0,
+        termText: const Value('ticket'),
+        translation: const Value('билет'),
+      ),
+    ],
+    itemUpserts: [
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't1',
+        updatedAt: t0,
+        position: const Value(0),
+      ),
+    ],
+    progressUpserts: [
+      TermProgressCompanion.insert(
+        termId: 't1',
+        updatedAt: t0,
+        state: const Value('review'),
+        intervalDays: const Value(30),
+      ),
+    ],
+  );
 
   test('upsert lands a collection, its term, and the joined status', () async {
     await upsertOne();
@@ -66,9 +86,15 @@ void main() {
 
   test('a later upsert overwrites earlier fields (last write wins)', () async {
     await upsertOne();
-    await db.applyDelta(collectionUpserts: [
-      CollectionsCompanion.insert(id: 'c1', updatedAt: t0.add(const Duration(days: 1)), title: const Value('Метро 2')),
-    ]);
+    await db.applyDelta(
+      collectionUpserts: [
+        CollectionsCompanion.insert(
+          id: 'c1',
+          updatedAt: t0.add(const Duration(days: 1)),
+          title: const Value('Метро 2'),
+        ),
+      ],
+    );
     expect((await db.watchCollections().first).single.title, 'Метро 2');
   });
 
@@ -84,9 +110,11 @@ void main() {
     await upsertOne();
     // The delta carries the governing triage verdict; applyDelta mirrors it into the marker so an
     // unknown swipe (no progress row) stays out of the deck after a sign-out wipe + re-login.
-    await db.applyDelta(triageUpserts: [
-      TriagedTermsCompanion.insert(termId: 't1', collectionId: const Value('c1'), decidedAt: t0),
-    ]);
+    await db.applyDelta(
+      triageUpserts: [
+        TriagedTermsCompanion.insert(termId: 't1', collectionId: const Value('c1'), decidedAt: t0),
+      ],
+    );
     expect(await db.triageEligible('c1'), isEmpty); // t1 marked → nothing eligible
   });
 

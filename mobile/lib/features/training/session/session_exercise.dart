@@ -404,23 +404,22 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         // equality here would print «Не то» over an answer the scheduler is about to count as
         // correct, which is the one direction this check is forbidden to take.
         : (_isSpeaking && _gradesByCoverage)
-            ? (SessionGrader.coversAny(
-                    response,
-                    [_card.answer, ..._card.acceptedVariants],
-                    ignoreArticles: true,
-                  )
-                ? LocalCheck.correct
-                : LocalCheck.wrong)
-            : SessionGrader.check(
-                response,
+        ? (SessionGrader.coversAny(response, [
                 _card.answer,
-                variants: _card.acceptedVariants,
-                forgiveTypos: _mode.forgivesTypos,
-                spokenSuffixTolerance: _isSpeaking,
-                // Speaking ONLY (QA-21) — see SessionGrader.check. Typing and dictation practise the
-                // article deliberately and keep failing a dropped one.
-                ignoreArticles: _isSpeaking,
-              );
+                ..._card.acceptedVariants,
+              ], ignoreArticles: true)
+              ? LocalCheck.correct
+              : LocalCheck.wrong)
+        : SessionGrader.check(
+            response,
+            _card.answer,
+            variants: _card.acceptedVariants,
+            forgiveTypos: _mode.forgivesTypos,
+            spokenSuffixTolerance: _isSpeaking,
+            // Speaking ONLY (QA-21) — see SessionGrader.check. Typing and dictation practise the
+            // article deliberately and keep failing a dropped one.
+            ignoreArticles: _isSpeaking,
+          );
     // Sound + haptic together, for every mode — the verdict is shared, so its feedback is too.
     switch (verdict) {
       case LocalCheck.correct:
@@ -445,12 +444,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (mounted && widget.isCurrent()) widget.onSpeak(_card.answerText);
       });
     }
-    widget.onAnswered(SessionAnswer(
-      response: response,
-      verdict: verdict,
-      usedHint: usedHint,
-      latencyMs: _latency(),
-    ));
+    widget.onAnswered(
+      SessionAnswer(
+        response: response,
+        verdict: verdict,
+        usedHint: usedHint,
+        latencyMs: _latency(),
+      ),
+    );
   }
 
   // ── interactions ──────────────────────────────────────────────────────────
@@ -524,15 +525,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     if (!mounted) return;
 
     final attempt = await _recognizer!.listenOnce(
-          expected: _spokenTargets,
-          localeId: widget.speechLocaleId,
-          timeout: _window.listenFor,
-          pauseFor: _window.pauseFor,
-          contextualStrings: contextualStrings,
-          onPartial: (text) {
-            if (mounted && _listeningNow) setState(() => _partial = text);
-          },
-        );
+      expected: _spokenTargets,
+      localeId: widget.speechLocaleId,
+      timeout: _window.listenFor,
+      pauseFor: _window.pauseFor,
+      contextualStrings: contextualStrings,
+      onPartial: (text) {
+        if (mounted && _listeningNow) setState(() => _partial = text);
+      },
+    );
 
     if (!mounted) return;
     setState(() => _listeningNow = false);
@@ -613,10 +614,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           _options(l),
         ],
-        if (_mode.isAssembled) ...[
-          const SizedBox(height: AppSpacing.s16),
-          _chipTray(l),
-        ],
+        if (_mode.isAssembled) ...[const SizedBox(height: AppSpacing.s16), _chipTray(l)],
         if (!_answered && _isSpeaking) ...[
           const SizedBox(height: AppSpacing.s16),
           _speakingControls(l),
@@ -672,39 +670,40 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   }
 
   String _instructionFor(AppLocalizations l) => switch (_mode) {
-        // Unreachable: an intro is not an exercise and never reaches this widget (the shell renders
-        // SessionIntroCard for it). Named rather than defaulted so the next mode added still has to
-        // answer this question explicitly.
-        ExerciseMode.intro => '',
-        // The instruction has to know which WAY the card asks. Rung 1 shows the English term and
-        // offers translations (it is graded by identity, which is what makes it recognisable here);
-        // rung 2 is the reverse. «Выбери английский эквивалент» printed under an English prompt with
-        // Russian options told the learner to do the opposite of what the card wanted.
-        ExerciseMode.multipleChoice =>
-          _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose,
-        ExerciseMode.wordBank => l.sessionInstrAssemble,
-        ExerciseMode.typing => l.sessionInstrType,
-        ExerciseMode.cloze => l.sessionInstrType,
-        ExerciseMode.scramble => l.sessionInstrAssembleSentence,
-        ExerciseMode.dictation => l.sessionInstrDictation,
-        ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
-        // The prompt above is a DESCRIPTION, not a translation, so the instruction has to say so —
-        // «выбери английский эквивалент» under an English sentence would describe the wrong task.
-        ExerciseMode.descriptionMatch => l.sessionInstrDescriptionMatch,
-        // The mode's two forms read as two different tasks, because they ARE two different tasks —
-        // recall the word, or read the sentence you can see.
-        ExerciseMode.speaking =>
-          _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
-        ExerciseMode.listening => _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
-      };
+    // Unreachable: an intro is not an exercise and never reaches this widget (the shell renders
+    // SessionIntroCard for it). Named rather than defaulted so the next mode added still has to
+    // answer this question explicitly.
+    ExerciseMode.intro => '',
+    // The instruction has to know which WAY the card asks. Rung 1 shows the English term and
+    // offers translations (it is graded by identity, which is what makes it recognisable here);
+    // rung 2 is the reverse. «Выбери английский эквивалент» printed under an English prompt with
+    // Russian options told the learner to do the opposite of what the card wanted.
+    ExerciseMode.multipleChoice =>
+      _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose,
+    ExerciseMode.wordBank => l.sessionInstrAssemble,
+    ExerciseMode.typing => l.sessionInstrType,
+    ExerciseMode.cloze => l.sessionInstrType,
+    ExerciseMode.scramble => l.sessionInstrAssembleSentence,
+    ExerciseMode.dictation => l.sessionInstrDictation,
+    ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
+    // The prompt above is a DESCRIPTION, not a translation, so the instruction has to say so —
+    // «выбери английский эквивалент» under an English sentence would describe the wrong task.
+    ExerciseMode.descriptionMatch => l.sessionInstrDescriptionMatch,
+    // The mode's two forms read as two different tasks, because they ARE two different tasks —
+    // recall the word, or read the sentence you can see.
+    ExerciseMode.speaking =>
+      _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
+    ExerciseMode.listening =>
+      _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
+  };
 
   String _typeLabel(AppLocalizations l) => switch (_card.type) {
-        'word' => l.triageTermTypeWord,
-        'phrase' => l.triageTermTypePhrase,
-        'idiom' => l.triageTermTypeIdiom,
-        'phrasal_verb' => l.triageTermTypePhrasalVerb,
-        _ => l.triageTermTypePhrase,
-      };
+    'word' => l.triageTermTypeWord,
+    'phrase' => l.triageTermTypePhrase,
+    'idiom' => l.triageTermTypeIdiom,
+    'phrasal_verb' => l.triageTermTypePhrasalVerb,
+    _ => l.triageTermTypePhrase,
+  };
 
   Widget _instructionLine(AppLocalizations l, {bool withType = true}) {
     final text = withType ? '${_typeLabel(l)} · ${_instructionFor(l)}' : _instructionFor(l);
@@ -904,7 +903,9 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
         if (_channelFailure != null) ...[
           const SizedBox(height: AppSpacing.s12),
           Text(
-            _channelFailure == SpeechOutcome.unavailable ? l.sessionSpeakNoMic : l.sessionSpeakNotHeard,
+            _channelFailure == SpeechOutcome.unavailable
+                ? l.sessionSpeakNoMic
+                : l.sessionSpeakNotHeard,
             textAlign: TextAlign.center,
             // The colour of an ordinary note, NOT of a verdict: nothing has gone wrong with the
             // learner's memory, and the card must not look as if it has.
@@ -915,7 +916,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s16),
           QuietButton(label: l.sessionSpeakSkip, onPressed: _skipCard),
           const SizedBox(height: AppSpacing.s4),
-          Text(l.sessionSpeakSkipHint, textAlign: TextAlign.center, style: AppTextExercise.taskInstruction),
+          Text(
+            l.sessionSpeakSkipHint,
+            textAlign: TextAlign.center,
+            style: AppTextExercise.taskInstruction,
+          ),
         ],
         const SizedBox(height: AppSpacing.s12),
         // «Не помню» is the OTHER exit, and the only one that writes anything: an honest lapse,
@@ -968,7 +973,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: _PlayCircle(onTap: () => widget.onSpeak(_card.answerText), label: l.sessionListenReplay)),
+          Center(
+            child: _PlayCircle(
+              onTap: () => widget.onSpeak(_card.answerText),
+              label: l.sessionListenReplay,
+            ),
+          ),
           const SizedBox(height: AppSpacing.s12),
           Center(
             child: QuietButton(
@@ -978,11 +988,12 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             ),
           ),
           const SizedBox(height: AppSpacing.s16),
-          Text(_instructionFor(l), textAlign: TextAlign.center, style: AppTextExercise.taskInstruction),
-          if (typed && !_answered) ...[
-            const SizedBox(height: AppSpacing.s16),
-            _inputField(),
-          ],
+          Text(
+            _instructionFor(l),
+            textAlign: TextAlign.center,
+            style: AppTextExercise.taskInstruction,
+          ),
+          if (typed && !_answered) ...[const SizedBox(height: AppSpacing.s16), _inputField()],
         ],
       ),
     );
@@ -1011,8 +1022,14 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       decoration: InputDecoration(
         isDense: true,
         contentPadding: const EdgeInsets.only(bottom: AppSpacing.s8),
-        enabledBorder: borderless ? noBorder : const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.track, width: 1.5)),
-        focusedBorder: borderless ? noBorder : const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 1.5)),
+        enabledBorder: borderless
+            ? noBorder
+            : const UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.track, width: 1.5),
+              ),
+        focusedBorder: borderless
+            ? noBorder
+            : const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 1.5)),
       ),
     );
   }
@@ -1091,9 +1108,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: QuietButton(label: l.sessionHintFirstLetter, onPressed: _usedHint ? null : _useFirstLetter)),
+          Expanded(
+            child: QuietButton(
+              label: l.sessionHintFirstLetter,
+              onPressed: _usedHint ? null : _useFirstLetter,
+            ),
+          ),
           const SizedBox(width: AppSpacing.s12),
-          Expanded(child: QuietButton(label: l.sessionDontRemember, onPressed: _giveUp)),
+          Expanded(
+            child: QuietButton(label: l.sessionDontRemember, onPressed: _giveUp),
+          ),
         ],
       ),
     );
@@ -1128,7 +1152,9 @@ class _SessionOption extends StatelessWidget {
     // terracotta underline + cross. Untouched options stay plain.
     final showCorrect = answered && isAnswer;
     final showWrong = answered && isPicked && !isAnswer;
-    final markColor = showCorrect ? AppColors.verdictKnown : (showWrong ? AppColors.destructiveText : null);
+    final markColor = showCorrect
+        ? AppColors.verdictKnown
+        : (showWrong ? AppColors.destructiveText : null);
     final icon = showCorrect ? LucideIcons.check : (showWrong ? LucideIcons.x : null);
 
     return PaperCard(
@@ -1226,8 +1252,14 @@ class _WordChip extends StatelessWidget {
     if (used) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-        decoration: BoxDecoration(color: AppColors.faintInk, borderRadius: BorderRadius.circular(AppRadii.field)),
-        child: Text(text, style: AppTextExercise.dictionaryChip.copyWith(color: AppColors.tertiary)),
+        decoration: BoxDecoration(
+          color: AppColors.faintInk,
+          borderRadius: BorderRadius.circular(AppRadii.field),
+        ),
+        child: Text(
+          text,
+          style: AppTextExercise.dictionaryChip.copyWith(color: AppColors.tertiary),
+        ),
       );
     }
     return Material(
@@ -1238,7 +1270,10 @@ class _WordChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadii.field),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadii.field), boxShadow: AppShadows.card),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.field),
+            boxShadow: AppShadows.card,
+          ),
           child: Text(text, style: AppTextExercise.dictionaryChip),
         ),
       ),
@@ -1291,7 +1326,10 @@ class _AssemblyLine extends StatelessWidget {
                   ? null
                   : Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(l.sessionAssemblyEmptyHint, style: AppTextExercise.taskInstruction),
+                      child: Text(
+                        l.sessionAssemblyEmptyHint,
+                        style: AppTextExercise.taskInstruction,
+                      ),
                     ),
             )
           : Wrap(
@@ -1396,7 +1434,11 @@ class _ClozeSentence extends StatelessWidget {
     return Text.rich(
       TextSpan(
         style: AppTextExercise.clozeExample,
-        children: [TextSpan(text: before), blank, TextSpan(text: after)],
+        children: [
+          TextSpan(text: before),
+          blank,
+          TextSpan(text: after),
+        ],
       ),
     );
   }
@@ -1414,8 +1456,12 @@ class _PlayCircle extends StatefulWidget {
 }
 
 class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse =
-      AnimationController(vsync: this, duration: AppMotion.listenPulse, lowerBound: 1.0, upperBound: 1.04);
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: AppMotion.listenPulse,
+    lowerBound: 1.0,
+    upperBound: 1.04,
+  );
 
   @override
   void dispose() {
@@ -1443,7 +1489,11 @@ class _PlayCircleState extends State<_PlayCircle> with SingleTickerProviderState
           child: Container(
             width: 112,
             height: 112,
-            decoration: const BoxDecoration(color: AppColors.ink, shape: BoxShape.circle, boxShadow: AppShadows.anchor),
+            decoration: const BoxDecoration(
+              color: AppColors.ink,
+              shape: BoxShape.circle,
+              boxShadow: AppShadows.anchor,
+            ),
             child: const Icon(LucideIcons.volume2, color: AppColors.paper, size: 44),
           ),
         ),
@@ -1472,8 +1522,12 @@ class _RecordCircle extends StatefulWidget {
 }
 
 class _RecordCircleState extends State<_RecordCircle> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse =
-      AnimationController(vsync: this, duration: AppMotion.listenPulse, lowerBound: 1.0, upperBound: 1.06);
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: AppMotion.listenPulse,
+    lowerBound: 1.0,
+    upperBound: 1.06,
+  );
 
   @override
   void didUpdateWidget(_RecordCircle old) {
@@ -1511,14 +1565,12 @@ class _RecordCircleState extends State<_RecordCircle> with SingleTickerProviderS
             decoration: BoxDecoration(
               color: filled ? AppColors.ink : AppColors.surfaceRaised,
               shape: BoxShape.circle,
-              border: filled ? null : const Border.fromBorderSide(BorderSide(color: AppColors.ink, width: 1.5)),
+              border: filled
+                  ? null
+                  : const Border.fromBorderSide(BorderSide(color: AppColors.ink, width: 1.5)),
               boxShadow: filled ? AppShadows.anchor : AppShadows.card,
             ),
-            child: Icon(
-              LucideIcons.mic,
-              color: filled ? AppColors.paper : AppColors.ink,
-              size: 44,
-            ),
+            child: Icon(LucideIcons.mic, color: filled ? AppColors.paper : AppColors.ink, size: 44),
           ),
         ),
       ),
@@ -1529,12 +1581,7 @@ class _RecordCircleState extends State<_RecordCircle> with SingleTickerProviderS
 // ── prompt photo (from the local term mirror) ─────────────────────────────────
 
 class _PromptPhoto extends ConsumerStatefulWidget {
-  const _PromptPhoto({
-    required this.termId,
-    this.url,
-    this.resolved = false,
-    this.reveal = true,
-  });
+  const _PromptPhoto({required this.termId, this.url, this.resolved = false, this.reveal = true});
 
   final String termId;
 
@@ -1576,13 +1623,13 @@ class _PromptPhotoState extends ConsumerState<_PromptPhoto> {
 
   /// The empty banner slot — a grey plate at the final height.
   Widget _plate() => const Padding(
-        padding: EdgeInsets.only(bottom: 14),
-        child: SizedBox(
-          height: 150,
-          width: double.infinity,
-          child: ColoredBox(color: AppColors.track),
-        ),
-      );
+    padding: EdgeInsets.only(bottom: 14),
+    child: SizedBox(
+      height: 150,
+      width: double.infinity,
+      child: ColoredBox(color: AppColors.track),
+    ),
+  );
 
   Widget _banner(BuildContext context, String? url) {
     if (url == null || url.isEmpty) return const SizedBox.shrink();
@@ -1724,7 +1771,9 @@ class _FeedbackBlock extends ConsumerWidget {
           ],
         ),
         // The transcription belongs to the TERM; under a whole sentence it reads as nonsense.
-        if (!card.asksForExample && card.transcription != null && card.transcription!.isNotEmpty) ...[
+        if (!card.asksForExample &&
+            card.transcription != null &&
+            card.transcription!.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.s4),
           Text('/${card.transcription}/', style: AppTextExercise.feedbackTranscription),
         ],
@@ -1755,10 +1804,10 @@ class _FeedbackBlock extends ConsumerWidget {
       // Where the correct answer actually IS decides which sentence this is. A tapped card marks it
       // in the option list above; a typed or assembled one has it right below, in this very block.
       LocalCheck.wrong => (
-          AppColors.destructiveText,
-          LucideIcons.x,
-          card.answeredByTapping ? l.sessionFeedbackWrongAbove : l.sessionFeedbackWrong,
-        ),
+        AppColors.destructiveText,
+        LucideIcons.x,
+        card.answeredByTapping ? l.sessionFeedbackWrongAbove : l.sessionFeedbackWrong,
+      ),
     };
     return Row(
       children: [
@@ -1799,8 +1848,8 @@ class _NextDue extends ConsumerWidget {
     final when = days == 0
         ? l.sessionDueToday
         : days == 1
-            ? l.sessionDueTomorrow
-            : l.sessionDueInDays(days);
+        ? l.sessionDueTomorrow
+        : l.sessionDueInDays(days);
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.s16),
       child: Text(l.sessionSeeAgain(when), style: AppTextExercise.feedbackNextDue),
@@ -1820,7 +1869,9 @@ class _SpokenSentence extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final words = sentence.trim().isEmpty ? const <String>[] : sentence.trim().split(RegExp(r'\s+'));
+    final words = sentence.trim().isEmpty
+        ? const <String>[]
+        : sentence.trim().split(RegExp(r'\s+'));
 
     return Text.rich(
       TextSpan(
@@ -1859,8 +1910,10 @@ class _WritesItself extends StatelessWidget {
       return Text(text, style: style);
     }
     final total = Duration(
-      milliseconds: (AppMotion.writePerChar.inMilliseconds * text.characters.length)
-          .clamp(0, AppMotion.writeTotalCap.inMilliseconds),
+      milliseconds: (AppMotion.writePerChar.inMilliseconds * text.characters.length).clamp(
+        0,
+        AppMotion.writeTotalCap.inMilliseconds,
+      ),
     );
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),

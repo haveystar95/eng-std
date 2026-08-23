@@ -40,13 +40,20 @@ void main() {
 
   /// Resolve a provider the way a widget does, inside `runAsync` — the disk read is real I/O, and
   /// the widget-test clock does not turn it. Returns the image, or the error it failed with.
-  Future<({ImageInfo? image, Object? error})> resolve(WidgetTester tester, ImageProvider provider) async {
+  Future<({ImageInfo? image, Object? error})> resolve(
+    WidgetTester tester,
+    ImageProvider provider,
+  ) async {
     final result = await tester.runAsync(() async {
       final completer = Completer<({ImageInfo? image, Object? error})>();
-      provider.resolve(ImageConfiguration.empty).addListener(ImageStreamListener(
-            (info, _) => completer.complete((image: info, error: null)),
-            onError: (e, _) => completer.complete((image: null, error: e)),
-          ));
+      provider
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener(
+              (info, _) => completer.complete((image: info, error: null)),
+              onError: (e, _) => completer.complete((image: null, error: e)),
+            ),
+          );
 
       return completer.future.timeout(const Duration(seconds: 10));
     });
@@ -66,7 +73,11 @@ void main() {
 
     final loaded = await resolve(tester, const CachedNetworkImage(url));
 
-    expect(loaded.error, isNull, reason: 'the bytes were on disk; nothing should have been fetched');
+    expect(
+      loaded.error,
+      isNull,
+      reason: 'the bytes were on disk; nothing should have been fetched',
+    );
     expect(loaded.image, isNotNull);
     expect(loaded.image!.image.width, 1);
   });
@@ -76,9 +87,9 @@ void main() {
     await tester.runAsync(() => cache.write(url, Uint8List.fromList(png)));
     await resolve(tester, const CachedNetworkImage(url)); // as the session's warm-up would
 
-    await tester.pumpWidget(const MaterialApp(
-      home: Image(image: CachedNetworkImage(url), width: 10, height: 10),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(home: Image(image: CachedNetworkImage(url), width: 10, height: 10)),
+    );
     await tester.pump();
 
     // Decoded before the frame → `wasSync`, which is the branch that shows the banner instantly.
@@ -87,10 +98,15 @@ void main() {
     expect(PaintingBinding.instance.imageCache.currentSize, greaterThan(0));
   });
 
-  testWidgets('a photo never cached fails cleanly — the plate stays, nothing hangs', (tester) async {
+  testWidgets('a photo never cached fails cleanly — the plate stays, nothing hangs', (
+    tester,
+  ) async {
     // Nothing on disk and nowhere to fetch from (port 9 is the discard port): offline without a
     // cached copy must surface as an error the banner draws around, exactly as it did before.
-    final loaded = await resolve(tester, const CachedNetworkImage('http://127.0.0.1:9/missing.jpg'));
+    final loaded = await resolve(
+      tester,
+      const CachedNetworkImage('http://127.0.0.1:9/missing.jpg'),
+    );
 
     expect(loaded.image, isNull);
     expect(loaded.error, isNotNull);

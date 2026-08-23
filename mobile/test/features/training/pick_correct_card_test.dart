@@ -19,45 +19,45 @@ void main() {
   const wrongPrep = 'Your workstation is ready of you.';
 
   SessionCard card() => SessionCard(
-        termId: 't1',
-        mode: ExerciseMode.pickCorrect,
-        type: 'word',
-        prompt: 'Ваше рабочее место готово.',
-        answer: right,
-        example: right,
-        exampleTranslation: 'Ваше рабочее место готово.',
-        options: const [wrongTense, right, wrongPrep],
-        optionFeedback: const [
-          OptionFeedback(sentence: wrongTense, errorSpan: 'are', correction: 'is'),
-          OptionFeedback(sentence: wrongPrep, errorSpan: 'of', correction: 'for'),
-        ],
-      );
+    termId: 't1',
+    mode: ExerciseMode.pickCorrect,
+    type: 'word',
+    prompt: 'Ваше рабочее место готово.',
+    answer: right,
+    example: right,
+    exampleTranslation: 'Ваше рабочее место готово.',
+    options: const [wrongTense, right, wrongPrep],
+    optionFeedback: const [
+      OptionFeedback(sentence: wrongTense, errorSpan: 'are', correction: 'is'),
+      OptionFeedback(sentence: wrongPrep, errorSpan: 'of', correction: 'for'),
+    ],
+  );
 
   Widget host(SessionCard c, {String? photoUrl}) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionExerciseCard(
-                card: c,
-                autoPronounce: false,
-                onAnswered: (_) {},
-                onSpeak: (text, {bool slow = false}) async {},
-                photoUrl: photoUrl,
-              ),
-            ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionExerciseCard(
+            card: c,
+            autoPronounce: false,
+            onAnswered: (_) {},
+            onSpeak: (text, {bool slow = false}) async {},
+            photoUrl: photoUrl,
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('renders all three sentences as tappable options', (tester) async {
     await tester.pumpWidget(host(card()));

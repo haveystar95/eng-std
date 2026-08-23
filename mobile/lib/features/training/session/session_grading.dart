@@ -71,10 +71,9 @@ abstract final class SpokenAnswer {
   static ({Duration listenFor, Duration pauseFor}) windowFor({
     required bool asksForExample,
     required String term,
-  }) =>
-      asksForExample || isLongTerm(term)
-          ? (listenFor: exampleFormListenFor, pauseFor: exampleFormPauseFor)
-          : (listenFor: wordFormListenFor, pauseFor: wordFormPauseFor);
+  }) => asksForExample || isLongTerm(term)
+      ? (listenFor: exampleFormListenFor, pauseFor: exampleFormPauseFor)
+      : (listenFor: wordFormListenFor, pauseFor: wordFormPauseFor);
 
   /// Is this spoken answer judged by COVERAGE rather than by equality (QA-22)?
   ///
@@ -142,9 +141,10 @@ abstract final class SessionGrader {
     final r = _normalize(response, ignoreArticles: ignoreArticles);
     if (r.isEmpty) return LocalCheck.wrong; // «Не помню» / blank
 
-    final accepted = [answer, ...variants]
-        .map((a) => _normalize(a, ignoreArticles: ignoreArticles))
-        .where((a) => a.isNotEmpty);
+    final accepted = [
+      answer,
+      ...variants,
+    ].map((a) => _normalize(a, ignoreArticles: ignoreArticles)).where((a) => a.isNotEmpty);
     for (final a in accepted) {
       if (r == a) return LocalCheck.correct;
     }
@@ -374,23 +374,46 @@ abstract final class SessionGrader {
   static String _stripArticle(String v) => v.replaceFirst(RegExp(r'^(the|a|an)\s+'), '');
 
   static const Map<String, String> _contractions = {
-    "i'd": 'i would', "i'll": 'i will', "i'm": 'i am', "i've": 'i have',
-    "you're": 'you are', "you'd": 'you would', "you'll": 'you will', "you've": 'you have',
-    "we're": 'we are', "we'd": 'we would', "we'll": 'we will', "we've": 'we have',
-    "they're": 'they are', "they'd": 'they would', "they'll": 'they will', "they've": 'they have',
-    "it's": 'it is', "that's": 'that is', "there's": 'there is', "let's": 'let us',
-    "don't": 'do not', "doesn't": 'does not', "didn't": 'did not', "isn't": 'is not',
-    "aren't": 'are not', "wasn't": 'was not', "weren't": 'were not', "can't": 'cannot',
-    "won't": 'will not', "wouldn't": 'would not', "couldn't": 'could not', "shouldn't": 'should not',
-    "haven't": 'have not', "hasn't": 'has not', "hadn't": 'had not',
+    "i'd": 'i would',
+    "i'll": 'i will',
+    "i'm": 'i am',
+    "i've": 'i have',
+    "you're": 'you are',
+    "you'd": 'you would',
+    "you'll": 'you will',
+    "you've": 'you have',
+    "we're": 'we are',
+    "we'd": 'we would',
+    "we'll": 'we will',
+    "we've": 'we have',
+    "they're": 'they are',
+    "they'd": 'they would',
+    "they'll": 'they will',
+    "they've": 'they have',
+    "it's": 'it is',
+    "that's": 'that is',
+    "there's": 'there is',
+    "let's": 'let us',
+    "don't": 'do not',
+    "doesn't": 'does not',
+    "didn't": 'did not',
+    "isn't": 'is not',
+    "aren't": 'are not',
+    "wasn't": 'was not',
+    "weren't": 'were not',
+    "can't": 'cannot',
+    "won't": 'will not',
+    "wouldn't": 'would not',
+    "couldn't": 'could not',
+    "shouldn't": 'should not',
+    "haven't": 'have not',
+    "hasn't": 'has not',
+    "hadn't": 'had not',
   };
 
   static String _expandContractions(String value) {
     final v = value.replaceAll('’', "'").replaceAll('`', "'");
-    return v.replaceAllMapped(
-      RegExp(r"\b[a-z]+'[a-z]+\b"),
-      (m) => _contractions[m[0]] ?? m[0]!,
-    );
+    return v.replaceAllMapped(RegExp(r"\b[a-z]+'[a-z]+\b"), (m) => _contractions[m[0]] ?? m[0]!);
   }
 
   /// Byte-free Levenshtein (edit distance) over runes — exact for the latin target side.
@@ -424,28 +447,27 @@ abstract final class SessionGrader {
 enum SessionPhase { intro, assemble, review }
 
 SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
-      // The acquisition ladder's rung 0 — literally the introduction the header has always named.
-      ExerciseMode.intro => SessionPhase.intro,
-      ExerciseMode.multipleChoice => SessionPhase.intro,
-      // scramble assembles too, but a sentence, and it is a LATER rung than word_bank — the header
-      // should read as review, not as the recognition→production step.
-      ExerciseMode.wordBank => SessionPhase.assemble,
-      // pick_correct is a LATER rung than word_bank (it reads whole sentences), so the header reads
-      // as review rather than as the recognition→production step.
-      // speaking opens on the assembly rung and only gets harder from there, so it reads as review
-      // — never as the recognition→production step the header calls «assemble».
-      // description_match opens on graduation and asks a question the learner must READ in the
-      // language they are learning — a review-phase card, never the recognition→production step.
-      ExerciseMode.descriptionMatch ||
-      ExerciseMode.speaking ||
-      ExerciseMode.pickCorrect ||
-      ExerciseMode.typing ||
-      ExerciseMode.listening ||
-      ExerciseMode.cloze ||
-      ExerciseMode.scramble ||
-      ExerciseMode.dictation =>
-        SessionPhase.review,
-    };
+  // The acquisition ladder's rung 0 — literally the introduction the header has always named.
+  ExerciseMode.intro => SessionPhase.intro,
+  ExerciseMode.multipleChoice => SessionPhase.intro,
+  // scramble assembles too, but a sentence, and it is a LATER rung than word_bank — the header
+  // should read as review, not as the recognition→production step.
+  ExerciseMode.wordBank => SessionPhase.assemble,
+  // pick_correct is a LATER rung than word_bank (it reads whole sentences), so the header reads
+  // as review rather than as the recognition→production step.
+  // speaking opens on the assembly rung and only gets harder from there, so it reads as review
+  // — never as the recognition→production step the header calls «assemble».
+  // description_match opens on graduation and asks a question the learner must READ in the
+  // language they are learning — a review-phase card, never the recognition→production step.
+  ExerciseMode.descriptionMatch ||
+  ExerciseMode.speaking ||
+  ExerciseMode.pickCorrect ||
+  ExerciseMode.typing ||
+  ExerciseMode.listening ||
+  ExerciseMode.cloze ||
+  ExerciseMode.scramble ||
+  ExerciseMode.dictation => SessionPhase.review,
+};
 
 /// What the session header NAMES on one card.
 ///
@@ -488,11 +510,8 @@ SessionHeader sessionHeaderFor({required ExerciseMode mode, required int? ladder
 /// device actually met, because a freshly introduced word gets an intro card AND its recognition
 /// cards in the same run, and every one of them sits in the intro PHASE. Unique term ids on the
 /// `intro` mode alone is the only reading that answers the question the label asks.
-int newWordCount(Iterable<SessionCard> cards) => cards
-    .where((c) => c.mode == ExerciseMode.intro)
-    .map((c) => c.termId)
-    .toSet()
-    .length;
+int newWordCount(Iterable<SessionCard> cards) =>
+    cards.where((c) => c.mode == ExerciseMode.intro).map((c) => c.termId).toSet().length;
 
 /// Whole calendar days from [now] to [due], in LOCAL time (0 = today, 1 = tomorrow, …). Negative
 /// (already overdue) is clamped to 0. Pure formatting of a REAL server `due_at`; the l10n layer

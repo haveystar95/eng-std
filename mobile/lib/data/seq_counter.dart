@@ -31,20 +31,20 @@ class SeqCounter {
   /// The next value for [key] — read, increment, persist. Serialized so concurrent
   /// callers never hand out the same number.
   Future<int> next(String key) => _serialize(() async {
-        final v = (await _current(key)) + 1;
-        _mem[key] = v;
-        await _storage.write(key: key, value: v.toString());
-        return v;
-      });
+    final v = (await _current(key)) + 1;
+    _mem[key] = v;
+    await _storage.write(key: key, value: v.toString());
+    return v;
+  });
 
   /// Lift the counter to at least [floor] (the server's stored max) — used on login so
   /// a reinstall or a fresh device does not emit values below what the server already has.
   Future<void> seedAtLeast(String key, int floor) => _serialize(() async {
-        if (floor > await _current(key)) {
-          _mem[key] = floor;
-          await _storage.write(key: key, value: floor.toString());
-        }
-      });
+    if (floor > await _current(key)) {
+      _mem[key] = floor;
+      await _storage.write(key: key, value: floor.toString());
+    }
+  });
 
   Future<int> _current(String key) async {
     final cached = _mem[key];

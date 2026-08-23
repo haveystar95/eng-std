@@ -30,10 +30,10 @@ enum UiLanguageOption {
   final String? code;
 
   static UiLanguageOption fromCode(String? code) => switch (code) {
-        'ru' => UiLanguageOption.russian,
-        'en' => UiLanguageOption.english,
-        _ => UiLanguageOption.system,
-      };
+    'ru' => UiLanguageOption.russian,
+    'en' => UiLanguageOption.english,
+    _ => UiLanguageOption.system,
+  };
 }
 
 /// Resolves and persists the UI-language override.
@@ -59,8 +59,9 @@ class LocaleController extends AsyncNotifier<UiLanguageOption> {
       option.code == null ? null : Locale(option.code!);
 }
 
-final localeControllerProvider =
-    AsyncNotifierProvider<LocaleController, UiLanguageOption>(LocaleController.new);
+final localeControllerProvider = AsyncNotifierProvider<LocaleController, UiLanguageOption>(
+  LocaleController.new,
+);
 
 /// Device → fallback resolution, exposed for [MaterialApp.localeResolutionCallback]
 /// and unit tests. The override is applied separately via [MaterialApp.locale].

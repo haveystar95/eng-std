@@ -9,6 +9,15 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# Page width for `dart format`. The Dart 3.7+ formatter picks its STYLE from the language
+# version (pubspec `sdk: ^3.12.2` ⇒ tall style) — that part is not a knob, and the repo was
+# reformatted to it once, in its own commit, rather than letting every session drag a few
+# hundred lines of unrelated re-wrapping into its diff. The width IS a knob, and 100 is the
+# width this code was written at; leaving the default 80 would have re-wrapped a third more
+# lines for nothing.
+formatter:
+  page_width: 100
+
 analyzer:
   exclude:
     # Vendored fork of `speech_to_text` (packages/speech_to_text — see its UPSTREAM.md). Its

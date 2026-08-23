@@ -27,7 +27,8 @@ class AppSettings {
     autoPronounce: true,
   );
 
-  AppSettings copyWith({bool? remindersEnabled, String? reminderTime, bool? autoPronounce}) => AppSettings(
+  AppSettings copyWith({bool? remindersEnabled, String? reminderTime, bool? autoPronounce}) =>
+      AppSettings(
         remindersEnabled: remindersEnabled ?? this.remindersEnabled,
         reminderTime: reminderTime ?? this.reminderTime,
         autoPronounce: autoPronounce ?? this.autoPronounce,
@@ -67,5 +68,6 @@ class AppSettingsController extends AsyncNotifier<AppSettings> {
   }
 }
 
-final appSettingsProvider =
-    AsyncNotifierProvider<AppSettingsController, AppSettings>(AppSettingsController.new);
+final appSettingsProvider = AsyncNotifierProvider<AppSettingsController, AppSettings>(
+  AppSettingsController.new,
+);

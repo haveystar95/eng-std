@@ -20,7 +20,8 @@ abstract final class SyncKeys {
   static const bestStreak = 'best_streak'; // running max of observed streak (Progress screen)
   static const newGoal = 'new_goal'; // daily new-term quota (F13 home CTA)
   static const newRemaining = 'new_remaining'; // new terms still introducible today (F13)
-  static const exerciseModes = 'exercise_modes'; // the trainer toggles this user is on (CSV, in order)
+  static const exerciseModes =
+      'exercise_modes'; // the trainer toggles this user is on (CSV, in order)
   // The acquisition-ladder admission matrix, stored as the JSON the server sent. Which rung opens
   // which trainer: the offline builder needs it to avoid dealing a word a mode it has not earned.
   static const modeAdmission = 'mode_admission';
@@ -56,7 +57,14 @@ class SyncReport {
   });
   final String since; // '∅' means a full snapshot was requested (no stored cursor)
   final String? serverTime;
-  final int pages, colUpserts, colDeletes, itemUpserts, itemDeletes, termUpserts, progressUpserts, triageUpserts;
+  final int pages,
+      colUpserts,
+      colDeletes,
+      itemUpserts,
+      itemDeletes,
+      termUpserts,
+      progressUpserts,
+      triageUpserts;
   final DateTime at;
   final String? error; // set when the sync was deferred (offline/transient)
 }
@@ -109,7 +117,13 @@ class SyncService {
       while (hasMore) {
         final page = await _api.syncDelta(since: since, cursor: cursor);
         final n = await _applyPage(page);
-        cu += n.cu; cd += n.cd; iu += n.iu; id += n.id; tu += n.tu; pu += n.pu; tr += n.tr;
+        cu += n.cu;
+        cd += n.cd;
+        iu += n.iu;
+        id += n.id;
+        tu += n.tu;
+        pu += n.pu;
+        tr += n.tr;
         if (isSnapshot) {
           seenCollectionIds.addAll(n.colIds);
           seenTermIds.addAll(n.termIds);
@@ -154,18 +168,35 @@ class SyncService {
       }
       await _refreshStatsCache();
       lastReport.value = SyncReport(
-        since: since ?? '∅', serverTime: serverTime, pages: pages,
-        colUpserts: cu, colDeletes: cd, itemUpserts: iu, itemDeletes: id,
-        termUpserts: tu, progressUpserts: pu, triageUpserts: tr, at: DateTime.now(),
+        since: since ?? '∅',
+        serverTime: serverTime,
+        pages: pages,
+        colUpserts: cu,
+        colDeletes: cd,
+        itemUpserts: iu,
+        itemDeletes: id,
+        termUpserts: tu,
+        progressUpserts: pu,
+        triageUpserts: tr,
+        at: DateTime.now(),
       );
       state.value = SyncState.idle;
     } catch (e) {
       // Offline / timeout / 5xx: keep the old cursor, try again on the next trigger. No modal.
       debugPrint('[sync] deferred (offline/transient): $e');
       lastReport.value = SyncReport(
-        since: (await _db.getMeta(_kCursor)) ?? '∅', serverTime: null, pages: 0,
-        colUpserts: 0, colDeletes: 0, itemUpserts: 0, itemDeletes: 0, termUpserts: 0,
-        progressUpserts: 0, triageUpserts: 0, at: DateTime.now(), error: '$e',
+        since: (await _db.getMeta(_kCursor)) ?? '∅',
+        serverTime: null,
+        pages: 0,
+        colUpserts: 0,
+        colDeletes: 0,
+        itemUpserts: 0,
+        itemDeletes: 0,
+        termUpserts: 0,
+        progressUpserts: 0,
+        triageUpserts: 0,
+        at: DateTime.now(),
+        error: '$e',
       );
       state.value = SyncState.offline;
     } finally {
@@ -174,19 +205,21 @@ class SyncService {
   }
 
   Future<
-      ({
-        int cu,
-        int cd,
-        int iu,
-        int id,
-        int tu,
-        int pu,
-        int tr,
-        List<String> colIds,
-        List<String> termIds,
-        List<String> progressIds,
-        List<String> triageIds,
-      })> _applyPage(Map<String, dynamic> page) async {
+    ({
+      int cu,
+      int cd,
+      int iu,
+      int id,
+      int tu,
+      int pu,
+      int tr,
+      List<String> colIds,
+      List<String> termIds,
+      List<String> progressIds,
+      List<String> triageIds,
+    })
+  >
+  _applyPage(Map<String, dynamic> page) async {
     final changes = (page['changes'] as Map<String, dynamic>?) ?? const {};
 
     final collectionUpserts = <CollectionsCompanion>[];
@@ -197,22 +230,24 @@ class SyncService {
       if (c['op'] == 'delete') {
         collectionDeletes.add(id);
       } else {
-        collectionUpserts.add(CollectionsCompanion.insert(
-          id: id,
-          updatedAt: _dt(c['updated_at']),
-          title: Value(c['title'] as String?),
-          description: Value(c['description'] as String?),
-          topic: Value(c['topic'] as String?),
-          sourceLang: Value(c['source_lang'] as String?),
-          targetLang: Value(c['target_lang'] as String?),
-          itemsCount: Value((c['items_count'] as int?) ?? 0),
-          source: Value(c['source'] as String?),
-          type: Value(c['type'] as String?),
-          imageUrl: Value(c['image_url'] as String?),
-          imageAuthor: Value(c['image_author'] as String?),
-          imageAuthorUrl: Value(c['image_author_url'] as String?),
-          isDefault: Value((c['is_default'] as bool?) ?? false),
-        ));
+        collectionUpserts.add(
+          CollectionsCompanion.insert(
+            id: id,
+            updatedAt: _dt(c['updated_at']),
+            title: Value(c['title'] as String?),
+            description: Value(c['description'] as String?),
+            topic: Value(c['topic'] as String?),
+            sourceLang: Value(c['source_lang'] as String?),
+            targetLang: Value(c['target_lang'] as String?),
+            itemsCount: Value((c['items_count'] as int?) ?? 0),
+            source: Value(c['source'] as String?),
+            type: Value(c['type'] as String?),
+            imageUrl: Value(c['image_url'] as String?),
+            imageAuthor: Value(c['image_author'] as String?),
+            imageAuthorUrl: Value(c['image_author_url'] as String?),
+            isDefault: Value((c['is_default'] as bool?) ?? false),
+          ),
+        );
       }
     }
 
@@ -225,69 +260,75 @@ class SyncService {
       if (i['op'] == 'delete') {
         itemDeletes.add((collectionId, termId));
       } else {
-        itemUpserts.add(CollectionItemsCompanion.insert(
-          collectionId: collectionId,
-          termId: termId,
-          updatedAt: _dt(i['updated_at']),
-          position: Value((i['position'] as int?) ?? 0),
-          note: Value(i['note'] as String?),
-        ));
+        itemUpserts.add(
+          CollectionItemsCompanion.insert(
+            collectionId: collectionId,
+            termId: termId,
+            updatedAt: _dt(i['updated_at']),
+            position: Value((i['position'] as int?) ?? 0),
+            note: Value(i['note'] as String?),
+          ),
+        );
       }
     }
 
     final termUpserts = <TermsCompanion>[];
     for (final raw in (changes['terms'] as List?) ?? const []) {
       final t = raw as Map<String, dynamic>;
-      termUpserts.add(TermsCompanion.insert(
-        id: t['id'] as String,
-        updatedAt: _dt(t['updated_at']),
-        termText: Value(t['text'] as String?),
-        type: Value((t['type'] as String?) ?? 'word'),
-        transcription: Value(t['transcription'] as String?),
-        translation: Value(t['translation'] as String?),
-        example: Value(t['example'] as String?),
-        exampleTranslation: Value(t['example_translation'] as String?),
-        description: Value(t['description'] as String?),
-        imageUrl: Value(t['image_url'] as String?),
-        imageAuthor: Value(t['image_author'] as String?),
-        imageAuthorUrl: Value(t['image_author_url'] as String?),
-        // Stored as the JSON the server sent. Encoding it back rather than keeping the raw string
-        // keeps the column's shape ours, not the wire's — and an absent key becomes null, not the
-        // string "null".
-        acceptedVariants: Value(_jsonOrNull(t['accepted_variants'])),
-        exampleDistractors: Value(_jsonOrNull(t['example_distractors'])),
-      ));
+      termUpserts.add(
+        TermsCompanion.insert(
+          id: t['id'] as String,
+          updatedAt: _dt(t['updated_at']),
+          termText: Value(t['text'] as String?),
+          type: Value((t['type'] as String?) ?? 'word'),
+          transcription: Value(t['transcription'] as String?),
+          translation: Value(t['translation'] as String?),
+          example: Value(t['example'] as String?),
+          exampleTranslation: Value(t['example_translation'] as String?),
+          description: Value(t['description'] as String?),
+          imageUrl: Value(t['image_url'] as String?),
+          imageAuthor: Value(t['image_author'] as String?),
+          imageAuthorUrl: Value(t['image_author_url'] as String?),
+          // Stored as the JSON the server sent. Encoding it back rather than keeping the raw string
+          // keeps the column's shape ours, not the wire's — and an absent key becomes null, not the
+          // string "null".
+          acceptedVariants: Value(_jsonOrNull(t['accepted_variants'])),
+          exampleDistractors: Value(_jsonOrNull(t['example_distractors'])),
+        ),
+      );
     }
 
     final progressUpserts = <TermProgressCompanion>[];
     for (final raw in (changes['progress'] as List?) ?? const []) {
       final p = raw as Map<String, dynamic>;
-      progressUpserts.add(TermProgressCompanion.insert(
-        termId: p['term_id'] as String,
-        updatedAt: _dt(p['updated_at']),
-        state: Value((p['state'] as String?) ?? 'new'),
-        easeFactor: Value(((p['ease_factor'] as num?) ?? 2.5).toDouble()),
-        intervalDays: Value((p['interval_days'] as int?) ?? 0),
-        dueAt: Value(_dtn(p['due_at'])),
-        reps: Value((p['reps'] as int?) ?? 0),
-        lapses: Value((p['lapses'] as int?) ?? 0),
-        lastReviewedAt: Value(_dtn(p['last_reviewed_at'])),
-        // The acquisition ladder, orthogonal to `state` above. An older server that does not send
-        // it leaves the pair `graduated` — the safe direction: it can never push a word the learner
-        // already knows back to an intro card.
-        acquisition: Value((p['acquisition'] as String?) ?? 'graduated'),
-        learningStep: Value((p['learning_step'] as int?) ?? 0),
-        // The ladder's counter for the rungs above assembly. An older server that does not send it
-        // leaves the pair at 0 — assembly — which is the safe direction here: it withholds the
-        // harder trainers rather than dealing dictation to a word that has not earned it.
-        successfulReviews: Value((p['successful_reviews'] as int?) ?? 0),
-        // POOL MEMBERSHIP. Null means the pair is in the catalogue only — the trainer never deals
-        // it and «Мои слова» never lists it. An older server that does not send the key leaves the
-        // pair OUT of the pool, which is the safe direction: it withholds cards rather than dealing
-        // words nobody asked to study. (Devices only ever meet a server that sends it — the v15
-        // migration asks for a full snapshot precisely so every row arrives carrying it.)
-        enrolledAt: Value(_dtn(p['enrolled_at'])),
-      ));
+      progressUpserts.add(
+        TermProgressCompanion.insert(
+          termId: p['term_id'] as String,
+          updatedAt: _dt(p['updated_at']),
+          state: Value((p['state'] as String?) ?? 'new'),
+          easeFactor: Value(((p['ease_factor'] as num?) ?? 2.5).toDouble()),
+          intervalDays: Value((p['interval_days'] as int?) ?? 0),
+          dueAt: Value(_dtn(p['due_at'])),
+          reps: Value((p['reps'] as int?) ?? 0),
+          lapses: Value((p['lapses'] as int?) ?? 0),
+          lastReviewedAt: Value(_dtn(p['last_reviewed_at'])),
+          // The acquisition ladder, orthogonal to `state` above. An older server that does not send
+          // it leaves the pair `graduated` — the safe direction: it can never push a word the learner
+          // already knows back to an intro card.
+          acquisition: Value((p['acquisition'] as String?) ?? 'graduated'),
+          learningStep: Value((p['learning_step'] as int?) ?? 0),
+          // The ladder's counter for the rungs above assembly. An older server that does not send it
+          // leaves the pair at 0 — assembly — which is the safe direction here: it withholds the
+          // harder trainers rather than dealing dictation to a word that has not earned it.
+          successfulReviews: Value((p['successful_reviews'] as int?) ?? 0),
+          // POOL MEMBERSHIP. Null means the pair is in the catalogue only — the trainer never deals
+          // it and «Мои слова» never lists it. An older server that does not send the key leaves the
+          // pair OUT of the pool, which is the safe direction: it withholds cards rather than dealing
+          // words nobody asked to study. (Devices only ever meet a server that sends it — the v15
+          // migration asks for a full snapshot precisely so every row arrives carrying it.)
+          enrolledAt: Value(_dtn(p['enrolled_at'])),
+        ),
+      );
     }
 
     // Triage markers: restore the local deck-exclusion the server keeps in term_triages. A swiped
@@ -297,11 +338,13 @@ class SyncService {
     final triageUpserts = <TriagedTermsCompanion>[];
     for (final raw in (changes['triages'] as List?) ?? const []) {
       final t = raw as Map<String, dynamic>;
-      triageUpserts.add(TriagedTermsCompanion.insert(
-        termId: t['term_id'] as String,
-        collectionId: Value(t['collection_id'] as String?),
-        decidedAt: _dt(t['updated_at']),
-      ));
+      triageUpserts.add(
+        TriagedTermsCompanion.insert(
+          termId: t['term_id'] as String,
+          collectionId: Value(t['collection_id'] as String?),
+          decidedAt: _dt(t['updated_at']),
+        ),
+      );
     }
 
     await _db.applyDelta(
@@ -315,9 +358,12 @@ class SyncService {
     );
 
     return (
-      cu: collectionUpserts.length, cd: collectionDeletes.length,
-      iu: itemUpserts.length, id: itemDeletes.length,
-      tu: termUpserts.length, pu: progressUpserts.length,
+      cu: collectionUpserts.length,
+      cd: collectionDeletes.length,
+      iu: itemUpserts.length,
+      id: itemDeletes.length,
+      tu: termUpserts.length,
+      pu: progressUpserts.length,
       tr: triageUpserts.length,
       colIds: [for (final c in collectionUpserts) c.id.value],
       termIds: [for (final t in termUpserts) t.id.value],
@@ -373,6 +419,5 @@ class SyncService {
 
   /// A list from the wire, re-encoded for storage. An empty list stores as null so "the server said
   /// none" and "we haven't synced this yet" collapse into one cheap check at read time.
-  static String? _jsonOrNull(Object? v) =>
-      v is List && v.isNotEmpty ? jsonEncode(v) : null;
+  static String? _jsonOrNull(Object? v) => v is List && v.isNotEmpty ? jsonEncode(v) : null;
 }

@@ -111,7 +111,11 @@ void main() {
 
     test('forgives a dropped trailing -s on the word form, in either direction', () {
       expect(
-        SessionGrader.check('salary expectation', 'salary expectations', spokenSuffixTolerance: true),
+        SessionGrader.check(
+          'salary expectation',
+          'salary expectations',
+          spokenSuffixTolerance: true,
+        ),
         LocalCheck.correct,
       );
       expect(

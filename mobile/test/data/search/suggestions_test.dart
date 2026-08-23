@@ -4,12 +4,8 @@ import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/search/suggestions.dart';
 import 'package:eng_std/data/search/word_list.dart';
 
-SearchHit _hit(String text, {String? translation = 'счёт'}) => SearchHit(
-      termId: 'term-$text',
-      text: text,
-      type: 'word',
-      translation: translation,
-    );
+SearchHit _hit(String text, {String? translation = 'счёт'}) =>
+    SearchHit(termId: 'term-$text', text: text, type: 'word', translation: translation);
 
 void main() {
   group('merge order', () {
@@ -76,11 +72,13 @@ void main() {
   group('lazy loading', () {
     test('reads the asset at most once, even under concurrent callers', () async {
       var reads = 0;
-      final loader = WordListLoader(read: () async {
-        reads++;
+      final loader = WordListLoader(
+        read: () async {
+          reads++;
 
-        return WordList.parse('income\nincrease\n');
-      });
+          return WordList.parse('income\nincrease\n');
+        },
+      );
 
       final results = await Future.wait([loader.ensureLoaded(), loader.ensureLoaded()]);
       await loader.ensureLoaded();

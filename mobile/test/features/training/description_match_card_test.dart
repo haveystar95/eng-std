@@ -30,17 +30,17 @@ void main() {
   const description = 'A paper that says how much money you must pay for something.';
 
   SessionCard card() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.descriptionMatch,
-        type: 'word',
-        // The description IS the prompt. Not the translation, not the example.
-        prompt: description,
-        answer: term,
-        example: 'They sent the invoice by email.',
-        exampleTranslation: 'Они прислали счёт по почте.',
-        options: const ['ledger', term, 'receipt', 'deposit'],
-        ladderStep: 3,
-      );
+    termId: termId,
+    mode: ExerciseMode.descriptionMatch,
+    type: 'word',
+    // The description IS the prompt. Not the translation, not the example.
+    prompt: description,
+    answer: term,
+    example: 'They sent the invoice by email.',
+    exampleTranslation: 'Они прислали счёт по почте.',
+    options: const ['ledger', term, 'receipt', 'deposit'],
+    ladderStep: 3,
+  );
 
   group('the answer key', () {
     test('carries no option ids — nothing here is graded by identity', () {
@@ -77,20 +77,28 @@ void main() {
     test('a term with one can, with or without an example', () {
       // The description hangs off the WORD, not off the example — unlike the distractors.
       expect(
-        TermPlayability.of(answer: term, description: description)
-            .supports(ExerciseMode.descriptionMatch),
+        TermPlayability.of(
+          answer: term,
+          description: description,
+        ).supports(ExerciseMode.descriptionMatch),
         isTrue,
       );
       expect(
-        TermPlayability.of(answer: term, example: 'They sent the invoice.', description: description)
-            .supports(ExerciseMode.descriptionMatch),
+        TermPlayability.of(
+          answer: term,
+          example: 'They sent the invoice.',
+          description: description,
+        ).supports(ExerciseMode.descriptionMatch),
         isTrue,
       );
     });
 
     test('whitespace is not a description', () {
       expect(
-        TermPlayability.of(answer: term, description: '   ').supports(ExerciseMode.descriptionMatch),
+        TermPlayability.of(
+          answer: term,
+          description: '   ',
+        ).supports(ExerciseMode.descriptionMatch),
         isFalse,
       );
     });
@@ -122,33 +130,33 @@ void main() {
     Future<void> onSpeak(String text, {bool slow = false}) async {}
 
     Widget host(SessionCard c) => ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWith((ref) {
-              final db = AppDatabase.forTesting(NativeDatabase.memory());
-              ref.onDispose(db.close);
-              return db;
-            }),
-          ],
-          child: MaterialApp(
-            locale: const Locale('ru'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: const [Locale('ru'), Locale('en')],
-            home: MediaQuery(
-              data: const MediaQueryData(disableAnimations: true),
-              child: Scaffold(
-                body: SingleChildScrollView(
-                  child: SessionExerciseCard(
-                    card: c,
-                    autoPronounce: false,
-                    onAnswered: answers.add,
-                    onSpeak: onSpeak,
-                    showDue: false,
-                  ),
-                ),
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          final db = AppDatabase.forTesting(NativeDatabase.memory());
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: SessionExerciseCard(
+                card: c,
+                autoPronounce: false,
+                onAnswered: answers.add,
+                onSpeak: onSpeak,
+                showDue: false,
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     testWidgets('shows the description and four words, and no Russian cue', (tester) async {
       await tester.pumpWidget(host(card()));
@@ -179,7 +187,11 @@ void main() {
 
       expect(answers, hasLength(1));
       expect(answers.single.verdict, LocalCheck.correct);
-      expect(answers.single.response, term, reason: 'text, not an id — this card is not identity-graded');
+      expect(
+        answers.single.response,
+        term,
+        reason: 'text, not an id — this card is not identity-graded',
+      );
     });
 
     testWidgets('a wrong tap is WRONG and uploads that option own text', (tester) async {

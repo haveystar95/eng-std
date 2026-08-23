@@ -46,7 +46,9 @@ class StoreView extends ConsumerWidget {
             // Section headers only when there are ≥2 meaningfully-named topics; otherwise (a single
             // group, or collections with no topic yet) render one flat vertical grid, no «OTHER»
             // header. Headers return by themselves once collections carry real topics.
-            final titled = sections.where((s) => s.topic != null && s.topic!.trim().isNotEmpty).toList();
+            final titled = sections
+                .where((s) => s.topic != null && s.topic!.trim().isNotEmpty)
+                .toList();
             if (titled.length < 2) {
               final all = [for (final s in sections) ...s.items];
               return Padding(
@@ -76,7 +78,11 @@ class _LangPairRow extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final chosen = await showAppBottomSheet<String>(
       context: context,
-      builder: (_) => _TargetLangSheet(title: l.storeLangPairSheetTitle, current: pair.target, exclude: pair.source),
+      builder: (_) => _TargetLangSheet(
+        title: l.storeLangPairSheetTitle,
+        current: pair.target,
+        exclude: pair.source,
+      ),
     );
     if (chosen != null && chosen != pair.target) {
       ref.read(storeLangPairProvider.notifier).setPair((source: pair.source, target: chosen));
@@ -111,8 +117,12 @@ class _LangPairRow extends ConsumerWidget {
     );
   }
 
-  static const _pairName =
-      TextStyle(fontFamily: AppFonts.inter, fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink);
+  static const _pairName = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.ink,
+  );
 }
 
 /// A topic section: header + a 2-column grid of its cards. A section with no meaningful topic (the
@@ -132,8 +142,10 @@ class _Section extends StatelessWidget {
           if (titled) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-              child: Text(section.topic!.toUpperCase(),
-                  style: AppText.sectionLabel.copyWith(color: AppColors.secondary)),
+              child: Text(
+                section.topic!.toUpperCase(),
+                style: AppText.sectionLabel.copyWith(color: AppColors.secondary),
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -162,7 +174,11 @@ class _Grid extends StatelessWidget {
             spacing: gap,
             runSpacing: 20,
             children: [
-              for (final item in items) SizedBox(width: w, child: _StoreCard(collection: item, width: w)),
+              for (final item in items)
+                SizedBox(
+                  width: w,
+                  child: _StoreCard(collection: item, width: w),
+                ),
             ],
           );
         },
@@ -197,18 +213,26 @@ class _StoreCard extends ConsumerWidget {
             radius: 16,
           ),
           const SizedBox(height: 9),
-          Text(collection.title,
-              maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.collectionNameCard.copyWith(fontSize: 16)),
+          Text(
+            collection.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.collectionNameCard.copyWith(fontSize: 16),
+          ),
           if (desc != null && desc.trim().isNotEmpty) ...[
             const SizedBox(height: 3),
-            Text(desc,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary)),
+            Text(
+              desc,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary),
+            ),
           ],
           const SizedBox(height: 3),
-          Text(_meta(l, collection),
-              style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+          Text(
+            _meta(l, collection),
+            style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+          ),
         ],
       ),
     );
@@ -281,9 +305,15 @@ class _StoreCover extends StatelessWidget {
                   children: [
                     const Icon(LucideIcons.check, size: 12, color: AppColors.ink),
                     const SizedBox(width: 5),
-                    Text(AppLocalizations.of(context).storeInLibrary,
-                        style: const TextStyle(
-                            fontFamily: AppFonts.inter, fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                    Text(
+                      AppLocalizations.of(context).storeInLibrary,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.inter,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -296,7 +326,10 @@ class _StoreCover extends StatelessWidget {
                 width: 28,
                 height: 28,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.ink.withValues(alpha: 0.55), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: AppColors.ink.withValues(alpha: 0.55),
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(LucideIcons.lock, size: 15, color: AppColors.field),
               ),
             ),
@@ -318,10 +351,17 @@ class _Empty extends StatelessWidget {
         children: [
           const Icon(LucideIcons.store, size: 40, color: AppColors.tertiary),
           const SizedBox(height: AppSpacing.s16),
-          Text(l.storeEmptyTitle, style: AppText.stepTitle.copyWith(fontSize: 22), textAlign: TextAlign.center),
+          Text(
+            l.storeEmptyTitle,
+            style: AppText.stepTitle.copyWith(fontSize: 22),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 8),
-          Text(l.storeEmptyBody,
-              textAlign: TextAlign.center, style: AppText.translation.copyWith(color: AppColors.secondary)),
+          Text(
+            l.storeEmptyBody,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(color: AppColors.secondary),
+          ),
         ],
       ),
     );
@@ -379,8 +419,15 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.storePreviewAdded)));
       case StoreSubscribeResult.subscriptionRequired:
         // Server says free tier — route to the paywall (store entrance).
-        await showPaywall(context, ref,
-            PaywallArgs(PaywallEntry.store, collectionTitle: c.title, otherSetsCount: _otherPremiumCount()));
+        await showPaywall(
+          context,
+          ref,
+          PaywallArgs(
+            PaywallEntry.store,
+            collectionTitle: c.title,
+            otherSetsCount: _otherPremiumCount(),
+          ),
+        );
       case StoreSubscribeResult.error:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.storeSubscribeError)));
       case StoreSubscribeResult.unsubscribed:
@@ -389,8 +436,15 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
   }
 
   Future<void> _openPaywall() async {
-    await showPaywall(context, ref,
-        PaywallArgs(PaywallEntry.store, collectionTitle: c.title, otherSetsCount: _otherPremiumCount()));
+    await showPaywall(
+      context,
+      ref,
+      PaywallArgs(
+        PaywallEntry.store,
+        collectionTitle: c.title,
+        otherSetsCount: _otherPremiumCount(),
+      ),
+    );
   }
 
   @override
@@ -416,12 +470,20 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
         Text(c.title, style: AppText.displayTerm.copyWith(fontSize: 24)),
         if (c.description != null && c.description!.isNotEmpty) ...[
           const SizedBox(height: 7),
-          Text(c.description!,
-              style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary, height: 1.45)),
+          Text(
+            c.description!,
+            style: AppText.translation.copyWith(
+              fontSize: 13.5,
+              color: AppColors.secondary,
+              height: 1.45,
+            ),
+          ),
         ],
         const SizedBox(height: 10),
-        Text(_meta(l, c),
-            style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+        Text(
+          _meta(l, c),
+          style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+        ),
         // «Что внутри» — the term teaser (кадры 8c/8d). Shown for premium sets too: the lock is on
         // adding, not on seeing the value. Loader while fetching; offline → no list (as before).
         _PreviewList(collectionId: c.id),
@@ -429,11 +491,16 @@ class _StorePreviewState extends ConsumerState<_StorePreview> {
         if (c.isSubscribed)
           _InLibraryButton(label: l.storeInLibrary)
         else if (locked) ...[
-          _PrimaryLockButton(label: l.storeAvailableWithPremium, onTap: _busy ? null : _openPaywall),
+          _PrimaryLockButton(
+            label: l.storeAvailableWithPremium,
+            onTap: _busy ? null : _openPaywall,
+          ),
           const SizedBox(height: 11),
           Center(
-            child: Text(l.storeAllSetsUnlock(_otherPremiumCount() + 1),
-                style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary)),
+            child: Text(
+              l.storeAllSetsUnlock(_otherPremiumCount() + 1),
+              style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary),
+            ),
           ),
         ] else
           PrimaryButton(
@@ -458,7 +525,9 @@ class _PreviewList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    return ref.watch(storePreviewProvider(collectionId)).when(
+    return ref
+        .watch(storePreviewProvider(collectionId))
+        .when(
           loading: () => const _PreviewSkeleton(),
           error: (_, _) => const SizedBox.shrink(),
           data: (p) {
@@ -467,16 +536,23 @@ class _PreviewList extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 18),
-                Text(l.storeInsideLabel.toUpperCase(),
-                    style: AppText.sectionLabel.copyWith(fontSize: 11.5, color: AppColors.secondary)),
+                Text(
+                  l.storeInsideLabel.toUpperCase(),
+                  style: AppText.sectionLabel.copyWith(fontSize: 11.5, color: AppColors.secondary),
+                ),
                 const SizedBox(height: 8),
                 for (var i = 0; i < p.items.length; i++)
                   _PreviewRow(item: p.items[i], last: i == p.items.length - 1 && p.more == 0),
                 if (p.more > 0)
                   Padding(
                     padding: const EdgeInsets.only(top: 9),
-                    child: Text(l.storeMoreWords(p.more),
-                        style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                    child: Text(
+                      l.storeMoreWords(p.more),
+                      style: AppText.transcription.copyWith(
+                        fontSize: 12,
+                        color: AppColors.tertiary,
+                      ),
+                    ),
                   ),
               ],
             );
@@ -497,23 +573,28 @@ class _PreviewRow extends StatelessWidget {
       decoration: last
           ? null
           : BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.ink.withValues(alpha: 0.09)))),
+              border: Border(bottom: BorderSide(color: AppColors.ink.withValues(alpha: 0.09))),
+            ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(item.term,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.termInList.copyWith(fontSize: 16)),
+            child: Text(
+              item.term,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.termInList.copyWith(fontSize: 16),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(item.translation,
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.translation.copyWith(fontSize: 13)),
+            child: Text(
+              item.translation,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.translation.copyWith(fontSize: 13),
+            ),
           ),
         ],
       ),
@@ -528,10 +609,10 @@ class _PreviewSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double w) => Container(
-          width: w,
-          height: 12,
-          decoration: BoxDecoration(color: AppColors.track, borderRadius: BorderRadius.circular(4)),
-        );
+      width: w,
+      height: 12,
+      decoration: BoxDecoration(color: AppColors.track, borderRadius: BorderRadius.circular(4)),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -541,9 +622,7 @@ class _PreviewSkeleton extends StatelessWidget {
         for (var i = 0; i < 5; i++)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 7),
-            child: Row(
-              children: [bar(110), const Spacer(), bar(70)],
-            ),
+            child: Row(children: [bar(110), const Spacer(), bar(70)]),
           ),
       ],
     );
@@ -591,7 +670,10 @@ class _InLibraryButton extends StatelessWidget {
     return Container(
       height: 52,
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: AppColors.faintInk, borderRadius: BorderRadius.circular(AppRadii.field)),
+      decoration: BoxDecoration(
+        color: AppColors.faintInk,
+        borderRadius: BorderRadius.circular(AppRadii.field),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -633,10 +715,17 @@ class _TargetLangSheet extends StatelessWidget {
                       MiniFlag(languageCode: lang.code),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(lang.name,
-                            style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, color: AppColors.ink)),
+                        child: Text(
+                          lang.name,
+                          style: const TextStyle(
+                            fontFamily: AppFonts.inter,
+                            fontSize: 15.5,
+                            color: AppColors.ink,
+                          ),
+                        ),
                       ),
-                      if (lang.code == current) const Icon(Icons.check, size: 18, color: AppColors.ink),
+                      if (lang.code == current)
+                        const Icon(Icons.check, size: 18, color: AppColors.ink),
                     ],
                   ),
                 ),

@@ -75,8 +75,11 @@ void main() {
       expect(await store.load(languages), languages.initialPair);
 
       await db.setMeta(SearchPairStore.metaKey, '{"s":"en","t":"en"}');
-      expect(await store.load(languages), languages.initialPair,
-          reason: 'a language paired with itself is not a pair');
+      expect(
+        await store.load(languages),
+        languages.initialPair,
+        reason: 'a language paired with itself is not a pair',
+      );
     });
   });
 

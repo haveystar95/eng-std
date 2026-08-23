@@ -29,40 +29,40 @@ class PendingTriage {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'term_id': termId,
-        'verdict': verdict,
-        'collection_id': collectionId,
-        'decided_at': decidedAt,
-        'client_seq': clientSeq,
-        'latency_ms': latencyMs,
-        'revealed': revealed,
-      };
+    'id': id,
+    'term_id': termId,
+    'verdict': verdict,
+    'collection_id': collectionId,
+    'decided_at': decidedAt,
+    'client_seq': clientSeq,
+    'latency_ms': latencyMs,
+    'revealed': revealed,
+  };
 
   /// The exact shape `/triage/batch` expects. latency_ms is sent as null (not
   /// omitted) when unmeasured — the server treats null neutrally; a 0 would once
   /// have read as "too fast to have read it", so the client must never send 0.
   Map<String, dynamic> toBatchJson() => {
-        'id': id,
-        'term_id': termId,
-        'verdict': verdict,
-        if (collectionId != null) 'collection_id': collectionId,
-        'decided_at': decidedAt,
-        'client_seq': clientSeq,
-        'latency_ms': latencyMs, // null-safe: null stays null
-        if (revealed != null) 'revealed': revealed,
-      };
+    'id': id,
+    'term_id': termId,
+    'verdict': verdict,
+    if (collectionId != null) 'collection_id': collectionId,
+    'decided_at': decidedAt,
+    'client_seq': clientSeq,
+    'latency_ms': latencyMs, // null-safe: null stays null
+    if (revealed != null) 'revealed': revealed,
+  };
 
   factory PendingTriage.fromJson(Map<String, dynamic> j) => PendingTriage(
-        id: j['id'] as String,
-        termId: j['term_id'] as String,
-        verdict: j['verdict'] as String,
-        collectionId: j['collection_id'] as String?,
-        decidedAt: j['decided_at'] as String,
-        clientSeq: (j['client_seq'] as int?) ?? 0, // legacy queued items → 0 (server treats as oldest)
-        latencyMs: j['latency_ms'] as int?,
-        revealed: j['revealed'] as bool?,
-      );
+    id: j['id'] as String,
+    termId: j['term_id'] as String,
+    verdict: j['verdict'] as String,
+    collectionId: j['collection_id'] as String?,
+    decidedAt: j['decided_at'] as String,
+    clientSeq: (j['client_seq'] as int?) ?? 0, // legacy queued items → 0 (server treats as oldest)
+    latencyMs: j['latency_ms'] as int?,
+    revealed: j['revealed'] as bool?,
+  );
 }
 
 /// Durable FIFO of un-uploaded triage swipes, persisted as one JSON blob in the

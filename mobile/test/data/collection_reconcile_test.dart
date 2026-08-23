@@ -14,16 +14,18 @@ void main() {
   final t0 = DateTime.utc(2026, 8, 6, 9);
 
   Future<void> seed() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Gym')),
-          CollectionsCompanion.insert(id: 'c2', updatedAt: t0, title: const Value('Calling IT Support')),
-          CollectionsCompanion.insert(id: 'c3', updatedAt: t0, title: const Value('Common')),
-        ],
-        termUpserts: [TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('workout'))],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c2', termId: 't1', updatedAt: t0),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Gym')),
+      CollectionsCompanion.insert(
+        id: 'c2',
+        updatedAt: t0,
+        title: const Value('Calling IT Support'),
+      ),
+      CollectionsCompanion.insert(id: 'c3', updatedAt: t0, title: const Value('Common')),
+    ],
+    termUpserts: [TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('workout'))],
+    itemUpserts: [CollectionItemsCompanion.insert(collectionId: 'c2', termId: 't1', updatedAt: t0)],
+  );
 
   Future<Set<String>> collectionIds() async =>
       (await db.watchCollections().first).map((c) => c.id).toSet();

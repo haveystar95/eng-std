@@ -49,8 +49,8 @@ class LadderDots extends StatelessWidget {
             state: i < current
                 ? _DotState.passed
                 : i == current
-                    ? _DotState.current
-                    : _DotState.ahead,
+                ? _DotState.current
+                : _DotState.ahead,
             size: size,
           ),
         ],
@@ -155,8 +155,8 @@ class LadderTrack extends StatelessWidget {
                       state: i < current
                           ? _DotState.passed
                           : i == current
-                              ? _DotState.current
-                              : _DotState.ahead,
+                          ? _DotState.current
+                          : _DotState.ahead,
                       size: 7,
                     ),
                   ],
@@ -177,8 +177,8 @@ class LadderTrack extends StatelessWidget {
                         alignment: i == 0
                             ? Alignment.centerLeft
                             : i == labels.length - 1
-                                ? Alignment.centerRight
-                                : Alignment.center,
+                            ? Alignment.centerRight
+                            : Alignment.center,
                         // A fifth of the card is not enough for «знакомство», and it was drawn
                         // «знакомст…» (QA-OBS-27). A caption cut in half explains nothing, and a
                         // single Russian word has nowhere to wrap — so it SHRINKS to fit, the same

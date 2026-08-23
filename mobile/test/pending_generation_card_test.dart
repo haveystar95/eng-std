@@ -16,24 +16,23 @@ PendingGeneration _row({
   int? delivered,
   String? error,
   bool sent = true,
-}) =>
-    PendingGeneration(
-      id: 'g1',
-      topic: 'иду в банк',
-      status: status,
-      collectionId: collectionId,
-      error: error,
-      requested: requested,
-      delivered: delivered,
-      sourceLang: 'ru',
-      targetLang: 'en',
-      levelsCsv: 'A2,B1',
-      size: 15,
-      sent: sent,
-      targetLangExplicit: true,
-      createdAt: DateTime(2026, 8, 4),
-      updatedAt: DateTime(2026, 8, 4),
-    );
+}) => PendingGeneration(
+  id: 'g1',
+  topic: 'иду в банк',
+  status: status,
+  collectionId: collectionId,
+  error: error,
+  requested: requested,
+  delivered: delivered,
+  sourceLang: 'ru',
+  targetLang: 'en',
+  levelsCsv: 'A2,B1',
+  size: 15,
+  sent: sent,
+  targetLangExplicit: true,
+  createdAt: DateTime(2026, 8, 4),
+  updatedAt: DateTime(2026, 8, 4),
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -41,23 +40,25 @@ Future<void> _pump(
   List<WordCollection> collections = const [],
   GenerationQuota? quota,
 }) async {
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWith((ref) {
-        final db = AppDatabase.forTesting(NativeDatabase.memory());
-        ref.onDispose(db.close);
-        return db;
-      }),
-      collectionsProvider.overrideWith((ref) => Stream.value(collections)),
-      generationQuotaProvider.overrideWith((ref) async => quota),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: Scaffold(body: PendingGenerationCard(row: row)),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          final db = AppDatabase.forTesting(NativeDatabase.memory());
+          ref.onDispose(db.close);
+          return db;
+        }),
+        collectionsProvider.overrideWith((ref) => Stream.value(collections)),
+        generationQuotaProvider.overrideWith((ref) async => quota),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: Scaffold(body: PendingGenerationCard(row: row)),
+      ),
     ),
-  ));
+  );
   await tester.pump(); // let the collections stream + localizations resolve
 }
 
@@ -76,7 +77,9 @@ void main() {
     expect(find.text('Скрыть'), findsOneWidget);
   });
 
-  testWidgets('the daily limit gets its own face — when it resets, and a way past it', (tester) async {
+  testWidgets('the daily limit gets its own face — when it resets, and a way past it', (
+    tester,
+  ) async {
     // The 429 «не больше трёх коллекций в бесплатном режиме» used to leave the card promising
     // «Отправим, как только появится сеть» for ever. It is not a breakage and not a network wait:
     // say what happened, when it lifts, and offer Premium instead of a retry that fails again.
@@ -108,8 +111,13 @@ void main() {
 
   testWidgets('ready state shows the collection and an under-delivery badge', (tester) async {
     final col = WordCollection(
-      id: 'c1', title: 'В банке', source: 'ai', type: 'custom', wordsCount: 12,
-      sourceLang: 'ru', targetLang: 'en',
+      id: 'c1',
+      title: 'В банке',
+      source: 'ai',
+      type: 'custom',
+      wordsCount: 12,
+      sourceLang: 'ru',
+      targetLang: 'en',
     );
     await _pump(
       tester,

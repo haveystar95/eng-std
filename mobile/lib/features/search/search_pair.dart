@@ -54,11 +54,7 @@ class SearchPair {
 
 /// What the server says the pill may offer. Codes only — the names and flags are the app's own.
 class SearchLanguages {
-  const SearchLanguages({
-    required this.taught,
-    required this.natives,
-    required this.defaultNative,
-  });
+  const SearchLanguages({required this.taught, required this.natives, required this.defaultNative});
 
   /// The language the app teaches — the fixed half of every pair in v1.
   final String taught;
@@ -75,9 +71,8 @@ class SearchLanguages {
 
   factory SearchLanguages.fromJson(Map<String, dynamic> j) {
     final taught = (j['target'] as String?)?.trim();
-    final natives = [
-      for (final n in (j['natives'] as List? ?? const [])) (n as String).trim(),
-    ]..removeWhere((n) => n.isEmpty);
+    final natives = [for (final n in (j['natives'] as List? ?? const [])) (n as String).trim()]
+      ..removeWhere((n) => n.isEmpty);
 
     return SearchLanguages(
       taught: (taught ?? '').isNotEmpty ? taught! : 'en',
@@ -129,7 +124,8 @@ class SearchPairStore {
     final taught = languages.taught;
     final sides = {pair.source, pair.target};
 
-    return sides.contains(taught) && sides.length == 2 &&
+    return sides.contains(taught) &&
+        sides.length == 2 &&
         languages.natives.contains(pair.otherThan(taught));
   }
 }

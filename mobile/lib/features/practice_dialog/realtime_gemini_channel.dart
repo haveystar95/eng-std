@@ -24,9 +24,9 @@ class GeminiLiveChannel implements RealtimeChannel {
     MicCapture Function()? mic,
     PcmPlayback Function()? playback,
     Future<WebSocket> Function(String url, Map<String, dynamic>? headers)? connect,
-  })  : _micFactory = mic ?? _silentMic,
-        _playbackFactory = playback ?? _silentPlayback,
-        _connect = connect ?? _defaultConnect;
+  }) : _micFactory = mic ?? _silentMic,
+       _playbackFactory = playback ?? _silentPlayback,
+       _connect = connect ?? _defaultConnect;
 
   // Ephemeral tokens are ONLY accepted on the Constrained endpoint on v1alpha (the standard
   // BidiGenerateContent endpoint supports API keys / OAuth only → 1008 "unregistered caller").
@@ -107,11 +107,13 @@ class GeminiLiveChannel implements RealtimeChannel {
     await _playback!.setup();
     _micSub = _mic!.start().listen((chunk) {
       if (_closed || _ws == null) return;
-      _ws!.add(jsonEncode({
-        'realtimeInput': {
-          'audio': {'data': base64Encode(chunk), 'mimeType': 'audio/pcm;rate=16000'},
-        },
-      }));
+      _ws!.add(
+        jsonEncode({
+          'realtimeInput': {
+            'audio': {'data': base64Encode(chunk), 'mimeType': 'audio/pcm;rate=16000'},
+          },
+        }),
+      );
     });
 
     _emitPhase(DialogPhase.listening);
@@ -135,7 +137,10 @@ class GeminiLiveChannel implements RealtimeChannel {
       _emitPhase(DialogPhase.listening);
     }
     if (fx.modelText != null) {
-      _outAgg.add(fx.modelText!, _nextTs()); // buffer the fragment; emit the whole reply on turn end
+      _outAgg.add(
+        fx.modelText!,
+        _nextTs(),
+      ); // buffer the fragment; emit the whole reply on turn end
       _emitPhase(DialogPhase.botSpeaking);
     }
     if (fx.audio != null) {
@@ -207,7 +212,9 @@ Map<String, dynamic> geminiSetupMessage(DialogStart start) {
   return {
     'setup': {
       'model': start.model,
-      'generationConfig': {'responseModalities': ['AUDIO']},
+      'generationConfig': {
+        'responseModalities': ['AUDIO'],
+      },
       'inputAudioTranscription': <String, dynamic>{},
       'outputAudioTranscription': <String, dynamic>{},
     },
@@ -256,7 +263,9 @@ GeminiServerEffects parseGeminiServerMessage(Map<String, dynamic> json) {
         if (d is String && d.isNotEmpty) {
           try {
             audio = base64Decode(d);
-          } catch (_) {/* skip a malformed chunk */}
+          } catch (_) {
+            /* skip a malformed chunk */
+          }
           break;
         }
       }
@@ -285,7 +294,22 @@ class GeminiOutputAggregator {
   // Leading characters that must NOT get a space inserted before them (sentence/clause punctuation,
   // closing brackets/quotes, and the apostrophe so contractions like "I" + "'m" stay "I'm").
   static const _noSpaceBefore = {
-    '.', ',', '!', '?', ';', ':', ')', ']', '}', "'", '"', '…', '’', '”', '»', '%',
+    '.',
+    ',',
+    '!',
+    '?',
+    ';',
+    ':',
+    ')',
+    ']',
+    '}',
+    "'",
+    '"',
+    '…',
+    '’',
+    '”',
+    '»',
+    '%',
   };
 
   static bool _isWs(String c) => c == ' ' || c == '\t' || c == '\n' || c == '\r';

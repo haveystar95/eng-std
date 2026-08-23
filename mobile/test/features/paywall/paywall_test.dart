@@ -10,27 +10,33 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// the auto-renew legal line when the period switches.
 void main() {
   Future<void> pump(WidgetTester tester, {required bool paywall}) {
-    return tester.pumpWidget(ProviderScope(
-      overrides: [
-        featureFlagsProvider.overrideWith(
-            () => _FakeFlags(FeatureFlags(storeEnabled: false, paywallEnabled: paywall, devPremium: false))),
-      ],
-      child: MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: const [Locale('ru')],
-        home: Consumer(
-          builder: (context, ref, _) => Scaffold(
-            body: Center(
-              child: TextButton(
-                onPressed: () => showPaywall(context, ref, const PaywallArgs(PaywallEntry.profile)),
-                child: const Text('open'),
+    return tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          featureFlagsProvider.overrideWith(
+            () => _FakeFlags(
+              FeatureFlags(storeEnabled: false, paywallEnabled: paywall, devPremium: false),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('ru')],
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () =>
+                      showPaywall(context, ref, const PaywallArgs(PaywallEntry.profile)),
+                  child: const Text('open'),
+                ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   testWidgets('flag on: opens the paywall with year selected by default', (tester) async {

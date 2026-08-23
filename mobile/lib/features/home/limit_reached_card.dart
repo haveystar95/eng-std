@@ -19,12 +19,20 @@ class LimitReachedCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l.homeLimitReachedTitle, textAlign: TextAlign.center, style: AppText.stepTitle.copyWith(fontSize: 22)),
+          Text(
+            l.homeLimitReachedTitle,
+            textAlign: TextAlign.center,
+            style: AppText.stepTitle.copyWith(fontSize: 22),
+          ),
           const SizedBox(height: 8),
           Text(
             l.homeLimitReachedHint,
             textAlign: TextAlign.center,
-            style: AppText.translation.copyWith(fontSize: 13.5, height: 1.45, color: AppColors.secondary),
+            style: AppText.translation.copyWith(
+              fontSize: 13.5,
+              height: 1.45,
+              color: AppColors.secondary,
+            ),
           ),
         ],
       ),

@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _host(Widget child, {double width = 120}) => MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: SizedBox(width: width, child: child),
-        ),
-      ),
-    );
+  home: Scaffold(
+    body: Center(
+      child: SizedBox(width: width, child: child),
+    ),
+  ),
+);
 
 void main() {
   testWidgets('AppChip never ellipsizes its label (rule 16)', (tester) async {
-    await tester.pumpWidget(_host(
-      const ChipScrollRow(children: [AppChip(label: 'сводить концы с концами')]),
-    ));
+    await tester.pumpWidget(
+      _host(const ChipScrollRow(children: [AppChip(label: 'сводить концы с концами')])),
+    );
     expect(tester.takeException(), isNull); // horizontal scroll, no overflow throw
 
     final text = tester.widget<Text>(find.text('сводить концы с концами'));
@@ -25,17 +25,21 @@ void main() {
 
   testWidgets('ChipWrap wraps to a second row when it does not fit', (tester) async {
     // Six short chips in a narrow row → guaranteed to wrap; each fits alone.
-    await tester.pumpWidget(_host(
-      const ChipWrap(children: [
-        AppChip(label: 'А'),
-        AppChip(label: 'Б'),
-        AppChip(label: 'В'),
-        AppChip(label: 'Г'),
-        AppChip(label: 'Д'),
-        AppChip(label: 'Е'),
-      ]),
-      width: 120,
-    ));
+    await tester.pumpWidget(
+      _host(
+        const ChipWrap(
+          children: [
+            AppChip(label: 'А'),
+            AppChip(label: 'Б'),
+            AppChip(label: 'В'),
+            AppChip(label: 'Г'),
+            AppChip(label: 'Д'),
+            AppChip(label: 'Е'),
+          ],
+        ),
+        width: 120,
+      ),
+    );
     expect(tester.takeException(), isNull); // no clip/overflow
 
     final first = tester.getTopLeft(find.text('А')).dy;
@@ -72,10 +76,9 @@ void main() {
   });
 
   testWidgets('selected chip is ink-filled (system selection idiom)', (tester) async {
-    await tester.pumpWidget(_host(
-      AppChip(label: 'большая', selected: true, onTap: () {}),
-      width: 300,
-    ));
+    await tester.pumpWidget(
+      _host(AppChip(label: 'большая', selected: true, onTap: () {}), width: 300),
+    );
     final m = tester.widget<Material>(
       find.descendant(of: find.byType(AppChip), matching: find.byType(Material)).first,
     );

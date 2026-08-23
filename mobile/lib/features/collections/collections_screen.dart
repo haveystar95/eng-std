@@ -69,10 +69,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppColors.paper,
-        body: SafeArea(
-          bottom: false,
-          child: storeOn ? _withStore() : _mineList(withHeader: true),
-        ),
+        body: SafeArea(bottom: false, child: storeOn ? _withStore() : _mineList(withHeader: true)),
       ),
     );
   }
@@ -83,11 +80,21 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s12),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            AppSpacing.s12,
+            AppSpacing.screenH,
+            AppSpacing.s12,
+          ),
           child: _Header(),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.s12),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            0,
+            AppSpacing.screenH,
+            AppSpacing.s12,
+          ),
           child: _Segmented(
             labels: [l.storeSegmentMine, l.storeSegmentReady],
             index: _segment,
@@ -143,7 +150,12 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
         children: [
           if (withHeader)
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s12, AppSpacing.screenH, AppSpacing.s16),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenH,
+                AppSpacing.s12,
+                AppSpacing.screenH,
+                AppSpacing.s16,
+              ),
               child: _Header(),
             ),
           if (empty)
@@ -209,9 +221,10 @@ class _Segmented extends StatelessWidget {
                             borderRadius: BorderRadius.circular(11),
                             boxShadow: [
                               BoxShadow(
-                                  color: AppColors.ink.withValues(alpha: 0.10),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1)),
+                                color: AppColors.ink.withValues(alpha: 0.10),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
                             ],
                           )
                         : null,
@@ -254,15 +267,19 @@ class _Header extends ConsumerWidget {
           ListTile(
             leading: const Icon(LucideIcons.sparkles, size: 20, color: AppColors.ink),
             title: Text(l.collectionsCreateGenerate, style: AppText.translation),
-            subtitle: Text(l.collectionsCreateGenerateHint,
-                style: AppText.transcription.copyWith(fontSize: 12)),
+            subtitle: Text(
+              l.collectionsCreateGenerateHint,
+              style: AppText.transcription.copyWith(fontSize: 12),
+            ),
             onTap: () => Navigator.of(sheet).pop(true),
           ),
           ListTile(
             leading: const Icon(LucideIcons.pencil, size: 20, color: AppColors.ink),
             title: Text(l.collectionsCreateManual, style: AppText.translation),
-            subtitle: Text(l.collectionsCreateManualHint,
-                style: AppText.transcription.copyWith(fontSize: 12)),
+            subtitle: Text(
+              l.collectionsCreateManualHint,
+              style: AppText.transcription.copyWith(fontSize: 12),
+            ),
             onTap: () => Navigator.of(sheet).pop(false),
           ),
         ],
@@ -386,7 +403,8 @@ class _CollectionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final prog = ref.watch(collectionsProgressProvider).value?[collection.id];
-    final density = ref.watch(collectionDensityProvider(collection.id)).value ??
+    final density =
+        ref.watch(collectionDensityProvider(collection.id)).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[collection.id] ?? 0;
     final learnable = ref.watch(learnableByCollectionProvider).value?[collection.id] ?? 0;
@@ -394,7 +412,11 @@ class _CollectionRow extends ConsumerWidget {
     final mastered = prog?.mastered ?? 0;
     final remainingNewQuota = ref.watch(statsProvider).value?.newRemaining ?? 0;
     final cta = computeCollectionCta(
-        untriaged: untriaged, learnable: learnable, due: prog?.due ?? 0, remainingNewQuota: remainingNewQuota);
+      untriaged: untriaged,
+      learnable: learnable,
+      due: prog?.due ?? 0,
+      remainingNewQuota: remainingNewQuota,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -402,9 +424,12 @@ class _CollectionRow extends ConsumerWidget {
       ),
       child: Builder(
         builder: (anchor) => InkWell(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => CollectionDetailScreen(collectionId: collection.id, title: collection.title),
-          )),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  CollectionDetailScreen(collectionId: collection.id, title: collection.title),
+            ),
+          ),
           onLongPress: () => _menu(anchor, ref),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
@@ -417,11 +442,17 @@ class _CollectionRow extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(collection.title,
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.collectionNameCard),
+                      Text(
+                        collection.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.collectionNameCard,
+                      ),
                       const SizedBox(height: 5),
-                      Text(l.collectionsTileMastered(total, mastered),
-                          style: AppText.translation.copyWith(fontSize: 12.5)),
+                      Text(
+                        l.collectionsTileMastered(total, mastered),
+                        style: AppText.translation.copyWith(fontSize: 12.5),
+                      ),
                       const SizedBox(height: 11),
                       InkSegments.fromCounts(
                         confirmed: density.confirmed,
@@ -431,7 +462,13 @@ class _CollectionRow extends ConsumerWidget {
                       ),
                       if (_hint(l, cta) case final hint?) ...[
                         const SizedBox(height: 8),
-                        Text(hint, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                        Text(
+                          hint,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 11.5,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -445,11 +482,11 @@ class _CollectionRow extends ConsumerWidget {
   }
 
   String? _hint(AppLocalizations l, HomeCta cta) => switch (cta.kind) {
-        HomeCtaKind.triage => l.collectionTriageButton(cta.count),
-        HomeCtaKind.learn => l.collectionLearnButton(cta.count),
-        HomeCtaKind.review => l.collectionReviewButton(cta.count),
-        _ => null,
-      };
+    HomeCtaKind.triage => l.collectionTriageButton(cta.count),
+    HomeCtaKind.learn => l.collectionLearnButton(cta.count),
+    HomeCtaKind.review => l.collectionReviewButton(cta.count),
+    _ => null,
+  };
 }
 
 class _Empty extends StatelessWidget {
@@ -464,10 +501,17 @@ class _Empty extends StatelessWidget {
         children: [
           const Icon(LucideIcons.layoutGrid, size: 40, color: AppColors.tertiary),
           const SizedBox(height: AppSpacing.s16),
-          Text(l.collectionsEmptyTitle, style: AppText.stepTitle.copyWith(fontSize: 22), textAlign: TextAlign.center),
+          Text(
+            l.collectionsEmptyTitle,
+            style: AppText.stepTitle.copyWith(fontSize: 22),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 8),
-          Text(l.collectionsEmptyBody,
-              textAlign: TextAlign.center, style: AppText.translation.copyWith(color: AppColors.secondary)),
+          Text(
+            l.collectionsEmptyBody,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(color: AppColors.secondary),
+          ),
         ],
       ),
     );

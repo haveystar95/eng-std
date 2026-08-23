@@ -21,27 +21,35 @@ void main() {
     String? example,
     String type = 'word',
     String? transcription,
-  }) =>
-      Term(
-        id: id,
-        termText: text,
-        type: type,
-        transcription: transcription,
-        translation: translation,
-        example: example,
-        exampleTranslation: null,
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 10),
-      );
+  }) => Term(
+    id: id,
+    termText: text,
+    type: type,
+    transcription: transcription,
+    translation: translation,
+    example: example,
+    exampleTranslation: null,
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 10),
+  );
 
   // Fixed ids so the mode each card gets is stable: the rotation seed is index + crc32(id).
   final terms = [
-    term('01KZETAAA50EMHCN6SP80T8DHC', text: 'reservation', translation: 'бронь',
-        example: 'I have a reservation for tonight.'),
-    term('01KZETAAB4AW6M9ZFRB3X02CVW', text: 'give up', translation: 'сдаваться', type: 'phrasal_verb',
-        example: "I won't give up."),
+    term(
+      '01KZETAAA50EMHCN6SP80T8DHC',
+      text: 'reservation',
+      translation: 'бронь',
+      example: 'I have a reservation for tonight.',
+    ),
+    term(
+      '01KZETAAB4AW6M9ZFRB3X02CVW',
+      text: 'give up',
+      translation: 'сдаваться',
+      type: 'phrasal_verb',
+      example: "I won't give up.",
+    ),
     term('01KZETAAC103WZ24WQ7H087ZJ3', text: 'front desk', translation: 'стойка регистрации'),
     term('01KZETAAD2EWE2H5ZV7WD8JWKT', text: 'towel', translation: 'полотенце'),
     term('01KZETAAE63W6K93C55NCYXKVA', text: 'check in', translation: 'заселение'),
@@ -54,9 +62,13 @@ void main() {
   /// further down. Leaving it out would silently make every case a rung-1 case (a term with no
   /// progress row has never been shown), and every assertion here would then be about one card.
   Map<String, LadderPosition> topOfLadder(List<Term> from) => {
-        for (final t in from)
-          t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-      };
+    for (final t in from)
+      t.id: const LadderPosition(
+        acquisition: Acquisition.graduated,
+        successfulReviews: 12,
+        enrolled: true,
+      ),
+  };
 
   StudySession build({
     List<Term>? from,
@@ -81,12 +93,21 @@ void main() {
 
   test('the session is marked as built locally and keeps the id it was given', () {
     final session = build();
-    expect(session.builtLocally, isTrue, reason: 'the server has never seen this id — it adopts it');
+    expect(
+      session.builtLocally,
+      isTrue,
+      reason: 'the server has never seen this id — it adopts it',
+    );
     expect(session.sessionId, 'SESSION');
   });
 
   test('a term with no text is dropped rather than asked about', () {
-    final session = build(from: [...terms, term('01KZETAAF37FWHW8WKDRGK71WN', text: '   ')]);
+    final session = build(
+      from: [
+        ...terms,
+        term('01KZETAAF37FWHW8WKDRGK71WN', text: '   '),
+      ],
+    );
 
     expect(session.cards, hasLength(terms.length));
     expect(session.cards.map((c) => c.answer), everyElement(isNotEmpty));
@@ -101,8 +122,16 @@ void main() {
       switch (card.mode) {
         case ExerciseMode.multipleChoice:
           expect(card.options, isNotNull);
-          expect(card.options, contains(card.answer), reason: 'the answer must be among the options');
-          expect(card.options!.toSet(), hasLength(card.options!.length), reason: 'no repeated option');
+          expect(
+            card.options,
+            contains(card.answer),
+            reason: 'the answer must be among the options',
+          );
+          expect(
+            card.options!.toSet(),
+            hasLength(card.options!.length),
+            reason: 'no repeated option',
+          );
           expect(card.chips, isNull);
         case ExerciseMode.wordBank:
           expect(card.chips, isNotNull);
@@ -132,7 +161,11 @@ void main() {
           expect(card.options, hasLength(3));
           expect(card.options, contains(card.answer));
           expect(card.optionFeedback, hasLength(2));
-          expect(card.feedbackFor(card.answer), isNull, reason: 'the right option explains nothing');
+          expect(
+            card.feedbackFor(card.answer),
+            isNull,
+            reason: 'the right option explains nothing',
+          );
           expect(card.chips, isNull);
         case ExerciseMode.cloze:
           // The selector only picks cloze when the example can be blanked — so it must be here.
@@ -176,14 +209,22 @@ void main() {
       random: Random(7),
       sessionId: 'SESSION',
       ladder: {
-        terms.first.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
+        terms.first.id: const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ),
         terms[3].id: const LadderPosition(enrolled: true),
       },
     ).cards.first;
 
     expect(card.termId, terms.first.id);
     expect(card.answer, 'reservation');
-    expect(card.mode, ExerciseMode.multipleChoice, reason: 'the fan opens on the first enabled mode');
+    expect(
+      card.mode,
+      ExerciseMode.multipleChoice,
+      reason: 'the fan opens on the first enabled mode',
+    );
     expect(card.prompt, 'бронь', reason: 'the prompt is the translation, in the user\'s language');
     expect(card.type, 'word');
   });
@@ -240,8 +281,11 @@ void main() {
           .where((t) => t.id != card.termId && t.translation == translation)
           .map((t) => t.termText);
       for (final text in sameMeaning) {
-        expect(card.options, isNot(contains(text)),
-            reason: 'a synonym would read as correct for the same prompt');
+        expect(
+          card.options,
+          isNot(contains(text)),
+          reason: 'a synonym would read as correct for the same prompt',
+        );
       }
     }
   });
@@ -304,7 +348,11 @@ void main() {
     ).cards.single;
 
     expect(card.chips!.length, greaterThan(2), reason: 'decoys make it a real choice');
-    expect(card.chips!.where((c) => c == 'up'), hasLength(1), reason: 'never a second real particle');
+    expect(
+      card.chips!.where((c) => c == 'up'),
+      hasLength(1),
+      reason: 'never a second real particle',
+    );
   });
 
   group('the collection snapshot it builds from', () {
@@ -321,8 +369,18 @@ void main() {
           TermsCompanion.insert(id: 't3', updatedAt: at, termText: const Value('other set')),
         ],
         itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't2', updatedAt: at, position: const Value(1)),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: at, position: const Value(0)),
+          CollectionItemsCompanion.insert(
+            collectionId: 'c1',
+            termId: 't2',
+            updatedAt: at,
+            position: const Value(1),
+          ),
+          CollectionItemsCompanion.insert(
+            collectionId: 'c1',
+            termId: 't1',
+            updatedAt: at,
+            position: const Value(0),
+          ),
           CollectionItemsCompanion.insert(collectionId: 'c2', termId: 't3', updatedAt: at),
         ],
       );
@@ -338,17 +396,21 @@ void main() {
     // point on it. Over many words the same rotation already shows every mode, which is why the
     // promise only ever failed for the single-word case — and why the fan is bounded by pool size.
     StudySession solo(Term t, {PracticeModes? enabled}) => LocalPracticeSessionBuilder.build(
-          terms: [t],
-          limit: 20,
-          random: Random(4),
-          sessionId: 'S',
-          enabled: enabled ?? PracticeModes.serverDefault,
-          ladder: topOfLadder([t]),
-        );
+      terms: [t],
+      limit: 20,
+      random: Random(4),
+      sessionId: 'S',
+      enabled: enabled ?? PracticeModes.serverDefault,
+      ladder: topOfLadder([t]),
+    );
 
     test('deals one card per applicable mode, in the matrix order', () {
-      final rich = term('01KZETAAK18AQK14YFSBWW6KRN',
-          text: 'reservation', translation: 'бронь', example: 'I have a reservation for tonight.');
+      final rich = term(
+        '01KZETAAK18AQK14YFSBWW6KRN',
+        text: 'reservation',
+        translation: 'бронь',
+        example: 'I have a reservation for tonight.',
+      );
       final cards = solo(rich).cards;
 
       expect(cards.length, greaterThan(1), reason: 'this is the «1 of 1» the acceptance saw');
@@ -383,12 +445,23 @@ void main() {
       final t = term('01KZETAAN18AQK14YFSBWW6KRQ', text: 'towel', translation: 'полотенце');
       final other = term('01KZETAAP2C0MG5J6ZV1S4XQD7', text: 'sheets', translation: 'простыни');
       final ladder = {
-        t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
-        other.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
+        t.id: const LadderPosition(
+          acquisition: Acquisition.learning,
+          learningStep: 1,
+          enrolled: true,
+        ),
+        other.id: const LadderPosition(
+          acquisition: Acquisition.learning,
+          learningStep: 1,
+          enrolled: true,
+        ),
       };
 
       final alone = LocalPracticeSessionBuilder.build(
-        terms: [t], limit: 20, random: Random(4), sessionId: 'S',
+        terms: [t],
+        limit: 20,
+        random: Random(4),
+        sessionId: 'S',
         ladder: {t.id: ladder[t.id]!},
       );
       expect(alone.cards, isNotEmpty);
@@ -400,7 +473,11 @@ void main() {
 
       // With a neighbour to lend a wrong option, the choice card comes back.
       final session = LocalPracticeSessionBuilder.build(
-        terms: [t, other], limit: 20, random: Random(4), sessionId: 'S', ladder: ladder,
+        terms: [t, other],
+        limit: 20,
+        random: Random(4),
+        sessionId: 'S',
+        ladder: ladder,
       );
       expect(session.cards.where((c) => c.termId == t.id), hasLength(1));
     });
@@ -417,10 +494,18 @@ void main() {
     final mixed = [
       term('01KZETAAP18AQK14YFSBWW6KRR', text: 'grain-free', translation: 'без злаков'),
       term('01KZETAAQ18AQK14YFSBWW6KRS', text: 'organic', translation: 'органический'),
-      term('01KZETAAR18AQK14YFSBWW6KRT',
-          text: 'Where can I find dog food?', translation: 'Где я могу найти корм для собак?', type: 'phrase'),
-      term('01KZETAAS18AQK14YFSBWW6KRU',
-          text: 'Is this suitable for small breeds?', translation: 'Подходит ли это для мелких пород?', type: 'phrase'),
+      term(
+        '01KZETAAR18AQK14YFSBWW6KRT',
+        text: 'Where can I find dog food?',
+        translation: 'Где я могу найти корм для собак?',
+        type: 'phrase',
+      ),
+      term(
+        '01KZETAAS18AQK14YFSBWW6KRU',
+        text: 'Is this suitable for small breeds?',
+        translation: 'Подходит ли это для мелких пород?',
+        type: 'phrase',
+      ),
     ];
     // Rung 2 is where practice deals a recognition card, and the matrix gives it `distant` options.
     final session = LocalPracticeSessionBuilder.build(
@@ -431,7 +516,11 @@ void main() {
       enabled: const PracticeModes([ExerciseMode.multipleChoice]),
       ladder: {
         for (final t in mixed)
-          t.id: const LadderPosition(acquisition: Acquisition.learning, learningStep: 2, enrolled: true),
+          t.id: const LadderPosition(
+            acquisition: Acquisition.learning,
+            learningStep: 2,
+            enrolled: true,
+          ),
       },
     );
 
@@ -442,7 +531,11 @@ void main() {
         final source = mixed.firstWhere((t) => t.termText == option, orElse: () => own);
         expect(source.type, own.type, reason: 'a ${own.type} card was offered «$option»');
       }
-      expect(card.options!.length, greaterThanOrEqualTo(2), reason: 'fewer options, still a choice');
+      expect(
+        card.options!.length,
+        greaterThanOrEqualTo(2),
+        reason: 'fewer options, still a choice',
+      );
     }
   });
 }

@@ -30,10 +30,7 @@ class FloatingTabBar extends StatelessWidget {
   static ui.ImageFilter _glassFilter() {
     return ui.ImageFilter.compose(
       outer: ui.ColorFilter.matrix(_saturation(AppTabBarMetrics.saturate)),
-      inner: ui.ImageFilter.blur(
-        sigmaX: AppTabBarMetrics.blur,
-        sigmaY: AppTabBarMetrics.blur,
-      ),
+      inner: ui.ImageFilter.blur(sigmaX: AppTabBarMetrics.blur, sigmaY: AppTabBarMetrics.blur),
     );
   }
 
@@ -57,7 +54,9 @@ class FloatingTabBar extends StatelessWidget {
     const chrome = AppTabBarMetrics.padH * 2 + AppSpacing.s16; // padding + a breath on each side
     final room = (available - chrome) / items.length;
 
-    return room < AppTabBarMetrics.item ? room.clamp(44.0, AppTabBarMetrics.item) : AppTabBarMetrics.item;
+    return room < AppTabBarMetrics.item
+        ? room.clamp(44.0, AppTabBarMetrics.item)
+        : AppTabBarMetrics.item;
   }
 
   @override
@@ -97,7 +96,12 @@ class FloatingTabBar extends StatelessWidget {
 }
 
 class _TabButton extends StatelessWidget {
-  const _TabButton({required this.item, required this.active, required this.width, required this.onTap});
+  const _TabButton({
+    required this.item,
+    required this.active,
+    required this.width,
+    required this.onTap,
+  });
   final FloatingTabItem item;
   final bool active;
   final double width;

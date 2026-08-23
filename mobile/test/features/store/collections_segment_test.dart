@@ -15,28 +15,33 @@ void main() {
   const pair = (source: 'ru', target: 'en');
 
   AppUser user() => AppUser(
-        id: 'u1',
-        name: 'D',
-        profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
-      );
+    id: 'u1',
+    name: 'D',
+    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
+  );
 
   Future<void> pump(WidgetTester tester, {required bool store}) {
-    return tester.pumpWidget(ProviderScope(
-      overrides: [
-        authControllerProvider.overrideWith(() => _FakeAuth(user())),
-        featureFlagsProvider.overrideWith(
-            () => _FakeFlags(FeatureFlags(storeEnabled: store, paywallEnabled: store, devPremium: false))),
-        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-        pendingGenerationsProvider.overrideWith((ref) => const Stream.empty()),
-        storeCollectionsProvider(pair).overrideWith((ref) async => const <StoreSection>[]),
-      ],
-      child: const MaterialApp(
-        locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: [Locale('ru')],
-        home: CollectionsScreen(),
+    return tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(() => _FakeAuth(user())),
+          featureFlagsProvider.overrideWith(
+            () => _FakeFlags(
+              FeatureFlags(storeEnabled: store, paywallEnabled: store, devPremium: false),
+            ),
+          ),
+          collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+          pendingGenerationsProvider.overrideWith((ref) => const Stream.empty()),
+          storeCollectionsProvider(pair).overrideWith((ref) async => const <StoreSection>[]),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('ru')],
+          home: CollectionsScreen(),
+        ),
       ),
-    ));
+    );
   }
 
   testWidgets('store off: no segment, no «Готовые»', (tester) async {
@@ -56,7 +61,9 @@ void main() {
     expect(find.text('Готовые'), findsOneWidget);
   });
 
-  testWidgets('store on: switching to «Готовые» shows the store (empty state here)', (tester) async {
+  testWidgets('store on: switching to «Готовые» shows the store (empty state here)', (
+    tester,
+  ) async {
     await pump(tester, store: true);
     await tester.pumpAndSettle();
 

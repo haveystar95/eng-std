@@ -24,20 +24,20 @@ import 'package:flutter_test/flutter_test.dart';
 /// earned to enter it.
 void main() {
   Term term(String id, String text, {String translation = 'перевод'}) => Term(
-        id: id,
-        termText: text,
-        type: 'word',
-        transcription: null,
-        translation: translation,
-        // Long enough to scramble and to dictate, and it CONTAINS the term, so cloze is playable
-        // too: anything missing from a session is then the selection's doing, never the content's.
-        example: 'Please find the $text before tonight.',
-        exampleTranslation: 'Пожалуйста, найдите это до вечера.',
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 14),
-      );
+    id: id,
+    termText: text,
+    type: 'word',
+    transcription: null,
+    translation: translation,
+    // Long enough to scramble and to dictate, and it CONTAINS the term, so cloze is playable
+    // too: anything missing from a session is then the selection's doing, never the content's.
+    example: 'Please find the $text before tonight.',
+    exampleTranslation: 'Пожалуйста, найдите это до вечера.',
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 14),
+  );
 
   // Rich enough to support every trainer, so anything missing from a session is the LADDER's doing
   // and not the term's data.
@@ -61,8 +61,11 @@ void main() {
 
   /// The lowest rung practice will actually deal: introduced, working through recognition. Its
   /// options are still `distant`, because the pair has not graduated.
-  const onLadder = LadderPosition(acquisition: Acquisition.learning,
-    learningStep: LearningLadder.stepRecognitionForward, enrolled: true);
+  const onLadder = LadderPosition(
+    acquisition: Acquisition.learning,
+    learningStep: LearningLadder.stepRecognitionForward,
+    enrolled: true,
+  );
 
   Set<ExerciseMode> modesAt(LadderPosition position, {int seed = 3}) =>
       LocalPracticeSessionBuilder.build(
@@ -107,10 +110,13 @@ void main() {
     // multiple_choice, so a rung-0 word that reached the card builder WOULD come back as a card —
     // which is exactly why `build` must drop it from the pool and not rely on the matrix.
     expect(LearningLadder.admitsPractice(LearningLadder.stepIntro), isFalse);
-    expect(ModeAdmission.shipped.only(
-      [for (final m in everyMode.modes) if (m.isGraded) m],
-      LearningLadder.stepIntro,
-    ), isEmpty);
+    expect(
+      ModeAdmission.shipped.only([
+        for (final m in everyMode.modes)
+          if (m.isGraded) m,
+      ], LearningLadder.stepIntro),
+      isEmpty,
+    );
   });
 
   test('one introduced word is drilled while its rung-0 neighbours only lend their text', () {
@@ -124,8 +130,11 @@ void main() {
       sessionId: 'S',
       enabled: everyMode,
       ladder: {
-        terms.first.id: const LadderPosition(acquisition: Acquisition.learning,
-          learningStep: LearningLadder.stepRecognitionReverse, enrolled: true),
+        terms.first.id: const LadderPosition(
+          acquisition: Acquisition.learning,
+          learningStep: LearningLadder.stepRecognitionReverse,
+          enrolled: true,
+        ),
         for (final t in terms.skip(1))
           t.id: const LadderPosition(acquisition: Acquisition.isNew, enrolled: true),
       },
@@ -138,14 +147,17 @@ void main() {
     }
   });
 
-  test('practice introduces nothing — an intro card is never dealt, even with intro switched on', () {
-    for (final position in [
-      const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
-      const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
-    ]) {
-      expect(modesAt(position), isNot(contains(ExerciseMode.intro)));
-    }
-  });
+  test(
+    'practice introduces nothing — an intro card is never dealt, even with intro switched on',
+    () {
+      for (final position in [
+        const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true),
+        const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
+      ]) {
+        expect(modesAt(position), isNot(contains(ExerciseMode.intro)));
+      }
+    },
+  );
 
   test('EVERY switched-on trainer is dealt in free practice, at every rung above 0 (QA-26)', () {
     // The owner's rule, and the bug it replaced: with all trainers on, a long enough draw must show
@@ -157,34 +169,48 @@ void main() {
     // the session has cards: four cards can never walk seven trainers however the deck is shuffled.
     final deck = [
       for (var i = 0; i < 24; i++)
-        term('01KZETAB${i.toString().padLeft(2, '0')}0EMHCN6SP80T8DH', i.isEven ? 'towel$i' : 'front desk$i',
-            // Distinct translations: a choice card's near-miss distractors are filtered by meaning,
-            // and twenty-four terms all meaning the same thing would leave it with no wrong option.
-            translation: 'перевод$i'),
+        term(
+          '01KZETAB${i.toString().padLeft(2, '0')}0EMHCN6SP80T8DH',
+          i.isEven ? 'towel$i' : 'front desk$i',
+          // Distinct translations: a choice card's near-miss distractors are filtered by meaning,
+          // and twenty-four terms all meaning the same thing would leave it with no wrong option.
+          translation: 'перевод$i',
+        ),
     ];
-    final graded = [for (final m in everyMode.modes) if (m.isGraded) m];
+    final graded = [
+      for (final m in everyMode.modes)
+        if (m.isGraded) m,
+    ];
 
     for (final position in [
       // The lowest rung practice deals at all…
       onLadder,
-      const LadderPosition(acquisition: Acquisition.learning,
-          learningStep: LearningLadder.stepRecognitionReverse, enrolled: true),
+      const LadderPosition(
+        acquisition: Acquisition.learning,
+        learningStep: LearningLadder.stepRecognitionReverse,
+        enrolled: true,
+      ),
       // …just graduated, nothing earned yet — the state a real pool is almost entirely in…
       const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
       // …and a pair that HAS earned the top rung.
-      const LadderPosition(acquisition: Acquisition.graduated,
-          successfulReviews: LearningLadder.dictationMinSuccesses, enrolled: true),
+      const LadderPosition(
+        acquisition: Acquisition.graduated,
+        successfulReviews: LearningLadder.dictationMinSuccesses,
+        enrolled: true,
+      ),
     ]) {
       final dealt = <ExerciseMode>{};
       for (var seed = 0; seed < 4; seed++) {
-        dealt.addAll(LocalPracticeSessionBuilder.build(
-          terms: deck,
-          limit: deck.length,
-          random: Random(seed),
-          sessionId: 'S',
-          enabled: everyMode,
-          ladder: {for (final t in deck) t.id: position},
-        ).cards.map((c) => c.mode));
+        dealt.addAll(
+          LocalPracticeSessionBuilder.build(
+            terms: deck,
+            limit: deck.length,
+            random: Random(seed),
+            sessionId: 'S',
+            enabled: everyMode,
+            ladder: {for (final t in deck) t.id: position},
+          ).cards.map((c) => c.mode),
+        );
       }
 
       expect(dealt, containsAll(graded), reason: 'missing ${graded.toSet().difference(dealt)}');
@@ -193,54 +219,65 @@ void main() {
     }
   });
 
-  test('«Тренировать слово» fans one word across every trainer it can furnish, dictation included', () {
-    // The other practice entry point (QA-14). Same rule, so the same trainers must be reachable —
-    // including dictation on a pair that has only just graduated.
-    final cards = LocalPracticeSessionBuilder.build(
-      terms: terms,
-      limit: 1,
-      random: Random(3),
-      sessionId: 'S',
-      enabled: everyMode,
-      ladder: {
-        for (final t in terms)
-          t.id: const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
-      },
-    ).cards;
+  test(
+    '«Тренировать слово» fans one word across every trainer it can furnish, dictation included',
+    () {
+      // The other practice entry point (QA-14). Same rule, so the same trainers must be reachable —
+      // including dictation on a pair that has only just graduated.
+      final cards = LocalPracticeSessionBuilder.build(
+        terms: terms,
+        limit: 1,
+        random: Random(3),
+        sessionId: 'S',
+        enabled: everyMode,
+        ladder: {
+          for (final t in terms)
+            t.id: const LadderPosition(acquisition: Acquisition.graduated, enrolled: true),
+        },
+      ).cards;
 
-    expect(cards.map((c) => c.termId).toSet(), hasLength(1), reason: 'the fan is over ONE word');
-    expect(cards.map((c) => c.mode), contains(ExerciseMode.dictation));
-  });
+      expect(cards.map((c) => c.termId).toSet(), hasLength(1), reason: 'the fan is over ONE word');
+      expect(cards.map((c) => c.mode), contains(ExerciseMode.dictation));
+    },
+  );
 
   test('a `known` word is not held back — it is outside the ladder, not at the bottom of it', () {
-    final dealt = modesAt(const LadderPosition(acquisition: Acquisition.graduated, isKnown: true, enrolled: true));
+    final dealt = modesAt(
+      const LadderPosition(acquisition: Acquisition.graduated, isKnown: true, enrolled: true),
+    );
 
     // Reading «no rung» as rung 0 would gate a self-assessed word down to recognition, which proves
     // nothing about a claim.
     expect(dealt, isNot({ExerciseMode.multipleChoice}));
   });
 
-  test('a pair still on the ladder gets FAR options — the session neighbours, not the near-misses', () {
-    final session = LocalPracticeSessionBuilder.build(
-      terms: terms,
-      limit: 20,
-      random: Random(5),
-      sessionId: 'S',
-      enabled: everyMode,
-      ladder: {for (final t in terms) t.id: onLadder},
-    );
+  test(
+    'a pair still on the ladder gets FAR options — the session neighbours, not the near-misses',
+    () {
+      final session = LocalPracticeSessionBuilder.build(
+        terms: terms,
+        limit: 20,
+        random: Random(5),
+        sessionId: 'S',
+        enabled: everyMode,
+        ladder: {for (final t in terms) t.id: onLadder},
+      );
 
-    for (final card in session.cards.where((c) => c.mode == ExerciseMode.multipleChoice)) {
-      expect(card.options, isNotNull);
-      // Every wrong option is another term OF THIS SESSION — unmistakably different, so the card is
-      // answerable by knowing the word and by nothing else.
-      final others = {for (final t in terms) if (t.id != card.termId) t.termText};
-      for (final option in card.options!) {
-        if (option == card.answer) continue;
-        expect(others, contains(option));
+      for (final card in session.cards.where((c) => c.mode == ExerciseMode.multipleChoice)) {
+        expect(card.options, isNotNull);
+        // Every wrong option is another term OF THIS SESSION — unmistakably different, so the card is
+        // answerable by knowing the word and by nothing else.
+        final others = {
+          for (final t in terms)
+            if (t.id != card.termId) t.termText,
+        };
+        for (final option in card.options!) {
+          if (option == card.answer) continue;
+          expect(others, contains(option));
+        }
       }
-    }
-  });
+    },
+  );
 
   test('practice never deals the identity-graded direction — the server refuses to grade it', () {
     // Rung 1 uploads the tapped option's TERM ID as the answer, and `SubmitReviewsHandler` refuses

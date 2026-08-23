@@ -22,13 +22,15 @@ void main() {
     expect(
       file.existsSync(),
       isTrue,
-      reason: 'missing ${file.path} — regenerate it with EXPORT_PRACTICE_FIXTURE=1 (see the header)',
+      reason:
+          'missing ${file.path} — regenerate it with EXPORT_PRACTICE_FIXTURE=1 (see the header)',
     );
   });
 
   final fixture = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
   final enabled = PracticeModes([
-    for (final wire in (fixture['enabled_modes'] as List).cast<String>()) ExerciseMode.fromWire(wire),
+    for (final wire in (fixture['enabled_modes'] as List).cast<String>())
+      ExerciseMode.fromWire(wire),
   ]);
   final cases = (fixture['cases'] as List).cast<Map<String, dynamic>>();
 
@@ -52,26 +54,42 @@ void main() {
 
   /// The gate inputs, derived here exactly as the server's PlayabilityAssessor derived them.
   TermPlayability playabilityOf(Map<String, dynamic> c) => TermPlayability.of(
-        answer: c['answer'] as String,
-        example: c['example'] as String?,
-        exampleTranslation: c['example_translation'] as String?,
-      );
+    answer: c['answer'] as String,
+    example: c['example'] as String?,
+    exampleTranslation: c['example_translation'] as String?,
+  );
 
   test('every gate input is derived the same way', () {
     // One assertion per input, so a drift names the gate it breaks instead of just "wrong mode".
     for (final c in cases) {
       final answer = c['answer'] as String;
       final p = playabilityOf(c);
-      expect(p.answerWordCount, c['word_count'],
-          reason: 'word count drift on "$answer" — this gates word_bank');
-      expect(p.clozeable, c['clozeable'],
-          reason: 'clozeable drift on "$answer" — this gates cloze');
-      expect(p.exampleTokenCount, c['example_token_count'],
-          reason: 'tokenizer drift on "${c['example']}" — this gates scramble length');
-      expect(p.hasExampleTranslation, c['has_example_translation'],
-          reason: 'translation gate drift on "$answer"');
-      expect(p.exampleIsAnswer, c['example_is_answer'],
-          reason: 'example-is-the-term drift on "$answer" — this keeps scramble off word_bank\'s turf');
+      expect(
+        p.answerWordCount,
+        c['word_count'],
+        reason: 'word count drift on "$answer" — this gates word_bank',
+      );
+      expect(
+        p.clozeable,
+        c['clozeable'],
+        reason: 'clozeable drift on "$answer" — this gates cloze',
+      );
+      expect(
+        p.exampleTokenCount,
+        c['example_token_count'],
+        reason: 'tokenizer drift on "${c['example']}" — this gates scramble length',
+      );
+      expect(
+        p.hasExampleTranslation,
+        c['has_example_translation'],
+        reason: 'translation gate drift on "$answer"',
+      );
+      expect(
+        p.exampleIsAnswer,
+        c['example_is_answer'],
+        reason:
+            'example-is-the-term drift on "$answer" — this keeps scramble off word_bank\'s turf',
+      );
     }
   });
 
@@ -90,8 +108,11 @@ void main() {
           if (mode.isGraded && p.supports(mode)) mode.wire,
       ];
 
-      expect(supported, (c['supported_modes'] as List).cast<String>(),
-          reason: 'gate drift on "${c['answer']}" / "${c['example']}"');
+      expect(
+        supported,
+        (c['supported_modes'] as List).cast<String>(),
+        reason: 'gate drift on "${c['answer']}" / "${c['example']}"',
+      );
     }
   });
 
@@ -108,8 +129,11 @@ void main() {
           exampleIsAnswer: c['example_is_answer'] as bool,
         ),
       );
-      expect(picked.wire, c['expected_mode'],
-          reason: 'mode drift on ${c['term_id']} @${c['card_index']} ("${c['answer']}")');
+      expect(
+        picked.wire,
+        c['expected_mode'],
+        reason: 'mode drift on ${c['term_id']} @${c['card_index']} ("${c['answer']}")',
+      );
     }
   });
 
@@ -135,11 +159,13 @@ void main() {
     ]);
     final dealt = <String>{};
     for (var rotation = 0; rotation < 60; rotation++) {
-      dealt.add(PracticeModeSelector.select(
-        enabled: phase1,
-        rotation: rotation,
-        playable: const TermPlayability(answerWordCount: 3, clozeable: true),
-      ).wire);
+      dealt.add(
+        PracticeModeSelector.select(
+          enabled: phase1,
+          rotation: rotation,
+          playable: const TermPlayability(answerWordCount: 3, clozeable: true),
+        ).wire,
+      );
     }
 
     expect(dealt, {'multiple_choice', 'word_bank', 'typing'});

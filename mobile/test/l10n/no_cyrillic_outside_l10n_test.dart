@@ -120,7 +120,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Cyrillic string literals outside lib/l10n/. Route the copy through '
+      reason:
+          'Cyrillic string literals outside lib/l10n/. Route the copy through '
           'AppLocalizations (add the key to lib/l10n/app_ru.arb):\n${offenders.join('\n')}',
     );
 
@@ -131,7 +132,8 @@ void main() {
     expect(
       stale,
       isEmpty,
-      reason: 'Legacy allowlist is stale — these files are clean or gone, remove '
+      reason:
+          'Legacy allowlist is stale — these files are clean or gone, remove '
           'them from _legacyAllowlist (the list must shrink to empty):\n${stale.join('\n')}',
     );
   });

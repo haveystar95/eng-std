@@ -82,9 +82,7 @@ class _Gallery extends StatelessWidget {
                 ],
               ),
               const Expanded(
-                child: TabBarView(
-                  children: [_IntroFrame(), _ListFrame(), _CardFrame()],
-                ),
+                child: TabBarView(children: [_IntroFrame(), _ListFrame(), _CardFrame()]),
               ),
             ],
           ),
@@ -115,7 +113,12 @@ class _IntroFrame extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, AppSpacing.s26),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenH,
+              18,
+              AppSpacing.screenH,
+              AppSpacing.s26,
+            ),
             child: SessionIntroCard(
               card: _introCard,
               autoPronounce: false, // a preview must not talk
@@ -163,14 +166,22 @@ class _ListFrame extends StatelessWidget {
             children: [
               const Text('Слова', style: AppText.screenTitle),
               const SizedBox(height: 2),
-              Text('24 слова · Банк и платежи', style: AppText.translation.copyWith(fontSize: 13, color: AppColors.secondary)),
+              Text(
+                '24 слова · Банк и платежи',
+                style: AppText.translation.copyWith(fontSize: 13, color: AppColors.secondary),
+              ),
               const SizedBox(height: AppSpacing.s16),
             ],
           ),
         ),
         for (final (term, translation, step) in rows)
           _PreviewRow(term: term, translation: translation, step: step),
-        _PreviewRow(term: 'invoice', translation: 'счёт', step: null, knownLabel: l.ladderKnownDash),
+        _PreviewRow(
+          term: 'invoice',
+          translation: 'счёт',
+          step: null,
+          knownLabel: l.ladderKnownDash,
+        ),
       ],
     );
   }
@@ -199,23 +210,31 @@ class _PreviewRow extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenH, AppSpacing.wordRowPadV, AppSpacing.screenH, AppSpacing.wordRowPadV),
+          AppSpacing.screenH,
+          AppSpacing.wordRowPadV,
+          AppSpacing.screenH,
+          AppSpacing.wordRowPadV,
+        ),
         child: Row(
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(term,
-                      style: known
-                          ? AppText.termInList.copyWith(color: AppColors.tertiary)
-                          : AppText.termInList),
+                  Text(
+                    term,
+                    style: known
+                        ? AppText.termInList.copyWith(color: AppColors.tertiary)
+                        : AppText.termInList,
+                  ),
                   const SizedBox(height: 3),
-                  Text(translation,
-                      style: AppText.translation.copyWith(
-                        fontSize: 13,
-                        color: known ? AppColors.tertiary : null,
-                      )),
+                  Text(
+                    translation,
+                    style: AppText.translation.copyWith(
+                      fontSize: 13,
+                      color: known ? AppColors.tertiary : null,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -242,14 +261,16 @@ class _CardFrame extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.screenH),
         child: PrimaryButton(
           label: 'Открыть карточку слова',
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => WordCardScreen(
-              subject: WordCardSubject.fromWord(_fillOut),
-              mode: WordCardMode.folder,
-              onSpeak: () {},
-              onTrain: () {},
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => WordCardScreen(
+                subject: WordCardSubject.fromWord(_fillOut),
+                mode: WordCardMode.folder,
+                onSpeak: () {},
+                onTrain: () {},
+              ),
             ),
-          )),
+          ),
         ),
       ),
     );

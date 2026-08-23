@@ -6,17 +6,17 @@ import 'package:eng_std/data/models.dart';
 /// client reads `cefr`, falling back to `level`, so it renders whichever key the store feed ships.
 void main() {
   Map<String, dynamic> base() => {
-        'id': 'c1',
-        'title': 'Собеседование',
-        'description': 'Вопросы рекрутера',
-        'topic': 'Работа и карьера',
-        'source_lang': 'ru',
-        'target_lang': 'en',
-        'is_premium': true,
-        'is_subscribed': false,
-        'items_count': 22,
-        'image_url': 'https://x/i.jpg',
-      };
+    'id': 'c1',
+    'title': 'Собеседование',
+    'description': 'Вопросы рекрутера',
+    'topic': 'Работа и карьера',
+    'source_lang': 'ru',
+    'target_lang': 'en',
+    'is_premium': true,
+    'is_subscribed': false,
+    'items_count': 22,
+    'image_url': 'https://x/i.jpg',
+  };
 
   test('parses the core fields + topic', () {
     final c = StoreCollection.fromJson(base());
@@ -44,7 +44,12 @@ void main() {
   });
 
   test('missing optional fields degrade to safe defaults', () {
-    final c = StoreCollection.fromJson({'id': 'c2', 'title': 'X', 'source_lang': 'ru', 'target_lang': 'en'});
+    final c = StoreCollection.fromJson({
+      'id': 'c2',
+      'title': 'X',
+      'source_lang': 'ru',
+      'target_lang': 'en',
+    });
     expect(c.itemsCount, 0);
     expect(c.isPremium, isFalse);
     expect(c.topic, isNull);

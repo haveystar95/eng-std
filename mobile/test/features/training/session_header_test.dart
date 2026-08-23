@@ -43,7 +43,9 @@ void main() {
       // never head the intro card «Узнавание».
       expect(
         sessionHeaderFor(
-            mode: ExerciseMode.intro, ladderStep: LearningLadder.stepRecognitionForward),
+          mode: ExerciseMode.intro,
+          ladderStep: LearningLadder.stepRecognitionForward,
+        ),
         SessionHeader.intro,
       );
     });

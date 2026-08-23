@@ -29,20 +29,20 @@ import 'package:flutter_test/flutter_test.dart';
 /// The server's half of the same story is `backend2/tests/Feature/Learning/CataloguePracticeTest.php`.
 void main() {
   Term term(String id, String text, {String translation = 'перевод'}) => Term(
-        id: id,
-        termText: text,
-        type: 'word',
-        transcription: null,
-        translation: translation,
-        // Long enough to scramble and to dictate, and it CONTAINS the term, so cloze is playable
-        // too: any trainer missing from a session below is the SELECTION's doing, never the data's.
-        example: 'Please find the $text before tonight.',
-        exampleTranslation: 'Пожалуйста, найдите это до вечера.',
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 20),
-      );
+    id: id,
+    termText: text,
+    type: 'word',
+    transcription: null,
+    translation: translation,
+    // Long enough to scramble and to dictate, and it CONTAINS the term, so cloze is playable
+    // too: any trainer missing from a session below is the SELECTION's doing, never the data's.
+    example: 'Please find the $text before tonight.',
+    exampleTranslation: 'Пожалуйста, найдите это до вечера.',
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 20),
+  );
 
   final terms = [
     term('01KZETBAA50EMHCN6SP80T8DHC', 'reservation', translation: 'бронь'),
@@ -78,23 +78,23 @@ void main() {
     Map<String, LadderPosition> ladder, {
     int seed = 3,
     int limit = 40,
-  }) =>
-      LocalPracticeSessionBuilder.build(
-        terms: deck,
-        limit: limit,
-        random: Random(seed),
-        sessionId: 'S',
-        enabled: everyMode,
-        ladder: ladder,
-      );
+  }) => LocalPracticeSessionBuilder.build(
+    terms: deck,
+    limit: limit,
+    random: Random(seed),
+    sessionId: 'S',
+    enabled: everyMode,
+    ladder: ladder,
+  );
 
   test('an untriaged collection is drillable — the session is no longer empty', () {
     // Nothing enrolled, nothing ever shown: the state a freshly generated topic is in.
     final session = sessionOver(terms, {for (final t in terms) t.id: LadderPosition.untouched});
 
     expect(session.cards, isNotEmpty);
-    expect(session.cards.map((c) => c.termId).toSet(), {for (final t in terms) t.id},
-        reason: 'every word of the collection is reachable');
+    expect(session.cards.map((c) => c.termId).toSet(), {
+      for (final t in terms) t.id,
+    }, reason: 'every word of the collection is reachable');
   });
 
   test('a word outside the pool is dealt the easy trainers only, over many seeds', () {
@@ -104,15 +104,18 @@ void main() {
     final dealt = <ExerciseMode>{};
     for (var seed = 0; seed < 12; seed++) {
       dealt.addAll(
-        sessionOver(terms, {for (final t in terms) t.id: LadderPosition.untouched}, seed: seed)
-            .cards
-            .map((c) => c.mode),
+        sessionOver(terms, {
+          for (final t in terms) t.id: LadderPosition.untouched,
+        }, seed: seed).cards.map((c) => c.mode),
       );
     }
 
     for (final mode in withheld) {
-      expect(dealt, isNot(contains(mode)),
-          reason: '$mode asks a word nobody has studied to produce it from memory');
+      expect(
+        dealt,
+        isNot(contains(mode)),
+        reason: '$mode asks a word nobody has studied to produce it from memory',
+      );
     }
     expect(dealt, isNot(contains(ExerciseMode.intro)), reason: 'practice introduces nothing');
     // …and it is not narrowed down to one trainer either: choice AND assembly, as the owner asked.
@@ -137,11 +140,13 @@ void main() {
     // «dictation was never dealt» cannot pass by accident.
     final deck = [
       for (var i = 0; i < 24; i++)
-        term('01KZETBB${i.toString().padLeft(2, '0')}0EMHCN6SP80T8DH',
-            i.isEven ? 'towel$i' : 'front desk$i',
-            // Distinct translations: a choice card's near-miss distractors are filtered by meaning,
-            // and a deck all meaning the same thing would leave one with no wrong option.
-            translation: 'перевод$i'),
+        term(
+          '01KZETBB${i.toString().padLeft(2, '0')}0EMHCN6SP80T8DH',
+          i.isEven ? 'towel$i' : 'front desk$i',
+          // Distinct translations: a choice card's near-miss distractors are filtered by meaning,
+          // and a deck all meaning the same thing would leave one with no wrong option.
+          translation: 'перевод$i',
+        ),
     ];
     final studied = {for (var i = 0; i < deck.length; i += 2) deck[i].id};
     final ladder = {
@@ -154,14 +159,20 @@ void main() {
         final enrolled = studied.contains(card.termId);
         if (enrolled) dealtToPool.add(card.mode);
         if (!enrolled) {
-          expect(withheld, isNot(contains(card.mode)),
-              reason: 'a catalogue word was dealt ${card.mode}');
+          expect(
+            withheld,
+            isNot(contains(card.mode)),
+            reason: 'a catalogue word was dealt ${card.mode}',
+          );
         }
       }
     }
 
-    expect(dealtToPool, containsAll(withheld),
-        reason: 'missing ${withheld.toSet().difference(dealtToPool)} — the cap leaked onto the pool');
+    expect(
+      dealtToPool,
+      containsAll(withheld),
+      reason: 'missing ${withheld.toSet().difference(dealtToPool)} — the cap leaked onto the pool',
+    );
   });
 
   test('the studied words lead the session; the catalogue fills the tail', () {
@@ -183,7 +194,11 @@ void main() {
           seenCatalogue = true;
           continue;
         }
-        expect(seenCatalogue, isFalse, reason: 'a pool word came after a catalogue one (seed $seed)');
+        expect(
+          seenCatalogue,
+          isFalse,
+          reason: 'a pool word came after a catalogue one (seed $seed)',
+        );
       }
     }
   });
@@ -200,30 +215,38 @@ void main() {
       for (final t in terms) t.id: studied.contains(t.id) ? onLadder : LadderPosition.untouched,
     }, limit: 2).cards;
 
-    expect(cards.map((c) => c.termId).toSet(), studied,
-        reason: 'the catalogue never crowds out a word being studied');
+    expect(
+      cards.map((c) => c.termId).toSet(),
+      studied,
+      reason: 'the catalogue never crowds out a word being studied',
+    );
   });
 
-  test('an ENROLLED rung-0 word is still refused — its first meeting belongs to a study session', () {
-    // The distinction the whole change rests on: enrolled-and-unmet is a word the trainer OWES an
-    // intro, and practice cannot pay it (no exposure, no quota). Un-enrolled is a word nothing is
-    // owed to, so the drill is the only meeting on offer.
-    const enrolledUnmet = LadderPosition(acquisition: Acquisition.isNew, enrolled: true);
-    expect(enrolledUnmet.admitsPractice, isFalse);
-    expect(LadderPosition.untouched.admitsPractice, isTrue);
+  test(
+    'an ENROLLED rung-0 word is still refused — its first meeting belongs to a study session',
+    () {
+      // The distinction the whole change rests on: enrolled-and-unmet is a word the trainer OWES an
+      // intro, and practice cannot pay it (no exposure, no quota). Un-enrolled is a word nothing is
+      // owed to, so the drill is the only meeting on offer.
+      const enrolledUnmet = LadderPosition(acquisition: Acquisition.isNew, enrolled: true);
+      expect(enrolledUnmet.admitsPractice, isFalse);
+      expect(LadderPosition.untouched.admitsPractice, isTrue);
 
-    final cards = sessionOver(terms, {
-      terms.first.id: enrolledUnmet,
-      for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
-    }).cards;
+      final cards = sessionOver(terms, {
+        terms.first.id: enrolledUnmet,
+        for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
+      }).cards;
 
-    expect(cards.map((c) => c.termId), isNot(contains(terms.first.id)));
-    expect(cards, isNotEmpty, reason: 'the rest of the collection still plays');
-  });
+      expect(cards.map((c) => c.termId), isNot(contains(terms.first.id)));
+      expect(cards, isNotEmpty, reason: 'the rest of the collection still plays');
+    },
+  );
 
   test('a choice card for a catalogue word is never a one-option card', () {
     for (var seed = 0; seed < 8; seed++) {
-      final session = sessionOver(terms, {for (final t in terms) t.id: LadderPosition.untouched}, seed: seed);
+      final session = sessionOver(terms, {
+        for (final t in terms) t.id: LadderPosition.untouched,
+      }, seed: seed);
       for (final card in session.cards) {
         if (card.options == null) continue;
         expect(card.options!.length, greaterThanOrEqualTo(LocalPracticeSessionBuilder.minOptions));
@@ -239,16 +262,26 @@ void main() {
     test('building the session enrols nobody — «Мои слова» does not grow', () async {
       final t0 = DateTime.utc(2026, 8, 20, 9);
       await db.applyDelta(
-        collectionUpserts: [CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Отель'))],
+        collectionUpserts: [
+          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Отель')),
+        ],
         termUpserts: [
           for (final t in terms)
             TermsCompanion.insert(
-                id: t.id, updatedAt: t0, termText: Value(t.termText), translation: Value(t.translation)),
+              id: t.id,
+              updatedAt: t0,
+              termText: Value(t.termText),
+              translation: Value(t.translation),
+            ),
         ],
         itemUpserts: [
           for (var i = 0; i < terms.length; i++)
             CollectionItemsCompanion.insert(
-                collectionId: 'c1', termId: terms[i].id, updatedAt: t0, position: Value(i)),
+              collectionId: 'c1',
+              termId: terms[i].id,
+              updatedAt: t0,
+              position: Value(i),
+            ),
         ],
       );
 

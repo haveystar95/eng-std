@@ -17,21 +17,17 @@ class RecentSearch {
   final String? cefr;
 
   Map<String, dynamic> toJson() => {
-        'w': word,
-        if ((translation ?? '').isNotEmpty) 't': translation,
-        if ((cefr ?? '').isNotEmpty) 'c': cefr,
-      };
+    'w': word,
+    if ((translation ?? '').isNotEmpty) 't': translation,
+    if ((cefr ?? '').isNotEmpty) 'c': cefr,
+  };
 
   static RecentSearch? fromJson(Object? raw) {
     if (raw is! Map) return null;
     final word = (raw['w'] as String?)?.trim() ?? '';
     if (word.isEmpty) return null;
 
-    return RecentSearch(
-      word: word,
-      translation: raw['t'] as String?,
-      cefr: raw['c'] as String?,
-    );
+    return RecentSearch(word: word, translation: raw['t'] as String?, cefr: raw['c'] as String?);
   }
 
   /// Is this line worth showing at all?
@@ -108,9 +104,10 @@ class SearchHistory {
 
     final existing = await load();
     final kept = existing.where((r) => r.word.toLowerCase() != word.toLowerCase());
-    final next = [RecentSearch(word: word, translation: entry.translation, cefr: entry.cefr), ...kept]
-        .take(limit)
-        .toList(growable: false);
+    final next = [
+      RecentSearch(word: word, translation: entry.translation, cefr: entry.cefr),
+      ...kept,
+    ].take(limit).toList(growable: false);
 
     await _db.setMeta(metaKey, jsonEncode([for (final r in next) r.toJson()]));
 

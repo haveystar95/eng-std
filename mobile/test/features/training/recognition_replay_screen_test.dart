@@ -15,12 +15,12 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// rung it echoes back is half of what QA-9 is about, so the test needs to see it.
 class _RecordingReviewSync extends ReviewSync {
   _RecordingReviewSync(Ref ref)
-      : super(
-          ref.read(apiClientProvider),
-          ref.read(reviewQueueProvider),
-          ref.read(seqCounterProvider),
-          ref,
-        );
+    : super(
+        ref.read(apiClientProvider),
+        ref.read(reviewQueueProvider),
+        ref.read(seqCounterProvider),
+        ref,
+      );
 
   final List<({String termId, int? ladderStep})> uploaded = [];
 
@@ -67,55 +67,57 @@ void main() {
 
   /// Rung 1 — the TERM is the prompt, the options are translations, graded by identity.
   SessionCard forward() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: term,
-        answer: termId,
-        options: const ['Где я могу найти корм для собак?', 'без злаков'],
-        optionIds: const [termId, otherId],
-        ladderStep: 1,
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: term,
+    answer: termId,
+    options: const ['Где я могу найти корм для собак?', 'без злаков'],
+    optionIds: const [termId, otherId],
+    ladderStep: 1,
+  );
 
   /// Rung 2 — the reverse direction, graded as text. Distinguishable on screen by its options.
   SessionCard reverse() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: 'Где я могу найти корм для собак?',
-        answer: term,
-        options: const [term, 'grain-free'],
-        ladderStep: 2,
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: 'Где я могу найти корм для собак?',
+    answer: term,
+    options: const [term, 'grain-free'],
+    ladderStep: 2,
+  );
 
   SessionCard filler() => SessionCard(
-        termId: otherId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'без злаков',
-        answer: 'grain-free',
-        options: const ['grain-free', 'canned food'],
-        ladderStep: 2,
-      );
+    termId: otherId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'без злаков',
+    answer: 'grain-free',
+    options: const ['grain-free', 'canned food'],
+    ladderStep: 2,
+  );
 
   late _RecordingReviewSync sync;
 
   Widget host() => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) => db = AppDatabase.forTesting(NativeDatabase.memory())),
-          reviewSyncProvider.overrideWith((ref) => sync = _RecordingReviewSync(ref)),
-          studySessionProvider.overrideWith((ref, args) async => StudySession(
-                sessionId: args.sessionId,
-                cards: [forward(), filler(), reverse()],
-              )),
-        ],
-        child: const MaterialApp(
-          locale: Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: [Locale('ru')],
-          home: SessionScreen(title: 'Корм для собаки'),
-        ),
-      );
+    overrides: [
+      appDatabaseProvider.overrideWith(
+        (ref) => db = AppDatabase.forTesting(NativeDatabase.memory()),
+      ),
+      reviewSyncProvider.overrideWith((ref) => sync = _RecordingReviewSync(ref)),
+      studySessionProvider.overrideWith(
+        (ref, args) async =>
+            StudySession(sessionId: args.sessionId, cards: [forward(), filler(), reverse()]),
+      ),
+    ],
+    child: const MaterialApp(
+      locale: Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('ru')],
+      home: SessionScreen(title: 'Корм для собаки'),
+    ),
+  );
 
   /// Answer the card on screen by tapping [option], then advance past the feedback.
   Future<void> answer(WidgetTester tester, String option) async {

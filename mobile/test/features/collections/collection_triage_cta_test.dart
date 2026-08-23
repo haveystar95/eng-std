@@ -16,16 +16,21 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// lives for exactly as long as the collection holds a word nobody has swiped.
 void main() {
   WordCollection collection() => WordCollection(
-        id: 'c1',
-        title: 'Собеседование',
-        source: 'curated',
-        type: 'custom',
-        wordsCount: 40,
-        sourceLang: 'ru',
-        targetLang: 'en',
-      );
+    id: 'c1',
+    title: 'Собеседование',
+    source: 'curated',
+    type: 'custom',
+    wordsCount: 40,
+    sourceLang: 'ru',
+    targetLang: 'en',
+  );
 
-  final word = Word(termId: 't1', term: 'cover letter', translation: 'сопроводительное', type: 'phrase');
+  final word = Word(
+    termId: 't1',
+    term: 'cover letter',
+    translation: 'сопроводительное',
+    type: 'phrase',
+  );
 
   Future<void> pump(
     WidgetTester tester, {
@@ -34,38 +39,53 @@ void main() {
     int due = 0,
     int newRemaining = 20,
   }) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authControllerProvider.overrideWith(() => _FakeAuth()),
-        connectivityProvider.overrideWith((ref) => Stream.value(true)),
-        collectionsProvider.overrideWith((ref) => Stream.value([collection()])),
-        collectionWordsProvider('c1').overrideWith((ref) => Stream.value([word])),
-        collectionDensityProvider('c1').overrideWith(
-            (ref) => Stream.value(const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 1))),
-        collectionsProgressProvider.overrideWith((ref) => Stream.value({
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(() => _FakeAuth()),
+          connectivityProvider.overrideWith((ref) => Stream.value(true)),
+          collectionsProvider.overrideWith((ref) => Stream.value([collection()])),
+          collectionWordsProvider('c1').overrideWith((ref) => Stream.value([word])),
+          collectionDensityProvider('c1').overrideWith(
+            (ref) =>
+                Stream.value(const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 1)),
+          ),
+          collectionsProgressProvider.overrideWith(
+            (ref) => Stream.value({
               'c1': CollectionProgress(
-                  collectionId: 'c1', total: 40, learned: 0, mastered: 0, due: due),
-            })),
-        untriagedByCollectionProvider.overrideWith((ref) => Stream.value({'c1': untriaged})),
-        learnableByCollectionProvider.overrideWith((ref) => Stream.value({'c1': learnable})),
-        statsProvider.overrideWith((ref) => Stream.value(Stats(
-              totalWords: 40,
-              learned: 0,
-              mastered: 0,
-              dueToday: due,
-              reviewsTotal: 0,
-              streakDays: 0,
-              newGoal: 20,
-              newRemaining: newRemaining,
-            ))),
-      ],
-      child: const MaterialApp(
-        locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: [Locale('ru')],
-        home: CollectionDetailScreen(collectionId: 'c1', title: 'Собеседование'),
+                collectionId: 'c1',
+                total: 40,
+                learned: 0,
+                mastered: 0,
+                due: due,
+              ),
+            }),
+          ),
+          untriagedByCollectionProvider.overrideWith((ref) => Stream.value({'c1': untriaged})),
+          learnableByCollectionProvider.overrideWith((ref) => Stream.value({'c1': learnable})),
+          statsProvider.overrideWith(
+            (ref) => Stream.value(
+              Stats(
+                totalWords: 40,
+                learned: 0,
+                mastered: 0,
+                dueToday: due,
+                reviewsTotal: 0,
+                streakDays: 0,
+                newGoal: 20,
+                newRemaining: newRemaining,
+              ),
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('ru')],
+          home: CollectionDetailScreen(collectionId: 'c1', title: 'Собеседование'),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
   }
 
@@ -83,8 +103,9 @@ void main() {
     expect(find.text('Разобрать 37'), findsOneWidget);
   });
 
-  testWidgets('…and it survives a due count too — reviews outrank it, they do not replace it',
-      (tester) async {
+  testWidgets('…and it survives a due count too — reviews outrank it, they do not replace it', (
+    tester,
+  ) async {
     await pump(tester, untriaged: 37, learnable: 3, due: 12);
 
     expect(find.text('Разобрать 37'), findsOneWidget);
@@ -107,8 +128,8 @@ void main() {
 class _FakeAuth extends AuthController {
   @override
   Future<AppUser?> build() async => AppUser(
-        id: 'u1',
-        name: 'D',
-        profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
-      );
+    id: 'u1',
+    name: 'D',
+    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
+  );
 }

@@ -10,28 +10,32 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// shows enough to be recognised, and the way on is a single terracotta line.
 Future<int> _pump(WidgetTester tester, WordCardSubject subject) async {
   var opened = 0;
-  await tester.pumpWidget(MaterialApp(
-    locale: const Locale('ru'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: const [Locale('ru')],
-    home: Scaffold(
-      body: SearchResultCard(subject: subject, onOpen: () => opened++),
+  await tester.pumpWidget(
+    MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru')],
+      home: Scaffold(
+        body: SearchResultCard(subject: subject, onOpen: () => opened++),
+      ),
     ),
-  ));
+  );
   await tester.pump();
 
   return opened;
 }
 
-WordCardSubject _subject() => WordCardSubject.fromHit(const SearchHit(
-      termId: '01KZETAAA50EMHCN6SP80T8DHC',
-      text: 'invoice',
-      type: 'word',
-      transcription: 'ˈɪnvɔɪs',
-      translation: 'счёт',
-      description: 'A paper that says how much money you must pay for something.',
-      cefr: 'B1',
-    ));
+WordCardSubject _subject() => WordCardSubject.fromHit(
+  const SearchHit(
+    termId: '01KZETAAA50EMHCN6SP80T8DHC',
+    text: 'invoice',
+    type: 'word',
+    transcription: 'ˈɪnvɔɪs',
+    translation: 'счёт',
+    description: 'A paper that says how much money you must pay for something.',
+    cefr: 'B1',
+  ),
+);
 
 void main() {
   testWidgets('shows the word, its transcription, translation and level', (tester) async {
@@ -53,12 +57,16 @@ void main() {
 
   testWidgets('the terracotta line opens the card — and so does the leaf itself', (tester) async {
     var opened = 0;
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: Scaffold(body: SearchResultCard(subject: _subject(), onOpen: () => opened++)),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: Scaffold(
+          body: SearchResultCard(subject: _subject(), onOpen: () => opened++),
+        ),
+      ),
+    );
     await tester.pump();
 
     await tester.tap(find.text('Открыть карточку'));
@@ -70,15 +78,19 @@ void main() {
     expect(opened, 2);
   });
 
-  testWidgets('a word with no photo still draws its plate — the leaf never collapses', (tester) async {
+  testWidgets('a word with no photo still draws its plate — the leaf never collapses', (
+    tester,
+  ) async {
     await _pump(tester, _subject());
 
     // 88 pt of warm plate, exactly where a photo would be. The composition of кадр 03 does not
     // depend on whether the catalogue happens to have a picture for this word.
-    final thumb = tester.widget<SizedBox>(find.descendant(
-      of: find.byType(SearchResultCard),
-      matching: find.byWidgetPredicate((w) => w is SizedBox && w.width == 88 && w.height == 88),
-    ));
+    final thumb = tester.widget<SizedBox>(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.byWidgetPredicate((w) => w is SizedBox && w.width == 88 && w.height == 88),
+      ),
+    );
     expect(thumb.width, 88);
   });
 }

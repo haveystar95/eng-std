@@ -21,7 +21,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// them: typing is free and may run on a debounce, the model costs money and runs ONLY on a tap.
 class _SpyApi implements ApiClient {
   _SpyApi({this.hits = const [], LookupOutcome? outcome, this.holdLookup = false, this.hint})
-      : outcome = outcome ?? const LookupOutcome(dailyCap: 5);
+    : outcome = outcome ?? const LookupOutcome(dailyCap: 5);
 
   final List<SearchHit> hits;
   final LookupOutcome outcome;
@@ -37,7 +37,12 @@ class _SpyApi implements ApiClient {
   int lookupCalls = 0;
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async {
     searchCalls++;
 
     return hits;
@@ -72,19 +77,21 @@ AppDatabase _open() {
 
 Future<void> _pump(WidgetTester tester, _SpyApi api, {AppDatabase? db}) async {
   final database = db ?? _open();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(database),
-      apiClientProvider.overrideWithValue(api),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: const SearchScreen(),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(database),
+        apiClientProvider.overrideWithValue(api),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: const SearchScreen(),
+      ),
     ),
-  ));
+  );
   // Three pumps: the first frame, the lazily-read dictionary, the history read.
   await tester.pump();
   await tester.pump();
@@ -107,14 +114,14 @@ Future<void> _submit(WidgetTester tester, String text) async {
 }
 
 SearchHit _hit({String text = 'invoice', String? translation = 'счёт'}) => SearchHit(
-      termId: 'ID-$text',
-      text: text,
-      type: 'word',
-      transcription: 'ˈɪnvɔɪs',
-      translation: translation,
-      description: 'A paper that says how much money you must pay.',
-      cefr: 'B1',
-    );
+  termId: 'ID-$text',
+  text: text,
+  type: 'word',
+  transcription: 'ˈɪnvɔɪs',
+  translation: translation,
+  description: 'A paper that says how much money you must pay.',
+  cefr: 'B1',
+);
 
 void main() {
   group('кадр 01 · пустой поиск', () {
@@ -128,8 +135,9 @@ void main() {
       expect(find.widgetWithText(DictionaryRow, 'hollow'), findsOneWidget);
     });
 
-    testWidgets('«Вы искали» lists what was searched before, and re-searching is one tap',
-        (tester) async {
+    testWidgets('«Вы искали» lists what was searched before, and re-searching is one tap', (
+      tester,
+    ) async {
       final api = _SpyApi(hits: [_hit()]);
       final db = _open();
       await db.setMeta(SearchHistory.metaKey, '[{"w":"hollow","t":"пустой","c":"B2"}]');
@@ -143,7 +151,11 @@ void main() {
       await tester.tap(find.text('hollow'));
       await tester.pump();
       await tester.pump();
-      expect(api.searchCalls, 1, reason: 'a recent line re-runs the search, it does not just fill the field');
+      expect(
+        api.searchCalls,
+        1,
+        reason: 'a recent line re-runs the search, it does not just fill the field',
+      );
     });
 
     testWidgets('typing a word is not yet a search worth remembering', (tester) async {
@@ -169,8 +181,9 @@ void main() {
   });
 
   group('кадр 02 · набор', () {
-    testWidgets('the words are ROWS now, not pills — and each carries its translation',
-        (tester) async {
+    testWidgets('the words are ROWS now, not pills — and each carries its translation', (
+      tester,
+    ) async {
       await _pump(tester, _SpyApi(hits: [_hit()]));
       await _type(tester, 'invoice');
 
@@ -216,10 +229,15 @@ void main() {
     });
 
     testWidgets('the other matches are demoted to flat lines under «Похожие»', (tester) async {
-      await _pump(tester, _SpyApi(hits: [
-        _hit(),
-        _hit(text: 'invoicing', translation: 'выставление счетов'),
-      ]));
+      await _pump(
+        tester,
+        _SpyApi(
+          hits: [
+            _hit(),
+            _hit(text: 'invoicing', translation: 'выставление счетов'),
+          ],
+        ),
+      );
       await _submit(tester, 'invoice');
 
       expect(find.byType(SearchResultCard), findsOneWidget);
@@ -266,7 +284,12 @@ void main() {
     testWidgets('a near miss is «Похожие», never the answer', (tester) async {
       // Deliberately not fuzzy: «invoicing» is not an answer to «invoic», and presenting it as one
       // would stop the learner generating the word they actually meant.
-      await _pump(tester, _SpyApi(hits: [_hit(text: 'invoicing', translation: 'выставление счетов')]));
+      await _pump(
+        tester,
+        _SpyApi(
+          hits: [_hit(text: 'invoicing', translation: 'выставление счетов')],
+        ),
+      );
       await _submit(tester, 'invoic');
 
       expect(find.byType(SearchResultCard), findsNothing);
@@ -297,8 +320,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('the translation is NOT being fetched — it stands ticked from the first frame',
-        (tester) async {
+    testWidgets('the translation is NOT being fetched — it stands ticked from the first frame', (
+      tester,
+    ) async {
       // It arrived free, before the button was pressed. What the call is paying for is the three
       // rows under it, which is exactly what the button promised.
       final api = _SpyApi(hits: const [], holdLookup: true, hint: 'возмещение');

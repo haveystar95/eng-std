@@ -70,10 +70,8 @@ class _TriageScreenState extends ConsumerState<TriageScreen> {
         body: SafeArea(
           child: deck.when(
             loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
-            error: (e, _) => _CenteredState(
-              title: widget.title,
-              heading: l.triageLoadError(e.toString()),
-            ),
+            error: (e, _) =>
+                _CenteredState(title: widget.title, heading: l.triageLoadError(e.toString())),
             data: (deck) => deck.cards.isEmpty
                 ? _AllTriaged(title: widget.title, remaining: deck.remaining)
                 : _Deck(
@@ -292,7 +290,9 @@ class _DeckState extends ConsumerState<_Deck>
     final card = _card;
     final latency = _latencyMs();
 
-    ref.read(triageSyncProvider).record(
+    ref
+        .read(triageSyncProvider)
+        .record(
           termId: card.termId,
           verdict: verdict,
           collectionId: widget.collectionId,
@@ -429,7 +429,11 @@ class _DeckState extends ConsumerState<_Deck>
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, AppSpacing.s16),
+        AppSpacing.screenH,
+        AppSpacing.s8,
+        AppSpacing.screenH,
+        AppSpacing.s16,
+      ),
       child: Column(
         children: [
           _TriageHeader(title: widget.title, current: (_pos + 1).clamp(1, total), total: total),
@@ -534,10 +538,7 @@ class _UndoButton extends StatelessWidget {
         child: Container(
           height: AppSpacing.minTap,
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: AppText.transcription.copyWith(color: color, fontSize: 12.5),
-          ),
+          child: Text(label, style: AppText.transcription.copyWith(color: color, fontSize: 12.5)),
         ),
       ),
     );
@@ -623,7 +624,9 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
           Positioned.fill(child: child),
           if (darken > 0)
             Positioned.fill(
-              child: IgnorePointer(child: ColoredBox(color: AppColors.ink.withValues(alpha: darken))),
+              child: IgnorePointer(
+                child: ColoredBox(color: AppColors.ink.withValues(alpha: darken)),
+              ),
             ),
         ],
       ),
@@ -691,10 +694,7 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    card.translation,
-                    style: AppText.translation.copyWith(fontSize: 16),
-                  ),
+                  Text(card.translation, style: AppText.translation.copyWith(fontSize: 16)),
                   if (card.example != null && card.example!.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     const Divider(color: AppColors.hairline, height: 1, thickness: 1),
@@ -850,7 +850,11 @@ class _CenteredState extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, AppSpacing.s16),
+        AppSpacing.screenH,
+        AppSpacing.s8,
+        AppSpacing.screenH,
+        AppSpacing.s16,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -863,14 +867,13 @@ class _CenteredState extends StatelessWidget {
                   Text(heading, textAlign: TextAlign.center, style: AppText.stepTitle),
                   if (body != null) ...[
                     const SizedBox(height: AppSpacing.s12),
-                    Text(body!,
-                        textAlign: TextAlign.center,
-                        style: AppText.translation.copyWith(color: AppColors.secondary)),
+                    Text(
+                      body!,
+                      textAlign: TextAlign.center,
+                      style: AppText.translation.copyWith(color: AppColors.secondary),
+                    ),
                   ],
-                  if (extra != null) ...[
-                    const SizedBox(height: AppSpacing.s22),
-                    extra!,
-                  ],
+                  if (extra != null) ...[const SizedBox(height: AppSpacing.s22), extra!],
                   const SizedBox(height: AppSpacing.s26),
                   PrimaryButton(
                     label: l.triageDone,
@@ -927,8 +930,13 @@ class _TriageSummary extends StatelessWidget {
 class _TallyDivider extends StatelessWidget {
   const _TallyDivider();
   @override
-  Widget build(BuildContext context) =>
-      const VerticalDivider(color: AppColors.hairline, width: 1, thickness: 1, indent: 4, endIndent: 4);
+  Widget build(BuildContext context) => const VerticalDivider(
+    color: AppColors.hairline,
+    width: 1,
+    thickness: 1,
+    indent: 4,
+    endIndent: 4,
+  );
 }
 
 class _Tally extends StatelessWidget {

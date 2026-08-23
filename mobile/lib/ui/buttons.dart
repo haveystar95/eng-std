@@ -58,7 +58,10 @@ class PrimaryButton extends StatelessWidget {
           onTap: on ? onPressed : null,
           child: Container(
             constraints: BoxConstraints(minHeight: minHeight),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s22,
+              vertical: AppSpacing.s12,
+            ),
             alignment: Alignment.center,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -69,9 +72,7 @@ class PrimaryButton extends StatelessWidget {
                   Text(
                     subtitle!,
                     textAlign: TextAlign.center,
-                    style: AppText.primaryButtonSub.copyWith(
-                      color: on ? null : AppColors.tertiary,
-                    ),
+                    style: AppText.primaryButtonSub.copyWith(color: on ? null : AppColors.tertiary),
                   ),
                 ],
               ],
@@ -114,7 +115,10 @@ class QuietButton extends StatelessWidget {
           onTap: onPressed,
           child: Container(
             constraints: BoxConstraints(minHeight: minHeight),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s16,
+              vertical: AppSpacing.s8,
+            ),
             alignment: Alignment.center,
             child: Row(
               mainAxisSize: MainAxisSize.min,

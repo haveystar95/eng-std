@@ -30,27 +30,27 @@ void main() {
   tearDown(() => db.close());
 
   Widget host() => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          studySessionProvider.overrideWith((ref, args) async {
-            builds++;
-            final failure = failWith;
-            if (failure != null) throw failure;
-            return const StudySession(sessionId: 's', cards: []);
-          }),
-        ],
-        child: const MaterialApp(
-          locale: Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: [Locale('ru')],
-          home: SessionScreen(title: 'Тест', practice: true),
-        ),
-      );
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      studySessionProvider.overrideWith((ref, args) async {
+        builds++;
+        final failure = failWith;
+        if (failure != null) throw failure;
+        return const StudySession(sessionId: 's', cards: []);
+      }),
+    ],
+    child: const MaterialApp(
+      locale: Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('ru')],
+      home: SessionScreen(title: 'Тест', practice: true),
+    ),
+  );
 
   DioException offline() => DioException(
-        requestOptions: RequestOptions(path: '/study/sessions'),
-        type: DioExceptionType.connectionError,
-      );
+    requestOptions: RequestOptions(path: '/study/sessions'),
+    type: DioExceptionType.connectionError,
+  );
 
   testWidgets('no network shows «Нет соединения», not a DioException dump', (tester) async {
     failWith = offline();

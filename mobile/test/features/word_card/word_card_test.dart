@@ -54,30 +54,33 @@ Future<void> _pump(
 }) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-      apiClientProvider.overrideWithValue(api ?? _Api()),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: WordCardScreen(
-        subject: subject,
-        mode: mode,
-        onSpeak: () {},
-        onTrain: onTrain,
-        onEnroll: onEnroll,
-        onUnenroll: onUnenroll,
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        apiClientProvider.overrideWithValue(api ?? _Api()),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: WordCardScreen(
+          subject: subject,
+          mode: mode,
+          onSpeak: () {},
+          onTrain: onTrain,
+          onEnroll: onEnroll,
+          onUnenroll: onUnenroll,
+        ),
       ),
     ),
-  ));
+  );
   await tester.pump();
 }
 
-WordCardSubject _fillOut({String? imageUrl, List<SavedFolder> folders = const []}) => WordCardSubject(
+WordCardSubject _fillOut({String? imageUrl, List<SavedFolder> folders = const []}) =>
+    WordCardSubject(
       termId: 'ID',
       text: 'fill out',
       type: 'phrase',
@@ -93,8 +96,9 @@ WordCardSubject _fillOut({String? imageUrl, List<SavedFolder> folders = const []
 
 void main() {
   group('кадр 06 · главный экран', () {
-    testWidgets('the article is a headword, a level line, a translation and two lifted leaves',
-        (tester) async {
+    testWidgets('the article is a headword, a level line, a translation and two lifted leaves', (
+      tester,
+    ) async {
       await _pump(tester, subject: _fillOut(imageUrl: 'https://example.test/p.jpg'));
 
       expect(find.text('fill out'), findsWidgets);
@@ -134,19 +138,22 @@ void main() {
     testWidgets('the example carries the term picked out, never as flat text', (tester) async {
       await _pump(tester, subject: _fillOut());
 
-      final rich = tester.widget<Text>(find.byWidgetPredicate(
-        (w) =>
-            w is Text &&
-            w.textSpan != null &&
-            w.textSpan!.toPlainText() == 'Please fill out this application to proceed.',
-      ));
+      final rich = tester.widget<Text>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              w.textSpan != null &&
+              w.textSpan!.toPlainText() == 'Please fill out this application to proceed.',
+        ),
+      );
       final spans = (rich.textSpan! as TextSpan).children!.cast<TextSpan>();
       expect(spans[1].text, 'fill out');
       expect(spans[1].style?.fontWeight, FontWeight.w500);
     });
 
-    testWidgets('the pair of actions is a save and a folder picker, with one grey line under it',
-        (tester) async {
+    testWidgets('the pair of actions is a save and a folder picker, with one grey line under it', (
+      tester,
+    ) async {
       await _pump(tester, subject: _fillOut());
 
       expect(find.text('+ Сохранённые'), findsOneWidget);
@@ -169,8 +176,9 @@ void main() {
   });
 
   group('кадр 07 · сохранено', () {
-    testWidgets('the button goes out to a STATE that names the folder — and the card stays open',
-        (tester) async {
+    testWidgets('the button goes out to a STATE that names the folder — and the card stays open', (
+      tester,
+    ) async {
       final api = _Api();
       await _pump(tester, subject: _fillOut(), api: api);
 
@@ -189,9 +197,12 @@ void main() {
     });
 
     testWidgets('the second action moves under it as a line, and stays live', (tester) async {
-      await _pump(tester, subject: _fillOut(folders: const [
-        SavedFolder(id: 'FOLDER', title: 'Сохранённые', isDefault: true),
-      ]));
+      await _pump(
+        tester,
+        subject: _fillOut(
+          folders: const [SavedFolder(id: 'FOLDER', title: 'Сохранённые', isDefault: true)],
+        ),
+      );
 
       expect(find.text('Добавить в другую коллекцию'), findsOneWidget);
       expect(find.text('Справа — выбрать другую коллекцию'), findsNothing);
@@ -204,9 +215,12 @@ void main() {
     });
 
     testWidgets('a word that arrives already saved opens in the saved state', (tester) async {
-      await _pump(tester, subject: _fillOut(folders: const [
-        SavedFolder(id: 'F', title: 'Мои находки', isDefault: false),
-      ]));
+      await _pump(
+        tester,
+        subject: _fillOut(
+          folders: const [SavedFolder(id: 'F', title: 'Мои находки', isDefault: false)],
+        ),
+      );
 
       expect(find.text('В коллекции «Мои находки»'), findsOneWidget);
     });
@@ -214,17 +228,17 @@ void main() {
 
   group('кадр 09 · открыто из папки', () {
     WordCardSubject fromFolder({int? step = 1, bool enrolled = true}) => WordCardSubject(
-          termId: 'ID',
-          text: 'hole',
-          type: 'word',
-          transcription: 'hoʊl',
-          translation: 'дыра',
-          description: 'This is a space or opening in a solid object or surface.',
-          example: 'I found a hole in my shirt.',
-          ladderStep: step,
-          enrolled: enrolled,
-          folders: const [SavedFolder(id: 'F', title: 'Сохранённые', isDefault: true)],
-        );
+      termId: 'ID',
+      text: 'hole',
+      type: 'word',
+      transcription: 'hoʊl',
+      translation: 'дыра',
+      description: 'This is a space or opening in a solid object or surface.',
+      example: 'I found a hole in my shirt.',
+      ladderStep: step,
+      enrolled: enrolled,
+      folders: const [SavedFolder(id: 'F', title: 'Сохранённые', isDefault: true)],
+    );
 
     testWidgets('the ladder is cut in as a band under the head', (tester) async {
       await _pump(tester, subject: fromFolder(), mode: WordCardMode.folder);
@@ -236,8 +250,9 @@ void main() {
       expect(find.text('узнавание'), findsOneWidget);
     });
 
-    testWidgets('the main action becomes the training run, with the folder move as a line',
-        (tester) async {
+    testWidgets('the main action becomes the training run, with the folder move as a line', (
+      tester,
+    ) async {
       var trained = 0;
       await _pump(
         tester,
@@ -257,7 +272,9 @@ void main() {
       expect(trained, 1);
     });
 
-    testWidgets('a word still in the catalogue is offered the DECISION, not a drill', (tester) async {
+    testWidgets('a word still in the catalogue is offered the DECISION, not a drill', (
+      tester,
+    ) async {
       await _pump(
         tester,
         subject: fromFolder(step: 0, enrolled: false),
@@ -300,8 +317,9 @@ void main() {
       expect(trained, 0);
     });
 
-    testWidgets('a «знаю» word is OUTSIDE the ladder, not at the bottom of it — and it trains',
-        (tester) async {
+    testWidgets('a «знаю» word is OUTSIDE the ladder, not at the bottom of it — and it trains', (
+      tester,
+    ) async {
       // Five pale dots would say «at the very beginning», which is the opposite of what «знаю»
       // means. A dash says it in one mark, and the training run stays available.
       var trained = 0;

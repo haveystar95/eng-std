@@ -144,7 +144,8 @@ abstract final class SessionLayout {
 
     for (var step = entry.step + 1; step <= LearningLadder.stepRecognitionReverse; step++) {
       final (min, max) = _gapBefore(step);
-      final index = _firstFree(slots, chain, previous + min, previous + max) ??
+      final index =
+          _firstFree(slots, chain, previous + min, previous + max) ??
           // The window is full because other terms' cards landed in it. Take the first free slot
           // after it rather than dropping the card: a follow-up that is slightly late is spacing, a
           // follow-up that never happens is a word met and abandoned.

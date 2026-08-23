@@ -26,7 +26,9 @@ class _OfflineApi extends ApiClient {
     String? targetLang,
   }) {
     throw DioException.connectionError(
-        requestOptions: RequestOptions(path: '/generations'), reason: 'offline');
+      requestOptions: RequestOptions(path: '/generations'),
+      reason: 'offline',
+    );
   }
 }
 
@@ -82,38 +84,50 @@ void main() {
     expect(rows.single.status, 'pending');
   });
 
-  test('reconcile() does NOT drop an un-sent offline generation (never polled → no 404 drop)', () async {
-    final ctrl = controller();
-    await ctrl.start(
-      topic: 'у врача', levels: ['B1'], size: 10, sourceLang: 'ru', targetLang: 'en', targetLangExplicit: false,
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+  test(
+    'reconcile() does NOT drop an un-sent offline generation (never polled → no 404 drop)',
+    () async {
+      final ctrl = controller();
+      await ctrl.start(
+        topic: 'у врача',
+        levels: ['B1'],
+        size: 10,
+        sourceLang: 'ru',
+        targetLang: 'en',
+        targetLangExplicit: false,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 20));
 
-    // Reconcile at "launch": the un-sent row must be re-sent (which fails, still offline), NOT
-    // dropped as a ghost. A sent row would have been polled and 404-dropped.
-    await ctrl.reconcile();
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+      // Reconcile at "launch": the un-sent row must be re-sent (which fails, still offline), NOT
+      // dropped as a ghost. A sent row would have been polled and 404-dropped.
+      await ctrl.reconcile();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
 
-    final rows = await db.allPendingGenerations();
-    expect(rows, hasLength(1), reason: 'the offline generation is still owed, not a ghost');
-    expect(rows.single.sent, isFalse);
-  });
+      final rows = await db.allPendingGenerations();
+      expect(rows, hasLength(1), reason: 'the offline generation is still owed, not a ghost');
+      expect(rows.single.sent, isFalse);
+    },
+  );
 
   test('reconcileCollections keeps a collection a pending generation still references', () async {
     final t0 = DateTime.utc(2026, 8, 6, 9);
     // A collection that arrived via sync for a just-finished generation.
-    await db.applyDelta(collectionUpserts: [
-      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('В банке')),
-    ]);
+    await db.applyDelta(
+      collectionUpserts: [
+        CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('В банке')),
+      ],
+    );
     // Its pending (succeeded, not yet acknowledged) card still points at it.
-    await db.upsertPendingGeneration(PendingGenerationsCompanion.insert(
-      id: 'g1',
-      topic: 'иду в банк',
-      status: const Value('succeeded'),
-      collectionId: const Value('c1'),
-      createdAt: t0,
-      updatedAt: t0,
-    ));
+    await db.upsertPendingGeneration(
+      PendingGenerationsCompanion.insert(
+        id: 'g1',
+        topic: 'иду в банк',
+        status: const Value('succeeded'),
+        collectionId: const Value('c1'),
+        createdAt: t0,
+        updatedAt: t0,
+      ),
+    );
 
     // A racing full snapshot that does NOT list c1 yet (replica lag) must not reap it.
     await db.reconcileCollections(<String>{});
@@ -135,7 +149,11 @@ void main() {
 
     await ctrl.resyncForCovers();
 
-    expect(syncs, 1, reason: 'one extra pull, unprompted — the user cannot know a cover is missing');
+    expect(
+      syncs,
+      1,
+      reason: 'one extra pull, unprompted — the user cannot know a cover is missing',
+    );
   });
 
   test('the extra sync WAITS — an immediate one would race the images again', () async {
@@ -172,8 +190,12 @@ void main() {
     );
 
     await ctrl.start(
-      topic: 'ремонт в квартире', levels: ['B1'], size: 10,
-      sourceLang: 'ru', targetLang: 'en', targetLangExplicit: false,
+      topic: 'ремонт в квартире',
+      levels: ['B1'],
+      size: 10,
+      sourceLang: 'ru',
+      targetLang: 'en',
+      targetLangExplicit: false,
     );
     await Future<void>.delayed(const Duration(milliseconds: 20));
 
@@ -193,21 +215,31 @@ void main() {
     final ctrl = GenerationController(_RefusingApi(429, 'Too Many Attempts.'), db, () async {});
 
     await ctrl.start(
-      topic: 'у врача', levels: ['B1'], size: 10,
-      sourceLang: 'ru', targetLang: 'en', targetLangExplicit: false,
+      topic: 'у врача',
+      levels: ['B1'],
+      size: 10,
+      sourceLang: 'ru',
+      targetLang: 'en',
+      targetLangExplicit: false,
     );
     await Future<void>.delayed(const Duration(milliseconds: 20));
 
     final row = (await db.allPendingGenerations()).single;
-    expect(row.status, 'pending', reason: 'a per-minute ceiling clears by itself — keep the prompt');
+    expect(
+      row.status,
+      'pending',
+      reason: 'a per-minute ceiling clears by itself — keep the prompt',
+    );
     expect(row.sent, isFalse);
   });
 
   test('reconcileCollections still reaps a genuine ghost with no pending reference', () async {
     final t0 = DateTime.utc(2026, 8, 6, 9);
-    await db.applyDelta(collectionUpserts: [
-      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Ghost')),
-    ]);
+    await db.applyDelta(
+      collectionUpserts: [
+        CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Ghost')),
+      ],
+    );
     await db.reconcileCollections(<String>{});
     expect(await db.watchCollections().first, isEmpty);
   });

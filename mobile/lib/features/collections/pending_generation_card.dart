@@ -29,7 +29,9 @@ List<PendingGeneration> visiblePendingGenerations(
 ) {
   final mirrored = collections.map((c) => c.id).toSet();
 
-  return pending.where((p) => p.collectionId == null || !mirrored.contains(p.collectionId)).toList();
+  return pending
+      .where((p) => p.collectionId == null || !mirrored.contains(p.collectionId))
+      .toList();
 }
 
 /// One in-flight / finished generation as a flat list row (кадр 2.5 / 7a), driven entirely by its
@@ -49,7 +51,10 @@ class PendingGenerationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final body = switch (row.status) {
-      'failed' when row.error == GenerationController.quotaExceededError => _quotaSpent(context, ref),
+      'failed' when row.error == GenerationController.quotaExceededError => _quotaSpent(
+        context,
+        ref,
+      ),
       'failed' => _failed(context, ref),
       'succeeded' => _ready(context, ref),
       _ => _generating(context),
@@ -82,11 +87,20 @@ class PendingGenerationCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.generationGeneratingTitle,
-                      style: AppText.collectionNameCard.copyWith(color: AppColors.secondary)),
+                  Text(
+                    l.generationGeneratingTitle,
+                    style: AppText.collectionNameCard.copyWith(color: AppColors.secondary),
+                  ),
                   const SizedBox(height: 5),
-                  Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+                  Text(
+                    meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.transcription.copyWith(
+                      fontSize: 12.5,
+                      color: AppColors.tertiary,
+                    ),
+                  ),
                   const SizedBox(height: 11),
                   // A thin indeterminate progress line — the shimmer already carries the "working" feel.
                   const SizedBox(
@@ -98,7 +112,13 @@ class PendingGenerationCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 7),
-                  Text(note, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                  Text(
+                    note,
+                    style: AppText.transcription.copyWith(
+                      fontSize: 11.5,
+                      color: AppColors.tertiary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -133,8 +153,14 @@ class PendingGenerationCard extends ConsumerWidget {
             children: [
               Text(l.generationFailedTitle, style: AppText.sheetButton.copyWith(fontSize: 16.5)),
               const SizedBox(height: 5),
-              Text(l.generationFailedBody(row.topic),
-                  style: AppText.translation.copyWith(fontSize: 13, height: 1.4, color: AppColors.secondary)),
+              Text(
+                l.generationFailedBody(row.topic),
+                style: AppText.translation.copyWith(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: AppColors.secondary,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -151,8 +177,10 @@ class PendingGenerationCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadii.small),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                      child: Text(l.generationHide,
-                          style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.tertiary)),
+                      child: Text(
+                        l.generationHide,
+                        style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.tertiary),
+                      ),
                     ),
                   ),
                 ],
@@ -200,7 +228,11 @@ class PendingGenerationCard extends ConsumerWidget {
                 quota == null
                     ? l.generationQuotaBodyNoTime(row.topic)
                     : l.generationQuotaBody(row.topic, _hhmm(quota.resetsAt)),
-                style: AppText.translation.copyWith(fontSize: 13, height: 1.4, color: AppColors.secondary),
+                style: AppText.translation.copyWith(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: AppColors.secondary,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -227,8 +259,10 @@ class PendingGenerationCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadii.small),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                      child: Text(l.generationHide,
-                          style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.tertiary)),
+                      child: Text(
+                        l.generationHide,
+                        style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.tertiary),
+                      ),
                     ),
                   ),
                 ],
@@ -257,8 +291,12 @@ class PendingGenerationCard extends ConsumerWidget {
           _ShimmerBox(size: _cover),
           const SizedBox(width: 13),
           Expanded(
-            child: Text(l.generationReadyLoading(row.topic),
-                maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.sheetButton),
+            child: Text(
+              l.generationReadyLoading(row.topic),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.sheetButton,
+            ),
           ),
         ],
       );
@@ -269,9 +307,12 @@ class PendingGenerationCard extends ConsumerWidget {
       onTap: () {
         AppHaptics.success();
         ref.read(generationControllerProvider).dismiss(row.id);
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => CollectionDetailScreen(collectionId: col.id, title: col.title, offerTriage: true),
-        ));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                CollectionDetailScreen(collectionId: col.id, title: col.title, offerTriage: true),
+          ),
+        );
       },
       child: Row(
         children: [
@@ -285,28 +326,40 @@ class PendingGenerationCard extends ConsumerWidget {
                   children: [
                     const Icon(LucideIcons.sparkles, size: 13, color: AppColors.secondary),
                     const SizedBox(width: 5),
-                    Text(l.generationReadyLabel, style: AppText.sectionLabel.copyWith(fontSize: 10.5)),
+                    Text(
+                      l.generationReadyLabel,
+                      style: AppText.sectionLabel.copyWith(fontSize: 10.5),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(col.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.collectionNameCard),
+                Text(
+                  col.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.collectionNameCard,
+                ),
                 const SizedBox(height: 5),
                 if (under)
                   Row(
                     children: [
                       Expanded(
-                        child: Text(l.generationReadyUnder,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.translation.copyWith(fontSize: 12.5)),
+                        child: Text(
+                          l.generationReadyUnder,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.translation.copyWith(fontSize: 12.5),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _CountBadge(label: l.generationUnderBadge(row.delivered!, row.requested!)),
                     ],
                   )
                 else
-                  Text(l.collectionWordsCount(col.wordsCount),
-                      style: AppText.translation.copyWith(fontSize: 12.5)),
+                  Text(
+                    l.collectionWordsCount(col.wordsCount),
+                    style: AppText.translation.copyWith(fontSize: 12.5),
+                  ),
               ],
             ),
           ),
@@ -338,8 +391,10 @@ class _ShimmerBox extends StatefulWidget {
 }
 
 class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
 
   @override
   void dispose() {
@@ -405,8 +460,13 @@ class _InkPill extends StatelessWidget {
           height: 38,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           alignment: Alignment.center,
-          child: Text(label,
-              style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.paper, fontWeight: FontWeight.w700)),
+          child: Text(
+            label,
+            style: AppTextExercise.answerAuxButton.copyWith(
+              color: AppColors.paper,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );
@@ -426,8 +486,7 @@ class _CountBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: AppColors.track),
       ),
-      child: Text(label,
-          style: AppText.badge.copyWith(letterSpacing: 0.3, fontFeatures: const [])),
+      child: Text(label, style: AppText.badge.copyWith(letterSpacing: 0.3, fontFeatures: const [])),
     );
   }
 }

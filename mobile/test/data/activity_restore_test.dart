@@ -14,12 +14,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // A one-shot read (not watch().first, whose stream would replay an earlier cached emission).
-  Future<Map<String, int>> activity(AppDatabase db) async =>
-      {for (final r in await db.select(db.dailyActivity).get()) r.day: r.reviews};
+  Future<Map<String, int>> activity(AppDatabase db) async => {
+    for (final r in await db.select(db.dailyActivity).get()) r.day: r.reviews,
+  };
 
   group('Stats.fromJson active_days', () {
     test('parses the server active_days list', () {
-      final s = Stats.fromJson({'streak_days': 4, 'active_days': ['2026-08-09', '2026-08-10']});
+      final s = Stats.fromJson({
+        'streak_days': 4,
+        'active_days': ['2026-08-09', '2026-08-10'],
+      });
       expect(s.activeDays, ['2026-08-09', '2026-08-10']);
       expect(s.streakDays, 4);
     });
@@ -53,27 +57,39 @@ void main() {
     });
   });
 
-  test('persists across a reopen — offline start shows the calendar without a network call', () async {
-    final file = File('${Directory.systemTemp.path}/f18_${DateTime.now().microsecondsSinceEpoch}.sqlite');
-    final first = AppDatabase.forTesting(NativeDatabase(file));
-    await first.mergeActiveDays(['2026-08-09']);
-    await first.close();
+  test(
+    'persists across a reopen — offline start shows the calendar without a network call',
+    () async {
+      final file = File(
+        '${Directory.systemTemp.path}/f18_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      final first = AppDatabase.forTesting(NativeDatabase(file));
+      await first.mergeActiveDays(['2026-08-09']);
+      await first.close();
 
-    final reopened = AppDatabase.forTesting(NativeDatabase(file));
-    expect((await activity(reopened))['2026-08-09'], 1);
-    await reopened.close();
-    await file.delete();
-  });
+      final reopened = AppDatabase.forTesting(NativeDatabase(file));
+      expect((await activity(reopened))['2026-08-09'], 1);
+      await reopened.close();
+      await file.delete();
+    },
+  );
 
   test('a relogin sync restores the calendar and streak from /stats', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     // A fresh install: no local activity, no cached streak.
     expect(await activity(db), isEmpty);
 
-    final api = _StubApi(Stats(
-      totalWords: 0, learned: 0, mastered: 0, dueToday: 0, reviewsTotal: 2, streakDays: 5,
-      activeDays: const ['2026-08-09', '2026-08-10', '2026-08-11'],
-    ));
+    final api = _StubApi(
+      Stats(
+        totalWords: 0,
+        learned: 0,
+        mastered: 0,
+        dueToday: 0,
+        reviewsTotal: 2,
+        streakDays: 5,
+        activeDays: const ['2026-08-09', '2026-08-10', '2026-08-11'],
+      ),
+    );
     await SyncService(api, db).sync();
 
     expect((await activity(db)).keys, containsAll(['2026-08-09', '2026-08-10', '2026-08-11']));

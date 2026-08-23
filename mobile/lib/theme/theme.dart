@@ -64,17 +64,11 @@ ThemeData buildAppTheme() {
       foregroundColor: AppColors.ink,
       titleTextStyle: AppText.screenTitle,
     ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.hairline,
-      thickness: 1,
-      space: 1,
-    ),
+    dividerTheme: const DividerThemeData(color: AppColors.hairline, thickness: 1, space: 1),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.alertSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.alert),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.alert)),
     ),
   );
 }

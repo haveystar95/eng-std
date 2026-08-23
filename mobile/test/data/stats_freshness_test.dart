@@ -112,5 +112,6 @@ void main() {
 /// The activity provider, re-declared here rather than imported: the real one lives in the
 /// features layer and this file is about the DATA layer waking up. Same query, same stream.
 StreamProvider<Map<String, int>> dailyActivityProviderForTest(AppDatabase db) =>
-    StreamProvider<Map<String, int>>((ref) =>
-        db.watchDailyActivity().map((rows) => {for (final r in rows) r.day: r.reviews}));
+    StreamProvider<Map<String, int>>(
+      (ref) => db.watchDailyActivity().map((rows) => {for (final r in rows) r.day: r.reviews}),
+    );

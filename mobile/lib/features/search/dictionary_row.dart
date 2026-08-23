@@ -73,7 +73,11 @@ class DictionaryRow extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Flexible(
-                  child: _Term(term: term, prefix: prefix, style: termStyle ?? AppText.searchRowTerm),
+                  child: _Term(
+                    term: term,
+                    prefix: prefix,
+                    style: termStyle ?? AppText.searchRowTerm,
+                  ),
                 ),
                 if ((translation ?? '').isNotEmpty) ...[
                   const SizedBox(width: AppSpacing.s12),
@@ -91,13 +95,13 @@ class DictionaryRow extends StatelessWidget {
           ),
           switch (trailing) {
             RowTrailing.chevron => const Padding(
-                padding: EdgeInsets.only(left: AppSpacing.s8),
-                child: Icon(LucideIcons.chevronRight, size: 16, color: AppColors.tertiary),
-              ),
+              padding: EdgeInsets.only(left: AppSpacing.s8),
+              child: Icon(LucideIcons.chevronRight, size: 16, color: AppColors.tertiary),
+            ),
             RowTrailing.level when (level ?? '').isNotEmpty => Padding(
-                padding: const EdgeInsets.only(left: AppSpacing.s8),
-                child: Text(level!, style: AppText.levelMark),
-              ),
+              padding: const EdgeInsets.only(left: AppSpacing.s8),
+              child: Text(level!, style: AppText.levelMark),
+            ),
             _ => const SizedBox.shrink(),
           },
         ],
@@ -134,13 +138,15 @@ class _Term extends StatelessWidget {
     }
 
     return Text.rich(
-      TextSpan(children: [
-        TextSpan(
-          text: term.substring(0, typed.length),
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        TextSpan(text: term.substring(typed.length)),
-      ]),
+      TextSpan(
+        children: [
+          TextSpan(
+            text: term.substring(0, typed.length),
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          TextSpan(text: term.substring(typed.length)),
+        ],
+      ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: style,
@@ -155,8 +161,6 @@ class SearchSectionLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(
-        text.toUpperCase(),
-        style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
-      );
+  Widget build(BuildContext context) =>
+      Text(text.toUpperCase(), style: AppText.sectionLabel.copyWith(color: AppColors.tertiary));
 }

@@ -64,39 +64,39 @@ void main() {
   }
 
   SessionCard choiceCard() => SessionCard(
-        termId: 'T1',
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'бронь',
-        answer: 'reservation',
-        options: const ['reservation', 'registration'],
-      );
+    termId: 'T1',
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'бронь',
+    answer: 'reservation',
+    options: const ['reservation', 'registration'],
+  );
 
   Widget host(SessionCard card, List<SessionAnswer> answers) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionExerciseCard(
-                card: card,
-                autoPronounce: false,
-                onAnswered: answers.add,
-                onSpeak: (String text, {bool slow = false}) async {},
-                showDue: false,
-              ),
-            ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionExerciseCard(
+            card: card,
+            autoPronounce: false,
+            onAnswered: answers.add,
+            onSpeak: (String text, {bool slow = false}) async {},
+            showDue: false,
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('a correct answer plays the accepted sound and a light haptic', (tester) async {
     final answers = <SessionAnswer>[];
@@ -128,11 +128,15 @@ void main() {
     expect(sound(), 'verdict_wrong');
   });
 
-  testWidgets('the sound is fire-and-forget — a native failure never takes the answer down', (tester) async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(AppFeedback.channel, (call) async {
-      throw PlatformException(code: 'no_sound', message: 'unknown sound');
-    });
+  testWidgets('the sound is fire-and-forget — a native failure never takes the answer down', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      AppFeedback.channel,
+      (call) async {
+        throw PlatformException(code: 'no_sound', message: 'unknown sound');
+      },
+    );
 
     final answers = <SessionAnswer>[];
     await tester.pumpWidget(host(choiceCard(), answers));
@@ -148,7 +152,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a typed answer gets the same feedback — the verdict is shared, so its feel is too', (tester) async {
+  testWidgets('a typed answer gets the same feedback — the verdict is shared, so its feel is too', (
+    tester,
+  ) async {
     final answers = <SessionAnswer>[];
     final typing = SessionCard(
       termId: 'T2',

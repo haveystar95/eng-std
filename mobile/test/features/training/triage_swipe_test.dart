@@ -85,14 +85,20 @@ void main() {
     test('a fling over 600 px/s commits even below threshold', () {
       expect(
         TriageSwipe.shouldCommit(
-            drag: const Offset(40, 0), threshold: 100, velocity: _fling(const Offset(900, 0))),
+          drag: const Offset(40, 0),
+          threshold: 100,
+          velocity: _fling(const Offset(900, 0)),
+        ),
         isTrue,
       );
     });
     test('no direction never commits, however fast', () {
       expect(
         TriageSwipe.shouldCommit(
-            drag: Offset.zero, threshold: 100, velocity: _fling(const Offset(0, 900))),
+          drag: Offset.zero,
+          threshold: 100,
+          velocity: _fling(const Offset(0, 900)),
+        ),
         isFalse,
       );
     });
@@ -100,12 +106,14 @@ void main() {
 
   group('SessionSegments', () {
     testWidgets('renders `total` segments, first `done` filled with ink', (tester) async {
-      await tester.pumpWidget(const Directionality(
-        textDirection: TextDirection.ltr,
-        // Center gives loose constraints so the bar's SizedBox(height: 3) is
-        // honoured (pumpWidget's root constraints are tight to the surface).
-        child: Center(child: SizedBox(width: 300, child: SessionSegments(done: 4, total: 10))),
-      ));
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          // Center gives loose constraints so the bar's SizedBox(height: 3) is
+          // honoured (pumpWidget's root constraints are tight to the surface).
+          child: Center(child: SizedBox(width: 300, child: SessionSegments(done: 4, total: 10))),
+        ),
+      );
       final boxes = tester.widgetList<ColoredBox>(find.byType(ColoredBox)).toList();
       expect(boxes.length, 10);
       expect(boxes.take(4).every((b) => b.color == AppColors.ink), isTrue);
@@ -116,10 +124,12 @@ void main() {
     });
 
     testWidgets('zero total renders nothing to divide by', (tester) async {
-      await tester.pumpWidget(const Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(width: 300, child: SessionSegments(done: 0, total: 0)),
-      ));
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(width: 300, child: SessionSegments(done: 0, total: 0)),
+        ),
+      );
       expect(find.byType(ColoredBox), findsNothing);
     });
   });

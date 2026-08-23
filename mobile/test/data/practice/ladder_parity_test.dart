@@ -66,10 +66,16 @@ void main() {
     for (var successes = 0; successes <= 12; successes++) {
       for (final a in Acquisition.values) {
         for (var s = 0; s <= 2; s++) {
-          final first =
-              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
-          final second =
-              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
+          final first = LearningLadder.stepFor(
+            acquisition: a,
+            successfulReviews: successes,
+            learningStep: s,
+          );
+          final second = LearningLadder.stepFor(
+            acquisition: a,
+            successfulReviews: successes,
+            learningStep: s,
+          );
           expect(first, second);
         }
       }
@@ -82,8 +88,11 @@ void main() {
     for (var successes = 0; successes <= 40; successes++) {
       for (final a in Acquisition.values) {
         for (var s = 0; s <= 2; s++) {
-          final step =
-              LearningLadder.stepFor(acquisition: a, successfulReviews: successes, learningStep: s);
+          final step = LearningLadder.stepFor(
+            acquisition: a,
+            successfulReviews: successes,
+            learningStep: s,
+          );
           expect(step, isNotNull);
           expect(step, inInclusiveRange(LearningLadder.stepIntro, LearningLadder.stepDictation));
         }
@@ -130,21 +139,24 @@ void main() {
     }
   });
 
-  test('the wire matrix is read as sent, and an unreadable one falls back to the shipped default', () {
-    final wire = ModeAdmission.fromWire([
-      {'mode': 'typing', 'min_step': 2, 'options_policy': 'standard'},
-      {'mode': 'multiple_choice', 'min_step': 1, 'options_policy': 'distant'},
-      // A trainer a newer server has and this build does not: dropped, never guessed at.
-      {'mode': 'time_travel', 'min_step': 0, 'options_policy': 'distant'},
-    ]);
+  test(
+    'the wire matrix is read as sent, and an unreadable one falls back to the shipped default',
+    () {
+      final wire = ModeAdmission.fromWire([
+        {'mode': 'typing', 'min_step': 2, 'options_policy': 'standard'},
+        {'mode': 'multiple_choice', 'min_step': 1, 'options_policy': 'distant'},
+        // A trainer a newer server has and this build does not: dropped, never guessed at.
+        {'mode': 'time_travel', 'min_step': 0, 'options_policy': 'distant'},
+      ]);
 
-    expect(wire.allows(ExerciseMode.typing, 2), isTrue, reason: 'the server moved typing down');
-    expect(wire.allows(ExerciseMode.typing, 1), isFalse);
-    expect(wire.rules.length, 2, reason: 'the unknown mode is dropped');
+      expect(wire.allows(ExerciseMode.typing, 2), isTrue, reason: 'the server moved typing down');
+      expect(wire.allows(ExerciseMode.typing, 1), isFalse);
+      expect(wire.rules.length, 2, reason: 'the unknown mode is dropped');
 
-    expect(ModeAdmission.fromWire(null).toString(), ModeAdmission.shipped.toString());
-    expect(ModeAdmission.fromWire(const []).rules, ModeAdmission.shipped.rules);
-  });
+      expect(ModeAdmission.fromWire(null).toString(), ModeAdmission.shipped.toString());
+      expect(ModeAdmission.fromWire(const []).rules, ModeAdmission.shipped.rules);
+    },
+  );
 
   test('distant options are a ladder concession — a graduated pair always gets standard', () {
     // `distant` exists to make a FIRST meeting winnable. A pair off the ladder is past that by
@@ -189,14 +201,23 @@ void main() {
       // «без диктанта/печати/аудирования» — the owner's rule for a word nobody has studied. The
       // matrix is the single place that is decided, and this is the row it resolves to.
       const graded = [
-        ExerciseMode.multipleChoice, ExerciseMode.wordBank, ExerciseMode.cloze,
-        ExerciseMode.scramble, ExerciseMode.pickCorrect, ExerciseMode.speaking,
-        ExerciseMode.typing, ExerciseMode.listening, ExerciseMode.dictation,
+        ExerciseMode.multipleChoice,
+        ExerciseMode.wordBank,
+        ExerciseMode.cloze,
+        ExerciseMode.scramble,
+        ExerciseMode.pickCorrect,
+        ExerciseMode.speaking,
+        ExerciseMode.typing,
+        ExerciseMode.listening,
+        ExerciseMode.dictation,
       ];
       final opened = ModeAdmission.shipped.only(graded, LearningLadder.stepUnenrolledPractice);
 
       expect(opened, contains(ExerciseMode.multipleChoice));
-      expect(opened, containsAll([ExerciseMode.wordBank, ExerciseMode.cloze, ExerciseMode.scramble]));
+      expect(
+        opened,
+        containsAll([ExerciseMode.wordBank, ExerciseMode.cloze, ExerciseMode.scramble]),
+      );
       expect(opened, isNot(contains(ExerciseMode.typing)));
       expect(opened, isNot(contains(ExerciseMode.listening)));
       expect(opened, isNot(contains(ExerciseMode.dictation)));
@@ -209,11 +230,19 @@ void main() {
         reason: 'practice introduces nothing, so a first meeting is not its job',
       );
       expect(
-        const LadderPosition(acquisition: Acquisition.learning, learningStep: 1, enrolled: true).admitsPractice,
+        const LadderPosition(
+          acquisition: Acquisition.learning,
+          learningStep: 1,
+          enrolled: true,
+        ).admitsPractice,
         isTrue,
       );
       expect(
-        const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true).admitsPractice,
+        const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ).admitsPractice,
         isTrue,
       );
     });

@@ -24,17 +24,24 @@ class _Api implements ApiClient {
   int searchCalls = 0;
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async {
     searchCalls++;
 
     return hits;
   }
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async => InstantHint(query: query);
+  Future<InstantHint> instantHint(String query, {String? source, String? target}) async =>
+      InstantHint(query: query);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async => const LookupOutcome(dailyCap: 5);
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async =>
+      const LookupOutcome(dailyCap: 5);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -43,29 +50,36 @@ class _Api implements ApiClient {
 Future<void> _pump(WidgetTester tester, _Api api) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-      apiClientProvider.overrideWithValue(api),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: const SearchScreen(),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        apiClientProvider.overrideWithValue(api),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: const SearchScreen(),
+      ),
     ),
-  ));
+  );
   await tester.pump();
   await tester.pump();
   await tester.pump();
 }
 
 void main() {
-  testWidgets('a word we already have is offered FIRST and carries its translation', (tester) async {
-    await _pump(tester, _Api(hits: const [
-      SearchHit(termId: 'ID', text: 'income', type: 'word', translation: 'доход'),
-    ]));
+  testWidgets('a word we already have is offered FIRST and carries its translation', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _Api(
+        hits: const [SearchHit(termId: 'ID', text: 'income', type: 'word', translation: 'доход')],
+      ),
+    );
 
     await tester.enterText(find.byType(TextField), 'incom');
     await tester.pump(const Duration(milliseconds: 400));
@@ -78,10 +92,12 @@ void main() {
     expect(rows.skip(1).every((r) => r.translation == null), isTrue);
   });
 
-  testWidgets('a catalogue row goes straight to the card; a dictionary row searches', (tester) async {
-    final api = _Api(hits: const [
-      SearchHit(termId: 'ID', text: 'income', type: 'word', translation: 'доход'),
-    ]);
+  testWidgets('a catalogue row goes straight to the card; a dictionary row searches', (
+    tester,
+  ) async {
+    final api = _Api(
+      hits: const [SearchHit(termId: 'ID', text: 'income', type: 'word', translation: 'доход')],
+    );
     await _pump(tester, api);
 
     await tester.enterText(find.byType(TextField), 'incom');

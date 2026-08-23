@@ -17,29 +17,33 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// in dialog_controller_test.dart (real time).
 void main() {
   testWidgets('renders coverage + feed, then the finale', (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        dialogRepositoryProvider.overrideWithValue(_StubRepo(const ['withdraw', 'account', 'balance'])),
-        // dispose() invalidates this — keep it off the network in the test.
-        lastDialogProvider('c1').overrideWith((ref) async => null),
-        realtimeChannelFactoryProvider.overrideWithValue(
-          // Slow enough that the active conversation is observable for a frame, fast enough that a
-          // couple of seconds of pumped time reaches the finale.
-          () => FakeRealtimeChannel(
-            connectDelay: const Duration(milliseconds: 40),
-            botBeat: const Duration(milliseconds: 150),
-            listenBeat: const Duration(milliseconds: 150),
-            thinkGap: const Duration(milliseconds: 40),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dialogRepositoryProvider.overrideWithValue(
+            _StubRepo(const ['withdraw', 'account', 'balance']),
           ),
+          // dispose() invalidates this — keep it off the network in the test.
+          lastDialogProvider('c1').overrideWith((ref) async => null),
+          realtimeChannelFactoryProvider.overrideWithValue(
+            // Slow enough that the active conversation is observable for a frame, fast enough that a
+            // couple of seconds of pumped time reaches the finale.
+            () => FakeRealtimeChannel(
+              connectDelay: const Duration(milliseconds: 40),
+              botBeat: const Duration(milliseconds: 150),
+              listenBeat: const Duration(milliseconds: 150),
+              thinkGap: const Duration(milliseconds: 40),
+            ),
+          ),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('ru')],
+          home: PracticeDialogScreen(collectionId: 'c1', title: 'At the Bank', targetLang: 'en'),
         ),
-      ],
-      child: const MaterialApp(
-        locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: [Locale('ru')],
-        home: PracticeDialogScreen(collectionId: 'c1', title: 'At the Bank', targetLang: 'en'),
       ),
-    ));
+    );
 
     // start() resolves, the conversation goes active and the bot greets (~40ms).
     await tester.pump();
@@ -70,9 +74,9 @@ void main() {
 /// Synchronous stand-in for [DialogRepository] — fixed words, substring coverage, no DB.
 class _StubRepo implements DialogRepository {
   _StubRepo(List<String> words)
-      : _words = [
-          for (var i = 0; i < words.length; i++) TargetWord(termId: 't${i + 1}', text: words[i]),
-        ];
+    : _words = [
+        for (var i = 0; i < words.length; i++) TargetWord(termId: 't${i + 1}', text: words[i]),
+      ];
 
   List<TargetWord> _words;
   final StringBuffer _spoken = StringBuffer();

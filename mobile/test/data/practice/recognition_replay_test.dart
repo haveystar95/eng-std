@@ -14,56 +14,56 @@ import 'package:flutter_test/flutter_test.dart';
 /// lower rung's card is already in the session when the higher one comes up).
 void main() {
   SessionCard intro(String term) => SessionCard(
-        termId: term,
-        mode: ExerciseMode.intro,
-        type: 'phrase',
-        answer: term,
-        ladderStep: LearningLadder.stepIntro,
-      );
+    termId: term,
+    mode: ExerciseMode.intro,
+    type: 'phrase',
+    answer: term,
+    ladderStep: LearningLadder.stepIntro,
+  );
 
   /// Rung 1 — term → translation, graded by identity: the answer is the card's own term id.
   SessionCard forward(String term) => SessionCard(
-        termId: term,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: term,
-        answer: term,
-        options: const ['перевод', 'не тот', 'и не тот'],
-        optionIds: [term, 'other-1', 'other-2'],
-        ladderStep: LearningLadder.stepRecognitionForward,
-      );
+    termId: term,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: term,
+    answer: term,
+    options: const ['перевод', 'не тот', 'и не тот'],
+    optionIds: [term, 'other-1', 'other-2'],
+    ladderStep: LearningLadder.stepRecognitionForward,
+  );
 
   /// Rung 2 — translation → term, graded as text.
   SessionCard reverse(String term) => SessionCard(
-        termId: term,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: 'перевод',
-        answer: term,
-        options: [term, 'не тот', 'и не тот'],
-        ladderStep: LearningLadder.stepRecognitionReverse,
-      );
+    termId: term,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: 'перевод',
+    answer: term,
+    options: [term, 'не тот', 'и не тот'],
+    ladderStep: LearningLadder.stepRecognitionReverse,
+  );
 
   SessionCard due(String term) => SessionCard(
-        termId: term,
-        mode: ExerciseMode.typing,
-        type: 'word',
-        prompt: 'перевод',
-        answer: term,
-      );
+    termId: term,
+    mode: ExerciseMode.typing,
+    type: 'word',
+    prompt: 'перевод',
+    answer: term,
+  );
 
   group('the exact case from the phone acceptance', () {
     // «Where can I find dog food?»: intro, rung 1 failed, and four cards later the session dealt
     // rung 2 — a card the pair had not earned, logged as an answer at rung 2 while the pair stood
     // at rung 1.
     List<SessionCard> session() => [
-          intro('dogfood'),
-          due('r1'),
-          forward('dogfood'),
-          due('r2'),
-          due('r3'),
-          reverse('dogfood'),
-        ];
+      intro('dogfood'),
+      due('r1'),
+      forward('dogfood'),
+      due('r2'),
+      due('r3'),
+      reverse('dogfood'),
+    ];
 
     test('a FAILED rung 1 is replayed instead of dealing rung 2', () {
       final cards = session();

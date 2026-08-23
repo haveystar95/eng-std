@@ -24,45 +24,46 @@ void main() {
 
   setUp(() => spoken = []);
 
-  Future<void> onSpeak(String text, {bool slow = false}) async => spoken.add((text: text, slow: slow));
+  Future<void> onSpeak(String text, {bool slow = false}) async =>
+      spoken.add((text: text, slow: slow));
 
   const sentence = 'I have a reservation for tonight.';
 
   SessionCard dictationCard() => SessionCard(
-        termId: 'T1',
-        mode: ExerciseMode.dictation,
-        type: 'word',
-        prompt: null, // the audio IS the task
-        answer: sentence,
-        example: sentence,
-        exampleTranslation: 'У меня бронь на сегодня.',
-      );
+    termId: 'T1',
+    mode: ExerciseMode.dictation,
+    type: 'word',
+    prompt: null, // the audio IS the task
+    answer: sentence,
+    example: sentence,
+    exampleTranslation: 'У меня бронь на сегодня.',
+  );
 
   Widget host(SessionCard card) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionExerciseCard(
-                card: card,
-                autoPronounce: false,
-                onAnswered: (_) {},
-                onSpeak: onSpeak,
-                showDue: false,
-              ),
-            ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionExerciseCard(
+            card: card,
+            autoPronounce: false,
+            onAnswered: (_) {},
+            onSpeak: onSpeak,
+            showDue: false,
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   group('the card', () {
     testWidgets('never shows the sentence — it is the answer', (tester) async {
@@ -135,7 +136,10 @@ void main() {
     });
 
     test('rejects a mis-heard word', () {
-      expect(SessionGrader.check('I have a registration for tonight', sentence).isAccepted, isFalse);
+      expect(
+        SessionGrader.check('I have a registration for tonight', sentence).isAccepted,
+        isFalse,
+      );
     });
 
     test('an empty answer («Не помню») is a miss', () {
@@ -144,9 +148,11 @@ void main() {
   });
 
   group('the gate', () {
-    bool dictates(String answer, String? example, [String? translation]) =>
-        TermPlayability.of(answer: answer, example: example, exampleTranslation: translation)
-            .supports(ExerciseMode.dictation);
+    bool dictates(String answer, String? example, [String? translation]) => TermPlayability.of(
+      answer: answer,
+      example: example,
+      exampleTranslation: translation,
+    ).supports(ExerciseMode.dictation);
 
     test('honours the 4…10 window at both edges', () {
       String of(int words) => '${List.filled(words, 'word').join(' ')}.';
@@ -168,7 +174,10 @@ void main() {
     test('needs no translation, unlike scramble', () {
       expect(dictates('reservation', sentence), isTrue); // no translation passed
       expect(
-        TermPlayability.of(answer: 'reservation', example: sentence).supports(ExerciseMode.scramble),
+        TermPlayability.of(
+          answer: 'reservation',
+          example: sentence,
+        ).supports(ExerciseMode.scramble),
         isFalse,
       );
     });
@@ -184,18 +193,18 @@ void main() {
 
   group('offline practice', () {
     Term term(String id, String text, String example) => Term(
-          id: id,
-          termText: text,
-          type: 'word',
-          transcription: null,
-          translation: 'перевод',
-          example: example,
-          exampleTranslation: 'перевод примера',
-          imageUrl: null,
-          imageAuthor: null,
-          imageAuthorUrl: null,
-          updatedAt: DateTime.utc(2026, 8, 12),
-        );
+      id: id,
+      termText: text,
+      type: 'word',
+      transcription: null,
+      translation: 'перевод',
+      example: example,
+      exampleTranslation: 'перевод примера',
+      imageUrl: null,
+      imageAuthor: null,
+      imageAuthorUrl: null,
+      updatedAt: DateTime.utc(2026, 8, 12),
+    );
 
     test('deals dictation once it is switched on, and never before', () {
       final terms = [
@@ -205,18 +214,22 @@ void main() {
       ];
 
       Set<ExerciseMode> dealt(PracticeModes enabled) => LocalPracticeSessionBuilder.build(
-            terms: terms,
-            limit: 20,
-            random: Random(5),
-            sessionId: 'S',
-            enabled: enabled,
-            // Dictation is a rung-5 trainer, so the pairs have to BE at rung 5 — this test is about
-            // the TOGGLE, and the ladder is a separate filter with its own tests.
-            ladder: {
-              for (final t in terms)
-                t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-            },
-          ).cards.map((c) => c.mode).toSet();
+        terms: terms,
+        limit: 20,
+        random: Random(5),
+        sessionId: 'S',
+        enabled: enabled,
+        // Dictation is a rung-5 trainer, so the pairs have to BE at rung 5 — this test is about
+        // the TOGGLE, and the ladder is a separate filter with its own tests.
+        ladder: {
+          for (final t in terms)
+            t.id: const LadderPosition(
+              acquisition: Acquisition.graduated,
+              successfulReviews: 12,
+              enrolled: true,
+            ),
+        },
+      ).cards.map((c) => c.mode).toSet();
 
       // The shipped default has no dictation in it — the release rule, seen from the device.
       expect(PracticeModes.serverDefault.modes, isNot(contains(ExerciseMode.dictation)));
@@ -234,8 +247,11 @@ void main() {
         sessionId: 'S',
         enabled: const PracticeModes([ExerciseMode.dictation]),
         ladder: const {
-          '01KZETAAA50EMHCN6SP80T8DHC':
-              LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
+          '01KZETAAA50EMHCN6SP80T8DHC': LadderPosition(
+            acquisition: Acquisition.graduated,
+            successfulReviews: 12,
+            enrolled: true,
+          ),
         },
       );
 

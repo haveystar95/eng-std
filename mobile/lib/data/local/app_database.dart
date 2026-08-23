@@ -29,6 +29,7 @@ class Collections extends Table {
   TextColumn get imageUrl => text().nullable()();
   TextColumn get imageAuthor => text().nullable()();
   TextColumn get imageAuthorUrl => text().nullable()();
+
   /// «Сохранённые»: the one folder a one-tap save from search lands in. Exactly one per owner,
   /// renameable, never deletable — the shelf greys its delete action out on this flag rather than
   /// on the title, which the owner may have changed.
@@ -61,6 +62,7 @@ class Terms extends Table {
   TextColumn get translation => text().nullable()();
   TextColumn get example => text().nullable()();
   TextColumn get exampleTranslation => text().nullable()();
+
   /// What the word MEANS, written in the language BEING LEARNED — the whole question of a
   /// `description_match` card. Mirrored rather than only carried on the card, because the device
   /// builds its own practice sessions offline: a trainer whose content never reaches the phone is a
@@ -71,6 +73,7 @@ class Terms extends Table {
   TextColumn get imageUrl => text().nullable()();
   TextColumn get imageAuthor => text().nullable()();
   TextColumn get imageAuthorUrl => text().nullable()();
+
   /// Other answers that also count as correct, as a JSON array of strings. Needed OFFLINE: the
   /// instant check grades against `{termText} ∪ acceptedVariants`, so a device without them would
   /// reject an answer the server accepts.
@@ -79,6 +82,7 @@ class Terms extends Table {
   /// list on every term upsert, so one write replaces the whole set atomically and there is no
   /// orphan row to clean up. A child table would buy queryability nothing here needs.
   TextColumn get acceptedVariants => text().nullable()();
+
   /// Wrong versions of [example], as a JSON array of objects. Mirrored ahead of the trainer that
   /// reads them, so it works offline the day it is switched on.
   TextColumn get exampleDistractors => text().nullable()();
@@ -221,7 +225,8 @@ class TriagedTerms extends Table {
 class PendingGenerations extends Table {
   TextColumn get id => text()();
   TextColumn get topic => text()();
-  TextColumn get status => text().withDefault(const Constant('pending'))(); // pending|running|succeeded|failed
+  TextColumn get status =>
+      text().withDefault(const Constant('pending'))(); // pending|running|succeeded|failed
   TextColumn get collectionId => text().nullable()();
   TextColumn get error => text().nullable()();
   IntColumn get requested => integer().nullable()();
@@ -311,7 +316,8 @@ class CollectionTermRow {
   final Term term; // generated data class for the Terms table
   final int position;
   final String? state; // null → not started (no progress row)
-  final bool triaged; // swiped in triage — lets the UI distinguish "не знаю" (still new) from untouched
+  final bool
+  triaged; // swiped in triage — lets the UI distinguish "не знаю" (still new) from untouched
 
   /// The ACQUISITION ladder, alongside [state]'s scheduling one. Null → no progress row at all,
   /// which the ladder reads as «never shown» (rung 0).
@@ -386,21 +392,23 @@ class CachedImages extends Table {
   Set<Column<Object>> get primaryKey => {url};
 }
 
-@DriftDatabase(tables: [
-  Collections,
-  CollectionItems,
-  Terms,
-  TermProgress,
-  SyncMeta,
-  TriagedTerms,
-  PendingGenerations,
-  DailyActivity,
-  ReviewQueueRows,
-  ExposureQueueRows,
-  SessionCompletionQueueRows,
-  PoolQueueRows,
-  CachedImages,
-])
+@DriftDatabase(
+  tables: [
+    Collections,
+    CollectionItems,
+    Terms,
+    TermProgress,
+    SyncMeta,
+    TriagedTerms,
+    PendingGenerations,
+    DailyActivity,
+    ReviewQueueRows,
+    ExposureQueueRows,
+    SessionCompletionQueueRows,
+    PoolQueueRows,
+    CachedImages,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
   AppDatabase.forTesting(super.e);
@@ -428,134 +436,123 @@ class AppDatabase extends _$AppDatabase {
     TableInfo<Table, dynamic> table,
     GeneratedColumn<Object> column,
   ) async {
-    final rows =
-        await m.database.customSelect('PRAGMA table_info(${table.actualTableName})').get();
+    final rows = await m.database.customSelect('PRAGMA table_info(${table.actualTableName})').get();
     final present = rows.any((r) => r.read<String>('name') == column.$name);
     if (!present) await m.addColumn(table, column);
   }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) await m.createTable(triagedTerms); // triage-from-local-DB
-          if (from < 3) {
-            await _addColumnIfMissing(m, collections, collections.source); // origin badge
-            await _addColumnIfMissing(m, collections, collections.type);
-          }
-          if (from < 4) {
-            // Pexels imagery (A3): cover on collections, photo on terms, + attribution each.
-            await _addColumnIfMissing(m, collections, collections.imageUrl);
-            await _addColumnIfMissing(m, collections, collections.imageAuthor);
-            await _addColumnIfMissing(m, collections, collections.imageAuthorUrl);
-            await _addColumnIfMissing(m, terms, terms.imageUrl);
-            await _addColumnIfMissing(m, terms, terms.imageAuthor);
-            await _addColumnIfMissing(m, terms, terms.imageAuthorUrl);
-          }
-          if (from < 5) await m.createTable(pendingGenerations); // pending-generation card (Part B)
-          if (from < 6) {
-            // Offline prompt queue (A3.5): a generation may sit un-sent until the network returns.
-            await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.sent);
-            await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.targetLangExplicit);
-          }
-          if (from < 7) await m.createTable(dailyActivity); // Progress-screen activity (A3.6)
-          // Durable review queue moved out of the Keychain (F20-r2). The existing blob is imported
-          // once at start-up by ReviewQueue.migrateFromKeychain — not here, because the migration
-          // needs the Keychain, which the DB layer must not know about.
-          if (from < 8) await m.createTable(reviewQueueRows);
-          // Disk cache for remote images (F22): photos seen once stay visible offline and across
-          // restarts. The files are created lazily, so there is nothing to backfill here.
-          if (from < 9) await m.createTable(cachedImages);
-          if (from < 10) {
-            // Enrichment станок: accepted variants (needed for offline typed grading) and example
-            // distractors (mirrored ahead of the trainer that reads them).
-            await _addColumnIfMissing(m, terms, terms.acceptedVariants);
-            await _addColumnIfMissing(m, terms, terms.exampleDistractors);
-            // Drop the sync cursor so the next sync is a FULL snapshot. A delta only carries terms
-            // whose `updated_at` moved, so terms already mirrored here would otherwise keep their
-            // new columns null forever — and a null variant list is exactly the state where the
-            // client grades an answer wrong that the server grades right.
-            await m.database.customStatement(
-              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
-            );
-          }
-          if (from < 11) {
-            // The acquisition ladder. Existing rows take the column default `graduated`, which is
-            // the same backfill the server did and for the same reason: a word already being
-            // reviewed must not be pushed back to an intro card.
-            await _addColumnIfMissing(m, termProgress, termProgress.acquisition);
-            await _addColumnIfMissing(m, termProgress, termProgress.learningStep);
-            await m.createTable(exposureQueueRows);
-            // Full snapshot on the next sync, for the same reason as v10: a delta carries only rows
-            // whose `updated_at` moved, so pairs already mirrored here would keep the default
-            // `graduated` forever — and a word the server has at rung 0 would never get its intro.
-            await m.database.customStatement(
-              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
-            );
-          }
-          if (from < 12) {
-            // The rung a queued answer was dealt at, so rung-1 taps upload as identity answers.
-            // Rows already queued stay null on purpose: they were recorded as TEXT, and stamping a
-            // rung on them now would tell the server to read that text as a term id. They upload
-            // exactly as they would have before this version — see the ladder_step contract note.
-            await _addColumnIfMissing(m, reviewQueueRows, reviewQueueRows.ladderStep);
-          }
-          if (from < 13) {
-            // Session completions ride their own durable queue, so a run finished in airplane mode
-            // still reaches `study_sessions.ended_at` when the network returns (QA-12).
-            await m.createTable(sessionCompletionQueueRows);
-          }
-          if (from < 14) {
-            // The ladder's own counter (QA-18). Rungs 4 and 5 used to be read off `reps`, which
-            // counts scheduler calls of every grade, so misses carried words upward.
-            await _addColumnIfMissing(m, termProgress, termProgress.successfulReviews);
-            // Full snapshot on the next sync, for the same reason as v10 and v11: a delta carries
-            // only rows whose `updated_at` moved, so every pair already mirrored here would keep
-            // the column default 0 — and a word the owner HAS earned typing on would sit back at
-            // assembly until it happened to be answered again. The server has the honest number
-            // for all of them; the cheapest way to get it is to ask for everything once.
-            await m.database.customStatement(
-              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
-            );
-          }
-          if (from < 15) {
-            // The POOL. A word reaches the trainer only once the learner has taken it into study.
-            await _addColumnIfMissing(m, termProgress, termProgress.enrolledAt);
-            // Local backfill, mirroring the server's migration exactly: every pair that already
-            // exists was created by a deliberate act, so it is enrolled — except a «знаю»
-            // self-assessment, whose row exists only to carry a verification check. Done here as
-            // well as asked for over the wire because the phone must not show an empty «Мои слова»
-            // in the minutes (or the flight) between the update and the next sync.
-            await m.database.customStatement(
-              "UPDATE term_progress SET enrolled_at = updated_at WHERE state <> 'known'",
-            );
-            // …and a full snapshot on the next sync, for the same reason as v10, v11 and v14: a
-            // delta carries only rows whose `updated_at` moved, so the server's real enrolment
-            // moments (and any word paused on another device) would never arrive. The backfill
-            // above is the offline stand-in; this is the truth replacing it.
-            await m.database.customStatement(
-              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
-            );
-            // The two pool taps ride their own durable queue, for the same reason answers and
-            // session completions do: they are the only way a word reaches the trainer, so one
-            // made in airplane mode must not be lost.
-            await m.createTable(poolQueueRows);
-          }
-          if (from < 16) {
-            // The word's DESCRIPTION (the description_match trainer's question) and the flag that
-            // says which folder is «Сохранённые».
-            await _addColumnIfMissing(m, terms, terms.description);
-            await _addColumnIfMissing(m, collections, collections.isDefault);
-            // …and a full snapshot on the next sync, for the same reason as v10, v11, v14 and v15:
-            // a delta carries only rows whose `updated_at` moved, so every term and folder already
-            // mirrored here would keep the column default forever. There is no offline stand-in for
-            // either value — the server is the only place they exist.
-            await m.database.customStatement(
-              "DELETE FROM sync_meta WHERE key = 'sync_cursor'",
-            );
-          }
-        },
-      );
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.createTable(triagedTerms); // triage-from-local-DB
+      if (from < 3) {
+        await _addColumnIfMissing(m, collections, collections.source); // origin badge
+        await _addColumnIfMissing(m, collections, collections.type);
+      }
+      if (from < 4) {
+        // Pexels imagery (A3): cover on collections, photo on terms, + attribution each.
+        await _addColumnIfMissing(m, collections, collections.imageUrl);
+        await _addColumnIfMissing(m, collections, collections.imageAuthor);
+        await _addColumnIfMissing(m, collections, collections.imageAuthorUrl);
+        await _addColumnIfMissing(m, terms, terms.imageUrl);
+        await _addColumnIfMissing(m, terms, terms.imageAuthor);
+        await _addColumnIfMissing(m, terms, terms.imageAuthorUrl);
+      }
+      if (from < 5) await m.createTable(pendingGenerations); // pending-generation card (Part B)
+      if (from < 6) {
+        // Offline prompt queue (A3.5): a generation may sit un-sent until the network returns.
+        await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.sent);
+        await _addColumnIfMissing(m, pendingGenerations, pendingGenerations.targetLangExplicit);
+      }
+      if (from < 7) await m.createTable(dailyActivity); // Progress-screen activity (A3.6)
+      // Durable review queue moved out of the Keychain (F20-r2). The existing blob is imported
+      // once at start-up by ReviewQueue.migrateFromKeychain — not here, because the migration
+      // needs the Keychain, which the DB layer must not know about.
+      if (from < 8) await m.createTable(reviewQueueRows);
+      // Disk cache for remote images (F22): photos seen once stay visible offline and across
+      // restarts. The files are created lazily, so there is nothing to backfill here.
+      if (from < 9) await m.createTable(cachedImages);
+      if (from < 10) {
+        // Enrichment станок: accepted variants (needed for offline typed grading) and example
+        // distractors (mirrored ahead of the trainer that reads them).
+        await _addColumnIfMissing(m, terms, terms.acceptedVariants);
+        await _addColumnIfMissing(m, terms, terms.exampleDistractors);
+        // Drop the sync cursor so the next sync is a FULL snapshot. A delta only carries terms
+        // whose `updated_at` moved, so terms already mirrored here would otherwise keep their
+        // new columns null forever — and a null variant list is exactly the state where the
+        // client grades an answer wrong that the server grades right.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
+      if (from < 11) {
+        // The acquisition ladder. Existing rows take the column default `graduated`, which is
+        // the same backfill the server did and for the same reason: a word already being
+        // reviewed must not be pushed back to an intro card.
+        await _addColumnIfMissing(m, termProgress, termProgress.acquisition);
+        await _addColumnIfMissing(m, termProgress, termProgress.learningStep);
+        await m.createTable(exposureQueueRows);
+        // Full snapshot on the next sync, for the same reason as v10: a delta carries only rows
+        // whose `updated_at` moved, so pairs already mirrored here would keep the default
+        // `graduated` forever — and a word the server has at rung 0 would never get its intro.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
+      if (from < 12) {
+        // The rung a queued answer was dealt at, so rung-1 taps upload as identity answers.
+        // Rows already queued stay null on purpose: they were recorded as TEXT, and stamping a
+        // rung on them now would tell the server to read that text as a term id. They upload
+        // exactly as they would have before this version — see the ladder_step contract note.
+        await _addColumnIfMissing(m, reviewQueueRows, reviewQueueRows.ladderStep);
+      }
+      if (from < 13) {
+        // Session completions ride their own durable queue, so a run finished in airplane mode
+        // still reaches `study_sessions.ended_at` when the network returns (QA-12).
+        await m.createTable(sessionCompletionQueueRows);
+      }
+      if (from < 14) {
+        // The ladder's own counter (QA-18). Rungs 4 and 5 used to be read off `reps`, which
+        // counts scheduler calls of every grade, so misses carried words upward.
+        await _addColumnIfMissing(m, termProgress, termProgress.successfulReviews);
+        // Full snapshot on the next sync, for the same reason as v10 and v11: a delta carries
+        // only rows whose `updated_at` moved, so every pair already mirrored here would keep
+        // the column default 0 — and a word the owner HAS earned typing on would sit back at
+        // assembly until it happened to be answered again. The server has the honest number
+        // for all of them; the cheapest way to get it is to ask for everything once.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
+      if (from < 15) {
+        // The POOL. A word reaches the trainer only once the learner has taken it into study.
+        await _addColumnIfMissing(m, termProgress, termProgress.enrolledAt);
+        // Local backfill, mirroring the server's migration exactly: every pair that already
+        // exists was created by a deliberate act, so it is enrolled — except a «знаю»
+        // self-assessment, whose row exists only to carry a verification check. Done here as
+        // well as asked for over the wire because the phone must not show an empty «Мои слова»
+        // in the minutes (or the flight) between the update and the next sync.
+        await m.database.customStatement(
+          "UPDATE term_progress SET enrolled_at = updated_at WHERE state <> 'known'",
+        );
+        // …and a full snapshot on the next sync, for the same reason as v10, v11 and v14: a
+        // delta carries only rows whose `updated_at` moved, so the server's real enrolment
+        // moments (and any word paused on another device) would never arrive. The backfill
+        // above is the offline stand-in; this is the truth replacing it.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+        // The two pool taps ride their own durable queue, for the same reason answers and
+        // session completions do: they are the only way a word reaches the trainer, so one
+        // made in airplane mode must not be lost.
+        await m.createTable(poolQueueRows);
+      }
+      if (from < 16) {
+        // The word's DESCRIPTION (the description_match trainer's question) and the flag that
+        // says which folder is «Сохранённые».
+        await _addColumnIfMissing(m, terms, terms.description);
+        await _addColumnIfMissing(m, collections, collections.isDefault);
+        // …and a full snapshot on the next sync, for the same reason as v10, v11, v14 and v15:
+        // a delta carries only rows whose `updated_at` moved, so every term and folder already
+        // mirrored here would keep the column default forever. There is no offline stand-in for
+        // either value — the server is the only place they exist.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
+    },
+  );
 
   // ---- Reads (reactive) -----------------------------------------------------
 
@@ -566,27 +563,30 @@ class AppDatabase extends _$AppDatabase {
 
   /// The terms of one collection with content + live status, in study order (position).
   Stream<List<CollectionTermRow>> watchCollectionTerms(String collectionId) {
-    final query = select(collectionItems).join([
-      innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
-      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
-      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
-    ])
-      ..where(collectionItems.collectionId.equals(collectionId))
-      ..orderBy([OrderingTerm(expression: collectionItems.position)]);
+    final query =
+        select(collectionItems).join([
+            innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
+            leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+            leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+          ])
+          ..where(collectionItems.collectionId.equals(collectionId))
+          ..orderBy([OrderingTerm(expression: collectionItems.position)]);
 
-    return query.watch().map((rows) => rows.map((r) {
-          final progress = r.readTableOrNull(termProgress);
-          return CollectionTermRow(
-            term: r.readTable(terms),
-            position: r.readTable(collectionItems).position,
-            state: progress?.state,
-            triaged: r.readTableOrNull(triagedTerms) != null,
-            acquisition: progress?.acquisition,
-            learningStep: progress?.learningStep ?? 0,
-            successfulReviews: progress?.successfulReviews ?? 0,
-            enrolled: progress?.enrolledAt != null,
-          );
-        }).toList());
+    return query.watch().map(
+      (rows) => rows.map((r) {
+        final progress = r.readTableOrNull(termProgress);
+        return CollectionTermRow(
+          term: r.readTable(terms),
+          position: r.readTable(collectionItems).position,
+          state: progress?.state,
+          triaged: r.readTableOrNull(triagedTerms) != null,
+          acquisition: progress?.acquisition,
+          learningStep: progress?.learningStep ?? 0,
+          successfulReviews: progress?.successfulReviews ?? 0,
+          enrolled: progress?.enrolledAt != null,
+        );
+      }).toList(),
+    );
   }
 
   /// Every progress row — the input for the local stats derivation.
@@ -599,11 +599,10 @@ class AppDatabase extends _$AppDatabase {
   /// Every synced term of one collection, in study order. One-shot: free practice builds its whole
   /// session from this snapshot on the device, so it must not depend on a live stream.
   Future<List<Term>> collectionTerms(String collectionId) {
-    final query = select(collectionItems).join([
-      innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
-    ])
-      ..where(collectionItems.collectionId.equals(collectionId))
-      ..orderBy([OrderingTerm(expression: collectionItems.position)]);
+    final query =
+        select(collectionItems).join([innerJoin(terms, terms.id.equalsExp(collectionItems.termId))])
+          ..where(collectionItems.collectionId.equals(collectionId))
+          ..orderBy([OrderingTerm(expression: collectionItems.position)]);
 
     return query.map((row) => row.readTable(terms)).get();
   }
@@ -623,12 +622,15 @@ class AppDatabase extends _$AppDatabase {
   /// terms (no progress row) surface as null. Feeds the global density bar on the Progress screen
   /// («Все N слов»): each term folds into exactly one of confirmed/familiar/in-progress. Reactive.
   Stream<List<({String? state, int? intervalDays})>> watchTermStates() {
-    final query = select(terms)
-        .join([leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id))]);
-    return query.watch().map((rows) => rows.map((r) {
-          final p = r.readTableOrNull(termProgress);
-          return (state: p?.state, intervalDays: p?.intervalDays);
-        }).toList());
+    final query = select(
+      terms,
+    ).join([leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id))]);
+    return query.watch().map(
+      (rows) => rows.map((r) {
+        final p = r.readTableOrNull(termProgress);
+        return (state: p?.state, intervalDays: p?.intervalDays);
+      }).toList(),
+    );
   }
 
   // ---- Daily activity (client-only, not synced) -----------------------------
@@ -645,25 +647,25 @@ class AppDatabase extends _$AppDatabase {
   /// The goal card read whatever the count had been when the screen first subscribed — zero — and
   /// stayed there for the whole run however many answers went in (QA-10).
   Future<void> bumpDailyActivity(String day) => customInsert(
-        'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) '
-        'ON CONFLICT(day) DO UPDATE SET reviews = reviews + 1',
-        variables: [Variable<String>(day)],
-        updates: {dailyActivity},
-      );
+    'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) '
+    'ON CONFLICT(day) DO UPDATE SET reviews = reviews + 1',
+    variables: [Variable<String>(day)],
+    updates: {dailyActivity},
+  );
 
   /// Merge the server's activity calendar (F18) into the local map: a day the client hasn't
   /// recorded lights up (count 1); a day it already counted keeps its exact optimistic tally
   /// (max(existing, 1) via ON CONFLICT DO NOTHING). So a relogin/reinstall restores the whole
   /// calendar from `/stats` without clobbering today's live count.
   Future<void> mergeActiveDays(List<String> days) => transaction(() async {
-        for (final day in days) {
-          await customInsert(
-            'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) ON CONFLICT(day) DO NOTHING',
-            variables: [Variable<String>(day)],
-            updates: {dailyActivity}, // same reason as bumpDailyActivity: raw SQL wakes no stream
-          );
-        }
-      });
+    for (final day in days) {
+      await customInsert(
+        'INSERT INTO daily_activity (day, reviews) VALUES (?, 1) ON CONFLICT(day) DO NOTHING',
+        variables: [Variable<String>(day)],
+        updates: {dailyActivity}, // same reason as bumpDailyActivity: raw SQL wakes no stream
+      );
+    }
+  });
 
   // ---- Durable review queue (client-only, not synced) -----------------------
 
@@ -692,11 +694,12 @@ class AppDatabase extends _$AppDatabase {
   /// The oldest PRACTICE answers, for the queue cap. Scheduling answers are never offered here —
   /// they carry progress the server has not seen and must never be dropped to make room.
   Future<List<String>> oldestPracticeReviewIds(int limit) async {
-    final rows = await (select(reviewQueueRows)
-          ..where((t) => t.isPractice.equals(true))
-          ..orderBy([(t) => OrderingTerm(expression: t.clientSeq)])
-          ..limit(limit))
-        .get();
+    final rows =
+        await (select(reviewQueueRows)
+              ..where((t) => t.isPractice.equals(true))
+              ..orderBy([(t) => OrderingTerm(expression: t.clientSeq)])
+              ..limit(limit))
+            .get();
     return [for (final r in rows) r.id];
   }
 
@@ -742,16 +745,18 @@ class AppDatabase extends _$AppDatabase {
 
   // ---- Durable session-completion queue (client-only, not synced) -----------
 
-  Future<List<SessionCompletionQueueRow>> completionQueue() =>
-      (select(sessionCompletionQueueRows)..orderBy([(t) => OrderingTerm(expression: t.endedAt)])).get();
+  Future<List<SessionCompletionQueueRow>> completionQueue() => (select(
+    sessionCompletionQueueRows,
+  )..orderBy([(t) => OrderingTerm(expression: t.endedAt)])).get();
 
   /// Record that a run was played to its end. `insertOrIgnore`, not upsert: the session is the key
   /// and the FIRST `ended_at` is the one that is true — a run finishes once.
   Future<void> enqueueCompletion(SessionCompletionQueueRowsCompanion row) =>
       into(sessionCompletionQueueRows).insert(row, mode: InsertMode.insertOrIgnore);
 
-  Future<void> dequeueCompletions(Iterable<String> sessionIds) =>
-      (delete(sessionCompletionQueueRows)..where((t) => t.sessionId.isIn(sessionIds.toList()))).go();
+  Future<void> dequeueCompletions(Iterable<String> sessionIds) => (delete(
+    sessionCompletionQueueRows,
+  )..where((t) => t.sessionId.isIn(sessionIds.toList()))).go();
 
   /// Step a pair off rung 0 onto the first recognition rung, locally.
   ///
@@ -762,16 +767,19 @@ class AppDatabase extends _$AppDatabase {
   /// Idempotent by the same rule the server uses: a pair that has already left `new` is untouched,
   /// so a replayed acknowledgement cannot push it back down.
   Future<void> markIntroduced(String termId, DateTime at) async {
-    final existing = await (select(termProgress)..where((p) => p.termId.equals(termId)))
-        .getSingleOrNull();
+    final existing = await (select(
+      termProgress,
+    )..where((p) => p.termId.equals(termId))).getSingleOrNull();
 
     if (existing == null) {
-      await into(termProgress).insert(TermProgressCompanion.insert(
-        termId: termId,
-        updatedAt: at,
-        acquisition: const Value('learning'),
-        learningStep: const Value(1),
-      ));
+      await into(termProgress).insert(
+        TermProgressCompanion.insert(
+          termId: termId,
+          updatedAt: at,
+          acquisition: const Value('learning'),
+          learningStep: const Value(1),
+        ),
+      );
       return;
     }
     if (existing.acquisition != 'new') return; // already past the intro — leave it alone
@@ -805,17 +813,20 @@ class AppDatabase extends _$AppDatabase {
     String acquisition = 'new',
     int learningStep = 0,
   }) async {
-    final existing =
-        await (select(termProgress)..where((p) => p.termId.equals(termId))).getSingleOrNull();
+    final existing = await (select(
+      termProgress,
+    )..where((p) => p.termId.equals(termId))).getSingleOrNull();
 
     if (existing == null) {
-      await into(termProgress).insert(TermProgressCompanion.insert(
-        termId: termId,
-        updatedAt: at,
-        acquisition: Value(acquisition),
-        learningStep: Value(learningStep),
-        enrolledAt: Value(at),
-      ));
+      await into(termProgress).insert(
+        TermProgressCompanion.insert(
+          termId: termId,
+          updatedAt: at,
+          acquisition: Value(acquisition),
+          learningStep: Value(learningStep),
+          enrolledAt: Value(at),
+        ),
+      );
       return;
     }
     if (existing.enrolledAt != null) return; // already in the pool — keep the first moment
@@ -844,8 +855,7 @@ class AppDatabase extends _$AppDatabase {
   /// never had is never corrected by a delta feed, and the word would sit in «Мои слова» forever.
   Future<void> unenrollLocallyIfUnshown(String termId, DateTime at) async {
     await (update(termProgress)
-          ..where((p) =>
-              p.termId.equals(termId) & p.acquisition.equals('new') & p.reps.equals(0)))
+          ..where((p) => p.termId.equals(termId) & p.acquisition.equals('new') & p.reps.equals(0)))
         .write(TermProgressCompanion(enrolledAt: const Value(null), updatedAt: Value(at)));
   }
 
@@ -858,11 +868,9 @@ class AppDatabase extends _$AppDatabase {
   /// Record the DESIRED membership. Upsert, not append: the last intent for a term is the only one
   /// worth sending, so enrol-then-remove offline leaves one row rather than two calls to replay.
   Future<void> enqueuePoolChange(String termId, {required bool enrolled, required DateTime at}) =>
-      into(poolQueueRows).insertOnConflictUpdate(PoolQueueRowsCompanion.insert(
-        termId: termId,
-        enrolled: enrolled,
-        changedAt: at,
-      ));
+      into(poolQueueRows).insertOnConflictUpdate(
+        PoolQueueRowsCompanion.insert(termId: termId, enrolled: enrolled, changedAt: at),
+      );
 
   Future<void> dequeuePoolChanges(Iterable<String> termIds) =>
       (delete(poolQueueRows)..where((t) => t.termId.isIn(termIds.toList()))).go();
@@ -875,12 +883,13 @@ class AppDatabase extends _$AppDatabase {
   /// still being studied and still listed, with no source to show. The join fans a word into one
   /// row per collection; they are folded back together here.
   Stream<List<PoolWordRow>> watchPool() {
-    final query = select(termProgress).join([
-      innerJoin(terms, terms.id.equalsExp(termProgress.termId)),
-      leftOuterJoin(collectionItems, collectionItems.termId.equalsExp(termProgress.termId)),
-    ])
-      ..where(termProgress.enrolledAt.isNotNull())
-      ..orderBy([OrderingTerm(expression: termProgress.enrolledAt, mode: OrderingMode.desc)]);
+    final query =
+        select(termProgress).join([
+            innerJoin(terms, terms.id.equalsExp(termProgress.termId)),
+            leftOuterJoin(collectionItems, collectionItems.termId.equalsExp(termProgress.termId)),
+          ])
+          ..where(termProgress.enrolledAt.isNotNull())
+          ..orderBy([OrderingTerm(expression: termProgress.enrolledAt, mode: OrderingMode.desc)]);
 
     return query.watch().map((rows) {
       final byTerm = <String, PoolWordRow>{};
@@ -938,9 +947,7 @@ class AppDatabase extends _$AppDatabase {
     final query = selectOnly(termProgress)
       ..addColumns([termProgress.enrolledAt])
       ..where(termProgress.enrolledAt.isNotNull());
-    return query
-        .watch()
-        .map((rows) => [for (final r in rows) r.read(termProgress.enrolledAt)!]);
+    return query.watch().map((rows) => [for (final r in rows) r.read(termProgress.enrolledAt)!]);
   }
 
   /// Triage-eligible (never-shown AND never-triaged) term count per collection —
@@ -949,8 +956,7 @@ class AppDatabase extends _$AppDatabase {
     final query = select(collectionItems).join([
       leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
       leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
-    ])
-      ..where(_neverShown & triagedTerms.termId.isNull());
+    ])..where(_neverShown & triagedTerms.termId.isNull());
     return query.watch().map((rows) {
       final map = <String, int>{};
       for (final r in rows) {
@@ -971,8 +977,7 @@ class AppDatabase extends _$AppDatabase {
   Stream<Map<String, int>> watchLearnableByCollection() {
     final query = select(collectionItems).join([
       innerJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
-    ])
-      ..where(termProgress.enrolledAt.isNotNull() & termProgress.acquisition.equals('new'));
+    ])..where(termProgress.enrolledAt.isNotNull() & termProgress.acquisition.equals('new'));
     return query.watch().map((rows) {
       final map = <String, int>{};
       for (final r in rows) {
@@ -998,24 +1003,32 @@ class AppDatabase extends _$AppDatabase {
   /// exactly like the backend. This is the single source for both the deck and its counter —
   /// deriving them separately is what caused BUG-1.
   Future<List<Term>> triageEligible(String collectionId, {int cap = 500}) {
-    final query = select(collectionItems).join([
-      innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
-      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
-      leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
-    ])
-      ..where(collectionItems.collectionId.equals(collectionId) &
-          _neverShown & // never shown (no row, or still at rung 0)
-          triagedTerms.termId.isNull()) // never triaged (local marker)
-      ..orderBy([OrderingTerm(expression: collectionItems.position)])
-      ..limit(cap);
+    final query =
+        select(collectionItems).join([
+            innerJoin(terms, terms.id.equalsExp(collectionItems.termId)),
+            leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
+            leftOuterJoin(triagedTerms, triagedTerms.termId.equalsExp(collectionItems.termId)),
+          ])
+          ..where(
+            collectionItems.collectionId.equals(collectionId) &
+                _neverShown & // never shown (no row, or still at rung 0)
+                triagedTerms.termId.isNull(),
+          ) // never triaged (local marker)
+          ..orderBy([OrderingTerm(expression: collectionItems.position)])
+          ..limit(cap);
 
     return query.map((r) => r.readTable(terms)).get();
   }
 
   /// Mark a term triaged so it leaves the deck and stays out (durable, not synced). Idempotent.
-  Future<void> markTriaged(String termId, String? collectionId, DateTime at) => into(triagedTerms)
-      .insertOnConflictUpdate(TriagedTermsCompanion.insert(
-          termId: termId, collectionId: Value(collectionId), decidedAt: at));
+  Future<void> markTriaged(String termId, String? collectionId, DateTime at) =>
+      into(triagedTerms).insertOnConflictUpdate(
+        TriagedTermsCompanion.insert(
+          termId: termId,
+          collectionId: Value(collectionId),
+          decidedAt: at,
+        ),
+      );
 
   /// Undo a triage mark (used when the last swipe is undone before it leaves the screen).
   Future<void> unmarkTriaged(String termId) =>
@@ -1023,20 +1036,22 @@ class AppDatabase extends _$AppDatabase {
 
   /// Every (collection item, progress) pair — the input for per-collection progress.
   Stream<List<ItemProgressRow>> watchItemProgress() {
-    final query = select(collectionItems).join([
-      leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId)),
-    ]);
-    return query.watch().map((rows) => rows.map((r) {
-          final item = r.readTable(collectionItems);
-          final prog = r.readTableOrNull(termProgress);
-          return ItemProgressRow(
-            collectionId: item.collectionId,
-            termId: item.termId,
-            state: prog?.state,
-            intervalDays: prog?.intervalDays,
-            dueAt: prog?.dueAt,
-          );
-        }).toList());
+    final query = select(
+      collectionItems,
+    ).join([leftOuterJoin(termProgress, termProgress.termId.equalsExp(collectionItems.termId))]);
+    return query.watch().map(
+      (rows) => rows.map((r) {
+        final item = r.readTable(collectionItems);
+        final prog = r.readTableOrNull(termProgress);
+        return ItemProgressRow(
+          collectionId: item.collectionId,
+          termId: item.termId,
+          state: prog?.state,
+          intervalDays: prog?.intervalDays,
+          dueAt: prog?.dueAt,
+        );
+      }).toList(),
+    );
   }
 
   // ---- Pending generations (client-only, not synced) ------------------------
@@ -1082,11 +1097,14 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> setMeta(String key, String? value) async {
-    await into(syncMeta).insertOnConflictUpdate(SyncMetaCompanion.insert(key: key, value: Value(value)));
+    await into(
+      syncMeta,
+    ).insertOnConflictUpdate(SyncMetaCompanion.insert(key: key, value: Value(value)));
   }
 
   /// Current row counts + the stored cursor — for the on-device sync diagnostics panel.
-  Future<({int collections, int items, int terms, int progress, String? cursor})> debugCounts() async {
+  Future<({int collections, int items, int terms, int progress, String? cursor})>
+  debugCounts() async {
     Future<int> count(TableInfo<Table, dynamic> t) async {
       final c = countAll();
       final row = await (selectOnly(t)..addColumns([c])).getSingle();
@@ -1132,9 +1150,9 @@ class AppDatabase extends _$AppDatabase {
         await batch((b) => b.insertAllOnConflictUpdate(collectionItems, itemUpserts));
       }
       for (final (collectionId, termId) in itemDeletes) {
-        await (delete(collectionItems)
-              ..where((t) => t.collectionId.equals(collectionId) & t.termId.equals(termId)))
-            .go();
+        await (delete(
+          collectionItems,
+        )..where((t) => t.collectionId.equals(collectionId) & t.termId.equals(termId))).go();
       }
       if (progressUpserts.isNotEmpty) {
         await batch((b) => b.insertAllOnConflictUpdate(termProgress, progressUpserts));
@@ -1172,10 +1190,9 @@ class AppDatabase extends _$AppDatabase {
   /// from being dropped as ghosts.
   Future<void> reconcileCollections(Set<String> keep) async {
     await transaction(() async {
-      final referenced = (await select(pendingGenerations).get())
-          .map((r) => r.collectionId)
-          .whereType<String>()
-          .toSet();
+      final referenced = (await select(
+        pendingGenerations,
+      ).get()).map((r) => r.collectionId).whereType<String>().toSet();
       final all = await select(collections).get();
       final stale = all
           .where((c) => !keep.contains(c.id) && !referenced.contains(c.id))
@@ -1225,12 +1242,19 @@ class AppDatabase extends _$AppDatabase {
         await (delete(table)..where((t) => match(t, stale))).go();
       }
 
-      await reap<Terms, Term>(
-          terms, (r) => r.id, termIds, (t, stale) => t.id.isIn(stale));
+      await reap<Terms, Term>(terms, (r) => r.id, termIds, (t, stale) => t.id.isIn(stale));
       await reap<TermProgress, TermProgressData>(
-          termProgress, (r) => r.termId, progressTermIds, (t, stale) => t.termId.isIn(stale));
+        termProgress,
+        (r) => r.termId,
+        progressTermIds,
+        (t, stale) => t.termId.isIn(stale),
+      );
       await reap<TriagedTerms, TriagedTerm>(
-          triagedTerms, (r) => r.termId, triageTermIds, (t, stale) => t.termId.isIn(stale));
+        triagedTerms,
+        (r) => r.termId,
+        triageTermIds,
+        (t, stale) => t.termId.isIn(stale),
+      );
     });
   }
 

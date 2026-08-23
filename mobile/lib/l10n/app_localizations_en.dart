@@ -162,8 +162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGenerateTitle => 'Describe a topic — we\'ll build a set';
 
   @override
-  String get homeGenerateSubtitle =>
-      'AI picks the words and phrases you\'ll actually need';
+  String get homeGenerateSubtitle => 'AI picks the words and phrases you\'ll actually need';
 
   @override
   String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
@@ -289,8 +288,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionTriageBannerTitle => 'Triage the set';
 
   @override
-  String get collectionTriageBannerBody =>
-      'Mark what you already know — the rest goes to practice';
+  String get collectionTriageBannerBody => 'Mark what you already know — the rest goes to practice';
 
   @override
   String get collectionTriageBannerStart => 'Start';
@@ -307,8 +305,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get collectionDeleteWordMessage =>
-      'The word stays in other sets; your progress is kept.';
+  String get collectionDeleteWordMessage => 'The word stays in other sets; your progress is kept.';
 
   @override
   String get wordSheetAddTitle => 'Add a word';
@@ -329,12 +326,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordTranslationHintOptional => 'optional — we\'ll fill it in';
 
   @override
-  String get wordSheetAddHelper =>
-      'Transcription, example and photo are added automatically.';
+  String get wordSheetAddHelper => 'Transcription, example and photo are added automatically.';
 
   @override
-  String get wordSheetEditHelper =>
-      'Example and photo stay unless you change the term.';
+  String get wordSheetEditHelper => 'Example and photo stay unless you change the term.';
 
   @override
   String get wordSheetAddButton => 'Add to set';
@@ -418,22 +413,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionsEmptyTitle => 'No collections yet';
 
   @override
-  String get collectionsEmptyBody =>
-      'Describe a situation — AI will build your first set.';
+  String get collectionsEmptyBody => 'Describe a situation — AI will build your first set.';
 
   @override
   String get collectionsCreateManual => 'Create manually';
 
   @override
-  String get collectionsCreateManualHint =>
-      'An empty collection — you add the words';
+  String get collectionsCreateManualHint => 'An empty collection — you add the words';
 
   @override
   String get collectionsCreateGenerate => 'Generate';
 
   @override
-  String get collectionsCreateGenerateHint =>
-      'AI builds a set from a situation you describe';
+  String get collectionsCreateGenerateHint => 'AI builds a set from a situation you describe';
 
   @override
   String get collectionsNewCollection => 'New collection';
@@ -458,8 +450,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get generationGeneratingNote =>
-      'Picking words and photos · usually 20–30 seconds';
+  String get generationGeneratingNote => 'Picking words and photos · usually 20–30 seconds';
 
   @override
   String get generationQueuedNote => 'We\'ll send it as soon as you\'re online';
@@ -529,8 +520,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generatePlaceholder0 => 'Renting a flat — talking to the agent';
 
   @override
-  String get generatePlaceholder1 =>
-      'First doctor\'s visit — symptoms and tests';
+  String get generatePlaceholder1 => 'First doctor\'s visit — symptoms and tests';
 
   @override
   String get generatePlaceholder2 => 'IT interview — talking through projects';
@@ -603,8 +593,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Text appears in the field as it\'s recognised — after you stop you can edit it by hand.';
 
   @override
-  String get generateVoiceRecordingNote =>
-      'Speak — the keyboard returns when you stop';
+  String get generateVoiceRecordingNote => 'Speak — the keyboard returns when you stop';
 
   @override
   String get generateVoicePermissionDenied =>
@@ -685,8 +674,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLookupFailed => 'Could not look this word up';
 
   @override
-  String get searchNotRecognized =>
-      'Couldn’t make that out — check the spelling';
+  String get searchNotRecognized => 'Couldn’t make that out — check the spelling';
 
   @override
   String get searchQueryTooLong => 'Search is for words and short phrases';
@@ -883,8 +871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appWordmark => 'Слова';
 
   @override
-  String get authTagline =>
-      'Words for real situations — from the bank to a job interview.';
+  String get authTagline => 'Words for real situations — from the bank to a job interview.';
 
   @override
   String get authContinueGoogle => 'Continue with Google';
@@ -899,8 +886,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authPrivacy => 'Privacy';
 
   @override
-  String get authOfflineHint =>
-      'No connection. The first sign-in needs the network.';
+  String get authOfflineHint => 'No connection. The first sign-in needs the network.';
 
   @override
   String get authAppleUnavailable => 'Sign in with Apple isn\'t available yet.';
@@ -915,8 +901,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onbLevelTitle => 'How confidently do you read?';
 
   @override
-  String get onbLevelSubtitle =>
-      'Roughly — we\'ll refine it from your triage answers.';
+  String get onbLevelSubtitle => 'Roughly — we\'ll refine it from your triage answers.';
 
   @override
   String onbLevelExample(String level) {
@@ -1002,8 +987,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileRowReminders => 'Reminders';
 
   @override
-  String get profileRemindersHint =>
-      'One a day, when there\'s something to review';
+  String get profileRemindersHint => 'One a day, when there\'s something to review';
 
   @override
   String get profileRowReminderTime => 'Time';
@@ -1123,8 +1107,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrType => 'write it in English';
 
   @override
-  String get sessionInstrListenChoose =>
-      'listen and choose the translation · replay any time';
+  String get sessionInstrListenChoose => 'listen and choose the translation · replay any time';
 
   @override
   String get sessionInstrListenType => 'listen and write it in English';
@@ -1183,12 +1166,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionSpeakListening => 'Listening…';
 
   @override
-  String get sessionSpeakNotHeard =>
-      'Didn\'t catch that. Try again — a little closer to the mic.';
+  String get sessionSpeakNotHeard => 'Didn\'t catch that. Try again — a little closer to the mic.';
 
   @override
-  String get sessionSpeakNoMic =>
-      'The microphone isn\'t available. You can skip this card.';
+  String get sessionSpeakNoMic => 'The microphone isn\'t available. You can skip this card.';
 
   @override
   String get sessionSpeakSkip => 'Skip';
@@ -1271,8 +1252,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionFeedbackWrong => 'Not quite — the correct form is below';
 
   @override
-  String get sessionFeedbackWrongAbove =>
-      'Not quite — the correct answer is marked above';
+  String get sessionFeedbackWrongAbove => 'Not quite — the correct answer is marked above';
 
   @override
   String get sessionDueToday => 'today';
@@ -1312,12 +1292,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sessionStatNew(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'New',
-      one: 'New',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'New', one: 'New');
     return '$_temp0';
   }
 
@@ -1382,15 +1357,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionNewExampleExhausted => 'You\'ve used today\'s examples';
 
   @override
-  String get sessionPracticeBanner =>
-      'Free practice — progress doesn\'t change';
+  String get sessionPracticeBanner => 'Free practice — progress doesn\'t change';
 
   @override
   String get sessionExitTitle => 'End the session?';
 
   @override
-  String get sessionExitBody =>
-      'Answered words are saved — you can come back any time.';
+  String get sessionExitBody => 'Answered words are saved — you can come back any time.';
 
   @override
   String get sessionExitConfirm => 'Exit';
@@ -1411,8 +1384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionEmpty => 'Nothing to review here yet';
 
   @override
-  String get sessionDailyNewLimit =>
-      'You\'ve reached today\'s new-word limit. Come back tomorrow';
+  String get sessionDailyNewLimit => 'You\'ve reached today\'s new-word limit. Come back tomorrow';
 
   @override
   String sessionLoadError(String error) {
@@ -1420,12 +1392,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get authErrorOffline =>
-      'No internet connection. Signing in needs a network.';
+  String get authErrorOffline => 'No internet connection. Signing in needs a network.';
 
   @override
-  String get authErrorGoogleUnsupported =>
-      'Google sign-in isn\'t supported on this platform.';
+  String get authErrorGoogleUnsupported => 'Google sign-in isn\'t supported on this platform.';
 
   @override
   String get authErrorCancelled => 'Sign-in cancelled.';
@@ -1486,8 +1456,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceDialogExitTitle => 'End the conversation?';
 
   @override
-  String get practiceDialogExitMessage =>
-      'The conversation will end and you\'ll see a recap.';
+  String get practiceDialogExitMessage => 'The conversation will end and you\'ll see a recap.';
 
   @override
   String get practiceDialogExitConfirm => 'End';
@@ -1507,8 +1476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceDialogFinaleDone => 'Done';
 
   @override
-  String get practiceDialogErrorSubscription =>
-      'Conversations are a Premium feature.';
+  String get practiceDialogErrorSubscription => 'Conversations are a Premium feature.';
 
   @override
   String practiceDialogErrorRateLimited(String time) {
@@ -1520,12 +1488,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No conversations left today. Try again tomorrow.';
 
   @override
-  String get practiceDialogErrorOffline =>
-      'You\'re offline. A conversation needs internet.';
+  String get practiceDialogErrorOffline => 'You\'re offline. A conversation needs internet.';
 
   @override
-  String get practiceDialogErrorGeneric =>
-      'Couldn\'t start the conversation. Please try again.';
+  String get practiceDialogErrorGeneric => 'Couldn\'t start the conversation. Please try again.';
 
   @override
   String get practiceDialogClose => 'Close';
@@ -1593,8 +1559,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeEmptyTitle => 'Sets are coming soon';
 
   @override
-  String get storeEmptyBody =>
-      'Ready-made collections by situation will appear here shortly.';
+  String get storeEmptyBody => 'Ready-made collections by situation will appear here shortly.';
 
   @override
   String get storePreviewAdded => 'Set added to Mine';
@@ -1617,16 +1582,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get paywallSubtitleQuota =>
-      'Premium raises the daily limit to twenty generations.';
+  String get paywallSubtitleQuota => 'Premium raises the daily limit to twenty generations.';
 
   @override
   String get paywallSubtitleStore =>
       'Premium collections are curated and all unlock at once — we don\'t sell them one by one.';
 
   @override
-  String get paywallSubtitleGeneric =>
-      'One plan unlocks everything that makes learning faster.';
+  String get paywallSubtitleGeneric => 'One plan unlocks everything that makes learning faster.';
 
   @override
   String get paywallBenefitGenerations => 'Up to 20 generations a day';
@@ -1687,8 +1650,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallDevPurchased => 'Premium activated (dev mode)';
 
   @override
-  String get paywallNeedsRealPremium =>
-      'Needs real Premium (StoreKit is a separate block)';
+  String get paywallNeedsRealPremium => 'Needs real Premium (StoreKit is a separate block)';
 
   @override
   String get profileTryPremium => 'Try Premium';
@@ -1732,8 +1694,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get perfMonitorToggle => 'Record stalls, slow frames and slow taps';
 
   @override
-  String get perfMonitorToggleHint =>
-      'Off by default — costs nothing while off';
+  String get perfMonitorToggleHint => 'Off by default — costs nothing while off';
 
   @override
   String get perfMonitorEmpty => 'nothing recorded';
@@ -1756,19 +1717,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionLoadFailed => 'Couldn\'t load the session';
 
   @override
-  String get syncStuckBanner =>
-      'Answers aren\'t reaching the server — check your connection';
+  String get syncStuckBanner => 'Answers aren\'t reaching the server — check your connection';
 
   @override
-  String get poolNotStudyingNote =>
-      'This word is in the catalogue — you are not studying it yet.';
+  String get poolNotStudyingNote => 'This word is in the catalogue — you are not studying it yet.';
 
   @override
   String get poolEnrollAction => 'Learn this word';
 
   @override
-  String get poolEnrollNote =>
-      'It joins the queue and starts coming up in your sessions.';
+  String get poolEnrollNote => 'It joins the queue and starts coming up in your sessions.';
 
   @override
   String get poolUnenrollAction => 'Stop studying';

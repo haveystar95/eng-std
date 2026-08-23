@@ -93,37 +93,46 @@ void main() {
   group('SessionGrader.check — accepted variants (offline grading agrees with the server)', () {
     test('a variant is accepted, not rejected', () {
       expect(
-        SessionGrader.check('that is my seat', 'this is my seat',
-            variants: const ['that is my seat']),
+        SessionGrader.check(
+          'that is my seat',
+          'this is my seat',
+          variants: const ['that is my seat'],
+        ),
         LocalCheck.correct,
       );
     });
     test('the canonical answer still wins when variants are present', () {
       expect(
-        SessionGrader.check('this is my seat', 'this is my seat',
-            variants: const ['that is my seat']),
+        SessionGrader.check(
+          'this is my seat',
+          'this is my seat',
+          variants: const ['that is my seat'],
+        ),
         LocalCheck.correct,
       );
     });
     test('a typo against a VARIANT is «Почти», not «Не то»', () {
       expect(
-        SessionGrader.check('that is my seaf', 'this is my seat',
-            variants: const ['that is my seat']),
+        SessionGrader.check(
+          'that is my seaf',
+          'this is my seat',
+          variants: const ['that is my seat'],
+        ),
         LocalCheck.typo,
       );
     });
     test('an exact variant beats a typo on the canonical answer', () {
       // "may I" is one edit from "can I", and also an exact variant. Exact must win, else a correct
       // answer would be reported as «Почти» and look like a mistake to the learner.
-      expect(
-        SessionGrader.check('may I', 'can I', variants: const ['may I']),
-        LocalCheck.correct,
-      );
+      expect(SessionGrader.check('may I', 'can I', variants: const ['may I']), LocalCheck.correct);
     });
     test('something outside the set is still wrong', () {
       expect(
-        SessionGrader.check('this is my chair', 'this is my seat',
-            variants: const ['that is my seat']),
+        SessionGrader.check(
+          'this is my chair',
+          'this is my seat',
+          variants: const ['that is my seat'],
+        ),
         LocalCheck.wrong,
       );
     });
@@ -132,12 +141,16 @@ void main() {
       expect(SessionGrader.check('deposit', 'withdraw'), LocalCheck.wrong);
     });
     test('blank is wrong even with variants on the card', () {
-      expect(SessionGrader.check('   ', 'withdraw', variants: const ['take out']),
-          LocalCheck.wrong);
+      expect(
+        SessionGrader.check('   ', 'withdraw', variants: const ['take out']),
+        LocalCheck.wrong,
+      );
     });
     test('an empty variant string cannot make everything correct', () {
-      expect(SessionGrader.check('nonsense', 'withdraw', variants: const ['', '   ']),
-          LocalCheck.wrong);
+      expect(
+        SessionGrader.check('nonsense', 'withdraw', variants: const ['', '   ']),
+        LocalCheck.wrong,
+      );
     });
   });
 
@@ -163,8 +176,12 @@ void main() {
 
     test('a variant is still accepted with leniency off', () {
       expect(
-        SessionGrader.check('that is my seat', 'this is my seat',
-            variants: const ['that is my seat'], forgiveTypos: false),
+        SessionGrader.check(
+          'that is my seat',
+          'this is my seat',
+          variants: const ['that is my seat'],
+          forgiveTypos: false,
+        ),
         LocalCheck.correct,
       );
     });
@@ -205,18 +222,12 @@ void main() {
 
   group('misplacedWords — which of the learner own words to mark (QA-16)', () {
     test('marks the one word that does not belong', () {
-      expect(
-        SessionGrader.misplacedWords(['withdraw', 'money'], 'withdraw cash'),
-        {1},
-      );
+      expect(SessionGrader.misplacedWords(['withdraw', 'money'], 'withdraw cash'), {1});
     });
 
     test('marks an extra word rather than shifting the blame onto the right ones', () {
       // «withdraw the cash» — everything expected is there, in order, plus one word that is not.
-      expect(
-        SessionGrader.misplacedWords(['withdraw', 'some', 'cash'], 'withdraw cash'),
-        {1},
-      );
+      expect(SessionGrader.misplacedWords(['withdraw', 'some', 'cash'], 'withdraw cash'), {1});
     });
 
     test('marks nothing when the words are all there in order', () {
@@ -256,44 +267,49 @@ void main() {
     });
   });
 
-  group('SpokenAnswer.windowFor — the recording window follows the LENGTH of what is said (QA-21)', () {
-    test('a one- or two-word term keeps the short window', () {
-      for (final term in ['evoke', 'boarding pass']) {
-        final w = SpokenAnswer.windowFor(asksForExample: false, term: term);
-        expect(w.listenFor, SpokenAnswer.wordFormListenFor, reason: term);
-        expect(w.pauseFor, SpokenAnswer.wordFormPauseFor, reason: term);
-      }
-    });
+  group(
+    'SpokenAnswer.windowFor — the recording window follows the LENGTH of what is said (QA-21)',
+    () {
+      test('a one- or two-word term keeps the short window', () {
+        for (final term in ['evoke', 'boarding pass']) {
+          final w = SpokenAnswer.windowFor(asksForExample: false, term: term);
+          expect(w.listenFor, SpokenAnswer.wordFormListenFor, reason: term);
+          expect(w.pauseFor, SpokenAnswer.wordFormPauseFor, reason: term);
+        }
+      });
 
-    test('a term of three words or more gets the sentence-sized window', () {
-      // The live case: an 8s/2s window cut this off after the first word («Heard: When»).
-      final w = SpokenAnswer.windowFor(
-        asksForExample: false,
-        term: 'Where do you see yourself in five years?',
-      );
-      expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
-      expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
-    });
+      test('a term of three words or more gets the sentence-sized window', () {
+        // The live case: an 8s/2s window cut this off after the first word («Heard: When»).
+        final w = SpokenAnswer.windowFor(
+          asksForExample: false,
+          term: 'Where do you see yourself in five years?',
+        );
+        expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
+        expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
+      });
 
-    test('the threshold is exactly SpokenAnswer.longTermWords, counted in words', () {
-      expect(SpokenAnswer.longTermWords, 3);
-      expect(SpokenAnswer.isLongTerm('take a photo'), isTrue); // 3
-      expect(SpokenAnswer.isLongTerm('team player'), isFalse); // 2
-      expect(SpokenAnswer.isLongTerm('   '), isFalse); // no words at all
-    });
+      test('the threshold is exactly SpokenAnswer.longTermWords, counted in words', () {
+        expect(SpokenAnswer.longTermWords, 3);
+        expect(SpokenAnswer.isLongTerm('take a photo'), isTrue); // 3
+        expect(SpokenAnswer.isLongTerm('team player'), isFalse); // 2
+        expect(SpokenAnswer.isLongTerm('   '), isFalse); // no words at all
+      });
 
-    test('the example form always gets the long window, however short its term', () {
-      final w = SpokenAnswer.windowFor(asksForExample: true, term: 'evoke');
-      expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
-      expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
-    });
-  });
+      test('the example form always gets the long window, however short its term', () {
+        final w = SpokenAnswer.windowFor(asksForExample: true, term: 'evoke');
+        expect(w.listenFor, SpokenAnswer.exampleFormListenFor);
+        expect(w.pauseFor, SpokenAnswer.exampleFormPauseFor);
+      });
+    },
+  );
 
   group('SpokenAnswer.gradesByCoverage — long spoken answers are judged by coverage (QA-22)', () {
     test('a phrase-shaped term on the word form is coverage-graded', () {
       expect(
         SpokenAnswer.gradesByCoverage(
-            asksForExample: false, term: 'How do you deal with conflict?'),
+          asksForExample: false,
+          term: 'How do you deal with conflict?',
+        ),
         isTrue,
       );
     });
@@ -308,10 +324,15 @@ void main() {
     });
 
     test('it is the SAME «длинность» rule the recording window uses — one source, never two', () {
-      for (final term in ['evoke', 'team player', 'take a photo', 'How do you deal with conflict?']) {
+      for (final term in [
+        'evoke',
+        'team player',
+        'take a photo',
+        'How do you deal with conflict?',
+      ]) {
         final longWindow =
             SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor ==
-                SpokenAnswer.exampleFormListenFor;
+            SpokenAnswer.exampleFormListenFor;
         expect(
           SpokenAnswer.gradesByCoverage(asksForExample: false, term: term),
           longWindow,
@@ -324,7 +345,10 @@ void main() {
   group('coversAny — the coverage counterpart of the accepted set (QA-22)', () {
     test('a variant is accepted, not just the canonical form', () {
       expect(
-        SessionGrader.coversAny('i am a team player', ['Are you a team player?', 'I am a team player']),
+        SessionGrader.coversAny('i am a team player', [
+          'Are you a team player?',
+          'I am a team player',
+        ]),
         isTrue,
       );
     });
@@ -352,10 +376,7 @@ void main() {
       // Indices into the TARGET's own displayed words: How(0) do(1) you(2) deal(3) with(4)
       // conflict?(5). The learner's stray «this» has no pair, which is what leaves «with» unmarked
       // — the mark is on the target word that never registered.
-      expect(
-        SessionGrader.uncoveredWords(heard, target, ignoreArticles: true),
-        {4},
-      );
+      expect(SessionGrader.uncoveredWords(heard, target, ignoreArticles: true), {4});
     });
 
     test('binary grading would have failed the same reading — which is the bug', () {
@@ -384,7 +405,11 @@ void main() {
       // _normalize already stripped a LEADING article before this change; the eaten one here is in
       // the middle, which is the case the live run hit.
       expect(
-        SessionGrader.check('i saw dog in the park', 'I saw a dog in the park', ignoreArticles: true),
+        SessionGrader.check(
+          'i saw dog in the park',
+          'I saw a dog in the park',
+          ignoreArticles: true,
+        ),
         LocalCheck.correct,
       );
       expect(
@@ -395,7 +420,11 @@ void main() {
 
     test('check: dropping articles does not make two different answers equal', () {
       expect(
-        SessionGrader.check('are you a team leader', 'Are you a team player?', ignoreArticles: true),
+        SessionGrader.check(
+          'are you a team leader',
+          'Are you a team player?',
+          ignoreArticles: true,
+        ),
         LocalCheck.wrong,
       );
     });
@@ -410,15 +439,25 @@ void main() {
 
     test('coverage: the 70% threshold itself is untouched — only what gets counted changed', () {
       expect(SpokenAnswer.minCoverage, 0.7);
-      expect(SessionGrader.covers('nothing like it', 'Could you take a photo of us?', ignoreArticles: true), isFalse);
+      expect(
+        SessionGrader.covers(
+          'nothing like it',
+          'Could you take a photo of us?',
+          ignoreArticles: true,
+        ),
+        isFalse,
+      );
     });
 
     test('uncoveredWords: a forgiven article is never marked as missing', () {
       // Index 3 is «a» — with articles ignored it is neither covered nor uncovered, so the
       // highlight cannot contradict the verdict that just forgave it.
       expect(
-        SessionGrader.uncoveredWords('could you take photo of us', 'Could you take a photo of us?',
-            ignoreArticles: true),
+        SessionGrader.uncoveredWords(
+          'could you take photo of us',
+          'Could you take a photo of us?',
+          ignoreArticles: true,
+        ),
         isEmpty,
       );
     });

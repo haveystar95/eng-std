@@ -59,36 +59,36 @@ void main() {
 
   group('the rendered card', () {
     SessionCard card({required String term, required String example}) => SessionCard(
-          termId: 't1',
-          mode: ExerciseMode.intro,
-          type: 'phrase',
-          prompt: 'у меня температура',
-          answer: term,
-          example: example,
-        );
+      termId: 't1',
+      mode: ExerciseMode.intro,
+      type: 'phrase',
+      prompt: 'у меня температура',
+      answer: term,
+      example: example,
+    );
 
     Widget host(SessionCard c) => ProviderScope(
-          child: MaterialApp(
-            locale: const Locale('ru'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: const [Locale('ru'), Locale('en')],
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: SessionIntroCard(
-                  card: c,
-                  autoPronounce: false,
-                  onSpeak: (text, {bool slow = false}) async {},
-                ),
-              ),
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SessionIntroCard(
+              card: c,
+              autoPronounce: false,
+              onSpeak: (text, {bool slow = false}) async {},
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     /// The bold runs of the example line, in order.
     List<String> boldRuns(WidgetTester tester, String example) {
-      final rich = tester.widgetList<Text>(find.byType(Text)).firstWhere(
-            (t) => (t.textSpan?.toPlainText() ?? '') == example,
-          );
+      final rich = tester
+          .widgetList<Text>(find.byType(Text))
+          .firstWhere((t) => (t.textSpan?.toPlainText() ?? '') == example);
       final out = <String>[];
       rich.textSpan!.visitChildren((span) {
         if (span is TextSpan && span.style?.fontWeight == FontWeight.w700) {
@@ -107,7 +107,9 @@ void main() {
       expect(boldRuns(tester, example), ['I have a fever']);
     });
 
-    testWidgets('the bolded run is the EXAMPLE own letters, not the term as stored', (tester) async {
+    testWidgets('the bolded run is the EXAMPLE own letters, not the term as stored', (
+      tester,
+    ) async {
       // «Tell me about yourself» is stored capitalised, because that is how the phrase is written on
       // its own — and the example embeds it mid-question, lowercase. Drawing the term's own text in
       // the sentence produced «Could you Tell me about yourself…»: a capital in the middle of a

@@ -79,8 +79,9 @@ final seqCounterProvider = Provider<SeqCounter>((ref) => SeqCounter());
 
 /// The durable review queue lives in the local DB, not the Keychain (F20-r2) — an append is one
 /// insert on the background isolate instead of a whole-blob rewrite on the UI isolate.
-final reviewQueueProvider =
-    Provider<ReviewQueue>((ref) => ReviewQueue(ref.watch(appDatabaseProvider)));
+final reviewQueueProvider = Provider<ReviewQueue>(
+  (ref) => ReviewQueue(ref.watch(appDatabaseProvider)),
+);
 
 /// Offline-first review upload pipeline (record locally → batch flush). Carries the monotonic
 /// `seq_review` counter so each raw answer gets a `client_seq` the server folds by.
@@ -97,30 +98,20 @@ final reviewSyncProvider = Provider<ReviewSync>((ref) {
 /// own queue, not the review one: an exposure is not an answer, and the review log must never hold
 /// a retrieval that never happened.
 final exposureSyncProvider = Provider<ExposureSync>((ref) {
-  return ExposureSync(
-    ref.watch(apiClientProvider),
-    ref.watch(appDatabaseProvider),
-    ref,
-  );
+  return ExposureSync(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider), ref);
 });
 
 /// Offline-first pipeline for «this run was played to its end» (QA-12). Its own queue, keyed by
 /// session, for the same reason the exposure one is separate: a completion is not an answer.
 final sessionCompletionSyncProvider = Provider<SessionCompletionSync>((ref) {
-  return SessionCompletionSync(
-    ref.watch(apiClientProvider),
-    ref.watch(appDatabaseProvider),
-  );
+  return SessionCompletionSync(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
 });
 
 /// «Учить это слово» / «Убрать из изучения» — the two acts that decide what the trainer works on.
 /// Its own durable queue, keyed by the TERM and holding the desired membership rather than a log:
 /// the verbs are idempotent and there is no order to protect.
 final poolSyncProvider = Provider<PoolSync>((ref) {
-  return PoolSync(
-    ref.watch(apiClientProvider),
-    ref.watch(appDatabaseProvider),
-  );
+  return PoolSync(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
 });
 
 /// «Мои слова» — every word the learner has taken into study, newest first, straight from the local
@@ -164,15 +155,15 @@ final triageDeckProvider = FutureProvider.family<TriageDeck, String>((ref, colle
 });
 
 TriageCard _toTriageCard(Term t) => TriageCard(
-      termId: t.id,
-      text: t.termText ?? '',
-      translation: t.translation ?? '',
-      type: t.type,
-      transcription: t.transcription,
-      example: t.example,
-      exampleTranslation: t.exampleTranslation,
-      imageUrl: t.imageUrl,
-    );
+  termId: t.id,
+  text: t.termText ?? '',
+  translation: t.translation ?? '',
+  type: t.type,
+  transcription: t.transcription,
+  example: t.example,
+  exampleTranslation: t.exampleTranslation,
+  imageUrl: t.imageUrl,
+);
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(ref.watch(tokenStoreProvider));
@@ -199,7 +190,9 @@ class AuthController extends AsyncNotifier<AppUser?> {
         try {
           final fresh = await repo.refresh();
           if (fresh != null) state = AsyncData(fresh);
-        } catch (_) {/* offline / transient — keep the cached user */}
+        } catch (_) {
+          /* offline / transient — keep the cached user */
+        }
       }());
     }
     return user;
@@ -207,16 +200,12 @@ class AuthController extends AsyncNotifier<AppUser?> {
 
   Future<void> signIn() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signInWithGoogle(),
-    );
+    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithGoogle());
   }
 
   Future<void> signInWithApple() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signInWithApple(),
-    );
+    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithApple());
   }
 
   /// QA dev sign-in — debug builds only (see [kDevLoginEnabled]). No-op if somehow reached in a
@@ -224,9 +213,7 @@ class AuthController extends AsyncNotifier<AppUser?> {
   Future<void> signInWithDev(String email) async {
     if (!kDevLoginEnabled) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signInWithDev(email),
-    );
+    state = await AsyncValue.guard(() => ref.read(authRepositoryProvider).signInWithDev(email));
   }
 
   Future<void> signOut() async {
@@ -268,8 +255,7 @@ class AuthController extends AsyncNotifier<AppUser?> {
   }
 }
 
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, AppUser?>(AuthController.new);
+final authControllerProvider = AsyncNotifierProvider<AuthController, AppUser?>(AuthController.new);
 
 /// Whether first-run onboarding is done — server truth via `profile.onboarded_at` (device-batch
 /// F1). Tied to the account, not the device: a relogin never re-onboards, a new account always
@@ -290,15 +276,17 @@ final onboardedProvider = FutureProvider<bool>((ref) async {
 // the change comes back through the next sync — until then the mutating screen refetches once.
 
 final collectionsProvider = StreamProvider<List<WordCollection>>((ref) {
-  return ref.watch(appDatabaseProvider).watchCollections().map(
-        (rows) => rows.map(_toCollection).toList(),
-      );
+  return ref
+      .watch(appDatabaseProvider)
+      .watchCollections()
+      .map((rows) => rows.map(_toCollection).toList());
 });
 
 final collectionWordsProvider = StreamProvider.family<List<Word>, String>((ref, collectionId) {
-  return ref.watch(appDatabaseProvider).watchCollectionTerms(collectionId).map(
-        (rows) => rows.map(_toWord).toList(),
-      );
+  return ref
+      .watch(appDatabaseProvider)
+      .watchCollectionTerms(collectionId)
+      .map((rows) => rows.map(_toWord).toList());
 });
 
 /// Local stats: total/learned/mastered/due are counted from the synced progress rows; streak and
@@ -318,7 +306,13 @@ final statsProvider = StreamProvider<Stats>((ref) async* {
     final reviews = int.tryParse(await db.getMeta(SyncKeys.reviewsToday) ?? '') ?? 0;
     final newGoal = int.tryParse(await db.getMeta(SyncKeys.newGoal) ?? '') ?? 0;
     final newRemaining = int.tryParse(await db.getMeta(SyncKeys.newRemaining) ?? '') ?? 0;
-    yield _deriveStats(rows, streak: streak, reviewsToday: reviews, newGoal: newGoal, newRemaining: newRemaining);
+    yield _deriveStats(
+      rows,
+      streak: streak,
+      reviewsToday: reviews,
+      newGoal: newGoal,
+      newRemaining: newRemaining,
+    );
   }
 });
 
@@ -344,7 +338,10 @@ final learnableByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
 /// The three ink-density buckets (§4) for one collection, partitioning its total:
 /// confirmed (mastered) · familiar (in SRS, not yet mastered) · in-progress (new /
 /// untouched). Local + reactive.
-final collectionDensityProvider = StreamProvider.family<CollectionDensity, String>((ref, collectionId) {
+final collectionDensityProvider = StreamProvider.family<CollectionDensity, String>((
+  ref,
+  collectionId,
+) {
   return ref.watch(appDatabaseProvider).watchItemProgress().map((rows) {
     var confirmed = 0, familiar = 0, inProgress = 0;
     for (final r in rows) {
@@ -377,7 +374,11 @@ DensityBucket classifyDensity(String? state, int intervalDays) {
 /// The three counts behind a collection's density bar. `confirmed + familiar +
 /// inProgress == collection total`.
 class CollectionDensity {
-  const CollectionDensity({required this.confirmed, required this.familiar, required this.inProgress});
+  const CollectionDensity({
+    required this.confirmed,
+    required this.familiar,
+    required this.inProgress,
+  });
   final int confirmed, familiar, inProgress;
   int get total => confirmed + familiar + inProgress;
 }
@@ -391,8 +392,7 @@ final dueCardsProvider = FutureProvider<List<ReviewCard>>((ref) async {
 /// One term's progress, reactive (local mirror). The exercise-session feedback watches it to show
 /// «увидишь снова через N дней» from the REAL server `due_at` once the answer's upload + sync
 /// lands — the client never computes the interval itself.
-final termProgressForProvider =
-    StreamProvider.family<TermProgressData?, String>((ref, termId) {
+final termProgressForProvider = StreamProvider.family<TermProgressData?, String>((ref, termId) {
   return ref.watch(appDatabaseProvider).watchProgressFor(termId);
 });
 
@@ -431,19 +431,19 @@ final generationQuotaProvider = FutureProvider<GenerationQuota?>((ref) async {
 // ---- Local mappers / derivations --------------------------------------------
 
 WordCollection _toCollection(Collection r) => WordCollection(
-      id: r.id,
-      title: r.title ?? '',
-      description: r.description,
-      source: r.source ?? 'user', // now synced → the ИИ badge and my/store/generated origin work
-      type: r.type ?? 'custom',
-      wordsCount: r.itemsCount,
-      sourceLang: r.sourceLang ?? 'ru',
-      targetLang: r.targetLang ?? 'en',
-      imageUrl: r.imageUrl, // Pexels cover (docks in via sync; null → gradient placeholder)
-      imageAuthor: r.imageAuthor,
-      imageAuthorUrl: r.imageAuthorUrl,
-      isDefault: r.isDefault, // «Сохранённые» — the shelf greys its delete action out on this
-    );
+  id: r.id,
+  title: r.title ?? '',
+  description: r.description,
+  source: r.source ?? 'user', // now synced → the ИИ badge and my/store/generated origin work
+  type: r.type ?? 'custom',
+  wordsCount: r.itemsCount,
+  sourceLang: r.sourceLang ?? 'ru',
+  targetLang: r.targetLang ?? 'en',
+  imageUrl: r.imageUrl, // Pexels cover (docks in via sync; null → gradient placeholder)
+  imageAuthor: r.imageAuthor,
+  imageAuthorUrl: r.imageAuthorUrl,
+  isDefault: r.isDefault, // «Сохранённые» — the shelf greys its delete action out on this
+);
 
 /// The stored admission matrix, decoded. Anything unreadable falls back to the shipped matrix —
 /// the same value a device that has never synced assumes.
@@ -543,10 +543,18 @@ Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow>
       due: cur.due + (isDue ? 1 : 0),
     );
   }
-  return agg.map((id, v) => MapEntry(
-        id,
-        CollectionProgress(collectionId: id, total: v.total, learned: v.learned, mastered: v.mastered, due: v.due),
-      ));
+  return agg.map(
+    (id, v) => MapEntry(
+      id,
+      CollectionProgress(
+        collectionId: id,
+        total: v.total,
+        learned: v.learned,
+        mastered: v.mastered,
+        due: v.due,
+      ),
+    ),
+  );
 }
 
 /// Identifies one exercise session. [sessionId] is a client ULID minted once when the screen
@@ -558,6 +566,7 @@ typedef SessionArgs = ({
   String? collectionId,
   bool practice,
   int limit,
+
   /// «Тренировать слово» (кадр 16e): narrow the practice pool to this one term. Practice only —
   /// a scheduling session's composition is the server's to fix.
   String? onlyTermId,
@@ -568,8 +577,7 @@ typedef SessionArgs = ({
 /// picks the mode and distractors); consumers read via `.when`. The photo/example shown in the
 /// per-card feedback come from the LOCAL term mirror, so they render even though the session shape
 /// carries no image.
-final studySessionProvider =
-    FutureProvider.family<StudySession, SessionArgs>((ref, args) async {
+final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((ref, args) async {
   // Free practice is built HERE, always — not "when offline". It has to work in airplane mode from
   // start to summary, and one code path is the only way both halves of that stay honest: a second,
   // online-only branch would be the one nobody exercises until it breaks. Everything it needs is
@@ -592,7 +600,10 @@ final studySessionProvider =
     // should make it a different kind of session.
     final terms = args.onlyTermId == null
         ? all
-        : [for (final t in all) if (t.id == args.onlyTermId) t];
+        : [
+            for (final t in all)
+              if (t.id == args.onlyTermId) t,
+          ];
     // The trainer toggles the server last told us about (stored by the sync service). Read from the
     // local DB like everything else on this path, so practice keeps working offline — and so a
     // toggle flipped in the admin panel changes the offline session on the next sync.
@@ -616,7 +627,9 @@ final studySessionProvider =
     );
   }
 
-  return ref.watch(apiClientProvider).buildSession(
+  return ref
+      .watch(apiClientProvider)
+      .buildSession(
         sessionId: args.sessionId,
         collectionId: args.collectionId,
         practice: args.practice,

@@ -36,8 +36,11 @@ class CollectionCover extends StatelessWidget {
           )
         : DecoratedBox(
             decoration: BoxDecoration(color: AppColors.track, borderRadius: br),
-            child: Icon(collection.isAi ? LucideIcons.sparkles : LucideIcons.image,
-                size: size < 64 ? 20 : 26, color: AppColors.tertiary),
+            child: Icon(
+              collection.isAi ? LucideIcons.sparkles : LucideIcons.image,
+              size: size < 64 ? 20 : 26,
+              color: AppColors.tertiary,
+            ),
           );
     // …and it is never overridden by one either: the default folder keeps its drawn identity even
     // if a photo somehow lands on the row.

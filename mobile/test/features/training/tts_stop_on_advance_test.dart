@@ -21,12 +21,12 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// an answer that does not depend on the plugin's internals.
 class _SilentReviewSync extends ReviewSync {
   _SilentReviewSync(Ref ref)
-      : super(
-          ref.read(apiClientProvider),
-          ref.read(reviewQueueProvider),
-          ref.read(seqCounterProvider),
-          ref,
-        );
+    : super(
+        ref.read(apiClientProvider),
+        ref.read(reviewQueueProvider),
+        ref.read(seqCounterProvider),
+        ref,
+      );
 
   @override
   Future<void> record({
@@ -57,48 +57,59 @@ void main() {
   setUp(() {
     ttsCalls.clear();
     FlutterSecureStorage.setMockInitialValues({});
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(ttsChannel, (call) async {
-      ttsCalls.add(call.method);
-      return 1; // flutter_tts reads 1 as "queued/ok" for speak & friends
-    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      ttsChannel,
+      (call) async {
+        ttsCalls.add(call.method);
+        return 1; // flutter_tts reads 1 as "queued/ok" for speak & friends
+      },
+    );
   });
 
   tearDown(() async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(ttsChannel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      ttsChannel,
+      null,
+    );
     await db?.close();
     db = null;
   });
 
   SessionCard card(String id, String answer, List<String> options) => SessionCard(
-        termId: id,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'бронь',
-        answer: answer,
-        options: options,
-      );
+    termId: id,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'бронь',
+    answer: answer,
+    options: options,
+  );
 
   Widget host() => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) => db = AppDatabase.forTesting(NativeDatabase.memory())),
-          reviewSyncProvider.overrideWith((ref) => _SilentReviewSync(ref)),
-          studySessionProvider.overrideWith((ref, args) async => StudySession(
-                sessionId: args.sessionId,
-                cards: [
-                  card('01M08AP74HM20AA0FDH2RSF5XS', 'reservation', const ['reservation', 'registration']),
-                  card('01M08AP74HM20AA0FDH2RSF5XT', 'luggage', const ['luggage', 'baggage claim']),
-                ],
-              )),
-        ],
-        child: const MaterialApp(
-          locale: Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: [Locale('ru')],
-          home: SessionScreen(title: 'Аэропорт'),
+    overrides: [
+      appDatabaseProvider.overrideWith(
+        (ref) => db = AppDatabase.forTesting(NativeDatabase.memory()),
+      ),
+      reviewSyncProvider.overrideWith((ref) => _SilentReviewSync(ref)),
+      studySessionProvider.overrideWith(
+        (ref, args) async => StudySession(
+          sessionId: args.sessionId,
+          cards: [
+            card('01M08AP74HM20AA0FDH2RSF5XS', 'reservation', const [
+              'reservation',
+              'registration',
+            ]),
+            card('01M08AP74HM20AA0FDH2RSF5XT', 'luggage', const ['luggage', 'baggage claim']),
+          ],
         ),
-      );
+      ),
+    ],
+    child: const MaterialApp(
+      locale: Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('ru')],
+      home: SessionScreen(title: 'Аэропорт'),
+    ),
+  );
 
   /// Tear the tree down INSIDE the test and drain what that schedules — drift cancels its query
   /// streams with a zero-duration timer the binding would otherwise report as pending.
@@ -146,7 +157,9 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('leaving by the ✕ stops it as the confirm dialog opens, not after the pop', (tester) async {
+  testWidgets('leaving by the ✕ stops it as the confirm dialog opens, not after the pop', (
+    tester,
+  ) async {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 

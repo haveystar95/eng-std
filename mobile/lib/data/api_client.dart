@@ -44,8 +44,7 @@ bool isOffline(Object? error) {
     DioExceptionType.connectionError ||
     DioExceptionType.connectionTimeout ||
     DioExceptionType.sendTimeout ||
-    DioExceptionType.receiveTimeout =>
-      true,
+    DioExceptionType.receiveTimeout => true,
     // `unknown` wraps whatever the socket threw; a SocketException is still just "no network".
     DioExceptionType.unknown => error.error is SocketException,
     _ => false,
@@ -78,25 +77,26 @@ class ApiClient {
   }
 
   static Dio _buildDio(TokenStore tokens) {
-    final dio = Dio(BaseOptions(
-      baseUrl: '${AppConfig.apiBaseUrl}/api/v1',
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 40),
-      headers: {
-        'Accept': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-    ));
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: '${AppConfig.apiBaseUrl}/api/v1',
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 40),
+        headers: {'Accept': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+      ),
+    );
 
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token = tokens.current;
-        if (token != null && token.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        handler.next(options);
-      },
-    ));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = tokens.current;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+      ),
+    );
 
     return dio;
   }
@@ -129,11 +129,10 @@ class ApiClient {
     if (!kDevLoginEnabled) {
       throw StateError('devLogin is a debug-only door');
     }
-    final r = await _dio.post('/auth/dev', data: {
-      'email': email,
-      'device_name': 'simulator',
-      'timezone': ?timezone,
-    });
+    final r = await _dio.post(
+      '/auth/dev',
+      data: {'email': email, 'device_name': 'simulator', 'timezone': ?timezone},
+    );
     final body = r.data as Map<String, dynamic>;
     return (
       token: body['token'] as String,
@@ -154,7 +153,10 @@ class ApiClient {
   /// NB: the backend `/auth/apple` endpoint is not built yet (Identity module) — this call will 404
   /// until it lands. See the A3.7 notes / roadmap.
   Future<({String token, AppUser user})> appleLogin(String identityToken, {String? name}) async {
-    final r = await _dio.post('/auth/apple', data: {'identity_token': identityToken, 'name': ?name});
+    final r = await _dio.post(
+      '/auth/apple',
+      data: {'identity_token': identityToken, 'name': ?name},
+    );
     final body = r.data as Map<String, dynamic>;
     return (
       token: body['token'] as String,
@@ -181,19 +183,18 @@ class ApiClient {
     String? sourceLang,
     String? targetLang,
   }) async {
-    final r = await _dio.post('/collections', data: {
-      'title': title,
-      'source_lang': ?sourceLang,
-      'target_lang': ?targetLang,
-    });
+    final r = await _dio.post(
+      '/collections',
+      data: {'title': title, 'source_lang': ?sourceLang, 'target_lang': ?targetLang},
+    );
     return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   Future<WordCollection> updateCollection(String id, {String? title, String? description}) async {
-    final r = await _dio.patch('/collections/$id', data: {
-      'title': ?title,
-      'description': ?description,
-    });
+    final r = await _dio.patch(
+      '/collections/$id',
+      data: {'title': ?title, 'description': ?description},
+    );
     return WordCollection.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -212,8 +213,10 @@ class ApiClient {
     String type = 'word',
   }) async {
     final t = translation?.trim();
-    await _dio.post('/collections/$collectionId/items',
-        data: {'text': text, 'translation': ?(t == null || t.isEmpty ? null : t), 'type': type});
+    await _dio.post(
+      '/collections/$collectionId/items',
+      data: {'text': text, 'translation': ?(t == null || t.isEmpty ? null : t), 'type': type},
+    );
   }
 
   Future<void> removeWord(String collectionId, String termId) async {
@@ -250,12 +253,10 @@ class ApiClient {
     String? source,
     String? target,
   }) async {
-    final r = await _dio.get('/search', queryParameters: {
-      'q': query,
-      'limit': limit,
-      'source': ?source,
-      'target': ?target,
-    });
+    final r = await _dio.get(
+      '/search',
+      queryParameters: {'q': query, 'limit': limit, 'source': ?source, 'target': ?target},
+    );
     return (_data(r) as List)
         .map((e) => SearchHit.fromJson(e as Map<String, dynamic>))
         .toList(growable: false);
@@ -274,11 +275,10 @@ class ApiClient {
   /// checked before any vendor), and it never fails in a way the screen has to render: no key, no
   /// budget, no answer and a dead vendor all come back as a null translation.
   Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
-    final r = await _dio.get('/search/instant', queryParameters: {
-      'q': query,
-      'source': ?source,
-      'target': ?target,
-    });
+    final r = await _dio.get(
+      '/search/instant',
+      queryParameters: {'q': query, 'source': ?source, 'target': ?target},
+    );
     return InstantHint.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -289,11 +289,10 @@ class ApiClient {
   /// shows the free results beside an honest line. A cached word is served free and does not touch
   /// the cap at all.
   Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
-    final r = await _dio.post('/search/lookup', data: {
-      'query': query,
-      'source': ?source,
-      'target': ?target,
-    });
+    final r = await _dio.post(
+      '/search/lookup',
+      data: {'query': query, 'source': ?source, 'target': ?target},
+    );
     return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -306,11 +305,10 @@ class ApiClient {
     String? termId,
     String? collectionId,
   }) async {
-    final r = await _dio.post('/search/add', data: {
-      'lookup_id': ?lookupId,
-      'term_id': ?termId,
-      'collection_id': ?collectionId,
-    });
+    final r = await _dio.post(
+      '/search/add',
+      data: {'lookup_id': ?lookupId, 'term_id': ?termId, 'collection_id': ?collectionId},
+    );
     return SavedSearchResult.fromJson(_data(r) as Map<String, dynamic>);
   }
 
@@ -325,12 +323,15 @@ class ApiClient {
     String? cursor,
     int limit = 30,
   }) async {
-    final r = await _dio.get('/store/collections', queryParameters: {
-      'source_lang': ?sourceLang,
-      'target_lang': ?targetLang,
-      'cursor': ?cursor,
-      'limit': limit,
-    });
+    final r = await _dio.get(
+      '/store/collections',
+      queryParameters: {
+        'source_lang': ?sourceLang,
+        'target_lang': ?targetLang,
+        'cursor': ?cursor,
+        'limit': limit,
+      },
+    );
     final body = r.data as Map<String, dynamic>;
     final items = ((body['data'] as List?) ?? const [])
         .map((e) => StoreCollection.fromJson(e as Map<String, dynamic>))
@@ -370,13 +371,11 @@ class ApiClient {
 
   /// Study cards now (due + new). Scoped to one collection when [collectionId] is set.
   Future<List<ReviewCard>> dueCards({int limit = 40, String? collectionId}) async {
-    final r = await _dio.get('/study/due', queryParameters: {
-      'limit': limit,
-      'collection_id': ?collectionId,
-    });
-    return (_data(r) as List)
-        .map((e) => ReviewCard.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final r = await _dio.get(
+      '/study/due',
+      queryParameters: {'limit': limit, 'collection_id': ?collectionId},
+    );
+    return (_data(r) as List).map((e) => ReviewCard.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   /// Build a self-contained study session (`POST /study/sessions`): due cards then new cards, one
@@ -389,12 +388,15 @@ class ApiClient {
     bool practice = false,
     int limit = 20,
   }) async {
-    final r = await _dio.post('/study/sessions', data: {
-      'session_id': sessionId,
-      'collection_id': ?collectionId,
-      'practice': practice,
-      'limit': limit,
-    });
+    final r = await _dio.post(
+      '/study/sessions',
+      data: {
+        'session_id': sessionId,
+        'collection_id': ?collectionId,
+        'practice': practice,
+        'limit': limit,
+      },
+    );
     final d = _data(r) as Map<String, dynamic>;
     return StudySession(
       sessionId: (d['session_id'] as String?) ?? sessionId,
@@ -424,10 +426,13 @@ class ApiClient {
 
   /// Upload a batch of graded answers (idempotent by each review's client ULID).
   /// Returns backend2's tally so the caller can reconcile the local queue.
-  Future<({int accepted, int duplicates, int unknown})> submitReviews(List<PendingReview> reviews) async {
-    final r = await _dio.post('/reviews/batch', data: {
-      'reviews': reviews.map((e) => e.toBatchJson()).toList(),
-    });
+  Future<({int accepted, int duplicates, int unknown})> submitReviews(
+    List<PendingReview> reviews,
+  ) async {
+    final r = await _dio.post(
+      '/reviews/batch',
+      data: {'reviews': reviews.map((e) => e.toBatchJson()).toList()},
+    );
     final d = _data(r) as Map<String, dynamic>;
     return (
       accepted: (d['accepted'] as int?) ?? 0,
@@ -440,9 +445,10 @@ class ApiClient {
   /// the (user, term) pair rather than on a client id: a term is introduced once, so a re-upload is
   /// an ignored insert that keeps the first `shown_at`.
   Future<int> submitExposures(List<PendingExposure> exposures) async {
-    final r = await _dio.post('/reviews/batch', data: {
-      'exposures': exposures.map((e) => e.toBatchJson()).toList(),
-    });
+    final r = await _dio.post(
+      '/reviews/batch',
+      data: {'exposures': exposures.map((e) => e.toBatchJson()).toList()},
+    );
     return ((_data(r) as Map<String, dynamic>)['exposures'] as int?) ?? 0;
   }
 
@@ -462,10 +468,13 @@ class ApiClient {
   // UPLOAD stays here — the one part that must reach the backend.
 
   /// Upload a batch of triage swipes (idempotent by each swipe's client ULID).
-  Future<({int accepted, int duplicates, int unknown})> submitTriages(List<PendingTriage> triages) async {
-    final r = await _dio.post('/triage/batch', data: {
-      'triages': triages.map((e) => e.toBatchJson()).toList(),
-    });
+  Future<({int accepted, int duplicates, int unknown})> submitTriages(
+    List<PendingTriage> triages,
+  ) async {
+    final r = await _dio.post(
+      '/triage/batch',
+      data: {'triages': triages.map((e) => e.toBatchJson()).toList()},
+    );
     final d = _data(r) as Map<String, dynamic>;
     return (
       accepted: (d['accepted'] as int?) ?? 0,
@@ -497,11 +506,10 @@ class ApiClient {
   /// [since] is the last stored `server_time` (never the device clock); [cursor] pages within
   /// a frozen snapshot. Omitting [since] asks for a full snapshot (first sync after install).
   Future<Map<String, dynamic>> syncDelta({String? since, String? cursor, int limit = 500}) async {
-    final r = await _dio.get('/sync', queryParameters: {
-      'since': ?since,
-      'cursor': ?cursor,
-      'limit': limit,
-    });
+    final r = await _dio.get(
+      '/sync',
+      queryParameters: {'since': ?since, 'cursor': ?cursor, 'limit': limit},
+    );
     return _data(r) as Map<String, dynamic>;
   }
 
@@ -511,10 +519,7 @@ class ApiClient {
   Future<({int triage, int review})> syncCursor() async {
     final r = await _dio.get('/sync/cursor');
     final d = _data(r) as Map<String, dynamic>;
-    return (
-      triage: (d['max_triage_seq'] as int?) ?? 0,
-      review: (d['max_review_seq'] as int?) ?? 0,
-    );
+    return (triage: (d['max_triage_seq'] as int?) ?? 0, review: (d['max_review_seq'] as int?) ?? 0);
   }
 
   // ---- AI generation --------------------------------------------------------
@@ -533,14 +538,17 @@ class ApiClient {
     String? sourceLang,
     String? targetLang,
   }) async {
-    final r = await _dio.post('/generations', data: {
-      'id': ?id,
-      'prompt': topic,
-      'levels': levels,
-      'size': size,
-      'source_lang': ?sourceLang,
-      'target_lang': ?targetLang,
-    });
+    final r = await _dio.post(
+      '/generations',
+      data: {
+        'id': ?id,
+        'prompt': topic,
+        'levels': levels,
+        'size': size,
+        'source_lang': ?sourceLang,
+        'target_lang': ?targetLang,
+      },
+    );
     return (_data(r) as Map<String, dynamic>)['id'] as String;
   }
 
@@ -567,15 +575,23 @@ class ApiClient {
 
   /// Start a dialog: `POST /practice/dialogs` → 201 StartedPracticeDialog (dialog_id, realtime_token,
   /// expires_at, model, target_words, duration_seconds). 403 = not premium; 429 = daily limit.
-  Future<Map<String, dynamic>> startDialog({required String collectionId, required String clientId}) async {
-    final r = await _dio.post('/practice/dialogs',
-        data: {'collection_id': collectionId, 'client_id': clientId});
+  Future<Map<String, dynamic>> startDialog({
+    required String collectionId,
+    required String clientId,
+  }) async {
+    final r = await _dio.post(
+      '/practice/dialogs',
+      data: {'collection_id': collectionId, 'client_id': clientId},
+    );
     return r.data as Map<String, dynamic>;
   }
 
   /// Upload a batch of transcript events: `POST /practice/dialogs/{id}/transcripts`. Idempotent by
   /// (role, ts). Returns the updated `target_words` (with the server's monotonic `used` flags).
-  Future<List<dynamic>> sendDialogTranscripts(String dialogId, List<Map<String, dynamic>> events) async {
+  Future<List<dynamic>> sendDialogTranscripts(
+    String dialogId,
+    List<Map<String, dynamic>> events,
+  ) async {
     final r = await _dio.post('/practice/dialogs/$dialogId/transcripts', data: {'events': events});
     return ((r.data as Map<String, dynamic>)['target_words'] as List?) ?? const [];
   }

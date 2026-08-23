@@ -13,21 +13,21 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// The rule: whatever the locale, the hint stays inside its own chip and on one line.
 void main() {
   Widget host(Locale locale) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-          generationQuotaProvider.overrideWith((ref) async => null),
-        ],
-        child: MaterialApp(
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: const GenerateScreen(),
-        ),
-      );
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+      generationQuotaProvider.overrideWith((ref) async => null),
+    ],
+    child: MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: const GenerateScreen(),
+    ),
+  );
 
   /// On-screen width — `getSize` would report the Text's natural size and miss the FittedBox's
   /// scale-down, which is exactly the mechanism under test.
@@ -35,7 +35,10 @@ void main() {
       tester.getBottomRight(f).dx - tester.getTopLeft(f).dx;
 
   Future<void> check(WidgetTester tester, Locale locale, List<String> hints) async {
-    tester.view.physicalSize = const Size(320 * 3, 812 * 3); // an iPhone SE — the narrowest we ship to
+    tester.view.physicalSize = const Size(
+      320 * 3,
+      812 * 3,
+    ); // an iPhone SE — the narrowest we ship to
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 

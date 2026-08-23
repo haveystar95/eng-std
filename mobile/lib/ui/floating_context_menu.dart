@@ -43,10 +43,7 @@ Future<void> showFloatingContextMenu({
   }
 
   // деструктив всегда в конце, порядок внутри групп сохраняется
-  final ordered = [
-    ...actions.where((a) => !a.destructive),
-    ...actions.where((a) => a.destructive),
-  ];
+  final ordered = [...actions.where((a) => !a.destructive), ...actions.where((a) => a.destructive)];
 
   return showGeneralDialog<void>(
     context: context,

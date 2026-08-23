@@ -42,7 +42,8 @@ void main() {
     expect(
       src.contains('const bool kDevLoginEnabled = kDebugMode;'),
       isTrue,
-      reason: 'kDevLoginEnabled must be defined exactly as `const bool kDevLoginEnabled = kDebugMode;`',
+      reason:
+          'kDevLoginEnabled must be defined exactly as `const bool kDevLoginEnabled = kDebugMode;`',
     );
 
     // And no second definition anywhere.
@@ -55,10 +56,14 @@ void main() {
   });
 
   test('the dev-login endpoint path appears in exactly one file', () {
-    final hits = _libSources().where((f) => f.src.contains('/auth/dev')).map((f) => f.path).toList();
+    final hits = _libSources()
+        .where((f) => f.src.contains('/auth/dev'))
+        .map((f) => f.path)
+        .toList();
 
-    expect(hits, ['lib/data/api_client.dart'],
-        reason: 'the dev endpoint must be reachable from one place only');
+    expect(hits, [
+      'lib/data/api_client.dart',
+    ], reason: 'the dev endpoint must be reachable from one place only');
   });
 
   test('every dev-login call site is behind the gate', () {
@@ -77,24 +82,37 @@ void main() {
     };
 
     final mentions = _libSources()
-        .where((f) => f.src.contains('devLogin') ||
-            f.src.contains('signInWithDev') ||
-            f.src.contains('kDevLoginEmail') ||
-            f.src.contains('kDevLoginEnabled'))
+        .where(
+          (f) =>
+              f.src.contains('devLogin') ||
+              f.src.contains('signInWithDev') ||
+              f.src.contains('kDevLoginEmail') ||
+              f.src.contains('kDevLoginEnabled'),
+        )
         .toList();
 
     for (final f in mentions) {
-      expect(guarded.containsKey(f.path), isTrue,
-          reason: '${f.path} mentions the dev login but is not a known, guarded site — '
-              'either guard it with kDevLoginEnabled and add it here, or remove the reference');
-      expect(f.src.contains(guarded[f.path]!), isTrue,
-          reason: '${f.path} must contain the guard `${guarded[f.path]}`');
+      expect(
+        guarded.containsKey(f.path),
+        isTrue,
+        reason:
+            '${f.path} mentions the dev login but is not a known, guarded site — '
+            'either guard it with kDevLoginEnabled and add it here, or remove the reference',
+      );
+      expect(
+        f.src.contains(guarded[f.path]!),
+        isTrue,
+        reason: '${f.path} must contain the guard `${guarded[f.path]}`',
+      );
     }
 
     // The list may not rot: every file it names must still mention the door.
     for (final path in guarded.keys) {
-      expect(mentions.any((f) => f.path == path), isTrue,
-          reason: '$path no longer mentions the dev login — drop it from this list');
+      expect(
+        mentions.any((f) => f.path == path),
+        isTrue,
+        reason: '$path no longer mentions the dev login — drop it from this list',
+      );
     }
   });
 
@@ -103,7 +121,10 @@ void main() {
     // No free-text entry: a run that could happen under any address is a run whose data
     // qa:time-travel / qa:reset are not allowed to touch.
     final screen = File('lib/features/auth/login_screen.dart').readAsStringSync();
-    expect(screen.contains('TextField'), isFalse,
-        reason: 'the login screen must not grow an email field for the dev door');
+    expect(
+      screen.contains('TextField'),
+      isFalse,
+      reason: 'the login screen must not grow an email field for the dev door',
+    );
   });
 }

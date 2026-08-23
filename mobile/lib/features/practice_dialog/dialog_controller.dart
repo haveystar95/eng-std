@@ -146,9 +146,7 @@ class DialogController extends ChangeNotifier {
 
   void _applyCoverage(List<TargetWord> updated) {
     final byId = {for (final w in updated) w.termId: w.used};
-    targetWords = [
-      for (final w in targetWords) w.copyWith(used: byId[w.termId] ?? w.used),
-    ];
+    targetWords = [for (final w in targetWords) w.copyWith(used: byId[w.termId] ?? w.used)];
   }
 
   /// End the dialog — user tapped «Завершить», the bot wrapped up, or the TTL hit. Flushes the last

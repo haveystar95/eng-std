@@ -23,7 +23,10 @@ final realtimeChannelFactoryProvider = Provider<RealtimeChannel Function()>((ref
 /// The collection's most recent finished dialog (network), for the collection-screen result row.
 /// Null when there is none. Degrades to null offline (the entry then shows the plain «Разговор»
 /// button). Invalidate after a dialog finishes so the row refreshes.
-final lastDialogProvider = FutureProvider.family<LastDialogResult?, String>((ref, collectionId) async {
+final lastDialogProvider = FutureProvider.family<LastDialogResult?, String>((
+  ref,
+  collectionId,
+) async {
   try {
     final raw = await ref.watch(apiClientProvider).lastDialog(collectionId);
     return raw == null ? null : LastDialogResult.fromJson(raw);

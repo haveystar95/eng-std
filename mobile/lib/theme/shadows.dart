@@ -9,14 +9,22 @@ abstract final class AppShadows {
   /// `0 2 8 rgba(46,38,32,.04)` + `0 12 28 rgba(46,38,32,.07)`.
   static const card = <BoxShadow>[
     BoxShadow(color: Color.fromARGB(10, _inkR, _inkG, _inkB), blurRadius: 8, offset: Offset(0, 2)),
-    BoxShadow(color: Color.fromARGB(18, _inkR, _inkG, _inkB), blurRadius: 28, offset: Offset(0, 12)),
+    BoxShadow(
+      color: Color.fromARGB(18, _inkR, _inkG, _inkB),
+      blurRadius: 28,
+      offset: Offset(0, 12),
+    ),
   ];
 
   /// Плавающее контекстное меню (§4в).
   /// `0 4 12 rgba(46,38,32,.10)` + `0 22 48 rgba(46,38,32,.26)`.
   static const menu = <BoxShadow>[
     BoxShadow(color: Color.fromARGB(26, _inkR, _inkG, _inkB), blurRadius: 12, offset: Offset(0, 4)),
-    BoxShadow(color: Color.fromARGB(66, _inkR, _inkG, _inkB), blurRadius: 48, offset: Offset(0, 22)),
+    BoxShadow(
+      color: Color.fromARGB(66, _inkR, _inkG, _inkB),
+      blurRadius: 48,
+      offset: Offset(0, 22),
+    ),
   ];
 
   /// Элемент, поднятый над scrim у контекстного меню (якорь).

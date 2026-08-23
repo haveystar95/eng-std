@@ -71,9 +71,9 @@ class _PerfLogScreenState extends State<PerfLogScreen> {
                       await Clipboard.setData(ClipboardData(text: PerfLog.instance.text));
                       final path = await PerfLog.instance.dumpToFile();
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l.perfMonitorCopied(path ?? 'n/a'))),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(l.perfMonitorCopied(path ?? 'n/a'))));
                       }
                     },
                   ),

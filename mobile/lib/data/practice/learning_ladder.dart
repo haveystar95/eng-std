@@ -107,13 +107,12 @@ abstract final class LearningLadder {
       // on purpose: the pair was never actually taught, only claimed.
       Acquisition.isNew => stepIntro,
       // Clamped, so a row written by a newer build can never point at a rung this one cannot deal.
-      Acquisition.learning =>
-        learningStep.clamp(stepRecognitionForward, stepRecognitionReverse),
+      Acquisition.learning => learningStep.clamp(stepRecognitionForward, stepRecognitionReverse),
       Acquisition.graduated => switch (successfulReviews) {
-          >= dictationMinSuccesses => stepDictation,
-          >= typingMinSuccesses => stepTyping,
-          _ => stepAssembly,
-        },
+        >= dictationMinSuccesses => stepDictation,
+        >= typingMinSuccesses => stepTyping,
+        _ => stepAssembly,
+      },
     };
   }
 
@@ -173,11 +172,11 @@ class LadderPosition {
 
   /// The rung, or null when the pair is outside the ladder.
   int? get step => LearningLadder.stepFor(
-        acquisition: acquisition,
-        successfulReviews: successfulReviews,
-        learningStep: learningStep,
-        isKnown: isKnown,
-      );
+    acquisition: acquisition,
+    successfulReviews: successfulReviews,
+    learningStep: learningStep,
+    isKnown: isKnown,
+  );
 
   /// The rung to filter modes by. A pair outside the ladder is not held back by it — its
   /// verification is decided elsewhere — so it reads as the top rung rather than as rung 0.
@@ -205,8 +204,7 @@ class LadderPosition {
   ///
   /// Study sessions, «Учить N» and due repeats are untouched by any of this: they are still read
   /// strictly from the pool, on both sides.
-  bool get admitsPractice =>
-      enrolled ? LearningLadder.admitsPractice(step) : true;
+  bool get admitsPractice => enrolled ? LearningLadder.admitsPractice(step) : true;
 
   /// The rung a free-practice card for this pair is DEALT at — what the card reports back with the
   /// answer, and what narrows the trainers for a word outside the pool.
@@ -298,23 +296,43 @@ class ModeAdmission {
       minStep: LearningLadder.stepRecognitionForward,
       optionsPolicy: OptionsPolicy.distant,
     ),
-    ExerciseMode.wordBank: ModeRule(mode: ExerciseMode.wordBank, minStep: LearningLadder.stepAssembly),
+    ExerciseMode.wordBank: ModeRule(
+      mode: ExerciseMode.wordBank,
+      minStep: LearningLadder.stepAssembly,
+    ),
     ExerciseMode.cloze: ModeRule(mode: ExerciseMode.cloze, minStep: LearningLadder.stepAssembly),
-    ExerciseMode.pickCorrect: ModeRule(mode: ExerciseMode.pickCorrect, minStep: LearningLadder.stepAssembly),
-    ExerciseMode.scramble: ModeRule(mode: ExerciseMode.scramble, minStep: LearningLadder.stepAssembly),
+    ExerciseMode.pickCorrect: ModeRule(
+      mode: ExerciseMode.pickCorrect,
+      minStep: LearningLadder.stepAssembly,
+    ),
+    ExerciseMode.scramble: ModeRule(
+      mode: ExerciseMode.scramble,
+      minStep: LearningLadder.stepAssembly,
+    ),
     ExerciseMode.typing: ModeRule(mode: ExerciseMode.typing, minStep: LearningLadder.stepTyping),
-    ExerciseMode.listening: ModeRule(mode: ExerciseMode.listening, minStep: LearningLadder.stepTyping),
-    ExerciseMode.dictation: ModeRule(mode: ExerciseMode.dictation, minStep: LearningLadder.stepDictation),
+    ExerciseMode.listening: ModeRule(
+      mode: ExerciseMode.listening,
+      minStep: LearningLadder.stepTyping,
+    ),
+    ExerciseMode.dictation: ModeRule(
+      mode: ExerciseMode.dictation,
+      minStep: LearningLadder.stepDictation,
+    ),
     // Speaking opens with the assembly trainers. Its two forms separate themselves by rung INSIDE
     // the mode ([ExerciseMode.asksForExample]), so there is one row here and not two — the same
     // shape the server's `ModeAdmission::shipped()` has.
-    ExerciseMode.speaking: ModeRule(mode: ExerciseMode.speaking, minStep: LearningLadder.stepAssembly),
+    ExerciseMode.speaking: ModeRule(
+      mode: ExerciseMode.speaking,
+      minStep: LearningLadder.stepAssembly,
+    ),
     // description_match opens with the assembly trainers too. `standard` options, not `distant`:
     // distant exists for the recognition rungs, and this card's wrong options come from the pool
     // through the ordinary picker — which already refuses a candidate sharing the target's meaning,
     // the failure that actually matters when the prompt is a definition rather than a gloss.
-    ExerciseMode.descriptionMatch:
-        ModeRule(mode: ExerciseMode.descriptionMatch, minStep: LearningLadder.stepAssembly),
+    ExerciseMode.descriptionMatch: ModeRule(
+      mode: ExerciseMode.descriptionMatch,
+      minStep: LearningLadder.stepAssembly,
+    ),
   });
 
   final Map<ExerciseMode, ModeRule> rules;
@@ -337,13 +355,13 @@ class ModeAdmission {
   /// a first meeting winnable — so a pair off the ladder always gets `standard`, whatever is stored.
   OptionsPolicy optionsPolicyFor(ExerciseMode mode, Acquisition acquisition) =>
       acquisition == Acquisition.graduated
-          ? OptionsPolicy.standard
-          : (rules[mode]?.optionsPolicy ?? OptionsPolicy.standard);
+      ? OptionsPolicy.standard
+      : (rules[mode]?.optionsPolicy ?? OptionsPolicy.standard);
 
   /// The given modes admitted at this rung, order preserved — the third filter a ladder passes
   /// through, alongside the enabled set and [TermPlayability.only].
   List<ExerciseMode> only(List<ExerciseMode> modes, int step) => [
-        for (final mode in modes)
-          if (allows(mode, step)) mode,
-      ];
+    for (final mode in modes)
+      if (allows(mode, step)) mode,
+  ];
 }

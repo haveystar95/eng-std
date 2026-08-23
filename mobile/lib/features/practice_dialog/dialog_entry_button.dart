@@ -39,7 +39,12 @@ class DialogEntryButton extends ConsumerWidget {
 
     void open() {
       AppHaptics.light();
-      showPracticeDialogPrestart(context, collectionId: collectionId, title: title, targetLang: targetLang);
+      showPracticeDialogPrestart(
+        context,
+        collectionId: collectionId,
+        title: title,
+        targetLang: targetLang,
+      );
     }
 
     return Padding(
@@ -55,10 +60,7 @@ class DialogEntryButton extends ConsumerWidget {
               onTap: online ? open : null,
             ),
           ),
-          if (last != null) ...[
-            const SizedBox(height: AppSpacing.s8),
-            _ResultRow(result: last),
-          ],
+          if (last != null) ...[const SizedBox(height: AppSpacing.s8), _ResultRow(result: last)],
         ],
       ),
     );
@@ -91,9 +93,15 @@ class _Button extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: AppText.primaryButton.copyWith(color: AppColors.ink, fontSize: 16)),
+                    Text(
+                      label,
+                      style: AppText.primaryButton.copyWith(color: AppColors.ink, fontSize: 16),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: AppText.primaryButtonSub.copyWith(color: AppColors.secondary)),
+                    Text(
+                      subtitle,
+                      style: AppText.primaryButtonSub.copyWith(color: AppColors.secondary),
+                    ),
                   ],
                 ),
               ),

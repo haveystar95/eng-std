@@ -2,18 +2,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/models.dart';
 
-WordCollection _collection({bool isDefault = false, String type = 'custom', bool subscribed = false}) =>
-    WordCollection(
-      id: '01KZETAAA50EMHCN6SP80T8DHC',
-      title: isDefault ? 'Сохранённые' : 'Работа',
-      source: 'user',
-      type: type,
-      wordsCount: 3,
-      sourceLang: 'ru',
-      targetLang: 'en',
-      isSubscribed: subscribed,
-      isDefault: isDefault,
-    );
+WordCollection _collection({
+  bool isDefault = false,
+  String type = 'custom',
+  bool subscribed = false,
+}) => WordCollection(
+  id: '01KZETAAA50EMHCN6SP80T8DHC',
+  title: isDefault ? 'Сохранённые' : 'Работа',
+  source: 'user',
+  type: type,
+  wordsCount: 3,
+  sourceLang: 'ru',
+  targetLang: 'en',
+  isSubscribed: subscribed,
+  isDefault: isDefault,
+);
 
 void main() {
   group('the default folder', () {
@@ -35,16 +38,18 @@ void main() {
       expect(store.readOnly, isTrue);
     });
 
-    test('defaults to false when the server says nothing — an old mirror is not the default folder',
-        () {
-      final parsed = WordCollection.fromJson({
-        'id': '01KZETAAA50EMHCN6SP80T8DHC',
-        'title': 'Работа',
-        'items_count': 0,
-      });
+    test(
+      'defaults to false when the server says nothing — an old mirror is not the default folder',
+      () {
+        final parsed = WordCollection.fromJson({
+          'id': '01KZETAAA50EMHCN6SP80T8DHC',
+          'title': 'Работа',
+          'items_count': 0,
+        });
 
-      expect(parsed.isDefault, isFalse);
-    });
+        expect(parsed.isDefault, isFalse);
+      },
+    );
 
     test('reads the flag, never the title — the owner may have renamed it', () {
       final renamed = WordCollection.fromJson({

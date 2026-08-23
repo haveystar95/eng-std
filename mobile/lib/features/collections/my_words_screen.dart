@@ -76,57 +76,70 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
               _Header(title: l.myWordsTitle, subtitle: l.myWordsCount(pool.length)),
               if (pool.isNotEmpty) ...[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 0, AppSpacing.screenH, AppSpacing.s12),
-                  child: _SearchField(controller: _search, hint: l.myWordsSearchHint, onChanged: (_) => setState(() {})),
-                ),
-                ChipScrollRow(children: [
-                  for (final p in _Phase.values)
-                    AppChip(
-                      label: _phaseLabel(l, p),
-                      selected: _phase == p,
-                      onTap: () => setState(() => _phase = p),
-                    ),
-                ]),
-                const SizedBox(height: AppSpacing.s8),
-                ChipScrollRow(children: [
-                  AppChip(
-                    label: l.myWordsSourceAll,
-                    selected: _collectionId == null,
-                    onTap: () => setState(() => _collectionId = null),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenH,
+                    0,
+                    AppSpacing.screenH,
+                    AppSpacing.s12,
                   ),
-                  for (final c in collections)
+                  child: _SearchField(
+                    controller: _search,
+                    hint: l.myWordsSearchHint,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                ChipScrollRow(
+                  children: [
+                    for (final p in _Phase.values)
+                      AppChip(
+                        label: _phaseLabel(l, p),
+                        selected: _phase == p,
+                        onTap: () => setState(() => _phase = p),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.s8),
+                ChipScrollRow(
+                  children: [
                     AppChip(
-                      label: c.title,
-                      selected: _collectionId == c.id,
-                      onTap: () => setState(() => _collectionId = c.id),
+                      label: l.myWordsSourceAll,
+                      selected: _collectionId == null,
+                      onTap: () => setState(() => _collectionId = null),
                     ),
-                  // Offered only when there is something behind it — a chip that always finds
-                  // nothing is a chip that teaches the learner to distrust the filter row.
-                  if (pool.any((r) => r.collectionIds.isEmpty))
-                    AppChip(
-                      label: l.myWordsSourceNone,
-                      selected: _collectionId == '',
-                      onTap: () => setState(() => _collectionId = ''),
-                    ),
-                ]),
+                    for (final c in collections)
+                      AppChip(
+                        label: c.title,
+                        selected: _collectionId == c.id,
+                        onTap: () => setState(() => _collectionId = c.id),
+                      ),
+                    // Offered only when there is something behind it — a chip that always finds
+                    // nothing is a chip that teaches the learner to distrust the filter row.
+                    if (pool.any((r) => r.collectionIds.isEmpty))
+                      AppChip(
+                        label: l.myWordsSourceNone,
+                        selected: _collectionId == '',
+                        onTap: () => setState(() => _collectionId = ''),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.s16),
               ],
               Expanded(
                 child: pool.isEmpty
                     ? _Empty(title: l.myWordsEmptyTitle, message: l.myWordsEmptyMessage)
                     : rows.isEmpty
-                        ? _Empty(title: l.myWordsNothingFound)
-                        : ListView.builder(
-                            padding: EdgeInsets.only(
-                              bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26,
-                            ),
-                            itemCount: rows.length,
-                            itemBuilder: (context, i) => _PoolRow(
-                              row: rows[i],
-                              showDivider: i < rows.length - 1,
-                              onTap: () => _openCard(rows[i]),
-                            ),
-                          ),
+                    ? _Empty(title: l.myWordsNothingFound)
+                    : ListView.builder(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26,
+                        ),
+                        itemCount: rows.length,
+                        itemBuilder: (context, i) => _PoolRow(
+                          row: rows[i],
+                          showDivider: i < rows.length - 1,
+                          onTap: () => _openCard(rows[i]),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -153,29 +166,28 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
   }
 
   bool _matchesPhase(PoolWordRow r) => switch (_phase) {
-        _Phase.all => true,
-        _Phase.isNew => r.position.acquisition == Acquisition.isNew,
-        _Phase.learning => r.position.acquisition == Acquisition.learning,
-        _Phase.review => r.position.acquisition == Acquisition.graduated,
-      };
+    _Phase.all => true,
+    _Phase.isNew => r.position.acquisition == Acquisition.isNew,
+    _Phase.learning => r.position.acquisition == Acquisition.learning,
+    _Phase.review => r.position.acquisition == Acquisition.graduated,
+  };
 
   bool _matchesSource(PoolWordRow r) => switch (_collectionId) {
-        null => true,
-        '' => r.collectionIds.isEmpty,
-        final id => r.collectionIds.contains(id),
-      };
+    null => true,
+    '' => r.collectionIds.isEmpty,
+    final id => r.collectionIds.contains(id),
+  };
 
   String _phaseLabel(AppLocalizations l, _Phase p) => switch (p) {
-        _Phase.all => l.myWordsFilterAll,
-        _Phase.isNew => l.myWordsFilterNew,
-        _Phase.learning => l.myWordsFilterLearning,
-        _Phase.review => l.myWordsFilterReview,
-      };
+    _Phase.all => l.myWordsFilterAll,
+    _Phase.isNew => l.myWordsFilterNew,
+    _Phase.learning => l.myWordsFilterLearning,
+    _Phase.review => l.myWordsFilterReview,
+  };
 
   /// The profile's target language, and only that: the pool mixes collections by design, so there
   /// is no single set whose language could be borrowed the way the collection screen borrows one.
-  String get _speakLang =>
-      ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+  String get _speakLang => ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
 
   /// The same card the collection screen opens — one card for a word, wherever it is met.
   ///
@@ -184,40 +196,41 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
   /// has no «current» shelf to contrast with.
   void _openCard(PoolWordRow row) {
     final word = _toWord(row);
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => WordCardScreen(
-        subject: WordCardSubject.fromWord(word),
-        mode: WordCardMode.folder,
-        onSpeak: () {
-          AppHaptics.light();
-          _pronouncer.speak(word, targetLang: _speakLang);
-        },
-        onTrain: () => Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => SessionScreen(
-            title: word.term,
-            practice: true,
-            onlyTermId: word.termId,
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WordCardScreen(
+          subject: WordCardSubject.fromWord(word),
+          mode: WordCardMode.folder,
+          onSpeak: () {
+            AppHaptics.light();
+            _pronouncer.speak(word, targetLang: _speakLang);
+          },
+          onTrain: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  SessionScreen(title: word.term, practice: true, onlyTermId: word.termId),
+            ),
           ),
-        )),
-        onUnenroll: () => ref.read(poolSyncProvider).unenroll(word.termId),
+          onUnenroll: () => ref.read(poolSyncProvider).unenroll(word.termId),
+        ),
       ),
-    ));
+    );
   }
 
   Word _toWord(PoolWordRow r) => Word(
-        termId: r.term.id,
-        term: r.term.termText ?? '',
-        translation: r.term.translation ?? '',
-        transcription: r.term.transcription,
-        example: r.term.example,
-        type: r.term.type,
-        imageUrl: r.term.imageUrl,
-        imageAuthor: r.term.imageAuthor,
-        imageAuthorUrl: r.term.imageAuthorUrl,
-        ladderStep: r.position.step,
-        isKnown: r.position.isKnown,
-        enrolled: true, // every row on this screen is in the pool by construction
-      );
+    termId: r.term.id,
+    term: r.term.termText ?? '',
+    translation: r.term.translation ?? '',
+    transcription: r.term.transcription,
+    example: r.term.example,
+    type: r.term.type,
+    imageUrl: r.term.imageUrl,
+    imageAuthor: r.term.imageAuthor,
+    imageAuthorUrl: r.term.imageAuthorUrl,
+    ladderStep: r.position.step,
+    isKnown: r.position.isKnown,
+    enrolled: true, // every row on this screen is in the pool by construction
+  );
 }
 
 class _Header extends StatelessWidget {
@@ -228,7 +241,12 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.s8, AppSpacing.s8, AppSpacing.screenH, AppSpacing.s16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s8,
+        AppSpacing.s8,
+        AppSpacing.screenH,
+        AppSpacing.s16,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -304,20 +322,30 @@ class _PoolRow extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenH, AppSpacing.wordRowPadV, AppSpacing.screenH, AppSpacing.wordRowPadV),
+            AppSpacing.screenH,
+            AppSpacing.wordRowPadV,
+            AppSpacing.screenH,
+            AppSpacing.wordRowPadV,
+          ),
           child: Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(row.term.termText ?? '',
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.termInList),
+                    Text(
+                      row.term.termText ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.termInList,
+                    ),
                     const SizedBox(height: 3),
-                    Text(row.term.translation ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.translation.copyWith(fontSize: 13)),
+                    Text(
+                      row.term.translation ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.translation.copyWith(fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -350,9 +378,11 @@ class _Empty extends StatelessWidget {
             Text(title, textAlign: TextAlign.center, style: AppText.sectionLabel),
             if (message != null) ...[
               const SizedBox(height: AppSpacing.s12),
-              Text(message!,
-                  textAlign: TextAlign.center,
-                  style: AppText.translation.copyWith(fontSize: 13.5, height: 1.4)),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: AppText.translation.copyWith(fontSize: 13.5, height: 1.4),
+              ),
             ],
           ],
         ),

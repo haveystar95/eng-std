@@ -26,19 +26,20 @@ void main() {
 
   test('the stored set is taken as sent, order included', () {
     // The order is the rotation, so it survives the round trip verbatim.
-    expect(
-      PracticeModes.fromWire('typing,multiple_choice,scramble').modes,
-      [ExerciseMode.typing, ExerciseMode.multipleChoice, ExerciseMode.scramble],
-    );
+    expect(PracticeModes.fromWire('typing,multiple_choice,scramble').modes, [
+      ExerciseMode.typing,
+      ExerciseMode.multipleChoice,
+      ExerciseMode.scramble,
+    ]);
   });
 
   test('a mode this build does not know is dropped, not guessed at', () {
     // A newer server can name a trainer this app cannot draw. Falling back to `typing` (what
     // ExerciseMode.fromWire does for a CARD) would deal a card the user never enabled.
-    expect(
-      PracticeModes.fromWire('typing,time_travel,cloze').modes,
-      [ExerciseMode.typing, ExerciseMode.cloze],
-    );
+    expect(PracticeModes.fromWire('typing,time_travel,cloze').modes, [
+      ExerciseMode.typing,
+      ExerciseMode.cloze,
+    ]);
     // …and if NOTHING survives, the default is a better answer than an empty session.
     expect(PracticeModes.fromWire('time_travel').modes, PracticeModes.serverDefault.modes);
   });
@@ -53,23 +54,33 @@ void main() {
     // other's wrong option, so a deck of synonyms leaves multiple_choice with nothing to offer and
     // the card is refused (QA-15). This group is about the TOGGLES.
     Term term(String id, String text, String example, String translation) => Term(
-          id: id,
-          termText: text,
-          type: 'word',
-          transcription: null,
-          translation: translation,
-          example: example,
-          exampleTranslation: 'перевод примера',
-          imageUrl: null,
-          imageAuthor: null,
-          imageAuthorUrl: null,
-          updatedAt: DateTime.utc(2026, 8, 11),
-        );
+      id: id,
+      termText: text,
+      type: 'word',
+      transcription: null,
+      translation: translation,
+      example: example,
+      exampleTranslation: 'перевод примера',
+      imageUrl: null,
+      imageAuthor: null,
+      imageAuthorUrl: null,
+      updatedAt: DateTime.utc(2026, 8, 11),
+    );
 
     final terms = [
-      term('01KZETAAA50EMHCN6SP80T8DHC', 'reservation', 'I have a reservation for tonight.', 'бронь'),
+      term(
+        '01KZETAAA50EMHCN6SP80T8DHC',
+        'reservation',
+        'I have a reservation for tonight.',
+        'бронь',
+      ),
       term('01KZETAAB4AW6M9ZFRB3X02CVW', 'towel', 'I need a clean towel, please.', 'полотенце'),
-      term('01KZETAAC103WZ24WQ7H087ZJ3', 'sheets', 'Could I have extra sheets, please?', 'простыни'),
+      term(
+        '01KZETAAC103WZ24WQ7H087ZJ3',
+        'sheets',
+        'Could I have extra sheets, please?',
+        'простыни',
+      ),
       term('01KZETAAD2EWE2H5ZV7WD8JWKT', 'goals', 'She finally achieved her goals.', 'цели'),
     ];
 
@@ -77,16 +88,20 @@ void main() {
     /// never-shown pair would be held at rung 1 by the ladder before a toggle could say anything.
     /// The ladder gate has its own tests (ladder_gate_test.dart).
     Set<ExerciseMode> dealt(PracticeModes enabled) => LocalPracticeSessionBuilder.build(
-          terms: terms,
-          limit: 20,
-          random: Random(3),
-          sessionId: 'S',
-          enabled: enabled,
-          ladder: {
-            for (final t in terms)
-              t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-          },
-        ).cards.map((c) => c.mode).toSet();
+      terms: terms,
+      limit: 20,
+      random: Random(3),
+      sessionId: 'S',
+      enabled: enabled,
+      ladder: {
+        for (final t in terms)
+          t.id: const LadderPosition(
+            acquisition: Acquisition.graduated,
+            successfulReviews: 12,
+            enrolled: true,
+          ),
+      },
+    ).cards.map((c) => c.mode).toSet();
 
     test('a narrowed set is the only thing dealt', () async {
       await db.setMeta(SyncKeys.exerciseModes, 'typing,multiple_choice');
@@ -99,20 +114,25 @@ void main() {
     test('a single-mode set deals only that mode', () async {
       await db.setMeta(SyncKeys.exerciseModes, 'scramble');
 
-      expect(dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))),
-          {ExerciseMode.scramble});
+      expect(dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))), {
+        ExerciseMode.scramble,
+      });
     });
 
     test('a mode switched off stops being dealt after the next sync', () async {
       await db.setMeta(SyncKeys.exerciseModes, 'multiple_choice,typing,scramble');
-      expect(dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))),
-          contains(ExerciseMode.scramble));
+      expect(
+        dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))),
+        contains(ExerciseMode.scramble),
+      );
 
       // …the admin switches scramble off, and the next /sync stores the new set.
       await db.setMeta(SyncKeys.exerciseModes, 'multiple_choice,typing');
 
-      expect(dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))),
-          isNot(contains(ExerciseMode.scramble)));
+      expect(
+        dealt(PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes))),
+        isNot(contains(ExerciseMode.scramble)),
+      );
     });
 
     test('the set survives a reopen — it is settings, not session state', () async {

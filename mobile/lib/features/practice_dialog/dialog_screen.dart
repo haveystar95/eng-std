@@ -25,7 +25,8 @@ Future<void> showPracticeDialogPrestart(
 }) {
   return showAppBottomSheet<void>(
     context: context,
-    builder: (_) => _PrestartSheet(collectionId: collectionId, title: title, targetLang: targetLang),
+    builder: (_) =>
+        _PrestartSheet(collectionId: collectionId, title: title, targetLang: targetLang),
   );
 }
 
@@ -57,17 +58,23 @@ class _PrestartSheet extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(l.practiceDialogPrestartTitle,
-                  style: AppText.stepTitle.copyWith(fontSize: 21)),
+              child: Text(
+                l.practiceDialogPrestartTitle,
+                style: AppText.stepTitle.copyWith(fontSize: 21),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        Text(l.practiceDialogPrestartBody(langName),
-            style: AppText.translation.copyWith(height: 1.4)),
+        Text(
+          l.practiceDialogPrestartBody(langName),
+          style: AppText.translation.copyWith(height: 1.4),
+        ),
         const SizedBox(height: AppSpacing.s22),
-        Text(l.practiceDialogPrestartWordsLabel.toUpperCase(),
-            style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary)),
+        Text(
+          l.practiceDialogPrestartWordsLabel.toUpperCase(),
+          style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary),
+        ),
         const SizedBox(height: 10),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 132),
@@ -75,9 +82,7 @@ class _PrestartSheet extends ConsumerWidget {
             child: Wrap(
               spacing: 7,
               runSpacing: 7,
-              children: [
-                for (final w in words) _WordPill(text: w.term),
-              ],
+              children: [for (final w in words) _WordPill(text: w.term)],
             ),
           ),
         ),
@@ -89,13 +94,15 @@ class _PrestartSheet extends ConsumerWidget {
           onPressed: () {
             AppHaptics.light();
             Navigator.of(context).pop(); // close the sheet
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => PracticeDialogScreen(
-                collectionId: collectionId,
-                title: title,
-                targetLang: targetLang,
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => PracticeDialogScreen(
+                  collectionId: collectionId,
+                  title: title,
+                  targetLang: targetLang,
+                ),
               ),
-            ));
+            );
           },
         ),
       ],
@@ -190,7 +197,8 @@ class _PracticeDialogScreenState extends ConsumerState<PracticeDialogScreen> {
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
-          final active = _controller.status == DialogStatus.active ||
+          final active =
+              _controller.status == DialogStatus.active ||
               _controller.status == DialogStatus.finishing;
           return PopScope(
             canPop: !active,
@@ -288,8 +296,10 @@ class _Header extends StatelessWidget {
           const Spacer(),
           const Icon(LucideIcons.clock, size: 13, color: AppColors.tertiary),
           const SizedBox(width: 5),
-          Text(_fmt(remainingSeconds),
-              style: AppText.counterSmall.copyWith(fontSize: 13, color: AppColors.tertiary)),
+          Text(
+            _fmt(remainingSeconds),
+            style: AppText.counterSmall.copyWith(fontSize: 13, color: AppColors.tertiary),
+          ),
         ],
       ),
     );
@@ -317,8 +327,10 @@ class _CoverageBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.practiceDialogCoverageLabel(used, words.length),
-              style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+          Text(
+            l.practiceDialogCoverageLabel(used, words.length),
+            style: AppText.counterSmall.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+          ),
           const SizedBox(height: 7),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 90),
@@ -326,9 +338,7 @@ class _CoverageBar extends StatelessWidget {
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: [
-                  for (final w in words) _CoverageChip(text: w.text, used: w.used),
-                ],
+                children: [for (final w in words) _CoverageChip(text: w.text, used: w.used)],
               ),
             ),
           ),
@@ -379,8 +389,10 @@ class _StateIndicator extends StatefulWidget {
 }
 
 class _StateIndicatorState extends State<_StateIndicator> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -413,7 +425,10 @@ class _StateIndicatorState extends State<_StateIndicator> with SingleTickerProvi
           ),
         ),
         const SizedBox(height: 6),
-        Text(caption, style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary)),
+        Text(
+          caption,
+          style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.secondary),
+        ),
       ],
     );
   }
@@ -421,7 +436,7 @@ class _StateIndicatorState extends State<_StateIndicator> with SingleTickerProvi
 
 class _Waveform extends AnimatedWidget {
   const _Waveform({required this.animation, required this.reduce, required this.faint})
-      : super(listenable: animation);
+    : super(listenable: animation);
   final Animation<double> animation;
   final bool reduce, faint;
 
@@ -531,10 +546,7 @@ class _FeedBubble extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Align(
-        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: bubble,
-      ),
+      child: Align(alignment: isUser ? Alignment.centerRight : Alignment.centerLeft, child: bubble),
     );
   }
 }
@@ -558,13 +570,18 @@ class _Finale extends StatelessWidget {
         children: [
           const Icon(LucideIcons.messageCircle, size: 34, color: AppColors.tertiary),
           const SizedBox(height: 16),
-          Text(l.practiceDialogFinaleTitle,
-              textAlign: TextAlign.center, style: AppText.displayTerm.copyWith(fontSize: 30)),
+          Text(
+            l.practiceDialogFinaleTitle,
+            textAlign: TextAlign.center,
+            style: AppText.displayTerm.copyWith(fontSize: 30),
+          ),
           const SizedBox(height: 14),
           if (s != null && s.summary.isNotEmpty) ...[
-            Text(s.summary,
-                textAlign: TextAlign.center,
-                style: AppText.usageExample.copyWith(fontSize: 16, height: 1.45)),
+            Text(
+              s.summary,
+              textAlign: TextAlign.center,
+              style: AppText.usageExample.copyWith(fontSize: 16, height: 1.45),
+            ),
             const SizedBox(height: 16),
           ],
           Text(
@@ -593,9 +610,10 @@ class _ErrorView extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final message = switch (kind) {
       DialogErrorKind.subscriptionRequired => l.practiceDialogErrorSubscription,
-      DialogErrorKind.rateLimited => resetsAt != null
-          ? l.practiceDialogErrorRateLimited(_fmtTime(resetsAt!))
-          : l.practiceDialogErrorRateLimitedNoTime,
+      DialogErrorKind.rateLimited =>
+        resetsAt != null
+            ? l.practiceDialogErrorRateLimited(_fmtTime(resetsAt!))
+            : l.practiceDialogErrorRateLimitedNoTime,
       DialogErrorKind.offline => l.practiceDialogErrorOffline,
       DialogErrorKind.network || DialogErrorKind.unknown => l.practiceDialogErrorGeneric,
     };
@@ -607,8 +625,11 @@ class _ErrorView extends StatelessWidget {
         children: [
           const Icon(LucideIcons.messageCircleOff, size: 34, color: AppColors.tertiary),
           const SizedBox(height: 16),
-          Text(message,
-              textAlign: TextAlign.center, style: AppText.translation.copyWith(height: 1.4)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(height: 1.4),
+          ),
           const SizedBox(height: 24),
           QuietButton(label: l.practiceDialogClose, onPressed: onClose),
         ],

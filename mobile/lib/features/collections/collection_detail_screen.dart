@@ -87,9 +87,8 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
   ///
   /// A word whose photo never arrives is not a bug and not a loop: the refresher's budget ends on
   /// its own, because a word the model refused to illustrate has nothing to wait for.
-  bool _awaitingContent(List<Word> items) => items.any(
-        (w) => (w.imageUrl == null || w.imageUrl!.isEmpty) || w.translation.trim().isEmpty,
-      );
+  bool _awaitingContent(List<Word> items) =>
+      items.any((w) => (w.imageUrl == null || w.imageUrl!.isEmpty) || w.translation.trim().isEmpty);
 
   /// Pronounce in the COLLECTION's language, not the profile's — a ru→de set must speak German even
   /// when the profile targets English (language lives on the collection; device-batch F16).
@@ -100,22 +99,26 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
 
   void _openTriage() {
     AppHaptics.light();
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TriageScreen(collectionId: widget.collectionId, title: widget.title),
+      ),
+    );
   }
 
   void _openSession(bool practice, {bool learn = false, String? onlyTermId}) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => SessionScreen(
-        title: widget.title,
-        collectionId: widget.collectionId,
-        practice: practice,
-        learn: learn, // «Учить N»: distinguish an empty session (quota spent) from «nothing here»
-        targetLang: _collection?.targetLang, // speak this collection's language (F16)
-        onlyTermId: onlyTermId, // «Тренировать слово» from the expanded card (кадр 16e)
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(
+          title: widget.title,
+          collectionId: widget.collectionId,
+          practice: practice,
+          learn: learn, // «Учить N»: distinguish an empty session (quota spent) from «nothing here»
+          targetLang: _collection?.targetLang, // speak this collection's language (F16)
+          onlyTermId: onlyTermId, // «Тренировать слово» from the expanded card (кадр 16e)
+        ),
       ),
-    ));
+    );
   }
 
   Future<void> _speak(Word word) async {
@@ -160,9 +163,9 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         .toList();
 
     if (targets.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.collectionMoveWordNowhere)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.collectionMoveWordNowhere)));
 
       return;
     }
@@ -188,31 +191,33 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     if (target == null || !mounted) return;
 
     try {
-      await ref.read(apiClientProvider).moveWord(
+      await ref
+          .read(apiClientProvider)
+          .moveWord(
             fromCollectionId: widget.collectionId,
             toCollectionId: target.id,
             termId: word.termId,
           );
       ref.read(syncServiceProvider).sync();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.collectionMoveWordDone(target.title))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.collectionMoveWordDone(target.title))));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.collectionMoveWordFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.collectionMoveWordFailed)));
     }
   }
 
   void _edit(Word word) => showWordEditor(
-        context,
-        ref,
-        collectionId: widget.collectionId,
-        existing: word,
-        onRequestDelete: () => _confirmDelete(word),
-      );
+    context,
+    ref,
+    collectionId: widget.collectionId,
+    existing: word,
+    onRequestDelete: () => _confirmDelete(word),
+  );
 
   void _add() => showWordEditor(context, ref, collectionId: widget.collectionId);
 
@@ -311,7 +316,8 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         .firstOrNull;
     _collection = collection;
     final readOnly = collection?.readOnly ?? false;
-    final density = ref.watch(collectionDensityProvider(widget.collectionId)).value ??
+    final density =
+        ref.watch(collectionDensityProvider(widget.collectionId)).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
     final cprog = ref.watch(collectionsProgressProvider).value?[widget.collectionId];
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[widget.collectionId] ?? 0;
@@ -331,124 +337,136 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-      backgroundColor: AppColors.paper,
-      body: words.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
-        error: (e, _) => _CoverScaffold(
-          imageUrl: collection?.imageUrl,
-          isDefault: collection?.isDefault ?? false,
-          child: Center(
-            child: Text(l.triageLoadError(e.toString()),
-                textAlign: TextAlign.center, style: AppText.translation),
+        backgroundColor: AppColors.paper,
+        body: words.when(
+          loading: () => const Center(child: CircularProgressIndicator(color: AppColors.ink)),
+          error: (e, _) => _CoverScaffold(
+            imageUrl: collection?.imageUrl,
+            isDefault: collection?.isDefault ?? false,
+            child: Center(
+              child: Text(
+                l.triageLoadError(e.toString()),
+                textAlign: TextAlign.center,
+                style: AppText.translation,
+              ),
+            ),
           ),
-        ),
-        data: (items) {
-          // Every rebuild says whether anything is still missing; the refresher decides whether
-          // that is worth another look and stops on its own when it is not.
-          (_refresher ??= PendingContentRefresher(ref.read(syncServiceProvider)))
-              .nudge(pending: _awaitingContent(items));
+          data: (items) {
+            // Every rebuild says whether anything is still missing; the refresher decides whether
+            // that is worth another look and stops on its own when it is not.
+            (_refresher ??= PendingContentRefresher(
+              ref.read(syncServiceProvider),
+            )).nudge(pending: _awaitingContent(items));
 
-          return ListView(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26),
-          children: [
-            _Cover(
-              imageUrl: collection?.imageUrl,
-              isDefault: collection?.isDefault ?? false,
-              onBack: () => Navigator.of(context).maybePop(),
-              onMenu: _openCollectionMenu,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.title, style: AppText.collectionNameScreen),
-                  const SizedBox(height: 6),
-                  Text(
-                    _subtitle(l, total, due),
-                    style: AppText.translation.copyWith(fontSize: 13),
-                  ),
-                  const SizedBox(height: AppSpacing.s16),
-                  InkSegments.fromCounts(
-                    confirmed: density.confirmed,
-                    familiar: density.familiar,
-                    inProgress: density.inProgress,
-                  ),
-                  const SizedBox(height: 11),
-                  _DensityLegend(density: density),
-                  const SizedBox(height: 18),
-                  _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
-                  // «Разобрать N» — the swipe pass over what is left, for as long as anything is
-                  // left (QA-25). The primary CTA above outranks triage the moment the first swipes
-                  // produce something to learn or to review, and the rest of the collection then had
-                  // no way in at all.
-                  if (showsSecondaryTriage(cta, untriaged)) ...[
-                    SizedBox(height: cta.kind == HomeCtaKind.none ? 0 : AppSpacing.s12),
-                    _TriageButton(count: untriaged, onTap: _openTriage),
-                  ],
-                  // «Тренировка» — always available under the primary CTA (Training Loop v2 / F17):
-                  // drills every word in the collection at any moment, ignoring due/status, and moves
-                  // no progress. Hidden only on an empty collection (nothing to drill).
-                  if (total > 0) ...[
-                    SizedBox(
-                      height: cta.kind == HomeCtaKind.none && !showsSecondaryTriage(cta, untriaged)
-                          ? 0
-                          : AppSpacing.s12,
-                    ),
-                    _PracticeButton(onTap: () => _openSession(true)),
-                  ],
-                  // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
-                  DialogEntryButton(collectionId: widget.collectionId, title: widget.title),
-                  if (_showTriagePrompt) ...[
-                    const SizedBox(height: AppSpacing.s12),
-                    _TriageBanner(
-                      onStart: _openTriage,
-                      onDismiss: () => setState(() => _showTriagePrompt = false),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  Text(l.collectionWordsLabel, style: AppText.sectionLabel),
-                  const SizedBox(height: 6),
-                ],
+            return ListView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewPaddingOf(context).bottom + AppSpacing.s26,
               ),
-            ),
-            if (items.isEmpty)
-              _Empty(l: l)
-            else
-              for (var i = 0; i < items.length; i++)
-                _WordRow(
-                  word: items[i],
-                  showDivider: i < items.length - 1,
-                  onSpeak: () => _speak(items[i]),
-                  // Own folder → the full card; a store deck stays on the compact sheet.
-                  folder: readOnly
-                      ? null
-                      : SavedFolder(
-                          id: widget.collectionId,
-                          title: widget.title,
-                          isDefault: collection?.isDefault ?? false,
-                        ),
-                  // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
-                  onEdit: readOnly ? null : () => _edit(items[i]),
-                  onDelete: readOnly ? null : () => _confirmDelete(items[i]),
-                  onMove: readOnly ? null : () => _moveWord(items[i]),
-                  // Practice, narrowed to this word. Practice and not a study session: drilling one
-                  // word on demand must not spend the day's new-term quota on it.
-                  onTrain: () => _openSession(true, onlyTermId: items[i].termId),
-                  // The two pool decisions. Local first, then queued for the server — see PoolSync.
-                  onEnroll: () => ref.read(poolSyncProvider).enroll(items[i].termId),
-                  onUnenroll: () => ref.read(poolSyncProvider).unenroll(items[i].termId),
+              children: [
+                _Cover(
+                  imageUrl: collection?.imageUrl,
+                  isDefault: collection?.isDefault ?? false,
+                  onBack: () => Navigator.of(context).maybePop(),
+                  onMenu: _openCollectionMenu,
                 ),
-            // «Добавить слово» — own collections only.
-            if (!readOnly)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 16, AppSpacing.screenH, 0),
-                child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
-              ),
-          ],
-          );
-        },
-      ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 18, AppSpacing.screenH, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.title, style: AppText.collectionNameScreen),
+                      const SizedBox(height: 6),
+                      Text(
+                        _subtitle(l, total, due),
+                        style: AppText.translation.copyWith(fontSize: 13),
+                      ),
+                      const SizedBox(height: AppSpacing.s16),
+                      InkSegments.fromCounts(
+                        confirmed: density.confirmed,
+                        familiar: density.familiar,
+                        inProgress: density.inProgress,
+                      ),
+                      const SizedBox(height: 11),
+                      _DensityLegend(density: density),
+                      const SizedBox(height: 18),
+                      _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
+                      // «Разобрать N» — the swipe pass over what is left, for as long as anything is
+                      // left (QA-25). The primary CTA above outranks triage the moment the first swipes
+                      // produce something to learn or to review, and the rest of the collection then had
+                      // no way in at all.
+                      if (showsSecondaryTriage(cta, untriaged)) ...[
+                        SizedBox(height: cta.kind == HomeCtaKind.none ? 0 : AppSpacing.s12),
+                        _TriageButton(count: untriaged, onTap: _openTriage),
+                      ],
+                      // «Тренировка» — always available under the primary CTA (Training Loop v2 / F17):
+                      // drills every word in the collection at any moment, ignoring due/status, and moves
+                      // no progress. Hidden only on an empty collection (nothing to drill).
+                      if (total > 0) ...[
+                        SizedBox(
+                          height:
+                              cta.kind == HomeCtaKind.none && !showsSecondaryTriage(cta, untriaged)
+                              ? 0
+                              : AppSpacing.s12,
+                        ),
+                        _PracticeButton(onTap: () => _openSession(true)),
+                      ],
+                      // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
+                      DialogEntryButton(collectionId: widget.collectionId, title: widget.title),
+                      if (_showTriagePrompt) ...[
+                        const SizedBox(height: AppSpacing.s12),
+                        _TriageBanner(
+                          onStart: _openTriage,
+                          onDismiss: () => setState(() => _showTriagePrompt = false),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      Text(l.collectionWordsLabel, style: AppText.sectionLabel),
+                      const SizedBox(height: 6),
+                    ],
+                  ),
+                ),
+                if (items.isEmpty)
+                  _Empty(l: l)
+                else
+                  for (var i = 0; i < items.length; i++)
+                    _WordRow(
+                      word: items[i],
+                      showDivider: i < items.length - 1,
+                      onSpeak: () => _speak(items[i]),
+                      // Own folder → the full card; a store deck stays on the compact sheet.
+                      folder: readOnly
+                          ? null
+                          : SavedFolder(
+                              id: widget.collectionId,
+                              title: widget.title,
+                              isDefault: collection?.isDefault ?? false,
+                            ),
+                      // Read-only store set: no per-word edit/delete (swipe + menu suppressed).
+                      onEdit: readOnly ? null : () => _edit(items[i]),
+                      onDelete: readOnly ? null : () => _confirmDelete(items[i]),
+                      onMove: readOnly ? null : () => _moveWord(items[i]),
+                      // Practice, narrowed to this word. Practice and not a study session: drilling one
+                      // word on demand must not spend the day's new-term quota on it.
+                      onTrain: () => _openSession(true, onlyTermId: items[i].termId),
+                      // The two pool decisions. Local first, then queued for the server — see PoolSync.
+                      onEnroll: () => ref.read(poolSyncProvider).enroll(items[i].termId),
+                      onUnenroll: () => ref.read(poolSyncProvider).unenroll(items[i].termId),
+                    ),
+                // «Добавить слово» — own collections only.
+                if (!readOnly)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.screenH,
+                      16,
+                      AppSpacing.screenH,
+                      0,
+                    ),
+                    child: _AddWordButton(label: l.collectionAddWord, onTap: _add),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -595,7 +613,10 @@ class _DensityLegend extends StatelessWidget {
           child: d == InkDensity.outline
               ? DecoratedBox(
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppInkDensity.outlineColor, width: AppInkDensity.outlineWidth),
+                    border: Border.all(
+                      color: AppInkDensity.outlineColor,
+                      width: AppInkDensity.outlineWidth,
+                    ),
                   ),
                 )
               : ColoredBox(color: AppInkDensity.solid(d)),
@@ -624,11 +645,36 @@ class _CtaButton extends StatelessWidget {
     if (cta.kind == HomeCtaKind.limitReached) return const LimitReachedCard();
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
-      HomeCtaKind.triage => (l.collectionTriageButton(cta.count), l.collectionTriageSubtitle, onTriage, true),
-      HomeCtaKind.learn => (l.collectionLearnButton(cta.count), l.collectionLearnSubtitle, () => onSession(false, learn: true), true),
-      HomeCtaKind.review => (l.collectionReviewButton(cta.count), l.collectionReviewSubtitle, () => onSession(false), true),
-      HomeCtaKind.practice => (l.collectionPracticeButton, l.collectionPracticeSubtitle, () => onSession(true), false),
-      HomeCtaKind.limitReached || HomeCtaKind.none => ('', '', () => onSession(false), false), // unreachable; keeps the switch exhaustive
+      HomeCtaKind.triage => (
+        l.collectionTriageButton(cta.count),
+        l.collectionTriageSubtitle,
+        onTriage,
+        true,
+      ),
+      HomeCtaKind.learn => (
+        l.collectionLearnButton(cta.count),
+        l.collectionLearnSubtitle,
+        () => onSession(false, learn: true),
+        true,
+      ),
+      HomeCtaKind.review => (
+        l.collectionReviewButton(cta.count),
+        l.collectionReviewSubtitle,
+        () => onSession(false),
+        true,
+      ),
+      HomeCtaKind.practice => (
+        l.collectionPracticeButton,
+        l.collectionPracticeSubtitle,
+        () => onSession(true),
+        false,
+      ),
+      HomeCtaKind.limitReached || HomeCtaKind.none => (
+        '',
+        '',
+        () => onSession(false),
+        false,
+      ), // unreachable; keeps the switch exhaustive
     };
 
     final fg = filled ? AppColors.paper : AppColors.ink;
@@ -711,8 +757,10 @@ class _PracticeButton extends StatelessWidget {
             children: [
               const Icon(LucideIcons.dumbbell, size: 17, color: AppColors.ink),
               const SizedBox(width: 9),
-              Text(l.collectionPracticeButton,
-                  style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                l.collectionPracticeButton,
+                style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ),
@@ -752,8 +800,10 @@ class _TriageButton extends StatelessWidget {
             children: [
               const Icon(LucideIcons.layers, size: 17, color: AppColors.ink),
               const SizedBox(width: 9),
-              Text(l.collectionTriageButton(count),
-                  style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                l.collectionTriageButton(count),
+                style: AppText.sheetButton.copyWith(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ),
@@ -780,7 +830,10 @@ class _TriageBanner extends StatelessWidget {
               children: [
                 Text(l.collectionTriageBannerTitle, style: AppText.sheetButton),
                 const SizedBox(height: 3),
-                Text(l.collectionTriageBannerBody, style: AppText.translation.copyWith(fontSize: 12.5)),
+                Text(
+                  l.collectionTriageBannerBody,
+                  style: AppText.translation.copyWith(fontSize: 12.5),
+                ),
               ],
             ),
           ),
@@ -847,8 +900,11 @@ class _Empty extends StatelessWidget {
           const SizedBox(height: AppSpacing.s12),
           Text(l.collectionEmptyTitle, style: AppText.stepTitle.copyWith(fontSize: 20)),
           const SizedBox(height: 6),
-          Text(l.collectionEmptyBody,
-              textAlign: TextAlign.center, style: AppText.translation.copyWith(color: AppColors.secondary)),
+          Text(
+            l.collectionEmptyBody,
+            textAlign: TextAlign.center,
+            style: AppText.translation.copyWith(color: AppColors.secondary),
+          ),
         ],
       ),
     );
@@ -924,19 +980,21 @@ class _WordRowState extends State<_WordRow> {
   void _openCard() {
     final folder = widget.folder;
 
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => WordCardScreen(
-        subject: WordCardSubject.fromWord(
-          widget.word,
-          folders: folder == null ? const [] : [folder],
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WordCardScreen(
+          subject: WordCardSubject.fromWord(
+            widget.word,
+            folders: folder == null ? const [] : [folder],
+          ),
+          mode: WordCardMode.folder,
+          onSpeak: widget.onSpeak,
+          onTrain: () => widget.onTrain?.call(),
+          onEnroll: widget.onEnroll,
+          onUnenroll: widget.onUnenroll,
         ),
-        mode: WordCardMode.folder,
-        onSpeak: widget.onSpeak,
-        onTrain: () => widget.onTrain?.call(),
-        onEnroll: widget.onEnroll,
-        onUnenroll: widget.onUnenroll,
       ),
-    ));
+    );
   }
 
   Future<void> _menu() async {
@@ -947,7 +1005,11 @@ class _WordRowState extends State<_WordRow> {
       anchorContext: context,
       barrierLabel: l.commonCloseMenu,
       actions: [
-        ContextMenuAction(icon: LucideIcons.pencil, label: l.actionEdit, onSelected: () => widget.onEdit?.call()),
+        ContextMenuAction(
+          icon: LucideIcons.pencil,
+          label: l.actionEdit,
+          onSelected: () => widget.onEdit?.call(),
+        ),
         // Not destructive: the word keeps its rung, its due date and its place in the pool — only
         // the shelf changes. Styling it in red would say the opposite.
         if (widget.onMove != null)
@@ -1054,7 +1116,14 @@ class _SwipeAction extends StatelessWidget {
           children: [
             Icon(icon, size: 17, color: color),
             const SizedBox(height: 5),
-            Text(label, style: AppText.transcription.copyWith(fontSize: 12.5, fontWeight: FontWeight.w700, color: color)),
+            Text(
+              label,
+              style: AppText.transcription.copyWith(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
@@ -1078,7 +1147,12 @@ class _RowBody extends StatelessWidget {
             : null,
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.wordRowPadV, AppSpacing.screenH, AppSpacing.wordRowPadV),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH,
+          AppSpacing.wordRowPadV,
+          AppSpacing.screenH,
+          AppSpacing.wordRowPadV,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -1091,20 +1165,33 @@ class _RowBody extends StatelessWidget {
                   Row(
                     children: [
                       Flexible(
-                        child: Text(word.term,
-                            maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.termInList),
+                        child: Text(
+                          word.term,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.termInList,
+                        ),
                       ),
                       const SizedBox(width: 7),
                       _TypeBadge(type: word.type),
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Text(word.translation,
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.translation.copyWith(fontSize: 13)),
+                  Text(
+                    word.translation,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.translation.copyWith(fontSize: 13),
+                  ),
                   if (word.transcription != null && word.transcription!.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text('/${word.transcription}/',
-                        style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                    Text(
+                      '/${word.transcription}/',
+                      style: AppText.transcription.copyWith(
+                        fontSize: 11.5,
+                        color: AppColors.tertiary,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -1144,7 +1231,11 @@ class _Thumb extends StatelessWidget {
     final radius = BorderRadius.circular(4);
     final placeholder = DecoratedBox(
       decoration: BoxDecoration(color: AppColors.track, borderRadius: radius),
-      child: Icon(word.isPhrase ? LucideIcons.quote : LucideIcons.type, size: 18, color: AppColors.tertiary),
+      child: Icon(
+        word.isPhrase ? LucideIcons.quote : LucideIcons.type,
+        size: 18,
+        color: AppColors.tertiary,
+      ),
     );
     final url = word.imageUrl;
     return SizedBox(
@@ -1154,7 +1245,11 @@ class _Thumb extends StatelessWidget {
           ? placeholder
           : ClipRRect(
               borderRadius: radius,
-              child: Image(image: CachedNetworkImage(url), fit: BoxFit.cover, errorBuilder: (_, _, _) => placeholder),
+              child: Image(
+                image: CachedNetworkImage(url),
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => placeholder,
+              ),
             ),
     );
   }
@@ -1197,7 +1292,11 @@ class _CoverScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _Cover(imageUrl: imageUrl, isDefault: isDefault, onBack: () => Navigator.of(context).maybePop()),
+        _Cover(
+          imageUrl: imageUrl,
+          isDefault: isDefault,
+          onBack: () => Navigator.of(context).maybePop(),
+        ),
         Expanded(child: child),
       ],
     );

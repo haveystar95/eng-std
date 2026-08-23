@@ -52,25 +52,30 @@ class AppConfig {
   // launch when needed, e.g. --dart-define=STORE_ENABLED=false.
 
   /// The store surface (the «Готовые» segment in the Collections tab, кадр 2.8).
-  static const bool storeEnabled =
-      bool.fromEnvironment('STORE_ENABLED', defaultValue: true); // TODO(release): default
+  static const bool storeEnabled = bool.fromEnvironment(
+    'STORE_ENABLED',
+    defaultValue: true,
+  ); // TODO(release): default
 
   /// The paywall (кадры 2.13–2.14) and its entry points (store premium lock,
   /// exhausted-quota upsell, the profile «Попробовать Premium» row).
-  static const bool paywallEnabled =
-      bool.fromEnvironment('PAYWALL_ENABLED', defaultValue: true); // TODO(release): default
+  static const bool paywallEnabled = bool.fromEnvironment(
+    'PAYWALL_ENABLED',
+    defaultValue: true,
+  ); // TODO(release): default
 
   /// Reveals the Profile → «Разработка» dev section (feature-flag + fake-premium
   /// toggles). On by default in dev builds so the flags are reachable on device
   /// without a rebuild; a release build should pin it off.
-  static const bool devMenuEnabled =
-      bool.fromEnvironment('DEV_MENU', defaultValue: true); // TODO(release): default false
+  static const bool devMenuEnabled = bool.fromEnvironment(
+    'DEV_MENU',
+    defaultValue: true,
+  ); // TODO(release): default false
 
   /// Serve a small built-in mock store catalogue when `GET /store/collections`
   /// returns nothing (Session B hasn't published content yet), so the store UI is
   /// exercisable on device before the live feed exists. Dev-only; never in release.
-  static const bool storeMockFallback =
-      bool.fromEnvironment('STORE_MOCK', defaultValue: false);
+  static const bool storeMockFallback = bool.fromEnvironment('STORE_MOCK', defaultValue: false);
 
   /// Base host of the backend (without a path). The client appends `/api/v1`.
   /// The app now targets **backend2** — point this at an exposed backend2

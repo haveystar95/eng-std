@@ -29,10 +29,12 @@ void main() {
   test('DispatchingRealtimeChannel selects by provider and forwards the inner streams', () async {
     final inner = _ImmediateChannel();
     String? picked;
-    final dispatcher = DispatchingRealtimeChannel(select: (p) {
-      picked = p;
-      return inner;
-    });
+    final dispatcher = DispatchingRealtimeChannel(
+      select: (p) {
+        picked = p;
+        return inner;
+      },
+    );
 
     final events = <TranscriptEvent>[];
     final phases = <DialogPhase>[];
@@ -52,11 +54,13 @@ void main() {
     test('forwards the backend BidiGenerateContentSetup from connection AS-IS', () {
       final setup = {
         'model': 'models/gemini-live',
-        'generationConfig': {'responseModalities': ['AUDIO']},
+        'generationConfig': {
+          'responseModalities': ['AUDIO'],
+        },
         'systemInstruction': {
           'parts': [
-            {'text': 'You are a boxing coach. Use these words: jab, hook.'}
-          ]
+            {'text': 'You are a boxing coach. Use these words: jab, hook.'},
+          ],
         },
         'inputAudioTranscription': <String, dynamic>{},
         'outputAudioTranscription': <String, dynamic>{},
@@ -81,8 +85,8 @@ void main() {
     test('user speech → userText (listening side)', () {
       final fx = parseGeminiServerMessage({
         'serverContent': {
-          'inputTranscription': {'text': 'i need to withdraw money'}
-        }
+          'inputTranscription': {'text': 'i need to withdraw money'},
+        },
       });
       expect(fx.userText, 'i need to withdraw money');
       expect(fx.modelText, isNull);
@@ -91,8 +95,8 @@ void main() {
     test('model speech → modelText (bot side)', () {
       final fx = parseGeminiServerMessage({
         'serverContent': {
-          'outputTranscription': {'text': 'Sure, let us practice.'}
-        }
+          'outputTranscription': {'text': 'Sure, let us practice.'},
+        },
       });
       expect(fx.modelText, 'Sure, let us practice.');
       expect(fx.userText, isNull);
@@ -100,14 +104,14 @@ void main() {
 
     test('interrupted flag = barge-in', () {
       final fx = parseGeminiServerMessage({
-        'serverContent': {'interrupted': true}
+        'serverContent': {'interrupted': true},
       });
       expect(fx.interrupted, isTrue);
     });
 
     test('turnComplete flag', () {
       final fx = parseGeminiServerMessage({
-        'serverContent': {'turnComplete': true}
+        'serverContent': {'turnComplete': true},
       });
       expect(fx.turnComplete, isTrue);
     });
@@ -119,11 +123,11 @@ void main() {
           'modelTurn': {
             'parts': [
               {
-                'inlineData': {'mimeType': 'audio/pcm;rate=24000', 'data': base64Encode(pcm)}
-              }
-            ]
-          }
-        }
+                'inlineData': {'mimeType': 'audio/pcm;rate=24000', 'data': base64Encode(pcm)},
+              },
+            ],
+          },
+        },
       });
       expect(fx.audio, isNotNull);
       expect(fx.audio, equals(pcm));
@@ -201,15 +205,15 @@ void main() {
 }
 
 DialogStart _start({required String provider, Map<String, dynamic>? sessionSetup}) => DialogStart(
-      dialogId: 'x',
-      realtimeToken: 'tok',
-      expiresAt: DateTime(2026, 8, 7, 12),
-      model: 'm',
-      targetWords: const [],
-      durationSeconds: 200,
-      provider: provider,
-      sessionSetup: sessionSetup,
-    );
+  dialogId: 'x',
+  realtimeToken: 'tok',
+  expiresAt: DateTime(2026, 8, 7, 12),
+  model: 'm',
+  targetWords: const [],
+  durationSeconds: 200,
+  provider: provider,
+  sessionSetup: sessionSetup,
+);
 
 /// A channel that emits one phase + one transcript on connect, to prove the dispatcher forwards.
 class _ImmediateChannel implements RealtimeChannel {

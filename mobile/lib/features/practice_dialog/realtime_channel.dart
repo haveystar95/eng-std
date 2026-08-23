@@ -81,9 +81,11 @@ class FakeRealtimeChannel implements RealtimeChannel {
   }
 
   void _schedule(Duration at, void Function() action) {
-    _timers.add(Timer(at, () {
-      if (!_closed) action();
-    }));
+    _timers.add(
+      Timer(at, () {
+        if (!_closed) action();
+      }),
+    );
   }
 
   void _emitPhase(DialogPhase p) {
@@ -109,10 +111,8 @@ class FakeRealtimeChannel implements RealtimeChannel {
 
   // ── Scripted lines (English — the practised language) ──
 
-  static const _greeting =
-      "Hi! Let's have a quick chat. Tell me what you'd like to do today.";
-  static const _wrapUp =
-      "Great talking with you — you handled that really well. Let's stop here.";
+  static const _greeting = "Hi! Let's have a quick chat. Tell me what you'd like to do today.";
+  static const _wrapUp = "Great talking with you — you handled that really well. Let's stop here.";
 
   static String _userLine(String word, int i) {
     switch (i % 4) {

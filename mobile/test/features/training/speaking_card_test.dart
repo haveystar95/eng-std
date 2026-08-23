@@ -113,76 +113,76 @@ void main() {
   // `_PromptPhotoState._term`) a `termText` to find. Every other test doesn't care and gets a
   // fresh empty one, same as before.
   Widget host(SessionCard card, _FakeRecognizer recognizer, {AppDatabase? db}) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final database = db ?? AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(database.close);
-            return database;
-          }),
-          speechRecognizerProvider.overrideWithValue(recognizer),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionExerciseCard(
-                card: card,
-                autoPronounce: false,
-                onAnswered: answers.add,
-                onSkipped: () => skips++,
-                onSpeak: (String text, {bool slow = false}) async {},
-                speechLocaleId: 'en_US',
-                showDue: false,
-              ),
-            ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final database = db ?? AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(database.close);
+        return database;
+      }),
+      speechRecognizerProvider.overrideWithValue(recognizer),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionExerciseCard(
+            card: card,
+            autoPronounce: false,
+            onAnswered: answers.add,
+            onSkipped: () => skips++,
+            onSpeak: (String text, {bool slow = false}) async {},
+            speechLocaleId: 'en_US',
+            showDue: false,
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   SessionCard wordCard() => SessionCard(
-        termId: 'T1',
-        mode: ExerciseMode.speaking,
-        type: 'word',
-        prompt: 'бронь',
-        answer: 'reservation',
-        example: 'I have a reservation for tonight.',
-        exampleTranslation: 'У меня бронь на сегодня.',
-        acceptedVariants: const ['booking'],
-        ladderStep: LearningLadder.stepAssembly,
-      );
+    termId: 'T1',
+    mode: ExerciseMode.speaking,
+    type: 'word',
+    prompt: 'бронь',
+    answer: 'reservation',
+    example: 'I have a reservation for tonight.',
+    exampleTranslation: 'У меня бронь на сегодня.',
+    acceptedVariants: const ['booking'],
+    ladderStep: LearningLadder.stepAssembly,
+  );
 
   /// A term that is itself a whole phrase, still asked on the WORD form (rung: assembly).
   SessionCard longTermWordCard() => SessionCard(
-        termId: 'T3',
-        mode: ExerciseMode.speaking,
-        type: 'phrase',
-        prompt: 'кем вы видите себя через пять лет?',
-        answer: 'Where do you see yourself in five years?',
-        ladderStep: LearningLadder.stepAssembly,
-      );
+    termId: 'T3',
+    mode: ExerciseMode.speaking,
+    type: 'phrase',
+    prompt: 'кем вы видите себя через пять лет?',
+    answer: 'Where do you see yourself in five years?',
+    ladderStep: LearningLadder.stepAssembly,
+  );
 
   /// A word-form phrase whose only fragile part is the article.
   SessionCard articleCard() => SessionCard(
-        termId: 'T4',
-        mode: ExerciseMode.speaking,
-        type: 'phrase',
-        prompt: 'вы командный игрок?',
-        answer: 'Are you a team player?',
-        ladderStep: LearningLadder.stepAssembly,
-      );
+    termId: 'T4',
+    mode: ExerciseMode.speaking,
+    type: 'phrase',
+    prompt: 'вы командный игрок?',
+    answer: 'Are you a team player?',
+    ladderStep: LearningLadder.stepAssembly,
+  );
 
   SessionCard exampleCard() => SessionCard(
-        termId: 'T2',
-        mode: ExerciseMode.speaking,
-        type: 'word',
-        prompt: 'фото',
-        answer: 'Could you take a photo of us?',
-        example: 'Could you take a photo of us?',
-        exampleTranslation: 'Не могли бы вы нас сфотографировать?',
-        ladderStep: LearningLadder.stepDictation,
-      );
+    termId: 'T2',
+    mode: ExerciseMode.speaking,
+    type: 'word',
+    prompt: 'фото',
+    answer: 'Could you take a photo of us?',
+    example: 'Could you take a photo of us?',
+    exampleTranslation: 'Не могли бы вы нас сфотографировать?',
+    ladderStep: LearningLadder.stepDictation,
+  );
 
   // The record button is a Semantics-labelled circle; find it by its label rather than by icon so
   // the test does not depend on which icon pack is in use.
@@ -190,7 +190,8 @@ void main() {
 
   // `_PromptPhoto` is private to session_exercise.dart, but runtimeType.toString() ignores library
   // privacy — the standard way to count instances of a private widget from an external test file.
-  Finder promptPhotos() => find.byWidgetPredicate((w) => w.runtimeType.toString() == '_PromptPhoto');
+  Finder promptPhotos() =>
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == '_PromptPhoto');
 
   /// The style of the span carrying [word], wherever in the tree it is drawn — same pattern as
   /// own_answer_verdict_test.dart's helper of the same name.
@@ -227,7 +228,9 @@ void main() {
       expect(find.textContaining('скажи слово вслух'), findsOneWidget);
     });
 
-    testWidgets('commits a recognised utterance as the answer, graded like any other', (tester) async {
+    testWidgets('commits a recognised utterance as the answer, graded like any other', (
+      tester,
+    ) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Reservation')]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
@@ -254,7 +257,9 @@ void main() {
       expect(recognizer.locales.single, 'en_US');
     });
 
-    testWidgets('a recognised WRONG word is a verdict on the first try, not a retry', (tester) async {
+    testWidgets('a recognised WRONG word is a verdict on the first try, not a retry', (
+      tester,
+    ) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
@@ -306,8 +311,9 @@ void main() {
       expect(recordButton(), findsWidgets);
     });
 
-    testWidgets('offers «Пропустить» from the FIRST channel failure, not before (QA-OBS-7)',
-        (tester) async {
+    testWidgets('offers «Пропустить» from the FIRST channel failure, not before (QA-OBS-7)', (
+      tester,
+    ) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.silent()]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
@@ -388,7 +394,9 @@ void main() {
       expect(find.textContaining('registration'), findsWidgets);
     });
 
-    testWidgets('shows what the recogniser heard on a CORRECT word-form verdict too', (tester) async {
+    testWidgets('shows what the recogniser heard on a CORRECT word-form verdict too', (
+      tester,
+    ) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Reservation')]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
@@ -439,7 +447,9 @@ void main() {
     });
 
     testWidgets('the example form uses the longer window', (tester) async {
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Could you take a photo of us?')]);
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('Could you take a photo of us?'),
+      ]);
       await tester.pumpWidget(host(exampleCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -449,11 +459,15 @@ void main() {
       expect(recognizer.pauseForsPerCall.single, SpokenAnswer.exampleFormPauseFor);
     });
 
-    testWidgets('a PHRASE-shaped term on the word form also gets the longer window (QA-21)', (tester) async {
+    testWidgets('a PHRASE-shaped term on the word form also gets the longer window (QA-21)', (
+      tester,
+    ) async {
       // The live case: an 8s/2s window cut this reading off after the first word («Heard: When»).
       // Still the word form — the card asks for the term, not the example — but what is being said
       // is sentence-length, and the window has to fit that.
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('Where do you see yourself in five years')]);
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('Where do you see yourself in five years'),
+      ]);
       await tester.pumpWidget(host(longTermWordCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -489,7 +503,9 @@ void main() {
       expect(answers.single.verdict, LocalCheck.wrong);
     });
 
-    testWidgets('ONE wrong content word in a short phrase now passes — the 70% trade-off', (tester) async {
+    testWidgets('ONE wrong content word in a short phrase now passes — the 70% trade-off', (
+      tester,
+    ) async {
       // «Are you a team player?» → «are you team leader»: with the article dropped the target is
       // four tokens, so a single wrong one is 3/4 = 75%, over the threshold. This is the specified
       // consequence of coverage-grading a phrase at 70% (QA-22) and is pinned, not accidental —
@@ -508,16 +524,20 @@ void main() {
   group('a phrase-shaped term on the word form is graded by coverage (QA-22)', () {
     /// The live case, verbatim: the reading was correct, the recogniser mangled the middle.
     SessionCard conflictCard() => SessionCard(
-          termId: 'T5',
-          mode: ExerciseMode.speaking,
-          type: 'phrase',
-          prompt: 'как вы справляетесь с конфликтами?',
-          answer: 'How do you deal with conflict?',
-          ladderStep: LearningLadder.stepAssembly,
-        );
+      termId: 'T5',
+      mode: ExerciseMode.speaking,
+      type: 'phrase',
+      prompt: 'как вы справляетесь с конфликтами?',
+      answer: 'How do you deal with conflict?',
+      ladderStep: LearningLadder.stepAssembly,
+    );
 
-    testWidgets('«How do you deal this a conflict?» counts — 5 of 6, article forgiven', (tester) async {
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('How do you deal this a conflict?')]);
+    testWidgets('«How do you deal this a conflict?» counts — 5 of 6, article forgiven', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('How do you deal this a conflict?'),
+      ]);
       await tester.pumpWidget(host(conflictCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -540,7 +560,9 @@ void main() {
       expect(answers.single.verdict, LocalCheck.wrong);
     });
 
-    testWidgets('a SHORT term keeps binary grading — one wrong word is still wrong', (tester) async {
+    testWidgets('a SHORT term keeps binary grading — one wrong word is still wrong', (
+      tester,
+    ) async {
       // 'reservation' vs 'registration' shares no coverage concept at all: the word form of a
       // one-word term is exactly where equality is the fair question.
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('registration')]);
@@ -556,10 +578,9 @@ void main() {
       // A deliberate «Готово» on a short reading, so the verdict is wrong and the reveal (which is
       // where the highlight lives) is shown. Before QA-22 the word form had no highlight at all —
       // it typed the term out whole, because it was never compared word by word.
-      final recognizer = _FakeRecognizer(
-        [const SpeechAttempt.heard('How do you')],
-        completeOnStop: true,
-      );
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('How do you'),
+      ], completeOnStop: true);
       await tester.pumpWidget(host(conflictCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -601,16 +622,17 @@ void main() {
       expect(answers.single.verdict, LocalCheck.correct);
     });
 
-    testWidgets('a deliberate «Готово» on a short reading is graded as the final answer', (tester) async {
+    testWidgets('a deliberate «Готово» on a short reading is graded as the final answer', (
+      tester,
+    ) async {
       // Same low-coverage transcript as above, but this time the learner tapped «Готово»
       // themselves — their own choice to stop, not the recogniser cutting them off, so it is
       // graded as-is like every other trainer's honest wrong answer. `completeOnStop` holds the
       // attempt open until stop() fires, exactly like the real plugin, so the tap lands while the
       // card still thinks it is listening.
-      final recognizer = _FakeRecognizer(
-        [const SpeechAttempt.heard('could you take')],
-        completeOnStop: true,
-      );
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('could you take'),
+      ], completeOnStop: true);
       await tester.pumpWidget(host(exampleCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -641,13 +663,14 @@ void main() {
   });
 
   group('the uncovered-word highlight (QA-20)', () {
-    testWidgets('marks the tail of the target sentence a short reading never reached', (tester) async {
+    testWidgets('marks the tail of the target sentence a short reading never reached', (
+      tester,
+    ) async {
       // A deliberate «Готово» on a short reading — graded wrong (Part 4.4's cutoff guard does not
       // apply, since this is not an automatic timeout) and short by its own tail.
-      final recognizer = _FakeRecognizer(
-        [const SpeechAttempt.heard('could you take')],
-        completeOnStop: true,
-      );
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('could you take'),
+      ], completeOnStop: true);
       await tester.pumpWidget(host(exampleCard(), recognizer));
       await tester.pumpAndSettle();
 
@@ -667,7 +690,9 @@ void main() {
   });
 
   group('«не помню»', () {
-    testWidgets('is the one exit that writes — an honest lapse, available immediately', (tester) async {
+    testWidgets('is the one exit that writes — an honest lapse, available immediately', (
+      tester,
+    ) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.silent()]);
       await tester.pumpWidget(host(wordCard(), recognizer));
       await tester.pumpAndSettle();
@@ -700,16 +725,22 @@ void main() {
       expect(sent.toSet().length, sent.length, reason: 'deduplicated');
     });
 
-    testWidgets('example form: the unique example words, plus the term looked up locally', (tester) async {
+    testWidgets('example form: the unique example words, plus the term looked up locally', (
+      tester,
+    ) async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
-      await db.into(db.terms).insert(
+      await db
+          .into(db.terms)
+          .insert(
             TermsCompanion.insert(
               id: 'T2',
               updatedAt: DateTime.utc(2026, 8, 19),
               termText: const Value('take a photo'),
             ),
           );
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('could you take a photo of us')]);
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('could you take a photo of us'),
+      ]);
       await tester.pumpWidget(host(exampleCard(), recognizer, db: db));
       await tester.pumpAndSettle();
 
@@ -723,11 +754,15 @@ void main() {
       expect(sent.toSet().length, sent.length, reason: 'deduplicated (e.g. "a" appears once)');
     });
 
-    testWidgets('example form with no local term row: falls back to just the example words', (tester) async {
+    testWidgets('example form with no local term row: falls back to just the example words', (
+      tester,
+    ) async {
       // No termById row for T2 — the DB is fresh/unsynced. The lookup returns null, and the card
       // must not crash or hang on it (this is the exact «без параметра» backward-compat shape one
       // layer up, at the app's own call site rather than the plugin's).
-      final recognizer = _FakeRecognizer([const SpeechAttempt.heard('could you take a photo of us')]);
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('could you take a photo of us'),
+      ]);
       await tester.pumpWidget(host(exampleCard(), recognizer));
       await tester.pumpAndSettle();
 

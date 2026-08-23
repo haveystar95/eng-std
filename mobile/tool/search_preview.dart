@@ -59,30 +59,32 @@ class _PreviewAppState extends State<_PreviewApp> {
   Future<void> _seed() async {
     // The photo a search hit gets is the one the LOCAL mirror already holds — `/search` carries
     // none. Seeding the term is what makes кадры 03 and 06 show a picture here.
-    await _db.applyDelta(termUpserts: [
-      TermsCompanion.insert(
-        id: '01HOLE',
-        termText: const Value('hole'),
-        translation: const Value('дыра'),
-        transcription: const Value('hoʊl'),
-        description: const Value(
-          'This is a space or opening in a solid object or surface. Air, water or light can pass through it.',
+    await _db.applyDelta(
+      termUpserts: [
+        TermsCompanion.insert(
+          id: '01HOLE',
+          termText: const Value('hole'),
+          translation: const Value('дыра'),
+          transcription: const Value('hoʊl'),
+          description: const Value(
+            'This is a space or opening in a solid object or surface. Air, water or light can pass through it.',
+          ),
+          example: const Value('I found a hole in my shirt after playing outside.'),
+          exampleTranslation: const Value('Я нашёл дыру в своей рубашке после игры на улице.'),
+          imageUrl: const Value(_holePhoto),
+          imageAuthor: const Value('Ann H'),
+          updatedAt: DateTime.now(),
         ),
-        example: const Value('I found a hole in my shirt after playing outside.'),
-        exampleTranslation: const Value('Я нашёл дыру в своей рубашке после игры на улице.'),
-        imageUrl: const Value(_holePhoto),
-        imageAuthor: const Value('Ann H'),
-        updatedAt: DateTime.now(),
-      ),
-      TermsCompanion.insert(
-        id: '01FILL',
-        termText: const Value('fill out'),
-        translation: const Value('заполнять (форму)'),
-        imageUrl: const Value(_formPhoto),
-        imageAuthor: const Value('Pixabay'),
-        updatedAt: DateTime.now(),
-      ),
-    ]);
+        TermsCompanion.insert(
+          id: '01FILL',
+          termText: const Value('fill out'),
+          translation: const Value('заполнять (форму)'),
+          imageUrl: const Value(_formPhoto),
+          imageAuthor: const Value('Pixabay'),
+          updatedAt: DateTime.now(),
+        ),
+      ],
+    );
     for (final entry in const [
       RecentSearch(word: 'withdraw', translation: 'снимать', cefr: 'B2'),
       RecentSearch(word: 'invoice', translation: 'счёт', cefr: 'B1'),
@@ -100,49 +102,51 @@ class _PreviewAppState extends State<_PreviewApp> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<void>(
-        future: _seeded,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const ColoredBox(color: AppColors.paper);
-          }
+    future: _seeded,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const ColoredBox(color: AppColors.paper);
+      }
 
-          return ProviderScope(
-            overrides: [
-              appDatabaseProvider.overrideWithValue(_db),
-              apiClientProvider.overrideWithValue(_RoutingApi()),
-              collectionsProvider.overrideWith((ref) => Stream.value([
-                    WordCollection(
-                      id: 'F',
-                      title: 'Сохранённые',
-                      source: 'user',
-                      type: 'custom',
-                      wordsCount: 12,
-                      sourceLang: 'ru',
-                      targetLang: 'en',
-                      isDefault: true,
-                    ),
-                    WordCollection(
-                      id: 'F2',
-                      title: 'Документы',
-                      source: 'user',
-                      type: 'custom',
-                      wordsCount: 4,
-                      sourceLang: 'ru',
-                      targetLang: 'en',
-                    ),
-                  ])),
-            ],
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              locale: const Locale('ru'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: const [Locale('ru')],
-              theme: buildAppTheme(),
-              home: const _Menu(),
-            ),
-          );
-        },
+      return ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(_db),
+          apiClientProvider.overrideWithValue(_RoutingApi()),
+          collectionsProvider.overrideWith(
+            (ref) => Stream.value([
+              WordCollection(
+                id: 'F',
+                title: 'Сохранённые',
+                source: 'user',
+                type: 'custom',
+                wordsCount: 12,
+                sourceLang: 'ru',
+                targetLang: 'en',
+                isDefault: true,
+              ),
+              WordCollection(
+                id: 'F2',
+                title: 'Документы',
+                source: 'user',
+                type: 'custom',
+                wordsCount: 4,
+                sourceLang: 'ru',
+                targetLang: 'en',
+              ),
+            ]),
+          ),
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('ru')],
+          theme: buildAppTheme(),
+          home: const _Menu(),
+        ),
       );
+    },
+  );
 }
 
 class _Menu extends StatelessWidget {
@@ -150,34 +154,33 @@ class _Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: AppColors.paper,
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.s22),
-            children: [
-              const SizedBox(height: 40),
-              Text('Слова · фаза 3', style: AppText.screenTitle),
-              const SizedBox(height: AppSpacing.s26),
-              _entry(context, '01–07 · поиск и карточка', () => _search(cap: false, slow: false)),
-              _entry(context, '05 · медленная сборка', () => _search(cap: false, slow: true)),
-              _entry(context, '08 · дневной лимит', () => _search(cap: true, slow: false)),
-              _entry(context, '09 · карточка из папки', () => const _FromFolder()),
-              _entry(context, '09 · слово из каталога (не в пуле)', () => const _FromCatalogue()),
-            ],
-          ),
-        ),
-      );
+    backgroundColor: AppColors.paper,
+    body: SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.s22),
+        children: [
+          const SizedBox(height: 40),
+          Text('Слова · фаза 3', style: AppText.screenTitle),
+          const SizedBox(height: AppSpacing.s26),
+          _entry(context, '01–07 · поиск и карточка', () => _search(cap: false, slow: false)),
+          _entry(context, '05 · медленная сборка', () => _search(cap: false, slow: true)),
+          _entry(context, '08 · дневной лимит', () => _search(cap: true, slow: false)),
+          _entry(context, '09 · карточка из папки', () => const _FromFolder()),
+          _entry(context, '09 · слово из каталога (не в пуле)', () => const _FromCatalogue()),
+        ],
+      ),
+    ),
+  );
 
   Widget _entry(BuildContext context, String label, Widget Function() build) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.s12),
-        child: ListTile(
-          tileColor: AppColors.surfaceRaised,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sheet)),
-          title: Text(label, style: AppText.translation.copyWith(color: AppColors.ink)),
-          onTap: () => Navigator.of(context)
-              .push(MaterialPageRoute<void>(builder: (_) => build())),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+    child: ListTile(
+      tileColor: AppColors.surfaceRaised,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sheet)),
+      title: Text(label, style: AppText.translation.copyWith(color: AppColors.ink)),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => build())),
+    ),
+  );
 
   Widget _search({required bool cap, required bool slow}) {
     _RoutingApi.delegate = _FakeApi(capReached: cap, slow: slow);
@@ -192,29 +195,29 @@ class _FromFolder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => WordCardScreen(
-          mode: WordCardMode.folder,
-          onSpeak: () {},
-          onTrain: () {},
-          onUnenroll: () {},
-          subject: WordCardSubject.fromWord(
-            Word(
-              termId: '01HOLE',
-              term: 'hole',
-              translation: 'дыра',
-              transcription: 'hoʊl',
-              description:
-                  'This is a space or opening in a solid object or surface. Air, water or light can pass through it.',
-              example: 'I found a hole in my shirt after playing outside.',
-              exampleTranslation: 'Я нашёл дыру в своей рубашке после игры на улице.',
-              type: 'word',
-              imageUrl: _holePhoto,
-              imageAuthor: 'Ann H',
-              ladderStep: 1,
-              enrolled: true,
-            ),
-            folders: const [SavedFolder(id: 'F', title: 'Сохранённые', isDefault: true)],
-          ),
-        );
+    mode: WordCardMode.folder,
+    onSpeak: () {},
+    onTrain: () {},
+    onUnenroll: () {},
+    subject: WordCardSubject.fromWord(
+      Word(
+        termId: '01HOLE',
+        term: 'hole',
+        translation: 'дыра',
+        transcription: 'hoʊl',
+        description:
+            'This is a space or opening in a solid object or surface. Air, water or light can pass through it.',
+        example: 'I found a hole in my shirt after playing outside.',
+        exampleTranslation: 'Я нашёл дыру в своей рубашке после игры на улице.',
+        type: 'word',
+        imageUrl: _holePhoto,
+        imageAuthor: 'Ann H',
+        ladderStep: 1,
+        enrolled: true,
+      ),
+      folders: const [SavedFolder(id: 'F', title: 'Сохранённые', isDefault: true)],
+    ),
+  );
 }
 
 /// The same card opened from a STORE set — a word in the catalogue the learner has not taken into
@@ -225,24 +228,24 @@ class _FromCatalogue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => WordCardScreen(
-        mode: WordCardMode.folder,
-        onSpeak: () {},
-        onTrain: () {},
-        onEnroll: () {},
-        subject: WordCardSubject.fromWord(
-          Word(
-            termId: '01WEATHER',
-            term: 'How is the weather?',
-            translation: 'Как погода?',
-            transcription: 'haʊ ɪz ðə ˈwɛðər',
-            example: 'How is the weather in your city right now?',
-            type: 'phrase',
-            imageUrl: _formPhoto,
-            imageAuthor: 'Pixabay',
-            ladderStep: 0,
-          ),
-        ),
-      );
+    mode: WordCardMode.folder,
+    onSpeak: () {},
+    onTrain: () {},
+    onEnroll: () {},
+    subject: WordCardSubject.fromWord(
+      Word(
+        termId: '01WEATHER',
+        term: 'How is the weather?',
+        translation: 'Как погода?',
+        transcription: 'haʊ ɪz ðə ˈwɛðər',
+        example: 'How is the weather in your city right now?',
+        type: 'phrase',
+        imageUrl: _formPhoto,
+        imageAuthor: 'Pixabay',
+        ladderStep: 0,
+      ),
+    ),
+  );
 }
 
 /// The one API the scope hands out; which fake it forwards to is switched per preview entry.
@@ -273,8 +276,7 @@ class _RoutingApi implements ApiClient {
     String? lookupId,
     String? termId,
     String? collectionId,
-  }) =>
-      delegate.addSearchResult(lookupId: lookupId, termId: termId, collectionId: collectionId);
+  }) => delegate.addSearchResult(lookupId: lookupId, termId: termId, collectionId: collectionId);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -327,14 +329,16 @@ class _FakeApi implements ApiClient {
   static const _gibberish = 'asdfgh';
 
   @override
-  Future<SearchLanguages> searchLanguages() async => const SearchLanguages(
-        taught: 'en',
-        natives: ['ru', 'ro'],
-        defaultNative: 'ru',
-      );
+  Future<SearchLanguages> searchLanguages() async =>
+      const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
     final q = query.trim().toLowerCase();
 

@@ -30,7 +30,8 @@ List<StreakDot> weekDots(DateTime now, Map<String, int> activity) {
   final today = DateTime(now.year, now.month, now.day);
   final monday = DateTime(today.year, today.month, today.day - (today.weekday - 1));
   return [
-    for (var i = 0; i < 7; i++) _dotFor(DateTime(monday.year, monday.month, monday.day + i), today, activity),
+    for (var i = 0; i < 7; i++)
+      _dotFor(DateTime(monday.year, monday.month, monday.day + i), today, activity),
   ];
 }
 
@@ -46,7 +47,8 @@ StreakDot _dotFor(DateTime day, DateTime today, Map<String, int> activity) {
 List<ActivityBar> monthBars(DateTime now, Map<String, int> activity) {
   final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
   final counts = [
-    for (var d = 1; d <= daysInMonth; d++) activity[localDayKey(DateTime(now.year, now.month, d))] ?? 0,
+    for (var d = 1; d <= daysInMonth; d++)
+      activity[localDayKey(DateTime(now.year, now.month, d))] ?? 0,
   ];
   final max = counts.fold<int>(0, (m, c) => c > m ? c : m);
   return [for (final c in counts) _bar(c, max)];

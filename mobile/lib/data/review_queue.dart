@@ -46,49 +46,49 @@ class PendingReview {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'term_id': termId,
-        'exercise_mode': exerciseMode,
-        'response': response,
-        'client_seq': clientSeq,
-        'answered_at': answeredAt,
-        'used_hint': usedHint,
-        'is_practice': isPractice,
-        'latency_ms': latencyMs,
-        'session_id': sessionId,
-        'ladder_step': ladderStep,
-      };
+    'id': id,
+    'term_id': termId,
+    'exercise_mode': exerciseMode,
+    'response': response,
+    'client_seq': clientSeq,
+    'answered_at': answeredAt,
+    'used_hint': usedHint,
+    'is_practice': isPractice,
+    'latency_ms': latencyMs,
+    'session_id': sessionId,
+    'ladder_step': ladderStep,
+  };
 
   /// The exact shape `/reviews/batch` expects (optional keys omitted when null/default).
   Map<String, dynamic> toBatchJson() => {
-        'id': id,
-        'term_id': termId,
-        'exercise_mode': exerciseMode,
-        'response': response,
-        'client_seq': clientSeq,
-        'answered_at': answeredAt,
-        if (usedHint) 'used_hint': usedHint,
-        if (isPractice) 'is_practice': isPractice,
-        if (latencyMs != null) 'latency_ms': latencyMs,
-        if (sessionId != null) 'session_id': sessionId,
-        // The contract accepts 1–5 only; 0 (intro) is an exposure, not an answer, and a queue row
-        // written before this field existed has none — both are simply omitted.
-        if (ladderStep != null && ladderStep! >= 1 && ladderStep! <= 5) 'ladder_step': ladderStep,
-      };
+    'id': id,
+    'term_id': termId,
+    'exercise_mode': exerciseMode,
+    'response': response,
+    'client_seq': clientSeq,
+    'answered_at': answeredAt,
+    if (usedHint) 'used_hint': usedHint,
+    if (isPractice) 'is_practice': isPractice,
+    if (latencyMs != null) 'latency_ms': latencyMs,
+    if (sessionId != null) 'session_id': sessionId,
+    // The contract accepts 1–5 only; 0 (intro) is an exposure, not an answer, and a queue row
+    // written before this field existed has none — both are simply omitted.
+    if (ladderStep != null && ladderStep! >= 1 && ladderStep! <= 5) 'ladder_step': ladderStep,
+  };
 
   factory PendingReview.fromJson(Map<String, dynamic> j) => PendingReview(
-        id: j['id'] as String,
-        termId: j['term_id'] as String,
-        exerciseMode: (j['exercise_mode'] as String?) ?? 'typing',
-        response: (j['response'] as String?) ?? '',
-        clientSeq: (j['client_seq'] as int?) ?? 0,
-        answeredAt: j['answered_at'] as String,
-        usedHint: (j['used_hint'] as bool?) ?? false,
-        isPractice: (j['is_practice'] as bool?) ?? false,
-        latencyMs: j['latency_ms'] as int?,
-        sessionId: j['session_id'] as String?,
-        ladderStep: (j['ladder_step'] as num?)?.toInt(),
-      );
+    id: j['id'] as String,
+    termId: j['term_id'] as String,
+    exerciseMode: (j['exercise_mode'] as String?) ?? 'typing',
+    response: (j['response'] as String?) ?? '',
+    clientSeq: (j['client_seq'] as int?) ?? 0,
+    answeredAt: j['answered_at'] as String,
+    usedHint: (j['used_hint'] as bool?) ?? false,
+    isPractice: (j['is_practice'] as bool?) ?? false,
+    latencyMs: j['latency_ms'] as int?,
+    sessionId: j['session_id'] as String?,
+    ladderStep: (j['ladder_step'] as num?)?.toInt(),
+  );
 }
 
 /// Durable FIFO of un-uploaded reviews, held in the local drift DB.
@@ -104,7 +104,7 @@ class PendingReview {
 /// queue being cleared, so the two must not share a lifetime.
 class ReviewQueue {
   ReviewQueue(this._db, [FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   /// The Keychain key the queue used to live under. Read once, then retired.
   static const legacyKey = 'pending_reviews';
@@ -170,30 +170,30 @@ class ReviewQueue {
   }
 
   static ReviewQueueRowsCompanion _toRow(PendingReview r) => ReviewQueueRowsCompanion.insert(
-        id: r.id,
-        termId: r.termId,
-        exerciseMode: r.exerciseMode,
-        response: r.response,
-        clientSeq: r.clientSeq,
-        answeredAt: r.answeredAt,
-        usedHint: Value(r.usedHint),
-        isPractice: Value(r.isPractice),
-        latencyMs: Value(r.latencyMs),
-        sessionId: Value(r.sessionId),
-        ladderStep: Value(r.ladderStep),
-      );
+    id: r.id,
+    termId: r.termId,
+    exerciseMode: r.exerciseMode,
+    response: r.response,
+    clientSeq: r.clientSeq,
+    answeredAt: r.answeredAt,
+    usedHint: Value(r.usedHint),
+    isPractice: Value(r.isPractice),
+    latencyMs: Value(r.latencyMs),
+    sessionId: Value(r.sessionId),
+    ladderStep: Value(r.ladderStep),
+  );
 
   static PendingReview _fromRow(ReviewQueueRow r) => PendingReview(
-        id: r.id,
-        termId: r.termId,
-        exerciseMode: r.exerciseMode,
-        response: r.response,
-        clientSeq: r.clientSeq,
-        answeredAt: r.answeredAt,
-        usedHint: r.usedHint,
-        isPractice: r.isPractice,
-        latencyMs: r.latencyMs,
-        sessionId: r.sessionId,
-        ladderStep: r.ladderStep,
-      );
+    id: r.id,
+    termId: r.termId,
+    exerciseMode: r.exerciseMode,
+    response: r.response,
+    clientSeq: r.clientSeq,
+    answeredAt: r.answeredAt,
+    usedHint: r.usedHint,
+    isPractice: r.isPractice,
+    latencyMs: r.latencyMs,
+    sessionId: r.sessionId,
+    ladderStep: r.ladderStep,
+  );
 }

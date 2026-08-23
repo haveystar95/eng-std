@@ -74,16 +74,18 @@ class WordListLoader {
     final loaded = _loaded;
     if (loaded != null) return Future.value(loaded);
 
-    return _pending ??= _read().then((list) {
-      _loaded = list;
+    return _pending ??= _read()
+        .then((list) {
+          _loaded = list;
 
-      return list;
-    }).catchError((Object _) {
-      // A missing or unreadable asset must not break search. The suggestions simply never appear,
-      // and every other part of the screen — the database results, the AI lookup — is untouched.
-      _pending = null;
+          return list;
+        })
+        .catchError((Object _) {
+          // A missing or unreadable asset must not break search. The suggestions simply never appear,
+          // and every other part of the screen — the database results, the AI lookup — is untouched.
+          _pending = null;
 
-      return WordList.parse('');
-    });
+          return WordList.parse('');
+        });
   }
 }

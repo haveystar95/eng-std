@@ -6,9 +6,10 @@ import '../../data/providers.dart';
 /// Per-day review counts (day key → count) for the Progress screen — local `daily_activity`,
 /// reactive. Empty until the first review lands (accrues forward, no backfill).
 final dailyActivityProvider = StreamProvider<Map<String, int>>((ref) {
-  return ref.watch(appDatabaseProvider).watchDailyActivity().map(
-        (rows) => {for (final r in rows) r.day: r.reviews},
-      );
+  return ref
+      .watch(appDatabaseProvider)
+      .watchDailyActivity()
+      .map((rows) => {for (final r in rows) r.day: r.reviews});
 });
 
 /// The global density bar («Все N слов»): every term folded into one of confirmed/familiar/

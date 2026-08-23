@@ -29,27 +29,27 @@ void main() {
 
   /// Rung 1: prompt is the TERM, options are translations, key is the term id.
   SessionCard forwardCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: term,
-        answer: termId,
-        example: 'You can buy this medicine over-the-counter.',
-        options: const ['по расписанию', 'без рецепта', 'за наличные'],
-        optionIds: const [otherId, termId, thirdId],
-        ladderStep: 1,
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: term,
+    answer: termId,
+    example: 'You can buy this medicine over-the-counter.',
+    options: const ['по расписанию', 'без рецепта', 'за наличные'],
+    optionIds: const [otherId, termId, thirdId],
+    ladderStep: 1,
+  );
 
   /// Rung 2: ordinary text grading.
   SessionCard reverseCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: 'без рецепта',
-        answer: term,
-        options: const [term, 'on schedule', 'in cash'],
-        ladderStep: 2,
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: 'без рецепта',
+    answer: term,
+    options: const [term, 'on schedule', 'in cash'],
+    ladderStep: 2,
+  );
 
   group('the answer key', () {
     test('an identity card resolves the tapped option to its term id', () {
@@ -69,14 +69,14 @@ void main() {
 
   group('the uploaded payload', () {
     PendingReview review({required String response, int? ladderStep}) => PendingReview(
-          id: '01M00WHZFYJSYW76Z4B4BBAS11',
-          termId: termId,
-          exerciseMode: 'multiple_choice',
-          response: response,
-          clientSeq: 7,
-          answeredAt: '2026-08-17T13:00:00.000Z',
-          ladderStep: ladderStep,
-        );
+      id: '01M00WHZFYJSYW76Z4B4BBAS11',
+      termId: termId,
+      exerciseMode: 'multiple_choice',
+      response: response,
+      clientSeq: 7,
+      answeredAt: '2026-08-17T13:00:00.000Z',
+      ladderStep: ladderStep,
+    );
 
     test('a rung-1 answer carries the rung and an id as the response', () {
       final json = review(response: termId, ladderStep: 1).toBatchJson();
@@ -96,7 +96,10 @@ void main() {
 
     test('rung 0 is never sent — an intro is an exposure, not an answer', () {
       // The contract's ladder_step is 1–5; 0 would be rejected as out of range.
-      expect(review(response: term, ladderStep: 0).toBatchJson().containsKey('ladder_step'), isFalse);
+      expect(
+        review(response: term, ladderStep: 0).toBatchJson().containsKey('ladder_step'),
+        isFalse,
+      );
     });
 
     test('a queue row survives a round trip through JSON', () {
@@ -119,33 +122,33 @@ void main() {
     Future<void> onSpeak(String text, {bool slow = false}) async {}
 
     Widget host(SessionCard card) => ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWith((ref) {
-              final db = AppDatabase.forTesting(NativeDatabase.memory());
-              ref.onDispose(db.close);
-              return db;
-            }),
-          ],
-          child: MaterialApp(
-            locale: const Locale('ru'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: const [Locale('ru'), Locale('en')],
-            home: MediaQuery(
-              data: const MediaQueryData(disableAnimations: true),
-              child: Scaffold(
-                body: SingleChildScrollView(
-                  child: SessionExerciseCard(
-                    card: card,
-                    autoPronounce: false,
-                    onAnswered: answers.add,
-                    onSpeak: onSpeak,
-                    showDue: false,
-                  ),
-                ),
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          final db = AppDatabase.forTesting(NativeDatabase.memory());
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: SessionExerciseCard(
+                card: card,
+                autoPronounce: false,
+                onAnswered: answers.add,
+                onSpeak: onSpeak,
+                showDue: false,
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     testWidgets('a correct rung-1 tap is CORRECT and uploads the term id', (tester) async {
       await tester.pumpWidget(host(forwardCard()));
@@ -195,7 +198,9 @@ void main() {
       expect(answers.single.response, term);
     });
 
-    testWidgets('the display still shows words — the key never leaks back into the UI', (tester) async {
+    testWidgets('the display still shows words — the key never leaks back into the UI', (
+      tester,
+    ) async {
       await tester.pumpWidget(host(forwardCard()));
       await tester.pumpAndSettle();
 
@@ -213,7 +218,8 @@ void main() {
   group('parity with the server', () {
     // Mirror of SubmitReviewsHandler::expectedFor + isForwardRecognition: on rung 1 (multiple_choice,
     // not practice) the expected answer is the card's own term id, and correctness is exact equality.
-    bool serverAcceptsForwardRecognition(String response, String cardTermId) => response == cardTermId;
+    bool serverAcceptsForwardRecognition(String response, String cardTermId) =>
+        response == cardTermId;
 
     /// What the client now decides, in the same terms.
     bool clientAccepts(SessionCard card, String response) => card.isIdentityGraded
@@ -235,8 +241,11 @@ void main() {
     test('the old behaviour — uploading the option TEXT — is refused by both', () {
       final card = forwardCard();
       expect(clientAccepts(card, 'без рецепта'), isFalse);
-      expect(serverAcceptsForwardRecognition('без рецепта', card.termId), isFalse,
-          reason: 'this is exactly what folded correct taps as lapses on the device');
+      expect(
+        serverAcceptsForwardRecognition('без рецепта', card.termId),
+        isFalse,
+        reason: 'this is exactly what folded correct taps as lapses on the device',
+      );
     });
   });
 }

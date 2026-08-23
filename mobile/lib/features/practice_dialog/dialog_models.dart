@@ -29,10 +29,10 @@ class TranscriptEvent {
   Map<String, dynamic> toJson() => {'role': role.wire, 'text': text, 'ts': ts};
 
   factory TranscriptEvent.fromJson(Map<String, dynamic> j) => TranscriptEvent(
-        role: DialogRole.fromWire(j['role'] as String?),
-        text: (j['text'] as String?) ?? '',
-        ts: (j['ts'] as int?) ?? 0,
-      );
+    role: DialogRole.fromWire(j['role'] as String?),
+    text: (j['text'] as String?) ?? '',
+    ts: (j['ts'] as int?) ?? 0,
+  );
 }
 
 /// A target word from the collection, with the server's authoritative [used] flag. The coverage
@@ -48,10 +48,10 @@ class TargetWord {
       TargetWord(termId: termId, text: text, used: used ?? this.used);
 
   factory TargetWord.fromJson(Map<String, dynamic> j) => TargetWord(
-        termId: (j['term_id'] as String?) ?? '',
-        text: (j['text'] as String?) ?? '',
-        used: (j['used'] as bool?) ?? false,
-      );
+    termId: (j['term_id'] as String?) ?? '',
+    text: (j['text'] as String?) ?? '',
+    used: (j['used'] as bool?) ?? false,
+  );
 }
 
 /// The started dialog: what `POST /practice/dialogs` returns. [realtimeToken] is an ephemeral
@@ -95,20 +95,21 @@ class DialogStart {
   });
 
   factory DialogStart.fromJson(Map<String, dynamic> j) => DialogStart(
-        dialogId: (j['dialog_id'] as String?) ?? '',
-        realtimeToken: (j['realtime_token'] as String?) ?? '',
-        expiresAt: DateTime.tryParse((j['expires_at'] as String?) ?? '')?.toLocal() ??
-            DateTime.now().add(const Duration(seconds: 200)),
-        model: (j['model'] as String?) ?? '',
-        targetWords: ((j['target_words'] as List?) ?? const [])
-            .map((e) => TargetWord.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        durationSeconds: (j['duration_seconds'] as int?) ?? 200,
-        provider: (j['provider'] as String?) ?? 'openai',
-        endpoint: j['endpoint'] as String?,
-        sessionSetup: j['session_setup'] as Map<String, dynamic>?,
-        connection: j['connection'] as Map<String, dynamic>?,
-      );
+    dialogId: (j['dialog_id'] as String?) ?? '',
+    realtimeToken: (j['realtime_token'] as String?) ?? '',
+    expiresAt:
+        DateTime.tryParse((j['expires_at'] as String?) ?? '')?.toLocal() ??
+        DateTime.now().add(const Duration(seconds: 200)),
+    model: (j['model'] as String?) ?? '',
+    targetWords: ((j['target_words'] as List?) ?? const [])
+        .map((e) => TargetWord.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    durationSeconds: (j['duration_seconds'] as int?) ?? 200,
+    provider: (j['provider'] as String?) ?? 'openai',
+    endpoint: j['endpoint'] as String?,
+    sessionSetup: j['session_setup'] as Map<String, dynamic>?,
+    connection: j['connection'] as Map<String, dynamic>?,
+  );
 }
 
 /// The wrap-up: what `POST /practice/dialogs/{id}/finish` returns. [summary] is model-written prose
@@ -118,17 +119,13 @@ class DialogSummary {
   final int wordsUsed;
   final int wordsTotal;
 
-  const DialogSummary({
-    required this.summary,
-    required this.wordsUsed,
-    required this.wordsTotal,
-  });
+  const DialogSummary({required this.summary, required this.wordsUsed, required this.wordsTotal});
 
   factory DialogSummary.fromJson(Map<String, dynamic> j) => DialogSummary(
-        summary: (j['summary'] as String?) ?? '',
-        wordsUsed: (j['words_used'] as int?) ?? 0,
-        wordsTotal: (j['words_total'] as int?) ?? 0,
-      );
+    summary: (j['summary'] as String?) ?? '',
+    wordsUsed: (j['words_used'] as int?) ?? 0,
+    wordsTotal: (j['words_total'] as int?) ?? 0,
+  );
 }
 
 /// Why a dialog could not start (or finished abnormally). [subscriptionRequired] = 403 (not
@@ -164,9 +161,10 @@ class LastDialogResult {
   });
 
   factory LastDialogResult.fromJson(Map<String, dynamic> j) => LastDialogResult(
-        finishedAt: DateTime.tryParse((j['finished_at'] ?? j['created_at'] ?? '') as String)?.toLocal() ??
-            DateTime.now(),
-        wordsUsed: (j['words_used'] as int?) ?? 0,
-        wordsTotal: (j['words_total'] as int?) ?? 0,
-      );
+    finishedAt:
+        DateTime.tryParse((j['finished_at'] ?? j['created_at'] ?? '') as String)?.toLocal() ??
+        DateTime.now(),
+    wordsUsed: (j['words_used'] as int?) ?? 0,
+    wordsTotal: (j['words_total'] as int?) ?? 0,
+  );
 }

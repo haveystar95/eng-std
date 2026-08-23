@@ -22,61 +22,61 @@ void main() {
 
   /// Rung 1: prompt is the TERM, options are translations, the key is the term id.
   SessionCard forwardCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'cold',
-        answer: termId,
-        options: const ['простуда', 'жара', 'счёт'],
-        optionIds: const [termId, 'T2', 'T3'],
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'cold',
+    answer: termId,
+    options: const ['простуда', 'жара', 'счёт'],
+    optionIds: const [termId, 'T2', 'T3'],
+  );
 
   /// Rung 2: the ordinary direction — prompt is the translation, key is the term's text.
   SessionCard reverseCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'простуда',
-        answer: 'cold',
-        options: const ['cold', 'heat', 'bill'],
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'простуда',
+    answer: 'cold',
+    options: const ['cold', 'heat', 'bill'],
+  );
 
   SessionCard typingCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.typing,
-        type: 'word',
-        prompt: 'простуда',
-        answer: 'cold',
-      );
+    termId: termId,
+    mode: ExerciseMode.typing,
+    type: 'word',
+    prompt: 'простуда',
+    answer: 'cold',
+  );
 
   Widget host(SessionCard card) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: MediaQuery(
-            data: const MediaQueryData(disableAnimations: true),
-            child: Scaffold(
-              body: SingleChildScrollView(
-                child: SessionExerciseCard(
-                  card: card,
-                  autoPronounce: false,
-                  onAnswered: (_) {},
-                  onSpeak: (text, {bool slow = false}) async {},
-                  showDue: false,
-                ),
-              ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: SessionExerciseCard(
+              card: card,
+              autoPronounce: false,
+              onAnswered: (_) {},
+              onSpeak: (text, {bool slow = false}) async {},
+              showDue: false,
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   group('the instruction knows which way the card asks', () {
     testWidgets('term → translation asks for the translation', (tester) async {

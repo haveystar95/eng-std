@@ -19,22 +19,26 @@ void main() {
 
   setUp(() {
     calls.clear();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-      calls.add(call);
-      switch (call.method) {
-        case 'initialize':
-        case 'listen':
-          return true;
-        default:
-          return null;
-      }
-    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      channel,
+      (call) async {
+        calls.add(call);
+        switch (call.method) {
+          case 'initialize':
+          case 'listen':
+            return true;
+          default:
+            return null;
+        }
+      },
+    );
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      channel,
+      null,
+    );
   });
 
   test('listen() with contextualStrings puts them in the channel call arguments', () async {
@@ -53,16 +57,19 @@ void main() {
     expect(args['localeId'], 'en_US');
   });
 
-  test('listen() without contextualStrings — no such argument at all (backward compatibility)', () async {
-    final speech = SpeechToText.withMethodChannel();
-    await speech.initialize();
+  test(
+    'listen() without contextualStrings — no such argument at all (backward compatibility)',
+    () async {
+      final speech = SpeechToText.withMethodChannel();
+      await speech.initialize();
 
-    await speech.listen(listenOptions: SpeechListenOptions(localeId: 'en_US'));
+      await speech.listen(listenOptions: SpeechListenOptions(localeId: 'en_US'));
 
-    final listenCall = calls.firstWhere((c) => c.method == 'listen');
-    final args = listenCall.arguments as Map;
-    expect(args.containsKey('contextualStrings'), isFalse);
-  });
+      final listenCall = calls.firstWhere((c) => c.method == 'listen');
+      final args = listenCall.arguments as Map;
+      expect(args.containsKey('contextualStrings'), isFalse);
+    },
+  );
 
   test('listen() with an empty contextualStrings list — same as omitting it', () async {
     final speech = SpeechToText.withMethodChannel();

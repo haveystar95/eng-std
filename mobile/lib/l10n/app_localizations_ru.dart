@@ -44,8 +44,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get triageAllDoneTitle => 'Всё разобрано';
 
   @override
-  String get triageAllDoneBody =>
-      'В этом наборе не осталось новых слов для разбора.';
+  String get triageAllDoneBody => 'В этом наборе не осталось новых слов для разбора.';
 
   @override
   String get triageMoreLaterTitle => 'На сейчас всё';
@@ -175,8 +174,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeGenerateTitle => 'Опиши тему — соберём коллекцию';
 
   @override
-  String get homeGenerateSubtitle =>
-      'ИИ подберёт слова и фразы, которые реально нужны';
+  String get homeGenerateSubtitle => 'ИИ подберёт слова и фразы, которые реально нужны';
 
   @override
   String get homeGeneratePlaceholder => 'Например: визит к врачу';
@@ -288,8 +286,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collectionPracticeButton => 'Свободная тренировка';
 
   @override
-  String get collectionPracticeSubtitle =>
-      'Ничего не горит — можно просто позаниматься';
+  String get collectionPracticeSubtitle => 'Ничего не горит — можно просто позаниматься';
 
   @override
   String get collectionWordsLabel => 'Слова';
@@ -307,8 +304,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collectionTriageBannerTitle => 'Разбери коллекцию';
 
   @override
-  String get collectionTriageBannerBody =>
-      'Отметь, что уже знаешь — остальное пойдёт в тренировку';
+  String get collectionTriageBannerBody => 'Отметь, что уже знаешь — остальное пойдёт в тренировку';
 
   @override
   String get collectionTriageBannerStart => 'Начать';
@@ -347,12 +343,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wordTranslationHintOptional => 'необязательно — подберём сами';
 
   @override
-  String get wordSheetAddHelper =>
-      'Транскрипция, пример и фото подберутся автоматически.';
+  String get wordSheetAddHelper => 'Транскрипция, пример и фото подберутся автоматически.';
 
   @override
-  String get wordSheetEditHelper =>
-      'Пример и фото останутся прежними, если не менять термин.';
+  String get wordSheetEditHelper => 'Пример и фото останутся прежними, если не менять термин.';
 
   @override
   String get wordSheetAddButton => 'Добавить в коллекцию';
@@ -438,22 +432,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collectionsEmptyTitle => 'Пока нет коллекций';
 
   @override
-  String get collectionsEmptyBody =>
-      'Опиши ситуацию — и ИИ соберёт первый набор.';
+  String get collectionsEmptyBody => 'Опиши ситуацию — и ИИ соберёт первый набор.';
 
   @override
   String get collectionsCreateManual => 'Создать вручную';
 
   @override
-  String get collectionsCreateManualHint =>
-      'Пустая коллекция — слова добавишь сам';
+  String get collectionsCreateManualHint => 'Пустая коллекция — слова добавишь сам';
 
   @override
   String get collectionsCreateGenerate => 'Сгенерировать';
 
   @override
-  String get collectionsCreateGenerateHint =>
-      'ИИ соберёт набор по описанию ситуации';
+  String get collectionsCreateGenerateHint => 'ИИ соберёт набор по описанию ситуации';
 
   @override
   String get collectionsNewCollection => 'Новая коллекция';
@@ -480,8 +471,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get generationGeneratingNote =>
-      'Подбираем слова и фотографии · обычно 20–30 секунд';
+  String get generationGeneratingNote => 'Подбираем слова и фотографии · обычно 20–30 секунд';
 
   @override
   String get generationQueuedNote => 'Отправим, как только появится сеть';
@@ -626,8 +616,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Текст появляется в поле по мере распознавания — после остановки его можно править руками.';
 
   @override
-  String get generateVoiceRecordingNote =>
-      'Говори — клавиатура вернётся, когда остановишь запись';
+  String get generateVoiceRecordingNote => 'Говори — клавиатура вернётся, когда остановишь запись';
 
   @override
   String get generateVoicePermissionDenied =>
@@ -675,8 +664,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchBuildCard => 'Собрать карточку';
 
   @override
-  String get searchBuildCardNote =>
-      'Значение, пример и фото. Повторно — бесплатно';
+  String get searchBuildCardNote => 'Значение, пример и фото. Повторно — бесплатно';
 
   @override
   String get searchLooking => 'Ищем…';
@@ -694,8 +682,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchBuildPhoto => 'фото';
 
   @override
-  String get searchBuildNote =>
-      'Пара секунд. Можно закрыть — карточка появится в поиске.';
+  String get searchBuildNote => 'Пара секунд. Можно закрыть — карточка появится в поиске.';
 
   @override
   String searchLimitUsed(int used, int cap) {
@@ -709,8 +696,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchLookupFailed => 'Не удалось найти это слово';
 
   @override
-  String get searchNotRecognized =>
-      'Не получилось распознать, проверьте написание';
+  String get searchNotRecognized => 'Не получилось распознать, проверьте написание';
 
   @override
   String get searchQueryTooLong => 'Поиск — для слов и коротких фраз';
@@ -915,8 +901,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appWordmark => 'Слова';
 
   @override
-  String get authTagline =>
-      'Слова для реальных ситуаций — от банка до собеседования.';
+  String get authTagline => 'Слова для реальных ситуаций — от банка до собеседования.';
 
   @override
   String get authContinueGoogle => 'Продолжить с Google';
@@ -931,8 +916,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authPrivacy => 'Конфиденциальность';
 
   @override
-  String get authOfflineHint =>
-      'Нет сети. Для первого входа нужно подключение.';
+  String get authOfflineHint => 'Нет сети. Для первого входа нужно подключение.';
 
   @override
   String get authAppleUnavailable => 'Вход через Apple пока недоступен.';
@@ -947,8 +931,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onbLevelTitle => 'Насколько уверенно читаешь?';
 
   @override
-  String get onbLevelSubtitle =>
-      'Примерно — потом уточним по твоим ответам в разборе.';
+  String get onbLevelSubtitle => 'Примерно — потом уточним по твоим ответам в разборе.';
 
   @override
   String onbLevelExample(String level) {
@@ -1160,8 +1143,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrType => 'напиши по-английски';
 
   @override
-  String get sessionInstrListenChoose =>
-      'прослушай и выбери перевод · можно повторить';
+  String get sessionInstrListenChoose => 'прослушай и выбери перевод · можно повторить';
 
   @override
   String get sessionInstrListenType => 'прослушай и напиши по-английски';
@@ -1184,8 +1166,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionClozeInsert => 'Вставь слово';
 
   @override
-  String get sessionChipReturnHint =>
-      'Тап по слову в строке возвращает его вниз';
+  String get sessionChipReturnHint => 'Тап по слову в строке возвращает его вниз';
 
   @override
   String get sessionHintFirstLetter => 'Подсказка: первая буква';
@@ -1221,23 +1202,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionSpeakListening => 'Слушаю…';
 
   @override
-  String get sessionSpeakNotHeard =>
-      'Не расслышал. Попробуй ещё раз — ближе к микрофону.';
+  String get sessionSpeakNotHeard => 'Не расслышал. Попробуй ещё раз — ближе к микрофону.';
 
   @override
-  String get sessionSpeakNoMic =>
-      'Микрофон недоступен. Можно пропустить эту карточку.';
+  String get sessionSpeakNoMic => 'Микрофон недоступен. Можно пропустить эту карточку.';
 
   @override
   String get sessionSpeakSkip => 'Пропустить';
 
   @override
-  String get sessionSpeakSkipHint =>
-      'Пропуск ничего не испортит: слово вернётся своим чередом.';
+  String get sessionSpeakSkipHint => 'Пропуск ничего не испортит: слово вернётся своим чередом.';
 
   @override
-  String get sessionSpeakHint =>
-      'Проверяем, вспомнил ли ты слово, а не произношение.';
+  String get sessionSpeakHint => 'Проверяем, вспомнил ли ты слово, а не произношение.';
 
   @override
   String sessionSpeakHeard(String text) {
@@ -1263,8 +1240,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrRecogniseTranslation => 'выбери перевод';
 
   @override
-  String get sessionRecogniseJustMet =>
-      'вы только что познакомились с этим словом';
+  String get sessionRecogniseJustMet => 'вы только что познакомились с этим словом';
 
   @override
   String get ladderStep0 => 'знакомство';
@@ -1432,15 +1408,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionNewExampleExhausted => 'Лимит примеров на сегодня исчерпан';
 
   @override
-  String get sessionPracticeBanner =>
-      'Свободная тренировка — прогресс не меняется';
+  String get sessionPracticeBanner => 'Свободная тренировка — прогресс не меняется';
 
   @override
   String get sessionExitTitle => 'Прервать сессию?';
 
   @override
-  String get sessionExitBody =>
-      'Отвеченные слова сохранятся — вернуться можно в любой момент.';
+  String get sessionExitBody => 'Отвеченные слова сохранятся — вернуться можно в любой момент.';
 
   @override
   String get sessionExitConfirm => 'Выйти';
@@ -1461,8 +1435,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionEmpty => 'Здесь пока нечего повторять';
 
   @override
-  String get sessionDailyNewLimit =>
-      'Дневной лимит новых слов достигнут. Возвращайся завтра';
+  String get sessionDailyNewLimit => 'Дневной лимит новых слов достигнут. Возвращайся завтра';
 
   @override
   String sessionLoadError(String error) {
@@ -1470,19 +1443,16 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get authErrorOffline =>
-      'Нет подключения к интернету. Для входа нужна сеть.';
+  String get authErrorOffline => 'Нет подключения к интернету. Для входа нужна сеть.';
 
   @override
-  String get authErrorGoogleUnsupported =>
-      'Вход через Google не поддерживается на этой платформе.';
+  String get authErrorGoogleUnsupported => 'Вход через Google не поддерживается на этой платформе.';
 
   @override
   String get authErrorCancelled => 'Вход отменён.';
 
   @override
-  String get authErrorGoogle =>
-      'Не удалось войти через Google. Попробуй ещё раз.';
+  String get authErrorGoogle => 'Не удалось войти через Google. Попробуй ещё раз.';
 
   @override
   String get authErrorGoogleToken => 'Не удалось получить токен Google.';
@@ -1537,8 +1507,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get practiceDialogExitTitle => 'Завершить разговор?';
 
   @override
-  String get practiceDialogExitMessage =>
-      'Разговор закончится, и ты увидишь итог.';
+  String get practiceDialogExitMessage => 'Разговор закончится, и ты увидишь итог.';
 
   @override
   String get practiceDialogExitConfirm => 'Завершить';
@@ -1570,12 +1539,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'На сегодня разговоры закончились. Попробуй завтра.';
 
   @override
-  String get practiceDialogErrorOffline =>
-      'Нет сети. Для разговора нужен интернет.';
+  String get practiceDialogErrorOffline => 'Нет сети. Для разговора нужен интернет.';
 
   @override
-  String get practiceDialogErrorGeneric =>
-      'Не удалось начать разговор. Попробуй ещё раз.';
+  String get practiceDialogErrorGeneric => 'Не удалось начать разговор. Попробуй ещё раз.';
 
   @override
   String get practiceDialogClose => 'Закрыть';
@@ -1647,15 +1614,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storeEmptyTitle => 'Скоро здесь появятся наборы';
 
   @override
-  String get storeEmptyBody =>
-      'Готовые коллекции по ситуациям добавим в ближайшее время.';
+  String get storeEmptyBody => 'Готовые коллекции по ситуациям добавим в ближайшее время.';
 
   @override
   String get storePreviewAdded => 'Набор добавлен в «Мои»';
 
   @override
-  String get storeSubscribeError =>
-      'Не удалось добавить набор. Попробуйте ещё раз.';
+  String get storeSubscribeError => 'Не удалось добавить набор. Попробуйте ещё раз.';
 
   @override
   String get paywallClose => 'Закрыть';
@@ -1672,16 +1637,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get paywallSubtitleQuota =>
-      'Premium поднимает дневной лимит до двадцати генераций.';
+  String get paywallSubtitleQuota => 'Premium поднимает дневной лимит до двадцати генераций.';
 
   @override
   String get paywallSubtitleStore =>
       'Премиум-коллекции собраны редакцией и открываются все сразу — по одной их не продаём.';
 
   @override
-  String get paywallSubtitleGeneric =>
-      'Один тариф открывает всё, что делает изучение быстрее.';
+  String get paywallSubtitleGeneric => 'Один тариф открывает всё, что делает изучение быстрее.';
 
   @override
   String get paywallBenefitGenerations => 'До 20 генераций в день';
@@ -1693,8 +1656,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallBenefitModes => 'Будущие режимы тренировок';
 
   @override
-  String get paywallFreeForever =>
-      'Повторения, разбор и офлайн — бесплатно всегда.';
+  String get paywallFreeForever => 'Повторения, разбор и офлайн — бесплатно всегда.';
 
   @override
   String get paywallPeriodYear => 'Год';
@@ -1743,8 +1705,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paywallDevPurchased => 'Premium активирован (dev-режим)';
 
   @override
-  String get paywallNeedsRealPremium =>
-      'Нужен настоящий Premium (StoreKit — отдельный блок)';
+  String get paywallNeedsRealPremium => 'Нужен настоящий Premium (StoreKit — отдельный блок)';
 
   @override
   String get profileTryPremium => 'Попробовать Premium';
@@ -1788,8 +1749,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get perfMonitorToggle => 'Записывать подвисания, кадры и тапы';
 
   @override
-  String get perfMonitorToggleHint =>
-      'По умолчанию выключено — пока выключено, ничего не стоит';
+  String get perfMonitorToggleHint => 'По умолчанию выключено — пока выключено, ничего не стоит';
 
   @override
   String get perfMonitorEmpty => 'записей нет';
@@ -1812,8 +1772,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionLoadFailed => 'Не удалось загрузить сессию';
 
   @override
-  String get syncStuckBanner =>
-      'Ответы не уходят на сервер — проверь соединение';
+  String get syncStuckBanner => 'Ответы не уходят на сервер — проверь соединение';
 
   @override
   String get poolNotStudyingNote => 'Слово в каталоге — ты его пока не учишь.';
@@ -1822,8 +1781,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get poolEnrollAction => 'Учить это слово';
 
   @override
-  String get poolEnrollNote =>
-      'Слово встанет в очередь и начнёт приходить на тренировках.';
+  String get poolEnrollNote => 'Слово встанет в очередь и начнёт приходить на тренировках.';
 
   @override
   String get poolUnenrollAction => 'Убрать из изучения';

@@ -49,10 +49,10 @@ abstract final class TriageSwipe {
 
   /// The side that stays in the screen — where the sign and the tint live.
   static VerdictSignSide signSide(TriageVerdict v) => switch (v) {
-        TriageVerdict.known => VerdictSignSide.left, // card slides right
-        TriageVerdict.unknown => VerdictSignSide.right, // card slides left
-        TriageVerdict.unsure => VerdictSignSide.bottom, // card slides up
-      };
+    TriageVerdict.known => VerdictSignSide.left, // card slides right
+    TriageVerdict.unknown => VerdictSignSide.right, // card slides left
+    TriageVerdict.unsure => VerdictSignSide.bottom, // card slides up
+  };
 
   /// Commit when the drag passes the distance [threshold] OR is a fling faster
   /// than [AppMotion.swipeFlingVelocity] (600 px/s) in an established direction.
@@ -98,11 +98,7 @@ class SessionSegments extends StatelessWidget {
         children: [
           for (var i = 0; i < total; i++) ...[
             if (i > 0) SizedBox(width: gap),
-            Expanded(
-              child: ColoredBox(
-                color: i < done ? AppColors.ink : AppColors.track,
-              ),
-            ),
+            Expanded(child: ColoredBox(color: i < done ? AppColors.ink : AppColors.track)),
           ],
         ],
       ),

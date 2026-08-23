@@ -124,7 +124,8 @@ class FakeDialogRepository implements DialogRepository {
     // English (practiced language) so no Cyrillic literal lives in lib/ (cyrillic-guard);
     // the real backend returns its own model-written summary once wired.
     return DialogSummary(
-      summary: 'You kept the conversation going and used $used of the ${_words.length} target words. '
+      summary:
+          'You kept the conversation going and used $used of the ${_words.length} target words. '
           'Nice, natural back-and-forth — keep practising out loud.',
       wordsUsed: used,
       wordsTotal: _words.length,

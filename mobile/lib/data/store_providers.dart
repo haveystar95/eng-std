@@ -21,8 +21,9 @@ class StoreLangPairNotifier extends Notifier<StoreLangPair?> {
   void setPair(StoreLangPair pair) => state = pair;
 }
 
-final storeLangPairProvider =
-    NotifierProvider<StoreLangPairNotifier, StoreLangPair?>(StoreLangPairNotifier.new);
+final storeLangPairProvider = NotifierProvider<StoreLangPairNotifier, StoreLangPair?>(
+  StoreLangPairNotifier.new,
+);
 
 /// One store section — a topic header + its cards, in the server's order.
 class StoreSection {
@@ -37,8 +38,10 @@ class StoreSection {
 /// already ordered by topic, so grouping preserves that order). Reads `GET /store/collections`.
 /// Falls back to a small built-in mock catalogue when the feed is empty AND [AppConfig.storeMockFallback]
 /// is set — so the store UI is exercisable on device before Session B publishes real content.
-final storeCollectionsProvider =
-    FutureProvider.family<List<StoreSection>, StoreLangPair>((ref, pair) async {
+final storeCollectionsProvider = FutureProvider.family<List<StoreSection>, StoreLangPair>((
+  ref,
+  pair,
+) async {
   final api = ref.watch(apiClientProvider);
   final page = await api.storeCollections(
     sourceLang: pair.source,
@@ -100,12 +103,18 @@ Future<bool> unsubscribeCollectionById(WidgetRef ref, String id) async {
   await ref.read(appDatabaseProvider).deleteCollectionLocal(id);
   try {
     await ref.read(syncServiceProvider).resync();
-  } catch (_) {/* offline/transient — next sync reconciles */}
+  } catch (_) {
+    /* offline/transient — next sync reconciles */
+  }
   ref.invalidate(storeCollectionsProvider);
   return true;
 }
 
-Future<StoreSubscribeResult> _mutate(WidgetRef ref, StoreCollection c, {required bool subscribe}) async {
+Future<StoreSubscribeResult> _mutate(
+  WidgetRef ref,
+  StoreCollection c, {
+  required bool subscribe,
+}) async {
   final api = ref.read(apiClientProvider);
   // 1) The subscribe/unsubscribe itself — its success is what the result reports. A failure of the
   //    follow-up sync must NOT read back as "add failed".
@@ -125,7 +134,9 @@ Future<StoreSubscribeResult> _mutate(WidgetRef ref, StoreCollection c, {required
   //    include subscribed collections; today it filters to owner_id only — see the tracked chip.)
   try {
     await ref.read(syncServiceProvider).resync();
-  } catch (_) {/* offline/transient — the next background sync reconciles */}
+  } catch (_) {
+    /* offline/transient — the next background sync reconciles */
+  }
   ref.invalidate(storeCollectionsProvider);
   return subscribe ? StoreSubscribeResult.subscribed : StoreSubscribeResult.unsubscribed;
 }
@@ -144,20 +155,26 @@ bool _isSubscriptionRequired(Object e) {
 /// cyrillic-guard forbids Russian literals in `lib/`; real content is Russian and comes from the
 /// server). Deterministic ids so re-fetches are stable.
 List<StoreCollection> _mockStore(StoreLangPair pair) {
-  StoreCollection mk(String id, String title, String topic, int n, String cefr, bool premium,
-          {bool subscribed = false}) =>
-      StoreCollection(
-        id: 'mock_$id',
-        title: title,
-        description: 'Sample store set for UI checks',
-        topic: topic,
-        sourceLang: pair.source,
-        targetLang: pair.target,
-        isPremium: premium,
-        isSubscribed: subscribed,
-        itemsCount: n,
-        cefr: cefr,
-      );
+  StoreCollection mk(
+    String id,
+    String title,
+    String topic,
+    int n,
+    String cefr,
+    bool premium, {
+    bool subscribed = false,
+  }) => StoreCollection(
+    id: 'mock_$id',
+    title: title,
+    description: 'Sample store set for UI checks',
+    topic: topic,
+    sourceLang: pair.source,
+    targetLang: pair.target,
+    isPremium: premium,
+    isSubscribed: subscribed,
+    itemsCount: n,
+    cefr: cefr,
+  );
   return [
     mk('cafe', 'Cafe', 'Everyday', 16, 'A2', false),
     mk('market', 'Market', 'Everyday', 20, 'A2–B1', false),

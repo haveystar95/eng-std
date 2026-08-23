@@ -23,12 +23,7 @@ import 'package:eng_std/theme/theme.dart';
 /// moment — when the response actually arrives. The wave is the real elapsed time of the request
 /// and nothing else, and if the request is slow it simply stops on the last row.
 class AssemblingCard extends StatefulWidget {
-  const AssemblingCard({
-    super.key,
-    required this.term,
-    this.transcription,
-    this.translation,
-  });
+  const AssemblingCard({super.key, required this.term, this.transcription, this.translation});
 
   final String term;
 
@@ -143,7 +138,9 @@ class _AssemblingCardState extends State<AssemblingCard> {
       height: 46,
       decoration: last
           ? null
-          : const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.dividerFaint))),
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+            ),
       child: Row(
         children: [
           SizedBox(
@@ -164,7 +161,9 @@ class _AssemblingCardState extends State<AssemblingCard> {
           const SizedBox(width: AppSpacing.s12),
           Text(
             label,
-            style: AppText.translation.copyWith(color: reached ? AppColors.ink : AppColors.tertiary),
+            style: AppText.translation.copyWith(
+              color: reached ? AppColors.ink : AppColors.tertiary,
+            ),
           ),
           const Spacer(),
           if (done)
@@ -251,7 +250,10 @@ class AiLimitCard extends StatelessWidget {
                     Container(
                       width: 7,
                       height: 7,
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.track),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.track,
+                      ),
                     ),
                   ],
                   const SizedBox(width: 10),
@@ -262,8 +264,10 @@ class AiLimitCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.s12),
-              Text(l.searchLimitTitle,
-                  style: AppText.searchMissTitle.copyWith(fontSize: 19, height: 1.35)),
+              Text(
+                l.searchLimitTitle,
+                style: AppText.searchMissTitle.copyWith(fontSize: 19, height: 1.35),
+              ),
             ],
           ),
         ),

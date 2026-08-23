@@ -28,11 +28,15 @@ class _Api implements ApiClient {
 
   @override
   Future<SearchLanguages> searchLanguages() async =>
-      languages ??
-      const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
+      languages ?? const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async {
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async {
     searchPairs.add('$source→$target');
 
     return const [];
@@ -42,11 +46,7 @@ class _Api implements ApiClient {
   Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
     pairs.add('$source→$target');
 
-    return InstantHint(
-      query: query,
-      translation: hint,
-      reversed: target == 'en',
-    );
+    return InstantHint(query: query, translation: hint, reversed: target == 'en');
   }
 
   @override
@@ -63,20 +63,22 @@ class _Api implements ApiClient {
 Future<void> _pump(WidgetTester tester, _Api api, {AppDatabase? db}) async {
   final database = db ?? AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(database.close);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(database),
-      apiClientProvider.overrideWithValue(api),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      theme: buildAppTheme(),
-      home: const SearchScreen(),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(database),
+        apiClientProvider.overrideWithValue(api),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        theme: buildAppTheme(),
+        home: const SearchScreen(),
+      ),
     ),
-  ));
+  );
   await tester.pumpAndSettle();
 }
 
@@ -131,9 +133,12 @@ void main() {
     // A fresh screen over the same device store — the app restarting, in effect.
     await _pump(tester, _Api(), db: db);
 
-    expect(await SearchPairStore(db).load(
-      const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru'),
-    ), const SearchPair(source: 'ru', target: 'en'));
+    expect(
+      await SearchPairStore(
+        db,
+      ).load(const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru')),
+      const SearchPair(source: 'ru', target: 'en'),
+    );
   });
 
   testWidgets('a long press offers the other language of the pair', (tester) async {
@@ -153,8 +158,9 @@ void main() {
     expect(find.text('EN'), findsOneWidget);
   });
 
-  testWidgets('says nothing about detection, direction or languages beyond the two codes',
-      (tester) async {
+  testWidgets('says nothing about detection, direction or languages beyond the two codes', (
+    tester,
+  ) async {
     await _pump(tester, _Api(hint: 'счёт'));
     await _type(tester, 'invoice');
 
@@ -168,20 +174,22 @@ void main() {
     // learner's own». A search screen that refused to work because it could not draw a language
     // label would be trading the feature for the setting.
     final api = _Api(languages: null);
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory())),
-        apiClientProvider.overrideWithValue(_BrokenLanguages(api)),
-        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-      ],
-      child: MaterialApp(
-        locale: const Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: const [Locale('ru')],
-        theme: buildAppTheme(),
-        home: const SearchScreen(),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory())),
+          apiClientProvider.overrideWithValue(_BrokenLanguages(api)),
+          collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('ru')],
+          theme: buildAppTheme(),
+          home: const SearchScreen(),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

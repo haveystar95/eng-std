@@ -22,24 +22,51 @@ void main() {
   final t0 = DateTime.utc(2026, 8, 19, 9);
 
   Future<void> seed() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Аптека')),
-          CollectionsCompanion.insert(id: 'c2', updatedAt: t0, title: const Value('Аэропорт')),
-        ],
-        termUpserts: [
-          TermsCompanion.insert(
-              id: 't1', updatedAt: t0, termText: const Value('antipyretic'), translation: const Value('жаропонижающее')),
-          TermsCompanion.insert(
-              id: 't2', updatedAt: t0, termText: const Value('painkiller'), translation: const Value('обезболивающее')),
-          TermsCompanion.insert(
-              id: 't3', updatedAt: t0, termText: const Value('boarding pass'), translation: const Value('посадочный талон')),
-        ],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0, position: const Value(0)),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't2', updatedAt: t0, position: const Value(1)),
-          CollectionItemsCompanion.insert(collectionId: 'c2', termId: 't3', updatedAt: t0, position: const Value(0)),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('Аптека')),
+      CollectionsCompanion.insert(id: 'c2', updatedAt: t0, title: const Value('Аэропорт')),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(
+        id: 't1',
+        updatedAt: t0,
+        termText: const Value('antipyretic'),
+        translation: const Value('жаропонижающее'),
+      ),
+      TermsCompanion.insert(
+        id: 't2',
+        updatedAt: t0,
+        termText: const Value('painkiller'),
+        translation: const Value('обезболивающее'),
+      ),
+      TermsCompanion.insert(
+        id: 't3',
+        updatedAt: t0,
+        termText: const Value('boarding pass'),
+        translation: const Value('посадочный талон'),
+      ),
+    ],
+    itemUpserts: [
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't1',
+        updatedAt: t0,
+        position: const Value(0),
+      ),
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't2',
+        updatedAt: t0,
+        position: const Value(1),
+      ),
+      CollectionItemsCompanion.insert(
+        collectionId: 'c2',
+        termId: 't3',
+        updatedAt: t0,
+        position: const Value(0),
+      ),
+    ],
+  );
 
   Future<List<Term>> allTerms() => db.watchAllTerms().first;
 
@@ -67,13 +94,16 @@ void main() {
     }.toList();
   }
 
-  test('a collection full of words is not a queue: nothing is studied until it is chosen', () async {
-    await seed();
+  test(
+    'a collection full of words is not a queue: nothing is studied until it is chosen',
+    () async {
+      await seed();
 
-    expect(await db.watchPool().first, isEmpty);
-    expect(await db.watchLearnableCount().first, 0);
-    expect(await practiceTermIds(), isEmpty, reason: 'no word is being STUDIED yet');
-  });
+      expect(await db.watchPool().first, isEmpty);
+      expect(await db.watchLearnableCount().first, 0);
+      expect(await practiceTermIds(), isEmpty, reason: 'no word is being STUDIED yet');
+    },
+  );
 
   test('a «не знаю» swipe puts the word in the pool at rung 0, and «Учить N» counts it', () async {
     await seed();
@@ -94,8 +124,18 @@ void main() {
 
   test('a «не уверен» swipe skips the intro — it lands on the first recognition rung', () async {
     await seed();
-    await db.enrollLocally('t1', t0, acquisition: 'learning', learningStep: LearningLadder.firstLadderStep);
-    await db.enrollLocally('t2', t0, acquisition: 'learning', learningStep: LearningLadder.firstLadderStep);
+    await db.enrollLocally(
+      't1',
+      t0,
+      acquisition: 'learning',
+      learningStep: LearningLadder.firstLadderStep,
+    );
+    await db.enrollLocally(
+      't2',
+      t0,
+      acquisition: 'learning',
+      learningStep: LearningLadder.firstLadderStep,
+    );
 
     final pool = await db.watchPool().first;
     expect(pool.first.position.step, LearningLadder.stepRecognitionForward);
@@ -114,25 +154,35 @@ void main() {
   test('«Убрать из изучения» is a pause: the word leaves the queue and loses nothing', () async {
     await seed();
     // A word with a real history: graduated, reviewed, scheduled.
-    await db.applyDelta(progressUpserts: [
-      TermProgressCompanion.insert(
-        termId: 't1',
-        updatedAt: t0,
-        state: const Value('review'),
-        acquisition: const Value('graduated'),
-        successfulReviews: const Value(5),
-        reps: const Value(9),
-        intervalDays: const Value(12),
-        dueAt: Value(t0),
-        enrolledAt: Value(t0),
-      ),
-    ]);
-    await db.enrollLocally('t2', t0, acquisition: 'learning', learningStep: 1); // a neighbour to drill
+    await db.applyDelta(
+      progressUpserts: [
+        TermProgressCompanion.insert(
+          termId: 't1',
+          updatedAt: t0,
+          state: const Value('review'),
+          acquisition: const Value('graduated'),
+          successfulReviews: const Value(5),
+          reps: const Value(9),
+          intervalDays: const Value(12),
+          dueAt: Value(t0),
+          enrolledAt: Value(t0),
+        ),
+      ],
+    );
+    await db.enrollLocally(
+      't2',
+      t0,
+      acquisition: 'learning',
+      learningStep: 1,
+    ); // a neighbour to drill
 
     await db.unenrollLocally('t1', t0.add(const Duration(days: 1)));
 
-    expect([for (final r in await db.watchPool().first) r.term.id], ['t2'],
-        reason: 'it is out of «Мои слова»');
+    expect(
+      [for (final r in await db.watchPool().first) r.term.id],
+      ['t2'],
+      reason: 'it is out of «Мои слова»',
+    );
     expect(await practiceTermIds(), ['t2'], reason: 'and out of the sessions');
 
     final row = await (db.select(db.termProgress)..where((p) => p.termId.equals('t1'))).getSingle();
@@ -149,16 +199,18 @@ void main() {
 
   test('a returned word resumes at the rung it left with, not at an intro', () async {
     await seed();
-    await db.applyDelta(progressUpserts: [
-      TermProgressCompanion.insert(
-        termId: 't1',
-        updatedAt: t0,
-        state: const Value('review'),
-        acquisition: const Value('graduated'),
-        successfulReviews: const Value(LearningLadder.typingMinSuccesses),
-        enrolledAt: Value(t0),
-      ),
-    ]);
+    await db.applyDelta(
+      progressUpserts: [
+        TermProgressCompanion.insert(
+          termId: 't1',
+          updatedAt: t0,
+          state: const Value('review'),
+          acquisition: const Value('graduated'),
+          successfulReviews: const Value(LearningLadder.typingMinSuccesses),
+          enrolledAt: Value(t0),
+        ),
+      ],
+    );
 
     await db.unenrollLocally('t1', t0);
     await db.enrollLocally('t1', t0.add(const Duration(days: 30)));
@@ -168,26 +220,31 @@ void main() {
     expect(back.position.acquisition, Acquisition.graduated);
   });
 
-  test('an undone swipe takes its enrolment back — but never one the learner had already earned', () async {
-    await seed();
-    // t1: enrolled by the swipe being undone, never shown → the enrolment goes back with it.
-    await db.enrollLocally('t1', t0);
-    // t2: already studied, and a stray swipe on it must not pause a word mid-ladder.
-    await db.applyDelta(progressUpserts: [
-      TermProgressCompanion.insert(
-        termId: 't2',
-        updatedAt: t0,
-        acquisition: const Value('learning'),
-        learningStep: const Value(1),
-        enrolledAt: Value(t0),
-      ),
-    ]);
+  test(
+    'an undone swipe takes its enrolment back — but never one the learner had already earned',
+    () async {
+      await seed();
+      // t1: enrolled by the swipe being undone, never shown → the enrolment goes back with it.
+      await db.enrollLocally('t1', t0);
+      // t2: already studied, and a stray swipe on it must not pause a word mid-ladder.
+      await db.applyDelta(
+        progressUpserts: [
+          TermProgressCompanion.insert(
+            termId: 't2',
+            updatedAt: t0,
+            acquisition: const Value('learning'),
+            learningStep: const Value(1),
+            enrolledAt: Value(t0),
+          ),
+        ],
+      );
 
-    await db.unenrollLocallyIfUnshown('t1', t0);
-    await db.unenrollLocallyIfUnshown('t2', t0);
+      await db.unenrollLocallyIfUnshown('t1', t0);
+      await db.unenrollLocallyIfUnshown('t2', t0);
 
-    expect([for (final r in await db.watchPool().first) r.term.id], ['t2']);
-  });
+      expect([for (final r in await db.watchPool().first) r.term.id], ['t2']);
+    },
+  );
 
   test('a pool word outlives its collection — and is still findable under «без коллекции»', () async {
     await seed();

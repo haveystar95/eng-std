@@ -31,16 +31,22 @@ void main() {
   // it is a number.
   group('ProgressLine — the fill is actually PAINTED', () {
     Finder inkFill() => find.byWidgetPredicate(
-        (w) => w is DecoratedBox && (w.decoration as BoxDecoration).color == AppColors.ink);
+      (w) => w is DecoratedBox && (w.decoration as BoxDecoration).color == AppColors.ink,
+    );
 
     Future<Size> fillSize(WidgetTester tester, double value, {double width = 200}) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(width: width, child: ProgressLine(value: value, height: 6)),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: width,
+                child: ProgressLine(value: value, height: 6),
+              ),
+            ),
           ),
         ),
-      ));
+      );
       expect(inkFill(), findsOneWidget);
       return tester.getSize(inkFill());
     }
@@ -58,11 +64,13 @@ void main() {
     });
 
     testWidgets('zero paints no fill at all', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: Center(child: SizedBox(width: 200, child: ProgressLine(value: 0))),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(child: SizedBox(width: 200, child: ProgressLine(value: 0))),
+          ),
         ),
-      ));
+      );
       expect(inkFill(), findsNothing);
     });
   });

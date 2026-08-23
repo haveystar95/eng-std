@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/triage_queue.dart';
 
 PendingTriage _t({bool? revealed}) => PendingTriage(
-      id: '01HTRIAGE0000000000000001',
-      termId: '01HTERM00000000000000000001',
-      verdict: 'known',
-      decidedAt: '2026-08-04T10:00:00.000Z',
-      clientSeq: 7,
-      revealed: revealed,
-    );
+  id: '01HTRIAGE0000000000000001',
+  termId: '01HTERM00000000000000000001',
+  verdict: 'known',
+  decidedAt: '2026-08-04T10:00:00.000Z',
+  clientSeq: 7,
+  revealed: revealed,
+);
 
 void main() {
   group('PendingTriage.revealed', () {

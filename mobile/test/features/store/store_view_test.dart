@@ -17,10 +17,10 @@ void main() {
   const pair = (source: 'ru', target: 'en');
 
   AppUser user() => AppUser(
-        id: 'u1',
-        name: 'D',
-        profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
-      );
+    id: 'u1',
+    name: 'D',
+    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
+  );
 
   StoreCollection col(String id, String title, String topic, int n, String cefr, bool premium) =>
       StoreCollection(
@@ -37,38 +37,46 @@ void main() {
 
   final sections = [
     StoreSection(topic: 'Everyday', items: [col('cafe', 'Cafe', 'Everyday', 16, 'A2', false)]),
-    StoreSection(topic: 'Work', items: [col('interview', 'Job interview', 'Work', 22, 'B1–B2', true)]),
+    StoreSection(
+      topic: 'Work',
+      items: [col('interview', 'Job interview', 'Work', 22, 'B1–B2', true)],
+    ),
   ];
 
   StorePreview preview(int total) => StorePreview(
-        items: const [
-          StorePreviewItem(term: 'appointment', translation: 'приём у врача'),
-          StorePreviewItem(term: 'symptom', translation: 'симптом'),
-          StorePreviewItem(term: 'prescription', translation: 'рецепт'),
-        ],
-        total: total,
-      );
+    items: const [
+      StorePreviewItem(term: 'appointment', translation: 'приём у врача'),
+      StorePreviewItem(term: 'symptom', translation: 'симптом'),
+      StorePreviewItem(term: 'prescription', translation: 'рецепт'),
+    ],
+    total: total,
+  );
 
   Future<void> pump(WidgetTester tester, {bool paywall = true, Object? previewError}) {
-    return tester.pumpWidget(ProviderScope(
-      overrides: [
-        authControllerProvider.overrideWith(() => _FakeAuth(user())),
-        featureFlagsProvider.overrideWith(
-            () => _FakeFlags(FeatureFlags(storeEnabled: true, paywallEnabled: paywall, devPremium: false))),
-        storeCollectionsProvider(pair).overrideWith((ref) async => sections),
-        storePreviewProvider('cafe').overrideWith((ref) async {
-          if (previewError != null) throw previewError;
-          return preview(16);
-        }),
-        storePreviewProvider('interview').overrideWith((ref) async => preview(22)),
-      ],
-      child: const MaterialApp(
-        locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: [Locale('ru')],
-        home: Scaffold(body: StoreView(bottomInset: 0)),
+    return tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(() => _FakeAuth(user())),
+          featureFlagsProvider.overrideWith(
+            () => _FakeFlags(
+              FeatureFlags(storeEnabled: true, paywallEnabled: paywall, devPremium: false),
+            ),
+          ),
+          storeCollectionsProvider(pair).overrideWith((ref) async => sections),
+          storePreviewProvider('cafe').overrideWith((ref) async {
+            if (previewError != null) throw previewError;
+            return preview(16);
+          }),
+          storePreviewProvider('interview').overrideWith((ref) async => preview(22)),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('ru')],
+          home: Scaffold(body: StoreView(bottomInset: 0)),
+        ),
       ),
-    ));
+    );
   }
 
   testWidgets('renders topic sections and cards with word counts', (tester) async {
@@ -129,22 +137,24 @@ void main() {
     expect(find.textContaining('ещё 13'), findsOneWidget);
   });
 
-  testWidgets('premium set preview shows the term list too (value showcase); gate only on the CTA',
-      (tester) async {
-    await pump(tester);
-    await tester.pumpAndSettle();
+  testWidgets(
+    'premium set preview shows the term list too (value showcase); gate only on the CTA',
+    (tester) async {
+      await pump(tester);
+      await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Job interview'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Job interview'));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Job interview'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Job interview'));
+      await tester.pumpAndSettle();
 
-    // Terms are visible even for the locked premium set…
-    expect(find.text('appointment'), findsOneWidget);
-    expect(find.textContaining('ещё 19'), findsOneWidget); // 22 − 3
-    // …and the lock is only on adding.
-    expect(find.text('Доступно с Premium'), findsOneWidget);
-  });
+      // Terms are visible even for the locked premium set…
+      expect(find.text('appointment'), findsOneWidget);
+      expect(find.textContaining('ещё 19'), findsOneWidget); // 22 − 3
+      // …and the lock is only on adding.
+      expect(find.text('Доступно с Premium'), findsOneWidget);
+    },
+  );
 
   testWidgets('offline: preview sheet shows no list, CTA still there', (tester) async {
     await pump(tester, previewError: Exception('offline'));

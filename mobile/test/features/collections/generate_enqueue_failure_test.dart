@@ -45,26 +45,26 @@ class _FailingGenerationController implements GenerationController {
 
 void main() {
   Widget host(GenerationController controller) => ProviderScope(
-        overrides: [
-          // In-memory, so the screen never touches the real on-disk store (whose open now carries
-          // a 10s timeout timer the test binding would report as pending).
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-          generationControllerProvider.overrideWithValue(controller),
-          // The quota is network-backed; a null one is the honest offline shape and, importantly,
-          // is NOT «exhausted» — so the button's only reason to be disabled is `_submitting`.
-          generationQuotaProvider.overrideWith((ref) async => null),
-        ],
-        child: const MaterialApp(
-          locale: Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: [Locale('ru'), Locale('en')],
-          home: GenerateScreen(initialTopic: 'популярные фразы и слова'),
-        ),
-      );
+    overrides: [
+      // In-memory, so the screen never touches the real on-disk store (whose open now carries
+      // a 10s timeout timer the test binding would report as pending).
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+      generationControllerProvider.overrideWithValue(controller),
+      // The quota is network-backed; a null one is the honest offline shape and, importantly,
+      // is NOT «exhausted» — so the button's only reason to be disabled is `_submitting`.
+      generationQuotaProvider.overrideWith((ref) async => null),
+    ],
+    child: const MaterialApp(
+      locale: Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('ru'), Locale('en')],
+      home: GenerateScreen(initialTopic: 'популярные фразы и слова'),
+    ),
+  );
 
   /// Tear the tree down INSIDE the test: the screen owns a `Timer.periodic` for its rotating
   /// hints (cancelled only by `dispose`) and the SnackBar owns its auto-dismiss timer, and the
@@ -93,7 +93,9 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('the button works AGAIN after a failure — it is not a one-shot screen', (tester) async {
+  testWidgets('the button works AGAIN after a failure — it is not a one-shot screen', (
+    tester,
+  ) async {
     final controller = _FailingGenerationController(Exception('database is locked'));
     await tester.pumpWidget(host(controller));
     await tester.pump();

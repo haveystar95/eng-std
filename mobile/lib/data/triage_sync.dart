@@ -43,16 +43,18 @@ class TriageSync {
     bool? revealed,
   }) async {
     final list = await _list();
-    list.add(PendingTriage(
-      id: ApiClient.ulid(),
-      termId: termId,
-      verdict: verdict.value,
-      collectionId: collectionId,
-      decidedAt: DateTime.now().toUtc().toIso8601String(),
-      clientSeq: await _seq.next(SeqCounter.triage),
-      latencyMs: latencyMs,
-      revealed: revealed,
-    ));
+    list.add(
+      PendingTriage(
+        id: ApiClient.ulid(),
+        termId: termId,
+        verdict: verdict.value,
+        collectionId: collectionId,
+        decidedAt: DateTime.now().toUtc().toIso8601String(),
+        clientSeq: await _seq.next(SeqCounter.triage),
+        latencyMs: latencyMs,
+        revealed: revealed,
+      ),
+    );
     await _queue.save(list);
     // Mark it triaged in the local DB so the deck (built from the DB) excludes it on re-entry and
     // it never resurrects after a sync — the exclusion the server does via term_triages, which the
@@ -125,8 +127,10 @@ class TriageSync {
         } on DioException catch (e) {
           if (!isPermanentReject(e)) break; // transient → keep this + remaining chunks, retry later
           drop.addAll(chunk.map((e) => e.id)); // 422/413 → drop with a log, don't block the rest
-          debugPrint('TriageSync: dropped ${chunk.length} rejected swipe(s) '
-              '(${e.response?.statusCode}): ${e.response?.data}');
+          debugPrint(
+            'TriageSync: dropped ${chunk.length} rejected swipe(s) '
+            '(${e.response?.statusCode}): ${e.response?.data}',
+          );
         } catch (_) {
           break; // unknown → treat as transient
         }

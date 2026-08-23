@@ -62,19 +62,28 @@ class LoginScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l.appWordmark,
-                        style: const TextStyle(
-                            fontFamily: AppFonts.literata,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 56,
-                            height: 1,
-                            letterSpacing: -1.68,
-                            color: AppColors.ink)),
+                    Text(
+                      l.appWordmark,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.literata,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 56,
+                        height: 1,
+                        letterSpacing: -1.68,
+                        color: AppColors.ink,
+                      ),
+                    ),
                     const SizedBox(height: 22),
                     const SizedBox(height: 1, child: ColoredBox(color: AppColors.track)),
                     const SizedBox(height: 20),
-                    Text(l.authTagline,
-                        style: AppText.translation.copyWith(fontSize: 15.5, height: 1.5, color: AppColors.inkBody)),
+                    Text(
+                      l.authTagline,
+                      style: AppText.translation.copyWith(
+                        fontSize: 15.5,
+                        height: 1.5,
+                        color: AppColors.inkBody,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -94,7 +103,13 @@ class LoginScreen extends ConsumerWidget {
                         height: 54,
                         child: Center(
                           child: SizedBox(
-                              width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.ink)),
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: AppColors.ink,
+                            ),
+                          ),
                         ),
                       )
                     else ...[
@@ -109,7 +124,8 @@ class LoginScreen extends ConsumerWidget {
                         text: l.authContinueApple,
                         borderRadius: BorderRadius.circular(AppRadii.field),
                         style: SignInWithAppleButtonStyle.black,
-                        onPressed: () => ref.read(authControllerProvider.notifier).signInWithApple(),
+                        onPressed: () =>
+                            ref.read(authControllerProvider.notifier).signInWithApple(),
                       ),
                       const SizedBox(height: 12),
                       _GoogleButton(
@@ -136,12 +152,30 @@ class LoginScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(l.authTerms, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                        Text(
+                          l.authTerms,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 11.5,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Container(
-                            width: 3, height: 3, decoration: const BoxDecoration(color: AppColors.dashed, shape: BoxShape.circle)),
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: AppColors.dashed,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text(l.authPrivacy, style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary)),
+                        Text(
+                          l.authPrivacy,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 11.5,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -214,8 +248,15 @@ class _GoogleButton extends StatelessWidget {
             children: [
               const SizedBox(width: 18, height: 18, child: CustomPaint(painter: _GoogleGPainter())),
               const SizedBox(width: 10),
-              Text(label,
-                  style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
             ],
           ),
         ),
@@ -275,10 +316,18 @@ class _OfflineHint extends StatelessWidget {
           Container(
             width: 9,
             height: 9,
-            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.secondary, width: 1.5)),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.secondary, width: 1.5),
+            ),
           ),
           const SizedBox(width: 9),
-          Expanded(child: Text(text, style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody))),
+          Expanded(
+            child: Text(
+              text,
+              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
+            ),
+          ),
         ],
       ),
     );

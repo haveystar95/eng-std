@@ -20,11 +20,6 @@ List<StreakDot> streakDots(int streak, {int week = kStreakWeek}) {
   final filled = streak.clamp(0, week);
   return [
     for (var i = 0; i < week; i++)
-      if (i < filled)
-        StreakDot.filled
-      else if (i == filled)
-        StreakDot.today
-      else
-        StreakDot.empty,
+      if (i < filled) StreakDot.filled else if (i == filled) StreakDot.today else StreakDot.empty,
   ];
 }

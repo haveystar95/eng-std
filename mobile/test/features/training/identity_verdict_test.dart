@@ -27,28 +27,28 @@ void main() {
 
   /// Rung 1: the prompt is the TERM, the options are translations, the key is the term id.
   SessionCard forwardCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: term,
-        answer: termId,
-        transcription: transcription,
-        example: example,
-        options: const ['без рецепта', 'по расписанию', 'за наличные'],
-        optionIds: const [termId, '01M00WHZFYJSYW76Z4B4BBASYD', '01M00WHZFYJSYW76Z4B4BBASZE'],
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: term,
+    answer: termId,
+    transcription: transcription,
+    example: example,
+    options: const ['без рецепта', 'по расписанию', 'за наличные'],
+    optionIds: const [termId, '01M00WHZFYJSYW76Z4B4BBASYD', '01M00WHZFYJSYW76Z4B4BBASZE'],
+  );
 
   /// Rung 2: the ordinary direction — prompt is the translation, and the key really is the term.
   SessionCard reverseCard() => SessionCard(
-        termId: termId,
-        mode: ExerciseMode.multipleChoice,
-        type: 'phrase',
-        prompt: 'без рецепта',
-        answer: term,
-        transcription: transcription,
-        example: example,
-        options: const [term, 'on schedule', 'in cash'],
-      );
+    termId: termId,
+    mode: ExerciseMode.multipleChoice,
+    type: 'phrase',
+    prompt: 'без рецепта',
+    answer: term,
+    transcription: transcription,
+    example: example,
+    options: const [term, 'on schedule', 'in cash'],
+  );
 
   group('SessionCard.answerText', () {
     test('an identity-graded card shows the term, not its id', () {
@@ -89,35 +89,35 @@ void main() {
     Future<void> onSpeak(String text, {bool slow = false}) async => spoken.add(text);
 
     Widget host(SessionCard card) => ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWith((ref) {
-              final db = AppDatabase.forTesting(NativeDatabase.memory());
-              ref.onDispose(db.close);
-              return db;
-            }),
-          ],
-          child: MaterialApp(
-            locale: const Locale('ru'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: const [Locale('ru'), Locale('en')],
-            // Reduce-motion: the «writes itself» headline renders in full on the first frame
-            // instead of one character at a time.
-            home: MediaQuery(
-              data: const MediaQueryData(disableAnimations: true),
-              child: Scaffold(
-                body: SingleChildScrollView(
-                  child: SessionExerciseCard(
-                    card: card,
-                    autoPronounce: false,
-                    onAnswered: (_) {},
-                    onSpeak: onSpeak,
-                    showDue: false,
-                  ),
-                ),
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          final db = AppDatabase.forTesting(NativeDatabase.memory());
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru'), Locale('en')],
+        // Reduce-motion: the «writes itself» headline renders in full on the first frame
+        // instead of one character at a time.
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: SessionExerciseCard(
+                card: card,
+                autoPronounce: false,
+                onAnswered: (_) {},
+                onSpeak: onSpeak,
+                showDue: false,
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     /// Every string this screen actually renders — plain [Text] and [Text.rich] alike.
     List<String> visibleText(WidgetTester tester) => tester

@@ -108,34 +108,34 @@ class _FakeRecognizer implements SpeechRecognizer {
 
 void main() {
   SessionCard introCard() => SessionCard(
-        termId: 'T1',
-        mode: ExerciseMode.intro,
-        type: 'word',
-        prompt: 'бронь',
-        answer: 'reservation',
-        transcription: 'ˌrezərˈveɪʃn',
-        example: 'I have a reservation for tonight.',
-        exampleTranslation: 'У меня бронь на сегодня.',
-        ladderStep: 0,
-      );
+    termId: 'T1',
+    mode: ExerciseMode.intro,
+    type: 'word',
+    prompt: 'бронь',
+    answer: 'reservation',
+    transcription: 'ˌrezərˈveɪʃn',
+    example: 'I have a reservation for tonight.',
+    exampleTranslation: 'У меня бронь на сегодня.',
+    ladderStep: 0,
+  );
 
   Widget host(_FakeRecognizer recognizer) => ProviderScope(
-        overrides: [speechRecognizerProvider.overrideWithValue(recognizer)],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru'), Locale('en')],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SessionIntroCard(
-                card: introCard(),
-                autoPronounce: false,
-                onSpeak: (String text, {bool slow = false}) async {},
-              ),
-            ),
+    overrides: [speechRecognizerProvider.overrideWithValue(recognizer)],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: SessionIntroCard(
+            card: introCard(),
+            autoPronounce: false,
+            onSpeak: (String text, {bool slow = false}) async {},
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('is hidden until the microphone has been permitted elsewhere', (tester) async {
     final recognizer = _FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: false);
@@ -152,14 +152,21 @@ void main() {
   });
 
   testWidgets('offers the echo once the microphone is available', (tester) async {
-    await tester.pumpWidget(host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)));
+    await tester.pumpWidget(
+      host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Повторить вслух'), findsOneWidget);
   });
 
-  testWidgets('a mangled attempt still counts — the transcript is shown, never marked', (tester) async {
-    final recognizer = _FakeRecognizer(attempt: const SpeechAttempt.heard('reserve ation'), isReady: true);
+  testWidgets('a mangled attempt still counts — the transcript is shown, never marked', (
+    tester,
+  ) async {
+    final recognizer = _FakeRecognizer(
+      attempt: const SpeechAttempt.heard('reserve ation'),
+      isReady: true,
+    );
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
@@ -176,8 +183,12 @@ void main() {
     expect(recognizer.calls, 1);
   });
 
-  testWidgets('invites another go when it heard nothing — and never calls it wrong', (tester) async {
-    await tester.pumpWidget(host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)));
+  testWidgets('invites another go when it heard nothing — and never calls it wrong', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Повторить вслух'));
@@ -194,9 +205,14 @@ void main() {
     // THIS run, so isReady cannot be the thing that answers. hasPermission is the OS's own answer,
     // asked directly and without a prompt (see the interface doc), and is what QA-21 adds.
 
-    testWidgets('the echo appears once the OS confirms the mic is already permitted', (tester) async {
-      final recognizer =
-          _FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: false, hasPermission: true);
+    testWidgets('the echo appears once the OS confirms the mic is already permitted', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: false,
+        hasPermission: true,
+      );
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
@@ -207,8 +223,11 @@ void main() {
     });
 
     testWidgets('stays hidden when the OS says no too', (tester) async {
-      final recognizer =
-          _FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: false, hasPermission: false);
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: false,
+        hasPermission: false,
+      );
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
@@ -218,8 +237,11 @@ void main() {
     });
 
     testWidgets('skips the OS round trip entirely once isReady is already true', (tester) async {
-      final recognizer =
-          _FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true, hasPermission: false);
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: true,
+        hasPermission: false,
+      );
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
@@ -231,7 +253,9 @@ void main() {
   });
 
   group('the echo makes the recording legible (QA-21)', () {
-    testWidgets('tapping it shows that the phone is recording, and offers a way to stop', (tester) async {
+    testWidgets('tapping it shows that the phone is recording, and offers a way to stop', (
+      tester,
+    ) async {
       // Held open, so the card can be observed WHILE it thinks it is listening.
       final recognizer = _FakeRecognizer(
         attempt: const SpeechAttempt.heard('reservation'),
@@ -289,7 +313,9 @@ void main() {
     });
 
     testWidgets('an empty result invites another go instead of printing nothing', (tester) async {
-      await tester.pumpWidget(host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)));
+      await tester.pumpWidget(
+        host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Повторить вслух'));
@@ -299,8 +325,13 @@ void main() {
       expect(find.textContaining('Услышали'), findsNothing);
     });
 
-    testWidgets('tapping again after a result starts over — the old text is replaced', (tester) async {
-      final recognizer = _FakeRecognizer(attempt: const SpeechAttempt.heard('reservation'), isReady: true);
+    testWidgets('tapping again after a result starts over — the old text is replaced', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.heard('reservation'),
+        isReady: true,
+      );
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 
@@ -316,8 +347,13 @@ void main() {
       expect(find.text('Услышали: «reservation»'), findsOneWidget);
     });
 
-    testWidgets('it sends the same window and vocabulary hint the speaking word form does', (tester) async {
-      final recognizer = _FakeRecognizer(attempt: const SpeechAttempt.heard('reservation'), isReady: true);
+    testWidgets('it sends the same window and vocabulary hint the speaking word form does', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.heard('reservation'),
+        isReady: true,
+      );
       await tester.pumpWidget(host(recognizer));
       await tester.pumpAndSettle();
 

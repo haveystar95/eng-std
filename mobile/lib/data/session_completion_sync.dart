@@ -38,10 +38,12 @@ class SessionCompletionSync {
 
   /// Record that [sessionId] was played to its summary, then try to send it.
   Future<void> record({required String sessionId, DateTime? endedAt}) async {
-    await _db.enqueueCompletion(SessionCompletionQueueRowsCompanion.insert(
-      sessionId: sessionId,
-      endedAt: (endedAt ?? DateTime.now()).toUtc().toIso8601String(),
-    ));
+    await _db.enqueueCompletion(
+      SessionCompletionQueueRowsCompanion.insert(
+        sessionId: sessionId,
+        endedAt: (endedAt ?? DateTime.now()).toUtc().toIso8601String(),
+      ),
+    );
     unawaited(flush());
   }
 
@@ -76,8 +78,10 @@ class SessionCompletionSync {
             break;
           }
           drop.add(row.sessionId);
-          debugPrint('SessionCompletionSync: dropped a rejected completion '
-              '(${e.response?.statusCode}): ${e.response?.data}');
+          debugPrint(
+            'SessionCompletionSync: dropped a rejected completion '
+            '(${e.response?.statusCode}): ${e.response?.data}',
+          );
         } catch (_) {
           transientFailure = true;
           break;

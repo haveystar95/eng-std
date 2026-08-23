@@ -53,8 +53,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         ref.read(syncServiceProvider).sync();
         ref.read(reviewSyncProvider).flush();
         ref.read(sessionCompletionSyncProvider).flush();
-      // …and the pool decisions («Учить это слово» / «Убрать из изучения») made while offline.
-      ref.read(poolSyncProvider).flush();
+        // …and the pool decisions («Учить это слово» / «Убрать из изучения») made while offline.
+        ref.read(poolSyncProvider).flush();
         ref.read(generationControllerProvider).flushQueue();
       }
     });
@@ -163,20 +163,20 @@ class _SyncIndicator extends ConsumerWidget {
         valueListenable: stuck,
         builder: (context, isStuck, child) => isStuck ? _StuckBanner() : child!,
         child: ValueListenableBuilder<SyncState>(
-        valueListenable: syncState,
-        builder: (_, s, _) => AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: s == SyncState.syncing
-              ? const SizedBox(
-                  height: 2,
-                  child: LinearProgressIndicator(
-                    minHeight: 2,
-                    backgroundColor: Colors.transparent,
-                    valueColor: AlwaysStoppedAnimation(AppColors.ink),
-                  ),
-                )
-              : const SizedBox(height: 2, width: double.infinity),
-        ),
+          valueListenable: syncState,
+          builder: (_, s, _) => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: s == SyncState.syncing
+                ? const SizedBox(
+                    height: 2,
+                    child: LinearProgressIndicator(
+                      minHeight: 2,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation(AppColors.ink),
+                    ),
+                  )
+                : const SizedBox(height: 2, width: double.infinity),
+          ),
         ),
       ),
     );

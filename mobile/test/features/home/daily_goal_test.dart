@@ -39,19 +39,23 @@ void main() {
   final yesterday = now.subtract(const Duration(days: 1));
 
   Future<void> seed() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: yesterday, title: const Value('Аптека')),
-        ],
-        termUpserts: [
-          for (final id in ['t1', 't2', 't3'])
-            TermsCompanion.insert(id: id, updatedAt: yesterday, termText: Value(id)),
-        ],
-        itemUpserts: [
-          for (final (i, id) in ['t1', 't2', 't3'].indexed)
-            CollectionItemsCompanion.insert(
-                collectionId: 'c1', termId: id, updatedAt: yesterday, position: Value(i)),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: yesterday, title: const Value('Аптека')),
+    ],
+    termUpserts: [
+      for (final id in ['t1', 't2', 't3'])
+        TermsCompanion.insert(id: id, updatedAt: yesterday, termText: Value(id)),
+    ],
+    itemUpserts: [
+      for (final (i, id) in ['t1', 't2', 't3'].indexed)
+        CollectionItemsCompanion.insert(
+          collectionId: 'c1',
+          termId: id,
+          updatedAt: yesterday,
+          position: Value(i),
+        ),
+    ],
+  );
 
   /// The goal's left-hand number, straight off the column the doors write.
   Future<int> goalDone() async => newWordsToday(await db.watchEnrolledAt().first, now);
@@ -68,8 +72,12 @@ void main() {
     test('«не уверен» is one new word too — it is the same decision, one rung up', () async {
       await seed();
       await db.markTriaged('t1', 'c1', now);
-      await db.enrollLocally('t1', now,
-          acquisition: 'learning', learningStep: LearningLadder.firstLadderStep);
+      await db.enrollLocally(
+        't1',
+        now,
+        acquisition: 'learning',
+        learningStep: LearningLadder.firstLadderStep,
+      );
 
       expect(await goalDone(), 1);
     });
@@ -94,13 +102,15 @@ void main() {
       await seed();
       // What `/sync` brings back after POST /search/add — the row carries the server's own
       // enrolled_at, so the client counts it without a second source of truth.
-      await db.applyDelta(progressUpserts: [
-        TermProgressCompanion.insert(
-          termId: 't3',
-          updatedAt: now,
-          enrolledAt: Value(now.subtract(const Duration(hours: 2)).toUtc()),
-        ),
-      ]);
+      await db.applyDelta(
+        progressUpserts: [
+          TermProgressCompanion.insert(
+            termId: 't3',
+            updatedAt: now,
+            enrolledAt: Value(now.subtract(const Duration(hours: 2)).toUtc()),
+          ),
+        ],
+      );
 
       expect(await goalDone(), 1);
     });
@@ -169,9 +179,7 @@ void main() {
       await db.enrollLocally('t1', DateTime.now());
       await db.enrollLocally('t2', DateTime.now());
 
-      final container = ProviderContainer(overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-      ]);
+      final container = ProviderContainer(overrides: [appDatabaseProvider.overrideWithValue(db)]);
       addTearDown(container.dispose);
 
       // A listener first: providers are auto-dispose by default in Riverpod 3, and a bare read of

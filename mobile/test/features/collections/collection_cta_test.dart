@@ -49,11 +49,19 @@ void main() {
       expect(showsSecondaryTriage(cta, 37), isTrue);
     });
 
-    test('a due count does not take it away either — reviews outrank triage, they do not end it', () {
-      final cta = computeCollectionCta(untriaged: 37, learnable: 3, due: 12, remainingNewQuota: 20);
-      expect(cta.kind, HomeCtaKind.review);
-      expect(showsSecondaryTriage(cta, 37), isTrue);
-    });
+    test(
+      'a due count does not take it away either — reviews outrank triage, they do not end it',
+      () {
+        final cta = computeCollectionCta(
+          untriaged: 37,
+          learnable: 3,
+          due: 12,
+          remainingNewQuota: 20,
+        );
+        expect(cta.kind, HomeCtaKind.review);
+        expect(showsSecondaryTriage(cta, 37), isTrue);
+      },
+    );
 
     test('nor does the daily new quota being spent — the pass never spends it', () {
       final cta = computeCollectionCta(untriaged: 37, learnable: 3, due: 0, remainingNewQuota: 0);

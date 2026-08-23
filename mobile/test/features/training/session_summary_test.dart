@@ -13,31 +13,31 @@ void main() {
   const termId = '01M00WHZFYJSYW76Z4B4BBASXC';
 
   SessionCard intro(String id) => SessionCard(
-        termId: id,
-        mode: ExerciseMode.intro,
-        type: 'word',
-        prompt: 'простуда',
-        answer: 'cold',
-      );
+    termId: id,
+    mode: ExerciseMode.intro,
+    type: 'word',
+    prompt: 'простуда',
+    answer: 'cold',
+  );
 
   SessionCard forward(String id) => SessionCard(
-        termId: id,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'cold',
-        answer: id,
-        options: const ['простуда', 'жара', 'счёт'],
-        optionIds: [id, 'T2', 'T3'],
-      );
+    termId: id,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'cold',
+    answer: id,
+    options: const ['простуда', 'жара', 'счёт'],
+    optionIds: [id, 'T2', 'T3'],
+  );
 
   SessionCard reverse(String id) => SessionCard(
-        termId: id,
-        mode: ExerciseMode.multipleChoice,
-        type: 'word',
-        prompt: 'простуда',
-        answer: 'cold',
-        options: const ['cold', 'heat', 'bill'],
-      );
+    termId: id,
+    mode: ExerciseMode.multipleChoice,
+    type: 'word',
+    prompt: 'простуда',
+    answer: 'cold',
+    options: const ['cold', 'heat', 'bill'],
+  );
 
   group('newWordCount — «НОВЫХ» counts words, not cards', () {
     test('six introduced words, each with two recognition cards, is six', () {

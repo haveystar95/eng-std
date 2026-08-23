@@ -10,7 +10,20 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   /// The sentence from the phone report, and the way the learner assembled it.
   const target = "Can you turn on the light? It's too dark to read here.";
-  const asBuilt = ['Can', 'you', 'turn', 'on', 'the', 'light?', "It's", 'too', 'dark', 'here', 'to', 'read'];
+  const asBuilt = [
+    'Can',
+    'you',
+    'turn',
+    'on',
+    'the',
+    'light?',
+    "It's",
+    'too',
+    'dark',
+    'here',
+    'to',
+    'read',
+  ];
 
   group('misplacedWords marks the minimal set of misplaced chips', () {
     test('the phone case: only «here» is out of place, «It\'s» is not', () {
@@ -24,12 +37,38 @@ void main() {
     });
 
     test('a fully correct assembly marks nothing', () {
-      const correct = ['Can', 'you', 'turn', 'on', 'the', 'light?', "It's", 'too', 'dark', 'to', 'read', 'here.'];
+      const correct = [
+        'Can',
+        'you',
+        'turn',
+        'on',
+        'the',
+        'light?',
+        "It's",
+        'too',
+        'dark',
+        'to',
+        'read',
+        'here.',
+      ];
       expect(SessionGrader.misplacedWords(correct, target), isEmpty);
     });
 
     test('two neighbours swapped: one of them is marked, not both and not the tail', () {
-      const swapped = ['Can', 'you', 'turn', 'on', 'the', 'light?', "It's", 'dark', 'too', 'to', 'read', 'here.'];
+      const swapped = [
+        'Can',
+        'you',
+        'turn',
+        'on',
+        'the',
+        'light?',
+        "It's",
+        'dark',
+        'too',
+        'to',
+        'read',
+        'here.',
+      ];
       final wrong = SessionGrader.misplacedWords(swapped, target);
 
       expect(wrong, hasLength(1));
@@ -37,14 +76,40 @@ void main() {
     });
 
     test('a word that travelled to the end is marked alone', () {
-      const travelled = ['you', 'turn', 'on', 'the', 'light?', "It's", 'too', 'dark', 'to', 'read', 'here.', 'Can'];
+      const travelled = [
+        'you',
+        'turn',
+        'on',
+        'the',
+        'light?',
+        "It's",
+        'too',
+        'dark',
+        'to',
+        'read',
+        'here.',
+        'Can',
+      ];
       expect(SessionGrader.misplacedWords(travelled, target), {travelled.length - 1});
     });
 
     test('a completely scrambled order marks fewer chips than there are chips', () {
       // A mark on every word says nothing the verdict did not already say. The alignment keeps the
       // longest ordered run, so something always survives.
-      const scrambled = ['here.', 'read', 'to', 'dark', 'too', "It's", 'light?', 'the', 'on', 'turn', 'you', 'Can'];
+      const scrambled = [
+        'here.',
+        'read',
+        'to',
+        'dark',
+        'too',
+        "It's",
+        'light?',
+        'the',
+        'on',
+        'turn',
+        'you',
+        'Can',
+      ];
       final wrong = SessionGrader.misplacedWords(scrambled, target);
 
       expect(wrong, isNotEmpty);
@@ -53,7 +118,20 @@ void main() {
 
     test('a contraction is one chip on screen and is marked, or not, as one', () {
       // Marked when it really is in the wrong place…
-      const moved = ["It's", 'Can', 'you', 'turn', 'on', 'the', 'light?', 'too', 'dark', 'to', 'read', 'here.'];
+      const moved = [
+        "It's",
+        'Can',
+        'you',
+        'turn',
+        'on',
+        'the',
+        'light?',
+        'too',
+        'dark',
+        'to',
+        'read',
+        'here.',
+      ];
       expect(SessionGrader.misplacedWords(moved, target), {0});
 
       // …and never split into a fragment of itself.
@@ -62,8 +140,17 @@ void main() {
     });
 
     test('punctuation and case are not mistakes', () {
-      expect(SessionGrader.misplacedWords(['can', 'you', 'turn', 'on', 'the', 'light'],
-          'Can you turn on the light?'), isEmpty);
+      expect(
+        SessionGrader.misplacedWords([
+          'can',
+          'you',
+          'turn',
+          'on',
+          'the',
+          'light',
+        ], 'Can you turn on the light?'),
+        isEmpty,
+      );
     });
   });
 }

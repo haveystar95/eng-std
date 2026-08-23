@@ -265,11 +265,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// beside a word it is not about», and that is a comparison of words.
   Future<void> _fetchHint(String query) async {
     try {
-      final hint = await ref.read(apiClientProvider).instantHint(
-            query,
-            source: _pair?.source,
-            target: _pair?.target,
-          );
+      final hint = await ref
+          .read(apiClientProvider)
+          .instantHint(query, source: _pair?.source, target: _pair?.target);
       // Kept when there is something to SAY — a translation, or the one honest «this is too long
       // to be a word» the field does put a line up for. An answerless hint is still dropped: it
       // has nothing to add and would only overwrite one that had.
@@ -285,11 +283,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final generation = ++_generation;
     setState(() => _searching = true);
     try {
-      final hits = await ref.read(apiClientProvider).search(
-            query,
-            source: _pair?.source,
-            target: _pair?.target,
-          );
+      final hits = await ref
+          .read(apiClientProvider)
+          .search(query, source: _pair?.source, target: _pair?.target);
       if (!mounted || generation != _generation) return;
       setState(() {
         _hits = hits;
@@ -334,11 +330,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _notRecognized = false;
     });
     try {
-      final outcome = await ref.read(apiClientProvider).lookupWord(
-            query,
-            source: _pair?.source,
-            target: _pair?.target,
-          );
+      final outcome = await ref
+          .read(apiClientProvider)
+          .lookupWord(query, source: _pair?.source, target: _pair?.target);
       if (!mounted || generation != _generation) return;
       setState(() {
         _lookingUp = false;
@@ -404,13 +398,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<void> _openCard(WordCardSubject subject) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => WordCardScreen(
-        subject: subject,
-        onSpeak: () => _speak(subject.text, subject.type),
-        onSaved: _afterSave,
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WordCardScreen(
+          subject: subject,
+          onSpeak: () => _speak(subject.text, subject.type),
+          onSaved: _afterSave,
+        ),
       ),
-    ));
+    );
   }
 
   /// A save always ends by re-running the FREE search: the word is now in the database, so the next
@@ -444,56 +440,56 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-      backgroundColor: AppColors.paper,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 18, AppSpacing.s22, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _field(l),
-                  // UNDER the field rather than beside it: the right-hand end of the field is
-                  // already spoken for by the echo and the clear button, and a third thing there
-                  // would make the busiest corner of the screen the one nobody looks at.
-                  if (_pair case final pair? when _languages != null)
-                    Padding(
-                      // Pulled back by the pill's own padding so its text lines up with the
-                      // field's, which is what makes it read as a caption and not a control.
-                      padding: const EdgeInsets.only(top: 2, left: 18),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: LanguagePill(
-                          pair: pair,
-                          languages: _languages!,
-                          onSwap: _swapPair,
-                          onPick: _pickOther,
+        backgroundColor: AppColors.paper,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 18, AppSpacing.s22, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _field(l),
+                    // UNDER the field rather than beside it: the right-hand end of the field is
+                    // already spoken for by the echo and the clear button, and a third thing there
+                    // would make the busiest corner of the screen the one nobody looks at.
+                    if (_pair case final pair? when _languages != null)
+                      Padding(
+                        // Pulled back by the pill's own padding so its text lines up with the
+                        // field's, which is what makes it read as a caption and not a control.
+                        padding: const EdgeInsets.only(top: 2, left: 18),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: LanguagePill(
+                            pair: pair,
+                            languages: _languages!,
+                            onSwap: _swapPair,
+                            onPick: _pickOther,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                // Scrolling the results puts the keyboard away, the way every list with a search
-                // field behaves.
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.s22,
-                  0,
-                  AppSpacing.s22,
-                  AppTabBarMetrics.height + AppTabBarMetrics.bottomInset + AppSpacing.s26,
+                  ],
                 ),
-                children: _body(l),
               ),
-            ),
-          ],
+              Expanded(
+                child: ListView(
+                  // Scrolling the results puts the keyboard away, the way every list with a search
+                  // field behaves.
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.s22,
+                    0,
+                    AppSpacing.s22,
+                    AppTabBarMetrics.height + AppTabBarMetrics.bottomInset + AppSpacing.s26,
+                  ),
+                  children: _body(l),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -662,10 +658,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return [
       const SizedBox(height: AppSpacing.s26),
-      SearchResultCard(
-        subject: _subjectFor(exact),
-        onOpen: () => _openHitCard(exact),
-      ),
+      SearchResultCard(subject: _subjectFor(exact), onOpen: () => _openHitCard(exact)),
       if (rest.isNotEmpty) ...[
         const SizedBox(height: 14),
         SearchSectionLabel(l.searchSimilar),
@@ -708,10 +701,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // Too long to be a word or a phrase. A calm line about what the field is FOR, and no button:
     // there is nothing here to build a card out of.
     if (hint?.queryTooLong ?? false) {
-      return [
-        const SizedBox(height: 34),
-        Text(l.searchQueryTooLong, style: AppText.searchNote),
-      ];
+      return [const SizedBox(height: 34), Text(l.searchQueryTooLong, style: AppText.searchNote)];
     }
 
     final headline = hint?.headline(asked) ?? asked;

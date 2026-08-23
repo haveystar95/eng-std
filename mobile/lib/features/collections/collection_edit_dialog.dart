@@ -75,11 +75,15 @@ class _CollectionSheetState extends ConsumerState<_CollectionSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(_isEdit ? l.collectionSheetEditTitle : l.collectionSheetCreateTitle,
-            style: AppText.sheetButton.copyWith(fontSize: 19)),
+        Text(
+          _isEdit ? l.collectionSheetEditTitle : l.collectionSheetCreateTitle,
+          style: AppText.sheetButton.copyWith(fontSize: 19),
+        ),
         const SizedBox(height: 18),
-        Text(l.collectionNameLabel.toUpperCase(),
-            style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary)),
+        Text(
+          l.collectionNameLabel.toUpperCase(),
+          style: AppText.sectionLabel.copyWith(fontSize: 11, color: AppColors.tertiary),
+        ),
         const SizedBox(height: 7),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -93,10 +97,20 @@ class _CollectionSheetState extends ConsumerState<_CollectionSheet> {
             autofocus: true,
             cursorColor: AppColors.ink,
             textCapitalization: TextCapitalization.sentences,
-            style: const TextStyle(fontFamily: AppFonts.literata, fontWeight: FontWeight.w500, fontSize: 17, color: AppColors.ink),
+            style: const TextStyle(
+              fontFamily: AppFonts.literata,
+              fontWeight: FontWeight.w500,
+              fontSize: 17,
+              color: AppColors.ink,
+            ),
             decoration: InputDecoration.collapsed(
               hintText: l.collectionNameHint,
-              hintStyle: const TextStyle(fontFamily: AppFonts.literata, fontWeight: FontWeight.w500, fontSize: 17, color: AppColors.tertiary),
+              hintStyle: const TextStyle(
+                fontFamily: AppFonts.literata,
+                fontWeight: FontWeight.w500,
+                fontSize: 17,
+                color: AppColors.tertiary,
+              ),
             ),
             onSubmitted: (_) => _submit(),
           ),

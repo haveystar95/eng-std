@@ -207,7 +207,11 @@ class PluginSpeechRecognizer implements SpeechRecognizer {
   /// The SFSpeechRecognitionTaskHint that fits what this card is asking for. A single term is a
   /// short standalone utterance (`search`); a whole sentence read aloud is `dictation`.
   static ListenMode _hintFor(List<String> expected) {
-    final longest = expected.fold(0, (n, s) => s.trim().split(RegExp(r'\s+')).length > n ? s.trim().split(RegExp(r'\s+')).length : n);
+    final longest = expected.fold(
+      0,
+      (n, s) =>
+          s.trim().split(RegExp(r'\s+')).length > n ? s.trim().split(RegExp(r'\s+')).length : n,
+    );
     return longest > 2 ? ListenMode.dictation : ListenMode.search;
   }
 

@@ -33,8 +33,7 @@ class RecordMicCapture implements MicCapture {
   );
 
   @override
-  Stream<Uint8List> start() =>
-      Stream.fromFuture(_rec.startStream(_config)).asyncExpand((s) => s);
+  Stream<Uint8List> start() => Stream.fromFuture(_rec.startStream(_config)).asyncExpand((s) => s);
 
   @override
   Future<void> stop() async {

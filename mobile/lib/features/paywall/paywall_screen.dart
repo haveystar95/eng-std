@@ -26,10 +26,9 @@ class PaywallArgs {
 /// Returns true when the user "purchased" (dev fake premium granted).
 Future<bool> showPaywall(BuildContext context, WidgetRef ref, PaywallArgs args) async {
   if (!ref.read(featureFlagsProvider).paywallEnabled) return false;
-  final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (_) => PaywallScreen(args: args),
-  ));
+  final ok = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(fullscreenDialog: true, builder: (_) => PaywallScreen(args: args)),
+  );
   return ok ?? false;
 }
 
@@ -73,10 +72,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   String _subtitle(AppLocalizations l) => switch (widget.args.entry) {
-        PaywallEntry.quota => l.paywallSubtitleQuota,
-        PaywallEntry.store => l.paywallSubtitleStore,
-        PaywallEntry.profile => l.paywallSubtitleGeneric,
-      };
+    PaywallEntry.quota => l.paywallSubtitleQuota,
+    PaywallEntry.store => l.paywallSubtitleStore,
+    PaywallEntry.profile => l.paywallSubtitleGeneric,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -115,8 +114,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   children: [
                     Text(_title(l), style: _titleStyle),
                     const SizedBox(height: 11),
-                    Text(_subtitle(l),
-                        style: AppText.translation.copyWith(fontSize: 14.5, color: AppColors.inkBody, height: 1.5)),
+                    Text(
+                      _subtitle(l),
+                      style: AppText.translation.copyWith(
+                        fontSize: 14.5,
+                        color: AppColors.inkBody,
+                        height: 1.5,
+                      ),
+                    ),
                     const SizedBox(height: 22),
                     _Benefit(l.paywallBenefitGenerations),
                     const SizedBox(height: 11),
@@ -129,8 +134,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       decoration: const BoxDecoration(
                         border: Border(top: BorderSide(color: AppColors.hairline)),
                       ),
-                      child: Text(l.paywallFreeForever,
-                          style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.inkBody, height: 1.45)),
+                      child: Text(
+                        l.paywallFreeForever,
+                        style: AppText.translation.copyWith(
+                          fontSize: 13.5,
+                          color: AppColors.inkBody,
+                          height: 1.45,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -168,7 +179,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               ),
               // Footer — «Продолжить» + юридический блок + ссылки (кадр 4ж «обязательное на экране»).
               Padding(
-                padding: EdgeInsets.fromLTRB(AppSpacing.screenH, 4, AppSpacing.screenH, bottomSafe + 14),
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.screenH,
+                  4,
+                  AppSpacing.screenH,
+                  bottomSafe + 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -181,26 +197,52 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         child: Container(
                           height: 54,
                           alignment: Alignment.center,
-                          child: Text(l.paywallContinue,
-                              style: AppText.primaryButton.copyWith(fontSize: 15.5)),
+                          child: Text(
+                            l.paywallContinue,
+                            style: AppText.primaryButton.copyWith(fontSize: 15.5),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      _period == _Period.year ? l.paywallLegalYear(l.paywallPriceYear) : l.paywallLegalMonth(l.paywallPriceMonth),
-                      style: AppText.counterSmall.copyWith(fontSize: 11, color: AppColors.tertiary, height: 1.45),
+                      _period == _Period.year
+                          ? l.paywallLegalYear(l.paywallPriceYear)
+                          : l.paywallLegalMonth(l.paywallPriceMonth),
+                      style: AppText.counterSmall.copyWith(
+                        fontSize: 11,
+                        color: AppColors.tertiary,
+                        height: 1.45,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(l.paywallRestore,
-                            style: AppText.transcription.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                        Text(
+                          l.paywallRestore,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.secondary,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Text(l.paywallTerms, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                        Text(
+                          l.paywallTerms,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 12,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Text(l.paywallPrivacy, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                        Text(
+                          l.paywallPrivacy,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 12,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -238,8 +280,15 @@ class _Benefit extends StatelessWidget {
         ),
         const SizedBox(width: 11),
         Expanded(
-          child: Text(text,
-              style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15, height: 1.4, color: AppColors.ink)),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontFamily: AppFonts.inter,
+              fontSize: 15,
+              height: 1.4,
+              color: AppColors.ink,
+            ),
+          ),
         ),
       ],
     );
@@ -283,33 +332,46 @@ class _PriceCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(period,
-                  style: TextStyle(fontFamily: AppFonts.inter, fontSize: 13, fontWeight: FontWeight.w600, color: periodColor)),
+              Text(
+                period,
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: periodColor,
+                ),
+              ),
               const SizedBox(height: 7),
               // FittedBox keeps a long localized price on one line by scaling down, never wrapping.
               Align(
                 alignment: Alignment.centerLeft,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(price,
-                      maxLines: 1,
-                      style: TextStyle(
-                          fontFamily: AppFonts.inter,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: fg,
-                          fontFeatures: const [FontFeature.tabularFigures()])),
+                  child: Text(
+                    price,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: AppFonts.inter,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: fg,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 3),
-              Text(sub,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontFamily: AppFonts.inter,
-                      fontSize: 12,
-                      color: subColor,
-                      fontFeatures: const [FontFeature.tabularFigures()])),
+              Text(
+                sub,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 12,
+                  color: subColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
             ],
           ),
         ),
@@ -331,14 +393,17 @@ class _PriceCard extends StatelessWidget {
               color: selected ? AppColors.paper : AppColors.ink,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(badge!,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: selected ? AppColors.ink : AppColors.paper,
-                    fontFeatures: const [FontFeature.tabularFigures()])),
+            child: Text(
+              badge!,
+              style: TextStyle(
+                fontFamily: AppFonts.inter,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: selected ? AppColors.ink : AppColors.paper,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
         ),
       ],

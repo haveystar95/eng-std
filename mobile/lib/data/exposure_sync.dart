@@ -24,10 +24,10 @@ class PendingExposure {
 
   /// The exact shape `/reviews/batch` expects under `exposures`.
   Map<String, dynamic> toBatchJson() => {
-        'term_id': termId,
-        'shown_at': shownAt,
-        if (sessionId != null) 'session_id': sessionId,
-      };
+    'term_id': termId,
+    'shown_at': shownAt,
+    if (sessionId != null) 'session_id': sessionId,
+  };
 }
 
 /// Offline-first pipeline for intro cards, alongside [ReviewSync] and for the same reasons: the
@@ -64,11 +64,13 @@ class ExposureSync {
   /// later in this same session, know it has been met with the network off the whole time.
   Future<void> record({required String termId, String? sessionId}) async {
     final now = DateTime.now();
-    await _db.enqueueExposure(ExposureQueueRowsCompanion.insert(
-      termId: termId,
-      shownAt: now.toUtc().toIso8601String(),
-      sessionId: Value(sessionId),
-    ));
+    await _db.enqueueExposure(
+      ExposureQueueRowsCompanion.insert(
+        termId: termId,
+        shownAt: now.toUtc().toIso8601String(),
+        sessionId: Value(sessionId),
+      ),
+    );
     await _db.markIntroduced(termId, now);
     unawaited(flush());
   }
@@ -108,8 +110,10 @@ class ExposureSync {
             break;
           }
           drop.addAll(chunk.map((e) => e.termId));
-          debugPrint('ExposureSync: dropped ${chunk.length} rejected exposure(s) '
-              '(${e.response?.statusCode}): ${e.response?.data}');
+          debugPrint(
+            'ExposureSync: dropped ${chunk.length} rejected exposure(s) '
+            '(${e.response?.statusCode}): ${e.response?.data}',
+          );
         } catch (_) {
           transientFailure = true;
           break;

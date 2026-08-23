@@ -14,36 +14,45 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// Render smoke test — the screen is device-batched, so this catches layout throws (e.g. the
 /// activity-bar Expanded/Align class of bug) and confirms the local stats surface.
 void main() {
-  testWidgets('Progress screen renders streak, counters, density from local providers', (tester) async {
+  testWidgets('Progress screen renders streak, counters, density from local providers', (
+    tester,
+  ) async {
     final today = localDayKey(DateTime.now());
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          final db = AppDatabase.forTesting(NativeDatabase.memory());
-          ref.onDispose(db.close);
-          return db;
-        }),
-        statsProvider.overrideWith((ref) => Stream.value(Stats(
-              totalWords: 146,
-              learned: 60,
-              mastered: 82,
-              dueToday: 0,
-              reviewsTotal: 12,
-              streakDays: 12,
-            ))),
-        bestStreakProvider.overrideWith((ref) async => 19),
-        dailyActivityProvider.overrideWith((ref) => Stream.value({today: 12})),
-        globalDensityProvider.overrideWith(
-          (ref) => Stream.value(const CollectionDensity(confirmed: 82, familiar: 41, inProgress: 23)),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            final db = AppDatabase.forTesting(NativeDatabase.memory());
+            ref.onDispose(db.close);
+            return db;
+          }),
+          statsProvider.overrideWith(
+            (ref) => Stream.value(
+              Stats(
+                totalWords: 146,
+                learned: 60,
+                mastered: 82,
+                dueToday: 0,
+                reviewsTotal: 12,
+                streakDays: 12,
+              ),
+            ),
+          ),
+          bestStreakProvider.overrideWith((ref) async => 19),
+          dailyActivityProvider.overrideWith((ref) => Stream.value({today: 12})),
+          globalDensityProvider.overrideWith(
+            (ref) =>
+                Stream.value(const CollectionDensity(confirmed: 82, familiar: 41, inProgress: 23)),
+          ),
+        ],
+        child: const MaterialApp(
+          locale: Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('ru')],
+          home: ProgressScreen(),
         ),
-      ],
-      child: const MaterialApp(
-        locale: Locale('ru'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: [Locale('ru')],
-        home: ProgressScreen(),
       ),
-    ));
+    );
     await tester.pump(); // resolve the streams / future
     await tester.pump();
 

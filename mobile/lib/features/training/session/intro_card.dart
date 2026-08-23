@@ -119,9 +119,11 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     // any card has prepared this run). [SpeechRecognizer.hasPermission] itself never prompts — see
     // its doc — so this cannot be the thing that raises iOS's permission dialog.
     if (!_recognizer.isReady) {
-      unawaited(_recognizer.hasPermission.then((granted) {
-        if (mounted && granted) setState(() => _osPermitted = true);
-      }));
+      unawaited(
+        _recognizer.hasPermission.then((granted) {
+          if (mounted && granted) setState(() => _osPermitted = true);
+        }),
+      );
     }
   }
 
@@ -157,20 +159,20 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
 
     final term = widget.card.answerText;
     final attempt = await _recognizer.listenOnce(
-          expected: [term],
-          localeId: widget.speechLocaleId,
-          // Same window the speaking word form picks for a term of this length — a phrase-shaped
-          // term needs the sentence-sized one (QA-21).
-          timeout: SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor,
-          pauseFor: SpokenAnswer.windowFor(asksForExample: false, term: term).pauseFor,
-          // The same vocabulary hint the speaking word form sends (QA-20): the term whole, plus its
-          // individual words. Nothing here grades against it — it only helps the recogniser print
-          // back what was actually said.
-          contextualStrings: _contextualStrings(term),
-          onPartial: (text) {
-            if (mounted && _echo == _Echo.listening) setState(() => _heard = text);
-          },
-        );
+      expected: [term],
+      localeId: widget.speechLocaleId,
+      // Same window the speaking word form picks for a term of this length — a phrase-shaped
+      // term needs the sentence-sized one (QA-21).
+      timeout: SpokenAnswer.windowFor(asksForExample: false, term: term).listenFor,
+      pauseFor: SpokenAnswer.windowFor(asksForExample: false, term: term).pauseFor,
+      // The same vocabulary hint the speaking word form sends (QA-20): the term whole, plus its
+      // individual words. Nothing here grades against it — it only helps the recogniser print
+      // back what was actually said.
+      contextualStrings: _contextualStrings(term),
+      onPartial: (text) {
+        if (mounted && _echo == _Echo.listening) setState(() => _heard = text);
+      },
+    );
 
     if (!mounted) return;
     // «Услышал тебя» means exactly that — the microphone worked. It is deliberately NOT a check

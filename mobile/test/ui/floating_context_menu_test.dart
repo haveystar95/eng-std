@@ -31,11 +31,20 @@ class _Harness extends StatelessWidget {
 
 void main() {
   testWidgets('opens on trigger and shows every row', (tester) async {
-    await tester.pumpWidget(_Harness(actions: [
-      ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
-      ContextMenuAction(icon: LucideIcons.copy, label: 'Дублировать', onSelected: () {}),
-      ContextMenuAction(icon: LucideIcons.trash2, label: 'Удалить', destructive: true, onSelected: () {}),
-    ]));
+    await tester.pumpWidget(
+      _Harness(
+        actions: [
+          ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
+          ContextMenuAction(icon: LucideIcons.copy, label: 'Дублировать', onSelected: () {}),
+          ContextMenuAction(
+            icon: LucideIcons.trash2,
+            label: 'Удалить',
+            destructive: true,
+            onSelected: () {},
+          ),
+        ],
+      ),
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -46,11 +55,20 @@ void main() {
   });
 
   testWidgets('destructive row is always last (§4в)', (tester) async {
-    await tester.pumpWidget(_Harness(actions: [
-      // destructive passed FIRST — component must still place it last
-      ContextMenuAction(icon: LucideIcons.trash2, label: 'Удалить', destructive: true, onSelected: () {}),
-      ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
-    ]));
+    await tester.pumpWidget(
+      _Harness(
+        actions: [
+          // destructive passed FIRST — component must still place it last
+          ContextMenuAction(
+            icon: LucideIcons.trash2,
+            label: 'Удалить',
+            destructive: true,
+            onSelected: () {},
+          ),
+          ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
+        ],
+      ),
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -62,9 +80,17 @@ void main() {
 
   testWidgets('tapping a row closes the menu and fires the action', (tester) async {
     var fired = false;
-    await tester.pumpWidget(_Harness(actions: [
-      ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () => fired = true),
-    ]));
+    await tester.pumpWidget(
+      _Harness(
+        actions: [
+          ContextMenuAction(
+            icon: LucideIcons.pencil,
+            label: 'Изменить',
+            onSelected: () => fired = true,
+          ),
+        ],
+      ),
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -76,9 +102,13 @@ void main() {
   });
 
   testWidgets('tapping the scrim closes the menu (no Close button)', (tester) async {
-    await tester.pumpWidget(_Harness(actions: [
-      ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
-    ]));
+    await tester.pumpWidget(
+      _Harness(
+        actions: [
+          ContextMenuAction(icon: LucideIcons.pencil, label: 'Изменить', onSelected: () {}),
+        ],
+      ),
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();

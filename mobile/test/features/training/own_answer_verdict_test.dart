@@ -21,37 +21,37 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// terracotta pick_correct puts under a broken fragment.
 void main() {
   Widget host(SessionCard card) => ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            final db = AppDatabase.forTesting(NativeDatabase.memory());
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-        child: MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: const [Locale('ru')],
-          // Reduce-motion, so the verdict's reveal animations resolve at once and the tests can
-          // settle instead of racing tickers. Same host shape as identity_verdict_test.
-          home: MediaQuery(
-            data: const MediaQueryData(disableAnimations: true),
-            child: Scaffold(
-              body: SingleChildScrollView(
-                child: SessionExerciseCard(
-                  card: card,
-                  autoPronounce: false,
-                  // The «когда снова» line reads the local DB, and its stream keeps a timer alive
-                  // past teardown. Nothing here is about the due date.
-                  showDue: false,
-                  onAnswered: (_) {},
-                  onSpeak: (text, {bool slow = false}) async {},
-                ),
-              ),
+    overrides: [
+      appDatabaseProvider.overrideWith((ref) {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ],
+    child: MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('ru')],
+      // Reduce-motion, so the verdict's reveal animations resolve at once and the tests can
+      // settle instead of racing tickers. Same host shape as identity_verdict_test.
+      home: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: SessionExerciseCard(
+              card: card,
+              autoPronounce: false,
+              // The «когда снова» line reads the local DB, and its stream keeps a timer alive
+              // past teardown. Nothing here is about the due date.
+              showDue: false,
+              onAnswered: (_) {},
+              onSpeak: (text, {bool slow = false}) async {},
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   /// Every string the tree draws, whether as `Text` or as a `Text.rich` span tree.
   List<String> renderedText(WidgetTester tester) => tester
@@ -78,14 +78,14 @@ void main() {
   }
 
   SessionCard clozeCard() => SessionCard(
-        termId: '01AAAAAAAAAAAAAAAAAAAAAAA1',
-        mode: ExerciseMode.cloze,
-        type: 'phrase',
-        prompt: 'снять наличные',
-        answer: 'withdraw cash',
-        example: 'I need to withdraw cash before we leave.',
-        exampleTranslation: 'Мне нужно снять наличные перед отъездом.',
-      );
+    termId: '01AAAAAAAAAAAAAAAAAAAAAAA1',
+    mode: ExerciseMode.cloze,
+    type: 'phrase',
+    prompt: 'снять наличные',
+    answer: 'withdraw cash',
+    example: 'I need to withdraw cash before we leave.',
+    exampleTranslation: 'Мне нужно снять наличные перед отъездом.',
+  );
 
   testWidgets('cloze keeps the learner own word in the blank after a wrong answer', (tester) async {
     await tester.pumpWidget(host(clozeCard()));
@@ -123,15 +123,19 @@ void main() {
     // The owner's case: «Tell me about yourself» is stored capitalised, because that is how the
     // phrase is written on its own — and the example embeds it in the middle of a question. Filling
     // the blank with the term as stored produced «Could you Tell me about yourself…».
-    await tester.pumpWidget(host(SessionCard(
-      termId: '01AAAAAAAAAAAAAAAAAAAAAAA2',
-      mode: ExerciseMode.cloze,
-      type: 'phrase',
-      prompt: 'расскажите о себе',
-      answer: 'Tell me about yourself',
-      example: 'Could you tell me about yourself and your career background?',
-      exampleTranslation: 'Не могли бы вы рассказать о себе и о своём опыте?',
-    )));
+    await tester.pumpWidget(
+      host(
+        SessionCard(
+          termId: '01AAAAAAAAAAAAAAAAAAAAAAA2',
+          mode: ExerciseMode.cloze,
+          type: 'phrase',
+          prompt: 'расскажите о себе',
+          answer: 'Tell me about yourself',
+          example: 'Could you tell me about yourself and your career background?',
+          exampleTranslation: 'Не могли бы вы рассказать о себе и о своём опыте?',
+        ),
+      ),
+    );
     await tester.pump();
 
     await tester.enterText(find.byType(TextField), 'tell me about yourself');
@@ -147,14 +151,18 @@ void main() {
   });
 
   testWidgets('word_bank marks the word that does not belong, and keeps the line', (tester) async {
-    await tester.pumpWidget(host(SessionCard(
-      termId: '01AAAAAAAAAAAAAAAAAAAAAAA3',
-      mode: ExerciseMode.wordBank,
-      type: 'phrase',
-      prompt: 'снять наличные',
-      answer: 'withdraw cash',
-      chips: const ['withdraw', 'cash', 'money'],
-    )));
+    await tester.pumpWidget(
+      host(
+        SessionCard(
+          termId: '01AAAAAAAAAAAAAAAAAAAAAAA3',
+          mode: ExerciseMode.wordBank,
+          type: 'phrase',
+          prompt: 'снять наличные',
+          answer: 'withdraw cash',
+          chips: const ['withdraw', 'cash', 'money'],
+        ),
+      ),
+    );
     await tester.pump();
 
     // Assemble the wrong line: the right first word, then the wrong second one.

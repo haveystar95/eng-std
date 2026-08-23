@@ -16,30 +16,60 @@ void main() {
   // ── tokenizer: the four rules, on the edge cases they were chosen for ──────
 
   test('an in-word apostrophe stays inside its token', () {
-    expect(
-      SentenceTokenizer.tokenize("I won't give up until I've achieved my goals."),
-      ['I', "won't", 'give', 'up', 'until', "I've", 'achieved', 'my', 'goals'],
-    );
+    expect(SentenceTokenizer.tokenize("I won't give up until I've achieved my goals."), [
+      'I',
+      "won't",
+      'give',
+      'up',
+      'until',
+      "I've",
+      'achieved',
+      'my',
+      'goals',
+    ]);
   });
 
   test('the final . ! ? is dropped and never becomes a chip', () {
-    expect(SentenceTokenizer.tokenize('I have a reservation for tonight.'),
-        ['I', 'have', 'a', 'reservation', 'for', 'tonight']);
-    expect(SentenceTokenizer.tokenize('Where is the front desk?'),
-        ['Where', 'is', 'the', 'front', 'desk']);
+    expect(SentenceTokenizer.tokenize('I have a reservation for tonight.'), [
+      'I',
+      'have',
+      'a',
+      'reservation',
+      'for',
+      'tonight',
+    ]);
+    expect(SentenceTokenizer.tokenize('Where is the front desk?'), [
+      'Where',
+      'is',
+      'the',
+      'front',
+      'desk',
+    ]);
     expect(SentenceTokenizer.tokenize('Really?!'), ['Really']);
   });
 
   test('inner punctuation stays glued to its own word', () {
-    expect(SentenceTokenizer.tokenize('Could I have extra sheets, please?'),
-        ['Could', 'I', 'have', 'extra', 'sheets,', 'please']);
+    expect(SentenceTokenizer.tokenize('Could I have extra sheets, please?'), [
+      'Could',
+      'I',
+      'have',
+      'extra',
+      'sheets,',
+      'please',
+    ]);
     // Only the LAST terminal mark is stripped; a mid-sentence one is inner punctuation.
     expect(SentenceTokenizer.tokenize('Wow! That was close.'), ['Wow!', 'That', 'was', 'close']);
   });
 
   test('case is not folded — the sentence keeps its own capitals', () {
-    expect(SentenceTokenizer.tokenize('CHECK IN starts at 3 pm.'),
-        ['CHECK', 'IN', 'starts', 'at', '3', 'pm']);
+    expect(SentenceTokenizer.tokenize('CHECK IN starts at 3 pm.'), [
+      'CHECK',
+      'IN',
+      'starts',
+      'at',
+      '3',
+      'pm',
+    ]);
   });
 
   test('degenerate input yields no empty chips', () {
@@ -52,8 +82,11 @@ void main() {
   // ── gate ───────────────────────────────────────────────────────────────────
 
   bool scrambles(String answer, String? example, [String? translation = 'Перевод.']) =>
-      TermPlayability.of(answer: answer, example: example, exampleTranslation: translation)
-          .supports(ExerciseMode.scramble);
+      TermPlayability.of(
+        answer: answer,
+        example: example,
+        exampleTranslation: translation,
+      ).supports(ExerciseMode.scramble);
 
   test('the 4…12 window is honoured at both edges', () {
     String of(int words) => '${List.filled(words, 'word').join(' ')}.';
@@ -85,25 +118,50 @@ void main() {
   // ── the card the offline builder deals ────────────────────────────────────
 
   Term term(String id, String text, String example, String exampleTranslation) => Term(
-        id: id,
-        termText: text,
-        type: 'word',
-        transcription: null,
-        translation: 'перевод',
-        example: example,
-        exampleTranslation: exampleTranslation,
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 11),
-      );
+    id: id,
+    termText: text,
+    type: 'word',
+    transcription: null,
+    translation: 'перевод',
+    example: example,
+    exampleTranslation: exampleTranslation,
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 11),
+  );
 
   final scrambleable = [
-    term('01KZETAAA50EMHCN6SP80T8DHC', 'reservation', 'I have a reservation for tonight.', 'У меня бронь на сегодня.'),
-    term('01KZETAAB4AW6M9ZFRB3X02CVW', 'goals', "I won't give up until I've achieved my goals.", 'Я не сдамся, пока не добьюсь своего.'),
-    term('01KZETAAC103WZ24WQ7H087ZJ3', 'sheets', 'Could I have extra sheets, please?', 'Можно мне ещё простыни?'),
-    term('01KZETAAD2EWE2H5ZV7WD8JWKT', 'towel', 'I need a clean towel, please.', 'Мне нужно чистое полотенце.'),
-    term('01KZETAAE63W6K93C55NCYXKVA', 'check in', 'Check in starts at three pm.', 'Заселение начинается в три.'),
+    term(
+      '01KZETAAA50EMHCN6SP80T8DHC',
+      'reservation',
+      'I have a reservation for tonight.',
+      'У меня бронь на сегодня.',
+    ),
+    term(
+      '01KZETAAB4AW6M9ZFRB3X02CVW',
+      'goals',
+      "I won't give up until I've achieved my goals.",
+      'Я не сдамся, пока не добьюсь своего.',
+    ),
+    term(
+      '01KZETAAC103WZ24WQ7H087ZJ3',
+      'sheets',
+      'Could I have extra sheets, please?',
+      'Можно мне ещё простыни?',
+    ),
+    term(
+      '01KZETAAD2EWE2H5ZV7WD8JWKT',
+      'towel',
+      'I need a clean towel, please.',
+      'Мне нужно чистое полотенце.',
+    ),
+    term(
+      '01KZETAAE63W6K93C55NCYXKVA',
+      'check in',
+      'Check in starts at three pm.',
+      'Заселение начинается в три.',
+    ),
   ];
 
   /// Every pair at the TOP of the acquisition ladder: this file is about scramble's own gate (a
@@ -111,19 +169,26 @@ void main() {
   /// tests. Left out, every term here would be a never-shown one — held at rung 1, where the only
   /// trainer admitted is multiple_choice and no scramble card can be dealt at all.
   List<SessionCard> scrambleCards() => LocalPracticeSessionBuilder.build(
-        terms: scrambleable,
-        limit: 20,
-        random: Random(8),
-        sessionId: 'SESSION',
-        ladder: {
-          for (final t in scrambleable)
-            t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-        },
-      ).cards.where((c) => c.mode == ExerciseMode.scramble).toList();
+    terms: scrambleable,
+    limit: 20,
+    random: Random(8),
+    sessionId: 'SESSION',
+    ladder: {
+      for (final t in scrambleable)
+        t.id: const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ),
+    },
+  ).cards.where((c) => c.mode == ExerciseMode.scramble).toList();
 
   test('offline practice deals scramble cards without a network call', () {
-    expect(scrambleCards(), isNotEmpty,
-        reason: 'a pool of translated, well-sized examples must reach scramble in the fan');
+    expect(
+      scrambleCards(),
+      isNotEmpty,
+      reason: 'a pool of translated, well-sized examples must reach scramble in the fan',
+    );
   });
 
   test('a scramble card asks for the SENTENCE, not the term', () {
@@ -157,8 +222,11 @@ void main() {
     for (final card in scrambleCards()) {
       final assembled = SentenceTokenizer.tokenize(card.answer).join(' ');
 
-      expect(SessionGrader.check(assembled, card.answer).isAccepted, isTrue,
-          reason: 'the correct assembly of "${card.answer}" must be accepted');
+      expect(
+        SessionGrader.check(assembled, card.answer).isAccepted,
+        isTrue,
+        reason: 'the correct assembly of "${card.answer}" must be accepted',
+      );
     }
   });
 

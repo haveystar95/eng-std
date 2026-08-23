@@ -13,18 +13,18 @@ import 'package:flutter_test/flutter_test.dart';
 /// reason: the device builds its own practice sessions offline.
 void main() {
   Term term(String id, String text, String translation) => Term(
-        id: id,
-        termText: text,
-        type: 'word',
-        transcription: null,
-        translation: translation,
-        example: null,
-        exampleTranslation: null,
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 10),
-      );
+    id: id,
+    termText: text,
+    type: 'word',
+    transcription: null,
+    translation: translation,
+    example: null,
+    exampleTranslation: null,
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 10),
+  );
 
   final target = term('t0', 'withdraw cash', 'снять наличные');
   final checkIn = term('t1', 'check-in desk', 'стойка регистрации');
@@ -66,9 +66,8 @@ void main() {
     // no translation cannot be a twin of anything.
     final untranslated = term('t6', 'lobby', '');
 
-    expect(
-      PracticeDistractors.forTarget(target: target, pool: [untranslated], count: 3),
-      ['lobby'],
-    );
+    expect(PracticeDistractors.forTarget(target: target, pool: [untranslated], count: 3), [
+      'lobby',
+    ]);
   });
 }

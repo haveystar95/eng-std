@@ -25,7 +25,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _saving = false;
 
   // Native stays the UI/source language (ru); onboarding only asks the target (per the design).
-  late final String _native = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
+  late final String _native =
+      ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
   late String _target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
   late String _level = ref.read(authControllerProvider).value?.profile?.cefrLevel ?? 'B1';
   late int _goal = ref.read(authControllerProvider).value?.profile?.dailyGoal ?? 20;
@@ -73,7 +74,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.screenHWide, 14, AppSpacing.screenHWide, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenHWide,
+                  14,
+                  AppSpacing.screenHWide,
+                  0,
+                ),
                 child: _StepBars(count: _steps, index: _step),
               ),
               Expanded(
@@ -82,7 +88,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: KeyedSubtree(
                     key: ValueKey(_step),
                     child: switch (_step) {
-                      0 => _LangStep(target: _target, native: _native, onPick: (c) => setState(() => _target = c)),
+                      0 => _LangStep(
+                        target: _target,
+                        native: _native,
+                        onPick: (c) => setState(() => _target = c),
+                      ),
                       1 => _LevelStep(level: _level, onPick: (v) => setState(() => _level = v)),
                       _ => _GoalStep(goal: _goal, onPick: (g) => setState(() => _goal = g)),
                     },
@@ -91,7 +101,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                    AppSpacing.screenHWide, 8, AppSpacing.screenHWide, MediaQuery.viewPaddingOf(context).bottom + 20),
+                  AppSpacing.screenHWide,
+                  8,
+                  AppSpacing.screenHWide,
+                  MediaQuery.viewPaddingOf(context).bottom + 20,
+                ),
                 child: PrimaryButton(
                   label: _step < _steps - 1 ? l.onbNext : l.onbStart,
                   enabled: !_saving,
@@ -132,7 +146,12 @@ class _StepBars extends StatelessWidget {
 
 /// Shared step layout: title + subtitle + scrollable content.
 class _StepShell extends StatelessWidget {
-  const _StepShell({required this.title, required this.subtitle, required this.children, this.footer});
+  const _StepShell({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    this.footer,
+  });
   final String title, subtitle;
   final List<Widget> children;
   final Widget? footer;
@@ -144,7 +163,14 @@ class _StepShell extends StatelessWidget {
       children: [
         Text(title, style: AppText.stepTitle),
         const SizedBox(height: 8),
-        Text(subtitle, style: AppText.translation.copyWith(fontSize: 13.5, height: 1.4, color: AppColors.secondary)),
+        Text(
+          subtitle,
+          style: AppText.translation.copyWith(
+            fontSize: 13.5,
+            height: 1.4,
+            color: AppColors.secondary,
+          ),
+        ),
         const SizedBox(height: 24),
         ...children,
         if (footer != null) ...[const SizedBox(height: 22), footer!],
@@ -184,13 +210,13 @@ class _LevelStep extends StatelessWidget {
   final ValueChanged<String> onPick;
 
   static String _hint(AppLocalizations l, String lvl) => switch (lvl) {
-        'A1' => l.cefrHintA1,
-        'A2' => l.cefrHintA2,
-        'B1' => l.cefrHintB1,
-        'B2' => l.cefrHintB2,
-        'C1' => l.cefrHintC1,
-        _ => l.cefrHintC2,
-      };
+    'A1' => l.cefrHintA1,
+    'A2' => l.cefrHintA2,
+    'B1' => l.cefrHintB1,
+    'B2' => l.cefrHintB2,
+    'C1' => l.cefrHintC1,
+    _ => l.cefrHintC2,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +230,14 @@ class _LevelStep extends StatelessWidget {
           const SizedBox(height: 4),
           const SizedBox(height: 1, child: ColoredBox(color: AppColors.hairline)),
           const SizedBox(height: 16),
-          Text(l.onbLevelExample(level),
-              style: AppText.translation.copyWith(fontSize: 13, height: 1.5, color: AppColors.secondary)),
+          Text(
+            l.onbLevelExample(level),
+            style: AppText.translation.copyWith(
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.secondary,
+            ),
+          ),
         ],
       ),
       children: [
@@ -218,7 +250,12 @@ class _LevelStep extends StatelessWidget {
           childAspectRatio: 1.55,
           children: [
             for (final lvl in kCefrLevels)
-              _LevelCell(label: lvl, hint: _hint(l, lvl), selected: lvl == level, onTap: () => onPick(lvl)),
+              _LevelCell(
+                label: lvl,
+                hint: _hint(l, lvl),
+                selected: lvl == level,
+                onTap: () => onPick(lvl),
+              ),
           ],
         ),
       ],
@@ -245,8 +282,10 @@ class _GoalStep extends StatelessWidget {
     return _StepShell(
       title: l.onbGoalTitle,
       subtitle: l.onbGoalSubtitle,
-      footer: Text(l.onbFooterNote,
-          style: AppText.translation.copyWith(fontSize: 13, height: 1.5, color: AppColors.secondary)),
+      footer: Text(
+        l.onbFooterNote,
+        style: AppText.translation.copyWith(fontSize: 13, height: 1.5, color: AppColors.secondary),
+      ),
       children: [
         for (final g in _options) ...[
           if (g != _options.first) const SizedBox(height: 10),
@@ -264,7 +303,13 @@ class _GoalStep extends StatelessWidget {
 
 /// A bordered radio row (selected → ink border + ink check), used for language and goal options.
 class _SelectRow extends StatelessWidget {
-  const _SelectRow({required this.selected, required this.onTap, required this.title, this.subtitle, this.leading});
+  const _SelectRow({
+    required this.selected,
+    required this.onTap,
+    required this.title,
+    this.subtitle,
+    this.leading,
+  });
   final bool selected;
   final VoidCallback onTap;
   final String title;
@@ -279,7 +324,10 @@ class _SelectRow extends StatelessWidget {
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.field),
-          side: BorderSide(color: selected ? AppColors.ink : AppColors.hairline, width: selected ? 1.5 : 1),
+          side: BorderSide(
+            color: selected ? AppColors.ink : AppColors.hairline,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -293,12 +341,24 @@ class _SelectRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: const TextStyle(
-                              fontFamily: AppFonts.inter, fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.inter,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 3),
-                        Text(subtitle!, style: AppText.transcription.copyWith(fontSize: 12.5, color: AppColors.tertiary)),
+                        Text(
+                          subtitle!,
+                          style: AppText.transcription.copyWith(
+                            fontSize: 12.5,
+                            color: AppColors.tertiary,
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -333,7 +393,12 @@ class _Radio extends StatelessWidget {
 }
 
 class _LevelCell extends StatelessWidget {
-  const _LevelCell({required this.label, required this.hint, required this.selected, required this.onTap});
+  const _LevelCell({
+    required this.label,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
   final String label, hint;
   final bool selected;
   final VoidCallback onTap;
@@ -352,18 +417,24 @@ class _LevelCell extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(label,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: selected ? AppColors.paper : AppColors.ink)),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.inter,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppColors.paper : AppColors.ink,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(hint,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 11,
-                    color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary)),
+            Text(
+              hint,
+              style: TextStyle(
+                fontFamily: AppFonts.inter,
+                fontSize: 11,
+                color: selected ? AppColors.paper.withValues(alpha: 0.7) : AppColors.tertiary,
+              ),
+            ),
           ],
         ),
       ),

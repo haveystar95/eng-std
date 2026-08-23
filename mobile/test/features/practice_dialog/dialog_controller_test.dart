@@ -19,34 +19,34 @@ void main() {
   final t0 = DateTime.utc(2026, 8, 7, 9);
 
   Future<void> seed() => db.applyDelta(
-        collectionUpserts: [
-          CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Bank')),
-        ],
-        termUpserts: [
-          TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('withdraw')),
-          TermsCompanion.insert(id: 't2', updatedAt: t0, termText: const Value('account')),
-          TermsCompanion.insert(id: 't3', updatedAt: t0, termText: const Value('balance')),
-        ],
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't2', updatedAt: t0),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't3', updatedAt: t0),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Bank')),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('withdraw')),
+      TermsCompanion.insert(id: 't2', updatedAt: t0, termText: const Value('account')),
+      TermsCompanion.insert(id: 't3', updatedAt: t0, termText: const Value('balance')),
+    ],
+    itemUpserts: [
+      CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0),
+      CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't2', updatedAt: t0),
+      CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't3', updatedAt: t0),
+    ],
+  );
 
   DialogController build() => DialogController(
-        repository: FakeDialogRepository(db, durationSeconds: 200),
-        channel: FakeRealtimeChannel(
-          connectDelay: const Duration(milliseconds: 2),
-          botBeat: const Duration(milliseconds: 2),
-          listenBeat: const Duration(milliseconds: 2),
-          thinkGap: const Duration(milliseconds: 1),
-        ),
-        collectionId: 'c1',
-        clientId: 'CID1',
-        flushEvery: const Duration(milliseconds: 2),
-        flushBatchSize: 2,
-      );
+    repository: FakeDialogRepository(db, durationSeconds: 200),
+    channel: FakeRealtimeChannel(
+      connectDelay: const Duration(milliseconds: 2),
+      botBeat: const Duration(milliseconds: 2),
+      listenBeat: const Duration(milliseconds: 2),
+      thinkGap: const Duration(milliseconds: 1),
+    ),
+    collectionId: 'c1',
+    clientId: 'CID1',
+    flushEvery: const Duration(milliseconds: 2),
+    flushBatchSize: 2,
+  );
 
   test('scripted dialog fills coverage and reaches the finale', () async {
     await seed();
@@ -90,42 +90,48 @@ void main() {
     c.dispose();
   });
 
-  test('a user-initiated finish (early exit) still produces a summary — a result is a result', () async {
-    await seed();
-    final c = build();
-    await c.start();
-    await _until(() => c.usedCount >= 1);
-    final usedSoFar = c.usedCount;
-    await c.finish();
-    expect(c.status, DialogStatus.finished);
-    expect(c.summary, isNotNull);
-    expect(c.summary!.wordsUsed, greaterThanOrEqualTo(usedSoFar));
-    c.dispose();
-  });
+  test(
+    'a user-initiated finish (early exit) still produces a summary — a result is a result',
+    () async {
+      await seed();
+      final c = build();
+      await c.start();
+      await _until(() => c.usedCount >= 1);
+      final usedSoFar = c.usedCount;
+      await c.finish();
+      expect(c.status, DialogStatus.finished);
+      expect(c.summary, isNotNull);
+      expect(c.summary!.wordsUsed, greaterThanOrEqualTo(usedSoFar));
+      c.dispose();
+    },
+  );
 
-  test('assistant transcripts are uploaded too, so the server can credit coverage from them', () async {
-    await seed();
-    final repo = _RecordingRepo(const ['withdraw', 'account', 'balance']);
-    final c = DialogController(
-      repository: repo,
-      channel: FakeRealtimeChannel(
-        connectDelay: const Duration(milliseconds: 2),
-        botBeat: const Duration(milliseconds: 2),
-        listenBeat: const Duration(milliseconds: 2),
-        thinkGap: const Duration(milliseconds: 1),
-      ),
-      collectionId: 'c1',
-      clientId: 'CID1',
-      flushEvery: const Duration(milliseconds: 2),
-      flushBatchSize: 2,
-    );
-    await c.start();
-    await _until(() => c.status == DialogStatus.finished);
-    // The frontend must send BOTH roles upstream — the bot's acks mention target words too.
-    expect(repo.uploaded.any((e) => e.role == DialogRole.assistant), isTrue);
-    expect(repo.uploaded.any((e) => e.role == DialogRole.user), isTrue);
-    c.dispose();
-  });
+  test(
+    'assistant transcripts are uploaded too, so the server can credit coverage from them',
+    () async {
+      await seed();
+      final repo = _RecordingRepo(const ['withdraw', 'account', 'balance']);
+      final c = DialogController(
+        repository: repo,
+        channel: FakeRealtimeChannel(
+          connectDelay: const Duration(milliseconds: 2),
+          botBeat: const Duration(milliseconds: 2),
+          listenBeat: const Duration(milliseconds: 2),
+          thinkGap: const Duration(milliseconds: 1),
+        ),
+        collectionId: 'c1',
+        clientId: 'CID1',
+        flushEvery: const Duration(milliseconds: 2),
+        flushBatchSize: 2,
+      );
+      await c.start();
+      await _until(() => c.status == DialogStatus.finished);
+      // The frontend must send BOTH roles upstream — the bot's acks mention target words too.
+      expect(repo.uploaded.any((e) => e.role == DialogRole.assistant), isTrue);
+      expect(repo.uploaded.any((e) => e.role == DialogRole.user), isTrue);
+      c.dispose();
+    },
+  );
 
   test('start maps a 403 to subscriptionRequired and never enters the conversation', () async {
     final c = DialogController(
@@ -171,9 +177,9 @@ Future<void> _until(bool Function() cond, {Duration timeout = const Duration(sec
 /// test can assert the frontend sends assistant lines upstream (server-side crediting territory).
 class _RecordingRepo implements DialogRepository {
   _RecordingRepo(List<String> words)
-      : _words = [
-          for (var i = 0; i < words.length; i++) TargetWord(termId: 't${i + 1}', text: words[i]),
-        ];
+    : _words = [
+        for (var i = 0; i < words.length; i++) TargetWord(termId: 't${i + 1}', text: words[i]),
+      ];
 
   List<TargetWord> _words;
   final List<TranscriptEvent> uploaded = [];

@@ -20,18 +20,18 @@ import 'package:flutter_test/flutter_test.dart';
 /// card the server would refuse must not appear just because the phone built the session offline.
 void main() {
   Term term(String id, {required String text, String? translation, String? example}) => Term(
-        id: id,
-        termText: text,
-        type: 'phrase',
-        transcription: null,
-        translation: translation,
-        example: example,
-        exampleTranslation: null,
-        imageUrl: null,
-        imageAuthor: null,
-        imageAuthorUrl: null,
-        updatedAt: DateTime.utc(2026, 8, 10),
-      );
+    id: id,
+    termText: text,
+    type: 'phrase',
+    transcription: null,
+    translation: translation,
+    example: example,
+    exampleTranslation: null,
+    imageUrl: null,
+    imageAuthor: null,
+    imageAuthorUrl: null,
+    updatedAt: DateTime.utc(2026, 8, 10),
+  );
 
   final lonely = term(
     '01KZETAAA50EMHCN6SP80T8DHC',
@@ -52,9 +52,16 @@ void main() {
       );
 
   test('a lone term is refused rather than dealt with the answer alone on screen', () {
-    final session = build([lonely], ladder: {
-      lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-    });
+    final session = build(
+      [lonely],
+      ladder: {
+        lonely.id: const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ),
+      },
+    );
 
     // Nothing to offer beside the answer, so nothing is dealt. An empty session is the screen's
     // empty state; a one-option card is a tap that proves nothing and is logged as if it did.
@@ -64,20 +71,33 @@ void main() {
   test('never a choice card below the floor, whatever the pool can manage', () {
     final pool = [
       lonely,
-      term('01KZETAAB4AW6M9ZFRB3X02CVW',
-          text: 'Can we talk about it later?', translation: 'Можем обсудить это позже?'),
+      term(
+        '01KZETAAB4AW6M9ZFRB3X02CVW',
+        text: 'Can we talk about it later?',
+        translation: 'Можем обсудить это позже?',
+      ),
     ];
-    final session = build(pool, ladder: {
-      for (final t in pool)
-        t.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
-    });
+    final session = build(
+      pool,
+      ladder: {
+        for (final t in pool)
+          t.id: const LadderPosition(
+            acquisition: Acquisition.graduated,
+            successfulReviews: 12,
+            enrolled: true,
+          ),
+      },
+    );
 
     expect(session.cards, isNotEmpty, reason: 'a second term is all it takes to build the card');
     for (final card in session.cards) {
       final options = card.options;
       if (options == null) continue;
-      expect(options.length, greaterThanOrEqualTo(LocalPracticeSessionBuilder.minOptions),
-          reason: '${card.prompt} was dealt as ${card.mode.wire} with ${options.length} option(s)');
+      expect(
+        options.length,
+        greaterThanOrEqualTo(LocalPracticeSessionBuilder.minOptions),
+        reason: '${card.prompt} was dealt as ${card.mode.wire} with ${options.length} option(s)',
+      );
     }
   });
 
@@ -91,7 +111,11 @@ void main() {
       random: Random(7),
       sessionId: 'SESSION',
       ladder: {
-        lonely.id: const LadderPosition(acquisition: Acquisition.graduated, successfulReviews: 12, enrolled: true),
+        lonely.id: const LadderPosition(
+          acquisition: Acquisition.graduated,
+          successfulReviews: 12,
+          enrolled: true,
+        ),
       },
       enabled: const PracticeModes([ExerciseMode.multipleChoice, ExerciseMode.wordBank]),
     );

@@ -40,7 +40,12 @@ class _Api implements ApiClient {
   int lookupCalls = 0;
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) async => const [];
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+  }) async => const [];
 
   @override
   Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
@@ -65,19 +70,21 @@ class _Api implements ApiClient {
 Future<void> _pump(WidgetTester tester, _Api api) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-      apiClientProvider.overrideWithValue(api),
-      collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
-    ],
-    child: MaterialApp(
-      locale: const Locale('ru'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('ru')],
-      home: const SearchScreen(),
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        apiClientProvider.overrideWithValue(api),
+        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('ru')],
+        home: const SearchScreen(),
+      ),
     ),
-  ));
+  );
   await tester.pump();
   await tester.pump();
   await tester.pump();
@@ -92,7 +99,9 @@ Future<void> _type(WidgetTester tester, String text) async {
 
 void main() {
   testWidgets('the echo is the translation alone, set italic and grey', (tester) async {
-    final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
+    final api = _Api(
+      hint: const InstantHint(query: 'significant', translation: 'значительный'),
+    );
     await _pump(tester, api);
 
     await _type(tester, 'significant');
@@ -106,7 +115,9 @@ void main() {
   testWidgets('it lives INSIDE the field, not on a line of its own', (tester) async {
     // The mockup's own summary: while somebody types, the only thing that leads anywhere is the
     // list of words. An instant gloss on its own line would sit at the same level as a result.
-    final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
+    final api = _Api(
+      hint: const InstantHint(query: 'significant', translation: 'значительный'),
+    );
     await _pump(tester, api);
 
     await _type(tester, 'significant');
@@ -148,7 +159,9 @@ void main() {
   });
 
   testWidgets('the echo never sits beside a word it is not about', (tester) async {
-    final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
+    final api = _Api(
+      hint: const InstantHint(query: 'significant', translation: 'значительный'),
+    );
     await _pump(tester, api);
 
     await _type(tester, 'significant');
@@ -202,7 +215,12 @@ void main() {
       // Not a draft, not a garnish, not a grey aside: the learner asked what a word means and has
       // been answered, free, in the time it took to press Enter. So it is typeset like an answer —
       // the term in the antiqua the word card uses, the translation under it in ink.
-      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'root', translation: 'корень'),
+        ),
+      );
       await ask(tester, 'root');
 
       // «root» is on screen twice — the field's own editable text and the headword. It is the
@@ -221,7 +239,12 @@ void main() {
     });
 
     testWidgets('the word «черновой» is gone from the screen entirely', (tester) async {
-      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'root', translation: 'корень'),
+        ),
+      );
       await ask(tester, 'root');
 
       expect(find.textContaining('черновой'), findsNothing);
@@ -229,7 +252,12 @@ void main() {
     });
 
     testWidgets('the button sells what is MISSING, not what was already given', (tester) async {
-      await _pump(tester, _Api(hint: const InstantHint(query: 'root', translation: 'корень')));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'root', translation: 'корень'),
+        ),
+      );
       await ask(tester, 'root');
 
       expect(find.text('Собрать карточку'), findsOneWidget);
@@ -247,27 +275,39 @@ void main() {
     testWidgets('a Russian question puts the ENGLISH word in the headline', (tester) async {
       // The learner typed «случай» because they cannot yet name it. The name is what they came
       // for, so it is the thing set large; the query goes underneath as confirmation we understood.
-      await _pump(tester, _Api(
-        hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
-      ));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
+        ),
+      );
       await ask(tester, 'случай');
 
       expect(
         find.byWidgetPredicate(
-          (w) => w is Text && w.data == 'occasion' && w.style?.fontSize == AppText.cardTerm.fontSize,
+          (w) =>
+              w is Text && w.data == 'occasion' && w.style?.fontSize == AppText.cardTerm.fontSize,
         ),
         findsOneWidget,
       );
-      final support = tester.widget<Text>(find.byWidgetPredicate(
-        (w) => w is Text && w.data == 'случай' && w.style?.fontSize == AppText.cardTranslation.fontSize,
-      ));
+      final support = tester.widget<Text>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              w.data == 'случай' &&
+              w.style?.fontSize == AppText.cardTranslation.fontSize,
+        ),
+      );
       expect(support.style?.color, AppColors.ink);
     });
 
     testWidgets('says nothing about languages, direction or detection', (tester) async {
-      await _pump(tester, _Api(
-        hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
-      ));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'случай', translation: 'occasion', reversed: true),
+        ),
+      );
       await ask(tester, 'случай');
 
       for (final word in ['язык', 'Язык', 'перевод с', 'английск', 'русск', 'направлен']) {
@@ -276,21 +316,29 @@ void main() {
     });
 
     testWidgets('a phrase behaves exactly like a word', (tester) async {
-      await _pump(tester, _Api(
-        hint: const InstantHint(query: 'как дела', translation: 'how are you', reversed: true),
-      ));
+      await _pump(
+        tester,
+        _Api(
+          hint: const InstantHint(query: 'как дела', translation: 'how are you', reversed: true),
+        ),
+      );
       await ask(tester, 'как дела');
 
       expect(
         find.byWidgetPredicate(
-          (w) => w is Text && w.data == 'how are you' && w.style?.fontSize == AppText.cardTerm.fontSize,
+          (w) =>
+              w is Text &&
+              w.data == 'how are you' &&
+              w.style?.fontSize == AppText.cardTerm.fontSize,
         ),
         findsOneWidget,
       );
       expect(find.text('Собрать карточку'), findsOneWidget);
     });
 
-    testWidgets('a paragraph gets a calm line about what the field is for, and no button', (tester) async {
+    testWidgets('a paragraph gets a calm line about what the field is for, and no button', (
+      tester,
+    ) async {
       await _pump(tester, _Api(hint: const InstantHint(query: 'x', queryTooLong: true)));
       await ask(tester, 'x');
 
@@ -317,7 +365,9 @@ void main() {
   });
 
   testWidgets('the echo never spends a model call by itself', (tester) async {
-    final api = _Api(hint: const InstantHint(query: 'significant', translation: 'значительный'));
+    final api = _Api(
+      hint: const InstantHint(query: 'significant', translation: 'значительный'),
+    );
     await _pump(tester, api);
 
     await _type(tester, 'significant');

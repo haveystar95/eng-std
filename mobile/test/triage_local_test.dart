@@ -15,30 +15,52 @@ void main() {
   final t0 = DateTime.utc(2026, 8, 4, 9);
 
   Future<void> seed() => db.applyDelta(
-        collectionUpserts: [CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Gym'))],
-        termUpserts: [
-          TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('workout')),
-          TermsCompanion.insert(id: 't2', updatedAt: t0, termText: const Value('exercise')),
-          TermsCompanion.insert(id: 't3', updatedAt: t0, termText: const Value('ticket')),
-        ],
-        // Inserted out of position order on purpose, to prove the ORDER BY.
-        itemUpserts: [
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't3', updatedAt: t0, position: const Value(2)),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't1', updatedAt: t0, position: const Value(0)),
-          CollectionItemsCompanion.insert(collectionId: 'c1', termId: 't2', updatedAt: t0, position: const Value(1)),
-        ],
-      );
+    collectionUpserts: [
+      CollectionsCompanion.insert(id: 'c1', updatedAt: t0, title: const Value('At the Gym')),
+    ],
+    termUpserts: [
+      TermsCompanion.insert(id: 't1', updatedAt: t0, termText: const Value('workout')),
+      TermsCompanion.insert(id: 't2', updatedAt: t0, termText: const Value('exercise')),
+      TermsCompanion.insert(id: 't3', updatedAt: t0, termText: const Value('ticket')),
+    ],
+    // Inserted out of position order on purpose, to prove the ORDER BY.
+    itemUpserts: [
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't3',
+        updatedAt: t0,
+        position: const Value(2),
+      ),
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't1',
+        updatedAt: t0,
+        position: const Value(0),
+      ),
+      CollectionItemsCompanion.insert(
+        collectionId: 'c1',
+        termId: 't2',
+        updatedAt: t0,
+        position: const Value(1),
+      ),
+    ],
+  );
 
-  test('eligible = all collection terms in position order when nothing is studied/triaged', () async {
-    await seed();
-    expect((await db.triageEligible('c1')).map((t) => t.id), ['t1', 't2', 't3']);
-  });
+  test(
+    'eligible = all collection terms in position order when nothing is studied/triaged',
+    () async {
+      await seed();
+      expect((await db.triageEligible('c1')).map((t) => t.id), ['t1', 't2', 't3']);
+    },
+  );
 
   test('a studied term (has a progress row) is excluded', () async {
     await seed();
-    await db.applyDelta(progressUpserts: [
-      TermProgressCompanion.insert(termId: 't2', updatedAt: t0, state: const Value('review')),
-    ]);
+    await db.applyDelta(
+      progressUpserts: [
+        TermProgressCompanion.insert(termId: 't2', updatedAt: t0, state: const Value('review')),
+      ],
+    );
     expect((await db.triageEligible('c1')).map((t) => t.id), ['t1', 't3']);
   });
 
@@ -59,51 +81,63 @@ void main() {
     await seed();
     await db.markTriaged('t1', 'c1', t0); // unknown swipe: marked, but NO progress row for t1
     // A later sync brings other progress; t1 still has no progress row of its own.
-    await db.applyDelta(progressUpserts: [
-      TermProgressCompanion.insert(termId: 't2', updatedAt: t0, state: const Value('known')),
-    ]);
+    await db.applyDelta(
+      progressUpserts: [
+        TermProgressCompanion.insert(termId: 't2', updatedAt: t0, state: const Value('known')),
+      ],
+    );
     // t1 excluded by the marker, t2 by its progress row → only t3 remains. t1 did not resurrect.
     expect((await db.triageEligible('c1')).map((t) => t.id), ['t3']);
   });
 
-  test('clearAll wipes local triage marks (the marker is restored by the next sync — see below)', () async {
-    await seed();
-    await db.markTriaged('t1', 'c1', t0);
-    await db.clearAll();
-    await seed(); // a resync WITHOUT triage rows (e.g. pre-fix / offline) → the mark is gone
-    expect((await db.triageEligible('c1')).map((t) => t.id), contains('t1'));
-  });
+  test(
+    'clearAll wipes local triage marks (the marker is restored by the next sync — see below)',
+    () async {
+      await seed();
+      await db.markTriaged('t1', 'c1', t0);
+      await db.clearAll();
+      await seed(); // a resync WITHOUT triage rows (e.g. pre-fix / offline) → the mark is gone
+      expect((await db.triageEligible('c1')).map((t) => t.id), contains('t1'));
+    },
+  );
 
-  test('re-login: an unknown swipe restored by the sync delta does NOT resurrect in the deck', () async {
-    // 1. Swipe t1 «не знаю»: a local marker, and a rung-0 row IN THE POOL — the swipe is the
-    //    learner deciding to learn the word, which is what puts it in the trainer's queue.
-    await seed();
-    await db.markTriaged('t1', 'c1', t0);
-    await db.enrollLocally('t1', t0);
-    // 2. Sign out → the whole local DB (incl. the marker) is wiped.
-    await db.clearAll();
-    // 3. Sign back in → full resync. The delta carries BOTH halves of that swipe: the triage verdict
-    //    (which applyDelta upserts into the marker) and the enrolled rung-0 progress row.
-    await seed();
-    await db.applyDelta(
-      triageUpserts: [
-        TriagedTermsCompanion.insert(termId: 't1', collectionId: const Value('c1'), decidedAt: t0),
-      ],
-      progressUpserts: [
-        TermProgressCompanion.insert(
-          termId: 't1',
-          updatedAt: t0,
-          acquisition: const Value('new'),
-          enrolledAt: Value(t0),
-        ),
-      ],
-    );
-    // 4. The deck excludes t1 again — it did not come back to be re-triaged. t2/t3 are still
-    //    eligible, and the rung-0 row does NOT exclude them from the deck: «never shown» is the
-    //    rule, not «no row».
-    expect((await db.triageEligible('c1')).map((t) => t.id), ['t2', 't3']);
-    // And it counts as learnable — in the pool, never shown — so «Учить N» can introduce it.
-    expect((await db.watchLearnableByCollection().first)['c1'], 1);
-    expect(await db.watchLearnableCount().first, 1);
-  });
+  test(
+    're-login: an unknown swipe restored by the sync delta does NOT resurrect in the deck',
+    () async {
+      // 1. Swipe t1 «не знаю»: a local marker, and a rung-0 row IN THE POOL — the swipe is the
+      //    learner deciding to learn the word, which is what puts it in the trainer's queue.
+      await seed();
+      await db.markTriaged('t1', 'c1', t0);
+      await db.enrollLocally('t1', t0);
+      // 2. Sign out → the whole local DB (incl. the marker) is wiped.
+      await db.clearAll();
+      // 3. Sign back in → full resync. The delta carries BOTH halves of that swipe: the triage verdict
+      //    (which applyDelta upserts into the marker) and the enrolled rung-0 progress row.
+      await seed();
+      await db.applyDelta(
+        triageUpserts: [
+          TriagedTermsCompanion.insert(
+            termId: 't1',
+            collectionId: const Value('c1'),
+            decidedAt: t0,
+          ),
+        ],
+        progressUpserts: [
+          TermProgressCompanion.insert(
+            termId: 't1',
+            updatedAt: t0,
+            acquisition: const Value('new'),
+            enrolledAt: Value(t0),
+          ),
+        ],
+      );
+      // 4. The deck excludes t1 again — it did not come back to be re-triaged. t2/t3 are still
+      //    eligible, and the rung-0 row does NOT exclude them from the deck: «never shown» is the
+      //    rule, not «no row».
+      expect((await db.triageEligible('c1')).map((t) => t.id), ['t2', 't3']);
+      // And it counts as learnable — in the pool, never shown — so «Учить N» can introduce it.
+      expect((await db.watchLearnableByCollection().first)['c1'], 1);
+      expect(await db.watchLearnableCount().first, 1);
+    },
+  );
 }

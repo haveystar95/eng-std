@@ -104,7 +104,8 @@ class TermPlayability {
     final hasExample = example != null && example.isNotEmpty;
     return TermPlayability(
       answerWordCount: wordsIn(answer),
-      clozeable: hasExample && answer.isNotEmpty && example.toLowerCase().contains(answer.toLowerCase()),
+      clozeable:
+          hasExample && answer.isNotEmpty && example.toLowerCase().contains(answer.toLowerCase()),
       exampleTokenCount: hasExample ? SentenceTokenizer.tokenize(example).length : 0,
       hasExampleTranslation: exampleTranslation != null && exampleTranslation.trim().isNotEmpty,
       exampleIsAnswer: hasExample && SentenceTokenizer.sameTokens(example, answer),
@@ -147,48 +148,48 @@ class TermPlayability {
 
   /// Can this term be drilled in this mode at all?
   bool supports(ExerciseMode mode) => switch (mode) {
-        ExerciseMode.wordBank => answerWordCount >= minWordBankWords,
-        ExerciseMode.cloze => clozeable, // needs an example holding the answer
-        ExerciseMode.scramble => !exampleIsAnswer && // else it is word_bank with extra steps
-            hasExampleTranslation && // the translation IS the question
-            exampleTokenCount >= minScrambleTokens &&
-            exampleTokenCount <= maxScrambleTokens,
-        // No translation needed — the task is the audio, so the card carries no written cue.
-        ExerciseMode.dictation => !exampleIsAnswer && // else it is listening with extra steps
-            exampleTokenCount >= minDictationTokens &&
-            exampleTokenCount <= maxDictationTokens,
-        // The prompt is the example's translation, and two wrong sentences must exist. No length
-        // window: three sentences are READ, not assembled, so a long example costs attention rather
-        // than becoming unplayable.
-        ExerciseMode.pickCorrect => !exampleIsAnswer &&
-            hasExampleTranslation &&
-            distractorCount >= minPickCorrectDistractors,
-        // The description IS the prompt, so this is the one gate with nothing to fall back on: a
-        // card with no question is not a lesser card, it is not a card. Says nothing about the
-        // OPTIONS — those are other pool words, a fact about the session, not about this term.
-        ExerciseMode.descriptionMatch => hasDescription,
-        // multiple_choice / typing / listening fit any term — they ask for the term itself.
-        // `intro` asks for nothing at all, so there is no content it could lack: a term with no
-        // example and no transcription still has a text and a translation to be SHOWN.
-        //
-        // `speaking` fits every term for typing's reason: its WORD form asks for the term, which
-        // every term has. Its late form asks for the example, and a term without one simply keeps
-        // being asked for the word — a degradation inside the mode, not a reason to withhold the
-        // whole trainer. Deliberately NOT gated on the example, or every exampleless term would
-        // lose speaking at every rung, including the early one that never wanted it.
-        ExerciseMode.multipleChoice ||
-        ExerciseMode.typing ||
-        ExerciseMode.listening ||
-        ExerciseMode.speaking ||
-        ExerciseMode.intro =>
-          true,
-      };
+    ExerciseMode.wordBank => answerWordCount >= minWordBankWords,
+    ExerciseMode.cloze => clozeable, // needs an example holding the answer
+    ExerciseMode.scramble =>
+      !exampleIsAnswer && // else it is word_bank with extra steps
+          hasExampleTranslation && // the translation IS the question
+          exampleTokenCount >= minScrambleTokens &&
+          exampleTokenCount <= maxScrambleTokens,
+    // No translation needed — the task is the audio, so the card carries no written cue.
+    ExerciseMode.dictation =>
+      !exampleIsAnswer && // else it is listening with extra steps
+          exampleTokenCount >= minDictationTokens &&
+          exampleTokenCount <= maxDictationTokens,
+    // The prompt is the example's translation, and two wrong sentences must exist. No length
+    // window: three sentences are READ, not assembled, so a long example costs attention rather
+    // than becoming unplayable.
+    ExerciseMode.pickCorrect =>
+      !exampleIsAnswer && hasExampleTranslation && distractorCount >= minPickCorrectDistractors,
+    // The description IS the prompt, so this is the one gate with nothing to fall back on: a
+    // card with no question is not a lesser card, it is not a card. Says nothing about the
+    // OPTIONS — those are other pool words, a fact about the session, not about this term.
+    ExerciseMode.descriptionMatch => hasDescription,
+    // multiple_choice / typing / listening fit any term — they ask for the term itself.
+    // `intro` asks for nothing at all, so there is no content it could lack: a term with no
+    // example and no transcription still has a text and a translation to be SHOWN.
+    //
+    // `speaking` fits every term for typing's reason: its WORD form asks for the term, which
+    // every term has. Its late form asks for the example, and a term without one simply keeps
+    // being asked for the word — a degradation inside the mode, not a reason to withhold the
+    // whole trainer. Deliberately NOT gated on the example, or every exampleless term would
+    // lose speaking at every rung, including the early one that never wanted it.
+    ExerciseMode.multipleChoice ||
+    ExerciseMode.typing ||
+    ExerciseMode.listening ||
+    ExerciseMode.speaking ||
+    ExerciseMode.intro => true,
+  };
 
   /// The given modes this term can be drilled in, order preserved.
   List<ExerciseMode> only(List<ExerciseMode> modes) => [
-        for (final mode in modes)
-          if (supports(mode)) mode,
-      ];
+    for (final mode in modes)
+      if (supports(mode)) mode,
+  ];
 
   /// Whitespace-separated words in the answer — what gates word_bank. Mirrors the server's
   /// `ChipShuffler::wordCount`.
@@ -254,7 +255,9 @@ List<int> _utf8Bytes(String input) {
     if (rune < 0x80) {
       bytes.add(rune);
     } else if (rune < 0x800) {
-      bytes..add(0xC0 | (rune >> 6))..add(0x80 | (rune & 0x3F));
+      bytes
+        ..add(0xC0 | (rune >> 6))
+        ..add(0x80 | (rune & 0x3F));
     } else if (rune < 0x10000) {
       bytes
         ..add(0xE0 | (rune >> 12))

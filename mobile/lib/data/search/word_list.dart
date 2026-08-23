@@ -122,9 +122,7 @@ class WordList {
     // A line's index is its frequency rank, so sorting the hits numerically IS sorting by frequency.
     hits.sort();
 
-    return [
-      for (final line in hits.take(limit)) _wordAt(line),
-    ];
+    return [for (final line in hits.take(limit)) _wordAt(line)];
   }
 
   /// How many alphabetical neighbours to look at before giving up on finding a better-ranked one.

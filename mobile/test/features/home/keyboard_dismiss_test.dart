@@ -18,42 +18,48 @@ void main() {
     final node = FocusNode();
     addTearDown(node.dispose);
 
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(
-        builder: (context, setState) => Scaffold(
-          backgroundColor: AppColors.paper,
-          body: Column(
-            children: [
-              Expanded(
-                child: IndexedStack(
-                  index: index,
-                  children: [
-                    TextField(focusNode: node),
-                    const Text('another tab'),
-                  ],
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            backgroundColor: AppColors.paper,
+            body: Column(
+              children: [
+                Expanded(
+                  child: IndexedStack(
+                    index: index,
+                    children: [
+                      TextField(focusNode: node),
+                      const Text('another tab'),
+                    ],
+                  ),
                 ),
-              ),
-              FloatingTabBar(
-                items: const [
-                  FloatingTabItem(icon: Icons.search, label: 'Search'),
-                  FloatingTabItem(icon: Icons.list, label: 'Collections'),
-                ],
-                currentIndex: index,
-                onTap: (i) {
-                  // The line under test, verbatim from HomeScreen._select.
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  setState(() => index = i);
-                },
-              ),
-            ],
+                FloatingTabBar(
+                  items: const [
+                    FloatingTabItem(icon: Icons.search, label: 'Search'),
+                    FloatingTabItem(icon: Icons.list, label: 'Collections'),
+                  ],
+                  currentIndex: index,
+                  onTap: (i) {
+                    // The line under test, verbatim from HomeScreen._select.
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    setState(() => index = i);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.byType(TextField));
     await tester.pump();
-    expect(node.hasFocus, isTrue, reason: 'the field must be focused for the test to mean anything');
+    expect(
+      node.hasFocus,
+      isTrue,
+      reason: 'the field must be focused for the test to mean anything',
+    );
 
     await tester.tap(find.text('Collections'));
     await tester.pumpAndSettle();

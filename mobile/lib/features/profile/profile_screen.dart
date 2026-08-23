@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart' show CupertinoPicker, CupertinoPickerDefaultSelectionOverlay;
+import 'package:flutter/cupertino.dart'
+    show CupertinoPicker, CupertinoPickerDefaultSelectionOverlay;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,7 +34,8 @@ class ProfileScreen extends ConsumerWidget {
     if (user == null) return const SizedBox.shrink();
     final profile = user.profile;
 
-    final bottomInset = AppTabBarMetrics.height +
+    final bottomInset =
+        AppTabBarMetrics.height +
         AppTabBarMetrics.bottomInset +
         MediaQuery.viewPaddingOf(context).bottom +
         AppSpacing.s8;
@@ -43,7 +45,12 @@ class ProfileScreen extends ConsumerWidget {
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(AppSpacing.screenH, AppSpacing.s8, AppSpacing.screenH, bottomInset),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            AppSpacing.s8,
+            AppSpacing.screenH,
+            bottomInset,
+          ),
           children: [
             Text(l.profileTitle, style: AppText.screenTitle),
             const SizedBox(height: 18),
@@ -51,23 +58,30 @@ class ProfileScreen extends ConsumerWidget {
 
             if (profile != null) ...[
               _SectionLabel(l.profileSectionLearning),
-              _NavRow(label: l.profileRowLevel, value: profile.cefrLevel, onTap: () => _editLevel(context, ref, profile.cefrLevel)),
               _NavRow(
-                  label: l.profileRowGoal,
-                  value: l.profileGoalValue(profile.dailyGoal),
-                  onTap: () => _editGoal(context, ref, profile.dailyGoal)),
+                label: l.profileRowLevel,
+                value: profile.cefrLevel,
+                onTap: () => _editLevel(context, ref, profile.cefrLevel),
+              ),
               _NavRow(
-                  label: l.profileRowTargetLang,
-                  value: languageByCode(profile.targetLanguage).name,
-                  onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
-                  last: true),
+                label: l.profileRowGoal,
+                value: l.profileGoalValue(profile.dailyGoal),
+                onTap: () => _editGoal(context, ref, profile.dailyGoal),
+              ),
+              _NavRow(
+                label: l.profileRowTargetLang,
+                value: languageByCode(profile.targetLanguage).name,
+                onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
+                last: true,
+              ),
             ],
 
             _SectionLabel(l.profileSectionApp),
             _NavRow(
-                label: l.profileRowUiLang,
-                value: _uiLangName(l, uiLang),
-                onTap: () => _editUiLang(context, ref, uiLang)),
+              label: l.profileRowUiLang,
+              value: _uiLangName(l, uiLang),
+              onTap: () => _editUiLang(context, ref, uiLang),
+            ),
             _SwitchRow(
               label: l.profileRowReminders,
               hint: l.profileRemindersHint,
@@ -82,7 +96,8 @@ class ProfileScreen extends ConsumerWidget {
                   ? _NavRow(
                       label: l.profileRowReminderTime,
                       value: settings.reminderTime,
-                      onTap: () => _editReminderTime(context, ref, settings.reminderTime))
+                      onTap: () => _editReminderTime(context, ref, settings.reminderTime),
+                    )
                   : const SizedBox(width: double.infinity),
             ),
             _SwitchRow(
@@ -96,13 +111,13 @@ class ProfileScreen extends ConsumerWidget {
             _SectionLabel(l.profileSectionSubscription),
             _SubscriptionSection(user: user),
 
-            if (AppConfig.devMenuEnabled) ...[
-              _SectionLabel(l.profileSectionDev),
-              _DevFlags(),
-            ],
+            if (AppConfig.devMenuEnabled) ...[_SectionLabel(l.profileSectionDev), _DevFlags()],
 
             _SectionLabel(l.profileSectionAccount),
-            _LinkRow(label: l.profileSignOut, onTap: () => ref.read(authControllerProvider.notifier).signOut()),
+            _LinkRow(
+              label: l.profileSignOut,
+              onTap: () => ref.read(authControllerProvider.notifier).signOut(),
+            ),
             _LinkRow(
               label: l.profileDeleteAccount,
               destructive: true,
@@ -116,12 +131,16 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   String _uiLangName(AppLocalizations l, UiLanguageOption o) => switch (o) {
-        UiLanguageOption.system => l.uiLangSystem,
-        UiLanguageOption.russian => l.uiLangRussian,
-        UiLanguageOption.english => l.uiLangEnglish,
-      };
+    UiLanguageOption.system => l.uiLangSystem,
+    UiLanguageOption.russian => l.uiLangRussian,
+    UiLanguageOption.english => l.uiLangEnglish,
+  };
 
-  Future<void> _saveProfile(BuildContext context, WidgetRef ref, Map<String, dynamic> changes) async {
+  Future<void> _saveProfile(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> changes,
+  ) async {
     try {
       await ref.read(authControllerProvider.notifier).updateProfile(changes);
     } catch (e) {
@@ -135,7 +154,8 @@ class ProfileScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final chosen = await showAppBottomSheet<String>(
       context: context,
-      builder: (_) => _GridSheet(title: l.profileLevelSheet, options: kCefrLevels, current: current),
+      builder: (_) =>
+          _GridSheet(title: l.profileLevelSheet, options: kCefrLevels, current: current),
     );
     if (chosen != null && chosen != current && context.mounted) {
       await _saveProfile(context, ref, {'cefr_level': chosen});
@@ -158,7 +178,8 @@ class ProfileScreen extends ConsumerWidget {
     final native = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
     final chosen = await showAppBottomSheet<String>(
       context: context,
-      builder: (_) => _LanguageSheet(title: l.profileRowTargetLang, current: current, exclude: native),
+      builder: (_) =>
+          _LanguageSheet(title: l.profileRowTargetLang, current: current, exclude: native),
     );
     if (chosen != null && chosen != current && context.mounted) {
       await _saveProfile(context, ref, {'target_language': chosen});
@@ -217,7 +238,12 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = user.name.trim().isEmpty
         ? '?'
-        : user.name.trim().split(RegExp(r'\s+')).take(2).map((w) => w.characters.first.toUpperCase()).join();
+        : user.name
+              .trim()
+              .split(RegExp(r'\s+'))
+              .take(2)
+              .map((w) => w.characters.first.toUpperCase())
+              .join();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -228,17 +254,38 @@ class _Header extends StatelessWidget {
             alignment: Alignment.center,
             decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
             child: user.avatar != null
-                ? ClipOval(child: Image(image: CachedNetworkImage(user.avatar!), width: 52, height: 52, fit: BoxFit.cover))
-                : Text(initials,
-                    style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.paper)),
+                ? ClipOval(
+                    child: Image(
+                      image: CachedNetworkImage(user.avatar!),
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Text(
+                    initials,
+                    style: const TextStyle(
+                      fontFamily: AppFonts.inter,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.paper,
+                    ),
+                  ),
           ),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name,
-                    style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.inter,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
                 if (user.email != null) ...[
                   const SizedBox(height: 3),
                   Text(user.email!, style: AppText.transcription.copyWith(fontSize: 12.5)),
@@ -258,9 +305,12 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 20, bottom: 4),
-        child: Text(text.toUpperCase(), style: AppText.sectionLabel.copyWith(color: AppColors.tertiary)),
-      );
+    padding: const EdgeInsets.only(top: 20, bottom: 4),
+    child: Text(
+      text.toUpperCase(),
+      style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+    ),
+  );
 }
 
 /// A row with a value + chevron that opens an editor.
@@ -278,7 +328,10 @@ class _NavRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(label, style: _labelStyle)),
-          Text(value, style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary)),
+          Text(
+            value,
+            style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary),
+          ),
           const SizedBox(width: 9),
           const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
         ],
@@ -288,7 +341,13 @@ class _NavRow extends StatelessWidget {
 }
 
 class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({required this.label, this.hint, required this.value, required this.onChanged, this.last = false});
+  const _SwitchRow({
+    required this.label,
+    this.hint,
+    required this.value,
+    required this.onChanged,
+    this.last = false,
+  });
   final String label;
   final String? hint;
   final bool value;
@@ -308,7 +367,10 @@ class _SwitchRow extends StatelessWidget {
                 Text(label, style: _labelStyle),
                 if (hint != null) ...[
                   const SizedBox(height: 3),
-                  Text(hint!, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                  Text(
+                    hint!,
+                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+                  ),
                 ],
               ],
             ),
@@ -348,13 +410,23 @@ class _InfoRow extends StatelessWidget {
                 Text(title, style: _labelStyle),
                 if (hint != null) ...[
                   const SizedBox(height: 3),
-                  Text(hint!, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+                  Text(
+                    hint!,
+                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+                  ),
                 ],
               ],
             ),
           ),
           if (trailing != null)
-            Text(trailing!, style: AppText.translation.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.tertiary)),
+            Text(
+              trailing!,
+              style: AppText.translation.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.tertiary,
+              ),
+            ),
         ],
       ),
     );
@@ -362,7 +434,12 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _LinkRow extends StatelessWidget {
-  const _LinkRow({required this.label, required this.onTap, this.destructive = false, this.last = false});
+  const _LinkRow({
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+    this.last = false,
+  });
   final String label;
   final VoidCallback onTap;
   final bool destructive, last;
@@ -372,12 +449,15 @@ class _LinkRow extends StatelessWidget {
     return _RowShell(
       last: last,
       onTap: onTap,
-      child: Text(label,
-          style: TextStyle(
-              fontFamily: AppFonts.inter,
-              fontSize: 15.5,
-              fontWeight: FontWeight.w600,
-              color: destructive ? AppColors.destructiveText : AppColors.ink)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: AppFonts.inter,
+          fontSize: 15.5,
+          fontWeight: FontWeight.w600,
+          color: destructive ? AppColors.destructiveText : AppColors.ink,
+        ),
+      ),
     );
   }
 }
@@ -396,7 +476,9 @@ class _RowShell extends StatelessWidget {
     final row = Container(
       decoration: last
           ? null
-          : const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.dividerFaint))),
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
+            ),
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: child,
     );
@@ -427,20 +509,31 @@ class _SubscriptionSection extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final paywallOn = ref.watch(featureFlagsProvider).paywallEnabled;
     if (!paywallOn) {
-      return _InfoRow(title: l.profileFreeTier, hint: l.profileFreeTierHint, trailing: l.profileSoon, last: true);
+      return _InfoRow(
+        title: l.profileFreeTier,
+        hint: l.profileFreeTierHint,
+        trailing: l.profileSoon,
+        last: true,
+      );
     }
     final premium = ref.watch(premiumProvider);
     if (premium) {
       return Column(
         children: [
-          _PremiumRow(title: l.profilePremiumActive, badge: l.profilePremiumBadge, hint: l.profilePremiumHint),
+          _PremiumRow(
+            title: l.profilePremiumActive,
+            badge: l.profilePremiumBadge,
+            hint: l.profilePremiumHint,
+          ),
           _ChevronRow(label: l.profileManageSubscription, external: true),
           _ChevronRow(label: l.profileRestorePurchases, last: true),
         ],
       );
     }
     final resetsAt = user.quota?.resetsAt;
-    final freeHint = resetsAt != null ? l.profileFreeTierReset(_hhmm(resetsAt)) : l.profileFreeTierHint;
+    final freeHint = resetsAt != null
+        ? l.profileFreeTierReset(_hhmm(resetsAt))
+        : l.profileFreeTierHint;
     return Column(
       children: [
         _InfoRow(title: l.profileFreeTier, hint: freeHint),
@@ -465,16 +558,27 @@ class _DevFlags extends ConsumerWidget {
     final notifier = ref.read(featureFlagsProvider.notifier);
     return Column(
       children: [
-        _SwitchRow(label: l.devFlagStore, value: flags.storeEnabled, onChanged: notifier.setStoreEnabled),
-        _SwitchRow(label: l.devFlagPaywall, value: flags.paywallEnabled, onChanged: notifier.setPaywallEnabled),
-        _SwitchRow(label: l.devFlagPremium, value: flags.devPremium, onChanged: notifier.setDevPremium),
+        _SwitchRow(
+          label: l.devFlagStore,
+          value: flags.storeEnabled,
+          onChanged: notifier.setStoreEnabled,
+        ),
+        _SwitchRow(
+          label: l.devFlagPaywall,
+          value: flags.paywallEnabled,
+          onChanged: notifier.setPaywallEnabled,
+        ),
+        _SwitchRow(
+          label: l.devFlagPremium,
+          value: flags.devPremium,
+          onChanged: notifier.setDevPremium,
+        ),
         // On-device stall monitor, off by default — the release build has no console to read.
         _ChevronRow(
           label: l.perfMonitorTitle,
           last: true,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PerfLogScreen()),
-          ),
+          onTap: () =>
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PerfLogScreen())),
         ),
       ],
     );
@@ -494,19 +598,40 @@ class _PremiumRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(title, style: const TextStyle(fontFamily: AppFonts.inter, fontSize: 15.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(6)),
-                child: Text(badge.toUpperCase(),
-                    style: const TextStyle(
-                        fontFamily: AppFonts.inter, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.paper)),
+                decoration: BoxDecoration(
+                  color: AppColors.ink,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: AppFonts.inter,
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: AppColors.paper,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(hint, style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary)),
+          Text(
+            hint,
+            style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+          ),
         ],
       ),
     );
@@ -515,7 +640,13 @@ class _PremiumRow extends StatelessWidget {
 
 /// A label + chevron (or external-link icon) row — used by the subscription entries.
 class _ChevronRow extends StatelessWidget {
-  const _ChevronRow({required this.label, this.onTap, this.bold = false, this.external = false, this.last = false});
+  const _ChevronRow({
+    required this.label,
+    this.onTap,
+    this.bold = false,
+    this.external = false,
+    this.last = false,
+  });
   final String label;
   final VoidCallback? onTap;
   final bool bold, external, last;
@@ -528,11 +659,21 @@ class _ChevronRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter, fontSize: 15.5, fontWeight: bold ? FontWeight.w600 : FontWeight.w400, color: AppColors.ink)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.inter,
+                fontSize: 15.5,
+                fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+                color: AppColors.ink,
+              ),
+            ),
           ),
-          Icon(external ? Icons.open_in_new : Icons.chevron_right, size: external ? 16 : 18, color: AppColors.tertiary),
+          Icon(
+            external ? Icons.open_in_new : Icons.chevron_right,
+            size: external ? 16 : 18,
+            color: AppColors.tertiary,
+          ),
         ],
       ),
     );
@@ -563,7 +704,11 @@ class _GridSheet extends StatelessWidget {
             for (final o in options)
               SizedBox(
                 width: 88,
-                child: _PillOption(label: o, selected: o == current, onTap: () => Navigator.of(context).pop(o)),
+                child: _PillOption(
+                  label: o,
+                  selected: o == current,
+                  onTap: () => Navigator.of(context).pop(o),
+                ),
               ),
           ],
         ),
@@ -590,7 +735,11 @@ class _GoalSheet extends StatelessWidget {
         const SizedBox(height: 12),
         for (final g in _options) ...[
           if (g != _options.first) const SizedBox(height: 10),
-          _PillOption(label: l.profileGoalValue(g), selected: g == current, onTap: () => Navigator.of(context).pop(g)),
+          _PillOption(
+            label: l.profileGoalValue(g),
+            selected: g == current,
+            onTap: () => Navigator.of(context).pop(g),
+          ),
         ],
       ],
     );
@@ -626,7 +775,8 @@ class _LanguageSheet extends StatelessWidget {
                       MiniFlag(languageCode: lang.code),
                       const SizedBox(width: 12),
                       Expanded(child: Text(lang.name, style: _labelStyle)),
-                      if (lang.code == current) const Icon(Icons.check, size: 18, color: AppColors.ink),
+                      if (lang.code == current)
+                        const Icon(Icons.check, size: 18, color: AppColors.ink),
                     ],
                   ),
                 ),
@@ -699,7 +849,8 @@ class _TimeSheetState extends State<_TimeSheet> {
     _minuteIndex = _minutes.indexOf((m ~/ 15) * 15).clamp(0, 3);
   }
 
-  String get _value => '${_hour.toString().padLeft(2, '0')}:${_minutes[_minuteIndex].toString().padLeft(2, '0')}';
+  String get _value =>
+      '${_hour.toString().padLeft(2, '0')}:${_minutes[_minuteIndex].toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -708,10 +859,24 @@ class _TimeSheetState extends State<_TimeSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.reminderSheetTitle,
-            style: const TextStyle(fontFamily: AppFonts.literata, fontSize: 23, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        Text(
+          l.reminderSheetTitle,
+          style: const TextStyle(
+            fontFamily: AppFonts.literata,
+            fontSize: 23,
+            fontWeight: FontWeight.w500,
+            color: AppColors.ink,
+          ),
+        ),
         const SizedBox(height: 7),
-        Text(l.reminderSheetSubtitle, style: AppText.translation.copyWith(fontSize: 13, height: 1.45, color: AppColors.secondary)),
+        Text(
+          l.reminderSheetSubtitle,
+          style: AppText.translation.copyWith(
+            fontSize: 13,
+            height: 1.45,
+            color: AppColors.secondary,
+          ),
+        ),
         const SizedBox(height: 12),
         SizedBox(
           height: 160,
@@ -724,7 +889,15 @@ class _TimeSheetState extends State<_TimeSheet> {
                 label: (i) => i.toString().padLeft(2, '0'),
                 onChanged: (i) => setState(() => _hour = i),
               ),
-              const Text(':', style: TextStyle(fontFamily: AppFonts.inter, fontSize: 25, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              const Text(
+                ':',
+                style: TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
               _Wheel(
                 count: _minutes.length,
                 initial: _minuteIndex,
@@ -735,14 +908,23 @@ class _TimeSheetState extends State<_TimeSheet> {
           ),
         ),
         const SizedBox(height: 16),
-        PrimaryButton(label: l.commonSave, minHeight: 52, onPressed: () => Navigator.of(context).pop(_value)),
+        PrimaryButton(
+          label: l.commonSave,
+          minHeight: 52,
+          onPressed: () => Navigator.of(context).pop(_value),
+        ),
       ],
     );
   }
 }
 
 class _Wheel extends StatelessWidget {
-  const _Wheel({required this.count, required this.initial, required this.label, required this.onChanged});
+  const _Wheel({
+    required this.count,
+    required this.initial,
+    required this.label,
+    required this.onChanged,
+  });
   final int count, initial;
   final String Function(int) label;
   final ValueChanged<int> onChanged;
@@ -756,14 +938,22 @@ class _Wheel extends StatelessWidget {
         itemExtent: 40,
         squeeze: 1.1,
         diameterRatio: 1.3,
-        selectionOverlay: const CupertinoPickerDefaultSelectionOverlay(background: AppColors.faintInk),
+        selectionOverlay: const CupertinoPickerDefaultSelectionOverlay(
+          background: AppColors.faintInk,
+        ),
         onSelectedItemChanged: onChanged,
         children: [
           for (var i = 0; i < count; i++)
             Center(
-              child: Text(label(i),
-                  style: const TextStyle(
-                      fontFamily: AppFonts.inter, fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              child: Text(
+                label(i),
+                style: const TextStyle(
+                  fontFamily: AppFonts.inter,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
             ),
         ],
       ),
@@ -791,12 +981,15 @@ class _PillOption extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 13),
           child: Center(
-            child: Text(label,
-                style: TextStyle(
-                    fontFamily: AppFonts.inter,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: selected ? AppColors.paper : AppColors.ink)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.inter,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppColors.paper : AppColors.ink,
+              ),
+            ),
           ),
         ),
       ),

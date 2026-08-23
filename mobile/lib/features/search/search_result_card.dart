@@ -17,11 +17,7 @@ import '../word_card/word_card_subject.dart';
 /// on the card, which is what the terracotta line under this leaf opens, and the two photos share a
 /// [Hero] so the small one becomes the big one instead of being replaced by it.
 class SearchResultCard extends StatelessWidget {
-  const SearchResultCard({
-    super.key,
-    required this.subject,
-    required this.onOpen,
-  });
+  const SearchResultCard({super.key, required this.subject, required this.onOpen});
 
   final WordCardSubject subject;
   final VoidCallback onOpen;
@@ -64,7 +60,10 @@ class SearchResultCard extends StatelessWidget {
                                 subject.text,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppText.searchRowTerm.copyWith(fontSize: 29, letterSpacing: -0.29),
+                                style: AppText.searchRowTerm.copyWith(
+                                  fontSize: 29,
+                                  letterSpacing: -0.29,
+                                ),
                               ),
                             ),
                             if ((subject.cefr ?? '').isNotEmpty) ...[
@@ -104,8 +103,11 @@ class SearchResultCard extends StatelessWidget {
               child: Center(
                 child: Text(
                   l.searchOpenCard,
-                  style: AppTextExercise.answerAuxButton
-                      .copyWith(color: AppColors.destructiveText, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: AppTextExercise.answerAuxButton.copyWith(
+                    color: AppColors.destructiveText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -154,11 +156,11 @@ class _OutlineLevel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(color: AppColors.track),
-        ),
-        child: Text(level, style: AppText.levelMark.copyWith(color: AppColors.secondary)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(5),
+      border: Border.all(color: AppColors.track),
+    ),
+    child: Text(level, style: AppText.levelMark.copyWith(color: AppColors.secondary)),
+  );
 }

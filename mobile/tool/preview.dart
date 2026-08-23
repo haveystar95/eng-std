@@ -11,15 +11,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// cyrillic-guard: its sample data is realistically Russian). Run with
 /// `flutter run -d chrome --target tool/preview.dart`.
 void main() {
-  Word word(String id, String term, String tr, String ipa, String ex, String type) => Word(
-        termId: id, term: term, translation: tr, transcription: ipa, example: ex, type: type,
-      );
+  Word word(String id, String term, String tr, String ipa, String ex, String type) =>
+      Word(termId: id, term: term, translation: tr, transcription: ipa, example: ex, type: type);
   final cards = [
-    ReviewCard(word: word('01AAAAAAAAAAAAAAAAAAAAAAA1', 'boarding pass', 'посадочный талон', 'ˈbɔːdɪŋ pɑːs', 'Please have your boarding pass ready.', 'phrase')),
-    ReviewCard(word: word('01AAAAAAAAAAAAAAAAAAAAAAA2', 'in advance', 'заранее', 'ɪn ədˈvɑːns', 'Please book your seat in advance.', 'phrase')),
+    ReviewCard(
+      word: word(
+        '01AAAAAAAAAAAAAAAAAAAAAAA1',
+        'boarding pass',
+        'посадочный талон',
+        'ˈbɔːdɪŋ pɑːs',
+        'Please have your boarding pass ready.',
+        'phrase',
+      ),
+    ),
+    ReviewCard(
+      word: word(
+        '01AAAAAAAAAAAAAAAAAAAAAAA2',
+        'in advance',
+        'заранее',
+        'ɪn ədˈvɑːns',
+        'Please book your seat in advance.',
+        'phrase',
+      ),
+    ),
   ];
-  WordCollection collection(String id, String title, String emoji, String source, int count) => WordCollection(
-        id: id, title: title, emoji: emoji, source: source, type: 'custom', wordsCount: count, sourceLang: 'ru', targetLang: 'en',
+  WordCollection collection(String id, String title, String emoji, String source, int count) =>
+      WordCollection(
+        id: id,
+        title: title,
+        emoji: emoji,
+        source: source,
+        type: 'custom',
+        wordsCount: count,
+        sourceLang: 'ru',
+        targetLang: 'en',
       );
   final collections = [
     collection('01BBBBBBBBBBBBBBBBBBBBBBBB1', 'Airport & Travel', '✈️', 'ai', 12),
@@ -27,7 +52,12 @@ void main() {
     collection('01BBBBBBBBBBBBBBBBBBBBBBBB3', 'Business Meetings', '💼', 'ai', 15),
   ];
   final stats = Stats(
-    totalWords: 33, learned: 14, mastered: 5, dueToday: 8, reviewsTotal: 61, streakDays: 4,
+    totalWords: 33,
+    learned: 14,
+    mastered: 5,
+    dueToday: 8,
+    reviewsTotal: 61,
+    streakDays: 4,
   );
   final progress = {
     for (final (i, c) in collections.indexed)
@@ -40,13 +70,15 @@ void main() {
       ),
   };
 
-  runApp(ProviderScope(
-    overrides: [
-      statsProvider.overrideWith((ref) => Stream.value(stats)),
-      dueCardsProvider.overrideWith((ref) async => cards),
-      collectionsProvider.overrideWith((ref) => Stream.value(collections)),
-      collectionsProgressProvider.overrideWith((ref) => Stream.value(progress)),
-      studySessionProvider.overrideWith((ref, args) async => StudySession(
+  runApp(
+    ProviderScope(
+      overrides: [
+        statsProvider.overrideWith((ref) => Stream.value(stats)),
+        dueCardsProvider.overrideWith((ref) async => cards),
+        collectionsProvider.overrideWith((ref) => Stream.value(collections)),
+        collectionsProgressProvider.overrideWith((ref) => Stream.value(progress)),
+        studySessionProvider.overrideWith(
+          (ref, args) async => StudySession(
             sessionId: args.sessionId,
             cards: [
               SessionCard(
@@ -66,21 +98,23 @@ void main() {
                 example: 'Please book your seat in advance.',
               ),
             ],
-          )),
-      authControllerProvider.overrideWith(_PreviewAuth.new),
-    ],
-    child: const _PreviewApp(),
-  ));
+          ),
+        ),
+        authControllerProvider.overrideWith(_PreviewAuth.new),
+      ],
+      child: const _PreviewApp(),
+    ),
+  );
 }
 
 class _PreviewAuth extends AuthController {
   @override
   Future<AppUser?> build() async => AppUser(
-        id: '01CCCCCCCCCCCCCCCCCCCCCCCC1',
-        name: 'Denis',
-        email: 'you@example.com',
-        profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
-      );
+    id: '01CCCCCCCCCCCCCCCCCCCCCCCC1',
+    name: 'Denis',
+    email: 'you@example.com',
+    profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
+  );
 }
 
 class _PreviewApp extends StatelessWidget {

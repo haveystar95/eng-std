@@ -27,20 +27,20 @@ void main() {
   tearDown(() => db.close());
 
   String blob(List<int> seqs) => jsonEncode([
-        for (final s in seqs)
-          {
-            'id': 'ULID$s',
-            'term_id': 'term$s',
-            'exercise_mode': 'typing',
-            'response': 'answer$s',
-            'client_seq': s,
-            'answered_at': '2026-08-10T09:00:0${s}Z',
-            'used_hint': false,
-            'is_practice': s.isEven,
-            'latency_ms': 1000 + s,
-            'session_id': 'sess',
-          },
-      ]);
+    for (final s in seqs)
+      {
+        'id': 'ULID$s',
+        'term_id': 'term$s',
+        'exercise_mode': 'typing',
+        'response': 'answer$s',
+        'client_seq': s,
+        'answered_at': '2026-08-10T09:00:0${s}Z',
+        'used_hint': false,
+        'is_practice': s.isEven,
+        'latency_ms': 1000 + s,
+        'session_id': 'sess',
+      },
+  ]);
 
   test('no legacy blob: migration is a no-op that still marks itself done', () async {
     await queue.migrateFromKeychain();
@@ -49,19 +49,25 @@ void main() {
     expect(await db.getMeta(ReviewQueue.migratedMetaKey), '1');
   });
 
-  test('a legacy blob is imported in client_seq order and then removed from the Keychain', () async {
-    storage.values[ReviewQueue.legacyKey] = blob([3, 1, 2]);
+  test(
+    'a legacy blob is imported in client_seq order and then removed from the Keychain',
+    () async {
+      storage.values[ReviewQueue.legacyKey] = blob([3, 1, 2]);
 
-    await queue.migrateFromKeychain();
+      await queue.migrateFromKeychain();
 
-    final imported = await queue.load();
-    expect(imported.map((e) => e.clientSeq), [1, 2, 3], reason: 'order rides on client_seq');
-    expect(imported.first.termId, 'term1');
-    expect(imported.firstWhere((e) => e.clientSeq == 2).isPractice, isTrue);
-    expect(storage.values.containsKey(ReviewQueue.legacyKey), isFalse,
-        reason: 'the blob is only deleted AFTER the rows are written');
-    expect(await db.getMeta(ReviewQueue.migratedMetaKey), '1');
-  });
+      final imported = await queue.load();
+      expect(imported.map((e) => e.clientSeq), [1, 2, 3], reason: 'order rides on client_seq');
+      expect(imported.first.termId, 'term1');
+      expect(imported.firstWhere((e) => e.clientSeq == 2).isPractice, isTrue);
+      expect(
+        storage.values.containsKey(ReviewQueue.legacyKey),
+        isFalse,
+        reason: 'the blob is only deleted AFTER the rows are written',
+      );
+      expect(await db.getMeta(ReviewQueue.migratedMetaKey), '1');
+    },
+  );
 
   test('a second launch does not re-import and does not touch the Keychain again', () async {
     storage.values[ReviewQueue.legacyKey] = blob([1, 2]);

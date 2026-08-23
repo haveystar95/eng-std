@@ -19,15 +19,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// old `lib/core/` theme is dismantled in A3. Target: empty.
 const _legacyAllowlist = <String>{};
 
-final _hexColor = RegExp(
-  r'Color\(\s*0x|Color\.fromARGB\(|Color\.fromRGBO\(|0x[0-9A-Fa-f]{8}',
-);
+final _hexColor = RegExp(r'Color\(\s*0x|Color\.fromARGB\(|Color\.fromRGBO\(|0x[0-9A-Fa-f]{8}');
 
 void main() {
   test('no colour hex literals outside lib/theme/', () {
     final libDir = Directory('lib');
-    expect(libDir.existsSync(), isTrue,
-        reason: 'run from the mobile/ package root');
+    expect(libDir.existsSync(), isTrue, reason: 'run from the mobile/ package root');
 
     final offenders = <String>[]; // "path:line: content"
     final allowlistedHit = <String>{};
@@ -54,7 +51,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Colour hex outside lib/theme/. Use tokens from '
+      reason:
+          'Colour hex outside lib/theme/. Use tokens from '
           'package:eng_std/theme/theme.dart (add the token there if missing):\n'
           '${offenders.join('\n')}',
     );
@@ -67,7 +65,8 @@ void main() {
     expect(
       stale,
       isEmpty,
-      reason: 'Legacy allowlist is stale — these files are clean or gone, '
+      reason:
+          'Legacy allowlist is stale — these files are clean or gone, '
           'remove them from _legacyAllowlist (the list must shrink to empty):\n'
           '${stale.join('\n')}',
     );

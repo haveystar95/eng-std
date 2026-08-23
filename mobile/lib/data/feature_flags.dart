@@ -67,9 +67,12 @@ class FeatureFlagsController extends Notifier<FeatureFlags> {
     );
   }
 
-  Future<void> setStoreEnabled(bool on) => _set(_Keys.store, on, (f) => f.copyWith(storeEnabled: on));
-  Future<void> setPaywallEnabled(bool on) => _set(_Keys.paywall, on, (f) => f.copyWith(paywallEnabled: on));
-  Future<void> setDevPremium(bool on) => _set(_Keys.devPremium, on, (f) => f.copyWith(devPremium: on));
+  Future<void> setStoreEnabled(bool on) =>
+      _set(_Keys.store, on, (f) => f.copyWith(storeEnabled: on));
+  Future<void> setPaywallEnabled(bool on) =>
+      _set(_Keys.paywall, on, (f) => f.copyWith(paywallEnabled: on));
+  Future<void> setDevPremium(bool on) =>
+      _set(_Keys.devPremium, on, (f) => f.copyWith(devPremium: on));
 
   Future<void> _set(String key, bool on, FeatureFlags Function(FeatureFlags) update) async {
     await ref.read(appDatabaseProvider).setMeta(key, on ? '1' : '0');
@@ -77,8 +80,9 @@ class FeatureFlagsController extends Notifier<FeatureFlags> {
   }
 }
 
-final featureFlagsProvider =
-    NotifierProvider<FeatureFlagsController, FeatureFlags>(FeatureFlagsController.new);
+final featureFlagsProvider = NotifierProvider<FeatureFlagsController, FeatureFlags>(
+  FeatureFlagsController.new,
+);
 
 /// Effective premium = the server tier (`/me` → `profile.tier`) OR the dev fake
 /// purchase. Everything that GATES on premium in the UI (the profile subscription
