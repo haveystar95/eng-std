@@ -124,7 +124,7 @@ function testStack(): GenerationStackConfig
     );
 }
 
-function openGeneration(object $ctx, int $used = 0, string $prompt = 'иду в банк'): GenerationRequestId
+function openGeneration(object $ctx, int $used = 0, string $prompt = 'иду в банк', int $size = 12): GenerationRequestId
 {
     $handler = new RequestCollectionGenerationHandler(
         testStack(), $ctx->requests, new FakeGenerationQuota($used), new PromptNormalizer(), $ctx->clock,
@@ -132,7 +132,7 @@ function openGeneration(object $ctx, int $used = 0, string $prompt = 'иду в 
     );
 
     return $handler(new RequestCollectionGeneration(
-        $ctx->user, $prompt, new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], 12,
+        $ctx->user, $prompt, new LanguageCode('ru'), new LanguageCode('en'), ['A2', 'B1'], $size,
     ))->id;
 }
 
@@ -253,15 +253,15 @@ it('materializes a collection with deduplicated terms from a pending request', f
     $request = $this->requests->findById($id);
     expect($request?->status())->toBe(GenerationStatus::Succeeded)
         ->and($request?->collectionId())->not->toBeNull()
-        ->and($this->terms->count())->toBe(16)
+        ->and($this->terms->count())->toBe(12)
         ->and($this->collections->count())->toBe(1);
 
     $collection = $this->collections->findById($request->collectionId());
-    expect($collection?->itemsCount())->toBe(16)
+    expect($collection?->itemsCount())->toBe(12)
         ->and($collection?->ownerId()?->value)->toBe($this->user->value)
-        // Asked 12; overshoot generates 16 (ceil(12*1.3)); size is approximate, so all 16 valid
-        // items ship — no trim back toward the requested count (owner decision, 2026-08-18).
-        ->and($request?->deliveredCount())->toBe(16)
+        // Asked 12; the overshoot generates 16 (ceil(12*1.3)) so that 12 can survive validation.
+        // The 4 spare are trimmed before anything is written (QA-OBS-9).
+        ->and($request?->deliveredCount())->toBe(12)
         // Image attachment is kicked off once, for the new collection, after success.
         ->and($this->attach->dispatched)->toBe([$request->collectionId()->value])
         // …and the second follow-up, same shape and same reason: give a real example to whatever the
@@ -278,6 +278,31 @@ it('materializes a collection with deduplicated terms from a pending request', f
         ->and($this->enrich->collections)->toBe([]);
 });
 
+/**
+ * QA-OBS-9, the reported case verbatim: an order of 8 came back as a collection of 11.
+ *
+ * The overshoot is the reason 8 is reachable at all — we ask for ceil(8*1.3)=11 because the model
+ * under-delivers and the validator and the barrier drop items. It is insurance, not a bigger order,
+ * and when the insurance is not needed it must not be written.
+ */
+it('writes exactly the requested size when the overshoot brings back more, in the model\'s order', function () {
+    $id = openGeneration($this, size: 8);
+    $generator = scriptedGenerator([[items('term', 11), 900, 1500]]);
+
+    (processWith($this, $generator))(new ProcessGeneration($id));
+
+    $request = $this->requests->findById($id);
+    expect($generator->calls)->toBe(1)                    // 11 ≥ 8, so no top-up
+        ->and($request?->deliveredCount())->toBe(8)
+        ->and($this->terms->count())->toBe(8)
+        ->and($this->collections->findById($request->collectionId())?->itemsCount())->toBe(8);
+
+    // The FIRST eight the model produced, in its order — no shuffle and no re-ranking. Two runs of
+    // the same prompt have to agree about which words «the good ones» were.
+    $texts = array_map(static fn ($term): string => $term->text()->value, $this->terms->all());
+    expect($texts)->toBe(['term1', 'term2', 'term3', 'term4', 'term5', 'term6', 'term7', 'term8']);
+});
+
 it('tops up a shortfall and sums tokens and cost across both model calls', function () {
     $id = openGeneration($this); // requested 12
 
@@ -289,10 +314,11 @@ it('tops up a shortfall and sums tokens and cost across both model calls', funct
     (processWith($this, $generator))(new ProcessGeneration($id));
 
     $request = $this->requests->findById($id);
-    // 10 primary + fresh top-up (5), all 15 ship — size is approximate, no trim back to 12.
+    // 10 primary + 5 fresh top-up = 15 survivors, trimmed to the 12 that were ordered (QA-OBS-9).
+    // The top-up still asked for the overshoot — the spare is what makes 12 reachable at all.
     expect($request?->status())->toBe(GenerationStatus::Succeeded)
         ->and($generator->calls)->toBe(2)                 // one primary + one top-up, never a loop
-        ->and($request?->deliveredCount())->toBe(15)
+        ->and($request?->deliveredCount())->toBe(12)
         // Spend is the SUM of both calls, not the second overwriting the first:
         ->and($request?->tokensIn())->toBe(1000)          // 700 + 300
         ->and($request?->tokensOut())->toBe(1600)         // 1200 + 400
@@ -536,8 +562,9 @@ it('drops an unfixable item, tops up the hole, and records the rejection', funct
 
     expect($repairer->calls)->toBe(LanguageBarrier::MAX_ATTEMPTS)
         ->and($generator->calls)->toBe(2)                       // the hole triggered a top-up
-        // 11 primary survivors (1 dropped, unfixable) + 2 fresh top-up = 13, all ship uncapped.
-        ->and($this->requests->findById($id)?->deliveredCount())->toBe(13);
+        // 11 primary survivors (1 dropped, unfixable) + 2 fresh top-up = 13, trimmed to the 12
+        // that were ordered. The hole the barrier made is filled; the collection is full-size.
+        ->and($this->requests->findById($id)?->deliveredCount())->toBe(12);
 
     $rejections = $journal->all();
     expect($rejections)->toHaveCount(1)

@@ -34,35 +34,36 @@ it('accepts a generation and completes it end-to-end on the sync queue', functio
     $created->assertStatus(202)->assertJsonStructure(['data' => ['id', 'status', 'prompt']]);
     $id = $created->json('data.id');
 
-    // Size is approximate (owner decision, 2026-08-18): asked 8, overshoot generates
-    // ceil(8*1.3)=11, and every valid item ships — nothing is trimmed back to 8.
+    // QA-OBS-9: asked 8, the overshoot generates ceil(8*1.3)=11, and the surplus is spare — the
+    // learner gets the 8 they ordered, and the other 3 are never written.
     $shown = $this->withHeader('Authorization', "Bearer {$token}")->getJson("/api/v1/generations/{$id}");
     $shown->assertOk()
         ->assertJsonPath('data.status', 'succeeded')
         ->assertJsonPath('data.requested', 8)   // honest requested/delivered surfaced for the client
-        ->assertJsonPath('data.delivered', 11);
+        ->assertJsonPath('data.delivered', 8);
     expect($shown->json('data.collection_id'))->not->toBeNull();
 
     $this->assertDatabaseHas('generation_requests', ['id' => $id, 'status' => 'succeeded']);
     $this->assertDatabaseHas('collections', ['source' => 'ai', 'source_lang' => 'ru', 'target_lang' => 'en']);
-    $this->assertDatabaseCount('collection_items', 11);
-    $this->assertDatabaseCount('terms', 11);
+    $this->assertDatabaseCount('collection_items', 8);
+    $this->assertDatabaseCount('terms', 8);
 
     // Generated terms carry pronunciation and a usage example (persisted, not dropped).
-    expect(DB::table('terms')->whereNotNull('ipa')->count())->toBe(11);
-    $this->assertDatabaseCount('term_examples', 11);
+    expect(DB::table('terms')->whereNotNull('ipa')->count())->toBe(8);
+    $this->assertDatabaseCount('term_examples', 8);
     $this->assertDatabaseHas('term_examples', ['sentence_translation' => 'Это образец предложения номер 1.']);
 });
 
-it('delivers an approximate term count — every valid item ships, not just the requested size', function () {
+it('delivers exactly the requested count when the overshoot brings back more (QA-OBS-9)', function () {
     $token = bearerToken();
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/generations', ['prompt' => 'путешествие', 'size' => 15])
         ->assertStatus(202);
 
-    // Overshoot generates ceil(15*1.3)=20; all 20 valid items ship (size is approximate).
-    $this->assertDatabaseCount('terms', 20);
+    // The overshoot generates ceil(15*1.3)=20 so that 15 can survive validation and the barrier.
+    // The 5 that were not needed are spare, and spare is not written.
+    $this->assertDatabaseCount('terms', 15);
 });
 
 it('validates that a prompt is required', function () {

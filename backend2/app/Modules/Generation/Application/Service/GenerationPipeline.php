@@ -14,13 +14,14 @@ use App\Modules\Generation\Application\Port\CollectionGeneratorPort;
 use App\Modules\Shared\Domain\Service\ModelCost;
 
 /**
- * The generate → validate → screen → top-up pipeline, in one place so every caller measures the
- * same thing. Models routinely under-deliver ("asked 15, got 13"), so this overshoots the ask by
- * ~30%, and — if still short — does ONE more call with an avoid list, never a loop. Size is
- * approximate (owner decision, 2026-08-18): every valid item ships, capped only at the hard
- * ceiling `DraftValidator::MAX_ITEMS`, never trimmed down toward the requested count. Tokens/cost
- * are summed across every call, repairs included. Owned here (not in the command handler) so the
- * eval tool exercises the exact production behaviour rather than a drifting copy.
+ * The generate → validate → screen → top-up → trim pipeline, in one place so every caller measures
+ * the same thing. Models routinely under-deliver ("asked 15, got 13"), so this overshoots the ask by
+ * ~30%, and — if still short — does ONE more call with an avoid list, never a loop. The overshoot is
+ * insurance against loss, not a bigger order: what survives is trimmed back to the requested count
+ * ({@see trimToRequested}, QA-OBS-9). Delivering FEWER than asked is still possible and still
+ * honest — a run the model and the top-up could not fill ships short rather than failing.
+ * Tokens/cost are summed across every call, repairs included. Owned here (not in the command
+ * handler) so the eval tool exercises the exact production behaviour rather than a drifting copy.
  *
  * The language barrier sits between validation and the caller: nothing leaves this class in the
  * wrong language, and what it refused travels alongside the draft rather than disappearing into a
@@ -108,6 +109,8 @@ final readonly class GenerationPipeline
             $draft = $this->merge($draft, $this->withItems($topUp, $screenedTopUp->items));
         }
 
+        $draft = $this->withItems($draft, $this->trimToRequested($draft->items, $requested));
+
         return new AssembledDraft(
             draft: $draft,
             primaryRaw: $raw,
@@ -118,6 +121,30 @@ final readonly class GenerationPipeline
             delivered: count($draft->items),
             rejections: $rejections,
         );
+    }
+
+    /**
+     * The surplus the overshoot bought is SPARE, not delivery (QA-OBS-9).
+     *
+     * We deliberately ask the model for ~30% more than the learner ordered, because it under-delivers
+     * and because the barrier and the validator drop items — that rule stays exactly as it is; it is
+     * what makes «8» reachable at all. What was missing is the other half: once enough items survive,
+     * the extras stop being insurance. An order of 8 was arriving as a collection of 11.
+     *
+     * The first $requested survivors ship, in the order the model produced them — no shuffle, no
+     * re-ranking. Anything a re-order could gain here would be bought by making two runs of the same
+     * prompt disagree about which words are «the good ones», and the model already ordered them.
+     *
+     * This is the one place that decides what ships, so the written collection, `delivered_count`
+     * and the prompt cache all carry the same set. `primaryRaw` still holds the untrimmed first
+     * response, which is what the eval tool measures raw-vs-delivered against.
+     *
+     * @param  list<GeneratedItem>  $items
+     * @return list<GeneratedItem>
+     */
+    private function trimToRequested(array $items, int $requested): array
+    {
+        return count($items) <= $requested ? $items : array_slice($items, 0, $requested);
     }
 
     /**
