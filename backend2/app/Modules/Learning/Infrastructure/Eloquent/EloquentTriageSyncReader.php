@@ -27,14 +27,16 @@ final class EloquentTriageSyncReader implements TriageSyncReader
         // exactly like the rest of the delta feed, and order it into the paged stream.
         $query = DB::query()
             ->fromSub($governing, 'g')
-            ->where('g.created_at', '<=', $upper)
+            ->where('g.created_at', '<=', UtcInstant::bind($upper))
             ->orderBy('g.created_at')
             ->orderBy('g.term_id');
 
         // Inclusive `since`, matching every other reader in the delta feed: at second precision the
         // boundary second is re-sent, and the client upserts idempotently so a re-send is a no-op.
+        // Bound as an instant — a `since` that arrives with a device offset would otherwise move the
+        // window by that offset (UtcInstant).
         if ($since !== null) {
-            $query->where('g.created_at', '>=', $since);
+            $query->where('g.created_at', '>=', UtcInstant::bind($since));
         }
 
         $rows = $query->get();

@@ -10,7 +10,6 @@ use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
-use DateTimeZone;
 
 /**
  * Row ↔ {@see TermProgress}. The `user_term_progress` table has a composite key
@@ -56,30 +55,14 @@ final class TermProgressMapper
             'successful_reviews' => $progress->successfulReviews(),
             // Pool membership: the third, independent fact on the row. Written only by enroll() /
             // unenroll(), and by nothing else — see TermProgress.
-            'enrolled_at' => $this->toUtc($progress->enrolledAt()),
+            'enrolled_at' => UtcInstant::bind($progress->enrolledAt()),
             'ease_factor' => $progress->easeFactor(),
             'interval_days' => $progress->intervalDays(),
-            'due_at' => $this->toUtc($progress->dueAt()),
+            'due_at' => UtcInstant::bind($progress->dueAt()),
             'reps' => $progress->reps(),
             'lapses' => $progress->lapses(),
-            'last_reviewed_at' => $this->toUtc($progress->lastReviewedAt()),
+            'last_reviewed_at' => UtcInstant::bind($progress->lastReviewedAt()),
         ];
-    }
-
-    /**
-     * Bind an instant as an instant. The query builder turns a DateTimeInterface into a bare
-     * `Y-m-d H:i:s` string IN THE OBJECT'S OWN ZONE (Connection::prepareBindings) — no offset — and
-     * Postgres then reads that string in the session zone, UTC. So a due date correctly computed as
-     * midnight in Europe/Bucharest arrived in the column as midnight UTC and came back to the phone
-     * as 03:00 (QA-BUG-1): the offset was lost here, on the write, not in the scheduler.
-     *
-     * Converting first makes the string say what the instant means. Every datetime column on this
-     * row goes through it — `due_at` is the one that was noticed, but `last_reviewed_at` carries the
-     * device's own offset and was landing hours off for the same reason.
-     */
-    private function toUtc(?DateTimeImmutable $value): ?DateTimeImmutable
-    {
-        return $value?->setTimezone(new DateTimeZone('UTC'));
     }
 
     private function toDate(mixed $value): ?DateTimeImmutable

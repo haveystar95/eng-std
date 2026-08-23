@@ -26,7 +26,8 @@ final class EloquentStudySessionRepository implements StudySessionRepository
             'collection_id' => $session->collectionId()?->value,
             'is_practice' => $session->isPractice(),
             'composition' => json_encode(array_map(static fn (TermId $id): string => $id->value, $session->composition())),
-            'started_at' => $session->startedAt(),
+            // Client-supplied, so it carries the device's offset (see UtcInstant).
+            'started_at' => UtcInstant::bind($session->startedAt()),
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -46,7 +47,7 @@ final class EloquentStudySessionRepository implements StudySessionRepository
             ->where('user_id', $userId->value)
             ->whereNull('ended_at')
             ->update([
-                'ended_at' => $endedAt,
+                'ended_at' => UtcInstant::bind($endedAt),
                 'stats' => json_encode($outcome->toArray()),
                 'updated_at' => now(),
             ]);

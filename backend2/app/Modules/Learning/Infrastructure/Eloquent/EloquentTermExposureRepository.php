@@ -19,7 +19,9 @@ final class EloquentTermExposureRepository implements TermExposureRepository
             'user_id' => $exposure->userId->value,
             'term_id' => $exposure->termId->value,
             'session_id' => $exposure->sessionId?->value,
-            'shown_at' => $exposure->shownAt,
+            // Device-stamped, like a review's answered_at — bound as an instant, not as whatever
+            // wall clock the phone happened to be showing (see UtcInstant).
+            'shown_at' => UtcInstant::bind($exposure->shownAt),
             'created_at' => now(),
         ]);
 

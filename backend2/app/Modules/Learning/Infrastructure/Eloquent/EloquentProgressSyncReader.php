@@ -14,11 +14,13 @@ final class EloquentProgressSyncReader implements ProgressSyncReader
 {
     public function changedProgress(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array
     {
+        // `since` is whatever the client echoed back; if it carries a device offset, binding it raw
+        // would shift the whole window by that offset and silently drop or re-send rows (UtcInstant).
         $q = DB::table('user_term_progress')
             ->where('user_id', $userId->value)
-            ->where('updated_at', '<=', $upper);
+            ->where('updated_at', '<=', UtcInstant::bind($upper));
         if ($since !== null) {
-            $q->where('updated_at', '>=', $since);
+            $q->where('updated_at', '>=', UtcInstant::bind($since));
         }
 
         return array_values($q->orderBy('updated_at')->orderBy('term_id')

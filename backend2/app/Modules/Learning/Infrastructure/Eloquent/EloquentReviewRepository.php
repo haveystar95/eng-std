@@ -26,7 +26,11 @@ final class EloquentReviewRepository implements ReviewRepository
             'response' => $review->response,
             'latency_ms' => $review->latencyMs,
             'client_seq' => $review->clientSeq,
-            'answered_at' => $review->answeredAt,
+            // The device stamps this in ITS OWN zone, so it is exactly the binding that loses an
+            // offset (see UtcInstant). Left as-is, an answer given at 23:30 in Bucharest was stored
+            // as 23:30Z and read back as 02:30 the next day — the streak and the activity calendar
+            // both bucket by the learner's local date, so the evening's work credited tomorrow.
+            'answered_at' => UtcInstant::bind($review->answeredAt),
             'created_at' => now(),
         ]);
 

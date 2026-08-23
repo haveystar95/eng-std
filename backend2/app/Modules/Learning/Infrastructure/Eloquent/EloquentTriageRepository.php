@@ -27,7 +27,8 @@ final class EloquentTriageRepository implements TriageRepository
             'latency_ms' => $triage->latencyMs,
             'revealed' => $triage->revealed,
             'client_seq' => $triage->clientSeq,
-            'decided_at' => $triage->decidedAt,
+            // Device-stamped, same class as a review's answered_at (see UtcInstant).
+            'decided_at' => UtcInstant::bind($triage->decidedAt),
             'created_at' => now(),
         ]);
 

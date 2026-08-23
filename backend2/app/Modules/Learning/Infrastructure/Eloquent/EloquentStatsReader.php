@@ -73,7 +73,11 @@ final class EloquentStatsReader implements StatsReader
      */
     private function activeDays(string $uid, DateTimeImmutable $now, DateTimeZone $tz): array
     {
-        $windowStart = $now->modify('-' . self::ACTIVITY_WINDOW_DAYS . ' days')->setTimezone($tz)->setTime(0, 0, 0);
+        // Start of the learner's day, a year back — computed IN their zone and then bound as the
+        // instant it is: bound raw, the offset is dropped and the window edge moves by it (UtcInstant).
+        $windowStart = UtcInstant::bind(
+            $now->modify('-' . self::ACTIVITY_WINDOW_DAYS . ' days')->setTimezone($tz)->setTime(0, 0, 0),
+        );
 
         $rows = DB::table('reviews')
             ->where('user_id', $uid)
