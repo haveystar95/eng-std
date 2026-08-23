@@ -98,8 +98,15 @@ class LoginScreen extends ConsumerWidget {
                         ),
                       )
                     else ...[
+                      // The label comes from OUR deck, not from the device. `SignInWithAppleButton`
+                      // is a plain Flutter button — nothing native about it but the auth call
+                      // behind it — and its `text` defaults to a hardcoded English «Sign in with
+                      // Apple», which is why the button stayed English beside «Продолжить с
+                      // Google» (QA-OBS-31). Apple's HIG allows sign in / sign up / continue with
+                      // Apple; «Продолжить» is the one that matches the button under it.
                       SignInWithAppleButton(
                         height: 54,
+                        text: l.authContinueApple,
                         borderRadius: BorderRadius.circular(AppRadii.field),
                         style: SignInWithAppleButtonStyle.black,
                         onPressed: () => ref.read(authControllerProvider.notifier).signInWithApple(),

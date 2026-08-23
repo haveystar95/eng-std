@@ -922,6 +922,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authContinueGoogle => 'Продолжить с Google';
 
   @override
+  String get authContinueApple => 'Продолжить с Apple';
+
+  @override
   String get authTerms => 'Условия';
 
   @override

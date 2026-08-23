@@ -890,6 +890,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authContinueGoogle => 'Continue with Google';
 
   @override
+  String get authContinueApple => 'Continue with Apple';
+
+  @override
   String get authTerms => 'Terms';
 
   @override

@@ -1418,6 +1418,12 @@ abstract class AppLocalizations {
   /// **'Продолжить с Google'**
   String get authContinueGoogle;
 
+  /// Подпись кнопки Apple. SignInWithAppleButton рисуется Flutter'ом и по умолчанию несёт зашитое английское «Sign in with Apple» — локаль устройства тут ни при чём (QA-OBS-31). Формулировка обязана оставаться одним из вариантов, разрешённых Apple HIG: sign in / sign up / continue with Apple.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить с Apple'**
+  String get authContinueApple;
+
   /// Ссылка на условия (кадр 10a).
   ///
   /// In ru, this message translates to:

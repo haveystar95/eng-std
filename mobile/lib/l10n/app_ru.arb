@@ -742,6 +742,8 @@
   "@authTagline": { "description": "Подзаголовок на экране входа (кадр 10a)." },
   "authContinueGoogle": "Продолжить с Google",
   "@authContinueGoogle": { "description": "Кнопка входа через Google (кадр 10a)." },
+  "authContinueApple": "Продолжить с Apple",
+  "@authContinueApple": { "description": "Подпись кнопки Apple. SignInWithAppleButton рисуется Flutter'ом и по умолчанию несёт зашитое английское «Sign in with Apple» — локаль устройства тут ни при чём (QA-OBS-31). Формулировка обязана оставаться одним из вариантов, разрешённых Apple HIG: sign in / sign up / continue with Apple." },
   "authTerms": "Условия",
   "@authTerms": { "description": "Ссылка на условия (кадр 10a)." },
   "authPrivacy": "Конфиденциальность",
