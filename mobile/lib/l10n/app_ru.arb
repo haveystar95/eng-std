@@ -366,6 +366,15 @@
   "collectionsEmptyBody": "Опиши ситуацию — и ИИ соберёт первый набор.",
   "@collectionsEmptyBody": { "description": "Пустая вкладка коллекций — пояснение." },
 
+  "collectionsCreateManual": "Создать вручную",
+  "@collectionsCreateManual": { "description": "Выбор на «плюсе» вкладки коллекций: пустая коллекция, слова добавляются руками (SLV-6)." },
+  "collectionsCreateManualHint": "Пустая коллекция — слова добавишь сам",
+  "@collectionsCreateManualHint": { "description": "Пояснение к «Создать вручную» в шите выбора." },
+  "collectionsCreateGenerate": "Сгенерировать",
+  "@collectionsCreateGenerate": { "description": "Выбор на «плюсе» вкладки коллекций: экран генерации по теме (SLV-6)." },
+  "collectionsCreateGenerateHint": "ИИ соберёт набор по описанию ситуации",
+  "@collectionsCreateGenerateHint": { "description": "Пояснение к «Сгенерировать» в шите выбора." },
+
   "collectionsNewCollection": "Новая коллекция",
   "@collectionsNewCollection": { "description": "A11y-лейбл кнопки «+» создания коллекции (кадр 2.5)." },
 

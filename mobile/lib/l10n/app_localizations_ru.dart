@@ -442,6 +442,20 @@ class AppLocalizationsRu extends AppLocalizations {
       'Опиши ситуацию — и ИИ соберёт первый набор.';
 
   @override
+  String get collectionsCreateManual => 'Создать вручную';
+
+  @override
+  String get collectionsCreateManualHint =>
+      'Пустая коллекция — слова добавишь сам';
+
+  @override
+  String get collectionsCreateGenerate => 'Сгенерировать';
+
+  @override
+  String get collectionsCreateGenerateHint =>
+      'ИИ соберёт набор по описанию ситуации';
+
+  @override
   String get collectionsNewCollection => 'Новая коллекция';
 
   @override

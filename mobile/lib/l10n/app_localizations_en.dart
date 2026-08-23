@@ -422,6 +422,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Describe a situation — AI will build your first set.';
 
   @override
+  String get collectionsCreateManual => 'Create manually';
+
+  @override
+  String get collectionsCreateManualHint =>
+      'An empty collection — you add the words';
+
+  @override
+  String get collectionsCreateGenerate => 'Generate';
+
+  @override
+  String get collectionsCreateGenerateHint =>
+      'AI builds a set from a situation you describe';
+
+  @override
   String get collectionsNewCollection => 'New collection';
 
   @override

@@ -704,6 +704,30 @@ abstract class AppLocalizations {
   /// **'Опиши ситуацию — и ИИ соберёт первый набор.'**
   String get collectionsEmptyBody;
 
+  /// Выбор на «плюсе» вкладки коллекций: пустая коллекция, слова добавляются руками (SLV-6).
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать вручную'**
+  String get collectionsCreateManual;
+
+  /// Пояснение к «Создать вручную» в шите выбора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пустая коллекция — слова добавишь сам'**
+  String get collectionsCreateManualHint;
+
+  /// Выбор на «плюсе» вкладки коллекций: экран генерации по теме (SLV-6).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сгенерировать'**
+  String get collectionsCreateGenerate;
+
+  /// Пояснение к «Сгенерировать» в шите выбора.
+  ///
+  /// In ru, this message translates to:
+  /// **'ИИ соберёт набор по описанию ситуации'**
+  String get collectionsCreateGenerateHint;
+
   /// A11y-лейбл кнопки «+» создания коллекции (кадр 2.5).
   ///
   /// In ru, this message translates to:

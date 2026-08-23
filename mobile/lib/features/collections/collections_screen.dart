@@ -234,9 +234,50 @@ class _Segmented extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
+  /// The «+» asks WHICH new collection (SLV-6). It used to walk straight into generation, which
+  /// made the manual collection — the one the search results and the word card save into —
+  /// reachable only from the generation screen's own footer, i.e. only by first asking the AI for
+  /// something you didn't want.
+  Future<void> _create(BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    AppHaptics.light();
+    final choice = await showAppBottomSheet<bool>(
+      context: context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+            child: Text(l.collectionsNewCollection, style: AppText.sectionLabel),
+          ),
+          ListTile(
+            leading: const Icon(LucideIcons.sparkles, size: 20, color: AppColors.ink),
+            title: Text(l.collectionsCreateGenerate, style: AppText.translation),
+            subtitle: Text(l.collectionsCreateGenerateHint,
+                style: AppText.transcription.copyWith(fontSize: 12)),
+            onTap: () => Navigator.of(sheet).pop(true),
+          ),
+          ListTile(
+            leading: const Icon(LucideIcons.pencil, size: 20, color: AppColors.ink),
+            title: Text(l.collectionsCreateManual, style: AppText.translation),
+            subtitle: Text(l.collectionsCreateManualHint,
+                style: AppText.transcription.copyWith(fontSize: 12)),
+            onTap: () => Navigator.of(sheet).pop(false),
+          ),
+        ],
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    if (choice) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GenerateScreen()));
+    } else {
+      await showCollectionEditor(context, ref);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     return Row(
       children: [
@@ -246,10 +287,7 @@ class _Header extends StatelessWidget {
           label: l.collectionsNewCollection,
           child: InkResponse(
             radius: 26,
-            onTap: () {
-              AppHaptics.light();
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GenerateScreen()));
-            },
+            onTap: () => _create(context, ref, l),
             child: Container(
               width: 36,
               height: 36,
