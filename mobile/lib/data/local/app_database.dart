@@ -922,6 +922,27 @@ class AppDatabase extends _$AppDatabase {
     return query.map((r) => r.read(termProgress.termId.count()) ?? 0).watchSingle();
   }
 
+  /// WHEN each pool word was taken into study — one moment per word, no other columns.
+  ///
+  /// This is the daily goal's whole source (QA-BUG-2). The goal is «сколько новых слов я сегодня
+  /// взял в работу», and [TermProgress.enrolledAt] is the one column that records that act and
+  /// nothing else: a «не знаю»/«не уверен» swipe, «Учить это слово», and a word saved from search
+  /// all write it, «знаю» does not, and it is kept at the FIRST moment — so a word counts once
+  /// however many trainers it then passes in the day.
+  ///
+  /// The instants come back raw rather than pre-counted because "today" is a LOCAL calendar day of
+  /// this device (and rolls over at the learner's midnight); SQL here would have to be told the zone
+  /// and the offset the day started at. The pool is a few hundred rows at most, so the day is picked
+  /// in Dart, where `toLocal()` is free and testable.
+  Stream<List<DateTime>> watchEnrolledAt() {
+    final query = selectOnly(termProgress)
+      ..addColumns([termProgress.enrolledAt])
+      ..where(termProgress.enrolledAt.isNotNull());
+    return query
+        .watch()
+        .map((rows) => [for (final r in rows) r.read(termProgress.enrolledAt)!]);
+  }
+
   /// Triage-eligible (never-shown AND never-triaged) term count per collection —
   /// powers the home «Разобрать N» CTA. Same rule as [triageEligible], reactive.
   Stream<Map<String, int>> watchUntriagedByCollection() {

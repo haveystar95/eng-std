@@ -18,8 +18,7 @@ import '../../data/models.dart';
 import '../../data/perf_log.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
-import '../progress/activity.dart';
-import '../progress/progress_providers.dart';
+import '../home/home_providers.dart';
 import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
 import 'session/session_grading.dart';
@@ -834,27 +833,24 @@ class _StatDivider extends StatelessWidget {
       );
 }
 
-/// Daily-goal card: today's cumulative reviews vs the profile goal, plus the streak. Filled and
-/// labelled «закрыта» once the goal is met (кадр 12e). Reads the same local `daily_activity` the
-/// Progress screen does, so the numbers agree.
+/// Daily-goal card: the day's NEW WORDS against the day's goal, plus the streak. Filled and
+/// labelled «закрыта» once the goal is met (кадр 12e).
+///
+/// Reads [dailyGoalProvider] — the same counter the home screen's ring reads, which is the whole
+/// point of it existing (QA-BUG-2). This card used to print today's ANSWERS here («8 / 20») while
+/// the home screen printed the new words («3 / 20») on the same day, and both called it «Дневная
+/// цель». The session's own answer count is still on this screen — as the «повторено» stat above,
+/// where it is a fact about the run and nothing is divided by a goal.
 class _GoalCard extends ConsumerWidget {
   const _GoalCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final goal = ref.watch(authControllerProvider).value?.profile?.dailyGoal ?? 20;
-    final activity = ref.watch(dailyActivityProvider).value ?? const {};
-    final stats = ref.watch(statsProvider).value;
-    // The larger of the two truths, never the smaller. The local tally counts optimistically and
-    // works offline; the server's `reviews_today` survives a reinstall and knows about answers this
-    // device did not make. Taking the max means neither source can DROP the count — which is what
-    // the phone showed as `Daily goal 0 / 20` after twelve answers the server had already counted
-    // (QA-10). Both are the same definition of an answer, so the larger is simply the better-informed
-    // one.
-    final today = [todayReviewCount(DateTime.now(), activity), stats?.reviewsTotal ?? 0]
-        .reduce((a, b) => a > b ? a : b);
-    final streak = stats?.streakDays ?? 0;
+    final ring = ref.watch(dailyGoalProvider);
+    final today = ring.done;
+    final goal = ring.goal;
+    final streak = ref.watch(statsProvider).value?.streakDays ?? 0;
     final done = today >= goal;
 
     return PaperCard(

@@ -1,4 +1,4 @@
-import '../../data/models.dart';
+import '../../data/local/day_key.dart';
 
 /// The home primary action is state-dependent (кадр 2.1). All inputs come from
 /// the local DB, so it resolves offline.
@@ -86,11 +86,38 @@ HomeCta learnOrLimitCta(int learnable, int remainingNewQuota) {
   return HomeCta(HomeCtaKind.learn, count: m);
 }
 
-/// The home goal ring counts NEW terms introduced today against the daily new-term goal (F13b) —
-/// reviews and free practice never count toward a "new words/day" goal. `done = new_today =
-/// new_goal − new_remaining`, clamped into `[0, goal]`.
-({int done, int goal}) homeGoalRing(Stats stats) {
-  final goal = stats.newGoal;
-  final done = (stats.newGoal - stats.newRemaining).clamp(0, stats.newGoal);
-  return (done: done, goal: goal);
+/// The daily goal when neither the server nor the profile has said otherwise — the same number the
+/// onboarding step offers first.
+const int kDefaultDailyGoal = 20;
+
+/// THE DAILY GOAL — one definition, for every screen that shows it (QA-BUG-2).
+///
+/// The goal is a number of NEW WORDS TAKEN INTO STUDY today, and «taken into study» is a deliberate
+/// act with four doors: a «не знаю» swipe, a «не уверен» swipe, «Учить это слово» on the word card,
+/// and saving a word from search. «Знаю» is not one of them — it means the opposite. All four write
+/// exactly one thing, `term_progress.enrolled_at`, and they write it once (the column keeps the
+/// FIRST moment), so a word counts once however many trainers it then passes today.
+///
+/// It is deliberately NOT a count of answers. The session summary used to print today's ANSWERS
+/// under the label «Дневная цель» while the home screen printed the new words — «8 / 20» against
+/// «3 / 20» on the same day, from the same phone (QA-BUG-2). Answers are a real fact and the
+/// summary still states it, as its own «повторено» stat, with no goal attached to it.
+///
+/// [now] and the stored instants are compared on the LOCAL calendar day: a goal rolls over at the
+/// learner's midnight, not at UTC's.
+int newWordsToday(Iterable<DateTime> enrolments, DateTime now) {
+  final today = localDayKey(now);
+  var count = 0;
+  for (final at in enrolments) {
+    if (localDayKey(at.toLocal()) == today) count++;
+  }
+  return count;
+}
+
+/// The goal's TARGET (its right-hand number): the server's daily new-term quota when the first
+/// `/stats` has arrived, else the profile's own goal — the value the learner picked, which is what
+/// the server derives its quota from anyway. Never zero, so nothing divides by it.
+int dailyGoalTarget({required int newGoal, required int profileGoal}) {
+  if (newGoal > 0) return newGoal;
+  return profileGoal > 0 ? profileGoal : kDefaultDailyGoal;
 }

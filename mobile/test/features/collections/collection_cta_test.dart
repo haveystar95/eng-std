@@ -1,4 +1,3 @@
-import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/collection_cta.dart';
 import 'package:eng_std/features/home/home_cta.dart';
@@ -74,22 +73,17 @@ void main() {
     });
   });
 
-  group('homeGoalRing — new_today vs new_goal (F13b)', () {
-    Stats stats({required int newGoal, required int newRemaining, int reviews = 0}) => Stats(
-          totalWords: 0, learned: 0, mastered: 0, dueToday: 0,
-          reviewsTotal: reviews, streakDays: 0, newGoal: newGoal, newRemaining: newRemaining,
-        );
-
-    test('a day of 10 reviews + 3 new against goal 30 → ring shows 3/30 (reviews do not inflate it)', () {
-      // 10 repeats + 3 new introductions = 13 reviews_today; new_today = 30 − 27 = 3.
-      final ring = homeGoalRing(stats(newGoal: 30, newRemaining: 27, reviews: 13));
-      expect(ring.done, 3);
-      expect(ring.goal, 30);
+  group('dailyGoalTarget — whose number the goal is measured against', () {
+    test('the server quota once /stats has arrived', () {
+      expect(dailyGoalTarget(newGoal: 30, profileGoal: 20), 30);
     });
 
-    test('done is clamped into [0, goal]', () {
-      expect(homeGoalRing(stats(newGoal: 5, newRemaining: 0)).done, 5); // quota fully spent
-      expect(homeGoalRing(stats(newGoal: 5, newRemaining: 9)).done, 0); // never negative
+    test('the profile goal until it has (offline first run)', () {
+      expect(dailyGoalTarget(newGoal: 0, profileGoal: 15), 15);
+    });
+
+    test('never zero — nothing on either screen divides by it', () {
+      expect(dailyGoalTarget(newGoal: 0, profileGoal: 0), kDefaultDailyGoal);
     });
   });
 

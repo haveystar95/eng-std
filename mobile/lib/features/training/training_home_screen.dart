@@ -35,26 +35,27 @@ class TrainingHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final stats = ref.watch(statsProvider).value;
-    final user = ref.watch(authControllerProvider).value;
     final collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
     final progress = ref.watch(collectionsProgressProvider).value ?? const <String, CollectionProgress>{};
     final cta = ref.watch(homeCtaProvider);
     final word = ref.watch(wordOfDayProvider).value;
     final online = ref.watch(connectivityProvider).value ?? true;
 
-    final goal = user?.profile?.dailyGoal ?? 20;
-    final done = stats?.reviewsTotal ?? 0;
+    final reviewsToday = stats?.reviewsTotal ?? 0;
     final streak = stats?.streakDays ?? 0;
-    // The goal ring counts NEW terms introduced today against the new-term goal (F13b) — reviews
-    // and free practice never count toward a "new words/day" goal. Falls back to the profile goal
-    // until the first /stats sync populates new_goal.
-    final ring = stats != null && stats.newGoal > 0 ? homeGoalRing(stats) : (done: 0, goal: goal);
+    // The daily goal, from the ONE counter every screen showing it reads (QA-BUG-2): new words
+    // taken into the pool today, against the day's new-word target.
+    final ring = ref.watch(dailyGoalProvider);
 
     // 9b «всё повторено»: the daily goal is met and there's nothing due / learnable / to triage
     // (cta == none) while words already exist. Free practice is NOT offered here — it lives only on
     // the collection screen — so the card just affirms the goal and points at a new collection.
-    final allDone =
-        cta.kind == HomeCtaKind.none && collections.isNotEmpty && goal > 0 && done >= goal;
+    // «Met» is asked of the goal counter, not of today's answers: the goal is new words, and a long
+    // repeat session used to close it without a single new word in it.
+    final allDone = cta.kind == HomeCtaKind.none &&
+        collections.isNotEmpty &&
+        ring.goal > 0 &&
+        ring.done >= ring.goal;
 
     final bottomInset = AppTabBarMetrics.height +
         AppTabBarMetrics.bottomInset +
@@ -89,7 +90,9 @@ class TrainingHomeScreen extends ConsumerWidget {
             if (allDone) ...[
               const SizedBox(height: AppSpacing.sectionAiry),
               _pad(_AllDoneCard(
-                done: done,
+                // «N повторений сделано» — the card's own line is about ANSWERS and stays that way;
+                // it is a fact under the headline, not the goal counter above it.
+                done: reviewsToday,
                 onGenerate: () => Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => const GenerateScreen(),
                     )),

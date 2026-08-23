@@ -21,6 +21,25 @@ final homeCtaProvider = Provider<HomeCta>((ref) {
   );
 });
 
+/// How many new words went into the pool today (local calendar day) — see [newWordsToday].
+/// Straight off the local mirror, so it is right in airplane mode and moves under the finger the
+/// moment a swipe enrols a word.
+final newWordsTodayProvider = StreamProvider<int>((ref) {
+  return ref
+      .watch(appDatabaseProvider)
+      .watchEnrolledAt()
+      .map((moments) => newWordsToday(moments, DateTime.now()));
+});
+
+/// THE daily-goal counter — the ONE both the home screen and the session summary read, which is
+/// what keeps them from printing different numbers on the same day (QA-BUG-2).
+final dailyGoalProvider = Provider<({int done, int goal})>((ref) {
+  final done = ref.watch(newWordsTodayProvider).value ?? 0;
+  final newGoal = ref.watch(statsProvider).value?.newGoal ?? 0;
+  final profileGoal = ref.watch(authControllerProvider).value?.profile?.dailyGoal ?? 0;
+  return (done: done, goal: dailyGoalTarget(newGoal: newGoal, profileGoal: profileGoal));
+});
+
 /// «Слово дня» — deterministic client pick from local terms (no endpoint), or
 /// null when there are no terms yet (the block hides).
 final wordOfDayProvider = StreamProvider<Word?>((ref) {
