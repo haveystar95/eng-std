@@ -207,17 +207,25 @@ final class EloquentAdminCostReader implements AdminCostReader
             ->sum('cost_usd'), 6);
     }
 
+    /**
+     * One user's spend in one ledger.
+     *
+     * The output-token alias is lower case and stays that way (QA-BUG-4). An unquoted identifier is
+     * FOLDED TO LOWER CASE by Postgres, so `AS toO` reached PHP as `too`, `$row->toO` was null, and
+     * the per-user breakdown reported 0 output tokens for every user forever — silently, because
+     * null casts to 0 and the money column next to it was right.
+     */
     private function category(string $table, string $userId, ?DateTimeImmutable $since): CostCategory
     {
         $row = DB::table($table)
             ->where('user_id', $userId)
             ->when($since !== null, fn (Builder $q): Builder => $q->where('created_at', '>=', $since))
-            ->selectRaw('COALESCE(SUM(tokens_in),0) AS ti, COALESCE(SUM(tokens_out),0) AS toO, COALESCE(SUM(cost_usd),0) AS c, COUNT(*) AS n')
+            ->selectRaw('COALESCE(SUM(tokens_in),0) AS ti, COALESCE(SUM(tokens_out),0) AS tokens_out, COALESCE(SUM(cost_usd),0) AS c, COUNT(*) AS n')
             ->first();
 
         return new CostCategory(
             tokensIn: (int) ($row->ti ?? 0),
-            tokensOut: (int) ($row->toO ?? 0),
+            tokensOut: (int) ($row->tokens_out ?? 0),
             costUsd: round((float) ($row->c ?? 0), 6),
             count: (int) ($row->n ?? 0),
         );

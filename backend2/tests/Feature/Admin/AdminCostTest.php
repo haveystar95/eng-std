@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Admin\Application\Port\AdminCostReader;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
@@ -214,4 +215,42 @@ it('prefers the ledger over the log and never sums both', function () {
 
     expect($enrichment['cost_usd'])->toBe(0.00024)     // the ledger's number, not the sum
         ->and($body['note'])->not->toContain('по логу вызовов');
+});
+
+// ── QA-BUG-4: the per-user breakdown reported zero output tokens for everyone ────────────────────
+//
+// `COALESCE(SUM(tokens_out),0) AS toO` — an UNQUOTED identifier, which Postgres folds to lower
+// case. The column came back as `too`, `$row->toO` was null, null cast to 0, and the money beside
+// it was right, so nothing ever looked broken. The fixture's ledgers carry 1000 / 150 / 50 output
+// tokens; the panel and `qa:cost` must both say so.
+
+it('reports the output tokens a user actually spent (QA-BUG-4)', function () {
+    [$adminToken] = costFixture();
+    $userId = (string) DB::table('users')->where('email', 'spender@wt.test')->value('id');
+
+    test()->withHeader('Authorization', "Bearer {$adminToken}")
+        ->getJson("/admin/api/users/{$userId}")
+        ->assertOk()
+        ->assertJsonPath('costs.generation.tokens_in', 2000)
+        ->assertJsonPath('costs.generation.tokens_out', 1000)
+        ->assertJsonPath('costs.practice.tokens_in', 300)
+        ->assertJsonPath('costs.practice.tokens_out', 150)
+        ->assertJsonPath('costs.example_regen.tokens_in', 100)
+        ->assertJsonPath('costs.example_regen.tokens_out', 50);
+});
+
+it('reports them through the port qa:cost reads, windowed as well as all-time', function () {
+    costFixture();
+    $userId = (string) DB::table('users')->where('email', 'spender@wt.test')->value('id');
+
+    $all = app(AdminCostReader::class)->userBreakdownSince($userId, null);
+    $week = app(AdminCostReader::class)->userBreakdownSince($userId, new DateTimeImmutable('-7 days'));
+
+    expect($all->generation->tokensOut)->toBe(1000)
+        ->and($all->practice->tokensOut)->toBe(150)
+        ->and($all->exampleRegen->tokensOut)->toBe(50)
+        // The windowed branch builds the same select; the fixture's rows are all from today.
+        ->and($week->generation->tokensOut)->toBe(1000)
+        ->and($week->practice->tokensOut)->toBe(150)
+        ->and($week->exampleRegen->tokensOut)->toBe(50);
 });
