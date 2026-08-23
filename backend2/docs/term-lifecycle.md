@@ -11,6 +11,13 @@
 нет — это иллюстрация механизма, а не выгрузка реальных данных. Там, где утверждение не удалось
 подтвердить чтением кода, оно помечено как **«не подтверждено кодом, TODO»** вместо догадки.
 
+> **ru→en здесь — ПАРАМЕТР примера, а не свойство механизма.** Пара языков — свойство коллекции
+> (`collections.source_lang`/`target_lang`), она параметризована по всему пути и передаётся в
+> промпт именами, а не кодами (`LanguageCatalog`/`LanguageName`). Ниже «английское поле» всюду
+> значит «поле изучаемого языка», «русское поле» — «поле языка поддержки»; конкретные `ru`/`en`
+> подставлены потому, что это пара сквозного примера. Где ограничение действительно есть — это
+> отмечено отдельно (детектор чистоты `LanguagePurity` имеет мнение только о `ru`/`uk`/`en`).
+
 ---
 
 ## Глава 1. РОЖДЕНИЕ
@@ -31,7 +38,7 @@
 'target_lang' => ['sometimes', 'string', 'min:2', 'max:5'],
 ```
 
-Смысл полей подтверждён прямо в тексте промпта (`Infrastructure/Prompt/generate_collection.v6.md:9-10`):
+Смысл полей подтверждён прямо в тексте промпта (`Infrastructure/Prompt/generate_collection.v9.md`):
 **`target_lang` — изучаемый язык** (для нашего примера — английский), **`source_lang` — родной
 язык учащегося** (русский). Для «Возвратов и жалоб» запрос выглядит так:
 
@@ -50,7 +57,7 @@
 `RequestCollectionGenerationHandler` (`Application/Command/RequestCollectionGenerationHandler.php`)
 проверяет идемпотентность по клиентскому ULID, дневную квоту (`GenerationQuota` +
 `GenerationDailyLimit`, строки 63-66), и создаёт агрегат `GenerationRequest::open(...)` со
-статусом `pending` и `promptVersion` — константа **`PROMPT_VERSION = 'v6'`** (строка 34). Строка
+статусом `pending` и `promptVersion` — константа **`PROMPT_VERSION`**, на HEAD `'v9'`. Строка
 в `generation_requests`:
 
 | колонка | значение |
@@ -58,8 +65,20 @@
 | prompt / normalized_prompt | текст запроса / его нормализованная форма (`PromptNormalizer::normalize()`, `Domain/Service/PromptNormalizer.php:14-23`) |
 | source_lang / target_lang | `ru` / `en` |
 | levels / size | `["A2","B1"]` / `12` |
-| prompt_version | `v6` |
+| prompt_version | `v9` |
 | status | `pending` → `running` → `succeeded` |
+
+> **Какая версия промпта работает на самом деле.** `PROMPT_VERSION = 'v9'` — версия стека **v1**:
+> один файл `generate_collection.v9.md`, один вызов, модель `services.openai.generate_model`
+> (`gpt-4o`). Боевой стек по умолчанию — **v2** (`GENERATION_STACK`, дефолт `v2` в
+> `config/services.php`): ядро карточки собирается каталогом секций
+> **`core_prompt_version` = `v11.1`** на **`core_model` = `gpt-5.4`**, механика (принятые формы и
+> дистракторы) — **`mechanics_prompt_version` = `v13.1`** на **`mechanics_model` = `gpt-4o-mini`**
+> (решение К2, `docs/bakeoff-v11-ab.md`). `GENERATION_STACK=v1` — механизм отката на замороженный
+> путь v9, временный: его судьба решается после перегенерации витрины (DECISIONS п. 131).
+> Ниже глава прослеживает путь **v1**, потому что именно он расписан пошагово; в стеке v2
+> меняются промпт, модель и адаптер, а последовательность «черновик → валидатор → барьер →
+> материализация» — та же.
 
 Контроллер диспатчит фоновую работу, только если запись новая (`GenerationController.php:55-57`):
 `DispatchesGeneration` → `QueuedGenerationDispatcher` → `GenerateCollectionJob::dispatch($id)`
@@ -81,8 +100,8 @@
 (`Infrastructure/Adapter/OpenAiCollectionGenerator.php`) собран через DI в
 `GenerationServiceProvider::register()` (строки 129-143) с моделью
 `config('services.openai.generate_model', 'gpt-4o')` (в `.env` — `gpt-4o`) и версией промпта,
-явно переданной как `RequestCollectionGenerationHandler::PROMPT_VERSION` = `v6`. Шаблон —
-реальный файл `Infrastructure/Prompt/generate_collection.v6.md`, интерполируется `{{source_lang}}
+явно переданной как `RequestCollectionGenerationHandler::PROMPT_VERSION` = `v9`. Шаблон —
+реальный файл `Infrastructure/Prompt/generate_collection.v9.md`, интерполируется `{{source_lang}}
 → Russian`, `{{target_lang}} → English`, `{{levels}} → "A2, B1"`, `{{size}} → "16"` (уже
 overshoot, не исходные 12). Тема пользователя идёт отдельным user-сообщением как размеченные
 данные, не как инструкция (`userMessage()`, строки 119-130). Запрос — `POST /chat/completions`
@@ -112,9 +131,10 @@ Generation, а в общем модуле: `App\Modules\Shared\Domain\Service\La
 пост-фактум обогащения (см. Главу 3).
 
 Барьер делит поля на две группы (`LanguageBarrier.php:52,58`):
-- **TARGET_FIELDS** (`text`, `example`, английские) — нарушение **не чинится**, элемент
-  отбрасывается сразу;
-- **LEARNER_FIELDS** (`translation`, `example_translation`, русские) — нарушение **чинится**
+- **TARGET_FIELDS** (`text`, `example` — поля ИЗУЧАЕМОГО языка пары, в примере английские) —
+  нарушение **не чинится**, элемент отбрасывается сразу;
+- **LEARNER_FIELDS** (`translation`, `example_translation` — поля языка ПОДДЕРЖКИ, в примере
+  русские) — нарушение **чинится**
   повторным запросом перевода, до **`MAX_ATTEMPTS = 2`** попыток (строка 52 — бриф про «до двух
   перезапросов» подтверждён точно).
 
@@ -191,7 +211,7 @@ sequenceDiagram
 
     App->>Ctl: POST /api/v1/generations
     Ctl->>ReqH: RequestCollectionGeneration
-    ReqH->>DB1: INSERT status=pending, prompt_version=v6
+    ReqH->>DB1: INSERT status=pending, prompt_version=v9
     Ctl-->>App: 202 Accepted
     Ctl->>Q: dispatch(id)
 
@@ -201,9 +221,9 @@ sequenceDiagram
     Proc->>DB1: UPDATE tokens/cost/raw_response (до валидации)
     Proc->>Val: validate(draft)
     Proc->>Bar: screen(items)
-    alt русское поле испорчено
+    alt поле языка поддержки испорчено
         Bar->>Rep: repair() (до 2 попыток)
-    else английское поле испорчено
+    else поле изучаемого языка испорчено
         Bar->>DB4: RejectedItem (без ремонта)
     end
     opt меньше 12 после барьера
@@ -247,8 +267,7 @@ sequenceDiagram
 > консольная команда `RepairContentLanguageCommand` для чистки уже сохранённого контента — не
 > путать с барьером на входе.
 >
-> **TODO (не подтверждено кодом):** значение `services.generation.prompt_version` на боевом
-> сервере (проверен только рабочий `.env`); точная денежная стоимость одного реального вызова
+> **TODO (не подтверждено кодом):** точная денежная стоимость одного реального вызова
 > для конкретного промпта; поведение `GenerationDailyLimit`/`GenerationQuota::usedOn` при полном
 > провале генерации.
 

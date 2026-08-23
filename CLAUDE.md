@@ -8,7 +8,7 @@ Detailed rules live in the per-directory files linked below.
 
 | Dir | What it is | Status |
 |---|---|---|
-| `mobile/` | Flutter/iOS app (the product). Dark UI, Riverpod. | **Live on the phone.** See `mobile/CLAUDE.md`. |
+| `mobile/` | Flutter/iOS app (the product). paper/ink «Слова» design (light, typographic — no dark theme), Riverpod. | **Live on the phone.** See `mobile/CLAUDE.md`. |
 | `backend/` | **MVP API, currently LIVE** — the app talks to this. Flat Laravel (Http/Models/Services/Actions/Policies/Resources), SQLite, FSRS, Google auth, AI. | Working. Keep running; change only if asked. |
 | `backend2/` | **Paradigm rewrite in progress** — modular monolith + DDD. Postgres/pgvector/Redis/Horizon. Not yet wired to the app. | See `backend2/CLAUDE.md` + `backend2/docs/ROADMAP.md`. |
 | `docs/` | `API_CONTRACT.md` (old backend ↔ Flutter contract). | — |

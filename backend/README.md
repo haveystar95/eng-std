@@ -1,50 +1,36 @@
-# Eng Std — бэкенд (Laravel 13 / PHP 8.4, Docker)
+# eng-std — старый бэкенд (`backend/`)
 
-API для персонального тренажёра английского: коллекции слов, интервальное повторение (FSRS),
-Google-авторизация и интеграция Claude (генерация коллекций + проверка ответов).
+**Что это.** Первый, плоский Laravel-API тренажёра (Http/Models/Services/Actions/Policies/
+Resources, SQLite, FSRS-повторения, вход через Google, генерация коллекций и проверка ответов
+моделью). Он работает и остаётся живым до явного решения о выводе; приложение при этом уже
+говорит с `../backend2` — переписанным модульным API. Два стека одновременно не поднимать:
+ngrok-домен у них один.
 
-## Запуск (всё в Docker)
+Развёрнутый контекст проекта — в корневом `../CLAUDE.md`; контракт этого API —
+`../docs/API_CONTRACT.md`. Новый бэкенд документирован отдельно (`../backend2/`).
+
+## Запуск
 
 ```bash
 docker compose up -d
 ```
 
-Поднимает три сервиса:
-| Сервис | Что делает | Порт |
-|--------|-----------|------|
-| `app` | Laravel API (`php artisan serve`), миграции на старте | http://localhost:8000 |
-| `queue` | воркер очереди для async AI-генерации | — |
-| `ngrok` | публичный туннель к API | инспектор: http://localhost:4040 |
+Три сервиса: `app` (Laravel на `:8000`, миграции на старте), `queue` (воркер для асинхронной
+генерации), `ngrok` (публичный туннель, инспектор на `:4040`). Artisan —
+`docker compose exec app php artisan …`. Логи — `docker compose logs -f app`.
 
-Публичный URL API:
-```bash
-curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"https://[^"]*"'
-```
+**Готча:** воркер очереди держит код джобов в памяти. После правки `app/Jobs/*`, промптов или
+провайдера — `docker compose restart queue`. После правки `.env` — тоже.
 
-Остановить: `docker compose down`. Логи: `docker compose logs -f app`.
+## Модель
 
-## Конфигурация (`.env`)
+`AI_PROVIDER` выбирает провайдера за одним портом (`App\Services\Ai\AiProvider`): сейчас в `.env`
+стоит `openai` (`OPENAI_GENERATE_MODEL` / `OPENAI_CHECK_MODEL`), рядом живут `ollama` (локальный,
+через `host.docker.internal:11434`) и `claude` (ключ есть, кредитов у организации нет — дефолт в
+`config/services.php` остался историческим). Вход — `GOOGLE_IOS_CLIENT_ID` + Sanctum-токен.
 
-| Ключ | Назначение |
-|------|-----------|
-| `ANTHROPIC_API_KEY` | ключ Claude для генерации/проверки (console.anthropic.com) |
-| `CLAUDE_GENERATE_MODEL` | модель генерации (по умолчанию `claude-sonnet-5`) |
-| `CLAUDE_CHECK_MODEL` | модель проверки (по умолчанию `claude-haiku-4-5-20251001`) |
-| `GOOGLE_IOS_CLIENT_ID` | OAuth client ID (iOS) для проверки Google ID-токена |
-| `GOOGLE_WEB_CLIENT_ID` | (опц.) web/server OAuth client ID |
-| `NGROK_AUTHTOKEN` | токен ngrok (уже проставлен) |
+## Поверхность
 
-После правки `.env`: `docker compose restart`.
-
-## Эндпоинты
-
-Публичные: `POST /api/auth/google`, `GET /api/health`.
-Остальные — под `auth:sanctum` (заголовок `Authorization: Bearer <token>`).
-Полный контракт: [../docs/API_CONTRACT.md](../docs/API_CONTRACT.md).
-
-## Artisan внутри контейнера
-
-```bash
-docker compose exec app php artisan <command>
-docker compose exec app php artisan tinker
-```
+`POST /auth/google`, `GET /auth/me`, `POST /auth/logout`, профиль, CRUD коллекций + `generate`,
+CRUD слов, `GET /reviews/due` + `POST /reviews/{word}/answer`, `GET /stats`, `POST /ai/check`,
+`GET /ai/jobs/{id}`, `GET /health`.

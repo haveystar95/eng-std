@@ -80,6 +80,15 @@ Mobile users are on cellular. Every field costs battery and bytes.
 - A study session payload must be self-contained — the client cannot make another call
   mid-session, so include everything needed to render every card and grade it.
 
+**A wire key may deliberately outlive the column it came from.** `/sync` ships the mode-admission
+matrix with the key **`min_reps`**, while the database column and the whole Domain have said
+`min_successful_reviews` since the `2026_08_18_100000` rename. That is not drift and not a bug to
+"fix" on sight: the rename stops at `ModeAdmission::toWire()`, marked **RENAME-DEFERRED**, because
+the Flutter client reads `min_reps` today and a wire rename is a client change. Both sides move
+together at the next contract version bump (FSRS), never silently in one backend commit. If you
+touch either side, move both or leave both — and if you are reading `min_reps` off the wire, the
+number in it is a count of SUCCESSFUL reviews, not of the scheduler's `reps`.
+
 ## Push
 
 `CollectionGenerated`, `StreakAtRisk` and `DailyReviewReminder` are pushed via APNs.

@@ -70,10 +70,11 @@ docker compose exec app php artisan admin:create you@example.com --name="You"
 ## Contract
 
 The authoritative contract is `backend2/openapi/openapi-admin.yaml`, authored by the
-**backend session**. It does not exist yet, so this app is built against
-`CONTRACT-ASSUMPTIONS.md` and a mock adapter (`src/api/mock/`). **When the BE contract
-lands, diff it against that doc and report divergences — do not silently reshape the
-frontend.**
+**backend session**. It exists, and this app is **SYNCED** to it: `src/api/types.ts` is the
+camelCased mirror, `src/api/mapping.ts` is the snake_case ↔ camelCase boundary, and the mock
+adapter (`src/api/mock/`) emits the same shapes for offline demo. `CONTRACT-ASSUMPTIONS.md`
+records what was assumed and how it was reconciled. **When the BE contract moves, diff it against
+that doc and report divergences — do not silently reshape the frontend.**
 
 ## Layout
 
@@ -85,7 +86,7 @@ src/
   layouts/      # AdminLayout (sidebar shell)
   stores/       # auth (Pinia)
   styles/       # tokens.css (paper/ink vars), base.css, fonts.css
-  utils/        # format (relative dates, money 4dp), labels
+  utils/        # format (relative dates, money 4dp), labels, languages
   views/        # Dashboard, Users(+user/*tabs), Collections, Terms, Logs, Login
 ```
 
@@ -93,5 +94,8 @@ src/
 
 Included: server-side pagination, empty/error states in paper style, relative dates
 with exact tooltip, money at 4 decimals, the Premium mutation with confirmation.
+Language codes are rendered through `src/utils/languages.ts` — the console's copy of the
+one-per-repository language catalogue (endonym, names, flag), shared in shape with
+`backend2/.../LanguageCatalog.php` and `mobile/lib/l10n/language_endonyms.dart`.
 **Not** in v1: any other data mutation, charting libraries (figures are cards),
 realtime updates.

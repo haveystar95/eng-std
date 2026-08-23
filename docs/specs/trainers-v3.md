@@ -429,15 +429,22 @@ Generation/Infrastructure/Job/GenerateExampleDistractorsJob
   - `tense` — Past Simple вместо Present Perfect, Present Simple вместо Continuous;
   - `word_order` — место наречия, порядок в вопросе, прямой порядок вместо инверсии;
   - `false_friend` — `actual`/`current`, `sympathetic`/`nice`, `magazine`/`shop`, `accurate`/`neat`;
-  - `agreement` — `he do`, `there is` при множественном;
+  - `modal_to` — `I can to swim`: русский инфинитив после модального глагола;
+
+  Список закрыт: это ровно шесть классов `ErrorType` (`Generation/Domain/ValueObject/ErrorType.php`),
+  и он зашит ещё и CHECK-констрейнтом БД. Класса `agreement` (`he do`, `there is` при
+  множественном), который стоял здесь раньше, в коде нет и не было — спека называла седьмой класс,
+  который никакой валидатор бы не принял.
 - **запрещено:** менять смысл; подменять слово синонимом; добавлять/убирать клаузы; менять регистр
   или пунктуацию; выдавать вариант, который носитель признает допустимым.
 
 **Валидация на импорте (детерминированная, до всякого eval):**
 
 1. `sentence != term_examples.sentence`;
-2. расстояние правки от исходника ограничено «одной точечной правкой» — пословный levenshtein ≤ 2
-   (2 допускает перестановку для `word_order`);
+2. ~~расстояние правки от исходника ограничено «одной точечной правкой» — пословный levenshtein ≤ 2
+   (2 допускает перестановку для `word_order`)~~ — **ОТМЕНЕНО**, см. `docs/DECISIONS.md`, раздел
+   «Отменено». Правило не было реализовано; действующий контроль — набор гейтов
+   `DistractorGate`/валидатора (пп. 3–5 ниже плюс `EnrichmentValidator`);
 3. `error_span` — подстрока `sentence`;
 4. `correction` встречается в исходном предложении;
 5. `error_type` ∈ CHECK-списке.

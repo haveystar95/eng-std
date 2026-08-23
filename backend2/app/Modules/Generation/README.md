@@ -75,7 +75,7 @@ POST /generations → RequestCollectionGeneration (quota check, insert pending) 
                   → dispatch GenerateCollectionJob
 GenerateCollectionJob → ProcessGeneration:
      markRunning → CollectionGeneratorPort::generate (slow, OUTSIDE any tx) — ask ceil(size×1.3)
-     → DraftValidator (CEFR/dedup, cap at MAX_ITEMS — size is approximate, never trimmed to `size`)
+     → DraftValidator (CEFR/dedup, cap at MAX_ITEMS) → trimToRequested (down to `size`)
      → if still short: ONE top-up with an avoid list → merge+dedup+cap (tokens/cost SUMMED)
      → [tx: CreateGeneratedCollection + ImportTerm×N + AddTerm]
      → markSucceeded (collection_id, tokens, cost, delivered_count)
@@ -180,9 +180,10 @@ Generation never touches other modules' tables or Domain. It calls, through Appl
   shipped broken set. A **top-up** batch is supplemental — it skips the floor (2 fresh items is fine).
 - **Under-delivery:** ask for ~30% more than requested; if still short, one top-up with an avoid
   list closes the gap. Still short after that is an **honest success** — `delivered_count` records
-  what actually landed (client shows "13 из 15"), never a failure. Size is approximate (owner
-  decision, 2026-08-18): an over-generated batch is never trimmed back down toward `size`, only
-  capped at the hard ceiling `MAX_ITEMS` (25).
+  what actually landed (client shows "13 из 15"), never a failure. **An over-delivery IS trimmed**:
+  `GenerationPipeline::trimToRequested` cuts the batch back to exactly `size` (owner decision
+  2026-08-23, QA-OBS-9, `61be58a`, reversing the 2026-08-18 «size is approximate»). `MAX_ITEMS` (25)
+  stays as the hard ceiling above that.
 - **Cost:** `tokens_in/out`, `model`, `cost_usd` recorded per request for the spend read model; a
   top-up's tokens/cost are **summed onto** the primary call, never overwritten.
 - **Idempotency:** reprocessing a finished request is a no-op.

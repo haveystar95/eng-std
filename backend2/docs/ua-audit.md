@@ -275,7 +275,10 @@ foreach (['translation' => $candidate->translation,
    дедупликацию. Класс C лечится только зачисткой данных — и до неё каждая новая коллекция
    на этих терминах заражается заново.
 4. Чинить надо три места: базу (22 термина), сид-файл (4 термина) и промпт (v6).
-5. **Не входит в этот наряд, но обязано попасть в ROADMAP:** `TermContentReader::byIds()`
-   не принимает язык и выбирает перевод без фильтра. Пока это так, любой легитимный
-   мультиязычный перевод снова выстрелит на экране. То же — `EloquentTermCurator::setPrimaryTranslation()`
-   и `EloquentEnrichmentTargetReader`.
+5. ~~**Не входит в этот наряд, но обязано попасть в ROADMAP:** `TermContentReader::byIds()`
+   не принимает язык и выбирает перевод без фильтра. То же — `EloquentTermCurator::setPrimaryTranslation()`
+   и `EloquentEnrichmentTargetReader`.~~ — **ЗАКРЫТО.** На HEAD `TermContentReader::byIds(array $termIds, string $lang)`
+   принимает язык; `EloquentEnrichmentTargetReader::byIds()` тоже, и выбирает перевод через
+   `TranslationPick::forTerms($ids, $lang)`, честно сообщая в брифе, если пришлось откатиться на
+   другой язык; `EloquentTermCurator::setPrimaryTranslation()` принимает и язык термина, и язык
+   перевода. Проверено 24.08 (HYG-1).

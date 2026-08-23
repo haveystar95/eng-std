@@ -8,14 +8,17 @@ return [
     | The fixed side of every language pair
     |--------------------------------------------------------------------------
     |
-    | What the app TEACHES. In v1 every pair has English on one side and one of
-    | `natives` on the other, so the search pill is always «EN → X» or «X → EN».
+    | What the app TEACHES. `SupportedLanguages::supports()` still requires this
+    | code on exactly one side of every pair, so the search pill reads «EN → X»
+    | or «X → EN».
     |
-    | This is a v1 limit of the PRODUCT, not of the schema: `terms.lang` and
-    | `term_translations.lang` are real columns and the live database already
-    | holds Polish terms with Russian translations, so a pair without English is
-    | representable the day it is wanted. See docs/search-language-pair.md for
-    | what else would have to move.
+    | That requirement is a TEMPORARY v1 limit, not the rule. The decision of
+    | 2026-08-24 is that PAIRS ARE ARBITRARY — any taught language × any support
+    | language, with no obligatory English on either side (docs/DECISIONS.md
+    | п. 134) — and the schema has always allowed it: `terms.lang` and
+    | `term_translations.lang` are real columns, and the live database already
+    | holds Polish terms with Russian translations. What has to move before the
+    | limit comes off is in docs/search-language-pair.md (RS-3).
     |
     */
     'target' => env('APP_TARGET_LANG', 'en'),

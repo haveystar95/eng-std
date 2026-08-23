@@ -53,18 +53,23 @@ The scheduler does not know `acquisition` exists; the admission matrix never loo
 orthogonality is why the ladder landed over live data without re-deriving a single interval —
 existing pairs were backfilled to `graduated` and no SM-2 column was touched.
 
-`LearningLadder::stepFor(acquisition, reps, learning_step)` is the ONE derivation of a pair's rung,
-mirrored by the client and table-tested here:
+`LearningLadder::stepFor(acquisition, successful_reviews, learning_step, is_known)` is the ONE
+derivation of a pair's rung, mirrored by the client and table-tested here:
 
 ```
-new                    → 0  intro, no grading      (writes term_exposures)
-learning, step 1       → 1  recognition term→translation, graded by IDENTITY (tap an option id)
-learning, step 2       → 2  recognition translation→term
-graduated, reps 0–3    → 3  assembly / choice
-graduated, reps 4–5    → 4  + typed production
-graduated, reps ≥ 6    → 5  + dictation
-known                  → null, outside the ladder (verification is always typing)
+new                                  → 0  intro, no grading      (writes term_exposures)
+learning, step 1                     → 1  recognition term→translation, graded by IDENTITY (tap an option id)
+learning, step 2                     → 2  recognition translation→term
+graduated, successful_reviews 0–3    → 3  assembly / choice
+graduated, successful_reviews 4–5    → 4  + typed production
+graduated, successful_reviews ≥ 6    → 5  + dictation
+known                                → null, outside the ladder (verification is always typing)
 ```
+
+Rungs 3–5 count **`successful_reviews`, not the scheduler's `reps`**: `reps` counts SM-2 calls,
+`again` included, so a word nobody could remember used to ride its own failures up to dictation.
+The counter grows on a correct non-practice review of a graduated pair (`hard` counts), and `again`
+neither increments nor resets it. Full reasoning: the `LearningLadder` docblock.
 
 An answer on rungs 1–2 is logged but **never schedules**: graduation invents no interval, and a
 failed step moves nothing, so the client can re-queue the same card into the session's tail. The
@@ -73,7 +78,11 @@ word always has.
 
 The admission matrix is **data**, in `learning_mode_settings` beside the on/off toggle and under the
 same global-plus-per-user-override mechanism — one row per `(scope, mode)`, carrying
-`min_acquisition`, `min_learning_step`, `min_reps` and `options_policy`.
+`min_acquisition`, `min_learning_step`, `min_successful_reviews` and `options_policy`.
+
+> The column was called `min_reps` until the `2026_08_18_100000` migration renamed it; the WIRE key
+> on `/sync` is still `min_reps` on purpose (`ModeAdmission::toWire()`, marked RENAME-DEFERRED).
+> See the `mobile-sync-contract` skill.
 
 ## The 11th trainer: `description_match`
 

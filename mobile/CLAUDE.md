@@ -47,9 +47,19 @@ of `test/data/practice/ladder_parity_test.dart`; the server's half is
 
 ## Design
 
-Dark, vibrant (reference-driven): deep navy bg, gradient accents, emoji on collections.
-Training session: tap card to reveal; **swipe right = Знаю, left = Не знаю, up = Повторить**
-(also 3 buttons). Live progress monitor (know/review/don't-know tallies + bar) + session summary.
+**«Слова» — paper/ink.** A light, typographic look: paper ground, ink type, hairline rules; no
+gradients, no emoji decoration, **no dark theme** (the old dark UI died with `lib/core/`). Tokens
+live in `lib/theme/`, components in `lib/ui/`. The source of truth for the theme is
+`../backend2/docs/design/tokens.html`; where the token list and a screen frame disagree, the token
+list wins.
+
+The palette is deliberately close-valued, which has a QA consequence worth knowing: a fill can be
+present in the code and invisible in a screenshot. «Выглядит пустым» is not a finding until it has
+been measured with an eyedropper (`../docs/qa/PLAYBOOK.md`).
+
+Training: triage is a swipe pass (**right = Знаю, left = Не знаю, up = Не уверен**, buttons too);
+the session itself is server-assembled and server-graded, with a live progress monitor and a
+summary at the end.
 
 ## Running on the iPhone — the exact recipe (and the gotchas)
 
@@ -85,7 +95,10 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 ## API config
 
 The data layer targets **backend2** (`{API_BASE_URL}/api/v1`, bearer token, responses wrapped
-in `data`, ULID string ids, `/reviews/batch`, `/study/due`, `/generations`). `lib/data/`
+in `data`, ULID string ids). The study surface is `POST /study/sessions` (self-contained package)
++ `POST /reviews/batch`; `GET /study/due` was removed on 2026-07-30 and is not a thing. Alongside
+them: `GET /study/progress`, `GET /stats`, `/triage/*`, `/pool/terms/{id}`, `GET /sync?since=` +
+`GET /sync/cursor`, `/collections/*`, `/generations`, `/search` + `/search/instant`. `lib/data/`
 (`models.dart`, `api_client.dart`, `providers.dart`) was hand-adapted to the OpenAPI contract
 (not codegen).
 

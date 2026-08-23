@@ -1,44 +1,64 @@
-# Eng Std — мобильное приложение (Flutter)
+# eng_std — мобильное приложение (Flutter / iOS)
 
-Персональный тренажёр английских слов: карточки с интервальным повторением (FSRS на бэкенде),
-произношение (TTS), коллекции слов и генерация новых коллекций через ИИ (Claude).
+Персональный тренажёр слов. Курс мультиязычный: пара языков — свойство КОЛЛЕКЦИИ
+(`источник → цель`), а не приложения; английский — один из изучаемых, а не единственный.
+
+Клиент говорит с `../backend2` (`/api/v1`, ULID-идентификаторы, ошибки RFC 7807). Контракт —
+`../backend2/openapi/openapi.yaml`.
+
+## Что делает клиент, а что сервер
+
+**Сервер собирает тренировку и он же грейдит ответы.** Состав сессии фиксируется на сервере под
+`session_id`; клиент шлёт сырой ответ и получает вердикт. Локальная проверка на устройстве есть,
+но только ради мгновенной анимации и **никогда не строже серверной**.
+
+Клиент — офлайн-first: экраны читают из локальной БД (drift), а не из сети; ответы, триажи и
+членство в пуле уезжают долговечными очередями; курсор синка лежит в той же локальной БД.
 
 ## Стек
-- Flutter 3.44 / Dart 3.12
-- Riverpod — состояние
-- Dio — HTTP к Laravel API
-- flutter_tts — озвучка слов
 
-## Структура
-```
-lib/
-  core/        config.dart (API URL, токен, демо-режим), theme.dart
-  data/        models.dart, api_client.dart, demo_data.dart, providers.dart
-  features/
-    home/        нижняя навигация
-    training/    экран тренировки (карточки + оценки again/hard/good/easy)
-    collections/ список коллекций, детали, диалог ИИ-генерации
-```
+Flutter 3.44 / Dart 3.12. `flutter_riverpod` (состояние), `dio` (HTTP), `drift` + `sqlite3` (локальная
+БД), `flutter_tts` (озвучка), `google_sign_in` v7 и `sign_in_with_apple` (вход),
+`flutter_secure_storage` (токен в Keychain). Шрифты Literata + Inter вшиты в `assets/fonts/`.
+
+## Дизайн — «Слова», paper/ink
+
+Светлая типографическая тема: бумага и чернила, никаких градиентов и эмодзи-декора. Токены —
+`lib/theme/`, базовые компоненты — `lib/ui/`. Источник правды по теме —
+`../backend2/docs/design/tokens.html`; при расхождении токен-листа с кадрами экранов побеждает
+токен-лист. Тёмной темы нет.
+
+## Структура `lib/`
+
+`theme/` — токены и `buildAppTheme()`. `ui/` — компоненты (PaperCard, кнопки, чипы, MiniFlag…).
+`data/` — модели, `api_client.dart`, `config.dart`, локальная БД и очереди синка, справочные
+таблицы (`languages.dart`). `features/` — экраны по областям (`auth/`, `home/`, `training/`,
+`collections/`, `search/`, `progress/`, `profile/`, `onboarding/`). `l10n/` — ARB-файлы
+(`app_ru.arb` — источник, `app_en.arb` — полный) плюс справочник языков; вся копия UI идёт через
+`AppLocalizations`, это держит тест.
 
 ## Запуск
 
-### Демо-режим (без бэкенда)
-Приложение сразу работает на встроенных примерах — можно листать карточки и коллекции:
+Бэкенд поднимается в `../backend2` (`docker compose up -d`), он же владеет ngrok-туннелем, адрес
+которого уже стоит дефолтом в `lib/data/config.dart`. Никаких `--dart-define` для дев-сборки не
+нужно:
+
 ```bash
-flutter run
+cd mobile && PATH="/opt/homebrew/bin:$PATH" LANG=en_US.UTF-8 flutter run --release -d <device-id>
 ```
 
-### С бэкендом Laravel
+Подробности сборки на телефон (подпись, Xcode, CocoaPods) — в `CLAUDE.md`.
+
+**Дев-вход** (`kDevLoginEnabled`) существует только в debug-сборке: это `kDebugMode`, а не
+`--dart-define`, поэтому в release он выпиливается компилятором. Демо-режима без бэкенда нет —
+приложению нужен сервер.
+
+## Проверка без телефона
+
 ```bash
-flutter run \
-  --dart-define=API_BASE_URL=http://192.168.1.10:8000 \
-  --dart-define=API_TOKEN=<sanctum-token>
+flutter analyze && flutter test
 ```
-(IP машины с Laravel — не `localhost`, если запускаешь на реальном iPhone.)
 
-## На свой iPhone
-1. Подключи телефон, доверься компьютеру.
-2. `open ios/Runner.xcworkspace` → в Xcode выбери свою команду (Signing & Capabilities) и Bundle ID.
-3. `flutter run -d <device-id>` либо запуск из Xcode.
-
-API-контракт с бэкендом: см. [../docs/API_CONTRACT.md](../docs/API_CONTRACT.md).
+Визуально — превью-стенды на моках, вне `lib/`: `tool/preview.dart` (экраны приложения),
+`tool/ladder_preview.dart` (поверхности лестницы освоения). Запускаются на симуляторе или в Chrome,
+только в `--debug`.

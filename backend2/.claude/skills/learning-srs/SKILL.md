@@ -82,17 +82,27 @@ never read each other's fields:
   in is a function of its ladder step alone (`ModeAdmission`), so a mode gated off at step 1 is
   gated off whatever the scheduler thinks.
 
-The step is derived by ONE pure function, `LearningLadder::stepFor(acquisition, reps, learningStep)`
-— mirrored by the client, so it is table-tested on both runtimes:
+The step is derived by ONE pure function,
+`LearningLadder::stepFor(acquisition, successfulReviews, learningStep, isKnown)` — mirrored by the
+client, so it is table-tested on both runtimes:
 
 ```
-acquisition=new                    → 0  intro (no grading)
-acquisition=learning, step 1       → 1  recognition, term → translation   (identity-graded)
-acquisition=learning, step 2       → 2  recognition, translation → term
-acquisition=graduated, reps 0–3    → 3  assembly / choice
-acquisition=graduated, reps 4–5    → 4  + typed production
-acquisition=graduated, reps ≥ 6    → 5  + dictation
+acquisition=new                                  → 0  intro (no grading)
+acquisition=learning, step 1                     → 1  recognition, term → translation   (identity-graded)
+acquisition=learning, step 2                     → 2  recognition, translation → term
+acquisition=graduated, successful_reviews 0–3    → 3  assembly / choice
+acquisition=graduated, successful_reviews 4–5    → 4  + typed production
+acquisition=graduated, successful_reviews ≥ 6    → 5  + dictation
 ```
+
+**Rungs 3–5 count `successful_reviews`, NOT the scheduler's `reps`** — and that is the whole point
+of the column. `reps` counts how many times SM-2 has been CALLED, `again` branches included, and
+because an `again` in learning reschedules the pair immediately, a word nobody could remember rode
+its own failures up to dictation. `reps` is still honest for what it does drive (the mode rotation
+in `ExerciseSelector`). The counter grows on a correct non-practice review of a GRADUATED pair —
+`hard` counts, `again` neither counts nor resets: a rung, once earned, is not lost. The reasoning
+is in the `LearningLadder` docblock, and the thresholds are `TYPING_MIN_SUCCESSES = 4` /
+`DICTATION_MIN_SUCCESSES = 6`.
 
 - **A ladder answer never schedules.** While `acquisition` is `new`/`learning`, a graded answer
   is appended to `reviews` (it is a real retrieval and keeps the streak) and moves `learning_step`
@@ -233,10 +243,14 @@ More session rules:
 
 ## Exercises and grading
 
-The exercise modes are `multiple_choice`, `word_bank`, `typing`, `listening`, `cloze`
-(`listening`/`cloze` are `> Not implemented yet` — they need TTS and good examples). Which
-mode a card gets is chosen by state (`ExerciseSelector`), rotating review modes deterministically
-on the term's `reps` (never `rand()`), degrading within the config-enabled set. The mode affects
+There are **eleven** exercise modes in `ExerciseMode`, all of them built: `multiple_choice`,
+`word_bank`, `typing`, `listening`, `cloze`, `scramble`, `dictation`, `pick_correct`,
+`description_match`, `speaking`, `intro`. (`listening` and `cloze` were the "not implemented yet"
+pair in an earlier draft of this skill — they have TTS and examples now and are dealt like the
+rest.) Which mode a card gets is chosen by state (`ExerciseSelector`), rotating review modes
+deterministically on the term's `reps` (never `rand()`), degrading within the config-enabled set.
+`intro` is the odd one: it produces no answer, so `isGraded()` is false and it writes
+`term_exposures`, never `reviews`. The mode affects
 **grading only, never scheduling** — the scheduler takes a `Grade` and never learns which mode
 produced it.
 
@@ -247,9 +261,12 @@ produced it.
   binary correct/incorrect for the animation — never a grade, never the median, never hints.
   (Client shows green, server says `hard` → invisible to the user. The reverse — client red,
   server correct — reads as a broken app and is not allowed.)
-- **Recognition modes can never award `easy`.** `multiple_choice`/`word_bank`/`cloze` cap at
-  `good`; only production (`typing`/`listening`) reaches `easy`. A four-way guess sent to a
-  month-long interval is a word quietly forgotten.
+- **Recognition modes can never award `easy`.** The ceiling is one function,
+  `ExerciseMode::maxGrade()`: `typing`, `listening` and `dictation` reach `easy` (free production —
+  `dictation` writes a whole sentence with nothing on screen to lean on); everything else —
+  `multiple_choice`, `word_bank`, `cloze`, `scramble`, `pick_correct`, `description_match`,
+  `speaking` — caps at `good`. A four-way guess sent to a month-long interval is a word quietly
+  forgotten. (`intro` throws rather than returning a grade at all.)
 - **Grade:** wrong → `again`; correct with a hint / typo / slow → `hard`; correct at normal
   pace → `good`; correct, fast, no hint, production mode → `easy`. "Slow"/"fast" are relative
   to the user's **personal median for that mode** (typing is far slower than multiple choice),
