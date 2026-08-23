@@ -95,6 +95,21 @@ it('keeps an intra-day (0-day) step at the exact moment, never floored', functio
     expect($result->dueAt())->toEqual($evening);
 });
 
+it('counts the interval in calendar days across a clock change, not in exact hours', function () {
+    // 23:30 on 2026-03-27, while Bucharest is still EET (+02:00); DST starts on the 29th.
+    // learning + good = +4 days → 31 March, floored to 00:00 EEST = 2026-03-30T21:00Z.
+    // Added as 96 exact hours in UTC instead, the 23:30 wall clock slides to 00:30 on 1 April and
+    // the card is floored to the wrong calendar day — a whole day late, once a year.
+    $bucharest = new DateTimeZone('Europe/Bucharest');
+    $answered = new DateTimeImmutable('2026-03-27T23:30:00', $bucharest);
+
+    $result = $this->scheduler->schedule(progressAt(LearningState::Learning, interval: 1), Grade::Good, $answered, $bucharest);
+
+    $due = $result->dueAt();
+    expect($due?->setTimezone($bucharest)->format('Y-m-d H:i:s'))->toBe('2026-03-31 00:00:00')
+        ->and($due?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'))->toBe('2026-03-30 21:00:00');
+});
+
 it('does not break an already-scheduled card when the user changes timezone', function () {
     // A card scheduled while on UTC, then re-graded after moving to Kyiv: the new due is simply the
     // start of the user's (new-zone) day — no crash, no drift into an invalid instant.

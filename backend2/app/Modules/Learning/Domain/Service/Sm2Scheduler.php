@@ -155,9 +155,16 @@ final readonly class Sm2Scheduler implements Scheduler
 
         // 0-day step is due now (intra-session). Day-scale due lands at 00:00 of the user's calendar
         // day so an evening review returns the next morning, not the next evening (F19).
+        //
+        // The day count is added IN THE USER'S ZONE, before the floor — «+4 days» is a calendar
+        // step, not 96 exact hours. Added in UTC first, an interval spanning a clock change lands
+        // an hour off the wall clock it started from, and an answer given within that hour of local
+        // midnight is then floored to the WRONG calendar day (a whole day late/early). Only a named
+        // zone knows where its clock changes, which is why the port hands one down and never an
+        // offset.
         $dueAt = $interval === 0
             ? $now
-            : $now->add(new DateInterval('P' . $interval . 'D'))->setTimezone($zone)->setTime(0, 0, 0);
+            : $now->setTimezone($zone)->add(new DateInterval('P' . $interval . 'D'))->setTime(0, 0, 0);
 
         return TermProgress::reconstitute(
             userId: $p->userId(),
