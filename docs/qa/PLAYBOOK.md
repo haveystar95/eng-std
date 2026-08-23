@@ -122,7 +122,44 @@ docker compose exec app php artisan qa:reset qa@wt.test --force
 После сброса на устройстве надо **выйти и войти заново** (Профиль → «Выйти» → «Dev login») — иначе
 локальное зеркало устройства всё ещё помнит стёртый прогресс, и первые же экраны соврут.
 
-### 5. Куда смотреть, кроме экрана
+### 5. Выманить редкий тренажёр — только пер-юзерным оверрайдом матрицы
+
+Половина тренажёров (`speaking`, `dictation`, `description_match`, `typing`, `listening`,
+`pick_correct`) на живом аккаунте приходит редко: их держат ступень, `successful_reviews` и наличие
+контента у термина. Чтобы посмотреть такой экран, матрицу приходится подкручивать — и подкручивать
+её надо **на QA-юзере, а не глобально**.
+
+`learning_mode_settings` устроена под это: строки с `user_id IS NULL` — глобальные (то, что видит
+админка → «Тренажёры»), строки с `user_id` — персональный оверрайд. Уникальный индекс стоит на
+`COALESCE(user_id,'') + mode`, так что персональная строка живёт рядом с глобальной и не мешает ей.
+
+**Глобальные строки в прогоне не трогать.** Они — то, что видят живые пользователи; правка «на
+минутку» переживает прогон и уезжает в продукт. Персональные строки видны только QA-аккаунту и
+удаляются одним `DELETE`.
+
+Выманить один тренажёр (пример — `speaking`): включить его и выключить остальные, опустив пороги.
+
+```bash
+docker compose exec db psql -U wordtrainer -d wordtrainer -c "INSERT INTO learning_mode_settings (id,user_id,mode,enabled,position,min_acquisition,min_learning_step,min_successful_reviews,options_policy,created_at,updated_at) SELECT lpad(m.mode,26,'Q'), (SELECT id FROM users WHERE email='qa@wt.test'), m.mode, (m.mode='speaking'), 0, 'new', 0, 0, 'standard', now(), now() FROM (VALUES ('intro'),('multiple_choice'),('word_bank'),('cloze'),('scramble'),('pick_correct'),('description_match'),('speaking'),('typing'),('listening'),('dictation')) AS m(mode);"
+```
+
+Перезапустить приложение (сессия собирается на сервере, но устройство держит уже полученную) и
+открыть сессию — придёт только выбранный тренажёр.
+
+Вернуть — и **показать возврат в отчёте**:
+
+```bash
+docker compose exec db psql -U wordtrainer -d wordtrainer -c "DELETE FROM learning_mode_settings WHERE user_id IS NOT NULL;" -c "SELECT count(*) AS per_user_rows FROM learning_mode_settings WHERE user_id IS NOT NULL;"
+```
+
+Ожидание после возврата: `per_user_rows = 0` и глобальные 11 строк ровно те же, что до прогона
+(снимите их `SELECT` до правки — это и есть эталон сравнения).
+
+Оговорка про контент: оверрайд снимает гейт ступени, но не создаёт данные. `description_match` без
+`term_descriptions` и `typing` без `term_accepted_variants` не придут всё равно — это QA-OBS-8, а не
+поломка оверрайда.
+
+### 6. Куда смотреть, кроме экрана
 
 | Инструмент | Адрес | Зачем |
 |---|---|---|
@@ -147,7 +184,7 @@ SELECT id FROM users WHERE email = 'qa@wt.test';
 Дальше в примерах он подставлен как `(SELECT id FROM users WHERE email='qa@wt.test')` — так запросы
 копируются без правки.
 
-### 6. Отсечка времени
+### 7. Отсечка времени
 
 Перед первым шагом прогона запомните момент старта — по нему потом фильтруются логи и расходы:
 
@@ -198,6 +235,35 @@ WHERE tokenable_id = (SELECT id FROM users WHERE email='qa@wt.test');
 SELECT occurred_at, method, path, status, duration_ms FROM api_request_logs
 WHERE direction = 'inbound' AND path LIKE '%/auth/dev%' ORDER BY occurred_at DESC LIMIT 3;
 ```
+
+#### Зона пользователя уезжает на сервер на входе — проверять на КАЖДОМ способе входа
+
+`profiles.timezone` — не украшение: на нём стоит `due_at` (полночь считается в зоне пользователя,
+F19/QA-BUG-1) и суточные окна квот и статистики. Зона берётся с устройства и отправляется
+**на входе** и **при правке профиля**. Если новый способ входа её не пошлёт, пользователь молча
+сядет на UTC, и сломается не вход, а расписание повторений — через сутки и не там, где смотрят.
+
+Проверка активная, а не наблюдательная: подложить заведомо неверную зону, войти, посмотреть, что её
+перезаписали.
+
+```bash
+docker compose exec db psql -U wordtrainer -d wordtrainer \
+  -c "UPDATE profiles SET timezone='UTC' WHERE user_id=(SELECT id FROM users WHERE email='qa@wt.test');"
+```
+
+Дальше — выйти (Профиль → «Выйти») и войти заново.
+
+```bash
+docker compose exec db psql -U wordtrainer -d wordtrainer \
+  -c "SELECT timezone FROM profiles WHERE user_id=(SELECT id FROM users WHERE email='qa@wt.test');"
+```
+
+Ожидание: зона устройства (на симуляторе — зона хоста, `Europe/Bucharest`), а НЕ `UTC`.
+
+**Прогонять это на каждом способе входа, который существует на момент прогона.** Сейчас их три —
+Dev login, Google, Apple; на QAB-1 (2026-08-23) проверен только Dev login (зелено: `UTC` →
+`Europe/Bucharest`), Google и Apple на симуляторе не пройти. Появится четвёртый — он попадает в этот
+список автоматически, а не «когда вспомним».
 
 ### 1.2 Главный экран
 
@@ -1765,6 +1831,10 @@ docker compose exec app php artisan qa:cost qa@wt.test --period=day
 
 # бэкап дев-базы перед чем угодно рискованным
 ./scripts/db-backup.sh
+
+# снять/вернуть пер-юзерный оверрайд матрицы тренажёров — SQL в «Подготовке стенда», п. 5.
+# Глобальные строки (user_id IS NULL) в прогоне не трогать.
+docker compose exec db psql -U wordtrainer -d wordtrainer -c "DELETE FROM learning_mode_settings WHERE user_id IS NOT NULL;"
 ```
 
 Оба пишущих командных инструмента **отказываются** работать:
