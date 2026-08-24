@@ -107,7 +107,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final languages = _languages;
     if (pair == null || languages == null) return null;
 
-    return LearningPair.of(pair, languages.taught);
+    return LearningPair.of(pair, languages);
   }
 
   /// Terms the LOCAL mirror already holds, keyed by id — the only place a search result can get a

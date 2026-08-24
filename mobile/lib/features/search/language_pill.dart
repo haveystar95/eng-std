@@ -22,9 +22,11 @@ import 'search_pair.dart';
 /// A pair has two halves and they are not interchangeable: one is the language being LEARNED, the
 /// other the language the learner reads. Which languages may stand in which half is a fact about
 /// the deployment, not about this screen — it is [SearchLanguages], read from the server — so each
-/// pill offers the list for the ROLE that currently occupies its side, and the roles move with the
-/// swap. A pill whose role has one language on offer is a label: it opens no sheet, because a sheet
-/// with a single row is a dead end that still costs a tap to close.
+/// pill offers what may stand beside ITS NEIGHBOUR, which is the only question with a stable answer
+/// now that the same language can play either role (RS-3). A pill left with one language on offer
+/// is a label: it opens no sheet, because a sheet with a single row is a dead end that still costs
+/// a tap to close. That is what the taught side used to be, every time, while the server named one
+/// taught language; it is a real picker now that the server names seven.
 ///
 /// THE ARROW SWAPS. That is the move this control exists for — «I know this word in English»
 /// versus «I need this word in English» is a switch people flip constantly, and it is its own
@@ -58,14 +60,17 @@ class LanguagePairBar extends StatelessWidget {
         _Pill(
           code: pair.source,
           role: l.searchPairFrom,
-          options: languages.optionsAt(pair.source),
+          // Each pill asks what would still make a pair with the OTHER one — see
+          // [SearchLanguages.optionsAgainst]. Its own language is in that list (it is the ticked
+          // row); its neighbour's never is, so «en → en» cannot be picked into being.
+          options: languages.optionsAgainst(pair.target),
           onPick: (code) => onChanged(SearchPair(source: code, target: pair.target)),
         ),
         _SwapButton(label: l.searchPairSwap, onTap: () => onChanged(pair.swapped)),
         _Pill(
           code: pair.target,
           role: l.searchPairTo,
-          options: languages.optionsAt(pair.target),
+          options: languages.optionsAgainst(pair.source),
           onPick: (code) => onChanged(SearchPair(source: pair.source, target: code)),
         ),
       ],

@@ -11,7 +11,14 @@ import 'package:eng_std/features/search/search_pair.dart';
 /// dropped from the config has to degrade to the default pair rather than to a 422 the learner has
 /// to read on a screen that was working yesterday.
 void main() {
-  const languages = SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
+  // The RS-3 contract, roughly as the live deployment answers it: seven taught languages, and every
+  // language of the catalogue readable — so most codes appear in BOTH lists.
+  const languages = SearchLanguages(
+    targets: ['en', 'ro', 'es'],
+    natives: ['ru', 'en', 'ro', 'es'],
+    defaultTaught: 'en',
+    defaultNative: 'ru',
+  );
 
   group('the pair itself', () {
     test('a tap is the same two languages, the other way', () {
@@ -27,14 +34,83 @@ void main() {
       expect(const SearchPair(source: 'en', target: 'ru').reversedFor('en'), isFalse);
     });
 
-    test('changing the other language keeps the direction', () {
-      // The learner was asking «from Russian into English» and picks Romanian: they are still
-      // asking from their own language into English, not the other way about.
-      const reversed = SearchPair(source: 'ru', target: 'en');
-      expect(reversed.withOther('en', 'ro'), const SearchPair(source: 'ro', target: 'en'));
+  });
 
-      const forward = SearchPair(source: 'en', target: 'ru');
-      expect(forward.withOther('en', 'ro'), const SearchPair(source: 'en', target: 'ro'));
+  group('which side is being learned', () {
+    test('the pair names it when only one side is taught', () {
+      // «ru → ro»: Russian is not a language this deployment teaches, so Romanian is the term side
+      // whichever way round the learner typed it.
+      expect(languages.taughtSideOf(const SearchPair(source: 'ru', target: 'ro')), 'ro');
+      expect(languages.taughtSideOf(const SearchPair(source: 'ro', target: 'ru')), 'ro');
+    });
+
+    test('two taught sides are a tie, broken the way the server breaks it', () {
+      // «es → en» is either Spanish studied with English support or the other way about, and the
+      // direction cannot tell them apart. The server asks the profile (DECISIONS п. 147); this asks
+      // the legacy `target`, which is the same value for this deployment.
+      expect(languages.taughtSideOf(const SearchPair(source: 'es', target: 'en')), 'en');
+      expect(languages.taughtSideOf(const SearchPair(source: 'en', target: 'es')), 'en');
+
+      // Neither side is it: the direction's source wins, as it does on the server.
+      expect(languages.taughtSideOf(const SearchPair(source: 'ro', target: 'es')), 'ro');
+    });
+
+    test('the roles a save obeys come from that, not from the direction', () {
+      // «поддержка es, учу en» — the pair кадр A-3.1 was run in. The collection born from this save
+      // is `en ← es`, whichever way the pill happened to be pointing.
+      expect(
+        LearningPair.of(const SearchPair(source: 'es', target: 'en'), languages),
+        const LearningPair(learned: 'en', support: 'es'),
+      );
+      expect(
+        LearningPair.of(const SearchPair(source: 'ro', target: 'ru'), languages),
+        const LearningPair(learned: 'ro', support: 'ru'),
+      );
+    });
+  });
+
+  group('what a pill may offer', () {
+    test('a support-only neighbour leaves the taught half to this side', () {
+      // Russian is not taught here, so the other pill has to hold a language that is — the whole
+      // «На какой» list, which is what became a real picker when the server named more than one.
+      expect(languages.optionsAgainst('ru'), ['en', 'ro', 'es']);
+    });
+
+    test('a taught neighbour covers the taught half, so this side may be anything readable', () {
+      expect(languages.optionsAgainst('en'), ['ru', 'ro', 'es']);
+    });
+
+    test('the neighbour itself is never on offer', () {
+      // «en → en» is not a pair. The way to say «the other way round» is the arrow between the
+      // pills, so the language opposite is left out of the sheet rather than shown greyed out.
+      for (final code in ['en', 'ru', 'ro', 'es']) {
+        expect(languages.optionsAgainst(code), isNot(contains(code)));
+      }
+    });
+
+    test('a pair the pills can build is one the server serves', () {
+      for (final opposite in ['en', 'ru', 'ro', 'es']) {
+        for (final code in languages.optionsAgainst(opposite)) {
+          expect(
+            languages.serves(SearchPair(source: code, target: opposite)),
+            isTrue,
+            reason: '$code→$opposite was offered',
+          );
+        }
+      }
+    });
+
+    test('the arrow can never make the two sides the same', () {
+      // By construction: a swap keeps the two languages and only exchanges the slots, and the rule
+      // for a served pair is symmetric.
+      for (final pair in [
+        const SearchPair(source: 'en', target: 'ru'),
+        const SearchPair(source: 'es', target: 'en'),
+        const SearchPair(source: 'ro', target: 'ru'),
+      ]) {
+        expect(pair.swapped.source, isNot(pair.swapped.target));
+        expect(languages.serves(pair.swapped), languages.serves(pair));
+      }
     });
   });
 
@@ -66,8 +142,38 @@ void main() {
 
       // Romanian dropped from the deployment. Without this the screen would open on a pair the
       // server refuses, and the learner would meet a 422 on a screen that worked yesterday.
-      const shrunk = SearchLanguages(taught: 'en', natives: ['ru'], defaultNative: 'ru');
+      const shrunk = SearchLanguages(
+        targets: ['en'],
+        natives: ['ru'],
+        defaultTaught: 'en',
+        defaultNative: 'ru',
+      );
       expect(await store.load(shrunk), const SearchPair(source: 'en', target: 'ru'));
+    });
+
+    test('a pair whose two sides became the same language falls back, and does not throw', () async {
+      // Not reachable from the pills — but the key is a string on a device, and the lists it was
+      // written against move underneath it. It degrades to the opening pair like anything else.
+      await db.setMeta(SearchPairStore.metaKey, '{"s":"es","t":"es"}');
+
+      expect(await store.load(languages), languages.initialPair);
+      expect(languages.initialPair.source, isNot(languages.initialPair.target));
+    });
+
+    test('a learner whose own language is also taught still opens on a pair', () async {
+      // `natives` is the whole catalogue now, so an English speaker's `default_native` is `en` —
+      // and «en → en» is the one pair the server refuses. The opening position steps around it.
+      const englishSpeaker = SearchLanguages(
+        targets: ['en', 'es'],
+        natives: ['en', 'es', 'ru'],
+        defaultTaught: 'en',
+        defaultNative: 'en',
+      );
+
+      final opening = await store.load(englishSpeaker);
+      expect(opening.source, isNot(opening.target));
+      expect(englishSpeaker.serves(opening), isTrue);
+      expect(opening, const SearchPair(source: 'es', target: 'en'));
     });
 
     test('a corrupted key reads as the default pair, never as a crash', () async {
@@ -84,19 +190,62 @@ void main() {
   });
 
   group('what the server offered', () {
+    test('it reads the two roles the RS-3 body names', () {
+      final languages = SearchLanguages.fromJson(const {
+        'target': 'en',
+        'targets': ['en', 'ro', 'es', 'de', 'fr', 'it', 'pl'],
+        'natives': ['ru', 'uk', 'en', 'ro', 'es'],
+        'default_native': 'ru',
+      });
+
+      expect(languages.targets, ['en', 'ro', 'es', 'de', 'fr', 'it', 'pl']);
+      expect(languages.natives, ['ru', 'uk', 'en', 'ro', 'es']);
+      expect(languages.teaches('pl'), isTrue);
+      expect(languages.teaches('uk'), isFalse, reason: 'readable is not the same as teachable');
+      // Both lists are read as ROLES: `ru → pl` is a pair now, with no English anywhere in it.
+      expect(languages.serves(const SearchPair(source: 'ru', target: 'pl')), isTrue);
+      expect(languages.serves(const SearchPair(source: 'ru', target: 'uk')), isFalse);
+    });
+
+    test('a body without the new lists still leaves the pill with a pair', () {
+      // Compatibility with a pre-RS-3 server is not owed, but the parse must not fall over: one
+      // taught language named the old way is a one-entry `targets`.
+      final languages = SearchLanguages.fromJson(const {
+        'target': 'en',
+        'natives': ['ro', 'ru'],
+        'default_native': 'ru',
+      });
+
+      expect(languages.targets, ['en']);
+      expect(languages.initialPair, const SearchPair(source: 'en', target: 'ru'));
+    });
+
     test('it degrades to something usable rather than to nothing', () {
       // A body from a server that is older, newer or briefly confused must still leave the pill
       // with a pair it can draw.
       final languages = SearchLanguages.fromJson(const {});
 
-      expect(languages.taught, 'en');
+      expect(languages.defaultTaught, 'en');
+      expect(languages.targets, isNotEmpty);
       expect(languages.natives, isNotEmpty);
       expect(languages.initialPair.source, 'en');
+      expect(languages.initialPair.source, isNot(languages.initialPair.target));
+    });
+
+    test('a body of rubbish is read as an empty list, not as a crash', () {
+      final languages = SearchLanguages.fromJson(const {
+        'targets': ['en', 7, '', '  ro  ', null],
+        'natives': 'ru',
+      });
+
+      expect(languages.targets, ['en', 'ro']);
+      expect(languages.natives, ['ru']);
     });
 
     test('it takes the default from the profile, not from the head of the list', () {
       final languages = SearchLanguages.fromJson(const {
         'target': 'en',
+        'targets': ['en', 'ro'],
         'natives': ['ro', 'ru'],
         'default_native': 'ru',
       });

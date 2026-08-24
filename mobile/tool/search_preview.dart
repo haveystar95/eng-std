@@ -329,8 +329,12 @@ class _FakeApi implements ApiClient {
   static const _gibberish = 'asdfgh';
 
   @override
-  Future<SearchLanguages> searchLanguages() async =>
-      const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
+  Future<SearchLanguages> searchLanguages() async => const SearchLanguages(
+    targets: ['en', 'ro', 'es', 'de'],
+    natives: ['ru', 'en', 'ro', 'es', 'de'],
+    defaultTaught: 'en',
+    defaultNative: 'ru',
+  );
 
   @override
   Future<List<SearchHit>> search(

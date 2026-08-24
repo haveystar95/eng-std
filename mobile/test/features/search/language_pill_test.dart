@@ -11,14 +11,26 @@ import 'package:eng_std/features/search/search_pair.dart';
 import 'package:eng_std/features/search/search_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart';
 
 /// The two pills — the control that says which pair the answer comes back in.
 ///
 /// It replaced automatic language detection, and these tests pin the difference: the pair is
 /// STATED, it is sent on every call, the arrow between the pills flips it, and nothing on the
-/// screen ever explains it. Since A-3 the two halves are pickers in their own right, each offering
-/// the languages the SERVER says may play that role — «На какой» the taught list, «С какого» the
-/// support one — so nothing about which language goes where is written in the app.
+/// screen ever explains it. Since A-3 the two halves are pickers in their own right, and since
+/// A-3.1 each offers what the SERVER says may stand beside the other pill — so nothing about which
+/// language goes where is written in the app.
+///
+/// What the deployment serves in these tests: Spanish and Romanian are taught alongside English,
+/// and every language of the catalogue is readable — which is what makes «обе стороны изучаемые»
+/// reachable at all.
+const _served = SearchLanguages(
+  targets: ['en', 'ro', 'es'],
+  natives: ['ru', 'en', 'ro', 'es'],
+  defaultTaught: 'en',
+  defaultNative: 'ru',
+);
+
 class _Api implements ApiClient {
   _Api({this.languages, this.hint, this.hits = const []});
 
@@ -33,8 +45,7 @@ class _Api implements ApiClient {
   final List<String> searchPairs = [];
 
   @override
-  Future<SearchLanguages> searchLanguages() async =>
-      languages ?? const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru');
+  Future<SearchLanguages> searchLanguages() async => languages ?? _served;
 
   @override
   Future<List<SearchHit>> search(
@@ -154,12 +165,7 @@ void main() {
     // A fresh screen over the same device store — the app restarting, in effect.
     await _pump(tester, _Api(), db: db);
 
-    expect(
-      await SearchPairStore(
-        db,
-      ).load(const SearchLanguages(taught: 'en', natives: ['ru', 'ro'], defaultNative: 'ru')),
-      const SearchPair(source: 'ru', target: 'en'),
-    );
+    expect(await SearchPairStore(db).load(_served), const SearchPair(source: 'ru', target: 'en'));
   });
 
   testWidgets('the support pill offers the languages the server says may read', (tester) async {
@@ -188,19 +194,75 @@ void main() {
     expect(api.searchPairs, ['en→ro']);
   });
 
-  testWidgets('the taught pill opens no sheet while the server names one taught language', (
-    tester,
-  ) async {
-    // `GET /search/languages` answers with ONE `target`, because `SupportedLanguages` still puts the
-    // taught language on one side of every pair (DECISIONS п. 134 records that as a v1 limit due to
-    // be lifted — RS-3). A sheet with a single row is a dead end that still costs a tap to close,
-    // so the pill is a label until the server has a second language to name.
-    await _pump(tester, _Api());
+  testWidgets('the taught pill offers the languages the server says may be LEARNED', (tester) async {
+    // It was a label while `GET /search/languages` named one taught language (DECISIONS п. 134,
+    // lifted by RS-3). Now the endpoint names several, so the pill is a picker like the other one —
+    // and it offers `targets`, not the catalogue: «С какого» reads Russian, so this side has to
+    // carry the taught half of the pair.
+    final api = _Api(hint: 'счёт');
+    await _pump(tester, api);
+    await _type(tester, 'invoice');
+    api.pairs.clear();
+    api.searchPairs.clear();
 
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ListTile), findsNothing);
+    expect(find.text('Română'), findsOneWidget);
+    expect(find.text('Español'), findsOneWidget);
+    // Russian is readable but not taught, so it cannot stand on this side — and it is the other
+    // pill's language besides.
+    expect(find.text('Русский'), findsOneWidget, reason: 'the other pill, not a row in the sheet');
+
+    await tester.tap(find.text('Español'));
+    await tester.pumpAndSettle();
+
+    expect(api.pairs, ['es→ru']);
+    expect(api.searchPairs, ['es→ru']);
+  });
+
+  testWidgets('a pill still opens no sheet when one language is left to offer', (tester) async {
+    // A sheet with a single row is a dead end that still costs a tap to close. This is the shape a
+    // deployment that teaches one language keeps — and the shape any pill takes when the pair has
+    // used up the list.
+    await _pump(
+      tester,
+      _Api(
+        languages: const SearchLanguages(
+          targets: ['en'],
+          natives: ['ru', 'en'],
+          defaultTaught: 'en',
+          defaultNative: 'ru',
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppSheetRow), findsNothing);
+  });
+
+  testWidgets('neither sheet offers the language the other pill is holding', (tester) async {
+    // «en → en» is not a pair, and the server refuses it. It is left OUT of the sheet rather than
+    // shown greyed out: the only thing to do about «I want English on both sides» is nothing, and
+    // the way to say «the other way round» is the arrow.
+    final api = _Api();
+    await _pump(tester, api);
+
+    // The support side first: English is readable, and it is what «С какого» holds.
+    await tester.tap(find.text('Русский'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AppSheetRow), findsWidgets);
+    expect(find.descendant(of: find.byType(AppSheetRow), matching: find.text('English')), findsNothing);
+    await tester.tap(find.text('Română').last);
+    await tester.pumpAndSettle();
+
+    // And the taught side, now that the pair is «en → ro» and Romanian is itself taught.
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byType(AppSheetRow), matching: find.text('Română')), findsNothing);
+    expect(find.descendant(of: find.byType(AppSheetRow), matching: find.text('Español')), findsOneWidget);
   });
 
   testWidgets('a new pair takes the OLD pair\'s results off the screen', (tester) async {
