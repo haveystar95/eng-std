@@ -9,7 +9,8 @@ namespace App\Modules\Shared\Domain\Service;
  *
  * This catches HALF the problem, and it is important to know which half. A character check finds
  * Cyrillic that leaked into an English sentence, and it finds Ukrainian letters that only exist in
- * Ukrainian (і ї є ґ). It CANNOT find Ukrainian words spelled entirely in letters Russian also has
+ * Ukrainian (і ї є ґ) — and, mirrored, Russian letters that only exist in Russian (ы э ё ъ) sitting
+ * in a Ukrainian field. It CANNOT find Ukrainian words spelled entirely in letters Russian also has
  * — «здаватися», «треба», «потрібно» — which is precisely the class the original one-off scan was
  * chasing. Those need a reader who knows both languages, which is why the enrichment model is asked
  * for lexis notes as well and both streams end up in the same findings table.
@@ -32,13 +33,31 @@ final class LanguagePurity
     private const UA_ONLY_LETTERS = ['і', 'ї', 'є', 'ґ', 'І', 'Ї', 'Є', 'Ґ'];
 
     /**
+     * The mirror: letters that exist in Russian and not in Ukrainian. Their presence in a UK field
+     * is just as decisive, and for exactly the same reason (DECISIONS п. 91 — «суржик ловится в обе
+     * стороны»).
+     *
+     * Only one direction was implemented, which is a strange thing for a symmetric problem: the
+     * content that existed was Russian, so Ukrainian leaking INTO it was the failure anyone had
+     * seen. Ukrainian is a support language in v1 (п. 85), so the other direction is now content
+     * somebody will actually read, and a check that watches one door is a check that says «clean»
+     * about a room with two.
+     *
+     * `ё` belongs here with the rest: Ukrainian does not have it, and it is not a Russian
+     * typographic option the way `е`/`ё` is within Russian — inside a Ukrainian field it is a
+     * Russian letter and nothing else.
+     */
+    private const RU_ONLY_LETTERS = ['ы', 'э', 'ё', 'ъ', 'Ы', 'Э', 'Ё', 'Ъ'];
+
+    /**
      * Letters that betray a foreign language in a field DECLARED to be `$lang`. Empty = clean.
      *
-     * Only two languages have a rule here, and that is deliberate rather than unfinished: we know
-     * what a Russian field must not contain (its close relative's letters) and what an English one
-     * must not (anything non-Latin). For any other language an honest "no opinion" beats a guess —
-     * a caller that treats silence as a pass keeps writing, which is the correct default for a
-     * check that exists to catch one specific, known failure.
+     * Three languages have a rule here, and that is deliberate rather than unfinished: we know what
+     * a Russian field must not contain (its close relative's letters), what a Ukrainian one must not
+     * (the mirror of the same), and what an English one must not (anything non-Latin). For any other
+     * language an honest "no opinion" beats a guess — a caller that treats silence as a pass keeps
+     * writing, which is the correct default for a check that exists to catch one specific, known
+     * failure.
      *
      * @param  string  $lang  ISO code the value claims to be written in
      * @return list<string>  the offending characters, deduped, in order
@@ -47,6 +66,7 @@ final class LanguagePurity
     {
         return match (strtolower(trim($lang))) {
             'ru' => $this->ukrainianLetters($value),
+            'uk' => $this->russianLetters($value),
             'en' => $this->nonEnglishLetters($value),
             default => [],
         };
@@ -122,6 +142,21 @@ final class LanguagePurity
     public function ukrainianLetters(string $value): array
     {
         return $this->matchAll('/[\p{L}]/u', $value, static fn (string $ch): bool => in_array($ch, self::UA_ONLY_LETTERS, true));
+    }
+
+    /**
+     * Russian-only letters in a field that is supposed to be Ukrainian — the mirror of
+     * {@see ukrainianLetters()}, see {@see RU_ONLY_LETTERS}.
+     *
+     * It catches the same HALF of the problem in the other direction, and the same half is missed:
+     * a Russian word spelled entirely in letters Ukrainian also has («сейчас», «работа») goes
+     * through untouched. That limit is the class's, not this method's — see the class docblock.
+     *
+     * @return list<string>
+     */
+    public function russianLetters(string $value): array
+    {
+        return $this->matchAll('/[\p{L}]/u', $value, static fn (string $ch): bool => in_array($ch, self::RU_ONLY_LETTERS, true));
     }
 
     /**

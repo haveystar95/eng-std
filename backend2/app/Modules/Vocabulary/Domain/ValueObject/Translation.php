@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Vocabulary\Domain\ValueObject;
 
+use App\Modules\Shared\Domain\Service\TextNormalizer;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use InvalidArgumentException;
 
@@ -22,7 +23,8 @@ final class Translation
         public readonly bool $isPrimary = false,
         public readonly ?Provenance $provenance = null,
     ) {
-        $trimmed = trim($text);
+        // Canonical Unicode on the way in — one of the three content gates, see {@see TermText}.
+        $trimmed = trim((new TextNormalizer())->canonical($text));
         if ($trimmed === '') {
             throw new InvalidArgumentException('Translation text cannot be empty.');
         }

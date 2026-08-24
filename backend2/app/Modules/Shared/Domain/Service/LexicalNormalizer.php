@@ -14,6 +14,8 @@ namespace App\Modules\Shared\Domain\Service;
  */
 final class LexicalNormalizer
 {
+    public function __construct(private readonly TextNormalizer $unicode = new TextNormalizer()) {}
+
     /** Lowercase, expand contractions, punctuation → space, whitespace collapsed, article dropped. */
     public function normalize(string $value): string
     {
@@ -33,6 +35,12 @@ final class LexicalNormalizer
      */
     public function canonicalize(string $value): string
     {
+        // Unicode BEFORE anything else: this is the one comparison point in the product, so the
+        // FOLD form belongs here and nowhere else ({@see TextNormalizer}). It is what lets a learner
+        // who typed «stiu» with a cedilla, or «strasse» for «Straße», be right — they know the word,
+        // and a grader that says otherwise is testing their keyboard. Nothing folded is ever stored:
+        // the store keeps the canonical spelling, which is a different method on the same class.
+        $value = $this->unicode->fold($value);
         $value = mb_strtolower(trim($value));
         $value = $this->expandContractions($value);            // before punctuation strips the apostrophe
         $value = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $value) ?? $value;

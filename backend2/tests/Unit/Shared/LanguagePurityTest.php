@@ -77,3 +77,41 @@ it('does not judge the script of a language it does not police', function () {
 it('reads the language code case- and whitespace-insensitively', function () {
     expect($this->purity->foreignLetters(' RU ', 'на одній хвилі'))->toBe(['і']);
 });
+
+/**
+ * The mirror (DECISIONS п. 91 — «суржик ловится в обе стороны»).
+ *
+ * Only the ru direction existed, which is a strange asymmetry for a symmetric problem: the content
+ * that existed was Russian, so Ukrainian leaking INTO it was the only failure anyone had seen.
+ * Ukrainian is a support language, so the other direction is content somebody will actually read.
+ */
+it('names the Russian-only letters found in a Ukrainian field', function () {
+    expect($this->purity->foreignLetters('uk', 'быть на одной волне'))->toBe(['ы'])
+        ->and($this->purity->isClean('uk', 'быть на одной волне'))->toBeFalse();
+});
+
+it('catches э, ё and ъ in a Ukrainian field too', function () {
+    expect($this->purity->foreignLetters('uk', 'это ещё съезд'))->toBe(['э', 'ё', 'ъ']);
+});
+
+it('passes an honest Ukrainian string', function () {
+    expect($this->purity->foreignLetters('uk', 'на одній хвилі, розуміти одне одного'))->toBe([])
+        ->and($this->purity->isClean('uk', 'на одній хвилі, розуміти одне одного'))->toBeTrue();
+});
+
+it('catches суржик in both directions with the same detector', function () {
+    // One string, two verdicts — and each is right about the field it is asked about.
+    expect($this->purity->isClean('ru', 'на одній хвилі'))->toBeFalse()
+        ->and($this->purity->isClean('uk', 'на одній хвилі'))->toBeTrue()
+        ->and($this->purity->isClean('uk', 'быть на одной волне'))->toBeFalse()
+        ->and($this->purity->isClean('ru', 'быть на одной волне'))->toBeTrue();
+});
+
+/**
+ * The mirror inherits the mirror of the limitation, and it is worth stating: Russian written
+ * entirely in letters Ukrainian also has passes. «робота» is a Ukrainian word, «работа» is Russian
+ * — and neither uses a letter the other lacks, so only a reader who knows both can tell.
+ */
+it('does NOT catch Russian written in shared letters', function () {
+    expect($this->purity->isClean('uk', 'сейчас'))->toBeTrue();
+});

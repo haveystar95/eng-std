@@ -134,3 +134,38 @@ it('marks a genuinely wrong answer as again', function () {
 
     expect($grade)->toBe(Grade::Again);
 });
+
+/**
+ * Unicode is the grader's problem before spelling is (DECISIONS п. 87).
+ *
+ * The learner does not choose which byte sequence their keyboard emits. «știi» typed with a cedilla
+ * `ş` and «știi» typed with a comma-below `ș` are the same word to everyone except a byte
+ * comparison, and a card that says «не то» to a Romanian speaker for writing Romanian is teaching
+ * them nothing. One fold, in `LexicalNormalizer::canonicalize()`, and the whole class is gone.
+ */
+it('forgives the cedilla spelling of a comma-below Romanian key', function () {
+    $key = answerKey(["\u{0219}tiu"]);   // știu, canonical
+
+    expect($this->grader->grade(new Answer("\u{015F}tiu"), ExerciseMode::Typing, $key, LatencyBaseline::insufficient()))
+        ->toBe(Grade::Good)
+        // …and the other direction, because an older row may still hold the cedilla form.
+        ->and($this->grader->grade(
+            new Answer("\u{0219}tiu"), ExerciseMode::Typing, answerKey(["\u{015F}tiu"]), LatencyBaseline::insufficient(),
+        ))->toBe(Grade::Good);
+});
+
+it('forgives the decomposed spelling of the same letter', function () {
+    // s + COMBINING COMMA BELOW against the precomposed ș: identical on screen, different bytes.
+    $grade = $this->grader->grade(
+        new Answer("s\u{0326}tiu"), ExerciseMode::Typing, answerKey(["\u{0219}tiu"]), LatencyBaseline::insufficient(),
+    );
+
+    expect($grade)->toBe(Grade::Good);
+});
+
+it('accepts ss for ß and oe for œ', function () {
+    expect($this->grader->grade(new Answer('Strasse'), ExerciseMode::Typing, answerKey(['Straße']), LatencyBaseline::insufficient()))
+        ->toBe(Grade::Good)
+        ->and($this->grader->grade(new Answer('coeur'), ExerciseMode::Typing, answerKey(['cœur']), LatencyBaseline::insufficient()))
+        ->toBe(Grade::Good);
+});
