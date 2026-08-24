@@ -84,3 +84,63 @@ it('reads a refusal back without demanding the fields a refusal has no reason to
         // Nothing worth storing but the verdict itself.
         ->and($result->toPayload())->toBe(['not_recognized' => true]);
 });
+
+describe('v4 — a real word is never «not a word» (наряд FIX-LOOKUP)', function () {
+    // `gpt-4o-mini` on v3 refused «привет» outright — deterministically, in BOTH the es←ru and the
+    // en←ru pair, while «спасибо» in the same pair came back as `gracias`. A greeting reads to a
+    // small model as somebody saying hello to it rather than as a word to look up, and the refusal
+    // section was the most example-rich instruction in the prompt. v4 says the quiet part out loud.
+
+    it('tells v4 that a greeting is an ordinary word', function () {
+        lookUpWith('v4');
+
+        Http::assertSent(function (Request $request): bool {
+            $system = $request->data()['messages'][0]['content'];
+
+            return str_contains($system, 'A real word is never `false`')
+                && str_contains($system, 'gets an ordinary card');
+        });
+    });
+
+    it('tells v4 to take the everyday sense, not the grammatical twin', function () {
+        // «пока» came back as `hasta` («until») on v3 — the preposition that shares its spelling,
+        // not the farewell anybody typing it means.
+        lookUpWith('v4');
+
+        Http::assertSent(function (Request $request): bool {
+            return str_contains($request->data()['messages'][0]['content'], 'everyday conversational one');
+        });
+    });
+
+    it('keeps v3 exactly as it was — a frozen version is frozen', function () {
+        lookUpWith('v3');
+
+        Http::assertSent(function (Request $request): bool {
+            $system = $request->data()['messages'][0]['content'];
+
+            return ! str_contains($system, 'A real word is never `false`')
+                && ! str_contains($system, 'everyday conversational one')
+                // …and still says the things v3 was pinned for.
+                && str_contains($system, 'either language');
+        });
+    });
+
+    it('is what the app actually ships', function () {
+        // The default on the adapter, not a config: a prompt version is a code fact.
+        Http::fake(['*' => Http::response([
+            'choices' => [['message' => ['content' => json_encode([
+                'recognized' => true, 'text' => 'hola', 'type' => 'word', 'translation' => 'привет',
+                'description' => 'Un saludo corto.', 'example' => 'Le dije hola al entrar.',
+                'example_translation' => 'Я сказал привет, когда вошёл.', 'cefr' => 'A1',
+                'transcription' => 'ˈola', 'image_api_prompt' => 'people greeting each other',
+            ], JSON_UNESCAPED_UNICODE)]]],
+            'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+        ], 200)]);
+
+        $result = (new OpenAiWordLookup(app(OutboundCallContext::class), 'key', 'gpt-4o-mini'))
+            ->lookUp(new WordLookupBrief('привет', new LanguageCode('es'), new LanguageCode('ru')));
+
+        expect($result->promptVersion)->toBe('lookup.v4')
+            ->and($result->text)->toBe('hola');
+    });
+});

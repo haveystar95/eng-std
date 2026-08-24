@@ -26,7 +26,7 @@ final class OpenAiWordLookup implements WordLookupPort
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
         private readonly string $model,
-        private readonly string $promptVersion = 'v3',
+        private readonly string $promptVersion = 'v4',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
         private readonly ModelCost $cost = new ModelCost(),
     ) {}
