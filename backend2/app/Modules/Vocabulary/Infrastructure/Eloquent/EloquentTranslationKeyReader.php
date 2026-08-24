@@ -36,47 +36,28 @@ final class EloquentTranslationKeyReader implements TranslationKeyReader
 
     public function primaryExampleKeys(string $termLang, string $translationLang): array
     {
+        // The gloss NAMES its language now, so the pair is read straight off the row. The old query
+        // had to infer it from the term's primary translation and skip every term that had more than
+        // one — the skips were reported as «не проверено», and they were the honest half of a table
+        // that recorded no language at all. There is nothing left to infer and nothing left to skip.
         $rows = DB::table('terms as t')
             ->join('term_examples as e', 'e.term_id', '=', 't.id')
+            ->join('example_translations as et', 'et.term_example_id', '=', 'e.id')
             ->whereNull('t.deleted_at')
             ->where('t.lang', $termLang)
-            ->whereNotNull('e.sentence_translation')
-            ->where('e.sentence_translation', '<>', '')
-            // The example's own language is not recorded, so it is taken from the term's primary
-            // translation — and only when that is unambiguous. See the port for why a guess is worse
-            // than a skip.
-            ->whereExists(fn ($q) => $q->from('term_translations as tr')
-                ->whereColumn('tr.term_id', 't.id')
-                ->where('tr.is_primary', true)
-                ->where('tr.lang', $translationLang))
-            ->whereRaw(
-                '(select count(distinct tr2.lang) from term_translations tr2 where tr2.term_id = t.id and tr2.is_primary) = 1',
-            )
+            ->where('et.lang', $translationLang)
+            ->where('et.text', '<>', '')
             ->orderBy('t.text')
             ->orderBy('e.id')
-            ->get(['t.id as term_id', 't.text as term_text', 'e.id as example_id', 'e.sentence', 'e.sentence_translation']);
+            ->get(['t.id as term_id', 't.text as term_text', 'e.id as example_id', 'e.sentence', 'et.text as translation']);
 
         return array_values($rows->map(static fn (object $r): ExampleKeyRow => new ExampleKeyRow(
             termId: (string) $r->term_id,
             termText: (string) $r->term_text,
             exampleId: (string) $r->example_id,
             sentence: (string) $r->sentence,
-            translation: (string) $r->sentence_translation,
+            translation: (string) $r->translation,
         ))->all());
-    }
-
-    public function examplesOfUnknownLangCount(string $termLang): int
-    {
-        return DB::table('terms as t')
-            ->join('term_examples as e', 'e.term_id', '=', 't.id')
-            ->whereNull('t.deleted_at')
-            ->where('t.lang', $termLang)
-            ->whereNotNull('e.sentence_translation')
-            ->where('e.sentence_translation', '<>', '')
-            ->whereRaw(
-                '(select count(distinct tr.lang) from term_translations tr where tr.term_id = t.id and tr.is_primary) > 1',
-            )
-            ->count();
     }
 
     public function translationLangs(string $termLang): array

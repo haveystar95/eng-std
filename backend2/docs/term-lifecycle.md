@@ -179,8 +179,9 @@ attempts, created_at`) **не содержит `term_id`** — термин та
    - **Новый термин** → `terms` (`lang='en', text='get a refund', normalized_text='get a refund',
      type='phrase', pos=null, ipa='/ɡet ə ˈriːfʌnd/', cefr='B1', source='ai',
      image_api_prompt=...`), `term_translations` (`lang='ru', text='получить возврат денег',
-     is_primary=true`), `term_examples` (`sentence='I want to get a refund for this jacket.',
-     sentence_translation='...', source='ai'`).
+     is_primary=true`), `term_examples` (`lang='en', sentence='I want to get a refund for this
+     jacket.', source='ai'`) и рядом `example_translations` (`lang='ru', text='...'` — язык
+     перевода примера с A-1 записан явно, а не подразумевается языком коллекции).
    - **Термин уже существует** (регенерация той же темы, или термин пришёл из другой коллекции)
      — новая строка `terms` не создаётся: `addTranslation()`/`addExample()` игнорируют точные
      дубликаты, `ensureIpa/ensureCefr/ensureImageApiPrompt()` заполняют поле только если оно было

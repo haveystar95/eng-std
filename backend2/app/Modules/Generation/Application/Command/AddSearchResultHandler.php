@@ -163,7 +163,13 @@ final readonly class AddSearchResultHandler
             )],
             ipa: $lookup->transcription,
             examples: $lookup->example !== null
-                ? [new ExampleInput($lookup->example, $lookup->exampleTranslation)]
+                // The gloss is in the learner's own language — the same one the translation above
+                // is labelled with, because the lookup was asked in exactly that pair.
+                ? [new ExampleInput(
+                    $lookup->example,
+                    $lookup->exampleTranslation,
+                    new \App\Modules\Shared\Domain\ValueObject\LanguageCode($nativeLang),
+                )]
                 : [],
             cefr: $lookup->cefr,
             // The model's own image-search query, so a word saved from search gets a photo the same

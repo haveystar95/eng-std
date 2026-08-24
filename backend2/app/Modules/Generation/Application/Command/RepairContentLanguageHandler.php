@@ -135,6 +135,9 @@ final readonly class RepairContentLanguageHandler
                 exampleId: $row->rowId,
                 exampleSentence: (string) $row->exampleSentence,
                 exampleTranslation: $value,
+                // Named for the same reason the translation branch names it: the model was asked for
+                // THIS language and the row it lands in has to say so.
+                translationLang: $lang->value,
             ));
 
         return new LanguageRepairReport(

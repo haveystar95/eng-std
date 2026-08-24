@@ -11,13 +11,14 @@ use App\Modules\Vocabulary\Domain\ValueObject\Provenance;
 /** Records every example replacement instead of writing one. */
 final class RecordingTermExampleWriter implements TermExampleWriter
 {
-    /** @var list<array{termId: string, sentence: string, translation: string|null, dropped: list<string>, source: string, promptVersion: string|null}> */
+    /** @var list<array{termId: string, sentence: string, translation: string|null, translationLang: string, dropped: list<string>, source: string, promptVersion: string|null}> */
     public array $replaced = [];
 
     public function replace(
         TermId $termId,
         string $sentence,
         ?string $sentenceTranslation,
+        string $translationLang,
         array $dropDistractorSentences = [],
         string $source = 'user',
         ?Provenance $provenance = null,
@@ -26,6 +27,7 @@ final class RecordingTermExampleWriter implements TermExampleWriter
             'termId' => $termId->value,
             'sentence' => $sentence,
             'translation' => $sentenceTranslation,
+            'translationLang' => $translationLang,
             'dropped' => $dropDistractorSentences,
             'source' => $source,
             'promptVersion' => $provenance?->promptVersion,

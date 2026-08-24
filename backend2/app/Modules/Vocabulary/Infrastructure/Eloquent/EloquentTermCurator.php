@@ -74,9 +74,9 @@ final class EloquentTermCurator implements TermCurator
         });
     }
 
-    public function updateExample(TermId $termId, string $exampleId, string $sentence, ?string $translation): bool
+    public function updateExample(TermId $termId, string $exampleId, string $sentence, ?string $translation, string $translationLang): bool
     {
-        return DB::transaction(function () use ($termId, $exampleId, $sentence, $translation): bool {
+        return DB::transaction(function () use ($termId, $exampleId, $sentence, $translation, $translationLang): bool {
             $example = DB::table('term_examples')
                 ->where('id', $exampleId)
                 ->where('term_id', $termId->value)
@@ -87,14 +87,26 @@ final class EloquentTermCurator implements TermCurator
 
             DB::table('term_examples')->where('id', $exampleId)->update([
                 'sentence' => $sentence,
-                'sentence_translation' => $translation,
                 'source' => 'user',
                 'updated_at' => now(),
             ]);
 
+            $sentenceChanged = (string) $example->sentence !== $sentence;
+
+            // A gloss the operator did not touch, in a language they were not editing, describes the
+            // sentence they just rewrote — so it goes with the distractors, and only then. An edit
+            // that left the sentence alone is an edit of ONE language's wording and nothing else.
+            if ($sentenceChanged) {
+                DB::table('example_translations')
+                    ->where('term_example_id', $exampleId)
+                    ->where('lang', '!=', $translationLang)
+                    ->delete();
+            }
+            $this->writeExampleTranslation($exampleId, $translation, $translationLang);
+
             // The sentence changed, so every distractor built from it is now a distractor of a
             // sentence nobody will see. Drop them rather than leave the trainer serving nonsense.
-            if ((string) $example->sentence !== $sentence) {
+            if ($sentenceChanged) {
                 DB::table('example_distractors')->where('example_id', $exampleId)->delete();
                 // Unmark the term: the станок picks up whatever has no version mark, so this is
                 // what puts it back in the queue.
@@ -202,6 +214,36 @@ final class EloquentTermCurator implements TermCurator
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    /**
+     * The example's gloss in ONE language: rewritten if it is there, created if it is not, removed
+     * when the operator cleared the field.
+     *
+     * Removal is a delete rather than an empty string, because `example_translations` answers "is
+     * there a gloss in this language" by the presence of a row — an empty row would read as "yes,
+     * and it says nothing", which is the answer the reader cannot distinguish from a real one.
+     */
+    private function writeExampleTranslation(string $exampleId, ?string $text, string $lang): void
+    {
+        $rows = DB::table('example_translations')->where('term_example_id', $exampleId)->where('lang', $lang);
+
+        if ($text === null || trim($text) === '') {
+            $rows->delete();
+
+            return;
+        }
+
+        if ($rows->update(['text' => $text, 'updated_at' => now()]) === 0) {
+            DB::table('example_translations')->insert([
+                'id' => Ulid::generate(),
+                'term_example_id' => $exampleId,
+                'lang' => $lang,
+                'text' => $text,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 
     /** Keep the denormalised counter honest for every collection the term just left. */

@@ -69,7 +69,6 @@ final readonly class AuditTranslationKeysHandler
             groupNames: AddresseeIsomorphism::groupNames(),
             seenTermsByLang: $seenTermsByLang,
             seenExamplesByLang: $seenExamplesByLang,
-            skippedExamples: $this->keys->examplesOfUnknownLangCount($query->termLang),
             ruleLanguages: AddresseeIsomorphism::languages(),
         );
     }

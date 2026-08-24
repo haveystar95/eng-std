@@ -88,7 +88,7 @@ final class EloquentTermRepository implements TermRepository
             }
 
             foreach ($term->examples() as $example) {
-                TermExampleModel::query()->firstOrCreate(
+                $row = TermExampleModel::query()->firstOrCreate(
                     [
                         'term_id' => $term->id()->value,
                         'sentence' => $example->sentence,
@@ -98,12 +98,30 @@ final class EloquentTermRepository implements TermRepository
                         // The sentence uses the term, so it is in the term's language — the
                         // aggregate's own `lang`, never a second opinion from the caller.
                         'lang' => $term->lang()->value,
-                        'sentence_translation' => $example->sentenceTranslation,
                         'source' => $term->source()->value,
                         'prompt_version' => $example->provenance?->promptVersion,
                         'generation_model' => $example->provenance?->model,
                     ],
                 );
+
+                // The gloss goes in beside the sentence, in the language it was written in. Ignoring
+                // on conflict for the same reason the translation merge above uses firstOrCreate: a
+                // second generation pass that produces the same sentence must not overwrite a gloss
+                // a human may have since corrected. A gloss in a NEW language is a new row, which is
+                // the whole point of the table — the same example glossed for a ru learner and for a
+                // uk one is two rows, not a coin flip between them.
+                if ($example->sentenceTranslation !== null
+                    && trim($example->sentenceTranslation) !== ''
+                    && $example->translationLang !== null) {
+                    DB::table('example_translations')->insertOrIgnore([
+                        'id' => Ulid::generate(),
+                        'term_example_id' => $row->id,
+                        'lang' => $example->translationLang->value,
+                        'text' => $example->sentenceTranslation,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
         });
     }

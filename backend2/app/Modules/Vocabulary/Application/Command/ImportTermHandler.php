@@ -34,7 +34,12 @@ final readonly class ImportTermHandler
             if (trim($example->sentence) === '') {
                 continue;
             }
-            $examples[] = new Example($example->sentence, $example->sentenceTranslation, $provenance);
+            $examples[] = new Example(
+                $example->sentence,
+                $example->sentenceTranslation,
+                $example->translationLang,
+                $provenance,
+            );
         }
 
         return ($this->findOrCreate)(new FindOrCreateTerm(

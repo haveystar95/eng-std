@@ -51,7 +51,12 @@ it('accepts a generation and completes it end-to-end on the sync queue', functio
     // Generated terms carry pronunciation and a usage example (persisted, not dropped).
     expect(DB::table('terms')->whereNotNull('ipa')->count())->toBe(8);
     $this->assertDatabaseCount('term_examples', 8);
-    $this->assertDatabaseHas('term_examples', ['sentence_translation' => 'Это образец предложения номер 1.']);
+    // The gloss lands in its own table, labelled with the request's SOURCE language — one
+    // generation is one pair, and the row now says which.
+    $this->assertDatabaseHas('example_translations', [
+        'lang' => 'ru',
+        'text' => 'Это образец предложения номер 1.',
+    ]);
 });
 
 it('delivers exactly the requested count when the overshoot brings back more (QA-OBS-9)', function () {

@@ -13,9 +13,12 @@ final readonly class TranslationKeyAuditView
      * @param  list<string>  $groupNames  every group the rule knows, so a report can show empty ones
      * @param  array<string, int>  $seenTermsByLang  language => term pairs judged in it
      * @param  array<string, int>  $seenExamplesByLang  language => example pairs judged in it
-     * @param  int  $skippedExamples  example pairs left unjudged because their language is not
-     *                       recorded and the term is translated into more than one. Carried so the
-     *                       export can say it: an audit that silently drops rows reads as complete.
+     * There is deliberately no «skipped» count any more. There used to be one, because the example
+     * gloss recorded no language and a term translated into two of them made its example's language
+     * a guess — the sweep skipped those pairs and reported how many. `example_translations` names
+     * the language on the row, so the class of unjudgeable pairs is empty by construction, and a
+     * counter that can only ever say zero is a claim about the past.
+     *
      * @param  list<string>  $ruleLanguages  the languages the rule HAS counterpart lists for.
      *                       Reported so a sweep can tell «clean» apart from «the rule is silent
      *                       here»: a language it was never taught yields zero candidates either way,
@@ -27,7 +30,6 @@ final readonly class TranslationKeyAuditView
         public array $groupNames,
         public array $seenTermsByLang,
         public array $seenExamplesByLang,
-        public int $skippedExamples,
         public array $ruleLanguages,
     ) {}
 }

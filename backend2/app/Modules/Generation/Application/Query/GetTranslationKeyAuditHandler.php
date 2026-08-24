@@ -59,7 +59,6 @@ final readonly class GetTranslationKeyAuditHandler
             groupNames: $judged->groupNames,
             seenTermsByLang: $judged->seenTermsByLang,
             seenExamplesByLang: $judged->seenExamplesByLang,
-            skippedExamples: $judged->skippedExamples,
             ruleLanguages: $judged->ruleLanguages,
         );
     }

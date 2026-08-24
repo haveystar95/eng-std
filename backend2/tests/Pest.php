@@ -199,11 +199,19 @@ function seedExample(array $attrs): string
     $attrs['lang'] ??= (string) DB::table('terms')->where('id', $attrs['term_id'])->value('lang');
     $attrs['created_at'] ??= now();
     $attrs['updated_at'] ??= now();
-    if (is_string($translation) && $translation !== '') {
-        $attrs['sentence_translation'] = $translation;
-    }
 
     DB::table('term_examples')->insert($attrs);
+
+    if (is_string($translation) && $translation !== '') {
+        DB::table('example_translations')->insert([
+            'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+            'term_example_id' => $attrs['id'],
+            'lang' => $translationLang,
+            'text' => $translation,
+            'created_at' => $attrs['created_at'],
+            'updated_at' => $attrs['updated_at'],
+        ]);
+    }
 
     return (string) $attrs['id'];
 }

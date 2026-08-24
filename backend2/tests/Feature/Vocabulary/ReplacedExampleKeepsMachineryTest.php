@@ -49,6 +49,7 @@ it('keeps the distractors that still describe the example when only its wording 
         TermId::fromString($termId),
         'I need to withdraw cash from the account.',
         'Мне нужно снять наличные со счёта.',
+        'ru',
         'ex-regen.v2',
         'gpt-4o-mini',
     );
@@ -72,6 +73,7 @@ it('drops the distractors the new sentence has orphaned, and re-opens the term f
         TermId::fromString($termId),
         'She withdrew cash before the shops closed.',
         'Она сняла наличные до закрытия магазинов.',
+        'ru',
         'ex-regen.v2',
         'gpt-4o-mini',
     );
@@ -94,6 +96,7 @@ it('leaves the term marked when nothing was orphaned', function () {
         TermId::fromString($termId),
         'I need to withdraw cash from the account.',
         'Мне нужно снять наличные со счёта.',
+        'ru',
         'ex-regen.v2',
         'gpt-4o-mini',
     );
@@ -115,6 +118,7 @@ it('records who wrote a replaced example: the source, the prompt version and the
         TermId::fromString($termId),
         'She withdrew cash before the shops closed.',
         'Она сняла наличные до закрытия магазинов.',
+        'ru',
         'ex-regen.v2',
         'gpt-4o-mini',
     );

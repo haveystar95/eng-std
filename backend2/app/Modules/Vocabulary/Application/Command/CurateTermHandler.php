@@ -33,6 +33,9 @@ final readonly class CurateTermHandler
                 (string) $command->exampleId,
                 (string) $command->exampleSentence,
                 $command->exampleTranslation,
+                // The same learner language the term's own translation is edited in: the panel edits
+                // ONE side of ONE pair at a time, and the example gloss is on that side.
+                $command->translationLang,
             );
         }
 

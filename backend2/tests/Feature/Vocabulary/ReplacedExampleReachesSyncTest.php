@@ -47,6 +47,7 @@ it('puts the term back in the sync delta when its example is replaced', function
         TermId::fromString($termId),
         'The paperwork threatened to overwhelm her.',
         'Бумажная работа грозила её захлестнуть.',
+        'ru',
     ));
 
     $data = sync($this, $token, 'since=' . urlencode($cursor));
@@ -66,7 +67,7 @@ it('leaves the rest of the term alone — only the timestamp moves', function ()
     $before = DB::table('terms')->where('id', $termId)->first();
 
     app(ReplaceTermExampleHandler::class)(new ReplaceTermExample(
-        TermId::fromString($termId), 'A sentence.', 'Предложение.',
+        TermId::fromString($termId), 'A sentence.', 'Предложение.', 'ru',
     ));
 
     $after = DB::table('terms')->where('id', $termId)->first();

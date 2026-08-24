@@ -133,19 +133,34 @@ final class EloquentTermReviewWriter implements TermReviewWriter
         return $updated;
     }
 
-    public function setPinnedExampleTranslation(string $termId, string $text): int
+    public function setPinnedExampleTranslation(string $termId, string $text, string $lang): int
     {
         $exampleId = $this->pinnedExampleId($termId);
         if ($exampleId === null) {
             return 0;
         }
 
-        $updated = DB::table('term_examples')
-            ->where('id', $exampleId)
-            ->update(['sentence_translation' => $text, 'updated_at' => now()]);
-        if ($updated > 0) {
-            $this->touchTerm($termId);
+        $updated = DB::table('example_translations')
+            ->where('term_example_id', $exampleId)
+            ->where('lang', $lang)
+            ->update(['text' => $text, 'updated_at' => now()]);
+
+        // No row in this language yet: the reviewer is not correcting a gloss, they are supplying
+        // the first one for their language. Written rather than reported as "nothing to fix" — the
+        // count this method returns means «did the review land», and it did.
+        if ($updated === 0) {
+            DB::table('example_translations')->insert([
+                'id' => Ulid::generate(),
+                'term_example_id' => $exampleId,
+                'lang' => $lang,
+                'text' => $text,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $updated = 1;
         }
+
+        $this->touchTerm($termId);
 
         return $updated;
     }

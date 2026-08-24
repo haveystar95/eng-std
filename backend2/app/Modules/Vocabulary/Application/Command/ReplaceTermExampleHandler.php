@@ -17,6 +17,7 @@ final readonly class ReplaceTermExampleHandler
             $command->termId,
             $command->sentence,
             $command->sentenceTranslation,
+            $command->translationLang,
             $command->dropDistractorSentences,
             $command->source,
             Provenance::forOrNull($command->promptVersion, $command->generationModel),

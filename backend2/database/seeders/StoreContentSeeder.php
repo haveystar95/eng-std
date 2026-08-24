@@ -82,6 +82,10 @@ final class StoreContentSeeder extends Seeder
                 $item['term'],
                 is_array($item['translations'] ?? null) ? $item['translations'] : [],
                 is_array($item['examples'] ?? null) ? $item['examples'] : [],
+                // The collection's SUPPORT language — the language its translations and its example
+                // glosses are written in. Read off the collection rather than assumed, because that
+                // is where the pair lives (DECISIONS п. 81).
+                (string) $c['source_lang'],
                 $now,
             );
 
@@ -105,8 +109,9 @@ final class StoreContentSeeder extends Seeder
      * @param  array<string, mixed>  $t
      * @param  list<mixed>  $translations
      * @param  list<mixed>  $examples
+     * @param  string  $supportLang  the collection's `source_lang` — what its example glosses are in
      */
-    private function resolveTerm(array $t, array $translations, array $examples, mixed $now): string
+    private function resolveTerm(array $t, array $translations, array $examples, string $supportLang, mixed $now): string
     {
         $pos = $t['pos'] ?? null;
         $existing = DB::table('terms')
@@ -160,18 +165,33 @@ final class StoreContentSeeder extends Seeder
             if (! is_array($ex)) {
                 continue;
             }
+            $exampleId = Ulid::generate();
             DB::table('term_examples')->insert([
-                'id' => Ulid::generate(),
+                'id' => $exampleId,
                 'term_id' => $termId,
                 // The sentence uses the term, so it is in the term's language — the same fact the
                 // writers read off `terms.lang` and the backfill copied from there.
                 'lang' => $t['lang'],
                 'sentence' => $ex['sentence'],
-                'sentence_translation' => $ex['sentence_translation'] ?? null,
                 'source' => $ex['source'] ?? null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
+
+            // The gloss goes in beside the sentence, labelled with the language the CATALOGUE says
+            // the collection supports. The seed file's key is still `sentence_translation` — it is a
+            // frozen snapshot of curated content, not a schema, and re-cutting it is a separate job.
+            $translation = $ex['sentence_translation'] ?? null;
+            if (is_string($translation) && trim($translation) !== '') {
+                DB::table('example_translations')->insertOrIgnore([
+                    'id' => Ulid::generate(),
+                    'term_example_id' => $exampleId,
+                    'lang' => $supportLang,
+                    'text' => $translation,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
         }
 
         return $termId;

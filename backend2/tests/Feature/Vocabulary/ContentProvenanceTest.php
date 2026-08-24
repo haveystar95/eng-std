@@ -21,7 +21,9 @@ function importStamped(string $text, ?string $version, ?string $model, string $t
         pos: null,
         source: 'ai',
         translations: [new TranslationInput(new LanguageCode('ru'), $translation, isPrimary: true)],
-        examples: $example !== null ? [new ExampleInput($example, 'Предложение с этим.')] : [],
+        examples: $example !== null
+            ? [new ExampleInput($example, 'Предложение с этим.', new LanguageCode('ru'))]
+            : [],
         promptVersion: $version,
         generationModel: $model,
     ))->value;

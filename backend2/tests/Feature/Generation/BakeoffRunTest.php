@@ -311,7 +311,7 @@ it('picks a sample that leads with the terms carrying an addressee, and repeats 
             pos: null,
             source: 'ai',
             translations: [new TranslationInput(new LanguageCode('ru'), $translation, isPrimary: true)],
-            examples: [new ExampleInput($text . ' now.', $translation . ' сейчас.')],
+            examples: [new ExampleInput($text . ' now.', $translation . ' сейчас.', new LanguageCode('ru'))],
         ));
     }
 

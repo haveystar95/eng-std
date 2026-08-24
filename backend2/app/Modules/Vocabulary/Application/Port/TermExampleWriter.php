@@ -30,6 +30,11 @@ interface TermExampleWriter
      * mean «a writer forgot to stamp its content» was being produced by a writer that had the facts
      * and dropped them.
      *
+     * @param  string  $translationLang  the language `$sentenceTranslation` is written in. Named by
+     *         the caller and not inferred here: the caller is the one that just ASKED a model for a
+     *         gloss in a particular language, and re-deriving it from the term's translations would
+     *         be a second opinion that can disagree with the text it is labelling. Ignored when
+     *         there is no translation to store.
      * @param  list<string>  $dropDistractorSentences  distractor sentences of the pinned example that
      *         the new sentence has orphaned. Empty (the default) keeps every distractor.
      * @param  string  $source  `ai` | `user` | `curated` — who wrote THIS sentence, not who asked
@@ -40,6 +45,7 @@ interface TermExampleWriter
         TermId $termId,
         string $sentence,
         ?string $sentenceTranslation,
+        string $translationLang,
         array $dropDistractorSentences = [],
         string $source = 'user',
         ?Provenance $provenance = null,

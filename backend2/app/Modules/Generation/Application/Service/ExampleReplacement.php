@@ -43,6 +43,10 @@ final readonly class ExampleReplacement
     ) {}
 
     /**
+     * @param  string  $translationLang  the language the gloss was asked for and answered in — the
+     *        same `translationLang` the caller put on the brief. Passed through rather than looked
+     *        up: the text and its label come from one model call, and re-deriving the label from the
+     *        term's translations is how a Russian gloss ends up in a row marked `uk`.
      * @param  string  $promptVersion  the prompt file that wrote this sentence, as the adapter reports
      *        it — the sentence is stamped with it, and with the model, so a defect sweep can find
      *        every example one prompt produced. The example writer used to record `source = 'user'`
@@ -52,6 +56,7 @@ final readonly class ExampleReplacement
         TermId $termId,
         string $sentence,
         ?string $sentenceTranslation,
+        string $translationLang,
         string $promptVersion,
         string $model,
     ): void {
@@ -61,6 +66,7 @@ final readonly class ExampleReplacement
             $termId,
             $sentence,
             $sentenceTranslation,
+            $translationLang,
             $orphaned,
             source: 'ai',
             promptVersion: $promptVersion,

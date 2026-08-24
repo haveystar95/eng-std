@@ -2,6 +2,21 @@
 
 **Owns:** terms (word or phrase), translations, examples, **descriptions**, audio, dedup
 
+## Examples and their glosses (`term_examples` + `example_translations`)
+
+An example is a sentence USING the term, so `term_examples.lang` is the term's language — a fact,
+not a choice. Its GLOSS is written in a support language and lives one table down, one row per
+`(example, lang)`, the same shape `term_translations` has always had. Readers pick the row by the
+learner's language through `ExampleTranslationPick` (asked-for language, then any, then `id`) — the
+sibling of `TranslationPick`, with the same explicit fallback so a card never blanks.
+
+It used to be one column, `sentence_translation`, with no language at all: whatever language the
+collection that first pulled the term in happened to support. A term translated into ru AND uk had
+exactly one gloss and nothing said whose it was (DECISIONS п. 138). The column is retained, marked
+DEPRECATED, unread and unwritten — `tests/Feature/Vocabulary/ExampleTranslationTableTest.php` runs
+every writing path and asserts it stays NULL — and it is dropped in its own migration once phase A
+of the multilanguage move has landed.
+
 ## Descriptions (`term_descriptions`)
 
 What a word MEANS, written in the language being learned — one or two A2–B1 sentences that never

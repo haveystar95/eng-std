@@ -28,25 +28,17 @@ interface TranslationKeyReader
     /**
      * The same question for EXAMPLE sentences: the pairs a learner is asked besides the term itself.
      *
-     * `term_examples` records no language for `sentence_translation`, so the language is inferred
-     * from the term's own primary translation — which is only honest while the term has exactly ONE.
-     * Examples of a term translated into several languages are NOT returned here and are counted by
-     * {@see examplesOfUnknownLangCount()} instead: judging them would mean guessing which language
-     * the sentence was translated into, and a guess in an audit is a false hit waiting to happen.
+     * The gloss lives in `example_translations` and names its own language, so the pair is read off
+     * the row. It used to be a single column with no language: the reader inferred one from the
+     * term's primary translation, which is only honest while the term has exactly ONE, and skipped
+     * the rest into a «не проверено» count. Both the inference and the count are gone — there is
+     * nothing left to guess at.
      *
      * @param  string  $termLang        the term side's language ('en')
      * @param  string  $translationLang the learner side's language ('ru')
      * @return list<ExampleKeyRow>
      */
     public function primaryExampleKeys(string $termLang, string $translationLang): array;
-
-    /**
-     * How many example pairs the sweep had to skip because their language cannot be inferred.
-     *
-     * Reported so the export can say it out loud: an audit that silently drops rows reads as
-     * «checked everything» to the person holding it.
-     */
-    public function examplesOfUnknownLangCount(string $termLang): int;
 
     /**
      * Which learner languages the store actually holds primary keys in.

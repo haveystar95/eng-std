@@ -153,6 +153,10 @@ final class EloquentAdminContentHealthReader implements AdminContentHealthReader
             static fn (stdClass $e): string => (string) $e->id,
             $examples,
         )));
+        $exampleTranslations = $this->exampleTranslations(array_values(array_map(
+            static fn (stdClass $e): string => (string) $e->id,
+            $examples,
+        )));
         $variants = $this->variantCounts($ids);
         $versions = $this->latestVersions($ids);
         $collections = $this->collectionIds($ids);
@@ -170,9 +174,7 @@ final class EloquentAdminContentHealthReader implements AdminContentHealthReader
                 type: (string) $term->type,
                 exampleId: $exampleId,
                 exampleSentence: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
-                exampleTranslation: $example !== null && $example->sentence_translation !== null
-                    ? (string) $example->sentence_translation
-                    : null,
+                exampleTranslation: $exampleId !== null ? ($exampleTranslations[$exampleId] ?? null) : null,
                 distractorSpans: $exampleId !== null ? ($spans[$exampleId] ?? []) : [],
                 variantCount: $variants[$id] ?? 0,
                 enrichmentVersion: $versions[$id] ?? null,
@@ -191,9 +193,35 @@ final class EloquentAdminContentHealthReader implements AdminContentHealthReader
     {
         $out = [];
         foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')
-            ->get(['id', 'term_id', 'sentence', 'sentence_translation']) as $row) {
+            ->get(['id', 'term_id', 'sentence']) as $row) {
             // First wins — the pinned example is the LOWEST id, exactly as the card reads it.
             $out[(string) $row->term_id] ??= $row;
+        }
+
+        return $out;
+    }
+
+    /**
+     * The gloss the health report judges: `ru` first, then any — the same rule and the same reason
+     * as {@see EloquentAdminTermReader::exampleTranslations()}, so «нет перевода примера» in the
+     * report and a blank field on the term page are the same fact.
+     *
+     * @param  list<string>  $exampleIds
+     * @return array<string, string>  keyed by example id
+     */
+    private function exampleTranslations(array $exampleIds): array
+    {
+        if ($exampleIds === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (DB::table('example_translations')
+            ->whereIn('term_example_id', $exampleIds)
+            ->orderByRaw("CASE WHEN lang = 'ru' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->get(['term_example_id', 'text']) as $row) {
+            $out[(string) $row->term_example_id] ??= (string) $row->text;
         }
 
         return $out;

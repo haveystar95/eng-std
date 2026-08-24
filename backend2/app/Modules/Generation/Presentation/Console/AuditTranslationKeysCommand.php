@@ -63,9 +63,6 @@ final class AuditTranslationKeysCommand extends Command
         $this->line('кандидатов на вычитку: ' . count($view->rows)
             . ' (LOST ' . $this->countForDirection($view->rows, 'lost')
             . ', EXTRA ' . $this->countForDirection($view->rows, 'extra') . ')');
-        if ($view->skippedExamples > 0) {
-            $this->warn('примеров пропущено (язык перевода примера не записан): ' . $view->skippedExamples);
-        }
 
         $this->table(
             ['язык', 'терминных пар', 'примерных пар', 'кандидатов', 'правило знает язык'],
@@ -175,16 +172,6 @@ final class AuditTranslationKeysCommand extends Command
             );
         }
         $lines[] = '';
-
-        if ($view->skippedExamples > 0) {
-            $lines[] = sprintf(
-                'Примеров **не проверено: %d** — у их терминов перевод больше чем на один язык, а язык',
-                $view->skippedExamples,
-            );
-            $lines[] = 'самого перевода примера нигде не записан. Аудит не угадывает: строка, язык которой';
-            $lines[] = 'неизвестен, пропущена и посчитана здесь, а не судится наугад.';
-            $lines[] = '';
-        }
 
         if ($view->rows === []) {
             $lines[] = '_Нечего вычитывать._';

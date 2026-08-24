@@ -206,7 +206,13 @@ final readonly class RecoverLostTermsHandler
                         : [],
                     ipa: is_string($item['transcription'] ?? null) ? $item['transcription'] : null,
                     examples: is_string($item['example'] ?? null)
-                        ? [new ExampleInput($item['example'], is_string($item['example_translation'] ?? null) ? $item['example_translation'] : null)]
+                        // Recovered from the request's own raw answer, so the pair is the request's:
+                        // the gloss is in its SOURCE language, like the translation above.
+                        ? [new ExampleInput(
+                            $item['example'],
+                            is_string($item['example_translation'] ?? null) ? $item['example_translation'] : null,
+                            $request->sourceLang(),
+                        )]
                         : [],
                     cefr: is_string($item['cefr'] ?? null) ? $item['cefr'] : null,
                     imageApiPrompt: is_string($item['image_api_prompt'] ?? null) ? $item['image_api_prompt'] : null,

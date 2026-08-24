@@ -31,10 +31,15 @@ use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 final readonly class ApplyEnrichmentReviewHandler
 {
     /**
-     * The language the target read asks for. Both reads here use the target only for its ENGLISH
-     * side — the pinned example sentence and the accepted forms — so the translation that comes back
-     * decides nothing; ru is named rather than defaulted so the reader has no language-blind caller
-     * left anywhere, which is the whole point of D-2.
+     * The learner language a review file is written in.
+     *
+     * It started as the language the target read asks for — both reads here use the target only for
+     * its ENGLISH side, so the translation that came back decided nothing, and `ru` was named rather
+     * than defaulted so no language-blind caller was left anywhere (D-2). It now also LABELS what a
+     * review writes: a corrected example gloss lands in `example_translations` under this code. Still
+     * a constant, and still honest — a review file is proof-read by one person in one language, and
+     * every one of them so far has been Russian. When a second one arrives it becomes a field on the
+     * command, read off the file, rather than a guess made here.
      */
     private const REVIEW_LANG = 'ru';
 
@@ -93,7 +98,7 @@ final readonly class ApplyEnrichmentReviewHandler
                 $hit > 0 ? $translations++ : $unmatched[] = "перевод у «{$row['term']}» — нечего править";
             }
             if (isset($row['example_translation'])) {
-                $hit = $this->review->setPinnedExampleTranslation($termId, (string) $row['example_translation']);
+                $hit = $this->review->setPinnedExampleTranslation($termId, (string) $row['example_translation'], self::REVIEW_LANG);
                 $hit > 0 ? $exampleTranslations++ : $unmatched[] = "перевод примера у «{$row['term']}» — нечего править";
             }
         }

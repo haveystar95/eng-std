@@ -15,7 +15,7 @@
 | `transcription` | да | `terms.ipa` |
 | `translation` | да | `term_translations.text` (один ряд, `is_primary=true`) |
 | `example` | да | `term_examples.sentence` |
-| `example_translation` | да | `term_examples.sentence_translation` |
+| `example_translation` | да | `example_translations.text` с `lang` = source_lang запроса (A-1) |
 | `cefr` | да | `terms.cefr` |
 | `image_api_prompt` | да (v4+) | `terms.image_api_prompt` → потом `AttachImagesJob` |
 | **опции / дистракторы** | **НЕТ** | — |

@@ -99,11 +99,12 @@ final readonly class RepairEchoExamplesHandler
 
         foreach ($broken as $term) {
             $now = $this->clock->now();
+            $translationLang = $term['translationLang'] ?? self::DEFAULT_TRANSLATION_LANG;
             try {
                 $result = $this->regenerator->regenerate(new ExampleRegenBrief(
                     text: $term['text'],
                     termLang: new LanguageCode($term['lang']),
-                    translationLang: new LanguageCode($term['translationLang'] ?? self::DEFAULT_TRANSLATION_LANG),
+                    translationLang: new LanguageCode($translationLang),
                     // The echo itself is what the model must not return again. Null when the example
                     // was already refused — there is nothing to avoid, only something to write.
                     avoid: $term['example'],
@@ -120,6 +121,8 @@ final readonly class RepairEchoExamplesHandler
                 $term['id'],
                 $result->example,
                 $result->exampleTranslation,
+                // Asked for and stored under the same language — one variable, no second guess.
+                $translationLang,
                 $result->promptVersion,
                 $result->model,
             );

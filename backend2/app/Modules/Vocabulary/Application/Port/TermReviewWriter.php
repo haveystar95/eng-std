@@ -52,6 +52,13 @@ interface TermReviewWriter
     /** Replace the term's primary translation (the prompt side of every card). */
     public function setPrimaryTranslation(string $termId, string $text): int;
 
-    /** Replace the pinned example's translation — used when the generator wrote it in the wrong language. */
-    public function setPinnedExampleTranslation(string $termId, string $text): int;
+    /**
+     * Replace the pinned example's translation IN $lang — used when the generator wrote it in the
+     * wrong language.
+     *
+     * The language is named rather than implied: this method exists precisely because a gloss came
+     * out in the wrong language, and "replace the translation" without saying which one is the
+     * instruction that produced the mess.
+     */
+    public function setPinnedExampleTranslation(string $termId, string $text, string $lang): int;
 }

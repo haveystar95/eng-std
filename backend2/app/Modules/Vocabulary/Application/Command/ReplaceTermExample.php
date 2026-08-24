@@ -14,6 +14,10 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
 final readonly class ReplaceTermExample
 {
     /**
+     * @param  string  $translationLang  the language `$sentenceTranslation` is written in — the
+     *         SUPPORT side of the pair the caller generated it for. Required, not defaulted: a
+     *         default is how the store ended up with one gloss per example and no record of whose
+     *         language it was.
      * @param  list<string>  $dropDistractorSentences  distractors of the pinned example that the NEW
      *         sentence orphans — see {@see \App\Modules\Vocabulary\Application\Port\TermExampleWriter}.
      *         Which ones those are is the caller's judgement: a distractor is a one-place break of one
@@ -29,6 +33,7 @@ final readonly class ReplaceTermExample
         public TermId $termId,
         public string $sentence,
         public ?string $sentenceTranslation,
+        public string $translationLang,
         public array $dropDistractorSentences = [],
         public string $source = 'user',
         public ?string $promptVersion = null,

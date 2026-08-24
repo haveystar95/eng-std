@@ -63,7 +63,11 @@ final readonly class EnrichTermHandler
                 source: 'user',
                 translations: [new TranslationInput($command->translationLang, $result->translation, isPrimary: true)],
                 ipa: $result->transcription,
-                examples: $result->example !== null ? [new ExampleInput($result->example, $result->exampleTranslation)] : [],
+                // The gloss is in the language the enricher was BRIEFED in, the same one the
+                // translation above carries.
+                examples: $result->example !== null
+                    ? [new ExampleInput($result->example, $result->exampleTranslation, $command->translationLang)]
+                    : [],
                 imageApiPrompt: $result->imageApiPrompt,
                 // «Учить это слово» is a model call like any other, and its translation and example
                 // are model output — they were being written with no stamp at all (audit A4), which

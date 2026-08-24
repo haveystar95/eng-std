@@ -128,6 +128,12 @@ deduplicated and a later prompt's translation can hang off an earlier prompt's t
 before the column exist carry the sentinel `legacy`; a NULL afterwards means a writer created
 content without stamping it, which is a bug the column can then find by itself.
 
+`example_translations` (A-1) carries no stamp of its own: a gloss is written by the same call as the
+sentence it sits beside, so the example row's stamp answers for both. That stops being true the day
+a gloss is generated on its own — a back-translation into a second support language — and the
+columns go on that table then, deliberately, rather than being added now for a caller that does not
+exist.
+
 ## Providers — one seam, three vendors
 
 `Application/Port/ContentModelPort` = one vendor, one structured JSON answer. Narrower than

@@ -121,9 +121,11 @@ it('deletes the surplus foreign translation and re-translates the example', func
     expect($translations)->toBe(['быть на одной волне']);
 
     $example = DB::table('term_examples')->where('id', REPAIR_EXAMPLE)->first();
+    $gloss = DB::table('example_translations')
+        ->where('term_example_id', REPAIR_EXAMPLE)->where('lang', 'ru')->value('text');
     // The double appends « (пример)» to an example translation, so this asserts the EXAMPLE field
     // was written from the example answer and not from the term one.
-    expect($example?->sentence_translation)->toBe('Важно, чтобы команда понимала друг друга. (пример)')
+    expect($gloss)->toBe('Важно, чтобы команда понимала друг друга. (пример)')
         // The English sentence is untouched, so anything built from it (distractors, the pinned
         // card the learner is looking at) still refers to text that exists.
         ->and($example?->sentence)->toBe('It is important for the team to be on the same page.');
@@ -154,7 +156,8 @@ it('reports a row it could not fix instead of writing the model’s second bad a
     $example = array_values(array_filter($report, static fn ($r): bool => $r->field === 'example_translation'))[0];
     expect($example->action)->toBe('unfixable')
         ->and($example->after)->toBeNull()
-        ->and(DB::table('term_examples')->where('id', REPAIR_EXAMPLE)->value('sentence_translation'))
+        ->and(DB::table('example_translations')
+            ->where('term_example_id', REPAIR_EXAMPLE)->where('lang', 'ru')->value('text'))
         ->toBe('Важливо, щоб команда розуміла одне одного.');
 });
 

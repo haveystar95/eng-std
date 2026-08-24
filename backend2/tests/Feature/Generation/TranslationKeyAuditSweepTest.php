@@ -222,9 +222,11 @@ it('judges example sentences as keys in their own right, in their own table', fu
         ->not->toContain('I need to withdraw cash today');
 });
 
-it('never judges an example whose language it cannot know, and says how many it skipped', function () {
-    // A second primary translation, in another language, makes the example's own language a guess:
-    // `sentence_translation` records none. The pair drops out of the sweep and into the count.
+it('still judges an example when the term is translated into several languages', function () {
+    // This used to be the skip: a second primary translation in another language made the example's
+    // own language a guess, because the gloss lived in a column that recorded none — the pair fell
+    // out of the sweep and into a «не проверено» count. The gloss names its language now, so a term
+    // read by two kinds of learner is no longer a reason to leave its example unread.
     DB::table('term_translations')->insert([
         'id' => str_pad('01SWEEPTRU2', 26, '0'),
         'term_id' => str_pad('01SWEEPRU', 26, '0'),
@@ -241,9 +243,33 @@ it('never judges an example whose language it cannot know, and says how many it 
     $export = (string) file_get_contents(sweepExportPath());
 
     expect($export)
-        ->toContain('Примеров **не проверено: 1**')
-        ->toContain('### Примеры (0)')
-        ->not->toContain('and how you overcame it');
+        ->toContain('### Примеры (1)')
+        ->toContain('and how you overcame it')
+        // The «Примеров не проверено: N» paragraph is gone with the class of rows it counted. (The
+        // export still says «не проверено» elsewhere, about a language the RULE is silent for — a
+        // different fact, and still true.)
+        ->not->toContain('Примеров **не проверено');
+});
+
+it('sweeps an example gloss under the language it is labelled with, not the term\'s', function () {
+    // The same term, glossed for a Ukrainian learner as well. The `uk` sweep must see the `uk` gloss
+    // and the `ru` sweep must not — before the language was on the row, one example had one gloss
+    // and every sweep claimed it.
+    seedExample([
+        'id' => str_pad('01SWEEPEXUA', 26, '0'),
+        'term_id' => str_pad('01SWEEPRU', 26, '0'),
+        'sentence' => 'Tell us about a challenge you faced and how you overcame it.',
+        'translation' => 'Розкажіть про виклик і як ви його подолали',
+        'translation_lang' => 'uk',
+        'source' => 'ai',
+    ]);
+
+    $rows = app(\App\Modules\Vocabulary\Application\Query\TranslationKeyReader::class);
+
+    expect(array_map(static fn ($r): string => $r->translation, $rows->primaryExampleKeys('en', 'uk')))
+        ->toBe(['Розкажіть про виклик і як ви його подолали'])
+        ->and(array_map(static fn ($r): string => $r->translation, $rows->primaryExampleKeys('en', 'ru')))
+        ->not->toContain('Розкажіть про виклик і як ви його подолали');
 });
 
 it('marks the direction of every candidate and counts both', function () {

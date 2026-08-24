@@ -62,7 +62,9 @@ terms(id, lang, text, normalized_text, type[word|phrase], pos, ipa, audio_url,
       UNIQUE(lang, normalized_text, pos)
 
 term_translations(term_id, lang, text, is_primary)
-term_examples(term_id, sentence, sentence_translation)
+term_examples(term_id, lang, sentence)
+example_translations(term_example_id, lang, text)
+      UNIQUE(term_example_id, lang)
 
 collection_items(collection_id, term_id, position, note)
       UNIQUE(collection_id, term_id)
@@ -220,7 +222,13 @@ UNIQUE (lang, normalized_text, COALESCE(pos,''))
 
 term_translations(id, term_id FK, lang, text, is_primary BOOL, created_at)
   UNIQUE (term_id, lang, text)
-term_examples(id, term_id FK, sentence, sentence_translation, source)
+-- `lang` is the SENTENCE's language (= the term's). The gloss lives one table down, one row per
+-- support language, because an example translation is written IN a language and a column could
+-- only ever pick one. `sentence_translation` is still on the table, marked DEPRECATED, unread and
+-- unwritten, until phase A of the multilanguage move has fully landed.
+term_examples(id, term_id FK, lang, sentence, source)
+example_translations(id, term_example_id FK, lang, text)
+  UNIQUE (term_example_id, lang)
 
 -- Collections
 collections(

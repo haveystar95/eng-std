@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentTermContentReader implements TermContentReader
 {
-    public function __construct(private readonly TranslationPick $pick = new TranslationPick()) {}
+    public function __construct(
+        private readonly TranslationPick $pick = new TranslationPick(),
+        private readonly ExampleTranslationPick $examplePick = new ExampleTranslationPick(),
+    ) {}
 
     public function byIds(array $termIds, string $lang): array
     {
@@ -61,6 +64,13 @@ final class EloquentTermContentReader implements TermContentReader
         foreach ($examples as $termId => $row) {
             $exampleIds[(string) $row->id] = (string) $termId;
         }
+
+        // The gloss under the example is picked by the SAME learner language as the term's own
+        // translation — see ExampleTranslationPick. It used to be a single column with no language
+        // at all, so a term glossed for a Ukrainian collection printed that gloss to a Russian
+        // speaker with nothing to say it had happened.
+        $exampleTranslations = $this->examplePick->textsFor(array_keys($exampleIds), $lang);
+
         $distractors = [];
         if ($exampleIds !== []) {
             foreach (DB::table('example_distractors')->whereIn('example_id', array_keys($exampleIds))->orderBy('id')
@@ -87,7 +97,7 @@ final class EloquentTermContentReader implements TermContentReader
                 transcription: $term->ipa !== null ? (string) $term->ipa : null,
                 translation: $translations[$id]['text'] ?? null,
                 example: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
-                exampleTranslation: $example !== null && $example->sentence_translation !== null ? (string) $example->sentence_translation : null,
+                exampleTranslation: $example !== null ? ($exampleTranslations[(string) $example->id] ?? null) : null,
                 description: $descriptions[$id][(string) $term->lang] ?? null,
                 imageUrl: $term->image_url !== null ? (string) $term->image_url : null,
                 imageAuthor: $term->image_author !== null ? (string) $term->image_author : null,

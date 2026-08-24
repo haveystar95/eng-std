@@ -79,6 +79,9 @@ final readonly class CoreReplacement
                 $termId,
                 $core->example,
                 $core->exampleTranslation,
+                // The example's gloss is written in the same language as the fresh key — one core,
+                // one model call, one support language.
+                $translationLang,
                 $promptVersion,
                 $model,
             );

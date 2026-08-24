@@ -117,6 +117,13 @@ final class EloquentTermSearchReader implements TermSearchReader
             $examples[(string) $row->term_id] ??= $row;
         }
 
+        // Same rule as the card: the gloss is picked by the learner's language, with a fallback to
+        // whatever gloss exists rather than none at all.
+        $exampleTranslations = (new ExampleTranslationPick())->textsFor(
+            array_values(array_map(static fn (object $e): string => (string) $e->id, $examples)),
+            $nativeLang,
+        );
+
         $descriptions = [];
         foreach (DB::table('term_descriptions')->whereIn('term_id', $ids)->get(['term_id', 'lang', 'text']) as $row) {
             $descriptions[(string) $row->term_id][(string) $row->lang] = (string) $row->text;
@@ -137,7 +144,7 @@ final class EloquentTermSearchReader implements TermSearchReader
                 // trainer shows and what the search card prints under the translation.
                 description: $descriptions[$id][(string) $term->lang] ?? null,
                 example: $example?->sentence !== null ? (string) $example->sentence : null,
-                exampleTranslation: $example?->sentence_translation !== null ? (string) $example->sentence_translation : null,
+                exampleTranslation: $example !== null ? ($exampleTranslations[(string) $example->id] ?? null) : null,
                 cefr: $term->cefr !== null ? (string) $term->cefr : null,
                 matchedTerm: $ranked[$id]['matched_term'],
             );

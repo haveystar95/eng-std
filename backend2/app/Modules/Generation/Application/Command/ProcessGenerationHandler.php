@@ -240,7 +240,9 @@ final readonly class ProcessGenerationHandler
                 translations: [new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true)],
                 ipa: $item->transcription,
                 examples: $item->example !== null
-                    ? [new ExampleInput($item->example, $item->exampleTranslation)]
+                    // The gloss is in the request's SOURCE language — the same one the term's
+                    // translation above carries, because one generation is one language pair.
+                    ? [new ExampleInput($item->example, $item->exampleTranslation, $request->sourceLang())]
                     : [],
                 cefr: $item->cefr,
                 imageApiPrompt: $item->imageApiPrompt,   // per-term image query for AttachImagesJob

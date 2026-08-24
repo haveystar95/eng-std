@@ -27,7 +27,7 @@ function staleCoreTerm(string $promptVersion = 'v9'): string
         source: 'ai',
         translations: [new TranslationInput(new LanguageCode('ru'), 'банк', isPrimary: true)],
         ipa: 'bæŋk',
-        examples: [new ExampleInput('I opened a bank account.', 'Я открыл счёт в банке.')],
+        examples: [new ExampleInput('I opened a bank account.', 'Я открыл счёт в банке.', new LanguageCode('ru'))],
         cefr: 'B1',
         promptVersion: $promptVersion,
         generationModel: 'gpt-4o',

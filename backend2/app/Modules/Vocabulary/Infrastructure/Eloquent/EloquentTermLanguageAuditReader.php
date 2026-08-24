@@ -100,8 +100,22 @@ final class EloquentTermLanguageAuditReader implements TermLanguageAuditReader
             );
         }
 
-        foreach (DB::table('term_examples')->whereIn('term_id', $termIds)->whereNotNull('sentence_translation')
-            ->orderBy('id')->get(['id', 'term_id', 'sentence', 'sentence_translation']) as $row) {
+        // The glosses this sweep is about: the ones LABELLED `$sourceLang`. The old read took every
+        // example translation there was and declared it `$sourceLang` by contract, because the table
+        // held no language at all — which is exactly how Ukrainian text sat unnoticed under a Russian
+        // collection's example. Now the label is the row's own, so the judge compares a claim against
+        // its content instead of comparing content against a convention.
+        //
+        // A gloss labelled ANOTHER language is not swept here and that is deliberate: it is the
+        // support side of a different pair, the way a `uk` translation beside a `ru` one is. On
+        // today's content (every gloss `ru`) this is the same set the old read returned.
+        foreach (DB::table('term_examples as e')
+            ->join('example_translations as et', 'et.term_example_id', '=', 'e.id')
+            ->whereIn('e.term_id', $termIds)
+            ->where('et.lang', $sourceLang)
+            ->orderBy('e.id')
+            ->orderBy('et.id')
+            ->get(['e.id', 'e.term_id', 'e.sentence', 'et.lang', 'et.text']) as $row) {
             $termId = (string) $row->term_id;
             $term = $terms[$termId] ?? null;
             if ($term === null) {
@@ -113,10 +127,11 @@ final class EloquentTermLanguageAuditReader implements TermLanguageAuditReader
                 termType: (string) $term->type,
                 termLang: (string) $term->lang,
                 field: 'example_translation',
+                // The EXAMPLE's id, not the translation row's: the repair writes back through
+                // CurateTerm, which addresses an example by id and names the language separately.
                 rowId: (string) $row->id,
-                // The table has no language column: the field is the learner's language by contract.
-                declaredLang: $sourceLang,
-                value: (string) $row->sentence_translation,
+                declaredLang: (string) $row->lang,
+                value: (string) $row->text,
                 exampleSentence: (string) $row->sentence,
                 hasSiblingInDeclared: false,
             );

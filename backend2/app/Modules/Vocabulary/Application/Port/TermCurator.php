@@ -38,8 +38,13 @@ interface TermCurator
      * about a sentence that no longer exists, so it is dropped and the term is unmarked for the
      * станок to redo. Leaving stale distractors would show the learner a "find the mistake"
      * exercise built from text they are not looking at.
+     *
+     * `$translationLang` names which gloss the operator is rewriting AND what that row is labelled
+     * afterwards — one parameter for both, exactly as in {@see updateContent()}, and for the same
+     * reason: editing "the" example translation without saying which language it is in is how the
+     * retrospective repair wrote Russian into rows that stayed marked `uk`.
      */
-    public function updateExample(TermId $termId, string $exampleId, string $sentence, ?string $translation): bool;
+    public function updateExample(TermId $termId, string $exampleId, string $sentence, ?string $translation, string $translationLang): bool;
 
     /**
      * Delete ONE translation row by id. Returns false when the row does not belong to this term, or

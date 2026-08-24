@@ -102,7 +102,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         // the learner never sees.
         $examples = [];
         foreach (DB::table('term_examples')->whereIn('term_id', $dedupIds)->orderBy('id')
-            ->get(['id', 'term_id', 'sentence', 'sentence_translation']) as $row) {
+            ->get(['id', 'term_id', 'sentence']) as $row) {
             $examples[(string) $row->term_id] ??= $row;
         }
 
@@ -113,6 +113,14 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
         // row that won travels on — TranslationPick may have had to fall back to another language,
         // and the brief must say so honestly rather than assert the language we asked for.
         $picked = $this->pick->forTerms($ids, $lang);
+
+        // The example's gloss travels for the same reason and by the same rule — the model is shown
+        // the sentence and what it means to THIS learner, so the two halves of the brief have to be
+        // in one language or the prompt describes content that isn't there.
+        $exampleTranslations = (new ExampleTranslationPick())->textsFor(
+            array_values(array_map(static fn (object $e): string => (string) $e->id, $examples)),
+            $lang,
+        );
 
         // Variants an earlier run already accepted: part of the answer key from now on.
         $variants = [];
@@ -165,9 +173,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                 translation: $picked[$id]['text'] ?? null,
                 exampleId: $example !== null ? (string) $example->id : null,
                 exampleSentence: $example !== null && $example->sentence !== null ? (string) $example->sentence : null,
-                exampleTranslation: $example !== null && $example->sentence_translation !== null
-                    ? (string) $example->sentence_translation
-                    : null,
+                exampleTranslation: $example !== null ? ($exampleTranslations[(string) $example->id] ?? null) : null,
                 lang: $langById[$id] ?? 'en',
                 translationLang: $picked[$id]['lang'] ?? null,
                 existingDistractors: [

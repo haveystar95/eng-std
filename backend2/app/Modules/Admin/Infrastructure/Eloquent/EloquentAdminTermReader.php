@@ -74,9 +74,14 @@ final class EloquentAdminTermReader implements AdminTermReader
         $examples = DB::table('term_examples')
             ->where('term_id', $termId)
             ->orderBy('id')
-            ->get(['id', 'sentence', 'sentence_translation'])
+            ->get(['id', 'sentence'])
             ->values()
             ->all();
+
+        $exampleTranslations = $this->exampleTranslations(array_values(array_map(
+            static fn (stdClass $r): string => (string) $r->id,
+            $examples,
+        )));
 
         $collections = DB::table('collection_items as ci')
             ->join('collections as c', 'c.id', '=', 'ci.collection_id')
@@ -116,7 +121,7 @@ final class EloquentAdminTermReader implements AdminTermReader
                 static fn (stdClass $r, int $i): TermExampleRow => new TermExampleRow(
                     id: (string) $r->id,
                     sentence: (string) $r->sentence,
-                    translation: $r->sentence_translation !== null ? (string) $r->sentence_translation : null,
+                    translation: $exampleTranslations[(string) $r->id] ?? null,
                     isPinned: $i === 0,
                     distractors: $distractors[(string) $r->id] ?? [],
                 ),
@@ -133,6 +138,37 @@ final class EloquentAdminTermReader implements AdminTermReader
             enrichmentVersion: $this->enrichmentVersion($termId),
             progressCount: $progressCount,
         );
+    }
+
+    /**
+     * The gloss the PANEL shows beside each example — the one the panel also edits.
+     *
+     * An example may now carry a gloss per language. The panel's edit form has no language picker
+     * and `CurateTerm` defaults its `translationLang` to `ru`, so `ru` is what a save writes; showing
+     * anything else would put the operator in front of one string and have their edit land on
+     * another. The fallback to any other language is the same one every reader uses: a gloss in the
+     * wrong language is still more than a blank field, and blanks are what the panel is for finding.
+     * When the panel grows a language picker, this constant becomes its parameter.
+     *
+     * @param  list<string>  $exampleIds
+     * @return array<string, string>  keyed by example id
+     */
+    private function exampleTranslations(array $exampleIds): array
+    {
+        if ($exampleIds === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (DB::table('example_translations')
+            ->whereIn('term_example_id', $exampleIds)
+            ->orderByRaw("CASE WHEN lang = 'ru' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->get(['term_example_id', 'text']) as $row) {
+            $out[(string) $row->term_example_id] ??= (string) $row->text;
+        }
+
+        return $out;
     }
 
     /**

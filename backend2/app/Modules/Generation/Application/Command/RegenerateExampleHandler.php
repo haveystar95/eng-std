@@ -57,10 +57,12 @@ final readonly class RegenerateExampleHandler
             throw GenerationQuotaExceeded::perDay($limit);
         }
 
+        $translationLang = $ctx->translationLang ?? self::DEFAULT_TRANSLATION_LANG;
+
         $result = $this->regenerator->regenerate(new ExampleRegenBrief(
             text: $ctx->text,
             termLang: new LanguageCode($ctx->lang),
-            translationLang: new LanguageCode($ctx->translationLang ?? self::DEFAULT_TRANSLATION_LANG),
+            translationLang: new LanguageCode($translationLang),
             avoid: $ctx->currentExample,
         ));
 
@@ -68,6 +70,9 @@ final readonly class RegenerateExampleHandler
             $command->termId,
             $result->example,
             $result->exampleTranslation,
+            // The language the gloss was ASKED for is the language it is stored under — one variable
+            // for the brief and for the row, so the two cannot drift apart.
+            $translationLang,
             $result->promptVersion,
             $result->model,
         );
