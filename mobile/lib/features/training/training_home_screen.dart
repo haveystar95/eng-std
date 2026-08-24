@@ -9,7 +9,6 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/models.dart';
 import '../../data/providers.dart';
-import '../collections/collection_detail_screen.dart';
 import '../collections/generate_screen.dart';
 import '../collections/my_words_screen.dart';
 import '../home/home_cta.dart';
@@ -17,8 +16,8 @@ import '../home/home_providers.dart';
 import '../home/limit_reached_card.dart';
 import '../home/streak.dart';
 import 'session_screen.dart';
+import 'collections_strip.dart';
 import 'triage_screen.dart';
-import '../../data/local/cached_image_provider.dart';
 
 /// «Главная» (кадр 2.1). Everything reads the local DB — the screen renders in
 /// airplane mode: daily goal + streak, the state-dependent primary action, the
@@ -148,7 +147,7 @@ class TrainingHomeScreen extends ConsumerWidget {
               ],
               if (collections.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sectionAiry),
-                _CollectionsStrip(
+                CollectionsStrip(
                   collections: collections,
                   progress: progress,
                   onSeeAll: onOpenCollections,
@@ -772,159 +771,6 @@ class _TypeBadge extends StatelessWidget {
         border: Border.all(color: AppColors.hairline),
       ),
       child: Text(label.toUpperCase(), style: AppText.badge),
-    );
-  }
-}
-
-/// Horizontal collections strip with large photo covers (кадр 2.1). Bleeds to
-/// the screen edges; the label row stays within the screen padding.
-class _CollectionsStrip extends StatelessWidget {
-  const _CollectionsStrip({required this.collections, required this.progress, this.onSeeAll});
-  final List<WordCollection> collections;
-  final Map<String, CollectionProgress> progress;
-  final VoidCallback? onSeeAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-          child: Row(
-            children: [
-              Expanded(child: Text(l.homeMyCollections, style: AppText.sectionLabel)),
-              InkWell(
-                onTap: onSeeAll,
-                borderRadius: BorderRadius.circular(AppRadii.small),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l.homeSeeAll,
-                        style: AppText.translation.copyWith(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Icon(LucideIcons.chevronRight, size: 14, color: AppColors.tertiary),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.s8),
-        SizedBox(
-          height: _CollectionCard.height,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-            itemCount: collections.length,
-            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.wordRowGap),
-            itemBuilder: (context, i) {
-              final c = collections[i];
-              return _CollectionCard(collection: c, progress: progress[c.id]);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CollectionCard extends StatelessWidget {
-  const _CollectionCard({required this.collection, required this.progress});
-  final WordCollection collection;
-  final CollectionProgress? progress;
-
-  static const _titleSize = 15.0;
-
-  /// Two lines of the title, always — the carousel is a fixed-height row, and a title that grew
-  /// from one line to two used to push the progress line and its count off the bottom of the card
-  /// («Ordering Takeaway Coffee», overflow 7 px — QA-OBS-11). Reserving the taller of the two
-  /// states costs a blank line under short titles and buys a card whose bottom half never moves.
-  static const _titleHeight = _titleSize * 1.15 * 2; // AppText.collectionNameCard.height = 1.15
-
-  /// Cover + gap + two title lines + gap + count + gap + bar, with a point of slack.
-  static const height =
-      104 + AppSpacing.s8 + _titleHeight + 3 + 15 + 7 + AppProgress.heightCard + 1;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final total = progress?.total ?? collection.wordsCount;
-    final done = progress?.mastered ?? 0;
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              CollectionDetailScreen(collectionId: collection.id, title: collection.title),
-        ),
-      ),
-      child: SizedBox(
-        width: 150,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _Cover(imageUrl: collection.imageUrl),
-            const SizedBox(height: AppSpacing.s8),
-            SizedBox(
-              height: _titleHeight,
-              child: Text(
-                collection.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.collectionNameCard.copyWith(fontSize: _titleSize),
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              l.homeCollectionProgress(done, total),
-              style: AppText.transcription.copyWith(fontSize: 11.5),
-            ),
-            const SizedBox(height: 7),
-            ProgressLine(value: total > 0 ? done / total : 0, height: AppProgress.heightCard),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Cover extends StatelessWidget {
-  const _Cover({required this.imageUrl});
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(AppRadii.thumb);
-    final placeholder = DecoratedBox(
-      decoration: BoxDecoration(color: AppColors.track, borderRadius: radius),
-      child: const Center(child: Icon(LucideIcons.image, size: 22, color: AppColors.tertiary)),
-    );
-    return SizedBox(
-      width: 150,
-      height: 104,
-      child: (imageUrl == null || imageUrl!.isEmpty)
-          ? placeholder
-          : ClipRRect(
-              borderRadius: radius,
-              child: Image(
-                image: CachedNetworkImage(imageUrl!),
-                width: 150,
-                height: 104,
-                fit: BoxFit.cover,
-                loadingBuilder: (_, child, p) => p == null ? child : placeholder,
-                errorBuilder: (_, _, _) => placeholder,
-              ),
-            ),
     );
   }
 }
