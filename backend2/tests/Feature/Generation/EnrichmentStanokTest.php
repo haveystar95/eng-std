@@ -39,14 +39,12 @@ function seedEnrichmentTerm(string $sentence = 'I would like to withdraw money.'
         'created_at' => now(),
         'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => ENRICH_EXAMPLE_ID,
         'term_id' => ENRICH_TERM_ID,
         'sentence' => $sentence,
-        'sentence_translation' => 'Я хотел бы снять деньги.',
+        'translation' => 'Я хотел бы снять деньги.',
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

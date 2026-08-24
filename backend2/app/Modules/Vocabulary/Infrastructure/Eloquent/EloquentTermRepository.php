@@ -95,6 +95,9 @@ final class EloquentTermRepository implements TermRepository
                     ],
                     [
                         'id' => Ulid::generate(),
+                        // The sentence uses the term, so it is in the term's language — the
+                        // aggregate's own `lang`, never a second opinion from the caller.
+                        'lang' => $term->lang()->value,
                         'sentence_translation' => $example->sentenceTranslation,
                         'source' => $term->source()->value,
                         'prompt_version' => $example->provenance?->promptVersion,

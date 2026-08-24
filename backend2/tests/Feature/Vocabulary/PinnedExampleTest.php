@@ -31,14 +31,12 @@ function seedExamplesOutOfOrder(string $termId): void
     ]);
 
     foreach (['C', 'B', 'A'] as $letter) {
-        DB::table('term_examples')->insert([
+        seedExample([
             'id' => str_pad("01EX{$letter}", 26, '0'),
             'term_id' => $termId,
             'sentence' => "Example {$letter}.",
-            'sentence_translation' => "Пример {$letter}.",
+            'translation' => "Пример {$letter}.",
             'source' => 'ai',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 }
@@ -59,7 +57,7 @@ it('pins one example per term, whatever the physical row order', function () {
     // in tests and visible in the app.
     DB::table('term_examples')
         ->where('id', str_pad('01EXA', 26, '0'))
-        ->update(['sentence_translation' => 'Пример A (правленый).']);
+        ->update(['source' => 'user']);
 
     expect($read())->toBe('Example A.');
 });
@@ -69,14 +67,12 @@ it('serves the same pinned example to the client through /sync', function () {
     [, $termId] = seedCollectionWith($user, 'withdraw cash', 'снять наличные');
 
     foreach (['C', 'B', 'A'] as $letter) {
-        DB::table('term_examples')->insert([
+        seedExample([
             'id' => str_pad("01EX{$letter}", 26, '0'),
             'term_id' => $termId,
             'sentence' => "Example {$letter}.",
-            'sentence_translation' => "Пример {$letter}.",
+            'translation' => "Пример {$letter}.",
             'source' => 'ai',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 

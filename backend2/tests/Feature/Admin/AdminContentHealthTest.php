@@ -16,10 +16,9 @@ function contentHealthExample(string $termId, string $sentence, ?string $transla
 {
     $exampleId = Ulid::generate();
     DB::table('term_examples')->where('term_id', $termId)->delete();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => $sentence,
-        'sentence_translation' => $translation, 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => $translation, 'source' => 'ai',
     ]);
 
     return $exampleId;

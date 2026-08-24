@@ -13,7 +13,6 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeExampleRegenerator;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
-use App\Modules\Shared\Domain\ValueObject\Ulid;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +30,8 @@ function setExample(string $termId, ?string $sentence): void
     if ($sentence === null) {
         return;
     }
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(), 'term_id' => $termId, 'sentence' => $sentence,
-        'sentence_translation' => 'перевод', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+    seedExample([
+        'term_id' => $termId, 'sentence' => $sentence, 'translation' => 'перевод', 'source' => 'ai',
     ]);
 }
 

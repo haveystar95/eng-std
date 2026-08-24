@@ -40,16 +40,15 @@ function seedSweepTerm(string $termId, string $text, string $lang, string $trans
     ]);
 }
 
-function seedSweepExample(string $termId, string $exampleId, string $sentence, ?string $translation): void
+function seedSweepExample(string $termId, string $exampleId, string $sentence, ?string $translation, string $translationLang = 'ru'): void
 {
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId,
         'term_id' => $termId,
         'sentence' => $sentence,
-        'sentence_translation' => $translation,
+        'translation' => $translation,
+        'translation_lang' => $translationLang,
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

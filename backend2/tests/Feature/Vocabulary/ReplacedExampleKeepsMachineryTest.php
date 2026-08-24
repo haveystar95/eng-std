@@ -23,10 +23,9 @@ function seedExampleWithDistractors(string $sentence): array
     [, $termId] = seedCollectionWith($user, 'withdraw cash', 'снять наличные');
 
     $exampleId = Ulid::generate();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => $sentence,
-        'sentence_translation' => 'Мне нужно снять наличные.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Мне нужно снять наличные.', 'source' => 'ai',
     ]);
 
     return [$termId, $exampleId];

@@ -18,14 +18,12 @@ const PC_RIGHT = 'Your workstation is ready for you.';
 function pickCorrectContent(string $termId): void
 {
     $exampleId = Ulid::generate();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId,
         'term_id' => $termId,
         'sentence' => PC_RIGHT,
-        'sentence_translation' => 'Ваше рабочее место готово.',
+        'translation' => 'Ваше рабочее место готово.',
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 
     foreach ([

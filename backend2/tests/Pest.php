@@ -21,6 +21,7 @@ use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Illuminate\Support\Facades\DB;
 use Tests\Doubles\FakeLatencyMedianReader;
 use Tests\Doubles\FakeLearnerProfileReader;
 use Tests\Doubles\FakeTermAnswerKeyReader;
@@ -169,6 +170,42 @@ function seedCollectionWith(User $user, string $text, string $translation = 'x',
     }
 
     return [$collectionId->value, $termId];
+}
+
+/**
+ * Seed one row of `term_examples` — and its translation, when the test supplies one.
+ *
+ * A test used to write the whole example with a single `DB::table('term_examples')->insert()`, which
+ * stopped being one row the moment an example gained a `lang` of its own. Rather than have two dozen
+ * test files each remember to derive the sentence's language from its term, the derivation lives
+ * here once: `lang` defaults to the TERM's language, which is what the writers do and what the
+ * backfill did.
+ *
+ * `translation` is the example's translation and `translation_lang` the language it is written in
+ * (defaulting to `ru`, the only support language the fixtures use). They are NOT columns of
+ * `term_examples` — that is the point.
+ *
+ * @param  array<string, mixed>  $attrs  columns of `term_examples`, plus `translation` /
+ *                                       `translation_lang`. `id` and the timestamps are filled in.
+ * @return string  the example's id
+ */
+function seedExample(array $attrs): string
+{
+    $translation = $attrs['translation'] ?? null;
+    $translationLang = (string) ($attrs['translation_lang'] ?? 'ru');
+    unset($attrs['translation'], $attrs['translation_lang']);
+
+    $attrs['id'] ??= \App\Modules\Shared\Domain\ValueObject\Ulid::generate();
+    $attrs['lang'] ??= (string) DB::table('terms')->where('id', $attrs['term_id'])->value('lang');
+    $attrs['created_at'] ??= now();
+    $attrs['updated_at'] ??= now();
+    if (is_string($translation) && $translation !== '') {
+        $attrs['sentence_translation'] = $translation;
+    }
+
+    DB::table('term_examples')->insert($attrs);
+
+    return (string) $attrs['id'];
 }
 
 /** Add a word to an existing collection (no HTTP) and return the term id. */

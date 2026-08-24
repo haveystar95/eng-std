@@ -43,10 +43,9 @@ function seedA1Target(): string
         'text' => 'дебетовая карта', 'is_primary' => true,
         'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => A1_EXAMPLE,
-        'sentence_translation' => 'Я плачу дебетовой картой за продукты.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Я плачу дебетовой картой за продукты.', 'source' => 'ai',
     ]);
     DB::table('example_distractors')->insert([
         'id' => Ulid::generate(), 'example_id' => $exampleId, 'sentence' => A1_REMOVED_SENTENCE,

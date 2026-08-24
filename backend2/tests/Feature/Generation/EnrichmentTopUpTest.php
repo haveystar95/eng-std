@@ -27,9 +27,8 @@ function topUpTerm(string $text, string $example): string
         'id' => $termId, 'lang' => 'en', 'text' => $text, 'normalized_text' => mb_strtolower($text),
         'type' => 'word', 'source' => 'ai', 'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(), 'term_id' => $termId, 'sentence' => $example,
-        'sentence_translation' => 'перевод примера', 'created_at' => now(), 'updated_at' => now(),
+    seedExample([
+        'term_id' => $termId, 'sentence' => $example, 'translation' => 'перевод примера',
     ]);
     DB::table('term_translations')->insert([
         'id' => Ulid::generate(), 'term_id' => $termId, 'lang' => 'ru', 'text' => 'перевод',

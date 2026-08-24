@@ -13,14 +13,11 @@ uses(RefreshDatabase::class);
 /** Attach a pinned example to a seeded term. */
 function withExample(string $termId, string $sentence, ?string $translation = 'У меня бронь на сегодня.'): void
 {
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => $sentence,
-        'sentence_translation' => $translation,
+        'translation' => $translation,
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

@@ -41,10 +41,9 @@ function seedDuplicateTextTerm(string $text): string
         'lang' => 'en', 'type' => 'phrase', 'source' => 'ai',
         'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => DUP_EXAMPLE,
-        'sentence_translation' => 'Я попросил горничную убрать в номере, пока меня не было.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Я попросил горничную убрать в номере, пока меня не было.', 'source' => 'ai',
     ]);
 
     return $termId;

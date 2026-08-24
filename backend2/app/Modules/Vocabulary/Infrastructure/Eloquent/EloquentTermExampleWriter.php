@@ -41,6 +41,10 @@ final class EloquentTermExampleWriter implements TermExampleWriter
                 DB::table('term_examples')->insert([
                     'id' => Ulid::generate(),
                     'term_id' => $termId->value,
+                    // The sentence USES the term, so it is written in the term's language. Read off
+                    // the term rather than taken from the caller: a parameter would be a second
+                    // opinion about a fact the row next door already holds.
+                    'lang' => DB::table('terms')->where('id', $termId->value)->value('lang'),
                     'sentence' => $sentence,
                     'sentence_translation' => $sentenceTranslation,
                     ...$stamp,

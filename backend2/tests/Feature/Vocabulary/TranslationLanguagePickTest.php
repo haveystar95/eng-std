@@ -49,14 +49,12 @@ function seedTwoPrimaries(): void
         ]);
     }
 
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => str_pad('01EXP', 26, '0'),
         'term_id' => PICK_TERM,
         'sentence' => 'She is busy as a bee today.',
-        'sentence_translation' => 'Она сегодня трудится как пчёлка.',
+        'translation' => 'Она сегодня трудится как пчёлка.',
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

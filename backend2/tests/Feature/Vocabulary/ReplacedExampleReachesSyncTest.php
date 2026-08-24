@@ -27,13 +27,11 @@ it('puts the term back in the sync delta when its example is replaced', function
     [$user, $token] = learner();
     [$col, $termId] = seedCollectionWith($user, 'overwhelm', 'переполнять');
 
-    DB::table('term_examples')->insert([
-        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => 'The old example sentence.',
-        'sentence_translation' => 'Старое предложение.',
+        'translation' => 'Старое предложение.',
         'source' => 'user',
-        'created_at' => now(), 'updated_at' => now(),
     ]);
 
     // A device that is fully caught up: everything it holds is older than the cursor it will send.

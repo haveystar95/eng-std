@@ -19,14 +19,12 @@ uses(RefreshDatabase::class);
  */
 function seedEnrichmentFor(string $termId): void
 {
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => str_pad('01VAREX', 26, '0'),
         'term_id' => $termId,
         'sentence' => 'Excuse me, this is my seat.',
-        'sentence_translation' => 'Простите, это моё место.',
+        'translation' => 'Простите, это моё место.',
         'source' => 'curated',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
     DB::table('term_accepted_variants')->insert([
         'id' => str_pad('01VARV1', 26, '0'),

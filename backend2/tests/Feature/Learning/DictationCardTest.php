@@ -15,14 +15,11 @@ uses(RefreshDatabase::class);
 /** Give the term the pinned example dictation reads out. */
 function dictationExample(string $termId, string $sentence): void
 {
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => $sentence,
-        'sentence_translation' => 'У меня бронь на сегодня.',
+        'translation' => 'У меня бронь на сегодня.',
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

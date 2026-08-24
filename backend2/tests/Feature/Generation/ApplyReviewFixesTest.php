@@ -23,10 +23,9 @@ function seedFixTarget(): string
         'lang' => 'en', 'type' => 'phrase', 'source' => 'ai',
         'created_at' => now(), 'updated_at' => now()->subDay(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => FIX_EXAMPLE,
-        'sentence_translation' => 'Вы предлагаете онлайн-банкинг?', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Вы предлагаете онлайн-банкинг?', 'source' => 'ai',
     ]);
     DB::table('example_distractors')->insert([
         'id' => Ulid::generate(), 'example_id' => $exampleId,

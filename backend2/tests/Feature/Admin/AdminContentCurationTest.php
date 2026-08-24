@@ -28,10 +28,9 @@ function curationFixture(): array
     [$collectionId, $termId] = adminSeedTerm($user, 'Banking', 'account', 'счёт', enroll: false);
 
     $exampleId = Ulid::generate();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => 'I opened a bank account.',
-        'sentence_translation' => 'Я открыл счёт.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Я открыл счёт.', 'source' => 'ai',
     ]);
     DB::table('example_distractors')->insert([
         'id' => Ulid::generate(), 'example_id' => $exampleId,

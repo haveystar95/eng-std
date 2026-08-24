@@ -23,10 +23,9 @@ function seedAuditTarget(array $distractors, string $example = AUDIT_EXAMPLE): s
         'lang' => 'en', 'type' => 'word', 'source' => 'ai',
         'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => $example,
-        'sentence_translation' => 'Кажется, я простыл.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Кажется, я простыл.', 'source' => 'ai',
     ]);
     foreach ($distractors as [$sentence, $span, $correction]) {
         DB::table('example_distractors')->insert([

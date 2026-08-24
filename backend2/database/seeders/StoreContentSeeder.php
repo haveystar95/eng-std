@@ -163,6 +163,9 @@ final class StoreContentSeeder extends Seeder
             DB::table('term_examples')->insert([
                 'id' => Ulid::generate(),
                 'term_id' => $termId,
+                // The sentence uses the term, so it is in the term's language — the same fact the
+                // writers read off `terms.lang` and the backfill copied from there.
+                'lang' => $t['lang'],
                 'sentence' => $ex['sentence'],
                 'sentence_translation' => $ex['sentence_translation'] ?? null,
                 'source' => $ex['source'] ?? null,

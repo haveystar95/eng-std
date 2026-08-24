@@ -88,12 +88,11 @@ it('leaves the option-free trainers alone — a term with an example is still tr
     // The same lonely deck, one rung up and with the example the rotation at rung 3 asks for.
     // cloze/scramble ask for the term or its sentence and build no options at all, so the floor
     // never applies and the word is trained exactly as before.
-    DB::table('term_examples')->insert([
-        'id' => \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => 'How do you deal with conflict at work?',
-        'sentence_translation' => 'Как вы справляетесь с конфликтами на работе?',
-        'source' => 'ai', 'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Как вы справляетесь с конфликтами на работе?',
+        'source' => 'ai',
     ]);
     DB::table('user_term_progress')->where('term_id', $termId)->delete(); // the enrolment's row; this case writes its own
     DB::table('user_term_progress')->insert([

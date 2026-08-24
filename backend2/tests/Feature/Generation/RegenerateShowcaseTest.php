@@ -28,10 +28,9 @@ function legacyTerm(string $text, string $translation, string $version = 'legacy
     DB::table('term_translations')->where('term_id', $termId)->update(['prompt_version' => $version]);
 
     $exampleId = Ulid::generate();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId, 'sentence' => 'An old sentence about it.',
-        'sentence_translation' => 'Старое предложение.', 'source' => 'ai', 'prompt_version' => $version,
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Старое предложение.', 'source' => 'ai', 'prompt_version' => $version,
     ]);
 
     return [$termId, $exampleId];

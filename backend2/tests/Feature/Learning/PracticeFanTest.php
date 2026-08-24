@@ -65,13 +65,10 @@ function soloDeck(object $user, string $text = 'withdraw cash'): array
         CollectionId::fromString($collectionId), $actor, $text, 'снять наличные',
     ))->value;
 
-    DB::table('term_examples')->insert([
-        'id' => (string) \App\Modules\Shared\Domain\ValueObject\Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => 'I need to withdraw cash from the machine.',
-        'sentence_translation' => 'Мне нужно снять наличные в банкомате.',
-        'created_at' => now(),
-        'updated_at' => now(),
+        'translation' => 'Мне нужно снять наличные в банкомате.',
     ]);
 
     return [$collectionId, $termId];

@@ -28,14 +28,10 @@ function termDetailFixture(): array
     sort($ids);
     [$pinned, $second] = $ids;
     DB::table('term_examples')->where('term_id', $termId)->delete();
-    DB::table('term_examples')->insert([
-        ['id' => $pinned, 'term_id' => $termId, 'sentence' => 'I opened a bank account.',
-            'sentence_translation' => 'Я открыл счёт в банке.', 'source' => 'ai',
-            'created_at' => now(), 'updated_at' => now()],
-        ['id' => $second, 'term_id' => $termId, 'sentence' => 'The account is empty.',
-            'sentence_translation' => 'Счёт пуст.', 'source' => 'ai',
-            'created_at' => now(), 'updated_at' => now()],
-    ]);
+    seedExample(['id' => $pinned, 'term_id' => $termId, 'sentence' => 'I opened a bank account.',
+        'translation' => 'Я открыл счёт в банке.', 'source' => 'ai']);
+    seedExample(['id' => $second, 'term_id' => $termId, 'sentence' => 'The account is empty.',
+        'translation' => 'Счёт пуст.', 'source' => 'ai']);
 
     DB::table('example_distractors')->insert([
         'id' => Ulid::generate(), 'example_id' => $pinned,

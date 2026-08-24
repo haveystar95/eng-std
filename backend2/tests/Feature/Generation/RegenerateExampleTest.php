@@ -34,10 +34,9 @@ function seedTermWithExample(): string
         'id' => Ulid::generate(), 'term_id' => $id, 'lang' => 'ru', 'text' => 'переполнять',
         'is_primary' => true, 'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(), 'term_id' => $id, 'sentence' => 'The old example sentence.',
-        'sentence_translation' => 'Старое предложение.', 'source' => 'user',
-        'created_at' => now(), 'updated_at' => now(),
+    seedExample([
+        'term_id' => $id, 'sentence' => 'The old example sentence.',
+        'translation' => 'Старое предложение.', 'source' => 'user',
     ]);
 
     return $id;

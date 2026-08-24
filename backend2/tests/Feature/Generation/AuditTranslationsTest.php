@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Modules\Generation\Application\Command\AuditTranslations;
 use App\Modules\Generation\Application\Command\AuditTranslationsHandler;
-use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,10 +22,9 @@ function auditTerm(string $text, string $translation, ?string $exampleTranslatio
     [, $termId] = seedCollectionWith($user, $text, $translation);
 
     if ($exampleTranslation !== null) {
-        DB::table('term_examples')->insert([
-            'id' => Ulid::generate(), 'term_id' => $termId, 'sentence' => 'A sentence.',
-            'sentence_translation' => $exampleTranslation, 'source' => 'ai',
-            'created_at' => now(), 'updated_at' => now(),
+        seedExample([
+            'term_id' => $termId, 'sentence' => 'A sentence.',
+            'translation' => $exampleTranslation, 'source' => 'ai',
         ]);
     }
 

@@ -16,14 +16,11 @@ uses(RefreshDatabase::class);
 /** Give the term the pinned example the late form asks the learner to read aloud. */
 function speakingExample(string $termId, string $sentence, string $translation = 'Не могли бы вы нас сфотографировать?'): void
 {
-    DB::table('term_examples')->insert([
-        'id' => Ulid::generate(),
+    seedExample([
         'term_id' => $termId,
         'sentence' => $sentence,
-        'sentence_translation' => $translation,
+        'translation' => $translation,
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

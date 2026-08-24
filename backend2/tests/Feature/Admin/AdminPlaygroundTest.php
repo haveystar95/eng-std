@@ -33,11 +33,10 @@ function playgroundFixture(): array
 
     $exampleId = Ulid::generate();
     DB::table('term_examples')->where('term_id', $termId)->delete();
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => $exampleId, 'term_id' => $termId,
         'sentence' => 'I would like to withdraw money from my account.',
-        'sentence_translation' => 'Я хотел бы снять деньги со счёта.', 'source' => 'ai',
-        'created_at' => now(), 'updated_at' => now(),
+        'translation' => 'Я хотел бы снять деньги со счёта.', 'source' => 'ai',
     ]);
 
     DB::table('example_distractors')->insert([

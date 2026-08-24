@@ -72,14 +72,15 @@ function seedPoisonedTerm(bool $withRussianTranslation = true): void
         'created_at' => now(),
         'updated_at' => now(),
     ]);
-    DB::table('term_examples')->insert([
+    seedExample([
         'id' => REPAIR_EXAMPLE,
         'term_id' => REPAIR_TERM,
         'sentence' => 'It is important for the team to be on the same page.',
-        'sentence_translation' => 'Важливо, щоб команда розуміла одне одного.',
+        // Ukrainian text in a row LABELLED `ru` — the live defect this repair exists for. The label
+        // is what the audit reads; the letters are what betray it.
+        'translation' => 'Важливо, щоб команда розуміла одне одного.',
+        'translation_lang' => 'ru',
         'source' => 'ai',
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 }
 

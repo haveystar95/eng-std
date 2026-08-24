@@ -64,10 +64,9 @@ it('carries an example edit too — the child table bumps the term', function ()
     $exampleId = (string) DB::table('term_examples')->where('term_id', $termId)->orderBy('id')->value('id');
     if ($exampleId === '') {
         $exampleId = \App\Modules\Shared\Domain\ValueObject\Ulid::generate();
-        DB::table('term_examples')->insert([
+        seedExample([
             'id' => $exampleId, 'term_id' => $termId, 'sentence' => 'Old sentence.',
-            'sentence_translation' => 'Старое.', 'source' => 'ai',
-            'created_at' => now(), 'updated_at' => now(),
+            'translation' => 'Старое.', 'source' => 'ai',
         ]);
         // That insert didn't move the term, so re-sync to put the device back in step.
         $since = test()->withHeader('Authorization', "Bearer {$userToken}")
