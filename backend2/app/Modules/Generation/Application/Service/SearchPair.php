@@ -62,21 +62,50 @@ final readonly class SearchPair
             throw UnsupportedLanguagePair::of($from, $to);
         }
 
+        // A supported pair has a taught language on one side — but «which side» is a question the
+        // direction alone answers only when the OTHER side is not taught too. See `taughtSideOf()`.
+        $termLang = $this->taughtSideOf($actorId, $from, $to);
+
         return new ResolvedPair(
             direction: new SearchDirection($from, $to),
-            // A supported pair has the taught language on one side by definition, so the sides are
-            // read off the configuration rather than guessed from the direction.
-            termLang: $this->supported->target(),
-            translationLang: $this->supported->nativeSideOf($from, $to),
+            termLang: $termLang,
+            translationLang: $termLang === $from ? $to : $from,
         );
+    }
+
+    /**
+     * Which half of the direction is the language being LEARNED.
+     *
+     * Usually the pair names it: in `ru → ro` only one side is a language this product teaches, and
+     * that is the term side whichever way the learner typed it. `de → en` names two, and the request
+     * carries a direction rather than a pair of roles — it is either German with English support or
+     * English with German support, and the query string cannot tell them apart.
+     *
+     * The tie is broken by the PROFILE, and only in that branch: the learner's own taught language,
+     * when it is one of the two. That is a default and not a content read — the same standing the
+     * profile has for the opening pair of the search screen (DECISIONS пп. 142, 147) — and it is
+     * read lazily, so an unambiguous pair (every pair the shipped app sends today) costs nothing.
+     *
+     * With neither side matching the profile, the direction's `source` wins: the pill opens
+     * «taught → support», so that is the likelier reading of a hand-made request.
+     */
+    private function taughtSideOf(UserId $actorId, string $from, string $to): string
+    {
+        $sole = $this->supported->soleTaughtSide($from, $to);
+        if ($sole !== null) {
+            return $sole;
+        }
+
+        $preferred = $this->languages->forUser($actorId)->target->value;
+
+        return in_array($preferred, [$from, $to], true) ? $preferred : $from;
     }
 
     /**
      * The learner's own pair, as their profile has it.
      *
-     * The sides come from the PROFILE here and not from the configured taught language, which is
-     * the difference that matters for a learner whose target is not English: the database already
-     * holds Polish terms, and reading their side off the config would look for English ones.
+     * The sides come from the PROFILE, which is where a request that named no pair has to get them:
+     * this is the «стартовая пара поиска» the profile is still allowed to decide (DECISIONS п. 142).
      */
     public function fromProfile(UserId $actorId): ResolvedPair
     {

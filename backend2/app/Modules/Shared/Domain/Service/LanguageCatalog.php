@@ -35,8 +35,9 @@ namespace App\Modules\Shared\Domain\Service;
  * Membership is the capability matrix's list (`docs/research/language-capability-matrix.md`):
  * the seven taught languages, the two reference-only ones (zh, ja), the three support languages,
  * plus `pt` and `tr`, which the table has always carried. Being in this table is NOT permission to
- * teach a language — that is `config/languages.php` plus the capability check. This table only
- * says how a language is NAMED.
+ * teach a language — that is {@see LanguageRoles}, which reads the capability table. This table
+ * only says how a language is NAMED. Being in it IS, however, permission to READ in a language:
+ * the support side of a pair takes a name and nothing else (DECISIONS п. 85).
  *
  * An unknown code is not guessed at anywhere: see {@see LanguageName::of()}.
  */

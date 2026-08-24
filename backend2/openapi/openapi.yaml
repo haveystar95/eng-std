@@ -619,11 +619,11 @@ paths:
         it already ships endonyms and flags, and a server that also held them would be a second
         list to keep in step with the first.
 
-        In v1 every pair is `target` ↔ one of `natives`, so the pill is always «EN → X» or «X → EN».
-        That is a limit of the product and not of the schema — `terms.lang` and
-        `term_translations.lang` are real columns and the live database already holds Polish terms
-        with Russian translations. See `docs/search-language-pair.md` for what a pair without
-        English would need.
+        TWO LISTS, one per ROLE. `targets` is what may be LEARNED — a language this deployment can
+        teach — and `natives` is what may be READ. A pair is any `targets` entry with any `natives`
+        entry, the two being different; English is not required on either side (DECISIONS пп. 85,
+        134). `target`, singular, is the older field: one taught language, frozen at `en` for the
+        app already on the phone, and it goes when that app reads `targets`.
       responses:
         '200':
           description: The pairs on offer
@@ -635,11 +635,23 @@ paths:
                   data:
                     type: object
                     properties:
-                      target: { type: string, description: the language being taught — the fixed half of every pair }
+                      target:
+                        type: string
+                        description: >
+                          LEGACY, frozen at `en` — one taught language, for the shipped app whose
+                          «На какой» picker is built from a single value. Read `targets` instead.
+                      targets:
+                        type: array
+                        items: { type: string }
+                        description: >
+                          the languages that may be LEARNED (the term side of a pair), in the order
+                          the pill offers them
                       natives:
                         type: array
                         items: { type: string }
-                        description: the languages a learner may read, in the order the pill offers them
+                        description: >
+                          the languages a learner may READ (the support side of a pair), in the
+                          order the pill offers them — every language the catalogue names
                       default_native:
                         type: string
                         description: >

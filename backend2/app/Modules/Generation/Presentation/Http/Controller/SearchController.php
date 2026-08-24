@@ -194,11 +194,20 @@ final class SearchController
      * Codes only. What each one is CALLED, and in whose language, is the client's business — it
      * already ships endonyms and flags, and a server that also held them would be a second list to
      * keep in step with the first.
+     *
+     * TWO LISTS, one per ROLE: `targets` is what may be LEARNED (a language this product can teach)
+     * and `natives` is what may be READ (every language the catalogue names). A pair is any target
+     * with any native, the two being different — English is not required on either side.
+     *
+     * `target`, singular, is the older field and stays for the app already on the phone, which
+     * builds its «На какой» picker out of one taught language. It is frozen at `en`
+     * ({@see SupportedLanguages::LEGACY_TARGET}) and goes when the app reads `targets`.
      */
     public function languages(Request $request): JsonResponse
     {
         return response()->json(['data' => [
-            'target' => $this->supported->target(),
+            'target' => SupportedLanguages::LEGACY_TARGET,
+            'targets' => $this->supported->targets(),
             'natives' => $this->supported->natives(),
             // Where the pill starts on a device that has never been set: the taught language into
             // the learner's own. Their profile, not the first entry of the list.

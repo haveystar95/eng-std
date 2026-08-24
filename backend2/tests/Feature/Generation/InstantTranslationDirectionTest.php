@@ -67,29 +67,44 @@ it('falls back to the learner\'s own pair when no pill is sent', function () {
     expect($fake->directions)->toBe(['en→ru'])->and($hint['reversed'])->toBeFalse();
 });
 
-it('refuses a pair this deployment does not serve, rather than quietly swapping it', function () {
-    fakeTranslator();
-    [, $token] = learner();
-
-    // The pill only ever offers what `GET /search/languages` returned, so this is a stale client or
-    // a hand-made request. Answering it in a DIFFERENT pair would make the label on the screen a
-    // lie, on the one screen whose whole job is to be believed.
-    $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/search/instant?q=word&source=en&target=de')
-        ->assertStatus(422)
-        ->assertJsonPath('code', 'unsupported_language_pair');
-});
-
 it('refuses a pair with no taught language in it at all', function () {
     fakeTranslator();
     [, $token] = learner();
 
-    // v1 pairs are «taught ↔ read». ru → ro is representable in the schema and not yet served —
-    // see docs/search-language-pair.md.
+    // A pair is «taught ↔ read», and neither Russian nor Ukrainian is a language this product
+    // teaches. The pill only ever offers what `GET /search/languages` returned, so this is a stale
+    // client or a hand-made request. Answering it in a DIFFERENT pair would make the label on the
+    // screen a lie, on the one screen whose whole job is to be believed.
     $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/search/instant?q=word&source=ru&target=ro')
+        ->getJson('/api/v1/search/instant?q=word&source=ru&target=uk')
         ->assertStatus(422)
         ->assertJsonPath('code', 'unsupported_language_pair');
+});
+
+it('refuses a language into itself', function () {
+    fakeTranslator();
+    [, $token] = learner();
+
+    // The shape a swapped-twice client bug takes: it would ask the vendor to translate a word into
+    // its own language.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/search/instant?q=word&source=en&target=en')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'unsupported_language_pair');
+});
+
+it('serves a pair with no English in it', function () {
+    // Was a 422 until RS-3: the taught side had to be `en` and the support side had to be one of
+    // two languages listed in an env var. Neither is true any more — the taught side is any
+    // language the capability table can teach, the support side any language the catalogue names
+    // (DECISIONS пп. 85, 134).
+    $fake = fakeTranslator();
+    [, $token] = learner();
+
+    $hint = instant($this, $token, 'factură', 'ro', 'uk');
+
+    expect($hint['translation'])->not->toBeNull();
+    expect($fake->directions)->toBe(['ro→uk']);
 });
 
 it('serves the second language of the pair when the pill is set to it', function () {
@@ -232,9 +247,21 @@ describe('GET /search/languages', function () {
         $data = $this->withHeader('Authorization', "Bearer {$token}")
             ->getJson('/api/v1/search/languages')->assertOk()->json('data');
 
-        expect($data['target'])->toBe('en')
+        expect($data['targets'])->toContain('en')
+            ->and($data['targets'])->toContain('ro')
+            ->and($data['targets'])->toContain('pl')
+            // Reference-only languages carry no trainers, so they are not taught (пп. 84, 136) and
+            // the search does not offer them as the term side yet.
+            ->and($data['targets'])->not->toContain('zh')
+            ->and($data['targets'])->not->toContain('ja')
+            // Reading takes a name and nothing else, so the support side is the whole catalogue —
+            // including the languages we teach, and including the ones we do not.
             ->and($data['natives'])->toContain('ru')
             ->and($data['natives'])->toContain('ro')
+            ->and($data['natives'])->toContain('uk')
+            ->and($data['natives'])->toContain('tr')
+            // The legacy single-language field, frozen for the app already on the phone.
+            ->and($data['target'])->toBe('en')
             // Where the pill starts on a fresh device: the learner's own language, from their
             // profile — not the first entry of the list.
             ->and($data['default_native'])->toBe('ru');
@@ -247,12 +274,25 @@ describe('GET /search/languages', function () {
         $data = $this->withHeader('Authorization', "Bearer {$token}")
             ->getJson('/api/v1/search/languages')->assertOk()->json('data');
 
-        foreach ($data['natives'] as $native) {
+        // The WHOLE matrix against the rule the endpoints apply — 7 × 13 both ways round is far more
+        // than one test may spend HTTP requests on (the rate limiter refuses at ~60), and the lists
+        // under test are the ones the response just advertised.
+        $rule = app(\App\Modules\Generation\Domain\Service\SupportedLanguages::class);
+        foreach ($data['targets'] as $target) {
+            foreach ($data['natives'] as $native) {
+                if ($target === $native) {
+                    continue; // not a pair — the one combination of the two lists that is refused
+                }
+                expect($rule->supports($target, $native))->toBeTrue("{$target} → {$native}")
+                    ->and($rule->supports($native, $target))->toBeTrue("{$native} → {$target}");
+            }
+        }
+
+        // …and a walk down the wire for a sample of it, so the rule above is the one the HTTP path
+        // really runs: the pair the app opens in, a pair with no English, and one both ways round.
+        foreach ([['en', 'ru'], ['ro', 'uk'], ['de', 'tr'], ['tr', 'de']] as [$source, $answer]) {
             $this->withHeader('Authorization', "Bearer {$token}")
-                ->getJson("/api/v1/search/instant?q=word&source={$data['target']}&target={$native}")
-                ->assertOk();
-            $this->withHeader('Authorization', "Bearer {$token}")
-                ->getJson("/api/v1/search/instant?q=word&source={$native}&target={$data['target']}")
+                ->getJson("/api/v1/search/instant?q=word&source={$source}&target={$answer}")
                 ->assertOk();
         }
     });
