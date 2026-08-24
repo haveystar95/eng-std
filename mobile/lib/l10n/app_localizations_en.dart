@@ -1238,7 +1238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionEchoAgain => 'Give it another go';
 
   @override
-  String get sessionHeaderIntro => 'Meeting';
+  String get sessionHeaderIntro => 'First look';
 
   @override
   String get sessionHeaderRecognition => 'Recognition';

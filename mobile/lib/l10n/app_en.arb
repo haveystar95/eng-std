@@ -360,7 +360,7 @@
   "sessionEchoTry": "Say it back",
   "sessionEchoHeard": "Heard you",
   "sessionEchoAgain": "Give it another go",
-  "sessionHeaderIntro": "Meeting",
+  "sessionHeaderIntro": "First look",
   "sessionHeaderRecognition": "Recognition",
   "sessionInstrRecogniseTranslation": "choose the translation",
   "sessionRecogniseJustMet": "you have just met this word",
