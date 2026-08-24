@@ -510,6 +510,10 @@ paths:
         «Похожие» are the same rows whichever way the learner is asking — `case` is an English term
         with a Russian translation either way — so both are searched and the translations shown are
         the pair's. Omit both for the learner's profile pair; an unserved pair is a 422.
+
+        `translation` and `example_translation` are STRICTLY in the pair's support language: a term
+        with no translation in it comes back with `null` there rather than with a gloss in a third
+        language, and `POST /search/lookup` is what fills the gap (DECISIONS п. 146).
       parameters:
         - { name: q, in: query, required: true, schema: { type: string } }
         - { name: source, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 } }
@@ -539,7 +543,9 @@ paths:
         garnish and never becomes card content.
 
         THREE RUNGS, each reached only because the one above had nothing: (1) our own catalogue —
-        free, and the exact string the card will show if the word is saved; (2) the shared cache —
+        free, and the exact string the card will show if the word is saved, taken STRICTLY in the
+        pair's support language, so a term glossed only in some third language walks on down the
+        ladder instead of answering in it (DECISIONS п. 146); (2) the shared cache —
         bought once by whoever typed the word first, free for everybody after; (3) the vendor. On a
         debounced field the same few hundred words are typed over and over, so rungs 1–2 answer
         almost everything.

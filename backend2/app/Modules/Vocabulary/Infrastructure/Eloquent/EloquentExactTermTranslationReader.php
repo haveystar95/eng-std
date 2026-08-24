@@ -35,10 +35,11 @@ final class EloquentExactTermTranslationReader implements ExactTermTranslationRe
             return null;
         }
 
-        // The SAME deterministic language pick the card builder uses, so the hint under the search
-        // field and the translation on the word's card are the same string. A hint that disagreed
-        // with the card it previews would be worse than no hint.
-        $picked = $this->pick->forTerms($termIds, $nativeLang);
+        // The same deterministic pick, STRICTLY in the pair's support language: the hint sits under
+        // a field labelled with the pair, so a translation in a third language would contradict the
+        // label (DECISIONS п. 146). Nothing in this language means no hint from our own catalogue,
+        // and the ladder below carries on to the cache and the vendor, which do answer in the pair.
+        $picked = $this->pick->forTermsInLanguage($termIds, $nativeLang);
         foreach ($termIds as $id) {
             $text = $picked[$id]['text'] ?? null;
             if (is_string($text) && trim($text) !== '') {

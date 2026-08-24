@@ -62,6 +62,33 @@ final class ExampleTranslationPick
     }
 
     /**
+     * The gloss IN THIS LANGUAGE AND NO OTHER — the search reader's variant, for the reason
+     * {@see TranslationPick::forTermsInLanguage()} gives: a hit answers the pair it was asked in,
+     * and a gloss in a third language under an example is not a smaller version of the answer, it
+     * is a different one (DECISIONS п. 146).
+     *
+     * @param  list<string>  $exampleIds
+     * @return array<string, string>  keyed by example id
+     */
+    public function textsInLanguage(array $exampleIds, string $lang): array
+    {
+        if ($exampleIds === []) {
+            return [];
+        }
+
+        $picked = [];
+        foreach (DB::table('example_translations')
+            ->whereIn('term_example_id', $exampleIds)
+            ->where('lang', $lang)
+            ->orderBy('id')
+            ->get(['term_example_id', 'text']) as $row) {
+            $picked[(string) $row->term_example_id] ??= (string) $row->text;
+        }
+
+        return $picked;
+    }
+
+    /**
      * The text alone, for the readers that only print it.
      *
      * @param  list<string>  $exampleIds

@@ -31,7 +31,9 @@ use Illuminate\Support\Facades\DB;
  *   4. `id` ascending inside every tier, so "the row we showed yesterday" is the row we show today.
  *
  * The fallback is a deliberate last resort and not a silent one: it only fires for a term with no
- * row in the asked-for language at all.
+ * row in the asked-for language at all. SEARCH does not want even that — it asks
+ * {@see forTermsInLanguage()} instead, because there the alternative to a wrong-language gloss is a
+ * paid lookup that answers in the right one (DECISIONS п. 146).
  */
 final class TranslationPick
 {
@@ -51,6 +53,46 @@ final class TranslationPick
         foreach (self::ordered(DB::table('term_translations')->whereIn('term_id', $termIds), $lang)
             ->get(['id', 'term_id', 'lang', 'text']) as $row) {
             // First row per term wins — and now "first" is a total order, not an accident.
+            $picked[(string) $row->term_id] ??= [
+                'id' => (string) $row->id,
+                'lang' => (string) $row->lang,
+                'text' => (string) $row->text,
+            ];
+        }
+
+        return $picked;
+    }
+
+    /**
+     * The winning translation per term, IN THIS LANGUAGE AND NO OTHER.
+     *
+     * The same rule as {@see forTerms()} minus its third tier: a term with no row in `$lang` gets
+     * no answer at all rather than a row in somebody else's language. Two readers want that and
+     * they are both SEARCH (DECISIONS п. 146): a hit answers the pair the learner asked in, and if
+     * we have nothing in that pair the live lookup is one tap away and will write it. The fallback
+     * stays where it belongs — on the card and in the trainer, where the alternative to a
+     * wrong-language gloss is a card with no question on it.
+     *
+     * Live proof that this is not tidiness: `invoice` looked up in RU → EN came back with the
+     * ROMANIAN `factură`, because the term had picked up a Romanian translation on a different
+     * pair and the fallback served it as if it were the answer.
+     *
+     * @param  list<string>  $termIds
+     * @return array<string, array{id: string, lang: string, text: string}>  keyed by term id
+     */
+    public function forTermsInLanguage(array $termIds, string $lang): array
+    {
+        if ($termIds === []) {
+            return [];
+        }
+
+        $picked = [];
+        foreach (DB::table('term_translations')
+            ->whereIn('term_id', $termIds)
+            ->where('lang', $lang)
+            ->orderByDesc('is_primary')
+            ->orderBy('id')
+            ->get(['id', 'term_id', 'lang', 'text']) as $row) {
             $picked[(string) $row->term_id] ??= [
                 'id' => (string) $row->id,
                 'lang' => (string) $row->lang,

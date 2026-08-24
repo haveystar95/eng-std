@@ -108,18 +108,22 @@ final class EloquentTermSearchReader implements TermSearchReader
     {
         $ids = array_keys($ranked);
 
-        // The same deterministic pick the card builder uses, so a word found in search reads exactly
-        // as it will read on its card.
-        $translations = (new TranslationPick())->forTerms($ids, $nativeLang);
+        // STRICTLY the asked-for language, unlike the card builder's pick, which falls back to any
+        // translation a term happens to have. A search hit belongs to the PAIR the learner asked in
+        // — a Romanian gloss under an English word in a RU → EN search is not a partial answer, it
+        // is the wrong one, and it is what `invoice` really did answer (DECISIONS п. 146). Nothing
+        // in this language means no translation on the hit, which the client renders as an empty
+        // line and the paid lookup then fills in.
+        $translations = (new TranslationPick())->forTermsInLanguage($ids, $nativeLang);
 
         $examples = [];
         foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get() as $row) {
             $examples[(string) $row->term_id] ??= $row;
         }
 
-        // Same rule as the card: the gloss is picked by the learner's language, with a fallback to
-        // whatever gloss exists rather than none at all.
-        $exampleTranslations = (new ExampleTranslationPick())->textsFor(
+        // Same rule as the translation above, and for the same reason: the gloss under an example
+        // is in the pair's support language or it is absent.
+        $exampleTranslations = (new ExampleTranslationPick())->textsInLanguage(
             array_values(array_map(static fn (object $e): string => (string) $e->id, $examples)),
             $nativeLang,
         );
