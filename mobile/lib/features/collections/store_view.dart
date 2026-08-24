@@ -246,6 +246,11 @@ class _StoreCard extends ConsumerWidget {
               PairBadge(
                 learned: collection.targetLang,
                 support: collection.sourceLang,
+                // «Не сказано» is read as «not a phrasebook», which is the ONLY safe way round: the
+                // feed has carried the flag since A-4.1, so a null here means an older server, and
+                // on an older server there is no zh/ja deck to be wrong about. The reverse default
+                // would print «справочник» over the whole catalogue.
+                reference: collection.isReference ?? false,
                 size: 11,
               ),
             ],

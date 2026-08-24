@@ -254,3 +254,43 @@ it('hides a private collection behind 404 on subscribe', function () {
         ->postJson("/api/v1/store/collections/{$id}/subscribe")
         ->assertNotFound();
 });
+
+describe('is_reference on the store card (наряд A-4.1 Ч.2)', function () {
+    // The flag is DERIVED from the studied language and never stored (DECISIONS п. 136), so this is
+    // the same computation `/sync` runs — and the store feed simply did not carry it until now.
+    // There is no zh/ja deck in the catalogue, which is the whole reason to land it before there is
+    // one: the first Chinese deck would otherwise have drawn a pair of flags on a card promising
+    // training that does not exist.
+
+    it('says false for a language that carries trainers', function () {
+        [, $token] = storeUser();
+        seedStoreCollection(['title' => 'Travel deck', 'target_lang' => 'en']);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/store/collections?source_lang=ru&target_lang=en')
+            ->assertOk()
+            ->assertJsonPath('data.0.is_reference', false);
+    });
+
+    it('says true for a phrasebook language', function () {
+        [, $token] = storeUser();
+        seedStoreCollection(['title' => '中文', 'target_lang' => 'zh']);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/store/collections?source_lang=ru&target_lang=zh')
+            ->assertOk()
+            ->assertJsonPath('data.0.is_reference', true);
+    });
+
+    it('is always present, so the client can tell «not said» from «no»', function () {
+        [, $token] = storeUser();
+        seedStoreCollection(['title' => 'Travel deck']);
+
+        $card = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/store/collections?source_lang=ru&target_lang=en')
+            ->assertOk()
+            ->json('data.0');
+
+        expect($card)->toHaveKey('is_reference');
+    });
+});

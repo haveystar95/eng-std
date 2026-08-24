@@ -28,6 +28,9 @@ final class StoreCollectionResource extends JsonResource
             'image_url' => $this->resource->imageUrl,
             'image_author' => $this->resource->imageAuthor,
             'image_author_url' => $this->resource->imageAuthorUrl,
+            // Additive, and always present once it is present at all: the client reads a MISSING key
+            // as «the server did not say», which is not the same answer as `false`.
+            'is_reference' => $this->resource->isReference(),
         ];
     }
 }

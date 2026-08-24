@@ -10,9 +10,19 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/store_providers.dart';
 import 'package:eng_std/features/collections/store_view.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/mini_flag.dart';
+import 'package:eng_std/ui/pair_badge.dart';
 
 /// A3.9 store surface (кадр 2.8): list renders by topic sections, premium sets carry the lock badge,
 /// and tapping a premium set routes through the preview to the paywall.
+/// The flags INSIDE the card's pair badge. The filter row above the grid draws two of its own, and
+/// a bare `byType(MiniFlag)` counts those too — which is how this file's first cut managed to fail
+/// on a screen that was rendering correctly.
+final _badgeFlags = find.descendant(
+  of: find.byType(PairBadge),
+  matching: find.byType(MiniFlag),
+);
+
 void main() {
   const pair = (source: 'ru', target: 'en');
 
@@ -22,18 +32,27 @@ void main() {
     profile: Profile(nativeLanguage: 'ru', targetLanguage: 'en', cefrLevel: 'B1', dailyGoal: 20),
   );
 
-  StoreCollection col(String id, String title, String topic, int n, String cefr, bool premium) =>
-      StoreCollection(
-        id: id,
-        title: title,
-        topic: topic,
-        sourceLang: 'ru',
-        targetLang: 'en',
-        isPremium: premium,
-        isSubscribed: false,
-        itemsCount: n,
-        cefr: cefr,
-      );
+  StoreCollection col(
+    String id,
+    String title,
+    String topic,
+    int n,
+    String cefr,
+    bool premium, {
+    String learned = 'en',
+    bool? reference,
+  }) => StoreCollection(
+    id: id,
+    title: title,
+    topic: topic,
+    sourceLang: 'ru',
+    targetLang: learned,
+    isPremium: premium,
+    isSubscribed: false,
+    itemsCount: n,
+    cefr: cefr,
+    isReference: reference,
+  );
 
   final sections = [
     StoreSection(topic: 'Everyday', items: [col('cafe', 'Cafe', 'Everyday', 16, 'A2', false)]),
@@ -78,6 +97,28 @@ void main() {
       ),
     );
   }
+
+  /// The same host as [pump], on a caller-supplied catalogue — the pair badge's answer depends on
+  /// which decks are on the shelf, not on the fixed two the other tests share.
+  Future<void> pumpWith(WidgetTester tester, List<StoreSection> catalogue) => tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authControllerProvider.overrideWith(() => _FakeAuth(user())),
+        featureFlagsProvider.overrideWith(
+          () => _FakeFlags(
+            FeatureFlags(storeEnabled: true, paywallEnabled: true, devPremium: false),
+          ),
+        ),
+        storeCollectionsProvider(pair).overrideWith((ref) async => catalogue),
+      ],
+      child: const MaterialApp(
+        locale: Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: [Locale('ru')],
+        home: Scaffold(body: StoreView(bottomInset: 0)),
+      ),
+    ),
+  );
 
   testWidgets('renders topic sections and cards with word counts', (tester) async {
     await pump(tester);
@@ -190,6 +231,53 @@ void main() {
     expect(find.text('appointment'), findsNothing);
     expect(find.text('Что внутри'.toUpperCase()), findsNothing);
     expect(find.text('Добавить в мои'), findsOneWidget);
+  });
+
+  group('справочник на карточке стора (наряд A-4.1 Ч.2)', () {
+    // The feed carries `is_reference` since Ч.2. Until then it did not, and a Chinese deck would
+    // have shown a pair of flags — training promised where none exists (DECISIONS пп. 84, 136).
+
+    testWidgets('a phrasebook deck says so instead of naming a pair', (tester) async {
+      await pumpWith(tester, [
+        StoreSection(
+          topic: 'Everyday',
+          items: [col('zh', '中文', 'Everyday', 12, 'A1', false, learned: 'zh', reference: true)],
+        ),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.text('СПРАВОЧНИК'), findsOneWidget);
+      expect(_badgeFlags, findsNothing);
+    });
+
+    testWidgets('an ordinary deck still names its pair', (tester) async {
+      await pumpWith(tester, [
+        StoreSection(
+          topic: 'Everyday',
+          items: [col('cafe', 'Cafe', 'Everyday', 16, 'A2', false, reference: false)],
+        ),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.text('СПРАВОЧНИК'), findsNothing);
+      expect(_badgeFlags, findsNWidgets(2));
+    });
+
+    testWidgets('an older server that says nothing is read as «not a phrasebook»', (tester) async {
+      // The only safe default: a null means a server from before the flag existed, and such a
+      // server has no zh/ja deck to be wrong about. The other way round would stamp «справочник»
+      // across the whole catalogue.
+      await pumpWith(tester, [
+        StoreSection(
+          topic: 'Everyday',
+          items: [col('cafe', 'Cafe', 'Everyday', 16, 'A2', false)],
+        ),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.text('СПРАВОЧНИК'), findsNothing);
+      expect(_badgeFlags, findsNWidgets(2));
+    });
   });
 }
 

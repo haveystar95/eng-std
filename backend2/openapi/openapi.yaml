@@ -2051,6 +2051,7 @@ components:
         image_url: { type: string, nullable: true }
         image_author: { type: string, nullable: true }
         image_author_url: { type: string, nullable: true }
+        is_reference: { type: boolean, description: 'A phrasebook rather than a course - the studied language carries no trainers (zh, ja). Derived from the language, never stored; the same flag /sync carries for a collection already on the shelf.' }
 
     StoreCollectionPreview:
       type: object
