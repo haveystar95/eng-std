@@ -162,6 +162,49 @@ enum ExerciseMode: string
         };
     }
 
+    /**
+     * Does a near-SYNONYM of the term count as a correct answer on this card?
+     *
+     * The question a card asks decides it, and there are only two shapes here.
+     *
+     * A card whose PROMPT is the meaning — the translation, or the description — asks «what is a
+     * {{target_lang}} word for this?», and `goal` answers «цель» exactly as well as `purpose` does.
+     * Refusing it marks a learner wrong for knowing the language, which is the most expensive way an
+     * answer key can be wrong: it also wipes the interval.
+     *
+     * A card whose prompt is THIS WORD — its sound (`listening`), its own sentence with a gap
+     * (`cloze`) — asks something narrower, and a synonym is not an answer to it. Someone who hears
+     * /ˈpɜːpəs/ and types `goal` did not do what the card asked, and accepting it would make the
+     * trainer unable to test a word at all. The sentence modes ({@see gradesAgainstExample()}) never
+     * reach this: their key is the pinned example, not the term.
+     *
+     * `speaking` is the one mode that is both, by rung — the word form asks for the meaning, the
+     * example form asks for the sentence — and the split is already made by the same predicate that
+     * makes every other version of it, so nothing extra is decided here.
+     *
+     * VARIANTS are unaffected and unconditional: another SPELLING of the same word is right on every
+     * card, including the listening one. That is the whole reason the two are separate lists
+     * ({@see \App\Modules\Vocabulary\Application\Dto\TermAnswerKeyView::$synonyms}).
+     *
+     * Exhaustive, like its neighbours: a new mode cannot be added without someone answering this.
+     */
+    public function acceptsSynonyms(): bool
+    {
+        return match ($this) {
+            // The prompt is the translation (multiple_choice, word_bank, typing, speaking's word
+            // form) or the description (description_match). Meaning in, a word out.
+            self::MultipleChoice, self::WordBank, self::Typing, self::Speaking,
+            self::DescriptionMatch => true,
+            // The prompt is the word itself, heard or gapped into its own sentence.
+            self::Listening, self::Cloze => false,
+            // Sentence-level: the key is the example, and a synonym of the TERM is not a spelling of
+            // that sentence. Stated rather than left to gradesAgainstExample() so the two cannot
+            // drift apart silently.
+            self::Scramble, self::Dictation, self::PickCorrect => false,
+            self::Intro => throw new \LogicException('intro accepts no answer, so nothing is accepted.'),
+        };
+    }
+
     /** A production mode reproduces from memory, so a fast clean answer can earn `easy`. */
     public function isProduction(): bool
     {

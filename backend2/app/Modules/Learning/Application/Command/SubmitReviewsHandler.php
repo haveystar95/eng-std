@@ -212,6 +212,12 @@ final readonly class SubmitReviewsHandler
      * the assembled sentence then won't match and grades `again`. Rare (it takes a "New example"
      * mid-session) and honest: we never invent a key the learner wasn't shown.
      *
+     * A near-SYNONYM of the term joins the key on the cards whose prompt is the MEANING — the
+     * translation, or the description — and on no others. `goal` answers «цель» as well as `purpose`
+     * does, and marking it wrong both fails a learner for knowing the language and wipes the
+     * interval; but somebody who HEARD /ˈpɜːpəs/ and typed `goal` did not answer the question that
+     * card asked. See {@see ExerciseMode::acceptsSynonyms()} for the whole of that split.
+     *
      * The one exception is the FORWARD-RECOGNITION card (ladder rung 1), which is graded by
      * IDENTITY: it shows the term and offers translations to tap, so the client uploads the tapped
      * option's id and the key is this card's own term id. No translation string is ever compared,
@@ -232,7 +238,20 @@ final readonly class SubmitReviewsHandler
             return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyFor($input));
         }
 
-        return new ExpectedAnswer($key->accepted, $key->isPhrase);
+        // WORD-LEVEL. The key is the term's own forms, plus its near-synonyms where the card asked
+        // what the word MEANS ({@see ExerciseMode::acceptsSynonyms()}) and not where it asked for
+        // this word in particular. Both halves are target-language text the term itself owns, so the
+        // answer-key rule («never a translation in a text key») is untouched.
+        //
+        // Not folded into `$key->accepted` by the reader, deliberately: the two are accepted on
+        // different cards, and a reader that merged them would make the distinction unrepresentable
+        // and hand a listening card a word the learner never heard.
+        return new ExpectedAnswer(
+            $input->exerciseMode->acceptsSynonyms()
+                ? [...$key->accepted, ...$key->synonyms]
+                : $key->accepted,
+            $key->isPhrase,
+        );
     }
 
     /**

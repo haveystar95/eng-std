@@ -22,6 +22,13 @@ final class EloquentDistractorReader implements DistractorReader
         }
 
         $targetTranslations = $this->translationsByTerm([$targetId->value])[$targetId->value] ?? [];
+        // THE SYNONYM BAN (SYN-1 Ч.2 п. 3). A near-synonym of the term is a SECOND CORRECT ANSWER on
+        // its own card: shown «цель» with `purpose` as the key and `goal` among the options, a
+        // learner who taps `goal` is right and is marked wrong. The translation-overlap rule below
+        // does not catch it — `purpose` and `goal` can easily be glossed «цель» and «задача» and
+        // read as two different meanings — so the ban is stated on the synonym table itself, which
+        // is the only place that knows the two words are the same answer.
+        $banned = $this->synonymBan($targetId->value);
 
         /** @var list<string> $picked */
         $picked = [];
@@ -36,7 +43,7 @@ final class EloquentDistractorReader implements DistractorReader
 
         // 1. Prefer the session's pool (its collection), minus the target itself.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations);
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned);
 
         // 2. Top up from same-language terms of a similar level (same cefr first).
         if (count($picked) < $count) {
@@ -49,7 +56,7 @@ final class EloquentDistractorReader implements DistractorReader
                 ->pluck('id')
                 ->map(static fn (mixed $id): string => (string) $id)
                 ->all());
-            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations);
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned);
         }
 
         return array_slice($picked, 0, $count);
@@ -60,8 +67,10 @@ final class EloquentDistractorReader implements DistractorReader
      * @param  list<string>  $picked
      * @param  array<string, true>  $usedTexts
      * @param  array<string, true>  $usedTranslations  every meaning already on the card, prompt first
+     * @param  array<string, true>  $banned  normalised texts that are the target's own answer under
+     *         another name — its synonyms, and the terms that name IT as one of theirs
      */
-    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned = []): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
@@ -82,6 +91,9 @@ final class EloquentDistractorReader implements DistractorReader
             $textKey = mb_strtolower(trim($text));
             if (isset($usedTexts[$textKey])) {
                 continue; // no duplicate option texts
+            }
+            if (isset($banned[$textKey])) {
+                continue; // a synonym of the answer IS the answer — see synonymBan()
             }
             // Exclude near-duplicates by MEANING, against the prompt AND against every option
             // already taken — a translation twin reads as correct for the same prompt whichever of
@@ -111,6 +123,40 @@ final class EloquentDistractorReader implements DistractorReader
         }
 
         return false;
+    }
+
+    /**
+     * Every option text that would secretly be correct for this target, normalised.
+     *
+     * BOTH DIRECTIONS, because the data is written per term and either side may hold it: the
+     * target's own synonyms (`purpose` → `goal`), and the TEXT of any term that lists the target as
+     * one of ITS synonyms (`goal` → `purpose`, written while enriching `goal`). One run of the
+     * станок over one of the two words is enough to make the pair unusable as options, which is the
+     * point — the ban has to work off whatever half of the data exists.
+     *
+     * @return array<string, true>
+     */
+    private function synonymBan(string $targetId): array
+    {
+        $target = DB::table('terms')->where('id', $targetId)->value('text');
+        $banned = [];
+
+        foreach (DB::table('term_synonyms')->where('term_id', $targetId)->pluck('text') as $text) {
+            $banned[mb_strtolower(trim((string) $text))] = true;
+        }
+
+        if (is_string($target)) {
+            // The reverse: terms whose synonym list names this one. Matched case-insensitively on
+            // the text, the same way the option dedup one level up compares.
+            foreach (DB::table('term_synonyms')
+                ->join('terms', 'terms.id', '=', 'term_synonyms.term_id')
+                ->whereRaw('lower(term_synonyms.text) = ?', [mb_strtolower(trim($target))])
+                ->pluck('terms.text') as $text) {
+                $banned[mb_strtolower(trim((string) $text))] = true;
+            }
+        }
+
+        return $banned;
     }
 
     /**
