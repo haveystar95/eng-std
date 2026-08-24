@@ -8,6 +8,7 @@ use App\Modules\Collections\Domain\Exception\DefaultCollectionNotDeletable;
 use App\Modules\Collections\Domain\Exception\NotCollectionOwner;
 use App\Modules\Collections\Domain\ValueObject\CollectionSource;
 use App\Modules\Collections\Domain\ValueObject\CollectionType;
+use App\Modules\Collections\Domain\ValueObject\LanguagePair;
 use App\Modules\Collections\Domain\ValueObject\Visibility;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -182,15 +183,38 @@ final class Collection
         }
     }
 
-    /** Idempotent: adding a term already present is a no-op (offline-retry-friendly). */
-    public function addTerm(TermId $termId, ?string $note = null): void
+    /**
+     * Put a term in this collection.
+     *
+     * Idempotent: adding a term already present is a no-op (offline-retry-friendly) — and the
+     * duplicate check comes FIRST, before the language gate, deliberately. The gate governs NEW
+     * rows; a row already sitting here predates it, and failing a retry over a word that is already
+     * where the caller wanted it would turn a flaky connection into an error the learner cannot act
+     * on.
+     *
+     * `$termLang` is the term's own language, which the aggregate cannot look up (a term belongs to
+     * Vocabulary). Passing it is what makes the pair invariant checkable at THE point of insertion
+     * rather than in each of the five writers that reach it — see {@see LanguagePair}.
+     *
+     * @throws \App\Modules\Collections\Domain\Exception\TermLanguageMismatch
+     */
+    public function addTerm(TermId $termId, LanguageCode $termLang, ?string $note = null): void
     {
         foreach ($this->items as $item) {
             if ($item->termId->equals($termId)) {
                 return;
             }
         }
+
+        $this->pair()->assertAccepts($this->id, $termLang);
+
         $this->items[] = new CollectionItem($termId, $this->nextPosition(), $note);
+    }
+
+    /** «Изучаемый → язык поддержки», and the rule that only terms of the first one live here. */
+    public function pair(): LanguagePair
+    {
+        return new LanguagePair($this->targetLang, $this->sourceLang);
     }
 
     public function removeTerm(TermId $termId): void

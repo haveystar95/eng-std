@@ -814,7 +814,16 @@ paths:
     post:
       tags: [Collections]
       summary: Create a custom collection
-      description: Accepts a client-generated `id` (ULID) for offline idempotency; re-sending the same id does not duplicate.
+      description: >
+        Accepts a client-generated `id` (ULID) for offline idempotency; re-sending the same id does
+        not duplicate.
+
+
+        The language PAIR is optional and defaults to the owner's profile (`native_language` →
+        `source_lang`, `target_language` → `target_lang`). Once created the pair is fixed and is what
+        every reader uses — the profile is a default at creation and nothing more. The collection
+        then accepts only terms of its `target_lang` (see the `422 term_language_mismatch` on
+        `/collections/{id}/items`).
       requestBody:
         required: true
         content:
@@ -949,6 +958,11 @@ paths:
         the term is created bare and enriched asynchronously (translation, transcription, example and
         a stock photo are filled in from the LLM + Pexels), so images/translation appear via a later
         `/sync`.
+
+
+        A collection holds exactly ONE language pair and accepts only terms of its `target_lang`.
+        Adding a term of another language is refused with `422 term_language_mismatch`; the word
+        belongs in a collection of its own pair.
       parameters:
         - $ref: '#/components/parameters/UlidId'
       requestBody:
@@ -985,7 +999,23 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: >
+            Request validation (the usual 422 shape), or the term is not of this collection's pair —
+            code `term_language_mismatch`, `meta.expected_lang` / `meta.actual_lang` naming the two.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string }
 
   /collections/{id}/items/{termId}/move:
     post:
@@ -995,6 +1025,11 @@ paths:
         One command rather than remove+add from the client, so the two halves cannot half-happen
         offline and leave the word in neither folder. BOTH ends are ownership-checked before anything
         is written. Idempotent — replaying the same move changes nothing. The pool is untouched.
+
+
+        The destination's pair is checked too, inside the same transaction and BEFORE the removal, so
+        a move into a folder of another pair fails whole (`422 term_language_mismatch`) and the word
+        stays where it was.
       parameters:
         - $ref: '#/components/parameters/UlidId'
         - { name: termId, in: path, required: true, schema: { type: string, minLength: 26, maxLength: 26 } }
@@ -1019,7 +1054,23 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: >
+            Request validation (the usual 422 shape), or the destination folder teaches another
+            language — code `term_language_mismatch`. Nothing moved.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string }
 
   /collections/{id}/items/{termId}:
     delete:

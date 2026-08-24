@@ -18,6 +18,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Domain\Service\TermNormalizer;
+use Tests\Doubles\FakeTermLanguageReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
@@ -63,7 +64,7 @@ beforeEach(function () {
         logs: $this->logs,
         termSet: new GetCollectionTermSetHandler($this->collections),
         importTerm: new ImportTermHandler($findOrCreate),
-        addTerm: new AddTermToCollectionHandler($this->collections),
+        addTerm: new AddTermToCollectionHandler($this->collections, new FakeTermLanguageReader()),
         attachImages: $this->attach,
         enrich: $this->enrich,
     );
@@ -93,7 +94,7 @@ beforeEach(function () {
         new LanguageCode('ru'), new LanguageCode('en'), $this->clock->now(),
     );
     foreach (range(1, 10) as $i) {
-        $dogfood->addTerm(TermId::generate()); // pre-existing terms, unrelated to the 3 targets
+        $dogfood->addTerm(TermId::generate(), new LanguageCode('en')); // pre-existing terms, unrelated to the 3 targets
     }
     $this->collections->save($dogfood);
 
@@ -123,7 +124,7 @@ beforeEach(function () {
         new LanguageCode('ru'), new LanguageCode('en'), $this->clock->now(),
     );
     foreach (range(1, 15) as $i) {
-        $pharmacy->addTerm(TermId::generate());
+        $pharmacy->addTerm(TermId::generate(), new LanguageCode('en'));
     }
     $this->collections->save($pharmacy);
 });

@@ -38,9 +38,9 @@ it('adds terms with incrementing positions and dedups', function () {
     $t1 = TermId::generate();
     $t2 = TermId::generate();
 
-    $c->addTerm($t1);
-    $c->addTerm($t2);
-    $c->addTerm($t1); // duplicate ignored
+    $c->addTerm($t1, new LanguageCode('en'));
+    $c->addTerm($t2, new LanguageCode('en'));
+    $c->addTerm($t1, new LanguageCode('en')); // duplicate ignored
 
     expect($c->itemsCount())->toBe(2)
         ->and($c->items()[0]->position)->toBe(1)
@@ -60,7 +60,7 @@ it('lets the owner edit but rejects everyone else', function () {
 it('removes a term', function () {
     $c = newCustomCollection(UserId::generate());
     $t = TermId::generate();
-    $c->addTerm($t);
+    $c->addTerm($t, new LanguageCode('en'));
     $c->removeTerm($t);
 
     expect($c->itemsCount())->toBe(0);
@@ -69,7 +69,7 @@ it('removes a term', function () {
 it('publishes a collection to the store: ownerless, system, public, curated', function () {
     $c = newCustomCollection(UserId::generate());
     $term = TermId::generate();
-    $c->addTerm($term);
+    $c->addTerm($term, new LanguageCode('en'));
 
     $c->publishToStore(false);
 

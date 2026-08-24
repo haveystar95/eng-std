@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Application\Command;
 
+use App\Modules\Collections\Application\Service\DefaultCollectionPair;
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Shared\Domain\Service\Clock;
@@ -20,6 +21,7 @@ final readonly class EnsureDefaultCollectionHandler
     public function __construct(
         private CollectionRepository $collections,
         private Clock $clock,
+        private DefaultCollectionPair $defaultPair,
     ) {}
 
     public function __invoke(EnsureDefaultCollection $command): CollectionId
@@ -29,12 +31,14 @@ final readonly class EnsureDefaultCollectionHandler
             return $existing->id();
         }
 
+        $default = $this->defaultPair->forOwner($command->ownerId);
+
         $collection = Collection::createDefault(
             id: CollectionId::generate(),
             ownerId: $command->ownerId,
             title: self::TITLE,
-            sourceLang: $command->sourceLang,
-            targetLang: $command->targetLang,
+            sourceLang: $command->sourceLang ?? $default->sourceLang,
+            targetLang: $command->targetLang ?? $default->targetLang,
             createdAt: $this->clock->now(),
         );
 

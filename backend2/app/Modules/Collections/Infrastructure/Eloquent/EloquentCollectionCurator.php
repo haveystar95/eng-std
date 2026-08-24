@@ -6,7 +6,9 @@ namespace App\Modules\Collections\Infrastructure\Eloquent;
 
 use App\Modules\Collections\Application\Dto\CollectionImpact;
 use App\Modules\Collections\Application\Port\CollectionCurator;
+use App\Modules\Collections\Domain\ValueObject\LanguagePair;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Support\Facades\DB;
@@ -71,16 +73,32 @@ final class EloquentCollectionCurator implements CollectionCurator
             ->update($changes) > 0;
     }
 
+    /**
+     * The one writer that does not go through the aggregate — the back-office curator writes
+     * `collection_items` with SQL, for the same reason the rest of this class does.
+     *
+     * It still asks the SAME rule. {@see LanguagePair} is a Domain value object with no persistence
+     * of its own precisely so that a writer holding two rows instead of an aggregate can construct
+     * it and get the identical answer. Re-implementing «target_lang = terms.lang» here as a WHERE
+     * clause would be a second copy of the invariant, and a silent one: a curator's add would come
+     * back «not found» for a word that exists.
+     */
     public function addTerm(CollectionId $collectionId, TermId $termId): bool
     {
         return DB::transaction(function () use ($collectionId, $termId): bool {
-            $collectionExists = DB::table('collections')
-                ->where('id', $collectionId->value)->whereNull('deleted_at')->exists();
-            $termExists = DB::table('terms')
-                ->where('id', $termId->value)->whereNull('deleted_at')->exists();
-            if (! $collectionExists || ! $termExists) {
+            $collection = DB::table('collections')
+                ->where('id', $collectionId->value)->whereNull('deleted_at')
+                ->first(['source_lang', 'target_lang']);
+            $termLang = DB::table('terms')
+                ->where('id', $termId->value)->whereNull('deleted_at')->value('lang');
+            if ($collection === null || $termLang === null) {
                 return false;
             }
+
+            (new LanguagePair(
+                new LanguageCode((string) $collection->target_lang),
+                new LanguageCode((string) $collection->source_lang),
+            ))->assertAccepts($collectionId, new LanguageCode((string) $termLang));
 
             $existing = DB::table('collection_items')
                 ->where('collection_id', $collectionId->value)

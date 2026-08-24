@@ -42,7 +42,10 @@ final readonly class AddWordToCollectionHandler
             translations: $translations,
         ));
 
-        $collection->addTerm($termId);
+        // The term was just created IN this collection's studied language, so the gate is a
+        // tautology here — and it is still asked, because «this writer cannot be wrong» is exactly
+        // the reasoning that leaves one writer unchecked when the code around it moves.
+        $collection->addTerm($termId, $collection->targetLang());
         $this->collections->save($collection);
 
         // No translation given → the LLM fills in translation/transcription/example/photo. The

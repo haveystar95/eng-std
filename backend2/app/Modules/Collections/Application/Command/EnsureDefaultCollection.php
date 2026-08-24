@@ -15,9 +15,17 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  */
 final readonly class EnsureDefaultCollection
 {
+    /**
+     * The pair is OPTIONAL and defaults to the owner's profile default, not to `ru→en`: the folder
+     * is created the first time a word lands in it, and a learner studying Polish must not be
+     * handed an English folder to put a Polish word into (DECISIONS пп. 81, 142).
+     *
+     * The caller passes a pair only when it already knows one — the save from search, which has the
+     * pill the learner picked.
+     */
     public function __construct(
         public UserId $ownerId,
-        public LanguageCode $sourceLang = new LanguageCode('ru'),
-        public LanguageCode $targetLang = new LanguageCode('en'),
+        public ?LanguageCode $sourceLang = null,
+        public ?LanguageCode $targetLang = null,
     ) {}
 }

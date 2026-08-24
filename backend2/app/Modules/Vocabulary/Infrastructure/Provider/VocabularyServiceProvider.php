@@ -24,6 +24,7 @@ use App\Modules\Vocabulary\Application\Query\TermLanguageAuditReader;
 use App\Modules\Vocabulary\Application\Query\TranslationKeyReader;
 use App\Modules\Vocabulary\Application\Query\TermDifficultyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
+use App\Modules\Vocabulary\Application\Query\TermLanguageReader;
 use App\Modules\Vocabulary\Application\Port\TermCurator;
 use App\Modules\Vocabulary\Application\Port\TranslationLabelWriter;
 use App\Modules\Vocabulary\Domain\Repository\TermRepository;
@@ -45,6 +46,7 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermChangeReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermContentReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermDifficultyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExistenceReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermCurator;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationLabelWriter;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditReader;
@@ -67,6 +69,9 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermCurator::class, EloquentTermCurator::class);
         $this->app->bind(TranslationLabelWriter::class, EloquentTranslationLabelWriter::class);
         $this->app->bind(TermExistenceReader::class, EloquentTermExistenceReader::class);
+        // Collections asks this before putting a term in a folder — the pair invariant
+        // (DECISIONS п. 141) needs the term's own language, and only Vocabulary has it.
+        $this->app->bind(TermLanguageReader::class, EloquentTermLanguageReader::class);
         $this->app->bind(TermContentReader::class, EloquentTermContentReader::class);
         $this->app->bind(TermChangeReader::class, EloquentTermChangeReader::class);
         // Search: the free half — exact and prefix matches over terms we already have.

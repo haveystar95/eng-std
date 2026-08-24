@@ -38,6 +38,7 @@ use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Command\ReplaceTermCoreHandler;
 use App\Modules\Vocabulary\Application\Command\ReplaceTermExampleHandler;
 use App\Modules\Vocabulary\Domain\Service\TermNormalizer;
+use Tests\Doubles\FakeTermLanguageReader;
 use Tests\Doubles\FakeDefaultTargetLangReader;
 use Tests\Doubles\FakeDistractorAuditReader;
 use Tests\Doubles\FakeGenerationQuota;
@@ -80,7 +81,7 @@ beforeEach(function () {
         rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
-        addTerm: new AddTermToCollectionHandler($this->collections),
+        addTerm: new AddTermToCollectionHandler($this->collections, new FakeTermLanguageReader()),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: $this->attach,
         enrich: $this->enrich,
@@ -149,7 +150,7 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($ctx->collections, $ctx->clock),
-        addTerm: new AddTermToCollectionHandler($ctx->collections),
+        addTerm: new AddTermToCollectionHandler($ctx->collections, new FakeTermLanguageReader()),
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
@@ -391,7 +392,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
-        addTerm: new AddTermToCollectionHandler($this->collections),
+        addTerm: new AddTermToCollectionHandler($this->collections, new FakeTermLanguageReader()),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
@@ -439,7 +440,7 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         rejections: new RecordingRejectionJournal(),
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($this->collections, $this->clock),
-        addTerm: new AddTermToCollectionHandler($this->collections),
+        addTerm: new AddTermToCollectionHandler($this->collections, new FakeTermLanguageReader()),
         cachedTermSet: new GetCollectionTermSetHandler($this->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),
@@ -504,7 +505,7 @@ function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, Lan
         rejections: $journal,
         importTerm: new ImportTermHandler($findOrCreate),
         createCollection: new CreateGeneratedCollectionHandler($ctx->collections, $ctx->clock),
-        addTerm: new AddTermToCollectionHandler($ctx->collections),
+        addTerm: new AddTermToCollectionHandler($ctx->collections, new FakeTermLanguageReader()),
         cachedTermSet: new GetCollectionTermSetHandler($ctx->collections),
         attachImages: new RecordingImageAttachmentDispatcher(),
         enrich: new RecordingEnrichmentDispatcher(),

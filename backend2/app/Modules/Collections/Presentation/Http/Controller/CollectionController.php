@@ -79,8 +79,10 @@ final class CollectionController
         $id = ($this->create)(new CreateCustomCollection(
             ownerId: $actor,
             title: (string) $data['title'],
-            sourceLang: new LanguageCode(isset($data['source_lang']) ? (string) $data['source_lang'] : 'ru'),
-            targetLang: new LanguageCode(isset($data['target_lang']) ? (string) $data['target_lang'] : 'en'),
+            // Null, not `ru`/`en`: an unnamed pair is the OWNER's profile default, and only the
+            // Application layer may read the profile (DECISIONS п. 142).
+            sourceLang: isset($data['source_lang']) ? new LanguageCode((string) $data['source_lang']) : null,
+            targetLang: isset($data['target_lang']) ? new LanguageCode((string) $data['target_lang']) : null,
             description: isset($data['description']) ? (string) $data['description'] : null,
             id: isset($data['id']) ? CollectionId::fromString((string) $data['id']) : null,
         ));

@@ -20,6 +20,7 @@ use App\Modules\Learning\Application\Command\EnrollTerm;
 use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
@@ -70,8 +71,7 @@ final readonly class AddSearchResultHandler
         // The language the word is being SAVED in — the lookup row's own, not the profile's. The
         // learner may have searched in a pair their profile does not name (that is what the pill is
         // for), and writing the translation under their profile language would file a Romanian
-        // gloss as Russian. The profile only stands in when there is no lookup to ask, and it is
-        // still what names the folder.
+        // gloss as Russian. The profile only stands in when there is no lookup to ask.
         $savedLang = $lookup !== null ? $lookup->nativeLang : $langs->native->value;
 
         [$termId, $collectionId, $added, $enrolled] = $this->tx->run(
@@ -82,11 +82,17 @@ final readonly class AddSearchResultHandler
 
                 // Ownership is asserted by the add itself, so an unowned folder never reaches the
                 // enrolment below — a save into someone else's shelf must not enrol anything.
+                //
+                // «Сохранённые» is born in the pair the learner actually SEARCHED in — the lookup
+                // row's, not the profile's. The profile pair only stands in when there is no lookup
+                // to ask. Getting this from the profile was harmless while nothing checked it and
+                // is not any more: the folder would be created as `en`, and the pair gate would
+                // then refuse the Polish word the learner had just looked up (DECISIONS п. 141).
                 $collectionId = $command->collectionId
                     ?? ($this->ensureDefault)(new EnsureDefaultCollection(
                         ownerId: $command->actorId,
-                        sourceLang: $langs->native,
-                        targetLang: $langs->target,
+                        sourceLang: $lookup !== null ? new LanguageCode($lookup->nativeLang) : $langs->native,
+                        targetLang: $lookup !== null ? new LanguageCode($lookup->lang) : $langs->target,
                     ));
 
                 $before = $this->folders->foldersHolding($command->actorId, [$termId->value]);

@@ -70,7 +70,7 @@ function syncedTranslations(object $ctx, string $token): array
 
 it('ships the collection pair language on /sync, not the profile one', function () {
     [$user, $token] = learner();
-    $user->profile()->update(['native_language' => 'ru']);
+    profileFor($user, ['native_language' => 'ru']);
 
     [, $termId] = pairedWord($user, 'uk', 'apple', ['uk' => 'яблуко', 'ru' => 'яблоко']);
 
@@ -79,7 +79,7 @@ it('ships the collection pair language on /sync, not the profile one', function 
 
 it('reads each term in ITS OWN collection language when the shelf mixes pairs', function () {
     [$user, $token] = learner();
-    $user->profile()->update(['native_language' => 'ru']);
+    profileFor($user, ['native_language' => 'ru']);
 
     [, $ukTerm] = pairedWord($user, 'uk', 'apple', ['uk' => 'яблуко', 'ru' => 'яблоко']);
     [, $ruTerm] = pairedWord($user, 'ru', 'bridge', ['ru' => 'мост', 'uk' => 'міст']);
@@ -94,7 +94,7 @@ it('reads each term in ITS OWN collection language when the shelf mixes pairs', 
 
 it('builds a session card in the pair language of the collection it was scoped to', function () {
     [$user, $token] = learner();
-    $user->profile()->update(['native_language' => 'ru']);
+    profileFor($user, ['native_language' => 'ru']);
 
     [$collectionId, $termId] = pairedWord($user, 'uk', 'apple', ['uk' => 'яблуко', 'ru' => 'яблоко']);
     // A recognition card needs somebody to be wrong beside it, so the deck gets two more words.
@@ -124,7 +124,7 @@ it('builds a session card in the pair language of the collection it was scoped t
 
 it('shows the collection screen in the collection pair language', function () {
     [$user, $token] = learner();
-    $user->profile()->update(['native_language' => 'ru']);
+    profileFor($user, ['native_language' => 'ru']);
 
     [$collectionId, $termId] = pairedWord($user, 'uk', 'apple', ['uk' => 'яблуко', 'ru' => 'яблоко']);
 
@@ -139,7 +139,7 @@ it('shows the collection screen in the collection pair language', function () {
 
 it('resolves the pair language per term, and the profile only when no folder is left', function () {
     [$user, $token] = learner();
-    $user->profile()->update(['native_language' => 'ru']);
+    profileFor($user, ['native_language' => 'ru']);
     $actor = UserId::fromString($user->id);
 
     [$ukCollection, $ukTerm] = pairedWord($user, 'uk', 'apple', ['uk' => 'яблуко', 'ru' => 'яблоко']);

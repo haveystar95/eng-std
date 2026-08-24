@@ -7,8 +7,10 @@ use App\Modules\Collections\Application\Command\AddWordToCollection;
 use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
+use App\Modules\Collections\Application\Service\DefaultCollectionPair;
 use App\Modules\Generation\Application\Port\TranslationProvider;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
+use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Learning\Application\Command\EnrollTerm;
 use App\Modules\Learning\Application\Command\EnrollTermHandler;
@@ -22,8 +24,10 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Support\Facades\DB;
+use Tests\Doubles\FakeDefaultTargetLangReader;
 use Tests\Doubles\FakeLatencyMedianReader;
 use Tests\Doubles\FakeLearnerProfileReader;
+use Tests\Doubles\FakeNativeLangReader;
 use Tests\Doubles\FakeTermAnswerKeyReader;
 use Tests\Doubles\FakeTermExistenceReader;
 use Tests\Doubles\FixedClock;
@@ -68,6 +72,27 @@ function answerTimes(object $ctx, string $token, string $termId, string $respons
     $ctx->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/reviews/batch', ['reviews' => $reviews])
         ->assertOk();
+}
+
+/**
+ * Give the learner a profile row with these fields. `learner()` creates a user with NO profile —
+ * every default the profile carries is a column default the readers never see — so a test about
+ * anything the profile decides has to write one.
+ *
+ * @param  array<string, mixed>  $attrs
+ */
+function profileFor(User $user, array $attrs): void
+{
+    Profile::updateOrCreate(['user_id' => $user->id], $attrs);
+}
+
+/**
+ * A {@see DefaultCollectionPair} over fakes, for the unit tests that build a collection handler by
+ * hand. Defaults to `ru→en`, which is what every fixture in this suite means by «the usual pair».
+ */
+function defaultPair(string $support = 'ru', string $studied = 'en'): DefaultCollectionPair
+{
+    return new DefaultCollectionPair(new FakeNativeLangReader($support), new FakeDefaultTargetLangReader($studied));
 }
 
 /**

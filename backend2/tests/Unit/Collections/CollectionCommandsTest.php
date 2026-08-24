@@ -16,6 +16,7 @@ use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Tests\Doubles\FakeTermLanguageReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\InMemoryCollectionRepository;
 
@@ -27,7 +28,7 @@ beforeEach(function () {
 
 function createCollection(object $ctx): CollectionId
 {
-    $handler = new CreateCustomCollectionHandler($ctx->repo, $ctx->clock);
+    $handler = new CreateCustomCollectionHandler($ctx->repo, $ctx->clock, defaultPair());
 
     return $handler(new CreateCustomCollection(
         $ctx->owner, 'Travel', new LanguageCode('ru'), new LanguageCode('en'),
@@ -45,7 +46,7 @@ it('adds a term to a collection owned by the actor', function () {
     $id = createCollection($this);
     $term = TermId::generate();
 
-    (new AddTermToCollectionHandler($this->repo))(
+    (new AddTermToCollectionHandler($this->repo, new FakeTermLanguageReader()))(
         new AddTermToCollection($id, $term, $this->owner),
     );
 
@@ -55,13 +56,13 @@ it('adds a term to a collection owned by the actor', function () {
 it('rejects adding a term by a non-owner', function () {
     $id = createCollection($this);
 
-    expect(fn () => (new AddTermToCollectionHandler($this->repo))(
+    expect(fn () => (new AddTermToCollectionHandler($this->repo, new FakeTermLanguageReader()))(
         new AddTermToCollection($id, TermId::generate(), UserId::generate()),
     ))->toThrow(NotCollectionOwner::class);
 });
 
 it('fails when the collection does not exist', function () {
-    expect(fn () => (new AddTermToCollectionHandler($this->repo))(
+    expect(fn () => (new AddTermToCollectionHandler($this->repo, new FakeTermLanguageReader()))(
         new AddTermToCollection(CollectionId::generate(), TermId::generate(), $this->owner),
     ))->toThrow(CollectionNotFound::class);
 });
