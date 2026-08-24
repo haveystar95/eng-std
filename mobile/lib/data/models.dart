@@ -558,6 +558,15 @@ class StoreCollection {
   final String? imageAuthor;
   final String? imageAuthorUrl;
 
+  /// A PHRASEBOOK — a collection whose language carries no trainers at all (DECISIONS пп. 84, 136).
+  ///
+  /// NULLABLE on purpose, and the null is the point: `null` means the feed did not state it, not
+  /// «no». `/sync` has carried the flag since A-4 and `/store/collections` does not yet, so a build
+  /// of this app can meet either server, and reading a missing field as `false` would print a pair
+  /// of flags on a Chinese deck — the exact lie the flag exists to prevent. The card therefore shows
+  /// the pair only when the answer is a stated `false`.
+  final bool? isReference;
+
   const StoreCollection({
     required this.id,
     required this.title,
@@ -572,6 +581,7 @@ class StoreCollection {
     this.imageUrl,
     this.imageAuthor,
     this.imageAuthorUrl,
+    this.isReference,
   });
 
   StoreCollection copyWith({bool? isSubscribed}) => StoreCollection(
@@ -588,6 +598,7 @@ class StoreCollection {
     imageUrl: imageUrl,
     imageAuthor: imageAuthor,
     imageAuthorUrl: imageAuthorUrl,
+    isReference: isReference,
   );
 
   factory StoreCollection.fromJson(Map<String, dynamic> j) => StoreCollection(
@@ -604,6 +615,9 @@ class StoreCollection {
     imageUrl: j['image_url'] as String?,
     imageAuthor: j['image_author'] as String?,
     imageAuthorUrl: j['image_author_url'] as String?,
+    // Read with `containsKey`, not with a `?? false`: the absence of the key and a stated `false`
+    // are different answers here, and the parse must survive a server that has neither.
+    isReference: j.containsKey('is_reference') ? (j['is_reference'] as bool?) ?? false : null,
   );
 }
 

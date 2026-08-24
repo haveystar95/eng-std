@@ -55,4 +55,26 @@ void main() {
     expect(c.topic, isNull);
     expect(c.cefr, isNull);
   });
+
+  group('is_reference — «не сказано» это не «нет»', () {
+    // The store feed does not carry the flag yet (it lands in Ч.2), and a build of this app can
+    // meet either server. Reading a missing field as `false` would print a pair of flags on a
+    // Chinese deck — the exact lie the flag exists to prevent — so the absent case has its own
+    // answer and the card shows the pair only when the server actually said «no».
+    test('an old feed leaves it unknown rather than false', () {
+      expect(StoreCollection.fromJson(base()).isReference, isNull);
+    });
+
+    test('a stated false is a stated false', () {
+      expect(StoreCollection.fromJson({...base(), 'is_reference': false}).isReference, isFalse);
+    });
+
+    test('a phrasebook says so', () {
+      expect(StoreCollection.fromJson({...base(), 'is_reference': true}).isReference, isTrue);
+    });
+
+    test('a null in the field does not break the parse', () {
+      expect(StoreCollection.fromJson({...base(), 'is_reference': null}).isReference, isFalse);
+    });
+  });
 }
