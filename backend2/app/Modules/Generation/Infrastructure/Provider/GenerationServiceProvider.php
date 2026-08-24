@@ -293,7 +293,12 @@ final class GenerationServiceProvider extends ServiceProvider
                 ),
                 coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider', 'openai')) ?? ProviderId::OpenAi,
                 coreModel: (string) config('services.generation.core_model', 'gpt-5.4'),
-                mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version', 'v12.1'),
+                // No default: `config/services.php` always resolves this key (it has an env default
+                // of its own), so a second one here was unreachable — and it had gone stale at
+                // `v12.1` while the config said `v13.1`, which is the worse half. A dead fallback
+                // that disagrees with the live value is a wrong answer waiting for the day the key
+                // does go missing.
+                mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version'),
                 mechanicsProvider: ProviderId::tryFrom((string) config('services.generation.mechanics_provider', 'openai')) ?? ProviderId::OpenAi,
                 mechanicsModel: (string) config('services.generation.mechanics_model', 'gpt-4o-mini'),
             );

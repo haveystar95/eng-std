@@ -1,6 +1,6 @@
 # eng-std — project master guide
 
-Personal English-learning app (single user, Denis; no App Store planned). Flutter/iOS
+Personal multilingual vocabulary trainer (single user, Denis; no App Store planned). Flutter/iOS
 client + Laravel API. This file auto-loads for any session in this repo — it's the map.
 Detailed rules live in the per-directory files linked below.
 
