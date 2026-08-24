@@ -653,7 +653,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchBuildCard => 'Build the card';
 
   @override
-  String get searchBuildCardNote => 'Meaning, example and photo. Again — free';
+  String get searchBuildCardNote => 'Meaning and example. Again — free';
 
   @override
   String get searchLooking => 'Looking…';
@@ -666,9 +666,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchBuildExample => 'example';
-
-  @override
-  String get searchBuildPhoto => 'photo';
 
   @override
   String get searchBuildNote =>

@@ -676,7 +676,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchBuildCard => 'Собрать карточку';
 
   @override
-  String get searchBuildCardNote => 'Значение, пример и фото. Повторно — бесплатно';
+  String get searchBuildCardNote => 'Значение и пример. Повторно — бесплатно';
 
   @override
   String get searchLooking => 'Ищем…';
@@ -689,9 +689,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchBuildExample => 'пример';
-
-  @override
-  String get searchBuildPhoto => 'фото';
 
   @override
   String get searchBuildNote => 'Пара секунд. Можно закрыть — карточка появится в поиске.';

@@ -14,9 +14,16 @@ import 'package:eng_std/theme/theme.dart';
 ///
 /// The TRANSLATION is not one of the things being written: it arrived free, before the button was
 /// pressed, and it stands ticked from the first frame. What the call is actually fetching is the
-/// three rows under it — which is the same promise the button made.
+/// two rows under it — which is what the button promises.
 ///
-/// HONESTY about those three, because this is the easy place to lie. There is exactly ONE model
+/// THE PHOTO IS NOT ONE OF THEM, and used to be. `/search/lookup` buys one model call and writes a
+/// cache row; the picture is a Pexels search dispatched by `/search/add`, i.e. AFTER the learner
+/// saves the word — so the row sat there through the whole wait with a pale bar beside it and never
+/// ticked, promising something this step does not even ask for (найдено на телефоне 24.08). A
+/// checklist is a claim about what is being fetched; a line that can never tick is the one kind of
+/// entry it must not contain.
+///
+/// HONESTY about those two, because this is the easy place to lie. There is exactly ONE model
 /// call and no streaming, so the app cannot know that «значение» is finished before «пример» is.
 /// Therefore none of them is ever TICKED before the answer lands: a row ahead of the wave carries a
 /// pale ring, the row the wave is on carries an ink ring, and every ring becomes a tick at the same
@@ -46,7 +53,7 @@ class _AssemblingCardState extends State<AssemblingCard> {
   int _wave = 0;
 
   /// The rows the CALL is responsible for. The translation row sits above them, already done.
-  static const _rows = 3;
+  static const _rows = 2;
 
   @override
   void initState() {
@@ -122,8 +129,7 @@ class _AssemblingCardState extends State<AssemblingCard> {
         // the button was pressed.
         _row(-1, l.searchBuildTranslation, widget.translation),
         _row(0, l.searchBuildMeaning, null),
-        _row(1, l.searchBuildExample, null),
-        _row(2, l.searchBuildPhoto, null, last: true),
+        _row(1, l.searchBuildExample, null, last: true),
         const SizedBox(height: AppSpacing.s22),
         Text(l.searchBuildNote, style: AppText.searchNote),
       ],

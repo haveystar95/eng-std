@@ -265,7 +265,7 @@ void main() {
       await ask(tester, 'root');
 
       expect(find.text('Собрать карточку'), findsOneWidget);
-      expect(find.textContaining('Значение, пример и фото'), findsOneWidget);
+      expect(find.textContaining('Значение и пример'), findsOneWidget);
     });
 
     testWidgets('no answer, no line — the frame does not reserve space for it', (tester) async {

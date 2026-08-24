@@ -268,7 +268,11 @@ void main() {
       // The answer to «what does this mean» is already on screen, free. Only the rest is for sale.
       expect(find.text('возмещение'), findsOneWidget);
       expect(find.text('Собрать карточку'), findsOneWidget);
-      expect(find.textContaining('Значение, пример и фото'), findsOneWidget);
+      expect(find.textContaining('Значение и пример'), findsOneWidget);
+      // The photo is NOT sold here: it is a Pexels search dispatched by the SAVE, so a build that
+      // promised one left the learner waiting for a picture this step never asked for (телефон,
+      // 24.08).
+      expect(find.textContaining('фото'), findsNothing);
       expect(api.lookupCalls, 0, reason: 'the model is a tap, never a consequence of searching');
     });
 
@@ -315,7 +319,9 @@ void main() {
       expect(find.text('перевод'), findsOneWidget);
       expect(find.text('значение'), findsOneWidget);
       expect(find.text('пример'), findsOneWidget);
-      expect(find.text('фото'), findsOneWidget);
+      // Two rows, not three: the checklist claims only what THIS call fetches, and the photo is
+      // bought later, by the save.
+      expect(find.text('фото'), findsNothing);
 
       api.lookupGate.complete();
       await tester.pumpAndSettle();
@@ -324,7 +330,7 @@ void main() {
     testWidgets('the translation is NOT being fetched — it stands ticked from the first frame', (
       tester,
     ) async {
-      // It arrived free, before the button was pressed. What the call is paying for is the three
+      // It arrived free, before the button was pressed. What the call is paying for is the two
       // rows under it, which is exactly what the button promised.
       final api = _SpyApi(hits: const [], holdLookup: true, hint: 'возмещение');
       await _pump(tester, api);

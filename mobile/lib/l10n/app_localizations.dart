@@ -1089,10 +1089,10 @@ abstract class AppLocalizations {
   /// **'Собрать карточку'**
   String get searchBuildCard;
 
-  /// Подпись под кнопкой «Собрать карточку» (кадр 04).
+  /// Подпись под кнопкой «Собрать карточку» (кадр 04). Фото здесь НЕ обещается: лукап покупает один вызов модели, а картинку ищет Pexels уже после сохранения (/search/add) — обещание фото на этом шаге не выполняется (телефон, 24.08).
   ///
   /// In ru, this message translates to:
-  /// **'Значение, пример и фото. Повторно — бесплатно'**
+  /// **'Значение и пример. Повторно — бесплатно'**
   String get searchBuildCardNote;
 
   /// Состояние во время вызова модели.
@@ -1118,12 +1118,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'пример'**
   String get searchBuildExample;
-
-  /// Строка чек-листа сборки карточки (кадр 05).
-  ///
-  /// In ru, this message translates to:
-  /// **'фото'**
-  String get searchBuildPhoto;
 
   /// Строка под чек-листом сборки (кадр 05).
   ///
