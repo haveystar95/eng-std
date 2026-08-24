@@ -86,17 +86,25 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
   /// widget that is already coming down.
   late final SpeechRecognizer _recognizer = ref.read(speechRecognizerProvider);
 
-  /// Set once an async, non-prompting OS permission check (below) confirms it — a brand-new word's
+  /// Set once an async, non-prompting OS permission check (below) confirms it — or once the learner
+  /// taps the microphone invitation and the OS says yes — a brand-new word's
   /// intro card is very often the FIRST speech-touching card in a fresh app run, and its echo is
   /// never the thing that calls [SpeechRecognizer.prepare] (see [_speechReady]'s doc), so
   /// [SpeechRecognizer.isReady] alone stayed false there even with the mic already permitted from a
   /// past run or iOS Settings (QA-21).
   bool _osPermitted = false;
 
-  /// Is the recogniser already permitted? The echo button is HIDDEN until it is, so an intro card
-  /// never raises a microphone prompt on its own — the learner meets that question on the first
-  /// speaking card, where saying something is the actual task, and not on a card that only asks
-  /// them to read.
+  /// Is the recogniser already permitted? The echo BUTTON is hidden until it is — an intro card
+  /// still never raises a microphone prompt on its own, and what stands in its place is an
+  /// invitation ([_EchoInvite]) rather than nothing at all.
+  ///
+  /// Nothing at all was the state until 24.08, and it made the echo undiscoverable in practice. The
+  /// permission is granted on the first SPEAKING card, which lives high on the ladder, so a word
+  /// just met is nowhere near it; and a device build off a free personal team is reinstalled about
+  /// weekly, and a reinstall resets the iOS speech and microphone authorisation. The echo was
+  /// therefore invisible on almost every build, and a learner who had not reached the speaking rung
+  /// had no way of ever learning it existed. A dimmed microphone that asks ON A TAP keeps the rule
+  /// the old behaviour was protecting — the card requires nothing — while giving the feature a door.
   ///
   /// [SpeechRecognizer.isReady] alone answers "has *this process* already prepared" — true once
   /// some OTHER card has called [SpeechRecognizer.prepare], but false for as long as this intro
@@ -125,6 +133,25 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
         }),
       );
     }
+  }
+
+  /// The permission prompt is up. The invitation goes inert rather than queueing a second prompt.
+  bool _asking = false;
+
+  /// The ONE place in this card that may prompt, and it is reached only by a deliberate tap on the
+  /// microphone. [SpeechRecognizer.prepare] is what raises the two iOS dialogs; a refusal comes back
+  /// as false and the invitation simply stays, because a refused microphone is an ordinary state of
+  /// this card and not an error to report.
+  Future<void> _askForMicrophone() async {
+    if (_asking) return;
+    AppHaptics.light();
+    setState(() => _asking = true);
+    final granted = await _recognizer.prepare();
+    if (!mounted) return;
+    setState(() {
+      _asking = false;
+      _osPermitted = granted;
+    });
   }
 
   @override
@@ -254,12 +281,13 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
                   style: AppTextExercise.introAlso,
                 ),
               ],
-              // The echo. Absent entirely until the microphone has been permitted elsewhere, so
-              // this card never asks for anything — including a permission.
-              if (_speechReady) ...[
-                const SizedBox(height: AppSpacing.s16),
-                _EchoRow(state: _echo, heard: _heard, onTap: _echoBack),
-              ],
+              // The echo, or the door to it. The card still asks for nothing: an unpermitted
+              // microphone is a dimmed glyph that does nothing until it is pressed.
+              const SizedBox(height: AppSpacing.s16),
+              if (_speechReady)
+                _EchoRow(state: _echo, heard: _heard, onTap: _echoBack)
+              else
+                _EchoInvite(onTap: _asking ? null : _askForMicrophone),
               // The badge closes the card rather than opening it (кадр 16b): it is a footnote about
               // what KIND of card this is, and at the top it was the first thing read — a label
               // where the word itself should have met the reader. It stays the last line even with
@@ -270,6 +298,51 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The microphone before there is a microphone — the echo's door on a card that has not been given
+/// the permission yet.
+///
+/// A GLYPH AND NOTHING ELSE, deliberately. The intro card's contract is that it asks for nothing,
+/// and a labelled button reading «Разрешить микрофон» would be the card asking; a dimmed mic sitting
+/// where the echo will sit is an offer that can be walked past without reading it. It carries the
+/// echo's own name in its semantics, because to a screen reader «what is this» has to have an
+/// answer, and the answer is «the thing that lets you say the word back».
+///
+/// Nothing happens until it is pressed. The press is the whole design: it is what makes the
+/// permission a decision the learner takes rather than a dialog the app throws at them.
+class _EchoInvite extends StatelessWidget {
+  const _EchoInvite({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Semantics(
+        button: true,
+        label: l.sessionEchoEnable,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 26,
+          child: Container(
+            width: AppSpacing.minTap,
+            height: AppSpacing.minTap,
+            alignment: Alignment.center,
+            child: Icon(
+              LucideIcons.mic,
+              size: 20,
+              // Tertiary, like every other thing on this card that is available and not asked for.
+              color: onTap == null ? AppColors.track : AppColors.tertiary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

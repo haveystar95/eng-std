@@ -986,6 +986,8 @@
   "@sessionEchoHeard": { "description": "Мягкая отметка эха на интро: распознавание что-то расслышало. Не оценка." },
   "sessionEchoAgain": "Попробуй ещё",
   "@sessionEchoAgain": { "description": "Мягкая отметка эха на интро: расслышать не удалось. Не оценка и не провал." },
+  "sessionEchoEnable": "Включить микрофон",
+  "@sessionEchoEnable": { "description": "Семантика неактивного микрофончика на карточке знакомства: пермишена ещё нет, тап его запрашивает. Подписи на экране нет — только глиф (наряд A-4.1 Ч.5)." },
   "sessionHeaderIntro": "Знакомство",
   "@sessionHeaderIntro": { "description": "Шапка сессии на карточке знакомства (кадры 16a–16b)." },
   "sessionHeaderRecognition": "Узнавание",

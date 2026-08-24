@@ -359,6 +359,7 @@
   "sessionEchoTry": "Say it back",
   "sessionEchoHeard": "Heard you",
   "sessionEchoAgain": "Give it another go",
+  "sessionEchoEnable": "Turn on the microphone",
   "sessionHeaderIntro": "First look",
   "sessionHeaderRecognition": "Recognition",
   "sessionInstrRecogniseTranslation": "choose the translation",

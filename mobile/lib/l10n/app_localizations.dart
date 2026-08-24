@@ -2037,6 +2037,12 @@ abstract class AppLocalizations {
   /// **'Попробуй ещё'**
   String get sessionEchoAgain;
 
+  /// Семантика неактивного микрофончика на карточке знакомства: пермишена ещё нет, тап его запрашивает. Подписи на экране нет — только глиф (наряд A-4.1 Ч.5).
+  ///
+  /// In ru, this message translates to:
+  /// **'Включить микрофон'**
+  String get sessionEchoEnable;
+
   /// Шапка сессии на карточке знакомства (кадры 16a–16b).
   ///
   /// In ru, this message translates to:

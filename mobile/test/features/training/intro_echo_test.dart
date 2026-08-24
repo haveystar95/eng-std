@@ -22,7 +22,9 @@ class _FakeRecognizer implements SpeechRecognizer {
     required this.isReady,
     bool? hasPermission,
     this.completeOnStop = false,
-  }) : _hasPermission = hasPermission ?? isReady;
+    bool? grantsOnPrepare,
+  }) : _hasPermission = hasPermission ?? isReady,
+       _grantsOnPrepare = grantsOnPrepare ?? isReady;
 
   final SpeechAttempt attempt;
 
@@ -55,11 +57,15 @@ class _FakeRecognizer implements SpeechRecognizer {
   void emitPartial(String text) => _onPartial?.call(text);
   ValueChanged<String>? _onPartial;
 
+  /// What the iOS prompt comes back with when the intro card's microphone invitation is tapped
+  /// (наряд A-4.1 Ч.5). Defaults to [isReady] so every older test in this file keeps its meaning.
+  final bool _grantsOnPrepare;
+
   @override
   Future<bool> prepare() async {
     prepares++;
 
-    return isReady;
+    return _grantsOnPrepare;
   }
 
   @override
@@ -106,6 +112,11 @@ class _FakeRecognizer implements SpeechRecognizer {
   Future<void> cancel() async {}
 }
 
+/// The dimmed microphone that stands in for the echo before the permission exists. Found by its
+/// semantics rather than by its glyph: the echo's own button carries a microphone too, and the two
+/// must not be confused for one another.
+final _invite = find.bySemanticsLabel('Включить микрофон');
+
 void main() {
   SessionCard introCard() => SessionCard(
     termId: 'T1',
@@ -142,10 +153,12 @@ void main() {
     await tester.pumpWidget(host(recognizer));
     await tester.pumpAndSettle();
 
-    // An intro card must never be the thing that raises a permission prompt: it is the card that
-    // asks for nothing, and the learner meets that question on their first speaking card instead.
+    // An intro card must never RAISE a permission prompt by itself: it is the card that asks for
+    // nothing. What it may do — since 24.08 — is stand a dimmed microphone where the echo will be,
+    // and wait to be pressed.
     expect(find.text('Повторить вслух'), findsNothing);
-    expect(recognizer.prepares, 0);
+    expect(_invite, findsOneWidget);
+    expect(recognizer.prepares, 0, reason: 'nothing prompts until the glyph is tapped');
     expect(recognizer.calls, 0);
     // The card itself is unaffected — the word, its transcription and «Понятно» are all still there.
     expect(find.text('reservation'), findsOneWidget);
@@ -365,6 +378,77 @@ void main() {
       expect(recognizer.timeoutsPerCall.single, SpokenAnswer.wordFormListenFor);
       expect(recognizer.pauseForsPerCall.single, SpokenAnswer.wordFormPauseFor);
       expect(recognizer.contextualStringsPerCall.single, ['reservation']);
+    });
+  });
+
+  group('the microphone invitation (наряд A-4.1 Ч.5)', () {
+    // The echo was undiscoverable, and not by accident: the permission is granted on the first
+    // SPEAKING card, which is high on the ladder, and every reinstall of a personal-team build
+    // resets it. A learner who had not reached that rung could not find out the echo existed.
+
+    testWidgets('a tap asks the OS, and the echo appears when it says yes', (tester) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: false,
+        hasPermission: false,
+        grantsOnPrepare: true,
+      );
+      await tester.pumpWidget(host(recognizer));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Повторить вслух'), findsNothing);
+      await tester.tap(_invite);
+      await tester.pumpAndSettle();
+
+      expect(recognizer.prepares, 1, reason: 'the tap is the prompt, and the only one');
+      expect(find.text('Повторить вслух'), findsOneWidget);
+      expect(_invite, findsNothing);
+    });
+
+    testWidgets('a refusal leaves the invitation and says nothing about it', (tester) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: false,
+        hasPermission: false,
+        grantsOnPrepare: false,
+      );
+      await tester.pumpWidget(host(recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_invite);
+      await tester.pumpAndSettle();
+
+      expect(recognizer.prepares, 1);
+      expect(_invite, findsOneWidget);
+      expect(find.text('Повторить вслух'), findsNothing);
+      // A refused microphone is an ordinary state of this card, not an error to report.
+      expect(find.textContaining('Не удалось'), findsNothing);
+      expect(recognizer.calls, 0);
+    });
+
+    testWidgets('there is no invitation once the echo itself is there', (tester) async {
+      await tester.pumpWidget(
+        host(_FakeRecognizer(attempt: const SpeechAttempt.silent(), isReady: true)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Повторить вслух'), findsOneWidget);
+      expect(_invite, findsNothing);
+    });
+
+    testWidgets('the intro still requires nothing — «Понятно» never waited on any of this', (
+      tester,
+    ) async {
+      final recognizer = _FakeRecognizer(
+        attempt: const SpeechAttempt.silent(),
+        isReady: false,
+        hasPermission: false,
+      );
+      await tester.pumpWidget(host(recognizer));
+      await tester.pumpAndSettle();
+
+      expect(find.text('reservation'), findsOneWidget);
+      expect(recognizer.prepares, 0);
     });
   });
 }

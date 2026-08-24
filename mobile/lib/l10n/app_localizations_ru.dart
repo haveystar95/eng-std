@@ -1269,6 +1269,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionEchoAgain => 'Попробуй ещё';
 
   @override
+  String get sessionEchoEnable => 'Включить микрофон';
+
+  @override
   String get sessionHeaderIntro => 'Знакомство';
 
   @override
