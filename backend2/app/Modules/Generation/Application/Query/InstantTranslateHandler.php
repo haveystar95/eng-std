@@ -51,6 +51,14 @@ use Throwable;
  */
 final readonly class InstantTranslateHandler
 {
+    /**
+     * Shortest query worth KEEPING in the shared cache. Answers are still returned below it.
+     *
+     * Two letters is where «word» stops and «fragment» begins for the languages this app serves:
+     * the live cache had `к`, `с` and `te` in it, each with a confident and useless translation.
+     */
+    private const MIN_CACHEABLE_CHARS = 3;
+
     public function __construct(
         private ExactTermTranslationReader $terms,
         private InstantTranslationCache $cache,
@@ -138,13 +146,23 @@ final readonly class InstantTranslateHandler
         // Written before it is returned, so the very next keystroke that re-sends the same word is
         // already free — a debounced field re-asks constantly, and a cache filled after the answer
         // is handed back would miss most of those.
-        $this->cache->store(
-            $normalized,
-            $pair->direction->pair(),
-            $translated->text,
-            $translated->provider,
-            $translated->characters,
-        );
+        //
+        // …but NOT for a query too short to be a word. This cache is GLOBAL and permanent: a row
+        // written here is served free to every other learner forever, so a fragment caught by a
+        // debounce does not just waste one call, it puts rubbish in a shared dictionary. The live
+        // table had `к` → «to», `с` → «with» and `сли` → «if» from exactly that. The learner still
+        // gets their answer — this only decides what is worth KEEPING, and a one- or two-letter
+        // query is not. The client's own guard stops most of these from arriving at all; this one
+        // is here because the cache outlives any client.
+        if (mb_strlen($normalized) >= self::MIN_CACHEABLE_CHARS) {
+            $this->cache->store(
+                $normalized,
+                $pair->direction->pair(),
+                $translated->text,
+                $translated->provider,
+                $translated->characters,
+            );
+        }
 
         return InstantHintView::hit(
             $normalized,

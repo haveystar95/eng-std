@@ -40,14 +40,16 @@ void main() {
     expect(flags.last.languageCode, 'ru');
   });
 
-  testWidgets('a language with no painter still draws — the pair is never half-missing', (
+  testWidgets('a code outside the catalogue still draws — the pair is never half-missing', (
     tester,
   ) async {
-    // `MiniFlag` falls back to a neutral coded circle, so a pair is always drawable.
-    await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'tr')));
+    // Every CATALOGUE language now has a painter (`mini_flag_test`), so the fallback is reached only
+    // by a code that should not exist — a typo, or a language added to one runtime and forgotten in
+    // another. It must still render: a half-drawn badge would be worse than a plain one.
+    await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'xx')));
 
     expect(find.byType(MiniFlag), findsNWidgets(2));
-    expect(find.text('TR'), findsOneWidget);
+    expect(find.text('XX'), findsOneWidget);
   });
 
   testWidgets('sits in a quiet chip — the colour must not float on the paper', (tester) async {

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 /**
- * THE CLIENT NAMES THE ROLES (DECISIONS п. 147 — the cure that decision itself names).
+ * THE CLIENT NAMES THE ROLES, and when it does not, the DIRECTION does (DECISIONS п. 147, amended).
  *
  * A search request carries a DIRECTION, «what I typed» → «what I want back», and a direction is not
  * a pair of roles. `de → en` is either German studied with English support or English studied with
@@ -47,13 +47,39 @@ it('reads the roles from taught_side when both halves are teachable', function (
         ->and($englishStudied['reversed'])->toBeTrue();
 });
 
-it('falls back to the tie-break when the client says nothing', function () {
-    // Nothing about the old behaviour changes for a build that does not know the field: the profile
-    // decides (here `en`, the factory default), so `en` is the taught side of `de → en`.
+it('reads the DIRECTION when the client says nothing — the target is what is being learned', function () {
+    // «Translate this German word into English» is somebody studying ENGLISH, so `en` is the term
+    // side and the German query is the support side: reversed.
     fakeTranslator();
     [, $token] = learner();
 
     expect(instantSide($this, $token, 'Rechnung', 'de', 'en')['reversed'])->toBeTrue();
+});
+
+it('answers en → es as SPANISH studied, not English — the bug that cost п. 147 its profile rule', function () {
+    // Reported from the phone: with the pill on «English → Español» the card put the ENGLISH word in
+    // the headline and the Spanish in small type, and the save sheet offered «English ← Spanish».
+    // The old tie-break picked the side matching profiles.default_target_lang (`en`), which is right
+    // exactly while a learner studies one language and wrong the moment they study two.
+    fakeTranslator();
+    [, $token] = learner();
+
+    // The claim is an EQUIVALENCE, because that is what the report was: «ru → en behaves right,
+    // en → es behaves backwards». `reversed` means «typed in the support language, so the ANSWER is
+    // the word being studied» — the headline. Both pairs must now say the same thing.
+    $spanishFromEnglish = instantSide($this, $token, 'book', 'en', 'es');
+    $englishFromRussian = instantSide($this, $token, 'книга', 'ru', 'en');
+
+    expect($spanishFromEnglish['reversed'])->toBeTrue()
+        ->and($spanishFromEnglish['reversed'])->toBe($englishFromRussian['reversed']);
+});
+
+it('reads it the other way round just as literally', function () {
+    fakeTranslator();
+    [, $token] = learner();
+
+    // `es → en`: somebody studying English who happens to write Spanish.
+    expect(instantSide($this, $token, 'libro', 'es', 'en')['reversed'])->toBeTrue();
 });
 
 it('ignores an unparseable side on the debounced GET rather than erroring at a typing learner', function () {

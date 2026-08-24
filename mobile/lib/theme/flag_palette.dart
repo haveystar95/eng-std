@@ -44,6 +44,22 @@ abstract final class FlagPalette {
   static const ruBlue = Color(0xFF0039A6);
   static const ruRed = Color(0xFFD52B1E);
 
+  // uk · Украина (лазурь / золото)
+  static const uaBlue = Color(0xFF0057B7);
+  static const uaYellow = Color(0xFFFFD700);
+
+  // tr · Турция (алое поле, белые полумесяц и звезда)
+  static const trRed = Color(0xFFE30A17);
+  static const trWhite = Color(0xFFFFFFFF);
+
+  // zh · Китай (алое поле, жёлтые звёзды)
+  static const cnRed = Color(0xFFDE2910);
+  static const cnYellow = Color(0xFFFFDE00);
+
+  // ja · Япония (белое поле, алый круг)
+  static const jpWhite = Color(0xFFFFFFFF);
+  static const jpRed = Color(0xFFBC002D);
+
   // ro · Румыния (кобальт / хромовый жёлтый / киноварь — вертикальный триколор,
   // как у Франции, поэтому и рисуется тем же painter'ом)
   static const roBlue = Color(0xFF002B7F);

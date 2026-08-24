@@ -123,12 +123,10 @@ class SearchLanguages {
 
   /// The singular, legacy `target` field: the ONE taught language the shipped app knew.
   ///
-  /// It survives for exactly one job — breaking the tie in [taughtSideOf] when both halves of a
-  /// pair are teachable. It is a deployment constant (`SupportedLanguages::LEGACY_TARGET`), which
-  /// for this deployment is also the profile's taught language, and the server breaks the same tie
-  /// with the profile. When the field finally goes, the fallback below (the first taught language)
-  /// takes over and the tie-break degrades to «the direction's source wins», which is what the
-  /// server does anyway when the profile matches neither side.
+  /// It no longer breaks any tie — that was its last job, and it lost it when `en → es` turned out
+  /// to mean «studying Spanish» (see [taughtSideOf]). What it still does is seed [initialPair] on a
+  /// device that has never been set, and stand in as [targets]' single member for a server from
+  /// before RS-3. It goes when the shipped app reads `targets`.
   final String defaultTaught;
 
   /// Where the pill starts on a device that has never been set: the learner's own language.
@@ -173,16 +171,19 @@ class SearchLanguages {
   /// Which half of [pair] is the language being LEARNED.
   ///
   /// Usually the pair names it: in `ru → ro` only `ro` is one this deployment teaches, so it is the
-  /// term side whichever way round the learner typed it. `es → en` names TWO, and what the pill
-  /// holds is a DIRECTION rather than a pair of roles — it is either Spanish studied with English
-  /// support or the other way about, and the two are indistinguishable from the pair alone.
+  /// term side whichever way round the learner typed it — nobody is studying Russian here.
   ///
-  /// The server breaks that tie with the learner's profile and falls back to the direction's source
-  /// (DECISIONS п. 147); this mirrors it with [defaultTaught] standing in for the profile, which is
-  /// the same value for this deployment and the only one the client is told. WHERE THE TWO COULD
-  /// DISAGREE, THE SERVER'S ANSWER IS THE ONE THAT COUNTS — it decides what a search returns. This
-  /// one decides something narrower: which collections the save sheet may offer, and in which pair
-  /// a collection made from that sheet is born.
+  /// `en → es` names TWO, and there the DIRECTION answers it: the learner types what they already
+  /// have and asks for what they do not. «Translate this English word into Spanish» is somebody
+  /// studying SPANISH, so the target side is the taught one.
+  ///
+  /// THIS REPLACED A TIE-BREAK ON [defaultTaught] (DECISIONS п. 147, amended 24.08). That rule
+  /// answered `en → es` with «English studied with Spanish support» — because `defaultTaught` is
+  /// frozen at `en` — and the consequences were all visible and all wrong: the result card put the
+  /// ENGLISH word in the headline with the Spanish in small type under it, and the save sheet
+  /// offered to file the word under «English ← Spanish». The server was amended in the same breath,
+  /// so the two still agree; the client's copy matters because it is what
+  /// [SearchScreen] sends as `taught_side` and what decides which collections the save sheet offers.
   String taughtSideOf(SearchPair pair) {
     final source = teaches(pair.source);
     final target = teaches(pair.target);
@@ -191,7 +192,7 @@ class SearchLanguages {
     // fallen back and nothing downstream will use the answer. Source, for the sake of an answer.
     if (!source) return pair.source;
 
-    return pair.target == defaultTaught ? pair.target : pair.source;
+    return pair.target;
   }
 
   /// The pill's opening position — a taught language into the learner's own. Looking up a word they

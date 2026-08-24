@@ -44,15 +44,36 @@ void main() {
       expect(languages.taughtSideOf(const SearchPair(source: 'ro', target: 'ru')), 'ro');
     });
 
-    test('two taught sides are a tie, broken the way the server breaks it', () {
-      // «es → en» is either Spanish studied with English support or the other way about, and the
-      // direction cannot tell them apart. The server asks the profile (DECISIONS п. 147); this asks
-      // the legacy `target`, which is the same value for this deployment.
+    test('two taught sides are read from the DIRECTION: you ask for what you do not have', () {
+      // «en → es» — «translate this English word into Spanish» — is somebody studying SPANISH. The
+      // learner types what they already have and asks for what they do not, so the TARGET side is
+      // the taught one (DECISIONS п. 147, amended 24.08).
+      expect(languages.taughtSideOf(const SearchPair(source: 'en', target: 'es')), 'es');
+      // …and the same sentence backwards is just as literal.
       expect(languages.taughtSideOf(const SearchPair(source: 'es', target: 'en')), 'en');
-      expect(languages.taughtSideOf(const SearchPair(source: 'en', target: 'es')), 'en');
+      expect(languages.taughtSideOf(const SearchPair(source: 'ro', target: 'es')), 'es');
+    });
 
-      // Neither side is it: the direction's source wins, as it does on the server.
-      expect(languages.taughtSideOf(const SearchPair(source: 'ro', target: 'es')), 'ro');
+    test('the reported bug: «English → Español» must not mean «studying English»', () {
+      // From the phone: with the pill on en → es the card put the ENGLISH word in the headline with
+      // the Spanish in small type, and the save sheet offered to file it under «English ← Spanish».
+      // The old rule broke the tie with the legacy `target` (frozen at `en`), which is right exactly
+      // while somebody studies one language.
+      final pair = LearningPair.of(const SearchPair(source: 'en', target: 'es'), languages);
+
+      expect(pair, const LearningPair(learned: 'es', support: 'en'));
+    });
+
+    test('it reads en → es the same way it reads ru → en, which was never wrong', () {
+      // The report was an INEQUALITY: «ru → en behaves right, en → es behaves backwards». Both are
+      // «typed the support language, got the word being studied», so both must answer alike.
+      final spanish = LearningPair.of(const SearchPair(source: 'en', target: 'es'), languages);
+      final english = LearningPair.of(const SearchPair(source: 'ru', target: 'en'), languages);
+
+      expect(spanish.learned, 'es');
+      expect(english.learned, 'en');
+      expect(spanish.support, 'en');
+      expect(english.support, 'ru');
     });
 
     test('the roles a save obeys come from that, not from the direction', () {

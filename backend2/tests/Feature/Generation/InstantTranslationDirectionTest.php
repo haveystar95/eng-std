@@ -113,7 +113,11 @@ it('serves the second language of the pair when the pill is set to it', function
 
     $hint = instant($this, $token, 'occasion', 'en', 'ro');
 
-    expect($hint['translation'])->not->toBeNull()->and($hint['reversed'])->toBeFalse();
+    // `reversed` is TRUE here since п. 147 was amended: both sides are taught, so the DIRECTION
+    // names the roles — «translate this English word into Romanian» is somebody studying Romanian,
+    // and the English query is therefore the support side. What this test is actually about is
+    // unchanged: the vendor is called in the stated direction and the cache key carries it.
+    expect($hint['translation'])->not->toBeNull()->and($hint['reversed'])->toBeTrue();
     expect($fake->directions)->toBe(['en→ro']);
     expect((string) DB::table('instant_translations')->value('lang_pair'))->toBe('en:ro');
 });

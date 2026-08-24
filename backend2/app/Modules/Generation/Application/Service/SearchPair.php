@@ -10,6 +10,7 @@ use App\Modules\Generation\Domain\Exception\UnsupportedLanguagePair;
 use App\Modules\Generation\Domain\Service\SearchDirection;
 use App\Modules\Generation\Domain\Service\SupportedLanguages;
 use App\Modules\Generation\Domain\ValueObject\TaughtSide;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
 /**
@@ -35,6 +36,13 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  *
  * A pair that IS named and is not supported is refused ({@see UnsupportedLanguagePair}), never
  * quietly swapped for the default — see that class for why.
+ *
+ * ## Which side is being learned
+ *
+ * A direction is not a pair of roles, and the client may now say the roles outright
+ * ({@see TaughtSide}). When it does not, {@see taughtSideOf()} works them out — from the pair when
+ * only one side is teachable, and from the direction when both are. The profile does not get a
+ * vote: it decides the OPENING pair and nothing else (DECISIONS пп. 142, 147).
  */
 final readonly class SearchPair
 {
@@ -77,7 +85,7 @@ final readonly class SearchPair
         // requests that do not (DECISIONS п. 147).
         $termLang = $taughtSide !== null
             ? $this->namedTaughtSide($taughtSide, $from, $to)
-            : $this->taughtSideOf($actorId, $from, $to);
+            : $this->taughtSideOf($from, $to);
 
         return new ResolvedPair(
             direction: new SearchDirection($from, $to),
@@ -110,28 +118,33 @@ final readonly class SearchPair
      * Which half of the direction is the language being LEARNED.
      *
      * Usually the pair names it: in `ru → ro` only one side is a language this product teaches, and
-     * that is the term side whichever way the learner typed it. `de → en` names two, and the request
-     * carries a direction rather than a pair of roles — it is either German with English support or
-     * English with German support, and the query string cannot tell them apart.
+     * that is the term side whichever way the learner typed it — `ru` has no trainers, so nobody is
+     * learning it here. That branch is {@see SupportedLanguages::soleTaughtSide()} and it is most
+     * requests.
      *
-     * The tie is broken by the PROFILE, and only in that branch: the learner's own taught language,
-     * when it is one of the two. That is a default and not a content read — the same standing the
-     * profile has for the opening pair of the search screen (DECISIONS пп. 142, 147) — and it is
-     * read lazily, so an unambiguous pair (every pair the shipped app sends today) costs nothing.
+     * `en → es` names TWO taught languages, and there the DIRECTION is the answer: the learner types
+     * what they already have and asks for what they do not. «Translate this English word into
+     * Spanish» is somebody studying Spanish, so the TARGET side is the taught one and the source is
+     * support. The same reading run backwards is just as true: `es → en` is somebody studying
+     * English who happens to write Spanish.
      *
-     * With neither side matching the profile, the direction's `source` wins: the pill opens
-     * «taught → support», so that is the likelier reading of a hand-made request.
+     * THIS REPLACED A PROFILE TIE-BREAK (DECISIONS п. 147, amended 24.08), and the replacement is a
+     * bug fix rather than a preference. The profile rule answered `en → es` with «English studied
+     * with Spanish support», because English is what `profiles.default_target_lang` holds — so the
+     * card put the English word in the headline, the Spanish in small type underneath, and the save
+     * sheet offered to file the word under «English ← Spanish». Every one of those is the opposite
+     * of what the learner asked for, and none of them looks broken on screen: it looks like an app
+     * that disagrees with you. A rule that only holds while somebody studies exactly one language
+     * was never going to survive a product whose whole current chapter is «any pair» (п. 134).
+     *
+     * The profile keeps the one job it is allowed to keep — the OPENING pair of the screen
+     * ({@see fromProfile()}, п. 142). It no longer decides what a stated pair means.
      */
-    private function taughtSideOf(UserId $actorId, string $from, string $to): string
+    private function taughtSideOf(string $from, string $to): string
     {
         $sole = $this->supported->soleTaughtSide($from, $to);
-        if ($sole !== null) {
-            return $sole;
-        }
 
-        $preferred = $this->languages->forUser($actorId)->target->value;
-
-        return in_array($preferred, [$from, $to], true) ? $preferred : $from;
+        return $sole ?? LanguageRoles::normalize($to);
     }
 
     /**

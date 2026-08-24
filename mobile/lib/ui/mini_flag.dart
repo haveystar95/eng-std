@@ -7,10 +7,15 @@ import 'package:eng_std/theme/theme.dart';
 /// (список языков онбординга, дропдаун «Язык изучения», языковая пара в сторе).
 /// На карточках слов и коллекций флагов нет.
 ///
-/// Поддержаны языки из кадров: en, pt, de, es, fr, плюс ro (пикер предлагал
-/// румынский, а флага у него не было — HYG-1) и pl, it, ru (A-4: pl и ru стоят
-/// по обе стороны живых пар дев-базы, it — изучаемый по капабилити).
-/// Прочие → нейтральный кружок с кодом языка (без декоративной краски).
+/// ВСЕ ТРИНАДЦАТЬ языков справочника нарисованы: en, ru, uk, ro, es, de, fr,
+/// it, pt, pl, tr, zh, ja. Нейтральный кружок с кодом остаётся только для кода
+/// ВНЕ справочника — то есть для опечатки или для языка, который добавили в
+/// один рантайм и забыли в другом.
+///
+/// Пустых мест тут быть не должно по прямой причине: пикер предлагает то, что
+/// вернул сервер, и язык без художника выглядел на экране как «этот хуже
+/// остальных». Так уже случалось дважды — `ro` (HYG-1), потом `pl`/`it`/`ru`
+/// (A-4), и оба раза чинилось задним числом. Тест держит полноту состава.
 class MiniFlag extends StatelessWidget {
   const MiniFlag({super.key, required this.languageCode, this.size = 22});
 
@@ -59,6 +64,10 @@ final Map<String, CustomPainter> _flagPainters = {
   'pl': _PlPainter(),
   'it': _ItPainter(),
   'ru': _RuPainter(),
+  'uk': _UaPainter(),
+  'tr': _TrPainter(),
+  'zh': _CnPainter(),
+  'ja': _JpPainter(),
 };
 
 class _NeutralFlag extends StatelessWidget {
@@ -234,6 +243,91 @@ class _RuPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, w, t), Paint()..color = FlagPalette.ruWhite);
     canvas.drawRect(Rect.fromLTWH(0, t, w, t), Paint()..color = FlagPalette.ruBlue);
     canvas.drawRect(Rect.fromLTWH(0, 2 * t, w, t), Paint()..color = FlagPalette.ruRed);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Украина — лазурь над золотом. Второй горизонтальный бицвет в наборе после
+/// польского, но краски не пересекаются ни в одной полосе, так что на 22 px
+/// они не путаются.
+class _UaPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h / 2), Paint()..color = FlagPalette.uaBlue);
+    canvas.drawRect(Rect.fromLTWH(0, h / 2, w, h / 2), Paint()..color = FlagPalette.uaYellow);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Турция — полумесяц и звезда на алом. Полумесяц собран вычитанием: круг,
+/// поверх него круг цветом поля со смещением. Звезда на 22 px сводится к
+/// точке — она нарисована, но именно как точка, а не как пятиконечник.
+class _TrPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.drawRect(Offset.zero & s, Paint()..color = FlagPalette.trRed);
+    canvas.drawCircle(
+      Offset(w * 0.42, h * 0.5),
+      w * 0.23,
+      Paint()..color = FlagPalette.trWhite,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.50, h * 0.5),
+      w * 0.19,
+      Paint()..color = FlagPalette.trRed,
+    );
+    canvas.drawCircle(
+      Offset(w * 0.70, h * 0.5),
+      w * 0.07,
+      Paint()..color = FlagPalette.trWhite,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Китай — алое поле, крупная звезда и дуга мелких. На 22 px пятиконечник не
+/// читается, поэтому звёзды — круги: сохраняется то, что отличает флаг на этом
+/// размере (алое поле + жёлтая группа в верхнем левом углу).
+class _CnPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.drawRect(Offset.zero & s, Paint()..color = FlagPalette.cnRed);
+    final star = Paint()..color = FlagPalette.cnYellow;
+    canvas.drawCircle(Offset(w * 0.26, h * 0.30), w * 0.11, star);
+    for (final o in [
+      Offset(w * 0.48, h * 0.14),
+      Offset(w * 0.57, h * 0.28),
+      Offset(w * 0.57, h * 0.45),
+      Offset(w * 0.48, h * 0.58),
+    ]) {
+      canvas.drawCircle(o, w * 0.04, star);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Япония — алый круг на белом. Единственный флаг набора, который на 22 px
+/// выглядит ровно так же, как на флагштоке.
+class _JpPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    canvas.drawRect(Offset.zero & s, Paint()..color = FlagPalette.jpWhite);
+    canvas.drawCircle(
+      Offset(s.width * 0.5, s.height * 0.5),
+      s.width * 0.28,
+      Paint()..color = FlagPalette.jpRed,
+    );
   }
 
   @override

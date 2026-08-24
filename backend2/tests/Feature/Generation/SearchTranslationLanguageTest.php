@@ -66,10 +66,15 @@ it('does not dress a hit in a translation from another pair', function () {
 
 it('shows the translation when it IS in the pair', function () {
     [$user, $token] = learner();
+    // An ENGLISH term glossed in Romanian — so the learner this fixture describes is one studying
+    // English with Romanian support, and the pill that matches it is «ro → en». (It used to be
+    // queried as «en → ro», which the old profile tie-break read the same way; since п. 147 was
+    // amended the direction names the roles, and «en → ro» is somebody studying ROMANIAN, whose
+    // words would be `ro` terms. Same claim, a pair that now agrees with the data.)
     termWithTranslations($user, 'invoice', ['ro' => 'factură']);
 
     $hit = $this->withHeader('Authorization', "Bearer {$token}")
-        ->getJson('/api/v1/search?q=invoice&source=en&target=ro')
+        ->getJson('/api/v1/search?q=invoice&source=ro&target=en')
         ->assertOk()->json('data.0');
 
     expect($hit['translation'])->toBe('factură');

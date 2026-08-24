@@ -93,7 +93,10 @@ Future<void> _pump(WidgetTester tester, _Api api) async {
 
 Future<void> _type(WidgetTester tester, String text) async {
   await tester.enterText(find.byType(TextField), text);
-  await tester.pump(const Duration(milliseconds: 400)); // past the debounce
+  // Past BOTH debounces. The free search answers at 280 ms; the PAID hint waits 900 ms, because
+  // 280 ms is an ordinary pause between two letters and every paused prefix used to be bought from
+  // DeepL and cached forever (`к` → «to», `сли` → «if»). See `_hintDebounce`.
+  await tester.pump(const Duration(milliseconds: 1000));
   await tester.pump();
   await tester.pump();
 }

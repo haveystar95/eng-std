@@ -49,11 +49,39 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Long enough that a fast typist fires one request, short enough to feel instant. The request it
   /// delays is free, so this is about the server's load and the list's stability, not about money.
+  /// The FREE half: `/search` over the database. Costs nothing and calls no model, so it may fire
+  /// as soon as the typing pauses at all — that immediacy is most of what the screen feels like.
   static const _debounce = Duration(milliseconds: 280);
+
+  /// The PAID half: `/search/instant`, whose third rung is DeepL and is billed by the character.
+  ///
+  /// A separate, much longer quiet period, because 280 ms is not «finished typing» — it is an
+  /// ordinary pause between two letters. On the live database that difference is not theoretical:
+  /// typing «слива» bought FOUR translations (`с` → «with», `сли` → «if», `слиаа` → «sliaa»,
+  /// `слива` → «plum») and «книга» bought three (`к` → «to», `кни`, `книга`). Every one of those
+  /// fragments also became a permanent row in the SHARED cache, where it is served free to everyone
+  /// else forever — so the cost of a short debounce is not one wasted call, it is a dictionary
+  /// slowly filling with rubbish.
+  ///
+  /// 900 ms is «the hand has stopped», not «the hand is between keys». Nothing waits for it when the
+  /// learner SAYS which word they meant: Enter, a tapped suggestion and a tapped recent all fetch
+  /// the hint at once (see [_submit]).
+  static const _hintDebounce = Duration(milliseconds: 900);
+
+  /// Below this, a query is a fragment rather than a word, and the vendor is not asked.
+  ///
+  /// Not a guess about language: it is what a one- or two-letter «word» produced in practice —
+  /// `к` → «to», `с` → «with», `te` → «те`. A real two-letter word (`go`, `ok`) still reaches the
+  /// vendor the moment the learner presses Enter, which is the one path this gate does not touch.
+  static const _minHintChars = 3;
 
   final _controller = TextEditingController();
   final _pronouncer = Pronouncer();
   Timer? _timer;
+
+  /// The paid hint's own timer — see [_hintDebounce]. Separate from [_timer] so the free search can
+  /// stay instant while the vendor call waits for the typing to actually stop.
+  Timer? _hintTimer;
 
   /// The offline dictionary, read once, the first time this screen opens. It fills the silence
   /// between a keystroke and a server round trip — see [WordList].
@@ -200,6 +228,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _hintTimer?.cancel();
     _controller.dispose();
     _pronouncer.release();
     super.dispose();
@@ -209,6 +238,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _onChanged(String raw) {
     _timer?.cancel();
+    _hintTimer?.cancel();
     final query = raw.trim();
     setState(() {
       _query = query;
@@ -232,6 +262,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (query.isEmpty) return;
     _timer = Timer(_debounce, () {
       unawaited(_runFreeSearch(query));
+    });
+    // Two timers, because the two halves have different prices. The free search answers at the
+    // first pause; the paid hint waits for the hand to actually stop.
+    _hintTimer = Timer(_hintDebounce, () {
+      if (query.characters.length < _minHintChars) return;
       unawaited(_fetchHint(query));
     });
   }
@@ -247,6 +282,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (query.isEmpty) return;
     AppHaptics.light();
     _timer?.cancel();
+    // The learner named the word, so the paid hint stops waiting for a pause that has already
+    // happened — and the pending one for a half-typed prefix is dropped rather than left to fire.
+    _hintTimer?.cancel();
     if (_controller.text != query) {
       _controller.value = TextEditingValue(
         text: query,

@@ -123,14 +123,37 @@ class _Thumb extends StatelessWidget {
 
   final WordCardSubject subject;
 
+  /// The plate a word with no photo gets: the warm ground with its own INITIAL on it.
+  ///
+  /// A bare plate was read on the phone as «the picture failed to load», and that reading is fair —
+  /// an empty rectangle where a photo goes looks like a photo that did not arrive. Nothing is
+  /// arriving: a word that has just been looked up has no photo at all (Pexels runs after the word
+  /// is saved and enriched), so this is a permanent state and it has to look deliberate. A monogram
+  /// does; a hole does not. Colour is [AppColors.plateLabel], which the theme already defines for
+  /// exactly this — type sitting ON the plate rather than on paper.
+  Widget _monogram() => ColoredBox(
+    color: AppColors.photoPlate,
+    child: Center(
+      child: Text(
+        subject.text.characters.take(1).toString().toUpperCase(),
+        style: AppText.searchRowTerm.copyWith(
+          fontSize: AppWordCard.inlinePhoto * 0.42,
+          color: AppColors.plateLabel,
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    Widget plate = const ColoredBox(color: AppColors.photoPlate);
+    Widget plate = _monogram();
     if (subject.hasPhoto) {
       plate = Image(
         image: CachedNetworkImage(subject.imageUrl!),
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.photoPlate),
+        // A url that IS there and fails — offline, an evicted cache, a dead host — lands on the same
+        // monogram rather than on an empty plate: the learner cannot act on the difference.
+        errorBuilder: (_, _, _) => _monogram(),
       );
     }
 

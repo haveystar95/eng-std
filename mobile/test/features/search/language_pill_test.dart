@@ -102,7 +102,8 @@ Future<void> _pump(WidgetTester tester, _Api api, {AppDatabase? db}) async {
 
 Future<void> _type(WidgetTester tester, String text) async {
   await tester.enterText(find.byType(TextField), text);
-  await tester.pump(const Duration(milliseconds: 400));
+  // Past BOTH debounces — the free search at 280 ms, the paid hint at 900 ms (`_hintDebounce`).
+  await tester.pump(const Duration(milliseconds: 1000));
   await tester.pump();
   await tester.pump();
 }
