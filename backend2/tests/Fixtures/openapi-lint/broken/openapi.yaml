@@ -1,0 +1,9 @@
+openapi: 3.1.0
+info:
+  title: Broken on purpose
+  version: '1'
+paths:
+  /x:
+    get:
+      parameters:
+        - { name: p, in: query, description: a value, with a comma in it }

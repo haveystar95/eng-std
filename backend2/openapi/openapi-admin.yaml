@@ -927,7 +927,7 @@ paths:
         of 50 model round-trips is megabytes; fetch `/logs/{id}` for the row the operator expanded.
       parameters:
         - { name: direction, in: query, schema: { type: string, enum: [inbound, outbound] } }
-        - { name: provider, in: query, schema: { type: string }, description: the `service` tag, e.g. openai }
+        - { name: provider, in: query, schema: { type: string }, description: 'the `service` tag, e.g. openai' }
         - { name: purpose, in: query, schema: { $ref: '#/components/schemas/CallPurpose' } }
         - { name: status, in: query, schema: { type: integer, minimum: 100, maximum: 599 } }
         - name: status_class
@@ -2174,7 +2174,7 @@ components:
     CostByPurpose:
       type: object
       properties:
-        scope_id: { type: [string, 'null'], description: the collection, when the scope is one }
+        scope_id: { type: [string, 'null'], description: 'the collection, when the scope is one' }
         period: { type: [string, 'null'], enum: [day, week, month, all, 'null'] }
         since: { type: [string, 'null'], format: date-time }
         total_usd: { type: number }
@@ -2219,7 +2219,7 @@ components:
         tokens_in: { type: [integer, 'null'], description: derived from the stored response usage block }
         tokens_out: { type: [integer, 'null'] }
         cost_usd: { type: [number, 'null'], description: priced from tokens; null for an unpriced model }
-        error: { type: [string, 'null'], description: transport error, when the call never completed }
+        error: { type: [string, 'null'], description: 'transport error, when the call never completed' }
 
     RequestLogDetail:
       allOf:

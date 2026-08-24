@@ -63,8 +63,10 @@
             "@php vendor/bin/pest"
         ],
         "arch": "@php vendor/bin/deptrac analyse --config-file=deptrac.yaml --no-progress",
+        "lint:openapi": "@php scripts/lint-openapi.php",
         "stan": "@php vendor/bin/phpstan analyse --memory-limit=512M",
         "check": [
+            "@lint:openapi",
             "@arch",
             "@stan",
             "@test"
