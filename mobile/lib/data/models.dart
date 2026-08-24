@@ -50,6 +50,7 @@ class WordCollection {
     this.imageAuthorUrl,
     this.isSubscribed = false,
     this.isDefault = false,
+    this.isReference = false,
   });
 
   bool get isAi => source == 'ai';
@@ -68,6 +69,14 @@ class WordCollection {
   /// have changed.
   final bool isDefault;
 
+  /// A PHRASEBOOK, not a course: the studied language carries no trainers at all (zh, ja in v1;
+  /// DECISIONS пп. 84, 136). The screen shows term — translation — audio and offers neither
+  /// training nor enrolment, because the server refuses both anyway (422 `reference_language_term`).
+  ///
+  /// Read from `/sync` and never derived here: which languages this deployment can teach is a
+  /// server capability that changes without a client release.
+  final bool isReference;
+
   factory WordCollection.fromJson(Map<String, dynamic> j) => WordCollection(
     id: j['id'] as String,
     title: j['title'] as String,
@@ -83,6 +92,7 @@ class WordCollection {
     imageAuthorUrl: j['image_author_url'] as String?,
     isSubscribed: (j['is_subscribed'] as bool?) ?? false,
     isDefault: (j['is_default'] as bool?) ?? false,
+    isReference: (j['is_reference'] as bool?) ?? false,
   );
 }
 

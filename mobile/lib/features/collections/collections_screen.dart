@@ -442,25 +442,46 @@ class _CollectionRow extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        collection.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.collectionNameCard,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              collection.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.collectionNameCard,
+                            ),
+                          ),
+                          // The pair rides the TITLE line rather than the counter line: the counter
+                          // already carries two numbers, and a third label there reads as a third
+                          // number. Trailing, so a long title still ellipsises against it.
+                          const SizedBox(width: 8),
+                          PairBadge(
+                            learned: collection.targetLang,
+                            support: collection.sourceLang,
+                            reference: collection.isReference,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        l.collectionsTileMastered(total, mastered),
+                        // A phrasebook has no progress to count (the server leaves it out of
+                        // /study/progress entirely), so it says how many words it holds and stops.
+                        collection.isReference
+                            ? l.collectionWordsCount(collection.wordsCount)
+                            : l.collectionsTileMastered(total, mastered),
                         style: AppText.translation.copyWith(fontSize: 12.5),
                       ),
-                      const SizedBox(height: 11),
-                      InkSegments.fromCounts(
-                        confirmed: density.confirmed,
-                        familiar: density.familiar,
-                        inProgress: density.inProgress,
-                        height: 6,
-                      ),
-                      if (_hint(l, cta) case final hint?) ...[
+                      if (!collection.isReference) ...[
+                        const SizedBox(height: 11),
+                        InkSegments.fromCounts(
+                          confirmed: density.confirmed,
+                          familiar: density.familiar,
+                          inProgress: density.inProgress,
+                          height: 6,
+                        ),
+                      ],
+                      if (_hint(l, cta) case final hint? when !collection.isReference) ...[
                         const SizedBox(height: 8),
                         Text(
                           hint,

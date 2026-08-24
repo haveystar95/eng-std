@@ -242,6 +242,15 @@
 
   "collectionWordsLabel": "Слова",
   "@collectionWordsLabel": { "description": "Лейбл секции списка слов." },
+  "collectionReferenceBadge": "справочник",
+  "@collectionReferenceBadge": { "description": "Метка коллекции на справочном языке (zh/ja): читаем и слушаем, но не тренируем." },
+  "pairBadgeSemantics": "Языковая пара: {learned} на {support}",
+  "@pairBadgeSemantics": {
+    "description": "Озвучка бейджа пары для VoiceOver.",
+    "placeholders": { "learned": { "type": "String" }, "support": { "type": "String" } }
+  },
+  "collectionReferenceHint": "Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.",
+  "@collectionReferenceHint": { "description": "Пояснение на экране справочной коллекции — почему нет кнопок тренировки." },
 
   "collectionAddWord": "Добавить слово",
   "@collectionAddWord": { "description": "Кнопка добавления слова в коллекцию." },

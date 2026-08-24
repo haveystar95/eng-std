@@ -15,6 +15,7 @@ export 'floating_tab_bar.dart';
 export 'ink_segments.dart';
 export 'ladder_dots.dart';
 export 'mini_flag.dart';
+export 'pair_badge.dart';
 export 'paper_card.dart';
 export 'progress_line.dart';
 export 'verdict_button.dart';

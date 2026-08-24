@@ -42,6 +42,7 @@ class _SpyApi implements ApiClient {
     int limit = 20,
     String? source,
     String? target,
+      String? taughtSide,
   }) async {
     searchCalls++;
 
@@ -49,11 +50,11 @@ class _SpyApi implements ApiClient {
   }
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async =>
+  Future<InstantHint> instantHint(String query, {String? source, String? target, String? taughtSide}) async =>
       InstantHint(query: query, translation: hint);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 

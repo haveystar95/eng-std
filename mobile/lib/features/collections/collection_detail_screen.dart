@@ -316,6 +316,10 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
         .firstOrNull;
     _collection = collection;
     final readOnly = collection?.readOnly ?? false;
+    // A PHRASEBOOK (zh/ja): term — translation — audio, and nothing that promises training. The
+    // server refuses enrolment for these words anyway (422 `reference_language_term`), so a button
+    // here would be a button that can only fail (DECISIONS пп. 84, 136).
+    final isReference = collection?.isReference ?? false;
     final density =
         ref.watch(collectionDensityProvider(widget.collectionId)).value ??
         const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
@@ -376,10 +380,39 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                     children: [
                       Text(widget.title, style: AppText.collectionNameScreen),
                       const SizedBox(height: 6),
-                      Text(
-                        _subtitle(l, total, due),
-                        style: AppText.translation.copyWith(fontSize: 13),
+                      Row(
+                        children: [
+                          // The pair leads the meta line here: this screen is where a word is
+                          // added, and «which language does this folder take» is the question the
+                          // 422 `term_language_mismatch` answers a moment too late.
+                          PairBadge(
+                            learned: collection?.targetLang ?? '',
+                            support: collection?.sourceLang ?? '',
+                            reference: isReference,
+                            fontSize: 11,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              isReference
+                                  ? l.collectionWordsCount(total)
+                                  : _subtitle(l, total, due),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.translation.copyWith(fontSize: 13),
+                            ),
+                          ),
+                        ],
                       ),
+                      if (isReference) ...[
+                        const SizedBox(height: AppSpacing.s16),
+                        Text(
+                          l.collectionReferenceHint,
+                          style: AppText.transcription.copyWith(color: AppColors.tertiary),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      if (!isReference) ...[
                       const SizedBox(height: AppSpacing.s16),
                       InkSegments.fromCounts(
                         confirmed: density.confirmed,
@@ -412,7 +445,8 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                       ],
                       // «Разговор · 3 мин» — premium-only, collapses to nothing otherwise (self-spaced).
                       DialogEntryButton(collectionId: widget.collectionId, title: widget.title),
-                      if (_showTriagePrompt) ...[
+                      ],
+                      if (!isReference && _showTriagePrompt) ...[
                         const SizedBox(height: AppSpacing.s12),
                         _TriageBanner(
                           onStart: _openTriage,
@@ -447,10 +481,15 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                       onMove: readOnly ? null : () => _moveWord(items[i]),
                       // Practice, narrowed to this word. Practice and not a study session: drilling one
                       // word on demand must not spend the day's new-term quota on it.
-                      onTrain: () => _openSession(true, onlyTermId: items[i].termId),
+                      //
+                      // All three are NULL in a phrasebook: there is no trainer for the language, so
+                      // «Тренировать» has nothing to deal and the pool refuses the word outright
+                      // (422 `reference_language_term`). A button that can only fail is worse than
+                      // no button.
+                      onTrain: isReference ? null : () => _openSession(true, onlyTermId: items[i].termId),
                       // The two pool decisions. Local first, then queued for the server — see PoolSync.
-                      onEnroll: () => ref.read(poolSyncProvider).enroll(items[i].termId),
-                      onUnenroll: () => ref.read(poolSyncProvider).unenroll(items[i].termId),
+                      onEnroll: isReference ? null : () => ref.read(poolSyncProvider).enroll(items[i].termId),
+                      onUnenroll: isReference ? null : () => ref.read(poolSyncProvider).unenroll(items[i].termId),
                     ),
                 // «Добавить слово» — own collections only.
                 if (!readOnly)

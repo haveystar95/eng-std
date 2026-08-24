@@ -34,6 +34,15 @@ class Collections extends Table {
   /// renameable, never deletable — the shelf greys its delete action out on this flag rather than
   /// on the title, which the owner may have changed.
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+
+  /// A PHRASEBOOK, not a course: the studied language carries no trainers at all (zh, ja in v1).
+  /// Such a collection shows a term, a translation and audio — no triage, no session, no enrolment.
+  ///
+  /// MIRRORED from `/sync` rather than worked out here, and that is the whole point: «which
+  /// languages can this deployment teach» is a server capability that moves without a client
+  /// release, so a phone holding its own copy of the list would hide the training buttons on a
+  /// language that had just gained a trainer.
+  BoolColumn get isReference => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -414,7 +423,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   /// `addColumn`, but a no-op when the column is already there (QA-23).
   ///
@@ -551,6 +560,15 @@ class AppDatabase extends _$AppDatabase {
         // either value — the server is the only place they exist.
         await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
       }
+      if (from < 17) {
+        // «Справочник» — the flag that says a collection is a phrasebook (A-4).
+        await _addColumnIfMissing(m, collections, collections.isReference);
+        // …and a full snapshot on the next sync, for the same reason as v10, v11, v14, v15 and
+        // v16: a delta carries only rows whose `updated_at` moved, so every folder already
+        // mirrored here would keep `false` forever — and a zh folder would keep offering training
+        // it does not have.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
     },
   );
 
@@ -605,6 +623,45 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([OrderingTerm(expression: collectionItems.position)]);
 
     return query.map((row) => row.readTable(terms)).get();
+  }
+
+  /// WHICH PAIR each of these terms is being studied through — the device's half of the server's
+  /// `CardLanguageResolver`.
+  ///
+  /// A study session mixes pairs by design (DECISIONS п. 128): the pool is an attribute of
+  /// `(user, term)`, and the words in it come from folders of different languages. The card itself
+  /// carries no language — the server sends a prompt and an answer, already in the right two — so
+  /// the badge over it is resolved HERE, from the local mirror, which is also what keeps it working
+  /// with the network off.
+  ///
+  /// ONE collection per term, chosen the same way the server chooses: the first by collection id.
+  /// A word may sit in several folders of the SAME pair (that is ordinary) and, on data from before
+  /// the pair gate, in folders of different ones — determinism matters more than which it picks,
+  /// because a badge that changed between two runs of the same session would be worse than none.
+  ///
+  /// A term whose folders are all gone is simply absent: the pool outlives a deleted folder
+  /// (п. 102), and the caller falls back to the profile exactly as the server does.
+  Future<Map<String, ({String learned, String support})>> pairByTerms(List<String> termIds) async {
+    if (termIds.isEmpty) return const {};
+
+    final query =
+        select(collectionItems).join([
+            innerJoin(collections, collections.id.equalsExp(collectionItems.collectionId)),
+          ])
+          ..where(collectionItems.termId.isIn(termIds))
+          ..orderBy([OrderingTerm(expression: collections.id)]);
+
+    final out = <String, ({String learned, String support})>{};
+    for (final row in await query.get()) {
+      final termId = row.readTable(collectionItems).termId;
+      if (out.containsKey(termId)) continue; // first by collection id wins, as on the server
+      final c = row.readTable(collections);
+      final learned = c.targetLang, support = c.sourceLang;
+      if (learned == null || support == null) continue;
+      out[termId] = (learned: learned, support: support);
+    }
+
+    return out;
   }
 
   /// One synced term by id (or null) — used by the exercise-session feedback to pull the photo,

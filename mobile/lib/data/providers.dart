@@ -443,6 +443,7 @@ WordCollection _toCollection(Collection r) => WordCollection(
   imageAuthor: r.imageAuthor,
   imageAuthorUrl: r.imageAuthorUrl,
   isDefault: r.isDefault, // «Сохранённые» — the shelf greys its delete action out on this
+  isReference: r.isReference, // phrasebook: no training buttons, no enrolment (A-4)
 );
 
 /// The stored admission matrix, decoded. Anything unreadable falls back to the shipped matrix —

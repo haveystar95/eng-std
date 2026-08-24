@@ -292,6 +292,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get collectionWordsLabel => 'Слова';
 
   @override
+  String get collectionReferenceBadge => 'справочник';
+
+  @override
+  String pairBadgeSemantics(String learned, String support) {
+    return 'Языковая пара: $learned на $support';
+  }
+
+  @override
+  String get collectionReferenceHint =>
+      'Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.';
+
+  @override
   String get collectionAddWord => 'Добавить слово';
 
   @override

@@ -30,6 +30,20 @@ abstract final class FlagPalette {
   static const frWhite = Color(0xFFFFFFFF);
   static const frRed = Color(0xFFEF4135);
 
+  // pl · Польша (белая полоса сверху, «червонная» снизу)
+  static const plWhite = Color(0xFFFFFFFF);
+  static const plRed = Color(0xFFDC143C);
+
+  // it · Италия (тот же вертикальный триколор, что у Франции, другие краски)
+  static const itGreen = Color(0xFF008C45);
+  static const itWhite = Color(0xFFF4F5F0);
+  static const itRed = Color(0xFFCD212A);
+
+  // ru · Россия (горизонтальный триколор)
+  static const ruWhite = Color(0xFFFFFFFF);
+  static const ruBlue = Color(0xFF0039A6);
+  static const ruRed = Color(0xFFD52B1E);
+
   // ro · Румыния (кобальт / хромовый жёлтый / киноварь — вертикальный триколор,
   // как у Франции, поэтому и рисуется тем же painter'ом)
   static const roBlue = Color(0xFF002B7F);

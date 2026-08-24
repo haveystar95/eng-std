@@ -270,10 +270,20 @@ class ApiClient {
     int limit = 20,
     String? source,
     String? target,
+    String? taughtSide,
   }) async {
     final r = await _dio.get(
       '/search',
-      queryParameters: {'q': query, 'limit': limit, 'source': ?source, 'target': ?target},
+      queryParameters: {
+        'q': query,
+        'limit': limit,
+        'source': ?source,
+        'target': ?target,
+        // Which half of the pair is the language being STUDIED. The pill knows; the server would
+        // otherwise guess from the profile, which is only right while somebody studies one
+        // language (DECISIONS п. 147).
+        'taught_side': ?taughtSide,
+      },
     );
     return (_data(r) as List)
         .map((e) => SearchHit.fromJson(e as Map<String, dynamic>))
@@ -292,10 +302,20 @@ class ApiClient {
   /// Safe on a debounce — most answers cost nothing (our own catalogue and a shared cache are
   /// checked before any vendor), and it never fails in a way the screen has to render: no key, no
   /// budget, no answer and a dead vendor all come back as a null translation.
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
+  Future<InstantHint> instantHint(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) async {
     final r = await _dio.get(
       '/search/instant',
-      queryParameters: {'q': query, 'source': ?source, 'target': ?target},
+      queryParameters: {
+        'q': query,
+        'source': ?source,
+        'target': ?target,
+        'taught_side': ?taughtSide,
+      },
     );
     return InstantHint.fromJson(_data(r) as Map<String, dynamic>);
   }
@@ -306,10 +326,20 @@ class ApiClient {
   /// A spent daily cap is a normal 200 with [LookupOutcome.limitReached], not an error: the screen
   /// shows the free results beside an honest line. A cached word is served free and does not touch
   /// the cap at all.
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+  Future<LookupOutcome> lookupWord(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) async {
     final r = await _dio.post(
       '/search/lookup',
-      data: {'query': query, 'source': ?source, 'target': ?target},
+      data: {
+        'query': query,
+        'source': ?source,
+        'target': ?target,
+        'taught_side': ?taughtSide,
+      },
     );
     return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }

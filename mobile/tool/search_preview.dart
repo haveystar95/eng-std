@@ -257,19 +257,32 @@ class _RoutingApi implements ApiClient {
   static ApiClient delegate = _FakeApi();
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) =>
-      delegate.search(query, limit: limit, source: source, target: target);
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => delegate.search(query, limit: limit, source: source, target: target, taughtSide: taughtSide);
 
   @override
   Future<SearchLanguages> searchLanguages() => delegate.searchLanguages();
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) =>
-      delegate.instantHint(query, source: source, target: target);
+  Future<InstantHint> instantHint(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => delegate.instantHint(query, source: source, target: target, taughtSide: taughtSide);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) =>
-      delegate.lookupWord(query, source: source, target: target);
+  Future<LookupOutcome> lookupWord(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => delegate.lookupWord(query, source: source, target: target, taughtSide: taughtSide);
 
   @override
   Future<SavedSearchResult> addSearchResult({
@@ -342,6 +355,7 @@ class _FakeApi implements ApiClient {
     int limit = 20,
     String? source,
     String? target,
+      String? taughtSide,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
     final q = query.trim().toLowerCase();
@@ -350,7 +364,12 @@ class _FakeApi implements ApiClient {
   }
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
+  Future<InstantHint> instantHint(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 150));
     // The one line the field puts up without a translation behind it: a paragraph is not a query.
     if (query.trim().length > 120) return InstantHint(query: query, queryTooLong: true);
@@ -361,7 +380,12 @@ class _FakeApi implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+  Future<LookupOutcome> lookupWord(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) async {
     await Future<void>.delayed(Duration(seconds: slow ? 5 : 2));
     if (capReached) return const LookupOutcome(limitReached: true, dailyCap: 5, usedToday: 5);
     if (query.trim().toLowerCase().contains(_gibberish)) {

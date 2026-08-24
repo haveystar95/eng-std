@@ -53,6 +53,7 @@ class _Api implements ApiClient {
     int limit = 20,
     String? source,
     String? target,
+      String? taughtSide,
   }) async {
     searchPairs.add('$source→$target');
 
@@ -60,14 +61,14 @@ class _Api implements ApiClient {
   }
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
+  Future<InstantHint> instantHint(String query, {String? source, String? target, String? taughtSide}) async {
     pairs.add('$source→$target');
 
     return InstantHint(query: query, translation: hint, reversed: target == 'en');
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
     pairs.add('lookup $source→$target');
 
     return const LookupOutcome(dailyCap: 5);
@@ -332,16 +333,29 @@ class _BrokenLanguages implements ApiClient {
   Future<SearchLanguages> searchLanguages() async => throw Exception('offline');
 
   @override
-  Future<List<SearchHit>> search(String query, {int limit = 20, String? source, String? target}) =>
-      _inner.search(query, limit: limit, source: source, target: target);
+  Future<List<SearchHit>> search(
+    String query, {
+    int limit = 20,
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => _inner.search(query, limit: limit, source: source, target: target, taughtSide: taughtSide);
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) =>
-      _inner.instantHint(query, source: source, target: target);
+  Future<InstantHint> instantHint(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => _inner.instantHint(query, source: source, target: target, taughtSide: taughtSide);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) =>
-      _inner.lookupWord(query, source: source, target: target);
+  Future<LookupOutcome> lookupWord(
+    String query, {
+    String? source,
+    String? target,
+    String? taughtSide,
+  }) => _inner.lookupWord(query, source: source, target: target, taughtSide: taughtSide);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

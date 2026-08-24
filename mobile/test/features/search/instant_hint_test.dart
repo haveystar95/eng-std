@@ -45,10 +45,11 @@ class _Api implements ApiClient {
     int limit = 20,
     String? source,
     String? target,
+      String? taughtSide,
   }) async => const [];
 
   @override
-  Future<InstantHint> instantHint(String query, {String? source, String? target}) async {
+  Future<InstantHint> instantHint(String query, {String? source, String? target, String? taughtSide}) async {
     hintCalls++;
     if (throwOnHint) throw Exception('offline');
 
@@ -56,7 +57,7 @@ class _Api implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 

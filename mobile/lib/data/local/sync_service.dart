@@ -246,6 +246,9 @@ class SyncService {
             imageAuthor: Value(c['image_author'] as String?),
             imageAuthorUrl: Value(c['image_author_url'] as String?),
             isDefault: Value((c['is_default'] as bool?) ?? false),
+            // Additive, and false for a server that predates it — which is the right default:
+            // «phrasebook» is a claim, and a server that makes no claim is not making this one.
+            isReference: Value((c['is_reference'] as bool?) ?? false),
           ),
         );
       }

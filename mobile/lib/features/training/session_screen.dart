@@ -235,6 +235,32 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
       _prepareCard(1);
       _prepareCard(2);
     });
+    unawaited(_resolvePairs());
+  }
+
+  /// WHICH PAIR each card belongs to — «EN→RU» over the card, resolved from the local mirror.
+  ///
+  /// A study session is MIXED by design (DECISIONS п. 128): the pool holds words from folders of
+  /// different languages and deals them in one stream. Without a label a Polish word arriving in
+  /// what the learner took to be an English session reads as a bug in the app.
+  ///
+  /// WHERE it is drawn depends on the session: when every card shares one pair — a collection-scoped
+  /// session, and most of them — it is stated ONCE in the header, beside the phase, because
+  /// repeating it over twenty cards is noise about something that is not changing. As soon as two
+  /// pairs are in the same session it moves ONTO the card, where it changes with the card and can be
+  /// read against the word it belongs to.
+  Map<String, ({String learned, String support})> _pairs = const {};
+
+  /// True when this session spans more than one pair — the case the per-card badge exists for.
+  bool get _mixedPairs => _pairs.values.map((p) => '${p.learned}:${p.support}').toSet().length > 1;
+
+  ({String learned, String support})? get _cardPair => _pairs[_card.termId];
+
+  Future<void> _resolvePairs() async {
+    final pairs = await ref
+        .read(appDatabaseProvider)
+        .pairByTerms(_cards.map((c) => c.termId).toList(growable: false));
+    if (mounted) setState(() => _pairs = pairs);
   }
 
   /// The resolved photo url per card index. A present KEY means the lookup finished, which is what
@@ -493,6 +519,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
               child: _SessionHeader(
                 phaseLabel: phaseLabel,
+                // One pair for the whole session: say it once, here, beside the phase. Mixed:
+                // null, and the badge rides each card instead — see [_pairs].
+                pair: _mixedPairs ? null : _pairs.values.firstOrNull,
                 current: _pos + 1,
                 total: total,
                 onClose: () async {
@@ -509,7 +538,29 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                   AppSpacing.screenH,
                   AppSpacing.s26,
                 ),
-                child: _SlideSwitcher(index: _pos, child: card),
+                child: _SlideSwitcher(
+                  index: _pos,
+                  child: (_mixedPairs && _cardPair != null)
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Top-right, above the card and outside it: the corner the eye reaches
+                            // last, so it answers «which language» without competing with the word.
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: PairBadge(
+                                  learned: _cardPair!.learned,
+                                  support: _cardPair!.support,
+                                ),
+                              ),
+                            ),
+                            card,
+                          ],
+                        )
+                      : card,
+                ),
               ),
             ),
             // «Дальше» pinned below the scroll view so a tall feedback (async photo) can't push it
@@ -570,7 +621,12 @@ class _SessionHeader extends StatelessWidget {
     required this.current,
     required this.total,
     required this.onClose,
+    this.pair,
   });
+
+  /// The session's pair when it has just one. Null when the session mixes pairs — the badge then
+  /// belongs on the card, which is the only place it can change with the card.
+  final ({String learned, String support})? pair;
 
   final String phaseLabel;
   final int current;
@@ -619,6 +675,14 @@ class _SessionHeader extends StatelessWidget {
             ),
           ],
         ),
+        // Centred UNDER the phase rather than beside it: the header row already carries a × and a
+        // counter, and the counter has form — it wrapped to two lines the moment the denominator
+        // went double-digit (QA-OBS-28). A third item competing for that row would find the same
+        // edge on a narrow phone.
+        if (pair case final p?) ...[
+          const SizedBox(height: 4),
+          Center(child: PairBadge(learned: p.learned, support: p.support)),
+        ],
         const SizedBox(height: 10),
         SessionSegments(done: current - 1, total: total),
       ],

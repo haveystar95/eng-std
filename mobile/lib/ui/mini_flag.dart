@@ -8,8 +8,9 @@ import 'package:eng_std/theme/theme.dart';
 /// На карточках слов и коллекций флагов нет.
 ///
 /// Поддержаны языки из кадров: en, pt, de, es, fr, плюс ro (пикер предлагал
-/// румынский, а флага у него не было — HYG-1). Прочие → нейтральный кружок
-/// с кодом языка (без декоративной краски).
+/// румынский, а флага у него не было — HYG-1) и pl, it, ru (A-4: pl и ru стоят
+/// по обе стороны живых пар дев-базы, it — изучаемый по капабилити).
+/// Прочие → нейтральный кружок с кодом языка (без декоративной краски).
 class MiniFlag extends StatelessWidget {
   const MiniFlag({super.key, required this.languageCode, this.size = 22});
 
@@ -55,6 +56,9 @@ final Map<String, CustomPainter> _flagPainters = {
   'es': _EsPainter(),
   'fr': _FrPainter(),
   'ro': _RoPainter(),
+  'pl': _PlPainter(),
+  'it': _ItPainter(),
+  'ru': _RuPainter(),
 };
 
 class _NeutralFlag extends StatelessWidget {
@@ -184,6 +188,52 @@ class _RoPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, t, h), Paint()..color = FlagPalette.roBlue);
     canvas.drawRect(Rect.fromLTWH(t, 0, t, h), Paint()..color = FlagPalette.roYellow);
     canvas.drawRect(Rect.fromLTWH(2 * t, 0, t, h), Paint()..color = FlagPalette.roRed);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Польша — белое над красным. На 22 px единственный горизонтальный бицвет
+/// среди наших флагов, поэтому ни с чем не путается; тонкий внутренний контур
+/// (общий для всех) не даёт белой половине слиться с бумажным фоном.
+class _PlPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h / 2), Paint()..color = FlagPalette.plWhite);
+    canvas.drawRect(Rect.fromLTWH(0, h / 2, w, h / 2), Paint()..color = FlagPalette.plRed);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Италия — вертикальный триколор, как у Франции и Румынии. Различает их только
+/// краска, и этого достаточно: зелёная левая полоса не встречается больше нигде
+/// в нашем наборе.
+class _ItPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height, t = w / 3;
+    canvas.drawRect(Rect.fromLTWH(0, 0, t, h), Paint()..color = FlagPalette.itGreen);
+    canvas.drawRect(Rect.fromLTWH(t, 0, t, h), Paint()..color = FlagPalette.itWhite);
+    canvas.drawRect(Rect.fromLTWH(2 * t, 0, t, h), Paint()..color = FlagPalette.itRed);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+/// Россия — горизонтальный триколор. Верхняя полоса белая, как у Польши, но
+/// полос три, а не две: на 22 px это читается сразу.
+class _RuPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height, t = h / 3;
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, t), Paint()..color = FlagPalette.ruWhite);
+    canvas.drawRect(Rect.fromLTWH(0, t, w, t), Paint()..color = FlagPalette.ruBlue);
+    canvas.drawRect(Rect.fromLTWH(0, 2 * t, w, t), Paint()..color = FlagPalette.ruRed);
   }
 
   @override

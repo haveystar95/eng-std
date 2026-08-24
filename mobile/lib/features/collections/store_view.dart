@@ -229,9 +229,26 @@ class _StoreCard extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 3),
-          Text(
-            _meta(l, collection),
-            style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  _meta(l, collection),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.transcription.copyWith(fontSize: 11.5, color: AppColors.tertiary),
+                ),
+              ),
+              // The store already states the pair once, in the row above the grid — but that row is
+              // a FILTER, and a card can outlive the filter it was found under (a saved set, a
+              // deep link, a scroll back). The card says which pair it is itself.
+              const SizedBox(width: 6),
+              PairBadge(
+                learned: collection.targetLang,
+                support: collection.sourceLang,
+                fontSize: 10,
+              ),
+            ],
           ),
         ],
       ),

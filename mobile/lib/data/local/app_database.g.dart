@@ -3,7 +3,8 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Collection> {
+class $CollectionsTable extends Collections
+    with TableInfo<$CollectionsTable, Collection> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -26,7 +27,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta('description');
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
     'description',
@@ -44,7 +47,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sourceLangMeta = const VerificationMeta('sourceLang');
+  static const VerificationMeta _sourceLangMeta = const VerificationMeta(
+    'sourceLang',
+  );
   @override
   late final GeneratedColumn<String> sourceLang = GeneratedColumn<String>(
     'source_lang',
@@ -53,7 +58,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _targetLangMeta = const VerificationMeta('targetLang');
+  static const VerificationMeta _targetLangMeta = const VerificationMeta(
+    'targetLang',
+  );
   @override
   late final GeneratedColumn<String> targetLang = GeneratedColumn<String>(
     'target_lang',
@@ -62,7 +69,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _itemsCountMeta = const VerificationMeta('itemsCount');
+  static const VerificationMeta _itemsCountMeta = const VerificationMeta(
+    'itemsCount',
+  );
   @override
   late final GeneratedColumn<int> itemsCount = GeneratedColumn<int>(
     'items_count',
@@ -90,7 +99,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageUrlMeta = const VerificationMeta('imageUrl');
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
   @override
   late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
     'image_url',
@@ -99,7 +110,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageAuthorMeta = const VerificationMeta('imageAuthor');
+  static const VerificationMeta _imageAuthorMeta = const VerificationMeta(
+    'imageAuthor',
+  );
   @override
   late final GeneratedColumn<String> imageAuthor = GeneratedColumn<String>(
     'image_author',
@@ -108,7 +121,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta('imageAuthorUrl');
+  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta(
+    'imageAuthorUrl',
+  );
   @override
   late final GeneratedColumn<String> imageAuthorUrl = GeneratedColumn<String>(
     'image_author_url',
@@ -117,7 +132,9 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _isDefaultMeta = const VerificationMeta('isDefault');
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
   @override
   late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
     'is_default',
@@ -125,10 +142,29 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  static const VerificationMeta _isReferenceMeta = const VerificationMeta(
+    'isReference',
+  );
+  @override
+  late final GeneratedColumn<bool> isReference = GeneratedColumn<bool>(
+    'is_reference',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_reference" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -152,6 +188,7 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     imageAuthor,
     imageAuthorUrl,
     isDefault,
+    isReference,
     updatedAt,
   ];
   @override
@@ -172,16 +209,25 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
       context.missing(_idMeta);
     }
     if (data.containsKey('title')) {
-      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
     }
     if (data.containsKey('description')) {
       context.handle(
         _descriptionMeta,
-        description.isAcceptableOrUnknown(data['description']!, _descriptionMeta),
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
       );
     }
     if (data.containsKey('topic')) {
-      context.handle(_topicMeta, topic.isAcceptableOrUnknown(data['topic']!, _topicMeta));
+      context.handle(
+        _topicMeta,
+        topic.isAcceptableOrUnknown(data['topic']!, _topicMeta),
+      );
     }
     if (data.containsKey('source_lang')) {
       context.handle(
@@ -202,10 +248,16 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
       );
     }
     if (data.containsKey('source')) {
-      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
     }
     if (data.containsKey('type')) {
-      context.handle(_typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     }
     if (data.containsKey('image_url')) {
       context.handle(
@@ -216,19 +268,34 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
     if (data.containsKey('image_author')) {
       context.handle(
         _imageAuthorMeta,
-        imageAuthor.isAcceptableOrUnknown(data['image_author']!, _imageAuthorMeta),
+        imageAuthor.isAcceptableOrUnknown(
+          data['image_author']!,
+          _imageAuthorMeta,
+        ),
       );
     }
     if (data.containsKey('image_author_url')) {
       context.handle(
         _imageAuthorUrlMeta,
-        imageAuthorUrl.isAcceptableOrUnknown(data['image_author_url']!, _imageAuthorUrlMeta),
+        imageAuthorUrl.isAcceptableOrUnknown(
+          data['image_author_url']!,
+          _imageAuthorUrlMeta,
+        ),
       );
     }
     if (data.containsKey('is_default')) {
       context.handle(
         _isDefaultMeta,
         isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('is_reference')) {
+      context.handle(
+        _isReferenceMeta,
+        isReference.isAcceptableOrUnknown(
+          data['is_reference']!,
+          _isReferenceMeta,
+        ),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -248,7 +315,10 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
   Collection map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Collection(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
@@ -277,7 +347,10 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
         DriftSqlType.string,
         data['${effectivePrefix}source'],
       ),
-      type: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type']),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      ),
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
@@ -293,6 +366,10 @@ class $CollectionsTable extends Collections with TableInfo<$CollectionsTable, Co
       isDefault: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_default'],
+      )!,
+      isReference: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_reference'],
       )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -325,6 +402,15 @@ class Collection extends DataClass implements Insertable<Collection> {
   /// renameable, never deletable — the shelf greys its delete action out on this flag rather than
   /// on the title, which the owner may have changed.
   final bool isDefault;
+
+  /// A PHRASEBOOK, not a course: the studied language carries no trainers at all (zh, ja in v1).
+  /// Such a collection shows a term, a translation and audio — no triage, no session, no enrolment.
+  ///
+  /// MIRRORED from `/sync` rather than worked out here, and that is the whole point: «which
+  /// languages can this deployment teach» is a server capability that moves without a client
+  /// release, so a phone holding its own copy of the list would hide the training buttons on a
+  /// language that had just gained a trainer.
+  final bool isReference;
   final DateTime updatedAt;
   const Collection({
     required this.id,
@@ -340,6 +426,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     this.imageAuthor,
     this.imageAuthorUrl,
     required this.isDefault,
+    required this.isReference,
     required this.updatedAt,
   });
   @override
@@ -378,6 +465,7 @@ class Collection extends DataClass implements Insertable<Collection> {
       map['image_author_url'] = Variable<String>(imageAuthorUrl);
     }
     map['is_default'] = Variable<bool>(isDefault);
+    map['is_reference'] = Variable<bool>(isReference);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -385,25 +473,45 @@ class Collection extends DataClass implements Insertable<Collection> {
   CollectionsCompanion toCompanion(bool nullToAbsent) {
     return CollectionsCompanion(
       id: Value(id),
-      title: title == null && nullToAbsent ? const Value.absent() : Value(title),
-      description: description == null && nullToAbsent ? const Value.absent() : Value(description),
-      topic: topic == null && nullToAbsent ? const Value.absent() : Value(topic),
-      sourceLang: sourceLang == null && nullToAbsent ? const Value.absent() : Value(sourceLang),
-      targetLang: targetLang == null && nullToAbsent ? const Value.absent() : Value(targetLang),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      topic: topic == null && nullToAbsent
+          ? const Value.absent()
+          : Value(topic),
+      sourceLang: sourceLang == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceLang),
+      targetLang: targetLang == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetLang),
       itemsCount: Value(itemsCount),
-      source: source == null && nullToAbsent ? const Value.absent() : Value(source),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       type: type == null && nullToAbsent ? const Value.absent() : Value(type),
-      imageUrl: imageUrl == null && nullToAbsent ? const Value.absent() : Value(imageUrl),
-      imageAuthor: imageAuthor == null && nullToAbsent ? const Value.absent() : Value(imageAuthor),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      imageAuthor: imageAuthor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthor),
       imageAuthorUrl: imageAuthorUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageAuthorUrl),
       isDefault: Value(isDefault),
+      isReference: Value(isReference),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory Collection.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory Collection.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Collection(
       id: serializer.fromJson<String>(json['id']),
@@ -419,6 +527,7 @@ class Collection extends DataClass implements Insertable<Collection> {
       imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
       imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
+      isReference: serializer.fromJson<bool>(json['isReference']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -439,6 +548,7 @@ class Collection extends DataClass implements Insertable<Collection> {
       'imageAuthor': serializer.toJson<String?>(imageAuthor),
       'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
       'isDefault': serializer.toJson<bool>(isDefault),
+      'isReference': serializer.toJson<bool>(isReference),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -457,6 +567,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     Value<String?> imageAuthor = const Value.absent(),
     Value<String?> imageAuthorUrl = const Value.absent(),
     bool? isDefault,
+    bool? isReference,
     DateTime? updatedAt,
   }) => Collection(
     id: id ?? this.id,
@@ -470,25 +581,43 @@ class Collection extends DataClass implements Insertable<Collection> {
     type: type.present ? type.value : this.type,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     imageAuthor: imageAuthor.present ? imageAuthor.value : this.imageAuthor,
-    imageAuthorUrl: imageAuthorUrl.present ? imageAuthorUrl.value : this.imageAuthorUrl,
+    imageAuthorUrl: imageAuthorUrl.present
+        ? imageAuthorUrl.value
+        : this.imageAuthorUrl,
     isDefault: isDefault ?? this.isDefault,
+    isReference: isReference ?? this.isReference,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Collection copyWithCompanion(CollectionsCompanion data) {
     return Collection(
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
-      description: data.description.present ? data.description.value : this.description,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       topic: data.topic.present ? data.topic.value : this.topic,
-      sourceLang: data.sourceLang.present ? data.sourceLang.value : this.sourceLang,
-      targetLang: data.targetLang.present ? data.targetLang.value : this.targetLang,
-      itemsCount: data.itemsCount.present ? data.itemsCount.value : this.itemsCount,
+      sourceLang: data.sourceLang.present
+          ? data.sourceLang.value
+          : this.sourceLang,
+      targetLang: data.targetLang.present
+          ? data.targetLang.value
+          : this.targetLang,
+      itemsCount: data.itemsCount.present
+          ? data.itemsCount.value
+          : this.itemsCount,
       source: data.source.present ? data.source.value : this.source,
       type: data.type.present ? data.type.value : this.type,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
-      imageAuthor: data.imageAuthor.present ? data.imageAuthor.value : this.imageAuthor,
-      imageAuthorUrl: data.imageAuthorUrl.present ? data.imageAuthorUrl.value : this.imageAuthorUrl,
+      imageAuthor: data.imageAuthor.present
+          ? data.imageAuthor.value
+          : this.imageAuthor,
+      imageAuthorUrl: data.imageAuthorUrl.present
+          ? data.imageAuthorUrl.value
+          : this.imageAuthorUrl,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      isReference: data.isReference.present
+          ? data.isReference.value
+          : this.isReference,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -509,6 +638,7 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('isDefault: $isDefault, ')
+          ..write('isReference: $isReference, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -529,6 +659,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     imageAuthor,
     imageAuthorUrl,
     isDefault,
+    isReference,
     updatedAt,
   );
   @override
@@ -548,6 +679,7 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.imageAuthor == this.imageAuthor &&
           other.imageAuthorUrl == this.imageAuthorUrl &&
           other.isDefault == this.isDefault &&
+          other.isReference == this.isReference &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -565,6 +697,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<String?> imageAuthor;
   final Value<String?> imageAuthorUrl;
   final Value<bool> isDefault;
+  final Value<bool> isReference;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const CollectionsCompanion({
@@ -581,6 +714,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.isReference = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -598,6 +732,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.imageAuthor = const Value.absent(),
     this.imageAuthorUrl = const Value.absent(),
     this.isDefault = const Value.absent(),
+    this.isReference = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -616,6 +751,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<String>? imageAuthor,
     Expression<String>? imageAuthorUrl,
     Expression<bool>? isDefault,
+    Expression<bool>? isReference,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -633,6 +769,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (imageAuthor != null) 'image_author': imageAuthor,
       if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
       if (isDefault != null) 'is_default': isDefault,
+      if (isReference != null) 'is_reference': isReference,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -652,6 +789,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<String?>? imageAuthor,
     Value<String?>? imageAuthorUrl,
     Value<bool>? isDefault,
+    Value<bool>? isReference,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -669,6 +807,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       imageAuthor: imageAuthor ?? this.imageAuthor,
       imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
       isDefault: isDefault ?? this.isDefault,
+      isReference: isReference ?? this.isReference,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -716,6 +855,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     if (isDefault.present) {
       map['is_default'] = Variable<bool>(isDefault.value);
     }
+    if (isReference.present) {
+      map['is_reference'] = Variable<bool>(isReference.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -741,6 +883,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('imageAuthor: $imageAuthor, ')
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('isDefault: $isDefault, ')
+          ..write('isReference: $isReference, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -754,7 +897,9 @@ class $CollectionItemsTable extends CollectionItems
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CollectionItemsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _collectionIdMeta = const VerificationMeta('collectionId');
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
   @override
   late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
     'collection_id',
@@ -772,7 +917,9 @@ class $CollectionItemsTable extends CollectionItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta('position');
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -791,7 +938,9 @@ class $CollectionItemsTable extends CollectionItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -801,7 +950,13 @@ class $CollectionItemsTable extends CollectionItems
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [collectionId, termId, position, note, updatedAt];
+  List<GeneratedColumn> get $columns => [
+    collectionId,
+    termId,
+    position,
+    note,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -817,13 +972,19 @@ class $CollectionItemsTable extends CollectionItems
     if (data.containsKey('collection_id')) {
       context.handle(
         _collectionIdMeta,
-        collectionId.isAcceptableOrUnknown(data['collection_id']!, _collectionIdMeta),
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
       );
     } else if (isInserting) {
       context.missing(_collectionIdMeta);
     }
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
@@ -834,7 +995,10 @@ class $CollectionItemsTable extends CollectionItems
       );
     }
     if (data.containsKey('note')) {
-      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
     }
     if (data.containsKey('updated_at')) {
       context.handle(
@@ -865,7 +1029,10 @@ class $CollectionItemsTable extends CollectionItems
         DriftSqlType.int,
         data['${effectivePrefix}position'],
       )!,
-      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -915,7 +1082,10 @@ class CollectionItem extends DataClass implements Insertable<CollectionItem> {
     );
   }
 
-  factory CollectionItem.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory CollectionItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CollectionItem(
       collectionId: serializer.fromJson<String>(json['collectionId']),
@@ -952,7 +1122,9 @@ class CollectionItem extends DataClass implements Insertable<CollectionItem> {
   );
   CollectionItem copyWithCompanion(CollectionItemsCompanion data) {
     return CollectionItem(
-      collectionId: data.collectionId.present ? data.collectionId.value : this.collectionId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
       termId: data.termId.present ? data.termId.value : this.termId,
       position: data.position.present ? data.position.value : this.position,
       note: data.note.present ? data.note.value : this.note,
@@ -973,7 +1145,8 @@ class CollectionItem extends DataClass implements Insertable<CollectionItem> {
   }
 
   @override
-  int get hashCode => Object.hash(collectionId, termId, position, note, updatedAt);
+  int get hashCode =>
+      Object.hash(collectionId, termId, position, note, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1098,7 +1271,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _termTextMeta = const VerificationMeta('termText');
+  static const VerificationMeta _termTextMeta = const VerificationMeta(
+    'termText',
+  );
   @override
   late final GeneratedColumn<String> termText = GeneratedColumn<String>(
     'text',
@@ -1117,7 +1292,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     requiredDuringInsert: false,
     defaultValue: const Constant('word'),
   );
-  static const VerificationMeta _transcriptionMeta = const VerificationMeta('transcription');
+  static const VerificationMeta _transcriptionMeta = const VerificationMeta(
+    'transcription',
+  );
   @override
   late final GeneratedColumn<String> transcription = GeneratedColumn<String>(
     'transcription',
@@ -1126,7 +1303,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _translationMeta = const VerificationMeta('translation');
+  static const VerificationMeta _translationMeta = const VerificationMeta(
+    'translation',
+  );
   @override
   late final GeneratedColumn<String> translation = GeneratedColumn<String>(
     'translation',
@@ -1135,7 +1314,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _exampleMeta = const VerificationMeta('example');
+  static const VerificationMeta _exampleMeta = const VerificationMeta(
+    'example',
+  );
   @override
   late final GeneratedColumn<String> example = GeneratedColumn<String>(
     'example',
@@ -1144,18 +1325,20 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _exampleTranslationMeta = const VerificationMeta(
-    'exampleTranslation',
-  );
+  static const VerificationMeta _exampleTranslationMeta =
+      const VerificationMeta('exampleTranslation');
   @override
-  late final GeneratedColumn<String> exampleTranslation = GeneratedColumn<String>(
-    'example_translation',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
+  late final GeneratedColumn<String> exampleTranslation =
+      GeneratedColumn<String>(
+        'example_translation',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
   );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta('description');
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
     'description',
@@ -1164,7 +1347,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageUrlMeta = const VerificationMeta('imageUrl');
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
   @override
   late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
     'image_url',
@@ -1173,7 +1358,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageAuthorMeta = const VerificationMeta('imageAuthor');
+  static const VerificationMeta _imageAuthorMeta = const VerificationMeta(
+    'imageAuthor',
+  );
   @override
   late final GeneratedColumn<String> imageAuthor = GeneratedColumn<String>(
     'image_author',
@@ -1182,7 +1369,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta('imageAuthorUrl');
+  static const VerificationMeta _imageAuthorUrlMeta = const VerificationMeta(
+    'imageAuthorUrl',
+  );
   @override
   late final GeneratedColumn<String> imageAuthorUrl = GeneratedColumn<String>(
     'image_author_url',
@@ -1191,7 +1380,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _acceptedVariantsMeta = const VerificationMeta('acceptedVariants');
+  static const VerificationMeta _acceptedVariantsMeta = const VerificationMeta(
+    'acceptedVariants',
+  );
   @override
   late final GeneratedColumn<String> acceptedVariants = GeneratedColumn<String>(
     'accepted_variants',
@@ -1200,18 +1391,20 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _exampleDistractorsMeta = const VerificationMeta(
-    'exampleDistractors',
-  );
+  static const VerificationMeta _exampleDistractorsMeta =
+      const VerificationMeta('exampleDistractors');
   @override
-  late final GeneratedColumn<String> exampleDistractors = GeneratedColumn<String>(
-    'example_distractors',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
+  late final GeneratedColumn<String> exampleDistractors =
+      GeneratedColumn<String>(
+        'example_distractors',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -1243,7 +1436,10 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
   String get actualTableName => $name;
   static const String $name = 'terms';
   @override
-  VerificationContext validateIntegrity(Insertable<Term> instance, {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Term> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1252,25 +1448,40 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
       context.missing(_idMeta);
     }
     if (data.containsKey('text')) {
-      context.handle(_termTextMeta, termText.isAcceptableOrUnknown(data['text']!, _termTextMeta));
+      context.handle(
+        _termTextMeta,
+        termText.isAcceptableOrUnknown(data['text']!, _termTextMeta),
+      );
     }
     if (data.containsKey('type')) {
-      context.handle(_typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     }
     if (data.containsKey('transcription')) {
       context.handle(
         _transcriptionMeta,
-        transcription.isAcceptableOrUnknown(data['transcription']!, _transcriptionMeta),
+        transcription.isAcceptableOrUnknown(
+          data['transcription']!,
+          _transcriptionMeta,
+        ),
       );
     }
     if (data.containsKey('translation')) {
       context.handle(
         _translationMeta,
-        translation.isAcceptableOrUnknown(data['translation']!, _translationMeta),
+        translation.isAcceptableOrUnknown(
+          data['translation']!,
+          _translationMeta,
+        ),
       );
     }
     if (data.containsKey('example')) {
-      context.handle(_exampleMeta, example.isAcceptableOrUnknown(data['example']!, _exampleMeta));
+      context.handle(
+        _exampleMeta,
+        example.isAcceptableOrUnknown(data['example']!, _exampleMeta),
+      );
     }
     if (data.containsKey('example_translation')) {
       context.handle(
@@ -1284,7 +1495,10 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     if (data.containsKey('description')) {
       context.handle(
         _descriptionMeta,
-        description.isAcceptableOrUnknown(data['description']!, _descriptionMeta),
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
       );
     }
     if (data.containsKey('image_url')) {
@@ -1296,19 +1510,28 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     if (data.containsKey('image_author')) {
       context.handle(
         _imageAuthorMeta,
-        imageAuthor.isAcceptableOrUnknown(data['image_author']!, _imageAuthorMeta),
+        imageAuthor.isAcceptableOrUnknown(
+          data['image_author']!,
+          _imageAuthorMeta,
+        ),
       );
     }
     if (data.containsKey('image_author_url')) {
       context.handle(
         _imageAuthorUrlMeta,
-        imageAuthorUrl.isAcceptableOrUnknown(data['image_author_url']!, _imageAuthorUrlMeta),
+        imageAuthorUrl.isAcceptableOrUnknown(
+          data['image_author_url']!,
+          _imageAuthorUrlMeta,
+        ),
       );
     }
     if (data.containsKey('accepted_variants')) {
       context.handle(
         _acceptedVariantsMeta,
-        acceptedVariants.isAcceptableOrUnknown(data['accepted_variants']!, _acceptedVariantsMeta),
+        acceptedVariants.isAcceptableOrUnknown(
+          data['accepted_variants']!,
+          _acceptedVariantsMeta,
+        ),
       );
     }
     if (data.containsKey('example_distractors')) {
@@ -1337,12 +1560,18 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
   Term map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Term(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       termText: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}text'],
       ),
-      type: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
       transcription: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}transcription'],
@@ -1489,19 +1718,31 @@ class Term extends DataClass implements Insertable<Term> {
   TermsCompanion toCompanion(bool nullToAbsent) {
     return TermsCompanion(
       id: Value(id),
-      termText: termText == null && nullToAbsent ? const Value.absent() : Value(termText),
+      termText: termText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(termText),
       type: Value(type),
       transcription: transcription == null && nullToAbsent
           ? const Value.absent()
           : Value(transcription),
-      translation: translation == null && nullToAbsent ? const Value.absent() : Value(translation),
-      example: example == null && nullToAbsent ? const Value.absent() : Value(example),
+      translation: translation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(translation),
+      example: example == null && nullToAbsent
+          ? const Value.absent()
+          : Value(example),
       exampleTranslation: exampleTranslation == null && nullToAbsent
           ? const Value.absent()
           : Value(exampleTranslation),
-      description: description == null && nullToAbsent ? const Value.absent() : Value(description),
-      imageUrl: imageUrl == null && nullToAbsent ? const Value.absent() : Value(imageUrl),
-      imageAuthor: imageAuthor == null && nullToAbsent ? const Value.absent() : Value(imageAuthor),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      imageAuthor: imageAuthor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageAuthor),
       imageAuthorUrl: imageAuthorUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageAuthorUrl),
@@ -1515,7 +1756,10 @@ class Term extends DataClass implements Insertable<Term> {
     );
   }
 
-  factory Term.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory Term.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Term(
       id: serializer.fromJson<String>(json['id']),
@@ -1524,13 +1768,17 @@ class Term extends DataClass implements Insertable<Term> {
       transcription: serializer.fromJson<String?>(json['transcription']),
       translation: serializer.fromJson<String?>(json['translation']),
       example: serializer.fromJson<String?>(json['example']),
-      exampleTranslation: serializer.fromJson<String?>(json['exampleTranslation']),
+      exampleTranslation: serializer.fromJson<String?>(
+        json['exampleTranslation'],
+      ),
       description: serializer.fromJson<String?>(json['description']),
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       imageAuthor: serializer.fromJson<String?>(json['imageAuthor']),
       imageAuthorUrl: serializer.fromJson<String?>(json['imageAuthorUrl']),
       acceptedVariants: serializer.fromJson<String?>(json['acceptedVariants']),
-      exampleDistractors: serializer.fromJson<String?>(json['exampleDistractors']),
+      exampleDistractors: serializer.fromJson<String?>(
+        json['exampleDistractors'],
+      ),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1574,7 +1822,9 @@ class Term extends DataClass implements Insertable<Term> {
     id: id ?? this.id,
     termText: termText.present ? termText.value : this.termText,
     type: type ?? this.type,
-    transcription: transcription.present ? transcription.value : this.transcription,
+    transcription: transcription.present
+        ? transcription.value
+        : this.transcription,
     translation: translation.present ? translation.value : this.translation,
     example: example.present ? example.value : this.example,
     exampleTranslation: exampleTranslation.present
@@ -1583,8 +1833,12 @@ class Term extends DataClass implements Insertable<Term> {
     description: description.present ? description.value : this.description,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     imageAuthor: imageAuthor.present ? imageAuthor.value : this.imageAuthor,
-    imageAuthorUrl: imageAuthorUrl.present ? imageAuthorUrl.value : this.imageAuthorUrl,
-    acceptedVariants: acceptedVariants.present ? acceptedVariants.value : this.acceptedVariants,
+    imageAuthorUrl: imageAuthorUrl.present
+        ? imageAuthorUrl.value
+        : this.imageAuthorUrl,
+    acceptedVariants: acceptedVariants.present
+        ? acceptedVariants.value
+        : this.acceptedVariants,
     exampleDistractors: exampleDistractors.present
         ? exampleDistractors.value
         : this.exampleDistractors,
@@ -1595,16 +1849,26 @@ class Term extends DataClass implements Insertable<Term> {
       id: data.id.present ? data.id.value : this.id,
       termText: data.termText.present ? data.termText.value : this.termText,
       type: data.type.present ? data.type.value : this.type,
-      transcription: data.transcription.present ? data.transcription.value : this.transcription,
-      translation: data.translation.present ? data.translation.value : this.translation,
+      transcription: data.transcription.present
+          ? data.transcription.value
+          : this.transcription,
+      translation: data.translation.present
+          ? data.translation.value
+          : this.translation,
       example: data.example.present ? data.example.value : this.example,
       exampleTranslation: data.exampleTranslation.present
           ? data.exampleTranslation.value
           : this.exampleTranslation,
-      description: data.description.present ? data.description.value : this.description,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
-      imageAuthor: data.imageAuthor.present ? data.imageAuthor.value : this.imageAuthor,
-      imageAuthorUrl: data.imageAuthorUrl.present ? data.imageAuthorUrl.value : this.imageAuthorUrl,
+      imageAuthor: data.imageAuthor.present
+          ? data.imageAuthor.value
+          : this.imageAuthor,
+      imageAuthorUrl: data.imageAuthorUrl.present
+          ? data.imageAuthorUrl.value
+          : this.imageAuthorUrl,
       acceptedVariants: data.acceptedVariants.present
           ? data.acceptedVariants.value
           : this.acceptedVariants,
@@ -1870,7 +2134,8 @@ class TermsCompanion extends UpdateCompanion<Term> {
   }
 }
 
-class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable, TermProgressData> {
+class $TermProgressTable extends TermProgress
+    with TableInfo<$TermProgressTable, TermProgressData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1894,7 +2159,9 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     requiredDuringInsert: false,
     defaultValue: const Constant('new'),
   );
-  static const VerificationMeta _easeFactorMeta = const VerificationMeta('easeFactor');
+  static const VerificationMeta _easeFactorMeta = const VerificationMeta(
+    'easeFactor',
+  );
   @override
   late final GeneratedColumn<double> easeFactor = GeneratedColumn<double>(
     'ease_factor',
@@ -1904,7 +2171,9 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     requiredDuringInsert: false,
     defaultValue: const Constant(2.5),
   );
-  static const VerificationMeta _intervalDaysMeta = const VerificationMeta('intervalDays');
+  static const VerificationMeta _intervalDaysMeta = const VerificationMeta(
+    'intervalDays',
+  );
   @override
   late final GeneratedColumn<int> intervalDays = GeneratedColumn<int>(
     'interval_days',
@@ -1943,16 +2212,21 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _lastReviewedAtMeta = const VerificationMeta('lastReviewedAt');
-  @override
-  late final GeneratedColumn<DateTime> lastReviewedAt = GeneratedColumn<DateTime>(
-    'last_reviewed_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
+  static const VerificationMeta _lastReviewedAtMeta = const VerificationMeta(
+    'lastReviewedAt',
   );
-  static const VerificationMeta _acquisitionMeta = const VerificationMeta('acquisition');
+  @override
+  late final GeneratedColumn<DateTime> lastReviewedAt =
+      GeneratedColumn<DateTime>(
+        'last_reviewed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _acquisitionMeta = const VerificationMeta(
+    'acquisition',
+  );
   @override
   late final GeneratedColumn<String> acquisition = GeneratedColumn<String>(
     'acquisition',
@@ -1962,7 +2236,9 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     requiredDuringInsert: false,
     defaultValue: const Constant('graduated'),
   );
-  static const VerificationMeta _learningStepMeta = const VerificationMeta('learningStep');
+  static const VerificationMeta _learningStepMeta = const VerificationMeta(
+    'learningStep',
+  );
   @override
   late final GeneratedColumn<int> learningStep = GeneratedColumn<int>(
     'learning_step',
@@ -1984,7 +2260,9 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _enrolledAtMeta = const VerificationMeta('enrolledAt');
+  static const VerificationMeta _enrolledAtMeta = const VerificationMeta(
+    'enrolledAt',
+  );
   @override
   late final GeneratedColumn<DateTime> enrolledAt = GeneratedColumn<DateTime>(
     'enrolled_at',
@@ -1993,7 +2271,9 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -2031,12 +2311,18 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
     if (data.containsKey('state')) {
-      context.handle(_stateMeta, state.isAcceptableOrUnknown(data['state']!, _stateMeta));
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
     }
     if (data.containsKey('ease_factor')) {
       context.handle(
@@ -2047,34 +2333,55 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
     if (data.containsKey('interval_days')) {
       context.handle(
         _intervalDaysMeta,
-        intervalDays.isAcceptableOrUnknown(data['interval_days']!, _intervalDaysMeta),
+        intervalDays.isAcceptableOrUnknown(
+          data['interval_days']!,
+          _intervalDaysMeta,
+        ),
       );
     }
     if (data.containsKey('due_at')) {
-      context.handle(_dueAtMeta, dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta));
+      context.handle(
+        _dueAtMeta,
+        dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
+      );
     }
     if (data.containsKey('reps')) {
-      context.handle(_repsMeta, reps.isAcceptableOrUnknown(data['reps']!, _repsMeta));
+      context.handle(
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
+      );
     }
     if (data.containsKey('lapses')) {
-      context.handle(_lapsesMeta, lapses.isAcceptableOrUnknown(data['lapses']!, _lapsesMeta));
+      context.handle(
+        _lapsesMeta,
+        lapses.isAcceptableOrUnknown(data['lapses']!, _lapsesMeta),
+      );
     }
     if (data.containsKey('last_reviewed_at')) {
       context.handle(
         _lastReviewedAtMeta,
-        lastReviewedAt.isAcceptableOrUnknown(data['last_reviewed_at']!, _lastReviewedAtMeta),
+        lastReviewedAt.isAcceptableOrUnknown(
+          data['last_reviewed_at']!,
+          _lastReviewedAtMeta,
+        ),
       );
     }
     if (data.containsKey('acquisition')) {
       context.handle(
         _acquisitionMeta,
-        acquisition.isAcceptableOrUnknown(data['acquisition']!, _acquisitionMeta),
+        acquisition.isAcceptableOrUnknown(
+          data['acquisition']!,
+          _acquisitionMeta,
+        ),
       );
     }
     if (data.containsKey('learning_step')) {
       context.handle(
         _learningStepMeta,
-        learningStep.isAcceptableOrUnknown(data['learning_step']!, _learningStepMeta),
+        learningStep.isAcceptableOrUnknown(
+          data['learning_step']!,
+          _learningStepMeta,
+        ),
       );
     }
     if (data.containsKey('successful_reviews')) {
@@ -2129,7 +2436,10 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
         DriftSqlType.dateTime,
         data['${effectivePrefix}due_at'],
       ),
-      reps: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reps'])!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      )!,
       lapses: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}lapses'],
@@ -2167,7 +2477,8 @@ class $TermProgressTable extends TermProgress with TableInfo<$TermProgressTable,
   }
 }
 
-class TermProgressData extends DataClass implements Insertable<TermProgressData> {
+class TermProgressData extends DataClass
+    implements Insertable<TermProgressData> {
   final String termId;
   final String state;
   final double easeFactor;
@@ -2247,7 +2558,9 @@ class TermProgressData extends DataClass implements Insertable<TermProgressData>
       state: Value(state),
       easeFactor: Value(easeFactor),
       intervalDays: Value(intervalDays),
-      dueAt: dueAt == null && nullToAbsent ? const Value.absent() : Value(dueAt),
+      dueAt: dueAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueAt),
       reps: Value(reps),
       lapses: Value(lapses),
       lastReviewedAt: lastReviewedAt == null && nullToAbsent
@@ -2256,12 +2569,17 @@ class TermProgressData extends DataClass implements Insertable<TermProgressData>
       acquisition: Value(acquisition),
       learningStep: Value(learningStep),
       successfulReviews: Value(successfulReviews),
-      enrolledAt: enrolledAt == null && nullToAbsent ? const Value.absent() : Value(enrolledAt),
+      enrolledAt: enrolledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(enrolledAt),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory TermProgressData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory TermProgressData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TermProgressData(
       termId: serializer.fromJson<String>(json['termId']),
@@ -2321,7 +2639,9 @@ class TermProgressData extends DataClass implements Insertable<TermProgressData>
     dueAt: dueAt.present ? dueAt.value : this.dueAt,
     reps: reps ?? this.reps,
     lapses: lapses ?? this.lapses,
-    lastReviewedAt: lastReviewedAt.present ? lastReviewedAt.value : this.lastReviewedAt,
+    lastReviewedAt: lastReviewedAt.present
+        ? lastReviewedAt.value
+        : this.lastReviewedAt,
     acquisition: acquisition ?? this.acquisition,
     learningStep: learningStep ?? this.learningStep,
     successfulReviews: successfulReviews ?? this.successfulReviews,
@@ -2332,18 +2652,30 @@ class TermProgressData extends DataClass implements Insertable<TermProgressData>
     return TermProgressData(
       termId: data.termId.present ? data.termId.value : this.termId,
       state: data.state.present ? data.state.value : this.state,
-      easeFactor: data.easeFactor.present ? data.easeFactor.value : this.easeFactor,
-      intervalDays: data.intervalDays.present ? data.intervalDays.value : this.intervalDays,
+      easeFactor: data.easeFactor.present
+          ? data.easeFactor.value
+          : this.easeFactor,
+      intervalDays: data.intervalDays.present
+          ? data.intervalDays.value
+          : this.intervalDays,
       dueAt: data.dueAt.present ? data.dueAt.value : this.dueAt,
       reps: data.reps.present ? data.reps.value : this.reps,
       lapses: data.lapses.present ? data.lapses.value : this.lapses,
-      lastReviewedAt: data.lastReviewedAt.present ? data.lastReviewedAt.value : this.lastReviewedAt,
-      acquisition: data.acquisition.present ? data.acquisition.value : this.acquisition,
-      learningStep: data.learningStep.present ? data.learningStep.value : this.learningStep,
+      lastReviewedAt: data.lastReviewedAt.present
+          ? data.lastReviewedAt.value
+          : this.lastReviewedAt,
+      acquisition: data.acquisition.present
+          ? data.acquisition.value
+          : this.acquisition,
+      learningStep: data.learningStep.present
+          ? data.learningStep.value
+          : this.learningStep,
       successfulReviews: data.successfulReviews.present
           ? data.successfulReviews.value
           : this.successfulReviews,
-      enrolledAt: data.enrolledAt.present ? data.enrolledAt.value : this.enrolledAt,
+      enrolledAt: data.enrolledAt.present
+          ? data.enrolledAt.value
+          : this.enrolledAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2589,7 +2921,8 @@ class TermProgressCompanion extends UpdateCompanion<TermProgressData> {
   }
 }
 
-class $SyncMetaTable extends SyncMeta with TableInfo<$SyncMetaTable, SyncMetaData> {
+class $SyncMetaTable extends SyncMeta
+    with TableInfo<$SyncMetaTable, SyncMetaData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2627,12 +2960,18 @@ class $SyncMetaTable extends SyncMeta with TableInfo<$SyncMetaTable, SyncMetaDat
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
-      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('value')) {
-      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
     }
     return context;
   }
@@ -2643,7 +2982,10 @@ class $SyncMetaTable extends SyncMeta with TableInfo<$SyncMetaTable, SyncMetaDat
   SyncMetaData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncMetaData(
-      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
       value: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}value'],
@@ -2674,11 +3016,16 @@ class SyncMetaData extends DataClass implements Insertable<SyncMetaData> {
   SyncMetaCompanion toCompanion(bool nullToAbsent) {
     return SyncMetaCompanion(
       key: Value(key),
-      value: value == null && nullToAbsent ? const Value.absent() : Value(value),
+      value: value == null && nullToAbsent
+          ? const Value.absent()
+          : Value(value),
     );
   }
 
-  factory SyncMetaData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory SyncMetaData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncMetaData(
       key: serializer.fromJson<String>(json['key']),
@@ -2694,8 +3041,13 @@ class SyncMetaData extends DataClass implements Insertable<SyncMetaData> {
     };
   }
 
-  SyncMetaData copyWith({String? key, Value<String?> value = const Value.absent()}) =>
-      SyncMetaData(key: key ?? this.key, value: value.present ? value.value : this.value);
+  SyncMetaData copyWith({
+    String? key,
+    Value<String?> value = const Value.absent(),
+  }) => SyncMetaData(
+    key: key ?? this.key,
+    value: value.present ? value.value : this.value,
+  );
   SyncMetaData copyWithCompanion(SyncMetaCompanion data) {
     return SyncMetaData(
       key: data.key.present ? data.key.value : this.key,
@@ -2717,7 +3069,9 @@ class SyncMetaData extends DataClass implements Insertable<SyncMetaData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncMetaData && other.key == this.key && other.value == this.value);
+      (other is SyncMetaData &&
+          other.key == this.key &&
+          other.value == this.value);
 }
 
 class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
@@ -2746,7 +3100,11 @@ class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
     });
   }
 
-  SyncMetaCompanion copyWith({Value<String>? key, Value<String?>? value, Value<int>? rowid}) {
+  SyncMetaCompanion copyWith({
+    Value<String>? key,
+    Value<String?>? value,
+    Value<int>? rowid,
+  }) {
     return SyncMetaCompanion(
       key: key ?? this.key,
       value: value ?? this.value,
@@ -2780,7 +3138,8 @@ class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
   }
 }
 
-class $TriagedTermsTable extends TriagedTerms with TableInfo<$TriagedTermsTable, TriagedTerm> {
+class $TriagedTermsTable extends TriagedTerms
+    with TableInfo<$TriagedTermsTable, TriagedTerm> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2794,7 +3153,9 @@ class $TriagedTermsTable extends TriagedTerms with TableInfo<$TriagedTermsTable,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _collectionIdMeta = const VerificationMeta('collectionId');
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
   @override
   late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
     'collection_id',
@@ -2803,7 +3164,9 @@ class $TriagedTermsTable extends TriagedTerms with TableInfo<$TriagedTermsTable,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _decidedAtMeta = const VerificationMeta('decidedAt');
+  static const VerificationMeta _decidedAtMeta = const VerificationMeta(
+    'decidedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> decidedAt = GeneratedColumn<DateTime>(
     'decided_at',
@@ -2827,14 +3190,20 @@ class $TriagedTermsTable extends TriagedTerms with TableInfo<$TriagedTermsTable,
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
     if (data.containsKey('collection_id')) {
       context.handle(
         _collectionIdMeta,
-        collectionId.isAcceptableOrUnknown(data['collection_id']!, _collectionIdMeta),
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
       );
     }
     if (data.containsKey('decided_at')) {
@@ -2879,7 +3248,11 @@ class TriagedTerm extends DataClass implements Insertable<TriagedTerm> {
   final String termId;
   final String? collectionId;
   final DateTime decidedAt;
-  const TriagedTerm({required this.termId, this.collectionId, required this.decidedAt});
+  const TriagedTerm({
+    required this.termId,
+    this.collectionId,
+    required this.decidedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2901,7 +3274,10 @@ class TriagedTerm extends DataClass implements Insertable<TriagedTerm> {
     );
   }
 
-  factory TriagedTerm.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory TriagedTerm.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TriagedTerm(
       termId: serializer.fromJson<String>(json['termId']),
@@ -2931,7 +3307,9 @@ class TriagedTerm extends DataClass implements Insertable<TriagedTerm> {
   TriagedTerm copyWithCompanion(TriagedTermsCompanion data) {
     return TriagedTerm(
       termId: data.termId.present ? data.termId.value : this.termId,
-      collectionId: data.collectionId.present ? data.collectionId.value : this.collectionId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
       decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
     );
   }
@@ -3067,7 +3445,9 @@ class $PendingGenerationsTable extends PendingGenerations
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
-  static const VerificationMeta _collectionIdMeta = const VerificationMeta('collectionId');
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
   @override
   late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
     'collection_id',
@@ -3085,7 +3465,9 @@ class $PendingGenerationsTable extends PendingGenerations
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _requestedMeta = const VerificationMeta('requested');
+  static const VerificationMeta _requestedMeta = const VerificationMeta(
+    'requested',
+  );
   @override
   late final GeneratedColumn<int> requested = GeneratedColumn<int>(
     'requested',
@@ -3094,7 +3476,9 @@ class $PendingGenerationsTable extends PendingGenerations
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _deliveredMeta = const VerificationMeta('delivered');
+  static const VerificationMeta _deliveredMeta = const VerificationMeta(
+    'delivered',
+  );
   @override
   late final GeneratedColumn<int> delivered = GeneratedColumn<int>(
     'delivered',
@@ -3103,7 +3487,9 @@ class $PendingGenerationsTable extends PendingGenerations
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sourceLangMeta = const VerificationMeta('sourceLang');
+  static const VerificationMeta _sourceLangMeta = const VerificationMeta(
+    'sourceLang',
+  );
   @override
   late final GeneratedColumn<String> sourceLang = GeneratedColumn<String>(
     'source_lang',
@@ -3113,7 +3499,9 @@ class $PendingGenerationsTable extends PendingGenerations
     requiredDuringInsert: false,
     defaultValue: const Constant('ru'),
   );
-  static const VerificationMeta _targetLangMeta = const VerificationMeta('targetLang');
+  static const VerificationMeta _targetLangMeta = const VerificationMeta(
+    'targetLang',
+  );
   @override
   late final GeneratedColumn<String> targetLang = GeneratedColumn<String>(
     'target_lang',
@@ -3123,7 +3511,9 @@ class $PendingGenerationsTable extends PendingGenerations
     requiredDuringInsert: false,
     defaultValue: const Constant('en'),
   );
-  static const VerificationMeta _levelsCsvMeta = const VerificationMeta('levelsCsv');
+  static const VerificationMeta _levelsCsvMeta = const VerificationMeta(
+    'levelsCsv',
+  );
   @override
   late final GeneratedColumn<String> levelsCsv = GeneratedColumn<String>(
     'levels_csv',
@@ -3151,12 +3541,13 @@ class $PendingGenerationsTable extends PendingGenerations
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("sent" IN (0, 1))'),
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sent" IN (0, 1))',
+    ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _targetLangExplicitMeta = const VerificationMeta(
-    'targetLangExplicit',
-  );
+  static const VerificationMeta _targetLangExplicitMeta =
+      const VerificationMeta('targetLangExplicit');
   @override
   late final GeneratedColumn<bool> targetLangExplicit = GeneratedColumn<bool>(
     'target_lang_explicit',
@@ -3169,7 +3560,9 @@ class $PendingGenerationsTable extends PendingGenerations
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
@@ -3178,7 +3571,9 @@ class $PendingGenerationsTable extends PendingGenerations
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -3223,21 +3618,33 @@ class $PendingGenerationsTable extends PendingGenerations
       context.missing(_idMeta);
     }
     if (data.containsKey('topic')) {
-      context.handle(_topicMeta, topic.isAcceptableOrUnknown(data['topic']!, _topicMeta));
+      context.handle(
+        _topicMeta,
+        topic.isAcceptableOrUnknown(data['topic']!, _topicMeta),
+      );
     } else if (isInserting) {
       context.missing(_topicMeta);
     }
     if (data.containsKey('status')) {
-      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
     }
     if (data.containsKey('collection_id')) {
       context.handle(
         _collectionIdMeta,
-        collectionId.isAcceptableOrUnknown(data['collection_id']!, _collectionIdMeta),
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
       );
     }
     if (data.containsKey('error')) {
-      context.handle(_errorMeta, error.isAcceptableOrUnknown(data['error']!, _errorMeta));
+      context.handle(
+        _errorMeta,
+        error.isAcceptableOrUnknown(data['error']!, _errorMeta),
+      );
     }
     if (data.containsKey('requested')) {
       context.handle(
@@ -3270,10 +3677,16 @@ class $PendingGenerationsTable extends PendingGenerations
       );
     }
     if (data.containsKey('size')) {
-      context.handle(_sizeMeta, size.isAcceptableOrUnknown(data['size']!, _sizeMeta));
+      context.handle(
+        _sizeMeta,
+        size.isAcceptableOrUnknown(data['size']!, _sizeMeta),
+      );
     }
     if (data.containsKey('sent')) {
-      context.handle(_sentMeta, sent.isAcceptableOrUnknown(data['sent']!, _sentMeta));
+      context.handle(
+        _sentMeta,
+        sent.isAcceptableOrUnknown(data['sent']!, _sentMeta),
+      );
     }
     if (data.containsKey('target_lang_explicit')) {
       context.handle(
@@ -3309,7 +3722,10 @@ class $PendingGenerationsTable extends PendingGenerations
   PendingGeneration map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PendingGeneration(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       topic: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}topic'],
@@ -3346,8 +3762,14 @@ class $PendingGenerationsTable extends PendingGenerations
         DriftSqlType.string,
         data['${effectivePrefix}levels_csv'],
       )!,
-      size: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size'])!,
-      sent: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}sent'])!,
+      size: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size'],
+      )!,
+      sent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sent'],
+      )!,
       targetLangExplicit: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}target_lang_explicit'],
@@ -3369,7 +3791,8 @@ class $PendingGenerationsTable extends PendingGenerations
   }
 }
 
-class PendingGeneration extends DataClass implements Insertable<PendingGeneration> {
+class PendingGeneration extends DataClass
+    implements Insertable<PendingGeneration> {
   final String id;
   final String topic;
   final String status;
@@ -3439,9 +3862,15 @@ class PendingGeneration extends DataClass implements Insertable<PendingGeneratio
       collectionId: collectionId == null && nullToAbsent
           ? const Value.absent()
           : Value(collectionId),
-      error: error == null && nullToAbsent ? const Value.absent() : Value(error),
-      requested: requested == null && nullToAbsent ? const Value.absent() : Value(requested),
-      delivered: delivered == null && nullToAbsent ? const Value.absent() : Value(delivered),
+      error: error == null && nullToAbsent
+          ? const Value.absent()
+          : Value(error),
+      requested: requested == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requested),
+      delivered: delivered == null && nullToAbsent
+          ? const Value.absent()
+          : Value(delivered),
       sourceLang: Value(sourceLang),
       targetLang: Value(targetLang),
       levelsCsv: Value(levelsCsv),
@@ -3453,7 +3882,10 @@ class PendingGeneration extends DataClass implements Insertable<PendingGeneratio
     );
   }
 
-  factory PendingGeneration.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory PendingGeneration.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PendingGeneration(
       id: serializer.fromJson<String>(json['id']),
@@ -3533,12 +3965,18 @@ class PendingGeneration extends DataClass implements Insertable<PendingGeneratio
       id: data.id.present ? data.id.value : this.id,
       topic: data.topic.present ? data.topic.value : this.topic,
       status: data.status.present ? data.status.value : this.status,
-      collectionId: data.collectionId.present ? data.collectionId.value : this.collectionId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
       error: data.error.present ? data.error.value : this.error,
       requested: data.requested.present ? data.requested.value : this.requested,
       delivered: data.delivered.present ? data.delivered.value : this.delivered,
-      sourceLang: data.sourceLang.present ? data.sourceLang.value : this.sourceLang,
-      targetLang: data.targetLang.present ? data.targetLang.value : this.targetLang,
+      sourceLang: data.sourceLang.present
+          ? data.sourceLang.value
+          : this.sourceLang,
+      targetLang: data.targetLang.present
+          ? data.targetLang.value
+          : this.targetLang,
       levelsCsv: data.levelsCsv.present ? data.levelsCsv.value : this.levelsCsv,
       size: data.size.present ? data.size.value : this.size,
       sent: data.sent.present ? data.sent.value : this.sent,
@@ -3698,7 +4136,8 @@ class PendingGenerationsCompanion extends UpdateCompanion<PendingGeneration> {
       if (levelsCsv != null) 'levels_csv': levelsCsv,
       if (size != null) 'size': size,
       if (sent != null) 'sent': sent,
-      if (targetLangExplicit != null) 'target_lang_explicit': targetLangExplicit,
+      if (targetLangExplicit != null)
+        'target_lang_explicit': targetLangExplicit,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3836,7 +4275,9 @@ class $DailyActivityTable extends DailyActivity
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _reviewsMeta = const VerificationMeta('reviews');
+  static const VerificationMeta _reviewsMeta = const VerificationMeta(
+    'reviews',
+  );
   @override
   late final GeneratedColumn<int> reviews = GeneratedColumn<int>(
     'reviews',
@@ -3861,12 +4302,18 @@ class $DailyActivityTable extends DailyActivity
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('day')) {
-      context.handle(_dayMeta, day.isAcceptableOrUnknown(data['day']!, _dayMeta));
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
     } else if (isInserting) {
       context.missing(_dayMeta);
     }
     if (data.containsKey('reviews')) {
-      context.handle(_reviewsMeta, reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta));
+      context.handle(
+        _reviewsMeta,
+        reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta),
+      );
     }
     return context;
   }
@@ -3877,7 +4324,10 @@ class $DailyActivityTable extends DailyActivity
   DailyActivityData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return DailyActivityData(
-      day: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}day'])!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}day'],
+      )!,
       reviews: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}reviews'],
@@ -3891,7 +4341,8 @@ class $DailyActivityTable extends DailyActivity
   }
 }
 
-class DailyActivityData extends DataClass implements Insertable<DailyActivityData> {
+class DailyActivityData extends DataClass
+    implements Insertable<DailyActivityData> {
   final String day;
   final int reviews;
   const DailyActivityData({required this.day, required this.reviews});
@@ -3907,7 +4358,10 @@ class DailyActivityData extends DataClass implements Insertable<DailyActivityDat
     return DailyActivityCompanion(day: Value(day), reviews: Value(reviews));
   }
 
-  factory DailyActivityData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory DailyActivityData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DailyActivityData(
       day: serializer.fromJson<String>(json['day']),
@@ -3946,7 +4400,9 @@ class DailyActivityData extends DataClass implements Insertable<DailyActivityDat
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DailyActivityData && other.day == this.day && other.reviews == this.reviews);
+      (other is DailyActivityData &&
+          other.day == this.day &&
+          other.reviews == this.reviews);
 }
 
 class DailyActivityCompanion extends UpdateCompanion<DailyActivityData> {
@@ -3975,7 +4431,11 @@ class DailyActivityCompanion extends UpdateCompanion<DailyActivityData> {
     });
   }
 
-  DailyActivityCompanion copyWith({Value<String>? day, Value<int>? reviews, Value<int>? rowid}) {
+  DailyActivityCompanion copyWith({
+    Value<String>? day,
+    Value<int>? reviews,
+    Value<int>? rowid,
+  }) {
     return DailyActivityCompanion(
       day: day ?? this.day,
       reviews: reviews ?? this.reviews,
@@ -4033,7 +4493,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _exerciseModeMeta = const VerificationMeta('exerciseMode');
+  static const VerificationMeta _exerciseModeMeta = const VerificationMeta(
+    'exerciseMode',
+  );
   @override
   late final GeneratedColumn<String> exerciseMode = GeneratedColumn<String>(
     'exercise_mode',
@@ -4042,7 +4504,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _responseMeta = const VerificationMeta('response');
+  static const VerificationMeta _responseMeta = const VerificationMeta(
+    'response',
+  );
   @override
   late final GeneratedColumn<String> response = GeneratedColumn<String>(
     'response',
@@ -4051,7 +4515,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _clientSeqMeta = const VerificationMeta('clientSeq');
+  static const VerificationMeta _clientSeqMeta = const VerificationMeta(
+    'clientSeq',
+  );
   @override
   late final GeneratedColumn<int> clientSeq = GeneratedColumn<int>(
     'client_seq',
@@ -4060,7 +4526,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _answeredAtMeta = const VerificationMeta('answeredAt');
+  static const VerificationMeta _answeredAtMeta = const VerificationMeta(
+    'answeredAt',
+  );
   @override
   late final GeneratedColumn<String> answeredAt = GeneratedColumn<String>(
     'answered_at',
@@ -4069,7 +4537,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _usedHintMeta = const VerificationMeta('usedHint');
+  static const VerificationMeta _usedHintMeta = const VerificationMeta(
+    'usedHint',
+  );
   @override
   late final GeneratedColumn<bool> usedHint = GeneratedColumn<bool>(
     'used_hint',
@@ -4077,10 +4547,14 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("used_hint" IN (0, 1))'),
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("used_hint" IN (0, 1))',
+    ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _isPracticeMeta = const VerificationMeta('isPractice');
+  static const VerificationMeta _isPracticeMeta = const VerificationMeta(
+    'isPractice',
+  );
   @override
   late final GeneratedColumn<bool> isPractice = GeneratedColumn<bool>(
     'is_practice',
@@ -4088,10 +4562,14 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_practice" IN (0, 1))'),
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_practice" IN (0, 1))',
+    ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _latencyMsMeta = const VerificationMeta('latencyMs');
+  static const VerificationMeta _latencyMsMeta = const VerificationMeta(
+    'latencyMs',
+  );
   @override
   late final GeneratedColumn<int> latencyMs = GeneratedColumn<int>(
     'latency_ms',
@@ -4100,7 +4578,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sessionIdMeta = const VerificationMeta('sessionId');
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
   @override
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
@@ -4109,7 +4589,9 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _ladderStepMeta = const VerificationMeta('ladderStep');
+  static const VerificationMeta _ladderStepMeta = const VerificationMeta(
+    'ladderStep',
+  );
   @override
   late final GeneratedColumn<int> ladderStep = GeneratedColumn<int>(
     'ladder_step',
@@ -4150,14 +4632,20 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
       context.missing(_idMeta);
     }
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
     if (data.containsKey('exercise_mode')) {
       context.handle(
         _exerciseModeMeta,
-        exerciseMode.isAcceptableOrUnknown(data['exercise_mode']!, _exerciseModeMeta),
+        exerciseMode.isAcceptableOrUnknown(
+          data['exercise_mode']!,
+          _exerciseModeMeta,
+        ),
       );
     } else if (isInserting) {
       context.missing(_exerciseModeMeta);
@@ -4225,7 +4713,10 @@ class $ReviewQueueRowsTable extends ReviewQueueRows
   ReviewQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReviewQueueRow(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       termId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}term_id'],
@@ -4339,13 +4830,22 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
       answeredAt: Value(answeredAt),
       usedHint: Value(usedHint),
       isPractice: Value(isPractice),
-      latencyMs: latencyMs == null && nullToAbsent ? const Value.absent() : Value(latencyMs),
-      sessionId: sessionId == null && nullToAbsent ? const Value.absent() : Value(sessionId),
-      ladderStep: ladderStep == null && nullToAbsent ? const Value.absent() : Value(ladderStep),
+      latencyMs: latencyMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latencyMs),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+      ladderStep: ladderStep == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ladderStep),
     );
   }
 
-  factory ReviewQueueRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory ReviewQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReviewQueueRow(
       id: serializer.fromJson<String>(json['id']),
@@ -4408,15 +4908,23 @@ class ReviewQueueRow extends DataClass implements Insertable<ReviewQueueRow> {
     return ReviewQueueRow(
       id: data.id.present ? data.id.value : this.id,
       termId: data.termId.present ? data.termId.value : this.termId,
-      exerciseMode: data.exerciseMode.present ? data.exerciseMode.value : this.exerciseMode,
+      exerciseMode: data.exerciseMode.present
+          ? data.exerciseMode.value
+          : this.exerciseMode,
       response: data.response.present ? data.response.value : this.response,
       clientSeq: data.clientSeq.present ? data.clientSeq.value : this.clientSeq,
-      answeredAt: data.answeredAt.present ? data.answeredAt.value : this.answeredAt,
+      answeredAt: data.answeredAt.present
+          ? data.answeredAt.value
+          : this.answeredAt,
       usedHint: data.usedHint.present ? data.usedHint.value : this.usedHint,
-      isPractice: data.isPractice.present ? data.isPractice.value : this.isPractice,
+      isPractice: data.isPractice.present
+          ? data.isPractice.value
+          : this.isPractice,
       latencyMs: data.latencyMs.present ? data.latencyMs.value : this.latencyMs,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      ladderStep: data.ladderStep.present ? data.ladderStep.value : this.ladderStep,
+      ladderStep: data.ladderStep.present
+          ? data.ladderStep.value
+          : this.ladderStep,
     );
   }
 
@@ -4652,7 +5160,9 @@ class $ExposureQueueRowsTable extends ExposureQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _shownAtMeta = const VerificationMeta('shownAt');
+  static const VerificationMeta _shownAtMeta = const VerificationMeta(
+    'shownAt',
+  );
   @override
   late final GeneratedColumn<String> shownAt = GeneratedColumn<String>(
     'shown_at',
@@ -4661,7 +5171,9 @@ class $ExposureQueueRowsTable extends ExposureQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sessionIdMeta = const VerificationMeta('sessionId');
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
   @override
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
@@ -4685,12 +5197,18 @@ class $ExposureQueueRowsTable extends ExposureQueueRows
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
     if (data.containsKey('shown_at')) {
-      context.handle(_shownAtMeta, shownAt.isAcceptableOrUnknown(data['shown_at']!, _shownAtMeta));
+      context.handle(
+        _shownAtMeta,
+        shownAt.isAcceptableOrUnknown(data['shown_at']!, _shownAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_shownAtMeta);
     }
@@ -4730,11 +5248,16 @@ class $ExposureQueueRowsTable extends ExposureQueueRows
   }
 }
 
-class ExposureQueueRow extends DataClass implements Insertable<ExposureQueueRow> {
+class ExposureQueueRow extends DataClass
+    implements Insertable<ExposureQueueRow> {
   final String termId;
   final String shownAt;
   final String? sessionId;
-  const ExposureQueueRow({required this.termId, required this.shownAt, this.sessionId});
+  const ExposureQueueRow({
+    required this.termId,
+    required this.shownAt,
+    this.sessionId,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4750,11 +5273,16 @@ class ExposureQueueRow extends DataClass implements Insertable<ExposureQueueRow>
     return ExposureQueueRowsCompanion(
       termId: Value(termId),
       shownAt: Value(shownAt),
-      sessionId: sessionId == null && nullToAbsent ? const Value.absent() : Value(sessionId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
     );
   }
 
-  factory ExposureQueueRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory ExposureQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ExposureQueueRow(
       termId: serializer.fromJson<String>(json['termId']),
@@ -4887,12 +5415,15 @@ class ExposureQueueRowsCompanion extends UpdateCompanion<ExposureQueueRow> {
 }
 
 class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
-    with TableInfo<$SessionCompletionQueueRowsTable, SessionCompletionQueueRow> {
+    with
+        TableInfo<$SessionCompletionQueueRowsTable, SessionCompletionQueueRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SessionCompletionQueueRowsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _sessionIdMeta = const VerificationMeta('sessionId');
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
   @override
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
@@ -4901,7 +5432,9 @@ class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _endedAtMeta = const VerificationMeta('endedAt');
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
   @override
   late final GeneratedColumn<String> endedAt = GeneratedColumn<String>(
     'ended_at',
@@ -4933,7 +5466,10 @@ class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
       context.missing(_sessionIdMeta);
     }
     if (data.containsKey('ended_at')) {
-      context.handle(_endedAtMeta, endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta));
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_endedAtMeta);
     }
@@ -4943,7 +5479,10 @@ class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
   @override
   Set<GeneratedColumn> get $primaryKey => {sessionId};
   @override
-  SessionCompletionQueueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SessionCompletionQueueRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionCompletionQueueRow(
       sessionId: attachedDatabase.typeMapping.read(
@@ -4963,10 +5502,14 @@ class $SessionCompletionQueueRowsTable extends SessionCompletionQueueRows
   }
 }
 
-class SessionCompletionQueueRow extends DataClass implements Insertable<SessionCompletionQueueRow> {
+class SessionCompletionQueueRow extends DataClass
+    implements Insertable<SessionCompletionQueueRow> {
   final String sessionId;
   final String endedAt;
-  const SessionCompletionQueueRow({required this.sessionId, required this.endedAt});
+  const SessionCompletionQueueRow({
+    required this.sessionId,
+    required this.endedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5006,7 +5549,9 @@ class SessionCompletionQueueRow extends DataClass implements Insertable<SessionC
         sessionId: sessionId ?? this.sessionId,
         endedAt: endedAt ?? this.endedAt,
       );
-  SessionCompletionQueueRow copyWithCompanion(SessionCompletionQueueRowsCompanion data) {
+  SessionCompletionQueueRow copyWithCompanion(
+    SessionCompletionQueueRowsCompanion data,
+  ) {
     return SessionCompletionQueueRow(
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
@@ -5032,7 +5577,8 @@ class SessionCompletionQueueRow extends DataClass implements Insertable<SessionC
           other.endedAt == this.endedAt);
 }
 
-class SessionCompletionQueueRowsCompanion extends UpdateCompanion<SessionCompletionQueueRow> {
+class SessionCompletionQueueRowsCompanion
+    extends UpdateCompanion<SessionCompletionQueueRow> {
   final Value<String> sessionId;
   final Value<String> endedAt;
   final Value<int> rowid;
@@ -5097,7 +5643,8 @@ class SessionCompletionQueueRowsCompanion extends UpdateCompanion<SessionComplet
   }
 }
 
-class $PoolQueueRowsTable extends PoolQueueRows with TableInfo<$PoolQueueRowsTable, PoolQueueRow> {
+class $PoolQueueRowsTable extends PoolQueueRows
+    with TableInfo<$PoolQueueRowsTable, PoolQueueRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -5111,7 +5658,9 @@ class $PoolQueueRowsTable extends PoolQueueRows with TableInfo<$PoolQueueRowsTab
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _enrolledMeta = const VerificationMeta('enrolled');
+  static const VerificationMeta _enrolledMeta = const VerificationMeta(
+    'enrolled',
+  );
   @override
   late final GeneratedColumn<bool> enrolled = GeneratedColumn<bool>(
     'enrolled',
@@ -5119,9 +5668,13 @@ class $PoolQueueRowsTable extends PoolQueueRows with TableInfo<$PoolQueueRowsTab
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("enrolled" IN (0, 1))'),
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enrolled" IN (0, 1))',
+    ),
   );
-  static const VerificationMeta _changedAtMeta = const VerificationMeta('changedAt');
+  static const VerificationMeta _changedAtMeta = const VerificationMeta(
+    'changedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> changedAt = GeneratedColumn<DateTime>(
     'changed_at',
@@ -5145,7 +5698,10 @@ class $PoolQueueRowsTable extends PoolQueueRows with TableInfo<$PoolQueueRowsTab
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('term_id')) {
-      context.handle(_termIdMeta, termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+      context.handle(
+        _termIdMeta,
+        termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_termIdMeta);
     }
@@ -5201,7 +5757,11 @@ class PoolQueueRow extends DataClass implements Insertable<PoolQueueRow> {
   /// true = «должно быть в пуле», false = «должно быть вне пула».
   final bool enrolled;
   final DateTime changedAt;
-  const PoolQueueRow({required this.termId, required this.enrolled, required this.changedAt});
+  const PoolQueueRow({
+    required this.termId,
+    required this.enrolled,
+    required this.changedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5219,7 +5779,10 @@ class PoolQueueRow extends DataClass implements Insertable<PoolQueueRow> {
     );
   }
 
-  factory PoolQueueRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory PoolQueueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PoolQueueRow(
       termId: serializer.fromJson<String>(json['termId']),
@@ -5237,7 +5800,11 @@ class PoolQueueRow extends DataClass implements Insertable<PoolQueueRow> {
     };
   }
 
-  PoolQueueRow copyWith({String? termId, bool? enrolled, DateTime? changedAt}) => PoolQueueRow(
+  PoolQueueRow copyWith({
+    String? termId,
+    bool? enrolled,
+    DateTime? changedAt,
+  }) => PoolQueueRow(
     termId: termId ?? this.termId,
     enrolled: enrolled ?? this.enrolled,
     changedAt: changedAt ?? this.changedAt,
@@ -5348,7 +5915,8 @@ class PoolQueueRowsCompanion extends UpdateCompanion<PoolQueueRow> {
   }
 }
 
-class $CachedImagesTable extends CachedImages with TableInfo<$CachedImagesTable, CachedImage> {
+class $CachedImagesTable extends CachedImages
+    with TableInfo<$CachedImagesTable, CachedImage> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -5404,22 +5972,34 @@ class $CachedImagesTable extends CachedImages with TableInfo<$CachedImagesTable,
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('url')) {
-      context.handle(_urlMeta, url.isAcceptableOrUnknown(data['url']!, _urlMeta));
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
     } else if (isInserting) {
       context.missing(_urlMeta);
     }
     if (data.containsKey('file')) {
-      context.handle(_fileMeta, file.isAcceptableOrUnknown(data['file']!, _fileMeta));
+      context.handle(
+        _fileMeta,
+        file.isAcceptableOrUnknown(data['file']!, _fileMeta),
+      );
     } else if (isInserting) {
       context.missing(_fileMeta);
     }
     if (data.containsKey('bytes')) {
-      context.handle(_bytesMeta, bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta));
+      context.handle(
+        _bytesMeta,
+        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
+      );
     } else if (isInserting) {
       context.missing(_bytesMeta);
     }
     if (data.containsKey('used_at')) {
-      context.handle(_usedAtMeta, usedAt.isAcceptableOrUnknown(data['used_at']!, _usedAtMeta));
+      context.handle(
+        _usedAtMeta,
+        usedAt.isAcceptableOrUnknown(data['used_at']!, _usedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_usedAtMeta);
     }
@@ -5432,9 +6012,18 @@ class $CachedImagesTable extends CachedImages with TableInfo<$CachedImagesTable,
   CachedImage map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedImage(
-      url: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}url'])!,
-      file: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}file'])!,
-      bytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}bytes'])!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      file: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file'],
+      )!,
+      bytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}bytes'],
+      )!,
       usedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}used_at'],
@@ -5478,7 +6067,10 @@ class CachedImage extends DataClass implements Insertable<CachedImage> {
     );
   }
 
-  factory CachedImage.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory CachedImage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedImage(
       url: serializer.fromJson<String>(json['url']),
@@ -5498,7 +6090,12 @@ class CachedImage extends DataClass implements Insertable<CachedImage> {
     };
   }
 
-  CachedImage copyWith({String? url, String? file, int? bytes, DateTime? usedAt}) => CachedImage(
+  CachedImage copyWith({
+    String? url,
+    String? file,
+    int? bytes,
+    DateTime? usedAt,
+  }) => CachedImage(
     url: url ?? this.url,
     file: file ?? this.file,
     bytes: bytes ?? this.bytes,
@@ -5629,15 +6226,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CollectionsTable collections = $CollectionsTable(this);
-  late final $CollectionItemsTable collectionItems = $CollectionItemsTable(this);
+  late final $CollectionItemsTable collectionItems = $CollectionItemsTable(
+    this,
+  );
   late final $TermsTable terms = $TermsTable(this);
   late final $TermProgressTable termProgress = $TermProgressTable(this);
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   late final $TriagedTermsTable triagedTerms = $TriagedTermsTable(this);
-  late final $PendingGenerationsTable pendingGenerations = $PendingGenerationsTable(this);
+  late final $PendingGenerationsTable pendingGenerations =
+      $PendingGenerationsTable(this);
   late final $DailyActivityTable dailyActivity = $DailyActivityTable(this);
-  late final $ReviewQueueRowsTable reviewQueueRows = $ReviewQueueRowsTable(this);
-  late final $ExposureQueueRowsTable exposureQueueRows = $ExposureQueueRowsTable(this);
+  late final $ReviewQueueRowsTable reviewQueueRows = $ReviewQueueRowsTable(
+    this,
+  );
+  late final $ExposureQueueRowsTable exposureQueueRows =
+      $ExposureQueueRowsTable(this);
   late final $SessionCompletionQueueRowsTable sessionCompletionQueueRows =
       $SessionCompletionQueueRowsTable(this);
   late final $PoolQueueRowsTable poolQueueRows = $PoolQueueRowsTable(this);
@@ -5678,6 +6281,7 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
       Value<bool> isDefault,
+      Value<bool> isReference,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -5696,11 +6300,13 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<String?> imageAuthor,
       Value<String?> imageAuthorUrl,
       Value<bool> isDefault,
+      Value<bool> isReference,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
-class $$CollectionsTableFilterComposer extends Composer<_$AppDatabase, $CollectionsTable> {
+class $$CollectionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CollectionsTable> {
   $$CollectionsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5708,50 +6314,84 @@ class $$CollectionsTableFilterComposer extends Composer<_$AppDatabase, $Collecti
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get topic =>
-      $composableBuilder(column: $table.topic, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get itemsCount =>
-      $composableBuilder(column: $table.itemsCount, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get itemsCount => $composableBuilder(
+    column: $table.itemsCount,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get source =>
-      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageAuthorUrl =>
-      $composableBuilder(column: $table.imageAuthorUrl, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get isDefault =>
-      $composableBuilder(column: $table.isDefault, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$CollectionsTableOrderingComposer extends Composer<_$AppDatabase, $CollectionsTable> {
+class $$CollectionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CollectionsTable> {
   $$CollectionsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5759,52 +6399,84 @@ class $$CollectionsTableOrderingComposer extends Composer<_$AppDatabase, $Collec
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get topic =>
-      $composableBuilder(column: $table.topic, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get itemsCount =>
-      $composableBuilder(column: $table.itemsCount, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get itemsCount => $composableBuilder(
+    column: $table.itemsCount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get source =>
-      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get imageAuthorUrl => $composableBuilder(
     column: $table.imageAuthorUrl,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isDefault =>
-      $composableBuilder(column: $table.isDefault, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$CollectionsTableAnnotationComposer extends Composer<_$AppDatabase, $CollectionsTable> {
+class $$CollectionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CollectionsTable> {
   $$CollectionsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5818,20 +6490,28 @@ class $$CollectionsTableAnnotationComposer extends Composer<_$AppDatabase, $Coll
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => column);
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get topic =>
       $composableBuilder(column: $table.topic, builder: (column) => column);
 
-  GeneratedColumn<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => column);
+  GeneratedColumn<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => column);
+  GeneratedColumn<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<int> get itemsCount =>
-      $composableBuilder(column: $table.itemsCount, builder: (column) => column);
+  GeneratedColumn<int> get itemsCount => $composableBuilder(
+    column: $table.itemsCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
@@ -5842,14 +6522,23 @@ class $$CollectionsTableAnnotationComposer extends Composer<_$AppDatabase, $Coll
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
-  GeneratedColumn<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => column);
+  GeneratedColumn<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get imageAuthorUrl =>
-      $composableBuilder(column: $table.imageAuthorUrl, builder: (column) => column);
+  GeneratedColumn<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isDefault =>
       $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<bool> get isReference => $composableBuilder(
+    column: $table.isReference,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -5866,7 +6555,10 @@ class $$CollectionsTableTableManager
           $$CollectionsTableAnnotationComposer,
           $$CollectionsTableCreateCompanionBuilder,
           $$CollectionsTableUpdateCompanionBuilder,
-          (Collection, BaseReferences<_$AppDatabase, $CollectionsTable, Collection>),
+          (
+            Collection,
+            BaseReferences<_$AppDatabase, $CollectionsTable, Collection>,
+          ),
           Collection,
           PrefetchHooks Function()
         > {
@@ -5875,8 +6567,10 @@ class $$CollectionsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$CollectionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$CollectionsTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$CollectionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CollectionsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CollectionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
@@ -5894,6 +6588,7 @@ class $$CollectionsTableTableManager
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<bool> isReference = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion(
@@ -5910,6 +6605,7 @@ class $$CollectionsTableTableManager
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
                 isDefault: isDefault,
+                isReference: isReference,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -5928,6 +6624,7 @@ class $$CollectionsTableTableManager
                 Value<String?> imageAuthor = const Value.absent(),
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
+                Value<bool> isReference = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion.insert(
@@ -5944,11 +6641,13 @@ class $$CollectionsTableTableManager
                 imageAuthor: imageAuthor,
                 imageAuthorUrl: imageAuthorUrl,
                 isDefault: isDefault,
+                isReference: isReference,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -5964,7 +6663,10 @@ typedef $$CollectionsTableProcessedTableManager =
       $$CollectionsTableAnnotationComposer,
       $$CollectionsTableCreateCompanionBuilder,
       $$CollectionsTableUpdateCompanionBuilder,
-      (Collection, BaseReferences<_$AppDatabase, $CollectionsTable, Collection>),
+      (
+        Collection,
+        BaseReferences<_$AppDatabase, $CollectionsTable, Collection>,
+      ),
       Collection,
       PrefetchHooks Function()
     >;
@@ -5987,7 +6689,8 @@ typedef $$CollectionItemsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$CollectionItemsTableFilterComposer extends Composer<_$AppDatabase, $CollectionItemsTable> {
+class $$CollectionItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $CollectionItemsTable> {
   $$CollectionItemsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5995,20 +6698,30 @@ class $$CollectionItemsTableFilterComposer extends Composer<_$AppDatabase, $Coll
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CollectionItemsTableOrderingComposer
@@ -6020,20 +6733,30 @@ class $$CollectionItemsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CollectionItemsTableAnnotationComposer
@@ -6045,8 +6768,10 @@ class $$CollectionItemsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => column);
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get termId =>
       $composableBuilder(column: $table.termId, builder: (column) => column);
@@ -6072,12 +6797,21 @@ class $$CollectionItemsTableTableManager
           $$CollectionItemsTableAnnotationComposer,
           $$CollectionItemsTableCreateCompanionBuilder,
           $$CollectionItemsTableUpdateCompanionBuilder,
-          (CollectionItem, BaseReferences<_$AppDatabase, $CollectionItemsTable, CollectionItem>),
+          (
+            CollectionItem,
+            BaseReferences<
+              _$AppDatabase,
+              $CollectionItemsTable,
+              CollectionItem
+            >,
+          ),
           CollectionItem,
           PrefetchHooks Function()
         > {
-  $$CollectionItemsTableTableManager(_$AppDatabase db, $CollectionItemsTable table)
-    : super(
+  $$CollectionItemsTableTableManager(
+    _$AppDatabase db,
+    $CollectionItemsTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
@@ -6119,8 +6853,9 @@ class $$CollectionItemsTableTableManager
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -6136,7 +6871,10 @@ typedef $$CollectionItemsTableProcessedTableManager =
       $$CollectionItemsTableAnnotationComposer,
       $$CollectionItemsTableCreateCompanionBuilder,
       $$CollectionItemsTableUpdateCompanionBuilder,
-      (CollectionItem, BaseReferences<_$AppDatabase, $CollectionItemsTable, CollectionItem>),
+      (
+        CollectionItem,
+        BaseReferences<_$AppDatabase, $CollectionItemsTable, CollectionItem>,
+      ),
       CollectionItem,
       PrefetchHooks Function()
     >;
@@ -6185,40 +6923,60 @@ class $$TermsTableFilterComposer extends Composer<_$AppDatabase, $TermsTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get termText =>
-      $composableBuilder(column: $table.termText, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termText => $composableBuilder(
+    column: $table.termText,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get transcription =>
-      $composableBuilder(column: $table.transcription, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get transcription => $composableBuilder(
+    column: $table.transcription,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get translation =>
-      $composableBuilder(column: $table.translation, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get example =>
-      $composableBuilder(column: $table.example, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get exampleTranslation => $composableBuilder(
     column: $table.exampleTranslation,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get imageAuthorUrl =>
-      $composableBuilder(column: $table.imageAuthorUrl, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get acceptedVariants => $composableBuilder(
     column: $table.acceptedVariants,
@@ -6230,11 +6988,14 @@ class $$TermsTableFilterComposer extends Composer<_$AppDatabase, $TermsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$TermsTableOrderingComposer extends Composer<_$AppDatabase, $TermsTable> {
+class $$TermsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TermsTable> {
   $$TermsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6242,39 +7003,55 @@ class $$TermsTableOrderingComposer extends Composer<_$AppDatabase, $TermsTable> 
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get termText =>
-      $composableBuilder(column: $table.termText, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termText => $composableBuilder(
+    column: $table.termText,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get transcription => $composableBuilder(
     column: $table.transcription,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get translation =>
-      $composableBuilder(column: $table.translation, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get example =>
-      $composableBuilder(column: $table.example, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get exampleTranslation => $composableBuilder(
     column: $table.exampleTranslation,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get imageUrl =>
-      $composableBuilder(column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get imageAuthorUrl => $composableBuilder(
     column: $table.imageAuthorUrl,
@@ -6291,11 +7068,14 @@ class $$TermsTableOrderingComposer extends Composer<_$AppDatabase, $TermsTable> 
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$TermsTableAnnotationComposer extends Composer<_$AppDatabase, $TermsTable> {
+class $$TermsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TermsTable> {
   $$TermsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6312,35 +7092,51 @@ class $$TermsTableAnnotationComposer extends Composer<_$AppDatabase, $TermsTable
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get transcription =>
-      $composableBuilder(column: $table.transcription, builder: (column) => column);
+  GeneratedColumn<String> get transcription => $composableBuilder(
+    column: $table.transcription,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get translation =>
-      $composableBuilder(column: $table.translation, builder: (column) => column);
+  GeneratedColumn<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get example =>
       $composableBuilder(column: $table.example, builder: (column) => column);
 
-  GeneratedColumn<String> get exampleTranslation =>
-      $composableBuilder(column: $table.exampleTranslation, builder: (column) => column);
+  GeneratedColumn<String> get exampleTranslation => $composableBuilder(
+    column: $table.exampleTranslation,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get description =>
-      $composableBuilder(column: $table.description, builder: (column) => column);
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
-  GeneratedColumn<String> get imageAuthor =>
-      $composableBuilder(column: $table.imageAuthor, builder: (column) => column);
+  GeneratedColumn<String> get imageAuthor => $composableBuilder(
+    column: $table.imageAuthor,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get imageAuthorUrl =>
-      $composableBuilder(column: $table.imageAuthorUrl, builder: (column) => column);
+  GeneratedColumn<String> get imageAuthorUrl => $composableBuilder(
+    column: $table.imageAuthorUrl,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get acceptedVariants =>
-      $composableBuilder(column: $table.acceptedVariants, builder: (column) => column);
+  GeneratedColumn<String> get acceptedVariants => $composableBuilder(
+    column: $table.acceptedVariants,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get exampleDistractors =>
-      $composableBuilder(column: $table.exampleDistractors, builder: (column) => column);
+  GeneratedColumn<String> get exampleDistractors => $composableBuilder(
+    column: $table.exampleDistractors,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -6366,9 +7162,12 @@ class $$TermsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$TermsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$TermsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () => $$TermsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$TermsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TermsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TermsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -6437,8 +7236,9 @@ class $$TermsTableTableManager
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -6493,7 +7293,8 @@ typedef $$TermProgressTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$TermProgressTableFilterComposer extends Composer<_$AppDatabase, $TermProgressTable> {
+class $$TermProgressTableFilterComposer
+    extends Composer<_$AppDatabase, $TermProgressTable> {
   $$TermProgressTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6501,49 +7302,74 @@ class $$TermProgressTableFilterComposer extends Composer<_$AppDatabase, $TermPro
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get state =>
-      $composableBuilder(column: $table.state, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<double> get easeFactor =>
-      $composableBuilder(column: $table.easeFactor, builder: (column) => ColumnFilters(column));
+  ColumnFilters<double> get easeFactor => $composableBuilder(
+    column: $table.easeFactor,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get intervalDays =>
-      $composableBuilder(column: $table.intervalDays, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get dueAt =>
-      $composableBuilder(column: $table.dueAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get reps =>
-      $composableBuilder(column: $table.reps, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get lapses =>
-      $composableBuilder(column: $table.lapses, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get lapses => $composableBuilder(
+    column: $table.lapses,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get lastReviewedAt =>
-      $composableBuilder(column: $table.lastReviewedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get lastReviewedAt => $composableBuilder(
+    column: $table.lastReviewedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get acquisition =>
-      $composableBuilder(column: $table.acquisition, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get learningStep =>
-      $composableBuilder(column: $table.learningStep, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get successfulReviews => $composableBuilder(
     column: $table.successfulReviews,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get enrolledAt =>
-      $composableBuilder(column: $table.enrolledAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$TermProgressTableOrderingComposer extends Composer<_$AppDatabase, $TermProgressTable> {
+class $$TermProgressTableOrderingComposer
+    extends Composer<_$AppDatabase, $TermProgressTable> {
   $$TermProgressTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6551,51 +7377,74 @@ class $$TermProgressTableOrderingComposer extends Composer<_$AppDatabase, $TermP
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get state =>
-      $composableBuilder(column: $table.state, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<double> get easeFactor =>
-      $composableBuilder(column: $table.easeFactor, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<double> get easeFactor => $composableBuilder(
+    column: $table.easeFactor,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get intervalDays =>
-      $composableBuilder(column: $table.intervalDays, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get dueAt =>
-      $composableBuilder(column: $table.dueAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get reps =>
-      $composableBuilder(column: $table.reps, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get lapses =>
-      $composableBuilder(column: $table.lapses, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get lapses => $composableBuilder(
+    column: $table.lapses,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastReviewedAt => $composableBuilder(
     column: $table.lastReviewedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get acquisition =>
-      $composableBuilder(column: $table.acquisition, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get learningStep =>
-      $composableBuilder(column: $table.learningStep, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get successfulReviews => $composableBuilder(
     column: $table.successfulReviews,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get enrolledAt =>
-      $composableBuilder(column: $table.enrolledAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$TermProgressTableAnnotationComposer extends Composer<_$AppDatabase, $TermProgressTable> {
+class $$TermProgressTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TermProgressTable> {
   $$TermProgressTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6609,11 +7458,15 @@ class $$TermProgressTableAnnotationComposer extends Composer<_$AppDatabase, $Ter
   GeneratedColumn<String> get state =>
       $composableBuilder(column: $table.state, builder: (column) => column);
 
-  GeneratedColumn<double> get easeFactor =>
-      $composableBuilder(column: $table.easeFactor, builder: (column) => column);
+  GeneratedColumn<double> get easeFactor => $composableBuilder(
+    column: $table.easeFactor,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<int> get intervalDays =>
-      $composableBuilder(column: $table.intervalDays, builder: (column) => column);
+  GeneratedColumn<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get dueAt =>
       $composableBuilder(column: $table.dueAt, builder: (column) => column);
@@ -6624,20 +7477,30 @@ class $$TermProgressTableAnnotationComposer extends Composer<_$AppDatabase, $Ter
   GeneratedColumn<int> get lapses =>
       $composableBuilder(column: $table.lapses, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get lastReviewedAt =>
-      $composableBuilder(column: $table.lastReviewedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get lastReviewedAt => $composableBuilder(
+    column: $table.lastReviewedAt,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get acquisition =>
-      $composableBuilder(column: $table.acquisition, builder: (column) => column);
+  GeneratedColumn<String> get acquisition => $composableBuilder(
+    column: $table.acquisition,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<int> get learningStep =>
-      $composableBuilder(column: $table.learningStep, builder: (column) => column);
+  GeneratedColumn<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<int> get successfulReviews =>
-      $composableBuilder(column: $table.successfulReviews, builder: (column) => column);
+  GeneratedColumn<int> get successfulReviews => $composableBuilder(
+    column: $table.successfulReviews,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<DateTime> get enrolledAt =>
-      $composableBuilder(column: $table.enrolledAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get enrolledAt => $composableBuilder(
+    column: $table.enrolledAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -6654,7 +7517,10 @@ class $$TermProgressTableTableManager
           $$TermProgressTableAnnotationComposer,
           $$TermProgressTableCreateCompanionBuilder,
           $$TermProgressTableUpdateCompanionBuilder,
-          (TermProgressData, BaseReferences<_$AppDatabase, $TermProgressTable, TermProgressData>),
+          (
+            TermProgressData,
+            BaseReferences<_$AppDatabase, $TermProgressTable, TermProgressData>,
+          ),
           TermProgressData,
           PrefetchHooks Function()
         > {
@@ -6663,8 +7529,10 @@ class $$TermProgressTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$TermProgressTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$TermProgressTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$TermProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TermProgressTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TermProgressTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
@@ -6731,8 +7599,9 @@ class $$TermProgressTableTableManager
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -6748,16 +7617,28 @@ typedef $$TermProgressTableProcessedTableManager =
       $$TermProgressTableAnnotationComposer,
       $$TermProgressTableCreateCompanionBuilder,
       $$TermProgressTableUpdateCompanionBuilder,
-      (TermProgressData, BaseReferences<_$AppDatabase, $TermProgressTable, TermProgressData>),
+      (
+        TermProgressData,
+        BaseReferences<_$AppDatabase, $TermProgressTable, TermProgressData>,
+      ),
       TermProgressData,
       PrefetchHooks Function()
     >;
 typedef $$SyncMetaTableCreateCompanionBuilder =
-    SyncMetaCompanion Function({required String key, Value<String?> value, Value<int> rowid});
+    SyncMetaCompanion Function({
+      required String key,
+      Value<String?> value,
+      Value<int> rowid,
+    });
 typedef $$SyncMetaTableUpdateCompanionBuilder =
-    SyncMetaCompanion Function({Value<String> key, Value<String?> value, Value<int> rowid});
+    SyncMetaCompanion Function({
+      Value<String> key,
+      Value<String?> value,
+      Value<int> rowid,
+    });
 
-class $$SyncMetaTableFilterComposer extends Composer<_$AppDatabase, $SyncMetaTable> {
+class $$SyncMetaTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
   $$SyncMetaTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6765,14 +7646,19 @@ class $$SyncMetaTableFilterComposer extends Composer<_$AppDatabase, $SyncMetaTab
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$SyncMetaTableOrderingComposer extends Composer<_$AppDatabase, $SyncMetaTable> {
+class $$SyncMetaTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
   $$SyncMetaTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6780,14 +7666,19 @@ class $$SyncMetaTableOrderingComposer extends Composer<_$AppDatabase, $SyncMetaT
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$SyncMetaTableAnnotationComposer extends Composer<_$AppDatabase, $SyncMetaTable> {
+class $$SyncMetaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
   $$SyncMetaTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6813,7 +7704,10 @@ class $$SyncMetaTableTableManager
           $$SyncMetaTableAnnotationComposer,
           $$SyncMetaTableCreateCompanionBuilder,
           $$SyncMetaTableUpdateCompanionBuilder,
-          (SyncMetaData, BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>),
+          (
+            SyncMetaData,
+            BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>,
+          ),
           SyncMetaData,
           PrefetchHooks Function()
         > {
@@ -6822,8 +7716,10 @@ class $$SyncMetaTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$SyncMetaTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$SyncMetaTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$SyncMetaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetaTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SyncMetaTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
@@ -6837,9 +7733,14 @@ class $$SyncMetaTableTableManager
                 required String key,
                 Value<String?> value = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => SyncMetaCompanion.insert(key: key, value: value, rowid: rowid),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+              }) => SyncMetaCompanion.insert(
+                key: key,
+                value: value,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -6855,7 +7756,10 @@ typedef $$SyncMetaTableProcessedTableManager =
       $$SyncMetaTableAnnotationComposer,
       $$SyncMetaTableCreateCompanionBuilder,
       $$SyncMetaTableUpdateCompanionBuilder,
-      (SyncMetaData, BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>),
+      (
+        SyncMetaData,
+        BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>,
+      ),
       SyncMetaData,
       PrefetchHooks Function()
     >;
@@ -6874,7 +7778,8 @@ typedef $$TriagedTermsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$TriagedTermsTableFilterComposer extends Composer<_$AppDatabase, $TriagedTermsTable> {
+class $$TriagedTermsTableFilterComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
   $$TriagedTermsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6882,17 +7787,24 @@ class $$TriagedTermsTableFilterComposer extends Composer<_$AppDatabase, $Triaged
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get decidedAt =>
-      $composableBuilder(column: $table.decidedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$TriagedTermsTableOrderingComposer extends Composer<_$AppDatabase, $TriagedTermsTable> {
+class $$TriagedTermsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
   $$TriagedTermsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6900,17 +7812,24 @@ class $$TriagedTermsTableOrderingComposer extends Composer<_$AppDatabase, $Triag
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get decidedAt =>
-      $composableBuilder(column: $table.decidedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$TriagedTermsTableAnnotationComposer extends Composer<_$AppDatabase, $TriagedTermsTable> {
+class $$TriagedTermsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TriagedTermsTable> {
   $$TriagedTermsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6921,8 +7840,10 @@ class $$TriagedTermsTableAnnotationComposer extends Composer<_$AppDatabase, $Tri
   GeneratedColumn<String> get termId =>
       $composableBuilder(column: $table.termId, builder: (column) => column);
 
-  GeneratedColumn<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => column);
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get decidedAt =>
       $composableBuilder(column: $table.decidedAt, builder: (column) => column);
@@ -6939,7 +7860,10 @@ class $$TriagedTermsTableTableManager
           $$TriagedTermsTableAnnotationComposer,
           $$TriagedTermsTableCreateCompanionBuilder,
           $$TriagedTermsTableUpdateCompanionBuilder,
-          (TriagedTerm, BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>),
+          (
+            TriagedTerm,
+            BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>,
+          ),
           TriagedTerm,
           PrefetchHooks Function()
         > {
@@ -6948,8 +7872,10 @@ class $$TriagedTermsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$TriagedTermsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$TriagedTermsTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$TriagedTermsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TriagedTermsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TriagedTermsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
@@ -6976,8 +7902,9 @@ class $$TriagedTermsTableTableManager
                 decidedAt: decidedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -6993,7 +7920,10 @@ typedef $$TriagedTermsTableProcessedTableManager =
       $$TriagedTermsTableAnnotationComposer,
       $$TriagedTermsTableCreateCompanionBuilder,
       $$TriagedTermsTableUpdateCompanionBuilder,
-      (TriagedTerm, BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>),
+      (
+        TriagedTerm,
+        BaseReferences<_$AppDatabase, $TriagedTermsTable, TriagedTerm>,
+      ),
       TriagedTerm,
       PrefetchHooks Function()
     >;
@@ -7045,52 +7975,80 @@ class $$PendingGenerationsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get topic =>
-      $composableBuilder(column: $table.topic, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get error =>
-      $composableBuilder(column: $table.error, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get requested =>
-      $composableBuilder(column: $table.requested, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get requested => $composableBuilder(
+    column: $table.requested,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get delivered =>
-      $composableBuilder(column: $table.delivered, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get delivered => $composableBuilder(
+    column: $table.delivered,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get levelsCsv =>
-      $composableBuilder(column: $table.levelsCsv, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get levelsCsv => $composableBuilder(
+    column: $table.levelsCsv,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get size =>
-      $composableBuilder(column: $table.size, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get sent =>
-      $composableBuilder(column: $table.sent, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get targetLangExplicit => $composableBuilder(
     column: $table.targetLangExplicit,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$PendingGenerationsTableOrderingComposer
@@ -7102,52 +8060,80 @@ class $$PendingGenerationsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get topic =>
-      $composableBuilder(column: $table.topic, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get topic => $composableBuilder(
+    column: $table.topic,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get error =>
-      $composableBuilder(column: $table.error, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get requested =>
-      $composableBuilder(column: $table.requested, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get requested => $composableBuilder(
+    column: $table.requested,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get delivered =>
-      $composableBuilder(column: $table.delivered, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get delivered => $composableBuilder(
+    column: $table.delivered,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get levelsCsv =>
-      $composableBuilder(column: $table.levelsCsv, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get levelsCsv => $composableBuilder(
+    column: $table.levelsCsv,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get size =>
-      $composableBuilder(column: $table.size, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<bool> get sent =>
-      $composableBuilder(column: $table.sent, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get targetLangExplicit => $composableBuilder(
     column: $table.targetLangExplicit,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PendingGenerationsTableAnnotationComposer
@@ -7168,8 +8154,10 @@ class $$PendingGenerationsTableAnnotationComposer
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<String> get collectionId =>
-      $composableBuilder(column: $table.collectionId, builder: (column) => column);
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get error =>
       $composableBuilder(column: $table.error, builder: (column) => column);
@@ -7180,11 +8168,15 @@ class $$PendingGenerationsTableAnnotationComposer
   GeneratedColumn<int> get delivered =>
       $composableBuilder(column: $table.delivered, builder: (column) => column);
 
-  GeneratedColumn<String> get sourceLang =>
-      $composableBuilder(column: $table.sourceLang, builder: (column) => column);
+  GeneratedColumn<String> get sourceLang => $composableBuilder(
+    column: $table.sourceLang,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get targetLang =>
-      $composableBuilder(column: $table.targetLang, builder: (column) => column);
+  GeneratedColumn<String> get targetLang => $composableBuilder(
+    column: $table.targetLang,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get levelsCsv =>
       $composableBuilder(column: $table.levelsCsv, builder: (column) => column);
@@ -7195,8 +8187,10 @@ class $$PendingGenerationsTableAnnotationComposer
   GeneratedColumn<bool> get sent =>
       $composableBuilder(column: $table.sent, builder: (column) => column);
 
-  GeneratedColumn<bool> get targetLangExplicit =>
-      $composableBuilder(column: $table.targetLangExplicit, builder: (column) => column);
+  GeneratedColumn<bool> get targetLangExplicit => $composableBuilder(
+    column: $table.targetLangExplicit,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -7218,13 +8212,19 @@ class $$PendingGenerationsTableTableManager
           $$PendingGenerationsTableUpdateCompanionBuilder,
           (
             PendingGeneration,
-            BaseReferences<_$AppDatabase, $PendingGenerationsTable, PendingGeneration>,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingGenerationsTable,
+              PendingGeneration
+            >,
           ),
           PendingGeneration,
           PrefetchHooks Function()
         > {
-  $$PendingGenerationsTableTableManager(_$AppDatabase db, $PendingGenerationsTable table)
-    : super(
+  $$PendingGenerationsTableTableManager(
+    _$AppDatabase db,
+    $PendingGenerationsTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
@@ -7233,7 +8233,10 @@ class $$PendingGenerationsTableTableManager
           createOrderingComposer: () =>
               $$PendingGenerationsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$PendingGenerationsTableAnnotationComposer($db: db, $table: table),
+              $$PendingGenerationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7306,8 +8309,9 @@ class $$PendingGenerationsTableTableManager
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7325,17 +8329,30 @@ typedef $$PendingGenerationsTableProcessedTableManager =
       $$PendingGenerationsTableUpdateCompanionBuilder,
       (
         PendingGeneration,
-        BaseReferences<_$AppDatabase, $PendingGenerationsTable, PendingGeneration>,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingGenerationsTable,
+          PendingGeneration
+        >,
       ),
       PendingGeneration,
       PrefetchHooks Function()
     >;
 typedef $$DailyActivityTableCreateCompanionBuilder =
-    DailyActivityCompanion Function({required String day, Value<int> reviews, Value<int> rowid});
+    DailyActivityCompanion Function({
+      required String day,
+      Value<int> reviews,
+      Value<int> rowid,
+    });
 typedef $$DailyActivityTableUpdateCompanionBuilder =
-    DailyActivityCompanion Function({Value<String> day, Value<int> reviews, Value<int> rowid});
+    DailyActivityCompanion Function({
+      Value<String> day,
+      Value<int> reviews,
+      Value<int> rowid,
+    });
 
-class $$DailyActivityTableFilterComposer extends Composer<_$AppDatabase, $DailyActivityTable> {
+class $$DailyActivityTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
   $$DailyActivityTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -7343,14 +8360,19 @@ class $$DailyActivityTableFilterComposer extends Composer<_$AppDatabase, $DailyA
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get day =>
-      $composableBuilder(column: $table.day, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get reviews =>
-      $composableBuilder(column: $table.reviews, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get reviews => $composableBuilder(
+    column: $table.reviews,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$DailyActivityTableOrderingComposer extends Composer<_$AppDatabase, $DailyActivityTable> {
+class $$DailyActivityTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
   $$DailyActivityTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7358,14 +8380,19 @@ class $$DailyActivityTableOrderingComposer extends Composer<_$AppDatabase, $Dail
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get day =>
-      $composableBuilder(column: $table.day, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get reviews =>
-      $composableBuilder(column: $table.reviews, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get reviews => $composableBuilder(
+    column: $table.reviews,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$DailyActivityTableAnnotationComposer extends Composer<_$AppDatabase, $DailyActivityTable> {
+class $$DailyActivityTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyActivityTable> {
   $$DailyActivityTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -7393,7 +8420,11 @@ class $$DailyActivityTableTableManager
           $$DailyActivityTableUpdateCompanionBuilder,
           (
             DailyActivityData,
-            BaseReferences<_$AppDatabase, $DailyActivityTable, DailyActivityData>,
+            BaseReferences<
+              _$AppDatabase,
+              $DailyActivityTable,
+              DailyActivityData
+            >,
           ),
           DailyActivityData,
           PrefetchHooks Function()
@@ -7403,7 +8434,8 @@ class $$DailyActivityTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$DailyActivityTableFilterComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$DailyActivityTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$DailyActivityTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
@@ -7413,15 +8445,24 @@ class $$DailyActivityTableTableManager
                 Value<String> day = const Value.absent(),
                 Value<int> reviews = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DailyActivityCompanion(day: day, reviews: reviews, rowid: rowid),
+              }) => DailyActivityCompanion(
+                day: day,
+                reviews: reviews,
+                rowid: rowid,
+              ),
           createCompanionCallback:
               ({
                 required String day,
                 Value<int> reviews = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DailyActivityCompanion.insert(day: day, reviews: reviews, rowid: rowid),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+              }) => DailyActivityCompanion.insert(
+                day: day,
+                reviews: reviews,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7437,7 +8478,10 @@ typedef $$DailyActivityTableProcessedTableManager =
       $$DailyActivityTableAnnotationComposer,
       $$DailyActivityTableCreateCompanionBuilder,
       $$DailyActivityTableUpdateCompanionBuilder,
-      (DailyActivityData, BaseReferences<_$AppDatabase, $DailyActivityTable, DailyActivityData>),
+      (
+        DailyActivityData,
+        BaseReferences<_$AppDatabase, $DailyActivityTable, DailyActivityData>,
+      ),
       DailyActivityData,
       PrefetchHooks Function()
     >;
@@ -7472,7 +8516,8 @@ typedef $$ReviewQueueRowsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$ReviewQueueRowsTableFilterComposer extends Composer<_$AppDatabase, $ReviewQueueRowsTable> {
+class $$ReviewQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReviewQueueRowsTable> {
   $$ReviewQueueRowsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -7480,38 +8525,60 @@ class $$ReviewQueueRowsTableFilterComposer extends Composer<_$AppDatabase, $Revi
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get exerciseMode =>
-      $composableBuilder(column: $table.exerciseMode, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get response =>
-      $composableBuilder(column: $table.response, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get clientSeq =>
-      $composableBuilder(column: $table.clientSeq, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get clientSeq => $composableBuilder(
+    column: $table.clientSeq,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get answeredAt =>
-      $composableBuilder(column: $table.answeredAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get usedHint =>
-      $composableBuilder(column: $table.usedHint, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get usedHint => $composableBuilder(
+    column: $table.usedHint,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get isPractice =>
-      $composableBuilder(column: $table.isPractice, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get latencyMs =>
-      $composableBuilder(column: $table.latencyMs, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get latencyMs => $composableBuilder(
+    column: $table.latencyMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get ladderStep =>
-      $composableBuilder(column: $table.ladderStep, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ReviewQueueRowsTableOrderingComposer
@@ -7523,38 +8590,60 @@ class $$ReviewQueueRowsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get exerciseMode =>
-      $composableBuilder(column: $table.exerciseMode, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get response =>
-      $composableBuilder(column: $table.response, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get clientSeq =>
-      $composableBuilder(column: $table.clientSeq, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get clientSeq => $composableBuilder(
+    column: $table.clientSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get answeredAt =>
-      $composableBuilder(column: $table.answeredAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<bool> get usedHint =>
-      $composableBuilder(column: $table.usedHint, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get usedHint => $composableBuilder(
+    column: $table.usedHint,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<bool> get isPractice =>
-      $composableBuilder(column: $table.isPractice, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get latencyMs =>
-      $composableBuilder(column: $table.latencyMs, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get latencyMs => $composableBuilder(
+    column: $table.latencyMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get ladderStep =>
-      $composableBuilder(column: $table.ladderStep, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReviewQueueRowsTableAnnotationComposer
@@ -7572,8 +8661,10 @@ class $$ReviewQueueRowsTableAnnotationComposer
   GeneratedColumn<String> get termId =>
       $composableBuilder(column: $table.termId, builder: (column) => column);
 
-  GeneratedColumn<String> get exerciseMode =>
-      $composableBuilder(column: $table.exerciseMode, builder: (column) => column);
+  GeneratedColumn<String> get exerciseMode => $composableBuilder(
+    column: $table.exerciseMode,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get response =>
       $composableBuilder(column: $table.response, builder: (column) => column);
@@ -7581,14 +8672,18 @@ class $$ReviewQueueRowsTableAnnotationComposer
   GeneratedColumn<int> get clientSeq =>
       $composableBuilder(column: $table.clientSeq, builder: (column) => column);
 
-  GeneratedColumn<String> get answeredAt =>
-      $composableBuilder(column: $table.answeredAt, builder: (column) => column);
+  GeneratedColumn<String> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get usedHint =>
       $composableBuilder(column: $table.usedHint, builder: (column) => column);
 
-  GeneratedColumn<bool> get isPractice =>
-      $composableBuilder(column: $table.isPractice, builder: (column) => column);
+  GeneratedColumn<bool> get isPractice => $composableBuilder(
+    column: $table.isPractice,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get latencyMs =>
       $composableBuilder(column: $table.latencyMs, builder: (column) => column);
@@ -7596,8 +8691,10 @@ class $$ReviewQueueRowsTableAnnotationComposer
   GeneratedColumn<String> get sessionId =>
       $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
-  GeneratedColumn<int> get ladderStep =>
-      $composableBuilder(column: $table.ladderStep, builder: (column) => column);
+  GeneratedColumn<int> get ladderStep => $composableBuilder(
+    column: $table.ladderStep,
+    builder: (column) => column,
+  );
 }
 
 class $$ReviewQueueRowsTableTableManager
@@ -7611,12 +8708,21 @@ class $$ReviewQueueRowsTableTableManager
           $$ReviewQueueRowsTableAnnotationComposer,
           $$ReviewQueueRowsTableCreateCompanionBuilder,
           $$ReviewQueueRowsTableUpdateCompanionBuilder,
-          (ReviewQueueRow, BaseReferences<_$AppDatabase, $ReviewQueueRowsTable, ReviewQueueRow>),
+          (
+            ReviewQueueRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ReviewQueueRowsTable,
+              ReviewQueueRow
+            >,
+          ),
           ReviewQueueRow,
           PrefetchHooks Function()
         > {
-  $$ReviewQueueRowsTableTableManager(_$AppDatabase db, $ReviewQueueRowsTable table)
-    : super(
+  $$ReviewQueueRowsTableTableManager(
+    _$AppDatabase db,
+    $ReviewQueueRowsTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
@@ -7682,8 +8788,9 @@ class $$ReviewQueueRowsTableTableManager
                 ladderStep: ladderStep,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7699,7 +8806,10 @@ typedef $$ReviewQueueRowsTableProcessedTableManager =
       $$ReviewQueueRowsTableAnnotationComposer,
       $$ReviewQueueRowsTableCreateCompanionBuilder,
       $$ReviewQueueRowsTableUpdateCompanionBuilder,
-      (ReviewQueueRow, BaseReferences<_$AppDatabase, $ReviewQueueRowsTable, ReviewQueueRow>),
+      (
+        ReviewQueueRow,
+        BaseReferences<_$AppDatabase, $ReviewQueueRowsTable, ReviewQueueRow>,
+      ),
       ReviewQueueRow,
       PrefetchHooks Function()
     >;
@@ -7727,14 +8837,20 @@ class $$ExposureQueueRowsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get shownAt =>
-      $composableBuilder(column: $table.shownAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get shownAt => $composableBuilder(
+    column: $table.shownAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ExposureQueueRowsTableOrderingComposer
@@ -7746,14 +8862,20 @@ class $$ExposureQueueRowsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get shownAt =>
-      $composableBuilder(column: $table.shownAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get shownAt => $composableBuilder(
+    column: $table.shownAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExposureQueueRowsTableAnnotationComposer
@@ -7788,13 +8910,19 @@ class $$ExposureQueueRowsTableTableManager
           $$ExposureQueueRowsTableUpdateCompanionBuilder,
           (
             ExposureQueueRow,
-            BaseReferences<_$AppDatabase, $ExposureQueueRowsTable, ExposureQueueRow>,
+            BaseReferences<
+              _$AppDatabase,
+              $ExposureQueueRowsTable,
+              ExposureQueueRow
+            >,
           ),
           ExposureQueueRow,
           PrefetchHooks Function()
         > {
-  $$ExposureQueueRowsTableTableManager(_$AppDatabase db, $ExposureQueueRowsTable table)
-    : super(
+  $$ExposureQueueRowsTableTableManager(
+    _$AppDatabase db,
+    $ExposureQueueRowsTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
@@ -7803,7 +8931,10 @@ class $$ExposureQueueRowsTableTableManager
           createOrderingComposer: () =>
               $$ExposureQueueRowsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ExposureQueueRowsTableAnnotationComposer($db: db, $table: table),
+              $$ExposureQueueRowsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> termId = const Value.absent(),
@@ -7828,8 +8959,9 @@ class $$ExposureQueueRowsTableTableManager
                 sessionId: sessionId,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7845,7 +8977,14 @@ typedef $$ExposureQueueRowsTableProcessedTableManager =
       $$ExposureQueueRowsTableAnnotationComposer,
       $$ExposureQueueRowsTableCreateCompanionBuilder,
       $$ExposureQueueRowsTableUpdateCompanionBuilder,
-      (ExposureQueueRow, BaseReferences<_$AppDatabase, $ExposureQueueRowsTable, ExposureQueueRow>),
+      (
+        ExposureQueueRow,
+        BaseReferences<
+          _$AppDatabase,
+          $ExposureQueueRowsTable,
+          ExposureQueueRow
+        >,
+      ),
       ExposureQueueRow,
       PrefetchHooks Function()
     >;
@@ -7871,11 +9010,15 @@ class $$SessionCompletionQueueRowsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get endedAt =>
-      $composableBuilder(column: $table.endedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SessionCompletionQueueRowsTableOrderingComposer
@@ -7887,11 +9030,15 @@ class $$SessionCompletionQueueRowsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get endedAt =>
-      $composableBuilder(column: $table.endedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionCompletionQueueRowsTableAnnotationComposer
@@ -7940,11 +9087,20 @@ class $$SessionCompletionQueueRowsTableTableManager
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$SessionCompletionQueueRowsTableFilterComposer($db: db, $table: table),
+              $$SessionCompletionQueueRowsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
-              $$SessionCompletionQueueRowsTableOrderingComposer($db: db, $table: table),
+              $$SessionCompletionQueueRowsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
-              $$SessionCompletionQueueRowsTableAnnotationComposer($db: db, $table: table),
+              $$SessionCompletionQueueRowsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
                 Value<String> sessionId = const Value.absent(),
@@ -7965,8 +9121,9 @@ class $$SessionCompletionQueueRowsTableTableManager
                 endedAt: endedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7984,7 +9141,11 @@ typedef $$SessionCompletionQueueRowsTableProcessedTableManager =
       $$SessionCompletionQueueRowsTableUpdateCompanionBuilder,
       (
         SessionCompletionQueueRow,
-        BaseReferences<_$AppDatabase, $SessionCompletionQueueRowsTable, SessionCompletionQueueRow>,
+        BaseReferences<
+          _$AppDatabase,
+          $SessionCompletionQueueRowsTable,
+          SessionCompletionQueueRow
+        >,
       ),
       SessionCompletionQueueRow,
       PrefetchHooks Function()
@@ -8004,7 +9165,8 @@ typedef $$PoolQueueRowsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$PoolQueueRowsTableFilterComposer extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+class $$PoolQueueRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
   $$PoolQueueRowsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -8012,17 +9174,24 @@ class $$PoolQueueRowsTableFilterComposer extends Composer<_$AppDatabase, $PoolQu
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<bool> get enrolled =>
-      $composableBuilder(column: $table.enrolled, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get enrolled => $composableBuilder(
+    column: $table.enrolled,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get changedAt =>
-      $composableBuilder(column: $table.changedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$PoolQueueRowsTableOrderingComposer extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+class $$PoolQueueRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
   $$PoolQueueRowsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -8030,17 +9199,24 @@ class $$PoolQueueRowsTableOrderingComposer extends Composer<_$AppDatabase, $Pool
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get termId =>
-      $composableBuilder(column: $table.termId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get termId => $composableBuilder(
+    column: $table.termId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<bool> get enrolled =>
-      $composableBuilder(column: $table.enrolled, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get enrolled => $composableBuilder(
+    column: $table.enrolled,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get changedAt =>
-      $composableBuilder(column: $table.changedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$PoolQueueRowsTableAnnotationComposer extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
+class $$PoolQueueRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PoolQueueRowsTable> {
   $$PoolQueueRowsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8069,7 +9245,10 @@ class $$PoolQueueRowsTableTableManager
           $$PoolQueueRowsTableAnnotationComposer,
           $$PoolQueueRowsTableCreateCompanionBuilder,
           $$PoolQueueRowsTableUpdateCompanionBuilder,
-          (PoolQueueRow, BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>),
+          (
+            PoolQueueRow,
+            BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>,
+          ),
           PoolQueueRow,
           PrefetchHooks Function()
         > {
@@ -8078,7 +9257,8 @@ class $$PoolQueueRowsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$PoolQueueRowsTableFilterComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$PoolQueueRowsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$PoolQueueRowsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
@@ -8107,8 +9287,9 @@ class $$PoolQueueRowsTableTableManager
                 changedAt: changedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -8124,7 +9305,10 @@ typedef $$PoolQueueRowsTableProcessedTableManager =
       $$PoolQueueRowsTableAnnotationComposer,
       $$PoolQueueRowsTableCreateCompanionBuilder,
       $$PoolQueueRowsTableUpdateCompanionBuilder,
-      (PoolQueueRow, BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>),
+      (
+        PoolQueueRow,
+        BaseReferences<_$AppDatabase, $PoolQueueRowsTable, PoolQueueRow>,
+      ),
       PoolQueueRow,
       PrefetchHooks Function()
     >;
@@ -8145,7 +9329,8 @@ typedef $$CachedImagesTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$CachedImagesTableFilterComposer extends Composer<_$AppDatabase, $CachedImagesTable> {
+class $$CachedImagesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
   $$CachedImagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -8153,20 +9338,29 @@ class $$CachedImagesTableFilterComposer extends Composer<_$AppDatabase, $CachedI
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get url =>
-      $composableBuilder(column: $table.url, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<String> get file =>
-      $composableBuilder(column: $table.file, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get file => $composableBuilder(
+    column: $table.file,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<int> get bytes =>
-      $composableBuilder(column: $table.bytes, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  ColumnFilters<DateTime> get usedAt =>
-      $composableBuilder(column: $table.usedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$CachedImagesTableOrderingComposer extends Composer<_$AppDatabase, $CachedImagesTable> {
+class $$CachedImagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
   $$CachedImagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -8174,20 +9368,29 @@ class $$CachedImagesTableOrderingComposer extends Composer<_$AppDatabase, $Cache
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get url =>
-      $composableBuilder(column: $table.url, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<String> get file =>
-      $composableBuilder(column: $table.file, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get file => $composableBuilder(
+    column: $table.file,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<int> get bytes =>
-      $composableBuilder(column: $table.bytes, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnOrderings(column),
+  );
 
-  ColumnOrderings<DateTime> get usedAt =>
-      $composableBuilder(column: $table.usedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$CachedImagesTableAnnotationComposer extends Composer<_$AppDatabase, $CachedImagesTable> {
+class $$CachedImagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedImagesTable> {
   $$CachedImagesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8219,7 +9422,10 @@ class $$CachedImagesTableTableManager
           $$CachedImagesTableAnnotationComposer,
           $$CachedImagesTableCreateCompanionBuilder,
           $$CachedImagesTableUpdateCompanionBuilder,
-          (CachedImage, BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>),
+          (
+            CachedImage,
+            BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>,
+          ),
           CachedImage,
           PrefetchHooks Function()
         > {
@@ -8228,8 +9434,10 @@ class $$CachedImagesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$CachedImagesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () => $$CachedImagesTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$CachedImagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedImagesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CachedImagesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
@@ -8260,8 +9468,9 @@ class $$CachedImagesTableTableManager
                 usedAt: usedAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) =>
-              p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -8277,7 +9486,10 @@ typedef $$CachedImagesTableProcessedTableManager =
       $$CachedImagesTableAnnotationComposer,
       $$CachedImagesTableCreateCompanionBuilder,
       $$CachedImagesTableUpdateCompanionBuilder,
-      (CachedImage, BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>),
+      (
+        CachedImage,
+        BaseReferences<_$AppDatabase, $CachedImagesTable, CachedImage>,
+      ),
       CachedImage,
       PrefetchHooks Function()
     >;
@@ -8289,10 +9501,12 @@ class $AppDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$CollectionItemsTableTableManager get collectionItems =>
       $$CollectionItemsTableTableManager(_db, _db.collectionItems);
-  $$TermsTableTableManager get terms => $$TermsTableTableManager(_db, _db.terms);
+  $$TermsTableTableManager get terms =>
+      $$TermsTableTableManager(_db, _db.terms);
   $$TermProgressTableTableManager get termProgress =>
       $$TermProgressTableTableManager(_db, _db.termProgress);
-  $$SyncMetaTableTableManager get syncMeta => $$SyncMetaTableTableManager(_db, _db.syncMeta);
+  $$SyncMetaTableTableManager get syncMeta =>
+      $$SyncMetaTableTableManager(_db, _db.syncMeta);
   $$TriagedTermsTableTableManager get triagedTerms =>
       $$TriagedTermsTableTableManager(_db, _db.triagedTerms);
   $$PendingGenerationsTableTableManager get pendingGenerations =>
@@ -8303,8 +9517,12 @@ class $AppDatabaseManager {
       $$ReviewQueueRowsTableTableManager(_db, _db.reviewQueueRows);
   $$ExposureQueueRowsTableTableManager get exposureQueueRows =>
       $$ExposureQueueRowsTableTableManager(_db, _db.exposureQueueRows);
-  $$SessionCompletionQueueRowsTableTableManager get sessionCompletionQueueRows =>
-      $$SessionCompletionQueueRowsTableTableManager(_db, _db.sessionCompletionQueueRows);
+  $$SessionCompletionQueueRowsTableTableManager
+  get sessionCompletionQueueRows =>
+      $$SessionCompletionQueueRowsTableTableManager(
+        _db,
+        _db.sessionCompletionQueueRows,
+      );
   $$PoolQueueRowsTableTableManager get poolQueueRows =>
       $$PoolQueueRowsTableTableManager(_db, _db.poolQueueRows);
   $$CachedImagesTableTableManager get cachedImages =>

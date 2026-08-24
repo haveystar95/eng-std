@@ -459,6 +459,24 @@ abstract class AppLocalizations {
   /// **'Слова'**
   String get collectionWordsLabel;
 
+  /// Метка коллекции на справочном языке (zh/ja): читаем и слушаем, но не тренируем.
+  ///
+  /// In ru, this message translates to:
+  /// **'справочник'**
+  String get collectionReferenceBadge;
+
+  /// Озвучка бейджа пары для VoiceOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Языковая пара: {learned} на {support}'**
+  String pairBadgeSemantics(String learned, String support);
+
+  /// Пояснение на экране справочной коллекции — почему нет кнопок тренировки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Справочная коллекция: слова можно читать и слушать. Тренажёров для этого языка пока нет.'**
+  String get collectionReferenceHint;
+
   /// Кнопка добавления слова в коллекцию.
   ///
   /// In ru, this message translates to:

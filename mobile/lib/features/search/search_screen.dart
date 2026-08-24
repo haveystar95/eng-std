@@ -110,6 +110,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return LearningPair.of(pair, languages);
   }
 
+  /// WHICH HALF of the pill is the language being studied — «source» or «target» — sent with every
+  /// search call so the server does not have to guess (DECISIONS п. 147).
+  ///
+  /// The client is the only side that knows: the learner set the two pills, and a direction is not
+  /// a pair of roles — `de → en` is either German with English support or the other way about. The
+  /// server's tie-break (the profile, then the direction's source) stays as the fallback for a
+  /// request that says nothing; the LEGACY_TARGET tie-break in [SearchLanguages.taughtSideOf] is
+  /// now only how THIS side works out its own answer, not how the server works out one for us.
+  String? get _taughtSide {
+    final pair = _pair;
+    final learning = _learningPair;
+    if (pair == null || learning == null) return null;
+
+    return learning.learned == pair.source ? 'source' : 'target';
+  }
+
   /// Terms the LOCAL mirror already holds, keyed by id — the only place a search result can get a
   /// photo from, since `/search` carries none. Filled for the word that was actually asked for, so
   /// its 88 pt plate in кадр 03 is a picture rather than an empty rectangle.
@@ -273,7 +289,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final hint = await ref
           .read(apiClientProvider)
-          .instantHint(query, source: _pair?.source, target: _pair?.target);
+          .instantHint(query, source: _pair?.source, target: _pair?.target, taughtSide: _taughtSide);
       // Kept when there is something to SAY — a translation, or the one honest «this is too long
       // to be a word» the field does put a line up for. An answerless hint is still dropped: it
       // has nothing to add and would only overwrite one that had.
@@ -291,7 +307,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final hits = await ref
           .read(apiClientProvider)
-          .search(query, source: _pair?.source, target: _pair?.target);
+          .search(query, source: _pair?.source, target: _pair?.target, taughtSide: _taughtSide);
       if (!mounted || generation != _generation) return;
       setState(() {
         _hits = hits;
@@ -338,7 +354,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final outcome = await ref
           .read(apiClientProvider)
-          .lookupWord(query, source: _pair?.source, target: _pair?.target);
+          .lookupWord(query, source: _pair?.source, target: _pair?.target, taughtSide: _taughtSide);
       if (!mounted || generation != _generation) return;
       setState(() {
         _lookingUp = false;

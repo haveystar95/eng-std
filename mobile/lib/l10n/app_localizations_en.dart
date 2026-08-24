@@ -276,6 +276,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionWordsLabel => 'Words';
 
   @override
+  String get collectionReferenceBadge => 'reference';
+
+  @override
+  String pairBadgeSemantics(String learned, String support) {
+    return 'Language pair: $learned with $support';
+  }
+
+  @override
+  String get collectionReferenceHint =>
+      'A reference collection: read the words and hear them. There are no trainers for this language yet.';
+
+  @override
   String get collectionAddWord => 'Add a word';
 
   @override

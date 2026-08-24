@@ -623,9 +623,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
           const SizedBox(height: AppSpacing.s12),
           _auxButtons(l),
         ],
-        // Assembling a whole sentence is long enough that giving up must stay reachable — the
-        // typed modes' «Не помню» is the same code path, not a copy.
-        if (!_answered && _isScramble) ...[
+        // Giving up stays reachable on BOTH assembly modes, through the same channel as the typed
+        // modes' «Не помню» — one `_giveUp`, which commits an empty answer and lets the SERVER
+        // grade it as the lapse it is. `scramble` had it and `word_bank` did not, which made
+        // «я не помню это слово» sayable on a sentence and unsayable on a word: the only way out of
+        // a word_bank card was to assemble something wrong on purpose, and a wrong answer and a
+        // blank one are not the same statement about what the learner knows.
+        if (!_answered && _mode.isAssembled) ...[
           const SizedBox(height: AppSpacing.s12),
           QuietButton(label: l.sessionDontRemember, onPressed: _giveUp),
         ],
