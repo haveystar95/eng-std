@@ -21,6 +21,50 @@ Future<T?> showAppBottomSheet<T>({
   );
 }
 
+/// Одна строка списка внутри [AppBottomSheet] — иконка/флаг слева, текст, отметка справа.
+///
+/// Не `ListTile`: тот рисует фон и всплеск по ближайшему `Material`, а шит — это `Container` с
+/// бумажным фоном, поэтому Flutter в debug кричит «background color or ink splashes may be
+/// invisible» на каждый такой ряд. Своя строка ещё и попадает в типографику «Слов»: тот же
+/// [AppText.translation], та же высота касания 44, никакой material-плотности.
+class AppSheetRow extends StatelessWidget {
+  const AppSheetRow({
+    super.key,
+    required this.title,
+    this.leading,
+    this.trailing,
+    this.onTap,
+    this.enabled = true,
+  });
+
+  final Widget title;
+  final Widget? leading, trailing;
+  final VoidCallback? onTap;
+
+  /// `false` — строка видна, но неактивна: она сообщает факт, а не предлагает действие.
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: enabled && onTap != null,
+    enabled: enabled,
+    child: InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(AppRadii.field),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s12),
+        child: Row(
+          children: [
+            if (leading != null) ...[leading!, const SizedBox(width: AppSpacing.s12)],
+            Expanded(child: title),
+            if (trailing != null) ...[const SizedBox(width: AppSpacing.s8), trailing!],
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 class AppBottomSheet extends StatelessWidget {
   const AppBottomSheet({super.key, required this.child});
 

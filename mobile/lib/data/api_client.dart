@@ -35,6 +35,24 @@ String? problemCode(DioException e) {
 bool isGenerationQuotaExceeded(DioException e) =>
     e.response?.statusCode == 429 && problemCode(e) == 'generation_quota_exceeded';
 
+/// A write refused because the word is not of the collection's pair — 422 `term_language_mismatch`,
+/// with `meta.expected_lang` (what the collection studies) and `meta.actual_lang` (the word's).
+///
+/// «Одна коллекция — одна пара» is a DOMAIN rule and the server is where it is enforced (DECISIONS
+/// п. 141), so the client reads the refusal rather than predicting it. The sheet filters its list by
+/// pair, which means this normally cannot happen — but «normally» here means «unless the list was
+/// built from a mirror the server has since moved past», which is a race, not an impossibility.
+/// Returns null for every other failure, including the offline ones, so a caller can tell «the pair
+/// is wrong» from «the save did not happen».
+({String expected, String actual})? termLanguageMismatch(Object? error) {
+  if (error is! DioException || problemCode(error) != 'term_language_mismatch') return null;
+  final meta = (error.response?.data as Map?)?['meta'];
+  if (meta is! Map) return null;
+  final expected = meta['expected_lang'], actual = meta['actual_lang'];
+
+  return (expected is String && actual is String) ? (expected: expected, actual: actual) : null;
+}
+
 /// The request never reached the server: no network, a dead tunnel, a timeout. Worth telling the
 /// user plainly («нет соединения») instead of showing them a stack of Dio internals — and worth
 /// distinguishing from a server that answered but answered badly.

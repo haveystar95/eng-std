@@ -188,7 +188,9 @@ void main() {
 
       expect(api.addCalls, 1);
       expect(api.lastCollectionId, isNull, reason: 'the one-tap save goes to the default folder');
-      expect(find.text('В коллекции «Сохранённые»'), findsOneWidget);
+      // Straight after the save the line reports what HAPPENED, enrolment included — «В коллекции»
+      // is what a card opened later says instead (A-3, ч.3).
+      expect(find.text('Сохранено в коллекцию «Сохранённые» — слово учится'), findsOneWidget);
       expect(find.text('+ Сохранённые'), findsNothing);
       // The learner opened the card to READ it. A save that closed it would take the article away
       // at the exact moment they decided they wanted it.
