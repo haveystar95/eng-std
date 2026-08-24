@@ -190,6 +190,35 @@ void main() {
   });
 
   group('what the server offered', () {
+    test('the body the live deployment answers with, verbatim', () {
+      // Copied from `GET /api/v1/search/languages` on 2026-08-24, after RS-3. Pinned as it stands
+      // rather than paraphrased: this is the shape the pills are being asked to draw, and the two
+      // lists OVERLAP — every taught language is also readable — which is the fact the whole of
+      // A-3.1 turns on.
+      final languages = SearchLanguages.fromJson(const {
+        'target': 'en',
+        'targets': ['en', 'ro', 'es', 'de', 'fr', 'it', 'pl'],
+        'natives': ['ru', 'en', 'uk', 'ro', 'es', 'de', 'fr', 'it', 'pt', 'pl', 'tr', 'zh', 'ja'],
+        'default_native': 'ru',
+      });
+
+      // The pair the screen opens on, and the two sheets it opens from there.
+      expect(languages.initialPair, const SearchPair(source: 'en', target: 'ru'));
+      expect(languages.optionsAgainst('ru'), ['en', 'ro', 'es', 'de', 'fr', 'it', 'pl']);
+      expect(languages.optionsAgainst('en').length, 12, reason: 'the catalogue, less English');
+      expect(languages.optionsAgainst('en'), isNot(contains('en')));
+
+      // «поддержка es, учу en» — the pair the live run was done in. The server answered that same
+      // request with `reversed: true`, which is it saying the same thing: the taught side is `en`.
+      const pair = SearchPair(source: 'es', target: 'en');
+      expect(languages.serves(pair), isTrue);
+      expect(languages.taughtSideOf(pair), 'en');
+      expect(
+        LearningPair.of(pair, languages),
+        const LearningPair(learned: 'en', support: 'es'),
+      );
+    });
+
     test('it reads the two roles the RS-3 body names', () {
       final languages = SearchLanguages.fromJson(const {
         'target': 'en',
