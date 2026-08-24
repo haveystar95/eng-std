@@ -21,6 +21,13 @@ final readonly class SessionCardView
      * @param  list<string>  $acceptedVariants  other answers that count as correct for THIS card's
      *        `answer`, so the client's instant check matches the server's. Empty on the
      *        sentence-graded modes: a variant of the term is not a variant of the sentence.
+     * @param  list<string>  $synonyms  near-synonyms of the term that count as correct on THIS card,
+     *        beside `acceptedVariants` and never inside it. Present only where the card's prompt is
+     *        the MEANING — the server accepts a synonym on exactly those cards
+     *        ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::acceptsSynonyms()}),
+     *        so a client that merged the two lists would accept `goal` on a listening card for
+     *        `purpose`, i.e. be looser than the server. Empty everywhere else, including the
+     *        sentence-graded modes.
      * @param  int|null  $ladderStep  which rung of the acquisition ladder this card was dealt at.
      *        The client echoes it back with the answer, because the pair's rung MOVES the moment
      *        that answer is folded — without it the server could not tell afterwards what the card
@@ -43,6 +50,7 @@ final readonly class SessionCardView
         public ?array $options,
         public ?array $chips,
         public array $acceptedVariants = [],
+        public array $synonyms = [],
         public ?array $optionFeedback = null,
         public ?int $ladderStep = null,
         public ?array $optionIds = null,

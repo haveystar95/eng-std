@@ -207,6 +207,18 @@ final class SyncController
             // Shipped ahead of the trainer that reads them, so the device already has them offline
             // when find_the_mistake is switched on.
             'example_distractors' => $c->exampleDistractors ?? [],
+            // ADDITIVE (SYN-1). Near-synonyms on the STUDIED side, beside `accepted_variants` and
+            // deliberately not inside it: the server accepts a synonym only where the card asked
+            // what the word MEANS ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::acceptsSynonyms()}),
+            // and folding the two lists together would make the device accept `goal` on a listening
+            // card for `purpose` — looser than the server, which is the wrong direction to be wrong
+            // in. `accepted_variants` keeps exactly the meaning and the contents it always had.
+            'synonyms' => $c->synonyms ?? [],
+            // ADDITIVE. Every reading of this term in the pair's language, the pinned one first —
+            // `translation` above is `translations[0]` and is unchanged. It rides the mirror so the
+            // device can eventually stop telling a learner who typed «задача» for «цель» that they
+            // are wrong; nothing consumes it yet.
+            'translations' => $c->translations ?? [],
         ];
     }
 

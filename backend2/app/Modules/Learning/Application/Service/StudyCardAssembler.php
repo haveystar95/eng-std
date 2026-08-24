@@ -319,6 +319,11 @@ final readonly class StudyCardAssembler
             // example sentence, and the server's own expected set is that sentence alone — sending
             // the term's variants there would make the client accept what the server rejects.
             acceptedVariants: $asksExample ? [] : $content->acceptedVariants,
+            // Only where the SERVER would accept one. The client's instant check must never be
+            // stricter than the server's, and it must not be looser either: sending the term's
+            // synonyms to a listening card would let the device green-light `goal` for a word the
+            // learner heard as `purpose`, which the server then grades `again`.
+            synonyms: ! $asksExample && $mode->acceptsSynonyms() ? $content->synonyms : [],
             ladderStep: $step,
         );
     }
@@ -524,6 +529,10 @@ final readonly class StudyCardAssembler
             chips: null,
             // Only meaningful where the answer is the term's own text.
             acceptedVariants: $forward ? [] : $content->acceptedVariants,
+            // The reverse card (rung 2) asks «which of these words means this», so a synonym of the
+            // answer is a right answer. The forward card is graded by option id and has no text key
+            // at all — see optionIds.
+            synonyms: $forward ? [] : $content->synonyms,
             ladderStep: $step,
             optionIds: $forward
                 ? array_map(static fn (array $o): string => $o['term_id'], $optionPairs)

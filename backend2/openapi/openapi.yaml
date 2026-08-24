@@ -1865,6 +1865,32 @@ paths:
                                       error_type: { type: string, enum: [article, preposition, tense, word_order, false_friend, modal_to] }
                                       error_span: { type: string, description: 'the wrong fragment, verbatim from `sentence`' }
                                       correction: { type: string }
+                                synonyms:
+                                  type: array
+                                  description: >
+                                    ADDITIVE. Near-SYNONYMS of the term, in the language being learned
+                                    (`purpose` → `goal`, `aim`). NOT the same thing as
+                                    `accepted_variants` and deliberately not merged into it: a variant
+                                    is another SPELLING of this word and is right wherever the word is
+                                    typed, a synonym is another WORD and is right only where the card
+                                    asked what the term MEANS. The server accepts one on
+                                    multiple_choice / word_bank / typing / description_match and the
+                                    word form of speaking, and on nothing else — a client that folded
+                                    the two lists together would green-light `goal` on a listening
+                                    card for `purpose`, i.e. be LOOSER than the server. Empty when the
+                                    станок has not run over the term. No client reads these yet.
+                                  items: { type: string }
+                                translations:
+                                  type: array
+                                  description: >
+                                    ADDITIVE. Every reading this term has in the pair's support
+                                    language, the pinned one FIRST — so `translations[0]` is always the
+                                    `translation` field above, unchanged. The rest are alternatives
+                                    («цель», then «задача»), carried so the device can eventually stop
+                                    telling a learner who typed the second one that they are wrong.
+                                    A term with one reading sends a one-element list. No client reads
+                                    these yet.
+                                  items: { type: string }
                           progress:
                             type: array
                             items:
@@ -2331,6 +2357,18 @@ components:
             stricter than the server. Always an empty list on the sentence-graded modes
             (`scramble`, `dictation`): a variant of the term is not a variant of the sentence, and
             the server's expected set there is the sentence alone.
+          items: { type: string }
+        synonyms:
+          type: array
+          description: >
+            ADDITIVE. Near-synonyms of the term that ALSO count as correct on THIS card — its own
+            list, never merged into `accepted_variants`, because the two are accepted on different
+            cards. Non-empty only where the card's prompt is the MEANING (the translation, or the
+            description on `description_match`), which is exactly where the server accepts one; empty
+            on `listening` and `cloze`, whose question is this word in particular, and empty on every
+            sentence-graded mode. A client that tested `{answer} ∪ accepted_variants ∪ synonyms`
+            unconditionally would be LOOSER than the server, which is the one direction the client
+            check must never be wrong in.
           items: { type: string }
 
     TriageCard:

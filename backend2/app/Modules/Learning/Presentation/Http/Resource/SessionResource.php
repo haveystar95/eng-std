@@ -29,6 +29,10 @@ final class SessionResource extends JsonResource
                 'options' => $card->options,
                 'chips' => $card->chips,
                 'accepted_variants' => $card->acceptedVariants,
+                // ADDITIVE (SYN-1): what else counts as right on THIS card because it means the
+                // same thing. Its own field and not part of `accepted_variants`, which keeps
+                // exactly the meaning it always had — see SessionCardView.
+                'synonyms' => $card->synonyms,
                 'option_feedback' => $card->optionFeedback,
                 // The rung this card was dealt at. The client echoes it back with the answer —
                 // the pair's rung moves as that answer is folded, so it is the only thing that can
