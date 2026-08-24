@@ -8,6 +8,7 @@ import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/collections/collection_detail_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/mini_flag.dart';
 import 'package:eng_std/ui/pair_badge.dart';
 
 /// A PHRASEBOOK on screen (DECISIONS пп. 84, 136).
@@ -140,7 +141,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('СПРАВОЧНИК'), findsNothing);
     expect(find.byType(PairBadge), findsOneWidget);
-    expect(find.text('EN→RU'), findsOneWidget);
+    expect(find.byType(MiniFlag), findsNWidgets(2)); // the pair, drawn as flags (п. 148)
     expect(find.text('Свободная тренировка'), findsOneWidget);
     await close(tester);
   });

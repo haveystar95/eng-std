@@ -246,7 +246,7 @@ class _StoreCard extends ConsumerWidget {
               PairBadge(
                 learned: collection.targetLang,
                 support: collection.sourceLang,
-                fontSize: 10,
+                size: 11,
               ),
             ],
           ),

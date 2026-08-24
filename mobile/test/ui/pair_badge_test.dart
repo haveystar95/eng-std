@@ -6,12 +6,14 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/mini_flag.dart';
 import 'package:eng_std/ui/pair_badge.dart';
 
-/// The pair badge: two codes and an arrow, in type — never a flag.
+/// The pair badge: two flags and an arrow.
 ///
-/// `tokens.html` §4б and rule 14 put mini-flags in LANGUAGE contexts only, and say in as many
-/// words: «на карточках слов и коллекций флагов нет». A collection card and a session card are
-/// exactly those two places. The rule is easy to break by accident later — a flag is the obvious
-/// thing to reach for — so it is pinned here rather than left to a review.
+/// The first cut set it in TYPE — «EN→ES» — on the letter of rule 14 («на карточках слов и
+/// коллекций флагов нет»). The owner overruled it on sight: a pair is glanced at, and two
+/// two-letter codes are read instead. Rule 14 was amended rather than quietly broken — a pair badge
+/// IS a language context (DECISIONS п. 148) — and what these tests hold is the amended shape, plus
+/// the two things that did not change with it: the direction never flips, and a phrasebook says a
+/// word instead of promising a course.
 void main() {
   Widget host(Widget child, {Locale locale = const Locale('ru')}) => MaterialApp(
     locale: locale,
@@ -20,24 +22,43 @@ void main() {
     home: Scaffold(body: Center(child: child)),
   );
 
-  testWidgets('reads «изучаемый → язык поддержки», in uppercase codes', (tester) async {
+  testWidgets('draws the two flags of the pair, learned first', (tester) async {
     await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'ru')));
 
-    expect(find.text('EN→RU'), findsOneWidget);
+    final flags = tester.widgetList<MiniFlag>(find.byType(MiniFlag)).toList();
+    expect(flags, hasLength(2));
+    expect(flags.first.languageCode, 'en');
+    expect(flags.last.languageCode, 'ru');
   });
 
   testWidgets('does not flip: a collection\'s pair is a fact, not a direction', (tester) async {
     // The search pill flips — it is a question the learner asks. This is what a folder IS.
     await tester.pumpWidget(host(const PairBadge(learned: 'pl', support: 'ru')));
 
-    expect(find.text('PL→RU'), findsOneWidget);
-    expect(find.text('RU→PL'), findsNothing);
+    final flags = tester.widgetList<MiniFlag>(find.byType(MiniFlag)).toList();
+    expect(flags.first.languageCode, 'pl');
+    expect(flags.last.languageCode, 'ru');
   });
 
-  testWidgets('draws no flag — rule 14 keeps decorative colour out of these cards', (tester) async {
+  testWidgets('a language with no painter still draws — the pair is never half-missing', (
+    tester,
+  ) async {
+    // `MiniFlag` falls back to a neutral coded circle, so a pair is always drawable.
+    await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'tr')));
+
+    expect(find.byType(MiniFlag), findsNWidgets(2));
+    expect(find.text('TR'), findsOneWidget);
+  });
+
+  testWidgets('sits in a quiet chip — the colour must not float on the paper', (tester) async {
+    // Bare flags at 15 were tried and lost: two saturated circles at the end of a title line become
+    // the brightest thing on a paper/ink screen. The chip is what frames them (DECISIONS п. 148).
     await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'ru')));
 
-    expect(find.byType(MiniFlag), findsNothing);
+    final chip = tester.widget<Container>(
+      find.ancestor(of: find.byType(MiniFlag).first, matching: find.byType(Container)).first,
+    );
+    expect((chip.decoration! as BoxDecoration).color, AppColors.faintInk);
   });
 
   testWidgets('a phrasebook says so instead of naming a pair', (tester) async {
@@ -47,7 +68,7 @@ void main() {
     );
 
     expect(find.text('СПРАВОЧНИК'), findsOneWidget);
-    expect(find.text('ZH→RU'), findsNothing);
+    expect(find.byType(MiniFlag), findsNothing);
   });
 
   testWidgets('the phrasebook label is localized, not a hard-coded Russian word', (tester) async {
@@ -61,10 +82,14 @@ void main() {
     expect(find.text('REFERENCE'), findsOneWidget);
   });
 
-  testWidgets('sits at tertiary ink — a label, never a headline', (tester) async {
-    await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'ru')));
+  testWidgets('the phrasebook label sits at tertiary ink — a label, never a headline', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(const PairBadge(learned: 'zh', support: 'ru', reference: true)),
+    );
 
-    final style = tester.widget<Text>(find.text('EN→RU')).style!;
+    final style = tester.widget<Text>(find.text('СПРАВОЧНИК')).style!;
     expect(style.color, AppColors.tertiary);
     expect(style.fontFamily, AppFonts.inter);
   });

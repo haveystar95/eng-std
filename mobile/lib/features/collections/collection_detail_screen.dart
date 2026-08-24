@@ -389,7 +389,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                             learned: collection?.targetLang ?? '',
                             support: collection?.sourceLang ?? '',
                             reference: isReference,
-                            fontSize: 11,
+                            size: 13,
                           ),
                           const SizedBox(width: 8),
                           Flexible(
