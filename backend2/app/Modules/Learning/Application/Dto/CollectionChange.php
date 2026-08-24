@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Dto;
 
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use DateTimeImmutable;
 
 /**
@@ -30,4 +31,20 @@ final readonly class CollectionChange
         public ?string $imageAuthorUrl = null,
         public bool $isDefault = false,
     ) {}
+
+    /**
+     * A REFERENCE collection: a phrasebook, not a course.
+     *
+     * DERIVED from the studied language and never stored (DECISIONS п. 136) — zh and ja carry no
+     * trainer, so a collection teaching one of them has a term, a translation and an audio and
+     * nothing else: no triage, no pool, no schedule, no daily goal (п. 84). It rides the sync feed
+     * rather than being worked out on the device because «which languages this deployment can
+     * teach» is a server capability that moves without a client release; a phone holding its own
+     * copy of that list would hide the training buttons on a language that had just gained a
+     * trainer, or offer them on one that never had.
+     */
+    public function isReference(): bool
+    {
+        return $this->targetLang !== null && LanguageRoles::isReference($this->targetLang);
+    }
 }

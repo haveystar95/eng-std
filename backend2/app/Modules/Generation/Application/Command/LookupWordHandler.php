@@ -41,7 +41,7 @@ final readonly class LookupWordHandler
 
     public function __invoke(LookupWord $command): LookupOutcome
     {
-        $pair = $this->pair->resolve($command->actorId, $command->source, $command->target);
+        $pair = $this->pair->resolve($command->actorId, $command->source, $command->target, $command->taughtSide);
         $normalized = self::normalize($command->query);
         $cap = $this->limit->cap();
 

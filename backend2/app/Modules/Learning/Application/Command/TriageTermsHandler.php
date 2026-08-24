@@ -15,11 +15,13 @@ use App\Modules\Learning\Domain\ValueObject\CefrLevel;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\TriageVerdict;
 use App\Modules\Shared\Domain\Service\Clock;
+use App\Modules\Shared\Domain\Service\LanguageRoles;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Dto\TermDifficultyView;
 use App\Modules\Vocabulary\Application\Query\TermDifficultyReader;
 use App\Modules\Vocabulary\Application\Query\TermExistenceReader;
+use App\Modules\Vocabulary\Application\Query\TermLanguageReader;
 use DateInterval;
 use DateTimeImmutable;
 
@@ -49,6 +51,7 @@ final readonly class TriageTermsHandler
         private TriageRepository $triages,
         private TermProgressRepository $progress,
         private TermExistenceReader $terms,
+        private TermLanguageReader $termLangs,
         private TriageVerificationPlanner $planner,
         private LearnerProfileReader $learnerProfile,
         private TermDifficultyReader $termDifficulty,
@@ -58,15 +61,26 @@ final readonly class TriageTermsHandler
 
     public function __invoke(TriageTerms $command): TriageBatchResult
     {
-        $known = $this->knownTermIds($command);
+        [$known, $reference] = $this->knownTermIds($command);
 
-        return $this->tx->run(function () use ($command, $known): TriageBatchResult {
+        return $this->tx->run(function () use ($command, $known, $reference): TriageBatchResult {
             /** @var list<Triage> $accepted */
             $accepted = [];
             $duplicates = 0;
             $unknown = 0;
+            $rejected = 0;
 
             foreach ($command->triages as $input) {
+                // A reference-language word is refused before the log, not after it: two of the
+                // three verdicts enrol, and a swipe deck that could put a zh term in the pool would
+                // be the same hole the enrolment gate closes (DECISIONS пп. 84, 136). Nothing is
+                // written — a verdict that can never be projected is not a fact worth keeping.
+                if (isset($reference[$input->termId->value])) {
+                    $rejected++;
+
+                    continue;
+                }
+
                 if (! isset($known[$input->termId->value])) {
                     $unknown++;
 
@@ -100,6 +114,7 @@ final readonly class TriageTermsHandler
                 accepted: count($accepted),
                 duplicates: $duplicates,
                 unknown: $unknown,
+                rejected: $rejected,
             );
         });
     }
@@ -212,7 +227,11 @@ final readonly class TriageTermsHandler
         return $ids;
     }
 
-    /** @return array<string, true> */
+    /**
+     * The terms of this batch that exist, split from the ones that exist but are unteachable.
+     *
+     * @return array{array<string, true>, array<string, true>} [existing, reference-language]
+     */
     private function knownTermIds(TriageTerms $command): array
     {
         $set = [];
@@ -220,6 +239,13 @@ final readonly class TriageTermsHandler
             $set[$termId->value] = true;
         }
 
-        return $set;
+        $reference = [];
+        foreach ($this->termLangs->langsFor($command->termIds()) as $termId => $lang) {
+            if (LanguageRoles::isReference($lang)) {
+                $reference[$termId] = true;
+            }
+        }
+
+        return [$set, $reference];
     }
 }

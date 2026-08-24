@@ -64,6 +64,25 @@ final class LanguageRoles
         return LanguageCatalog::knows(self::normalize($code));
     }
 
+    /**
+     * A REFERENCE language: one the catalogue names but this product does not teach.
+     *
+     * Derived, never stored (DECISIONS п. 136): zh and ja carry no trainer ({@see
+     * LanguageModeSupport}), so a collection that teaches one of them is a phrasebook — a term, a
+     * translation and an audio — and its words are outside the pool, the schedule and the daily
+     * goal (п. 84). The day a judge and a normaliser exist for Chinese, that row grows a trainer and
+     * every screen that asks this question changes its answer on its own.
+     *
+     * A code the catalogue has never heard of is NOT reference — it is nothing at all, and saying
+     * «reference» about it would turn a typo into a product decision.
+     */
+    public static function isReference(string $code): bool
+    {
+        $normalized = self::normalize($code);
+
+        return LanguageCatalog::knows($normalized) && ! self::isTaught($normalized);
+    }
+
     /** Casefolded and trimmed, so `« RU »` and `ru` are one language and not two. */
     public static function normalize(string $code): string
     {

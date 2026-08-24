@@ -32,7 +32,7 @@ final readonly class SearchTermsHandler
     /** @return list<SearchHitView> */
     public function __invoke(SearchTerms $query): array
     {
-        $pair = $this->pair->resolve($query->actorId, $query->source, $query->target);
+        $pair = $this->pair->resolve($query->actorId, $query->source, $query->target, $query->taughtSide);
 
         // The CATALOGUE sides, not the direction. «Похожие» are the same rows whichever way the
         // learner is asking — `case` is an English term with a Russian translation either way — and

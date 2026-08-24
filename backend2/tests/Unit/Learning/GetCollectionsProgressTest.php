@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Query\GetCollectionsProgressHandler;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use Tests\Doubles\FakeTermLanguageReader;
 use Tests\Doubles\InMemoryProgressSnapshotReader;
 use Tests\Doubles\InMemoryUserCollectionTermsReader;
 
@@ -20,6 +21,7 @@ it('derives learned, mastered and due per collection', function () {
 
     $handler = new GetCollectionsProgressHandler(
         new InMemoryUserCollectionTermsReader([], ['COL' => [$mastered, $learned, $known, $fresh]]),
+        new FakeTermLanguageReader(),
         new InMemoryProgressSnapshotReader([
             $mastered => new DueTermView(TermId::fromString($mastered), LearningState::Review, 30, $now->modify('-1 day')),
             $learned => new DueTermView(TermId::fromString($learned), LearningState::Review, 5, $now->modify('+1 day')),
@@ -43,6 +45,7 @@ it('derives learned, mastered and due per collection', function () {
 it('returns nothing when the user has no collections', function () {
     $handler = new GetCollectionsProgressHandler(
         new InMemoryUserCollectionTermsReader(),
+        new FakeTermLanguageReader(),
         new InMemoryProgressSnapshotReader(),
     );
 

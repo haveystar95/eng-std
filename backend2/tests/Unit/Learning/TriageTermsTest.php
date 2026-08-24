@@ -17,6 +17,7 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
 use Tests\Doubles\FakeLearnerProfileReader;
 use Tests\Doubles\FakeTermDifficultyReader;
 use Tests\Doubles\FakeTermExistenceReader;
+use Tests\Doubles\FakeTermLanguageReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
 use Tests\Doubles\InMemoryTermProgressRepository;
@@ -35,6 +36,7 @@ function triageHandler(object $ctx): TriageTermsHandler
         $ctx->triages,
         $ctx->progress,
         FakeTermExistenceReader::knowingAll(),
+        new FakeTermLanguageReader(),
         new TriageVerificationPlanner(),
         new FakeLearnerProfileReader(CefrLevel::B1),
         new FakeTermDifficultyReader(), // unknown difficulty → not risky → 90-day check
@@ -219,6 +221,7 @@ it('skips unknown term ids', function () {
     $handler = new TriageTermsHandler(
         $this->triages, $this->progress,
         FakeTermExistenceReader::knowing([]), // nothing exists
+        new FakeTermLanguageReader(),
         new TriageVerificationPlanner(),
         new FakeLearnerProfileReader(CefrLevel::B1),
         new FakeTermDifficultyReader(),

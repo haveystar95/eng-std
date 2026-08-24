@@ -16,6 +16,7 @@ use App\Modules\Generation\Application\Query\SearchTerms;
 use App\Modules\Generation\Application\Query\SearchTermsHandler;
 use App\Modules\Generation\Application\Service\SearchPair;
 use App\Modules\Generation\Domain\Service\SupportedLanguages;
+use App\Modules\Generation\Domain\ValueObject\TaughtSide;
 use App\Modules\Generation\Presentation\Http\Request\AddSearchResultRequest;
 use App\Modules\Generation\Presentation\Http\Request\LookupWordRequest;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
@@ -58,6 +59,7 @@ final class SearchController
                 query: $query,
                 source: $this->lang($request, 'source'),
                 target: $this->lang($request, 'target'),
+                taughtSide: $this->taughtSide($request),
                 limit: min(50, max(1, $request->integer('limit', 20))),
             ));
 
@@ -79,6 +81,7 @@ final class SearchController
             query: trim($request->string('q')->toString()),
             source: $this->lang($request, 'source'),
             target: $this->lang($request, 'target'),
+            taughtSide: $this->taughtSide($request),
         ));
 
         return response()->json(['data' => [
@@ -107,6 +110,9 @@ final class SearchController
             query: (string) $data['query'],
             source: isset($data['source']) ? (string) $data['source'] : null,
             target: isset($data['target']) ? (string) $data['target'] : null,
+            taughtSide: TaughtSide::tryFromInput(
+                isset($data['taught_side']) ? (string) $data['taught_side'] : null,
+            ),
         ));
 
         // The cap is a 200, not a 429. It is a normal answer the app has a screen for — «на сегодня
@@ -213,6 +219,24 @@ final class SearchController
             // the learner's own. Their profile, not the first entry of the list.
             'default_native' => $this->pair->fromProfile($this->actorId($request))->translationLang,
         ]]);
+    }
+
+    /**
+     * WHICH SIDE of the pair the learner is studying, if the client said so.
+     *
+     * The cure DECISIONS п. 147 names for its own tie-break: a request carries a direction, and the
+     * roles inside it are the client's to state, because the learner set them on the pill. Absent —
+     * an older build, a screen with no pill — the server guesses as it always did.
+     *
+     * An unrecognised value reads as «not given» rather than as an error on the two GET endpoints:
+     * both are fired by a debounce, and a typo in a query string must not put a 422 on a screen the
+     * learner is still typing into. `POST /search/lookup` validates it properly (see
+     * {@see \App\Modules\Generation\Presentation\Http\Request\LookupWordRequest}) — that one is
+     * a deliberate tap and can afford to be told.
+     */
+    private function taughtSide(Request $request): ?TaughtSide
+    {
+        return TaughtSide::tryFromInput($request->string('taught_side')->toString());
     }
 
     /** A query-string language code, or null when it was not given. Blank is «not given». */

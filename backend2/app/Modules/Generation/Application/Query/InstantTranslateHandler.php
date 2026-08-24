@@ -74,7 +74,7 @@ final readonly class InstantTranslateHandler
             return InstantHintView::tooLong($normalized);
         }
 
-        $pair = $this->pair->resolve($query->actorId, $query->source, $query->target);
+        $pair = $this->pair->resolve($query->actorId, $query->source, $query->target, $query->taughtSide);
 
         // 1. Our own catalogue — free, and the string the card would show. ONE direction, the one
         //    the learner asked for: looking the other way too would answer a question they did not

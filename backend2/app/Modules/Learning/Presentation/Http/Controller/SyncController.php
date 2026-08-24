@@ -150,6 +150,11 @@ final class SyncController
             'image_author' => $r->imageAuthor,
             'image_author_url' => $r->imageAuthorUrl,
             'is_default' => $r->isDefault,
+            // ADDITIVE, and derived rather than stored: a collection whose studied language carries
+            // no trainers is a phrasebook — term, translation, audio — with no training buttons and
+            // no enrolment (DECISIONS пп. 84, 136). Sent from here because the capability is the
+            // server's and moves without a client release; see CollectionChange::isReference().
+            'is_reference' => $r->isReference(),
         ];
     }
 

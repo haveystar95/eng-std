@@ -10,12 +10,15 @@ use App\Modules\Learning\Application\Command\CompleteStudySession;
 use App\Modules\Learning\Application\Command\CompleteStudySessionHandler;
 use App\Modules\Learning\Application\Query\GetCollectionsProgress;
 use App\Modules\Learning\Application\Query\GetCollectionsProgressHandler;
+use App\Modules\Learning\Application\Query\GetProgressByLanguage;
+use App\Modules\Learning\Application\Query\GetProgressByLanguageHandler;
 use App\Modules\Learning\Application\Query\GetUserStats;
 use App\Modules\Learning\Application\Query\GetUserStatsHandler;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\BuildSessionRequest;
 use App\Modules\Learning\Presentation\Http\Request\CompleteSessionRequest;
 use App\Modules\Learning\Presentation\Http\Resource\CollectionProgressResource;
+use App\Modules\Learning\Presentation\Http\Resource\LanguageProgressResource;
 use App\Modules\Learning\Presentation\Http\Resource\SessionResource;
 use App\Modules\Learning\Presentation\Http\Resource\StatsResource;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -32,6 +35,7 @@ final class StudyController
         private readonly CompleteStudySessionHandler $completeSession,
         private readonly GetUserStatsHandler $userStats,
         private readonly GetCollectionsProgressHandler $collectionsProgress,
+        private readonly GetProgressByLanguageHandler $progressByLanguage,
     ) {}
 
     public function session(BuildSessionRequest $request): SessionResource
@@ -76,11 +80,27 @@ final class StudyController
         return new StatsResource($stats);
     }
 
+    /**
+     * Per-collection progress, with the per-LANGUAGE cut beside it.
+     *
+     * `data` is unchanged, field for field — this endpoint is what the shelf and the collection
+     * screen draw their bars from, and the cut is an ADDITION alongside them, never a reshaping of
+     * them (DECISIONS п. 139). «Сколько усвоено в румынском» is a question about terms, and a term
+     * has one language, so the cut regroups the very same rows rather than introducing a second
+     * progress. There is deliberately no cut by PAIR: a word studied through two folders of
+     * different support languages would be counted twice.
+     */
     public function progress(Request $request): AnonymousResourceCollection
     {
-        $progress = ($this->collectionsProgress)(new GetCollectionsProgress($this->actorId($request), new DateTimeImmutable()));
+        $actorId = $this->actorId($request);
+        $now = new DateTimeImmutable();
 
-        return CollectionProgressResource::collection($progress);
+        $progress = ($this->collectionsProgress)(new GetCollectionsProgress($actorId, $now));
+        $byLanguage = ($this->progressByLanguage)(new GetProgressByLanguage($actorId, $now));
+
+        return CollectionProgressResource::collection($progress)->additional([
+            'by_language' => LanguageProgressResource::collection($byLanguage)->resolve($request),
+        ]);
     }
 
     private function actorId(Request $request): UserId

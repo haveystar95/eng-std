@@ -82,6 +82,9 @@ final class TriageController
             'accepted' => $result->accepted,
             'duplicates' => $result->duplicates,
             'unknown' => $result->unknown,
+            // Additive: words that exist but are in a language with no trainers at all, so no
+            // verdict about them can ever be projected (DECISIONS пп. 84, 136).
+            'rejected' => $result->rejected,
         ]]);
     }
 

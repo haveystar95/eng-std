@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Service;
 
 use App\Modules\Generation\Application\Dto\ResolvedPair;
+use App\Modules\Generation\Domain\Exception\TaughtSideNotTaught;
 use App\Modules\Generation\Domain\Exception\UnsupportedLanguagePair;
 use App\Modules\Generation\Domain\Service\SearchDirection;
 use App\Modules\Generation\Domain\Service\SupportedLanguages;
+use App\Modules\Generation\Domain\ValueObject\TaughtSide;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
 /**
@@ -44,11 +46,18 @@ final readonly class SearchPair
     /**
      * @param  string|null  $source  the language the query is written in
      * @param  string|null  $target  the language the answer comes back in
+     * @param  TaughtSide|null  $taughtSide  which half of the direction the learner is STUDYING,
+     *                                       said by the client. Null falls back to `taughtSideOf()`.
      *
      * @throws UnsupportedLanguagePair
+     * @throws TaughtSideNotTaught
      */
-    public function resolve(UserId $actorId, ?string $source, ?string $target): ResolvedPair
-    {
+    public function resolve(
+        UserId $actorId,
+        ?string $source,
+        ?string $target,
+        ?TaughtSide $taughtSide = null,
+    ): ResolvedPair {
         $from = strtolower(trim($source ?? ''));
         $to = strtolower(trim($target ?? ''));
 
@@ -63,14 +72,38 @@ final readonly class SearchPair
         }
 
         // A supported pair has a taught language on one side — but «which side» is a question the
-        // direction alone answers only when the OTHER side is not taught too. See `taughtSideOf()`.
-        $termLang = $this->taughtSideOf($actorId, $from, $to);
+        // direction alone answers only when the OTHER side is not taught too. The client may now
+        // ANSWER it instead of leaving it to be guessed; `taughtSideOf()` is the fallback for the
+        // requests that do not (DECISIONS п. 147).
+        $termLang = $taughtSide !== null
+            ? $this->namedTaughtSide($taughtSide, $from, $to)
+            : $this->taughtSideOf($actorId, $from, $to);
 
         return new ResolvedPair(
             direction: new SearchDirection($from, $to),
             termLang: $termLang,
             translationLang: $termLang === $from ? $to : $from,
         );
+    }
+
+    /**
+     * The side the CLIENT named, checked against what this deployment can actually teach.
+     *
+     * Checked rather than trusted: a role is a claim about the deployment's capabilities, and a
+     * client that has not re-read `GET /search/languages` since a language was retired would
+     * otherwise have the server answer in a language nobody teaches — invisibly, because the screen
+     * would look exactly the same.
+     *
+     * @throws TaughtSideNotTaught
+     */
+    private function namedTaughtSide(TaughtSide $side, string $from, string $to): string
+    {
+        $lang = $side->of($from, $to);
+        if (! $this->supported->teaches($lang)) {
+            throw TaughtSideNotTaught::of($side, $lang);
+        }
+
+        return $lang;
     }
 
     /**

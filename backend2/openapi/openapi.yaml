@@ -518,6 +518,18 @@ paths:
         - { name: q, in: query, required: true, schema: { type: string } }
         - { name: source, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 } }
         - { name: target, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 } }
+        - name: taught_side
+          in: query
+          required: false
+          schema: { type: string, enum: [source, target] }
+          description: >-
+            WHICH HALF of the pair is the language being STUDIED, said by the client instead of
+            guessed by the server. A request carries a direction, not a pair of roles: `de → en` is
+            either German with English support or English with German support, and the query string
+            alone cannot tell them apart. Omit it and the server breaks the tie as before — the
+            learner's profile, then the direction's `source` (DECISIONS п. 147). An unparseable
+            value reads as «not given» on these two debounced GETs, because a typo must not put an
+            error on a screen somebody is still typing into.
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
       responses:
         '200':
@@ -575,6 +587,18 @@ paths:
         - { name: q, in: query, required: true, schema: { type: string } }
         - { name: source, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: the language the query is written in }
         - { name: target, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: the language the answer comes back in }
+        - name: taught_side
+          in: query
+          required: false
+          schema: { type: string, enum: [source, target] }
+          description: >-
+            WHICH HALF of the pair is the language being STUDIED, said by the client instead of
+            guessed by the server. A request carries a direction, not a pair of roles: `de → en` is
+            either German with English support or English with German support, and the query string
+            alone cannot tell them apart. Omit it and the server breaks the tie as before — the
+            learner's profile, then the direction's `source` (DECISIONS п. 147). An unparseable
+            value reads as «not given» on this debounced GET, because a typo must not put an error
+            on a screen somebody is still typing into.
       responses:
         '200':
           description: A hint, or an honest nothing
@@ -717,6 +741,18 @@ paths:
                   maxLength: 120
                 source: { type: string, minLength: 2, maxLength: 2 }
                 target: { type: string, minLength: 2, maxLength: 2 }
+                taught_side:
+                  type: string
+                  enum: [source, target]
+                  description: >-
+                    WHICH HALF of the pair is the language being STUDIED, said by the client instead
+                    of guessed by the server — the same optional field the two search GETs take. A
+                    request carries a direction and not a pair of roles: `de → en` is either German
+                    with English support or English with German support. Omitted, the server breaks
+                    the tie as before (DECISIONS п. 147). Naming a side whose language this
+                    deployment does not teach is a **422** `taught_side_not_taught`: this endpoint is
+                    a deliberate tap and can afford to be told, and answering in the other role would
+                    write the card in the wrong language invisibly.
       responses:
         '200':
           description: An answer, or an honest «not today»
@@ -1221,6 +1257,20 @@ paths:
         For each of the user's own collections: total, new, due, and mastered counts, with
         mastered broken into confirmed (proven by exercises) vs familiar (marked known) and the
         rest in progress. Computed by folding the (user, term) progress over collection membership.
+
+
+        `by_language` rides ALONGSIDE `data`, which is unchanged field for field: the same counters
+        cut by the language of the TERM — «сколько усвоено в румынском» (DECISIONS п. 139). It is a
+        REGROUPING of the very same rows and not a second progress: progress lives on `(user, term)`
+        and a term has exactly one language. There is deliberately no cut by PAIR — a word studied
+        through two folders with different support languages would then be counted twice.
+
+
+        A term is counted ONCE in `by_language`, however many folders hold it (`data` counts it once
+        per folder, which is right for a folder's own bar). REFERENCE languages are absent from
+        both: zh and ja carry no trainer, so their words have no progress to report, and a phrasebook
+        collection drops out of `data` rather than reporting a «0 из 40» that reads as work not yet
+        done (пп. 84, 136).
       responses:
         '200':
           description: OK
@@ -1232,6 +1282,10 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/CollectionProgress' }
+                  by_language:
+                    type: array
+                    description: Ordered by language code, so the response is diffable between runs.
+                    items: { $ref: '#/components/schemas/LanguageProgress' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /reviews/batch:
@@ -1338,6 +1392,16 @@ paths:
                       accepted: { type: integer }
                       duplicates: { type: integer }
                       unknown: { type: integer }
+                      rejected:
+                        type: integer
+                        description: >-
+                          Swipes REFUSED because the word is in a reference language (one that
+                          carries no trainers at all — zh, ja in v1; DECISIONS пп. 84, 136). Nothing
+                          is written for them: two of the three verdicts enrol, and the pool does not
+                          take a word that can never be dealt as a card. Separate from `unknown`,
+                          which is a term this account cannot see and goes away by itself — a
+                          `rejected` swipe will never land, however often it is retried. The rest of
+                          the batch is applied as usual (a batch never fails whole).
                       exposures:
                         type: integer
                         description: >-
@@ -1413,7 +1477,8 @@ paths:
         the first recognition rung, enrolled; `known` → a `known` row with a verification check,
         NOT enrolled (on an untaught word this supersedes an earlier enrolment). A pair that has
         actually been taught is never rewritten by a swipe — it is only enrolled. Re-sending an
-        id is a duplicate, not an error; a swipe for an unknown term is skipped.
+        id is a duplicate, not an error; a swipe for an unknown term is skipped, and a swipe for a
+        REFERENCE-language term is refused (`rejected`) rather than written.
       requestBody:
         required: true
         content:
@@ -1512,6 +1577,16 @@ paths:
         '200': { $ref: '#/components/responses/PoolMembership' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Not a term id }
+        '422':
+          description: >-
+            The term is in a REFERENCE language — one this deployment does not teach (zh, ja in v1;
+            DECISIONS пп. 84, 136). Such a language carries no trainer at all, so an enrolled word
+            would be «being studied» and never come back. Code `reference_language_term`, with
+            `meta.term_id` / `meta.lang`. Not reachable from an app in step with the server: a
+            reference collection shows no «Учить это слово» at all.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
     delete:
       tags: [Study]
@@ -1682,7 +1757,19 @@ paths:
                                 image_url: { type: string, nullable: true, description: 'Pexels cover; null = none, show a placeholder' }
                                 image_author: { type: string, nullable: true, description: 'photographer credit (Pexels licence)' }
                                 image_author_url: { type: string, nullable: true, description: 'link to the photographer' }
-                                is_default: { type: boolean, description: 'the owner\'s «Сохранённые» folder — one per owner, undeletable' }
+                                is_default: { type: boolean, description: 'the owner''s «Сохранённые» folder — one per owner, undeletable' }
+                                is_reference:
+                                  type: boolean
+                                  description: >-
+                                    A PHRASEBOOK, not a course: the studied language (`target_lang`)
+                                    carries no trainers at all — zh and ja in v1 (DECISIONS пп. 84,
+                                    136). Such a collection shows a term, a translation and audio,
+                                    and offers neither training nor enrolment; its words never enter
+                                    the pool, the schedule or the daily goal, and the server refuses
+                                    them at both doors (`PUT /pool/terms/{id}` 422, `/triage/batch`
+                                    `rejected`). DERIVED from the language, never stored — it rides
+                                    the feed because which languages this deployment can teach is a
+                                    server capability that changes without a client release.
                           collection_items:
                             type: array
                             items:
@@ -1980,7 +2067,7 @@ components:
               text: { type: string, description: The learned-language term. }
               translation: { type: string, nullable: true, description: Native-language translation (collection source_lang). }
               type: { type: string, description: word | phrase | idiom | phrasal_verb }
-              cefr: { type: string, nullable: true, description: CEFR level, e.g. A2. }
+              cefr: { type: string, nullable: true, description: 'CEFR level, e.g. A2.' }
 
     User:
       type: object
@@ -2065,7 +2152,7 @@ components:
             One or two A2–B1 sentences in the language being learned, never containing the word
             itself — a description that names its headword answers the `description_match` card
             before it is asked, and the barrier refuses one that does.
-        example: { type: string, nullable: true, description: contains the term verbatim, or is absent }
+        example: { type: string, nullable: true, description: 'contains the term verbatim, or is absent' }
         example_translation: { type: string, nullable: true }
         cefr: { type: string, nullable: true }
         fresh: { type: boolean, description: true when THIS call paid for the answer }
@@ -2120,6 +2207,22 @@ components:
       properties:
         collection_id: { type: string }
         terms_total: { type: integer }
+        new_count: { type: integer, description: "Not started (no progress, or returned to new)" }
+        due_count: { type: integer }
+        mastered_count: { type: integer, description: confirmed + familiar }
+        confirmed_count: { type: integer, description: "Proven by exercises (review, interval >= 21)" }
+        familiar_count: { type: integer, description: Marked known (self-assessed) }
+        in_progress_count: { type: integer, description: Started but not yet mastered }
+
+    LanguageProgress:
+      type: object
+      description: >-
+        The same counters as CollectionProgress, cut by the language the TERMS are written in rather
+        than by the folder holding them (DECISIONS п. 139). A term is counted once, whatever its
+        folders; reference languages (zh, ja) are not listed at all.
+      properties:
+        lang: { type: string, minLength: 2, maxLength: 2 }
+        terms_total: { type: integer, description: Distinct terms in this language across the learner's collections }
         new_count: { type: integer, description: "Not started (no progress, or returned to new)" }
         due_count: { type: integer }
         mastered_count: { type: integer, description: confirmed + familiar }

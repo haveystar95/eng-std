@@ -31,6 +31,11 @@ final class LookupWordRequest extends FormRequest
             // by an `in:` rule that would have to be kept in step with the config by hand.
             'source' => ['sometimes', 'string', 'size:2'],
             'target' => ['sometimes', 'string', 'size:2'],
+            // Which half of that pair is the language being STUDIED. Optional: a client that does
+            // not say leaves the server to break the tie as before (DECISIONS п. 147). `in:` is
+            // right here where it was wrong above — «source|target» is the whole vocabulary of this
+            // field and it cannot drift with the deployment.
+            'taught_side' => ['sometimes', 'string', 'in:source,target'],
         ];
     }
 }
