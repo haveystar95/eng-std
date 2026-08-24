@@ -282,25 +282,31 @@ final class GenerationServiceProvider extends ServiceProvider
 
             return new GenerationStackConfig(
                 stack: $stack,
-                // The v1 stack's prompt version is frozen with the adapter that loads it; the v2
-                // stack's is configurable, and `prompt_version` stays the eval command's override
-                // for either — that is what lets a new version be trialled without flipping prod.
+                // NO SECOND DEFAULT on any of the five keys below, for the reason `61fb139` gives
+                // about `mechanics_prompt_version`: `config/services.php` resolves each of them and
+                // carries its own env default, so a fallback here is unreachable — and a fallback
+                // nothing executes is a value nobody re-reads, which is how that one drifted to
+                // `v12.1` while the live config said `v13.1`. One place states the default: the
+                // config file.
+                //
+                // `prompt_version` is the ONE that keeps its second argument, and it is not a
+                // default: the key genuinely does not exist in the config file. It is the eval
+                // command's runtime override, set with `config([...])` for one process, and the
+                // second argument is what runs in every other one — the v1 stack's frozen version
+                // or the v2 stack's configured one.
                 corePromptVersion: (string) config(
                     'services.generation.prompt_version',
                     $stack === GenerationStackConfig::LEGACY
                         ? RequestCollectionGenerationHandler::PROMPT_VERSION
-                        : (string) config('services.generation.core_prompt_version', 'v11.1'),
+                        : (string) config('services.generation.core_prompt_version'),
                 ),
-                coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider', 'openai')) ?? ProviderId::OpenAi,
-                coreModel: (string) config('services.generation.core_model', 'gpt-5.4'),
-                // No default: `config/services.php` always resolves this key (it has an env default
-                // of its own), so a second one here was unreachable — and it had gone stale at
-                // `v12.1` while the config said `v13.1`, which is the worse half. A dead fallback
-                // that disagrees with the live value is a wrong answer waiting for the day the key
-                // does go missing.
+                // The `?? ProviderId::OpenAi` below is a different thing and stays: it catches an
+                // env value that is not a provider name at all, which a config default cannot.
+                coreProvider: ProviderId::tryFrom((string) config('services.generation.core_provider')) ?? ProviderId::OpenAi,
+                coreModel: (string) config('services.generation.core_model'),
                 mechanicsPromptVersion: (string) config('services.generation.mechanics_prompt_version'),
-                mechanicsProvider: ProviderId::tryFrom((string) config('services.generation.mechanics_provider', 'openai')) ?? ProviderId::OpenAi,
-                mechanicsModel: (string) config('services.generation.mechanics_model', 'gpt-4o-mini'),
+                mechanicsProvider: ProviderId::tryFrom((string) config('services.generation.mechanics_provider')) ?? ProviderId::OpenAi,
+                mechanicsModel: (string) config('services.generation.mechanics_model'),
             );
         });
 
