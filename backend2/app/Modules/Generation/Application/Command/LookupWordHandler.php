@@ -61,7 +61,13 @@ final readonly class LookupWordHandler
         // it must not survive into the branches below either, including the one that serves an old
         // row when the cap is spent.
         if ($cached !== null && $cached->notRecognized) {
-            if (! NegativeVerdictLifetime::isStale($cached->createdAt, $this->clock->now())) {
+            // A RE-TAP outranks the verdict. The learner is looking at «не получилось распознать»
+            // over a word they know exists and has pressed the button again; they are the retry,
+            // and asking them to wait a day for the automatic expiry would be the app defending a
+            // mistake it can see. The expiry below still governs every path nobody is watching.
+            $disputed = $command->retry
+                || NegativeVerdictLifetime::isStale($cached->createdAt, $this->clock->now());
+            if (! $disputed) {
                 return LookupOutcome::notRecognized($cap, $this->usedToday($command));
             }
             $cached = null;

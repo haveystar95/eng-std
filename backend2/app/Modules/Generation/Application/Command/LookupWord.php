@@ -30,5 +30,20 @@ final readonly class LookupWord
          * pill at all, will always send.
          */
         public ?TaughtSide $taughtSide = null,
+        /**
+         * The learner pressed «Собрать карточку» AGAIN on a query the model just refused.
+         *
+         * A person tapping the same button a second time IS the retry, and it outranks a stored
+         * «это не слово»: the verdict they are disputing is the one thing on screen they can see is
+         * wrong. So an explicit re-tap ignores the negative row outright — not only a stale one —
+         * and buys a fresh call, while the 24-hour expiry
+         * ({@see \App\Modules\Generation\Domain\Service\NegativeVerdictLifetime}) goes on governing
+         * every AUTOMATIC path, where nobody is watching and nobody asked (решение архитектора, 25.08).
+         *
+         * It does NOT bypass the daily cap: that is a spend guard, not a verdict, and a retry loop
+         * is exactly what it exists to stop. Nor does it re-buy a POSITIVE card — there is nothing
+         * to dispute about a card that exists.
+         */
+        public bool $retry = false,
     ) {}
 }

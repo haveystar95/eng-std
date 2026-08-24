@@ -36,6 +36,10 @@ final class LookupWordRequest extends FormRequest
             // right here where it was wrong above — «source|target» is the whole vocabulary of this
             // field and it cannot drift with the deployment.
             'taught_side' => ['sometimes', 'string', 'in:source,target'],
+            // «Я нажал ещё раз». Only ever sent after the screen has been told the query was not
+            // recognised, so it cannot be a way to buy the same card twice — a positive answer is
+            // still served from the cache whatever this says.
+            'retry' => ['sometimes', 'boolean'],
         ];
     }
 }

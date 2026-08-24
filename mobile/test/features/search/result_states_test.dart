@@ -40,6 +40,10 @@ class _SpyApi implements ApiClient {
 
   int lookupCalls = 0;
   int addCalls = 0;
+
+  /// The `retry` flag as it arrived, per call — «я нажал ещё раз», which is what lets the server
+  /// past a refusal it wrote seconds ago.
+  final List<bool> retriesPerCall = [];
   String? addedTermId;
   String? addedLookupId;
 
@@ -66,8 +70,10 @@ class _SpyApi implements ApiClient {
     String? source,
     String? target,
     String? taughtSide,
+    bool retry = false,
   }) async {
     lookupCalls++;
+    retriesPerCall.add(retry);
 
     return outcome;
   }
@@ -321,6 +327,52 @@ void main() {
 
       expect(find.byType(SearchResultCard), findsNothing);
       expect(find.text('Собрать карточку'), findsOneWidget);
+    });
+  });
+
+  group('повторный тап — это и есть «повторить» (решение архитектора 25.08)', () {
+    // The model refused a word the learner knows exists. Pressing the button again is the retry:
+    // the client says so, and the server goes past the verdict it wrote seconds ago instead of
+    // re-serving it. Without the flag the second tap is answered from the cache, free and wrong.
+
+    testWidgets('the first tap is not a retry; the one after a refusal is', (tester) async {
+      final api = _SpyApi(
+        hint: 'hola',
+        outcome: const LookupOutcome(dailyCap: 5, usedToday: 1, notRecognized: true),
+      );
+      await _pump(tester, api);
+      await _submit(tester, 'привет');
+
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+
+      // The refusal is on screen, and the button is still there to press again.
+      expect(find.textContaining('Не получилось распознать'), findsOneWidget);
+      expect(api.retriesPerCall, [false]);
+
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+
+      expect(api.retriesPerCall, [false, true]);
+    });
+
+    testWidgets('a fresh query is never a retry, whatever came before it', (tester) async {
+      final api = _SpyApi(
+        hint: 'hola',
+        outcome: const LookupOutcome(dailyCap: 5, usedToday: 1, notRecognized: true),
+      );
+      await _pump(tester, api);
+      await _submit(tester, 'привет');
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+
+      // Another word entirely: the refusal was about «привет», and carrying the flag over would
+      // spend a call to dispute a verdict nobody has been given yet.
+      await _submit(tester, 'спасибо');
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+
+      expect(api.retriesPerCall, [false, false]);
     });
   });
 }

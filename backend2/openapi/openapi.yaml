@@ -753,6 +753,16 @@ paths:
                     deployment does not teach is a **422** `taught_side_not_taught`: this endpoint is
                     a deliberate tap and can afford to be told, and answering in the other role would
                     write the card in the wrong language invisibly.
+                retry:
+                  type: boolean
+                  default: false
+                  description: >-
+                    The learner pressed the button AGAIN on a query the model just refused. A person
+                    tapping twice is the retry, so this ignores a stored `not_recognized` outright
+                    rather than waiting out its 24-hour expiry — the expiry goes on governing every
+                    automatic path, where nobody is watching. It does not bypass the daily cap, and
+                    it never re-buys a card that already exists: a positive answer is still served
+                    from the cache whatever this says.
       responses:
         '200':
           description: An answer, or an honest «not today»

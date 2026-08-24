@@ -41,7 +41,7 @@ class _Api implements ApiClient {
       InstantHint(query: query);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async =>
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide, bool retry = false}) async =>
       const LookupOutcome(dailyCap: 5);
 
   @override

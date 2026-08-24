@@ -282,6 +282,7 @@ class _RoutingApi implements ApiClient {
     String? source,
     String? target,
     String? taughtSide,
+    bool retry = false,
   }) => delegate.lookupWord(query, source: source, target: target, taughtSide: taughtSide);
 
   @override
@@ -385,6 +386,7 @@ class _FakeApi implements ApiClient {
     String? source,
     String? target,
     String? taughtSide,
+    bool retry = false,
   }) async {
     await Future<void>.delayed(Duration(seconds: slow ? 5 : 2));
     if (capReached) return const LookupOutcome(limitReached: true, dailyCap: 5, usedToday: 5);

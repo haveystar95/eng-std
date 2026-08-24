@@ -403,6 +403,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final query = _query;
     if (query.isEmpty || _lookingUp) return;
     AppHaptics.light();
+    // THIS tap is a retry when the last one came back «не получилось распознать». The learner is
+    // looking at a refusal over a word they know exists and has pressed the button again — they are
+    // the retry, and the server lets them past the stored verdict rather than making them wait out
+    // its expiry (решение архитектора, 25.08). Read before the flag is cleared below.
+    final retry = _notRecognized;
     final generation = ++_generation;
     setState(() {
       _lookingUp = true;
@@ -412,7 +417,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final outcome = await ref
           .read(apiClientProvider)
-          .lookupWord(query, source: _pair?.source, target: _pair?.target, taughtSide: _taughtSide);
+          .lookupWord(
+            query,
+            source: _pair?.source,
+            target: _pair?.target,
+            taughtSide: _taughtSide,
+            retry: retry,
+          );
       if (!mounted || generation != _generation) return;
       setState(() {
         _lookingUp = false;

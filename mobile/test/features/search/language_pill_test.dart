@@ -68,7 +68,7 @@ class _Api implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide, bool retry = false}) async {
     pairs.add('lookup $source→$target');
 
     return const LookupOutcome(dailyCap: 5);
@@ -356,6 +356,7 @@ class _BrokenLanguages implements ApiClient {
     String? source,
     String? target,
     String? taughtSide,
+    bool retry = false,
   }) => _inner.lookupWord(query, source: source, target: target, taughtSide: taughtSide);
 
   @override

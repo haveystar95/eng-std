@@ -21,8 +21,13 @@ uses(RefreshDatabase::class);
  * correct it — the mistake was cheaper to keep than to fix.
  *
  * A refusal now lives 24 hours. Inside the day it still does its job (a paste-and-retry loop buys
- * nothing); after it, the word is simply asked again. There is no «повторить» button: spending money
- * on a retry is not the learner's decision to take.
+ * nothing); after it, the word is simply asked again.
+ *
+ * There is still no «повторить» BUTTON — but there did not need to be one, and that is the second
+ * half of this file (решение архитектора 25.08). The learner already has a button: «Собрать
+ * карточку». Pressing it a second time on a query that was just refused IS the retry, so an explicit
+ * re-tap goes past the stored verdict outright, fresh or not. The expiry then governs exactly what
+ * it should: the automatic paths, where nobody is watching and nobody asked.
  */
 final class SpyWordLookup implements WordLookupPort
 {
@@ -78,10 +83,10 @@ beforeEach(function (): void {
 });
 
 /** POST /search/lookup, unwrapped. Always a 200 — a refusal is an answer here, not an error. */
-function askLookup(object $ctx, string $token, string $query): array
+function askLookup(object $ctx, string $token, string $query, bool $retry = false): array
 {
     return $ctx->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/search/lookup', ['query' => $query])
+        ->postJson('/api/v1/search/lookup', ['query' => $query] + ($retry ? ['retry' => true] : []))
         ->assertOk()
         ->json('data');
 }
@@ -165,4 +170,61 @@ it('restarts the clock on the refreshed row, so the second chance is not every r
 
     askLookup($this, $token, 'asdfgh');
     expect(SpyWordLookup::$calls)->toBe(2, 'the refreshed refusal is fresh again and answers free');
+});
+
+describe('a re-tap outranks the verdict (решение архитектора 25.08)', function () {
+    // The expiry is for the paths nobody watches. A person looking at «не получилось распознать»
+    // over a word they know exists, pressing the button a second time, IS the retry — and making
+    // them wait a day is the app defending a mistake it can see on screen.
+
+    it('ignores a refusal written seconds ago', function () {
+        [, $token] = learner();
+
+        askLookup($this, $token, 'asdfgh');
+        expect(SpyWordLookup::$calls)->toBe(1);
+
+        // No ageing anywhere: the row is as fresh as it gets, and the re-tap goes past it.
+        SpyWordLookup::$recognizes = true;
+        $answer = askLookup($this, $token, 'asdfgh', retry: true);
+
+        expect(SpyWordLookup::$calls)->toBe(2)
+            ->and($answer['not_recognized'])->toBeFalse()
+            ->and($answer['lookup']['text'])->toBe('greeting');
+    });
+
+    it('does not re-buy a card that already exists', function () {
+        [, $token] = learner();
+
+        SpyWordLookup::$recognizes = true;
+        askLookup($this, $token, 'asdfgh');
+        expect(SpyWordLookup::$calls)->toBe(1);
+
+        // There is nothing to dispute about a positive answer, so the flag changes nothing: the
+        // card is served from the cache and no money is spent.
+        $again = askLookup($this, $token, 'asdfgh', retry: true);
+
+        expect(SpyWordLookup::$calls)->toBe(1)
+            ->and($again['lookup']['text'])->toBe('greeting');
+    });
+
+    it('does not bypass the daily cap — a retry loop is what the cap is for', function () {
+        [, $token] = learner();
+        // A cap of zero is the cheapest way to say «spent», and the retry must not walk past it.
+        config(['services.generation.search_lookup_daily_cap' => 0]);
+
+        $answer = askLookup($this, $token, 'asdfgh', retry: true);
+
+        expect($answer['limit_reached'])->toBeTrue()
+            ->and(SpyWordLookup::$calls)->toBe(0);
+    });
+
+    it('leaves the automatic path governed by the expiry alone', function () {
+        [, $token] = learner();
+
+        askLookup($this, $token, 'asdfgh');
+        // Same query, no flag, no ageing: the refusal answers and nothing is bought.
+        askLookup($this, $token, 'asdfgh');
+
+        expect(SpyWordLookup::$calls)->toBe(1);
+    });
 });

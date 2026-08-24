@@ -113,6 +113,7 @@ final class SearchController
             taughtSide: TaughtSide::tryFromInput(
                 isset($data['taught_side']) ? (string) $data['taught_side'] : null,
             ),
+            retry: (bool) ($data['retry'] ?? false),
         ));
 
         // The cap is a 200, not a 429. It is a normal answer the app has a screen for — «на сегодня

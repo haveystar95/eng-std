@@ -326,11 +326,15 @@ class ApiClient {
   /// A spent daily cap is a normal 200 with [LookupOutcome.limitReached], not an error: the screen
   /// shows the free results beside an honest line. A cached word is served free and does not touch
   /// the cap at all.
+  /// [retry] — the learner pressed «Собрать карточку» AGAIN on a query the model just refused.
+  /// It makes the server ignore the stored «это не слово» instead of re-serving it: a person
+  /// tapping twice IS the retry, and the 24-hour expiry behind it is for the paths nobody watches.
   Future<LookupOutcome> lookupWord(
     String query, {
     String? source,
     String? target,
     String? taughtSide,
+    bool retry = false,
   }) async {
     final r = await _dio.post(
       '/search/lookup',
@@ -339,6 +343,7 @@ class ApiClient {
         'source': ?source,
         'target': ?target,
         'taught_side': ?taughtSide,
+        if (retry) 'retry': true,
       },
     );
     return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);

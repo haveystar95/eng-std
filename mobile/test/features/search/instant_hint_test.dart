@@ -57,7 +57,7 @@ class _Api implements ApiClient {
   }
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide, bool retry = false}) async {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 

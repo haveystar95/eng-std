@@ -54,7 +54,7 @@ class _SpyApi implements ApiClient {
       InstantHint(query: query, translation: hint);
 
   @override
-  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide}) async {
+  Future<LookupOutcome> lookupWord(String query, {String? source, String? target, String? taughtSide, bool retry = false}) async {
     lookupCalls++;
     if (holdLookup) await lookupGate.future;
 
