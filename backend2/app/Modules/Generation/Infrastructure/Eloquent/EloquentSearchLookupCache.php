@@ -73,6 +73,13 @@ final class EloquentSearchLookupCache implements SearchLookupCache
             'updated_at' => now(),
         ], ['normalized_query', 'lang', 'native_lang'], [
             'payload', 'model', 'prompt_version', 'tokens_in', 'tokens_out', 'cost_usd', 'updated_at',
+            // …including WHO paid and WHEN. A refreshed row is a new purchase, not an edit of an old
+            // one: `created_at` is what the refusal's expiry is measured from
+            // ({@see \App\Modules\Generation\Domain\Service\NegativeVerdictLifetime}), so leaving it
+            // at the original write would make a stale «это не слово» re-ask itself on every single
+            // lookup and never come back fresh. `user_id` travels with it because the daily cap
+            // counts rows by payer, and the payer of this row is whoever just bought it.
+            'user_id', 'created_at',
         ]) > 0;
 
         $stored = $this->find($normalizedQuery, $lang, $nativeLang)

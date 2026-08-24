@@ -9,7 +9,12 @@ use App\Modules\Generation\Application\Dto\WordLookupResult;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 
 /**
- * The lookup cache: one paid answer per word, for everybody, forever.
+ * The lookup cache: one paid answer per word, for everybody, forever — with one exception, and it
+ * is the refusal. A card keeps; «это не слово» goes off after a day
+ * ({@see \App\Modules\Generation\Domain\Service\NegativeVerdictLifetime}), because the model can be
+ * wrong about a real word and a global cache would make that mistake permanent for everyone. The
+ * expiry lives at the READ, in {@see \App\Modules\Generation\Application\Command\LookupWordHandler}:
+ * nothing is deleted, a stale refusal is simply not served.
  *
  * `find` is global on purpose — the answer is a fact about the word, not about who asked — and
  * `countPaidToday` is per user, because the daily cap is a spend guard on the person triggering the

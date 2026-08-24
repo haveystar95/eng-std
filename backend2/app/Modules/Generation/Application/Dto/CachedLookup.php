@@ -53,10 +53,14 @@ final readonly class CachedLookup
         /**
          * The model could not place this query in either language.
          *
-         * Cached exactly like a card, because it is the same kind of fact: `asdfgh` will not become
-         * a word tomorrow. Caching it is also what keeps the daily cap honest — the cap counts rows,
-         * so a refusal that wrote none would be a paid call nobody was charged for, and a field
-         * that costs nothing to abuse is a field that gets abused.
+         * Cached, but NOT like a card: a refusal is a perishable verdict and expires after a day
+         * ({@see \App\Modules\Generation\Domain\Service\NegativeVerdictLifetime}). It used to be
+         * stored as permanently as an answer, on the reasoning that `asdfgh` will not become a word
+         * tomorrow — true of `asdfgh` and false of the case that actually happened, a real word the
+         * model declined once (см. 24.08, «привет» в паре es ← ru). The row still earns its keep
+         * inside its day: it stops a paste-and-retry loop buying the same refusal ten times, and it
+         * keeps the daily cap honest — the cap counts rows, so a refusal that wrote none would be a
+         * paid call nobody was charged for.
          */
         public bool $notRecognized = false,
     ) {}

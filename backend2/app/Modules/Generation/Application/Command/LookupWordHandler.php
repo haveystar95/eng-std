@@ -11,6 +11,7 @@ use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Service\LookupBarrier;
 use App\Modules\Generation\Application\Service\SearchPair;
 use App\Modules\Generation\Domain\Exception\LookupRefused;
+use App\Modules\Generation\Domain\Service\NegativeVerdictLifetime;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -52,11 +53,18 @@ final readonly class LookupWordHandler
         }
 
         $cached = $this->cache->find($normalized, $pair->termLang, $pair->translationLang);
-        // «Not a word» is as permanent as a card and is served the same way — free, forever, for
-        // everybody. Checked before the staleness rule below, which is about a photo question this
-        // row never had.
+        // «Not a word» is a PERISHABLE verdict, unlike the card beside it. It is served free while
+        // it is fresh — that is what stops a paste-and-retry loop buying the same refusal ten times
+        // — and it is dropped once it is a day old, because the cache is global and a model that
+        // declines a real word once would otherwise close that word for everybody forever
+        // ({@see NegativeVerdictLifetime}). A stale refusal is treated as a MISS, not as an answer:
+        // it must not survive into the branches below either, including the one that serves an old
+        // row when the cap is spent.
         if ($cached !== null && $cached->notRecognized) {
-            return LookupOutcome::notRecognized($cap, $this->usedToday($command));
+            if (! NegativeVerdictLifetime::isStale($cached->createdAt, $this->clock->now())) {
+                return LookupOutcome::notRecognized($cap, $this->usedToday($command));
+            }
+            $cached = null;
         }
         // A row written before a field the card now needs existed is a STALE hit, not a hit: the
         // cache is global and permanent, so honouring it would let whoever looked a word up first
@@ -92,7 +100,8 @@ final readonly class LookupWordHandler
         }
 
         // Nothing to screen and nothing to show. Still STORED, so the day's cap counts the call that
-        // was actually bought and the next paste of the same keystrokes is free.
+        // was actually bought and the next paste of the same keystrokes is free — for a day, after
+        // which the refusal expires and the word gets asked again.
         $screened = $answer->notRecognized
             ? $answer
             : $this->barrier->screen($answer, $pair->termLang, $pair->translationLang);
