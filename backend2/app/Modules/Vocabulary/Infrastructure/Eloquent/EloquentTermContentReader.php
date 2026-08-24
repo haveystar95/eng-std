@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Vocabulary\Infrastructure\Eloquent;
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ final class EloquentTermContentReader implements TermContentReader
         private readonly ExampleTranslationPick $examplePick = new ExampleTranslationPick(),
     ) {}
 
-    public function byIds(array $termIds, string $lang): array
+    public function byIds(array $termIds, SupportLanguages $langs): array
     {
         if ($termIds === []) {
             return [];
@@ -24,11 +25,17 @@ final class EloquentTermContentReader implements TermContentReader
 
         $ids = array_map(static fn (TermId $id): string => $id->value, $termIds);
 
-        // The learner's own language decides which translation is the question on this card, and the
-        // pick is deterministic — see TranslationPick. Before it, this was `orderByDesc('is_primary')`
-        // with no language at all, which is how a term carrying a Ukrainian row could ask a
-        // Russian-speaking learner in Ukrainian.
-        $translations = $this->pick->forTerms($ids, $lang);
+        // The collection's SUPPORT language decides which translation is the question on this card,
+        // and the pick is deterministic — see TranslationPick. Before it, this was
+        // `orderByDesc('is_primary')` with no language at all, which is how a term carrying a
+        // Ukrainian row could ask a Russian-speaking learner in Ukrainian.
+        //
+        // One query per DISTINCT language, not per term: a session mixing an `en→ru` deck with an
+        // `en→uk` one asks twice, and the ordinary single-pair session still asks once.
+        $translations = [];
+        foreach ($langs->group($ids) as $lang => $groupIds) {
+            $translations += $this->pick->forTerms($groupIds, $lang);
+        }
 
         // A term may hold several examples (ImportTerm appends one per generation pass), but a card
         // shows exactly one — so which one must be PINNED, not whichever the heap hands back. Without
@@ -53,7 +60,7 @@ final class EloquentTermContentReader implements TermContentReader
 
         // The description is written in the language BEING LEARNED — it is the question of the
         // description_match card, not a gloss for the learner's own language, so it is picked by
-        // the TERM's language and not by `$lang`.
+        // the TERM's language and not by the support language.
         $descriptions = [];
         foreach (DB::table('term_descriptions')->whereIn('term_id', $ids)->get(['term_id', 'lang', 'text']) as $row) {
             $descriptions[(string) $row->term_id][(string) $row->lang] = (string) $row->text;
@@ -65,11 +72,20 @@ final class EloquentTermContentReader implements TermContentReader
             $exampleIds[(string) $row->id] = (string) $termId;
         }
 
-        // The gloss under the example is picked by the SAME learner language as the term's own
+        // The gloss under the example is picked by the SAME support language as the term's own
         // translation — see ExampleTranslationPick. It used to be a single column with no language
         // at all, so a term glossed for a Ukrainian collection printed that gloss to a Russian
-        // speaker with nothing to say it had happened.
-        $exampleTranslations = $this->examplePick->textsFor(array_keys($exampleIds), $lang);
+        // speaker with nothing to say it had happened. Grouped by language for the same reason the
+        // translations above are, and by the language of the example's OWN term.
+        /** @var array<string, list<string>> $exampleIdsByLang */
+        $exampleIdsByLang = [];
+        foreach ($exampleIds as $exampleId => $termId) {
+            $exampleIdsByLang[$langs->for($termId)][] = (string) $exampleId;
+        }
+        $exampleTranslations = [];
+        foreach ($exampleIdsByLang as $lang => $groupIds) {
+            $exampleTranslations += $this->examplePick->textsFor($groupIds, $lang);
+        }
 
         $distractors = [];
         if ($exampleIds !== []) {

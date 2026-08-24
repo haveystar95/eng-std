@@ -9,8 +9,7 @@ use App\Modules\Collections\Application\Dto\CollectionView;
 use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Domain\Entity\Collection;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
-use App\Modules\Identity\Application\Port\NativeLangReader;
-use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 final readonly class GetCollectionHandler
@@ -19,7 +18,6 @@ final readonly class GetCollectionHandler
         private CollectionRepository $collections,
         private TermContentReader $termContent,
         private CollectionSubscriptions $subscriptions,
-        private NativeLangReader $nativeLang,
     ) {}
 
     public function __invoke(GetCollection $query): ?CollectionView
@@ -37,16 +35,22 @@ final readonly class GetCollectionHandler
             return null;
         }
 
-        return $this->toView($collection, $query->actorId);
+        return $this->toView($collection);
     }
 
-    private function toView(Collection $collection, UserId $actorId): CollectionView
+    private function toView(Collection $collection): CollectionView
     {
         $termIds = array_map(static fn ($item) => $item->termId, $collection->items());
-        // The READER's language, not the collection's: the same deck is read by whoever subscribed
-        // to it, and the question on the card belongs to the person answering it.
-        $lang = $this->nativeLang->nativeLangFor($actorId)->value ?? NativeLangReader::FALLBACK;
-        $content = $this->termContent->byIds($termIds, $lang);
+        // The COLLECTION's language, not the reader's profile. It used to be the reader's, on the
+        // reasoning that «the question on the card belongs to the person answering it» — which was
+        // sound while a deck's pair was a suggestion. It is not: the pair is a property of the
+        // collection (DECISIONS п. 81), a subscriber to an `en→uk` deck subscribed to a Ukrainian
+        // deck, and reading it in their profile language is how the same word answered differently
+        // on the shelf and in the session.
+        $content = $this->termContent->byIds(
+            $termIds,
+            SupportLanguages::uniform($collection->sourceLang()->value),
+        );
 
         $items = [];
         foreach ($collection->items() as $item) {

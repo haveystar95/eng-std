@@ -8,6 +8,7 @@ use App\Modules\Collections\Application\Query\GetCollectionTermSet;
 use App\Modules\Collections\Application\Query\GetCollectionTermSetHandler;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
 /**
@@ -34,13 +35,14 @@ final readonly class StoreCollectionSnapshot
     /**
      * The collection's title and its terms in order, or null when there is no such collection.
      *
-     * @param  string  $lang  the learner's language — WHICH translation is the card's question.
-     *                        Required rather than defaulted, for the same reason the reader itself
-     *                        requires it: a forgotten language is how a Russian speaker got asked
-     *                        in Ukrainian.
+     * The language is the COLLECTION's own (`source_lang`), not a parameter: the question this
+     * baseline answers is «что учащемуся показывают СЕГОДНЯ», and today he is shown this deck's
+     * pair. A run's `--source-lang` names the pair of the CANDIDATES, and reading the baseline in
+     * it would print an empty column the moment the two differ.
+     *
      * @return array{title: string, terms: list<array{text: string, translation: string}>}|null
      */
-    public function read(string $collectionId, string $lang): ?array
+    public function read(string $collectionId): ?array
     {
         $set = ($this->termSet)(new GetCollectionTermSet(CollectionId::fromString($collectionId)));
         if ($set === null) {
@@ -49,7 +51,7 @@ final readonly class StoreCollectionSnapshot
 
         $views = $this->content->byIds(
             array_map(static fn (string $id): TermId => TermId::fromString($id), $set->termIds),
-            $lang,
+            SupportLanguages::uniform($set->sourceLang),
         );
 
         $terms = [];

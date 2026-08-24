@@ -12,6 +12,7 @@ use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -122,7 +123,7 @@ it('serves the same example_translation through /sync as before the move', funct
     ]);
 
     $term = collect(sync($this, $token)['changes']['terms'])->firstWhere('id', $termId);
-    $onCard = app(TermContentReader::class)->byIds([TermId::fromString($termId)], 'ru')[$termId];
+    $onCard = app(TermContentReader::class)->byIds([TermId::fromString($termId)], SupportLanguages::uniform('ru'))[$termId];
 
     expect($term['example'])->toBe('I need to withdraw cash.')
         ->and($term['example_translation'])->toBe('Мне нужно снять наличные.')
@@ -146,7 +147,7 @@ it('shows the learner their OWN language when an example is glossed in two', fun
     ]);
 
     $read = fn (string $lang): ?string => app(TermContentReader::class)
-        ->byIds([TermId::fromString($termId)], $lang)[$termId]->exampleTranslation;
+        ->byIds([TermId::fromString($termId)], SupportLanguages::uniform($lang))[$termId]->exampleTranslation;
 
     // The whole point of the move: one example, two glosses, and each learner gets theirs. The old
     // column could hold only one of these and said nothing about whose it was.

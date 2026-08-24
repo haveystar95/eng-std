@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Infrastructure\Provider;
 
+use App\Modules\Collections\Application\Port\CollectionPairReader;
 use App\Modules\Collections\Application\Port\CollectionsAccountEraser;
 use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
@@ -17,6 +18,7 @@ use App\Modules\Collections\Application\Query\TermDeckTitleReader;
 use App\Modules\Collections\Application\Port\CollectionCurator;
 use App\Modules\Collections\Domain\Repository\CollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionCurator;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionPairReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionRepository;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionsAccountEraser;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSubscriptions;
@@ -40,6 +42,9 @@ final class CollectionsServiceProvider extends ServiceProvider
         $this->app->bind(UserCollectionsReader::class, EloquentUserCollectionsReader::class);
         $this->app->bind(UserCollectionTermsReader::class, EloquentUserCollectionTermsReader::class);
         $this->app->bind(CollectionSyncReader::class, EloquentCollectionSyncReader::class);
+        // The language a card is shown in comes from the collection's pair, never from the profile
+        // (DECISIONS пп. 81, 142) — this is the reader every hot path asks.
+        $this->app->bind(CollectionPairReader::class, EloquentCollectionPairReader::class);
         $this->app->bind(TermDeckTitleReader::class, EloquentTermDeckTitleReader::class);
         // Search needs one fact Vocabulary cannot give: «уже в такой-то твоей папке».
         $this->app->bind(TermFolderMembershipReader::class, EloquentTermFolderMembershipReader::class);

@@ -17,9 +17,9 @@ use App\Modules\Learning\Application\Dto\TermSyncView;
 use App\Modules\Learning\Application\Dto\TriageSyncRow;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
-use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Learning\Application\Port\TriageSyncReader;
+use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\ValueObject\TermId;
@@ -48,7 +48,7 @@ final readonly class GetSyncDeltaHandler
         private EnabledModesReader $enabledModes,
         private ModeAdmissionReader $admission,
         private Clock $clock,
-        private LearnerProfileReader $profile,
+        private CardLanguageResolver $cardLanguages,
     ) {}
 
     public function __invoke(GetSyncDelta $query): SyncDeltaView
@@ -120,13 +120,16 @@ final readonly class GetSyncDeltaHandler
 
         // Tombstones need no content — and asking for it would return nothing anyway.
         // The mirror on the phone is one translation per term, so the language it is written in has
-        // to be the OWNER of that phone's — not whatever row sorted first.
+        // to be the one that term's own COLLECTION supports — not the owner's profile, and not
+        // whatever row sorted first. A shelf holding an `en→ru` deck beside an `en→uk` one mirrors
+        // each in its own language, which is the whole point of the pair being on the collection.
+        $liveTermIds = array_map(
+            static fn (TermChangeRef $r): TermId => TermId::fromString($r->id),
+            array_values(array_filter($pTermRefs, static fn (TermChangeRef $r): bool => ! $r->deleted)),
+        );
         $content = $this->termContent->byIds(
-            array_map(
-                static fn (TermChangeRef $r): TermId => TermId::fromString($r->id),
-                array_values(array_filter($pTermRefs, static fn (TermChangeRef $r): bool => ! $r->deleted)),
-            ),
-            $this->profile->nativeLangFor($query->userId),
+            $liveTermIds,
+            $this->cardLanguages->forTerms($query->userId, $liveTermIds),
         );
         $terms = array_map(
             static fn (TermChangeRef $r): TermSyncView => new TermSyncView(

@@ -7,9 +7,9 @@ namespace App\Modules\Learning\Application\Query;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\TriageCardView;
 use App\Modules\Learning\Application\Dto\TriageQueueView;
-use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\ProgressExistenceReader;
 use App\Modules\Learning\Application\Port\TriagedTermsReader;
+use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 
@@ -33,7 +33,7 @@ final readonly class GetTriageQueueHandler
         private ProgressExistenceReader $progress,
         private TriagedTermsReader $triaged,
         private TermContentReader $termContent,
-        private LearnerProfileReader $profile,
+        private CardLanguageResolver $cardLanguages,
     ) {}
 
     public function __invoke(GetTriageQueue $query): TriageQueueView
@@ -62,9 +62,11 @@ final readonly class GetTriageQueueHandler
             return new TriageQueueView(cards: [], remaining: $remaining);
         }
 
+        $pageIds = array_map(TermId::fromString(...), $page);
+        // The queue is a COLLECTION's terms, so the collection's own pair answers for all of them.
         $content = $this->termContent->byIds(
-            array_map(TermId::fromString(...), $page),
-            $this->profile->nativeLangFor($query->userId),
+            $pageIds,
+            $this->cardLanguages->forTerms($query->userId, $pageIds, $query->collectionId),
         );
 
         $cards = [];

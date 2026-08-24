@@ -209,7 +209,7 @@ final class BakeoffCommand extends Command
 
         $this->summarise($results);
 
-        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $source->value, $store);
+        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $store);
 
         $path = $this->write($report, $results, $availability, [
             'label' => $promptVersion,
@@ -431,7 +431,7 @@ final class BakeoffCommand extends Command
         $source = is_string($run['source_lang'] ?? null) ? $run['source_lang'] : 'ru';
         $notes = is_array($run['notes'] ?? null) ? $run['notes'] : [];
 
-        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $source, $store);
+        [$storeTopic, $storeTerms] = $this->storeContent($this->str($this->option('compare'), ''), $store);
 
         $path = $this->write($report, $results, $catalog->availability(), [
             'track_sources' => $sources,
@@ -537,13 +537,13 @@ final class BakeoffCommand extends Command
      *
      * @return array{0: string, 1: list<array{text: string, translation: string}>}
      */
-    private function storeContent(string $collectionId, string $lang, StoreCollectionSnapshot $store): array
+    private function storeContent(string $collectionId, StoreCollectionSnapshot $store): array
     {
         if ($collectionId === '') {
             return ['', []];
         }
 
-        $snapshot = $store->read($collectionId, $lang);
+        $snapshot = $store->read($collectionId);
         if ($snapshot === null) {
             $this->warn('--compare: коллекция не найдена, блок сравнения с витриной пропущен.');
 

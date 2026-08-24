@@ -13,6 +13,7 @@ use App\Modules\Learning\Application\Query\GetDueTerms;
 use App\Modules\Learning\Application\Query\GetDueTermsHandler;
 use App\Modules\Learning\Application\Query\GetPracticeTerms;
 use App\Modules\Learning\Application\Query\GetPracticeTermsHandler;
+use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Application\Service\StudyCardAssembler;
 use App\Modules\Learning\Domain\Entity\StudySession;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
@@ -56,6 +57,7 @@ final readonly class BuildStudySessionHandler
         private LearnerProfileReader $profile,
         private IntroducedTermsReader $introduced,
         private TermContentReader $content,
+        private CardLanguageResolver $cardLanguages,
         private UserCollectionTermsReader $collectionTerms,
         private StudyCardAssembler $assembler,
         private StudySessionRepository $sessions,
@@ -94,10 +96,10 @@ final readonly class BuildStudySessionHandler
             )));
 
         $termIds = array_map(static fn (DueTermView $v): TermId => $v->termId, $due);
-        $content = $this->content->byIds(
-            $termIds,
-            $this->profile->nativeLangFor($command->actorId),
-        );
+        // The language of each card is its COLLECTION's, not the owner's profile: a scoped session
+        // reads the scope's pair, a pool session reads each term's own (DECISIONS пп. 81, 128, 143).
+        $langs = $this->cardLanguages->forTerms($command->actorId, $termIds, $command->collectionId);
+        $content = $this->content->byIds($termIds, $langs);
 
         // Distractor pool: the scoped collection's terms, else the session's own term set.
         $poolIds = $command->collectionId !== null

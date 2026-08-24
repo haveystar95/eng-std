@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 use App\Modules\Vocabulary\Application\Query\TermEnrichmentExportReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,8 +63,8 @@ it('gives each language its own translation when two primaries sit side by side'
     seedTwoPrimaries();
     $ids = [TermId::fromString(PICK_TERM)];
 
-    $ru = app(TermContentReader::class)->byIds($ids, 'ru')[PICK_TERM];
-    $uk = app(TermContentReader::class)->byIds($ids, 'uk')[PICK_TERM];
+    $ru = app(TermContentReader::class)->byIds($ids, SupportLanguages::uniform('ru'))[PICK_TERM];
+    $uk = app(TermContentReader::class)->byIds($ids, SupportLanguages::uniform('uk'))[PICK_TERM];
 
     expect($ru->translation)->toBe('трудолюбивый как пчёлка');
     // The Ukrainian row is legitimate data — it is simply not the row a Russian speaker is asked.
@@ -73,7 +74,7 @@ it('gives each language its own translation when two primaries sit side by side'
 it('keeps the same answer across repeated reads and after the table is churned', function () {
     seedTwoPrimaries();
     $ids = [TermId::fromString(PICK_TERM)];
-    $read = fn (): ?string => app(TermContentReader::class)->byIds($ids, 'ru')[PICK_TERM]->translation;
+    $read = fn (): ?string => app(TermContentReader::class)->byIds($ids, SupportLanguages::uniform('ru'))[PICK_TERM]->translation;
 
     expect($read())->toBe('трудолюбивый как пчёлка');
 
@@ -91,7 +92,7 @@ it('falls back to another language deterministically when the asked-for one is a
 
     // A card whose question is in the wrong language still beats a card with no question — but the
     // fallback must be the SAME row every time, not a coin flip.
-    $read = fn (): ?string => app(TermContentReader::class)->byIds($ids, 'ru')[PICK_TERM]->translation;
+    $read = fn (): ?string => app(TermContentReader::class)->byIds($ids, SupportLanguages::uniform('ru'))[PICK_TERM]->translation;
 
     expect($read())->toBe('працьовитий як бджола')
         ->and($read())->toBe('працьовитий як бджола');
@@ -110,7 +111,7 @@ it('breaks a tie inside one language by id, not by insertion order', function ()
         'updated_at' => now(),
     ]);
 
-    $got = app(TermContentReader::class)->byIds([TermId::fromString(PICK_TERM)], 'ru')[PICK_TERM];
+    $got = app(TermContentReader::class)->byIds([TermId::fromString(PICK_TERM)], SupportLanguages::uniform('ru'))[PICK_TERM];
 
     expect($got->translation)->toBe('трудолюбивый как пчёлка');
 });
@@ -128,7 +129,7 @@ it('prefers a primary row over a non-primary one inside the asked-for language',
         'updated_at' => now(),
     ]);
 
-    $got = app(TermContentReader::class)->byIds([TermId::fromString(PICK_TERM)], 'ru')[PICK_TERM];
+    $got = app(TermContentReader::class)->byIds([TermId::fromString(PICK_TERM)], SupportLanguages::uniform('ru'))[PICK_TERM];
 
     expect($got->translation)->toBe('трудолюбивый как пчёлка');
 });
@@ -140,7 +141,7 @@ it('gives the станок and the export the same row the card shows', function
     seedTwoPrimaries();
     $ids = [TermId::fromString(PICK_TERM)];
 
-    $card = app(TermContentReader::class)->byIds($ids, 'ru')[PICK_TERM];
+    $card = app(TermContentReader::class)->byIds($ids, SupportLanguages::uniform('ru'))[PICK_TERM];
     $target = app(EnrichmentTargetReader::class)->byIds($ids, 'ru')[PICK_TERM];
     $export = app(TermEnrichmentExportReader::class)->byIds($ids, 'ru')[PICK_TERM];
 

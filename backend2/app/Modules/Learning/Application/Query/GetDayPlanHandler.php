@@ -9,6 +9,7 @@ use App\Modules\Learning\Application\Dto\DayPlanView;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
+use App\Modules\Learning\Application\Service\CardLanguageResolver;
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
@@ -41,6 +42,7 @@ final readonly class GetDayPlanHandler
         private LearnerProfileReader $profile,
         private IntroducedTermsReader $introduced,
         private TermContentReader $content,
+        private CardLanguageResolver $cardLanguages,
         private ExerciseSelector $selector,
         private PlayabilityAssessor $playability,
         private EnabledModesReader $enabledModes,
@@ -73,9 +75,11 @@ final readonly class GetDayPlanHandler
         ));
 
         $termIds = array_map(static fn (DueTermView $v): TermId => $v->termId, $due);
+        // The simulator plans the whole POOL, so it has no single collection to read a pair from —
+        // each term answers for itself, exactly as the live pool session does.
         $content = $this->content->byIds(
             $termIds,
-            $this->profile->nativeLangFor($query->userId),
+            $this->cardLanguages->forTerms($query->userId, $termIds),
         );
 
         $entries = [];

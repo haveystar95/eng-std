@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Vocabulary\Application\Dto\SupportLanguages;
 use App\Modules\Vocabulary\Application\Query\TermContentReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ it('pins one example per term, whatever the physical row order', function () {
     seedExamplesOutOfOrder($termId);
 
     $read = fn (): ?string => app(TermContentReader::class)
-        ->byIds([TermId::fromString($termId)], 'ru')[$termId]->example;
+        ->byIds([TermId::fromString($termId)], SupportLanguages::uniform('ru'))[$termId]->example;
 
     // Lowest id wins — not the row that happened to be inserted first.
     expect($read())->toBe('Example A.')
@@ -82,7 +83,7 @@ it('serves the same pinned example to the client through /sync', function () {
     // The client mirrors ONE example per term. It must be the one the server also puts on the card
     // (both go through TermContentReader) — otherwise anything keyed to the example, starting with
     // the distractors of `pick_correct`, would line up against a sentence the user never sees.
-    $onCard = app(TermContentReader::class)->byIds([TermId::fromString($termId)], 'ru')[$termId];
+    $onCard = app(TermContentReader::class)->byIds([TermId::fromString($termId)], SupportLanguages::uniform('ru'))[$termId];
 
     expect($synced['example'])->toBe('Example A.')
         ->and($synced['example'])->toBe($onCard->example)
