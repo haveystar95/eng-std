@@ -1149,17 +1149,17 @@ abstract class AppLocalizations {
   /// **'+ Сохранённые'**
   String get searchSaveToDefault;
 
-  /// Кнопка неактивна: слово уже в этой папке.
+  /// Строка шита неактивна: слово уже в этой коллекции. Плейсхолдер переименован с folder на collection в A-3 — «папка» ушла из словаря продукта.
   ///
   /// In ru, this message translates to:
-  /// **'В «{folder}»'**
-  String searchAlreadyIn(String folder);
+  /// **'Уже в коллекции «{collection}»'**
+  String searchAlreadyIn(String collection);
 
-  /// Подтверждение после сохранения.
+  /// Подтверждение сразу после сохранения из поиска: называет коллекцию И говорит, что слово зачислено в пул. Плейсхолдер переименован с folder на collection в A-3.
   ///
   /// In ru, this message translates to:
-  /// **'Сохранено в «{folder}» — слово учится'**
-  String searchSavedTo(String folder);
+  /// **'Сохранено в коллекцию «{collection}» — слово учится'**
+  String searchSavedTo(String collection);
 
   /// Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20).
   ///
@@ -1173,11 +1173,59 @@ abstract class AppLocalizations {
   /// **'Новая коллекция'**
   String get searchNewCollection;
 
+  /// Пункт шита: создать коллекцию в паре текущего лукапа. {pair} — «English → Русский», эндонимы из справочника.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая коллекция · {pair}'**
+  String searchNewCollectionInPair(String pair);
+
   /// Ошибка сохранения слова из поиска.
   ///
   /// In ru, this message translates to:
   /// **'Не удалось сохранить'**
   String get searchSaveFailed;
+
+  /// Роль левой пилюли пары над полем поиска: язык, на котором задан запрос. Читается вслух, не рисуется.
+  ///
+  /// In ru, this message translates to:
+  /// **'С какого'**
+  String get searchPairFrom;
+
+  /// Роль правой пилюли пары над полем поиска: язык, на котором придёт ответ.
+  ///
+  /// In ru, this message translates to:
+  /// **'На какой'**
+  String get searchPairTo;
+
+  /// Кнопка-стрелка между пилюлями пары.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поменять языки местами'**
+  String get searchPairSwap;
+
+  /// Подпись под кнопкой на карточке слова, когда папка по умолчанию не совпадает по паре с лукапом: одна папка — одна пара (DECISIONS п. 81).
+  ///
+  /// In ru, this message translates to:
+  /// **'«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.'**
+  String get searchPairNoDefault;
+
+  /// Заголовок алерта на 422 term_language_mismatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово другого языка'**
+  String get searchPairMismatchTitle;
+
+  /// Текст алерта на 422 term_language_mismatch. Языки названы эндонимами.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эта коллекция изучает {expected}, а слово — на {actual}. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.'**
+  String searchPairMismatchMessage(String expected, String actual);
+
+  /// Кнопка алерта: создать коллекцию нужной пары и сохранить слово туда.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать коллекцию'**
+  String get searchPairMismatchCreate;
 
   /// Лейбл над примером на карточке слова (кадры 06/09).
   ///

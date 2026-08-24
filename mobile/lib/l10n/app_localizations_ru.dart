@@ -705,13 +705,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchSaveToDefault => '+ Сохранённые';
 
   @override
-  String searchAlreadyIn(String folder) {
-    return 'В «$folder»';
+  String searchAlreadyIn(String collection) {
+    return 'Уже в коллекции «$collection»';
   }
 
   @override
-  String searchSavedTo(String folder) {
-    return 'Сохранено в «$folder» — слово учится';
+  String searchSavedTo(String collection) {
+    return 'Сохранено в коллекцию «$collection» — слово учится';
   }
 
   @override
@@ -721,7 +721,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchNewCollection => 'Новая коллекция';
 
   @override
+  String searchNewCollectionInPair(String pair) {
+    return 'Новая коллекция · $pair';
+  }
+
+  @override
   String get searchSaveFailed => 'Не удалось сохранить';
+
+  @override
+  String get searchPairFrom => 'С какого';
+
+  @override
+  String get searchPairTo => 'На какой';
+
+  @override
+  String get searchPairSwap => 'Поменять языки местами';
+
+  @override
+  String get searchPairNoDefault =>
+      '«Сохранённые» — коллекция другой пары. Выберите коллекцию этой пары или создайте новую.';
+
+  @override
+  String get searchPairMismatchTitle => 'Слово другого языка';
+
+  @override
+  String searchPairMismatchMessage(String expected, String actual) {
+    return 'Эта коллекция изучает $expected, а слово — на $actual. Одна коллекция — одна пара, поэтому нужна коллекция другой пары.';
+  }
+
+  @override
+  String get searchPairMismatchCreate => 'Создать коллекцию';
 
   @override
   String get wordCardExampleLabel => 'Пример';

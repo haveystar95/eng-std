@@ -683,13 +683,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSaveToDefault => '+ Saved';
 
   @override
-  String searchAlreadyIn(String folder) {
-    return 'In “$folder”';
+  String searchAlreadyIn(String collection) {
+    return 'Already in “$collection”';
   }
 
   @override
-  String searchSavedTo(String folder) {
-    return 'Saved to “$folder” — it is being studied now';
+  String searchSavedTo(String collection) {
+    return 'Saved to “$collection” — it is being studied now';
   }
 
   @override
@@ -699,7 +699,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchNewCollection => 'New collection';
 
   @override
+  String searchNewCollectionInPair(String pair) {
+    return 'New collection · $pair';
+  }
+
+  @override
   String get searchSaveFailed => 'Could not save';
+
+  @override
+  String get searchPairFrom => 'From';
+
+  @override
+  String get searchPairTo => 'Into';
+
+  @override
+  String get searchPairSwap => 'Swap the languages';
+
+  @override
+  String get searchPairNoDefault =>
+      '“Saved” is a collection of another pair. Pick a collection of this pair, or make a new one.';
+
+  @override
+  String get searchPairMismatchTitle => 'A word of another language';
+
+  @override
+  String searchPairMismatchMessage(String expected, String actual) {
+    return 'This collection studies $expected, and the word is in $actual. One collection, one pair — so this word needs a collection of its own pair.';
+  }
+
+  @override
+  String get searchPairMismatchCreate => 'Make a collection';
 
   @override
   String get wordCardExampleLabel => 'Example';
