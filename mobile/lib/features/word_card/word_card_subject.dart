@@ -128,8 +128,11 @@ class WordCardSubject {
         folders: folders,
       );
 
-  WordCardSubject copyWith({List<SavedFolder>? folders}) => WordCardSubject(
-    termId: termId,
+  /// [termId] is settable because a SAVE is the moment a looked-up card becomes a catalogue term:
+  /// the answer carries the id, and folding it in is what lets the next save address the word by
+  /// what it now is rather than by the lookup handle it arrived as.
+  WordCardSubject copyWith({List<SavedFolder>? folders, String? termId}) => WordCardSubject(
+    termId: termId ?? this.termId,
     lookupId: lookupId,
     text: text,
     type: type,

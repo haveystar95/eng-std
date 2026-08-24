@@ -15,6 +15,7 @@ import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
 import '../../data/search/suggestions.dart';
 import '../../data/search/word_list.dart';
+import '../word_card/collection_saver.dart';
 import '../word_card/word_card_screen.dart';
 import '../word_card/word_card_subject.dart';
 import 'dictionary_row.dart';
@@ -159,6 +160,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// its 88 pt plate in кадр 03 is a picture rather than an empty rectangle.
   final Map<String, Term> _mirrored = {};
 
+  /// The card this screen knows about that the free search has not returned yet — a lookup that just
+  /// answered, or the outcome of a save made from here. Dropped whenever the query or the pair
+  /// changes, because it is an answer to a question that is no longer being asked.
+  WordCardSubject? _local;
+
+  /// A save from THIS screen is in flight; the actions go inert rather than double-firing.
+  bool _saving = false;
+
+  /// The learner's shelf as the local mirror last had it, written by `build` and read by the sheet —
+  /// the same arrangement the word card uses, and for the same reason: a sheet opened from a tap
+  /// must not fetch its own list.
+  List<WordCollection> _collections = const [];
+
   SearchHistory get _history => SearchHistory(ref.read(appDatabaseProvider));
 
   @override
@@ -216,6 +230,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {
       _hint = null;
       _hits = const [];
+      _local = null;
       _lookupError = null;
       _limitReached = false;
       _notRecognized = false;
@@ -251,6 +266,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       // must never do.
       _submitted = null;
       _hint = null;
+      _local = null;
       _lookupError = null;
       _limitReached = false;
       _notRecognized = false;
@@ -296,6 +312,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _query = query;
       _submitted = query;
       _hint = null;
+      // A different word is being asked about, so the card held for the last one is not an answer
+      // to it. Kept when the SAME word is submitted again (a tapped recent, a re-Enter): the card
+      // is still the card, and dropping it would put «Собрать карточку» back on a built word.
+      if (query.toLowerCase() != (_local?.text ?? '').toLowerCase()) _local = null;
       _lookupError = null;
       _limitReached = false;
       _notRecognized = false;
@@ -405,11 +425,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       // кадр 08 — the cap; or a query the model could not place. Both are answers and neither is
       // an error, so both are drawn by _missing()/_body() rather than thrown.
       if (card == null) return;
+      final subject = WordCardSubject.fromLookup(card);
+      // THE SCREEN CHANGES STATE HERE, not when the card is dismissed. The build succeeded, so
+      // there is nothing left to build; coming back from the card to «Собрать карточку» is the
+      // screen saying the last two seconds did not happen (найдено на телефоне 24.08).
+      setState(() => _local = subject);
       // The word that was actually built, not the string that found it: a Russian query ends in an
       // English card, and the English word is what the learner would want to get back to.
       await _remember(word: card.text, translation: card.translation, cefr: card.cefr);
       if (!mounted) return;
-      await _openCard(WordCardSubject.fromLookup(card));
+      await _openCard(subject);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -448,6 +473,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  /// Open the card the result IS — a hit, or the one this screen built. Remembered under the word
+  /// being learned, like every other way into кадр 06.
+  Future<void> _openResultCard(WordCardSubject result) async {
+    unawaited(
+      _remember(word: result.text, translation: result.translation, cefr: result.cefr),
+    );
+    await _openCard(result);
+  }
+
   /// Open the word's own screen (кадр 06).
   Future<void> _openHitCard(SearchHit hit) async {
     await _loadMirrored(hit.termId);
@@ -467,15 +501,53 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           // одна пара» (DECISIONS п. 81).
           pair: _learningPair,
           onSpeak: () => _speak(subject.text, subject.type),
-          onSaved: _afterSave,
+          onSaved: (saved) => _afterSave(saved, subject),
         ),
       ),
     );
   }
 
+  /// «Добавить в коллекцию» / «…в другую коллекцию» — the SAME sheet the word card opens, because it
+  /// is the same decision (see [CollectionSaver]). Offered straight on the result so a word whose
+  /// card already exists — an orphan, or one just built — has a way into a collection without
+  /// having to guess that the way in is behind the card.
+  Future<void> _addToCollection(WordCardSubject subject) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final saved = await CollectionSaver(
+      ref: ref,
+      collections: _collections,
+      pair: _learningPair,
+    ).pickAndSave(context, subject);
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (saved == null) return;
+    AppHaptics.light();
+    await _afterSave(saved, subject);
+  }
+
   /// A save always ends by re-running the FREE search: the word is now in the database, so the next
-  /// pass returns it as an ordinary hit with its folder attached.
-  Future<void> _afterSave(SavedSearchResult saved) async {
+  /// pass returns it as an ordinary hit with its collection attached.
+  ///
+  /// The answer is ALSO folded straight into [_local], and that is what makes the transition
+  /// immediate: the free search is a round trip, and until it lands the screen would otherwise still
+  /// be showing the word as belonging to nothing it was just put into.
+  Future<void> _afterSave(SavedSearchResult saved, WordCardSubject subject) async {
+    if (mounted) {
+      setState(() {
+        _local = subject.copyWith(
+          termId: saved.termId,
+          folders: [
+            SavedFolder(
+              id: saved.collectionId,
+              title: saved.collectionTitle,
+              isDefault: saved.collectionIsDefault,
+            ),
+            ...subject.folders.where((f) => f.id != saved.collectionId),
+          ],
+        );
+      });
+    }
     ref.read(syncServiceProvider).sync();
     if (_query.isNotEmpty) unawaited(_runFreeSearch(_query));
   }
@@ -485,19 +557,58 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// The hit that IS the word that was asked for, as opposed to one that merely starts with it.
   /// Deliberately exact: «hollow» is not an answer to «hole», and treating it as one would stop the
   /// learner ever generating the word they meant.
+  ///
+  /// BOTH SIDES ARE EXACT MATCHES, and only comparing one of them was the bug behind the whole of
+  /// Ч.4. `/search` looks the query up in the terms AND in their translations — that is how typing
+  /// «привет» in the pair `es ← ru` finds `hola` at all — but this getter compared the query only
+  /// with `hit.text`, which is in the language being LEARNED. So every query typed in the support
+  /// language fell through to кадр 04 and offered «Собрать карточку» for a word the database was
+  /// returning on the same screen, and went on offering it after the card had been built and saved
+  /// (найдено на телефоне 24.08: RU→ES «привет»/hola).
+  ///
+  /// The term side is scanned FIRST and in full, so a word that answers the query by its own text
+  /// always beats one that answers it by a gloss.
   SearchHit? get _exactHit {
-    final asked = (_submitted ?? '').toLowerCase();
+    final asked = (_submitted ?? '').trim().toLowerCase();
     if (asked.isEmpty) return null;
     for (final hit in _hits) {
       if (hit.text.trim().toLowerCase() == asked) return hit;
+    }
+    for (final hit in _hits) {
+      if ((hit.translation ?? '').trim().toLowerCase() == asked) return hit;
     }
 
     return null;
   }
 
+  /// THE CARD THIS SCREEN HAS FOR THE SUBMITTED QUERY, or null when there is none to have.
+  ///
+  /// The whole of Ч.4 is this one question asked once. Three states follow from it and the button
+  /// that builds a card belongs to exactly one of them:
+  ///
+  ///  * null — no card anywhere: «Собрать карточку» (кадр 04);
+  ///  * a card with collections — «Уже в коллекции „…"» plus «Добавить в другую коллекцию»;
+  ///  * a card with none — an ORPHAN (its only collection was deleted) or one just built and not yet
+  ///    saved: «Добавить в коллекцию», and no build button, because there is nothing left to build.
+  ///
+  /// [_local] wins over the server's hit when it exists, and that is what makes the fourth state —
+  /// «сразу после сборки» — a state rather than a race: it is set by the lookup that just answered
+  /// and by every save this screen makes, both of which know more than a free search that has not
+  /// re-run yet.
+  WordCardSubject? get _result {
+    if (_local != null) return _local;
+    final exact = _exactHit;
+
+    return exact == null ? null : _subjectFor(exact);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Subscribed UNCONDITIONALLY, exactly as the word card does it and for the same reason: the
+    // save sheet opens from a tap, where watching is not allowed, and it must never open on a shelf
+    // that was empty because the mirror's first emission had not landed.
+    _collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
 
     // Stated, not inherited: coming back from a word card that had a photo, the light glyphs it
     // asked for would otherwise stay on this screen's paper and vanish into it.
@@ -648,9 +759,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ];
     }
 
-    final exact = _exactHit;
+    final result = _result;
 
-    return exact != null ? _found(l, exact) : _missing(l);
+    return result != null ? _found(l, result) : _missing(l);
   }
 
   /// Кадр 01 — nothing typed yet: three words the learner has been to before, and nothing else.
@@ -716,13 +827,48 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ];
   }
 
-  /// Кадр 03 — the word was found. One raised leaf, then the rest of the matches as flat lines.
-  List<Widget> _found(AppLocalizations l, SearchHit exact) {
-    final rest = _hits.where((h) => h.termId != exact.termId).toList();
+  /// Кадр 03 — THE CARD EXISTS. One raised leaf, the one action that is left, then the rest of the
+  /// matches as flat lines.
+  ///
+  /// «Собрать карточку» is absent here by construction rather than by a condition: this branch is
+  /// only reached when there IS a card, and a build button on a built word is the screen claiming
+  /// the word does not exist while displaying it. What replaces it depends on the one remaining
+  /// question — is the word in a collection:
+  ///
+  ///  * IN ONE — the state is stated («Уже в коллекции „…"») and the only offer is one more
+  ///    collection, in the quiet second line the word card uses for the same offer;
+  ///  * IN NONE — an orphan, or a card built a moment ago: putting it somewhere is the main action,
+  ///    and it is a filled button because it is the only thing there is to do with this word.
+  ///
+  /// An orphan is not a rare shape. A word survives its collection — deleting a collection does not
+  /// delete the terms in it — so «в базе есть, ни в одной коллекции не лежит» is the ordinary end
+  /// state of tidying up, and until now the screen offered it no way back in at all.
+  List<Widget> _found(AppLocalizations l, WordCardSubject result) {
+    final text = result.text.trim().toLowerCase();
+    final rest = _hits
+        .where((h) => h.termId != result.termId && h.text.trim().toLowerCase() != text)
+        .toList();
+    final saved = result.savedIn;
 
     return [
       const SizedBox(height: AppSpacing.s26),
-      SearchResultCard(subject: _subjectFor(exact), onOpen: () => _openHitCard(exact)),
+      SearchResultCard(subject: result, onOpen: () => _openResultCard(result)),
+      const SizedBox(height: AppSpacing.s8),
+      if (saved != null) ...[
+        SavedStateLine(label: l.searchAlreadyIn(saved.title)),
+        QuietLinkAction(
+          icon: LucideIcons.folderPlus,
+          label: l.wordCardAddToAnother,
+          onTap: _saving ? null : () => _addToCollection(result),
+        ),
+      ] else ...[
+        PrimaryButton(
+          label: l.searchAddToCollection,
+          minHeight: 54,
+          enabled: !_saving,
+          onPressed: () => _addToCollection(result),
+        ),
+      ],
       if (rest.isNotEmpty) ...[
         const SizedBox(height: 14),
         SearchSectionLabel(l.searchSimilar),

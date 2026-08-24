@@ -10,13 +10,12 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
-import '../../data/api_client.dart' show termLanguageMismatch;
 import '../../data/local/cached_image_provider.dart';
 import '../../data/models.dart';
 import '../../data/practice/learning_ladder.dart';
 import '../../data/providers.dart';
-import '../../l10n/language_endonyms.dart';
 import '../search/search_pair.dart' show LearningPair;
+import 'collection_saver.dart';
 import 'word_card_subject.dart';
 
 /// The word card — направление «Фото-герой» (кадры 06, 07, 09).
@@ -197,11 +196,11 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
             // that the word is now being studied, which is the half a learner cannot see. On a card
             // opened later the same slot states where the word lives; nothing «just happened» then,
             // and claiming it did would be a lie about the pool.
-            _OutlineState(
+            SavedStateLine(
               label: _justSaved ? l.searchSavedTo(saved.title) : l.wordCardSavedIn(saved.title),
             ),
             const SizedBox(height: AppSpacing.s12),
-            _QuietLink(
+            QuietLinkAction(
               icon: LucideIcons.folderPlus,
               label: l.wordCardAddToAnother,
               onTap: _saving ? null : _pickCollection,
@@ -285,7 +284,7 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
         Text(l.ladderTrainLockedIntro, textAlign: TextAlign.center, style: AppText.searchFootnote),
       ],
       const SizedBox(height: AppSpacing.s12),
-      _QuietLink(
+      QuietLinkAction(
         icon: LucideIcons.folderPlus,
         label: l.wordCardAddToAnother,
         onTap: _saving ? null : _pickCollection,
@@ -331,252 +330,60 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
 
   // ── saving ────────────────────────────────────────────────────────────────
 
-  static const _newCollectionSentinel = 'new';
+  /// The sheet, the «new collection» dialog and the 422 repair, all of it shared with the search
+  /// screen — see [CollectionSaver]. Rebuilt on every read so it always carries the shelf `build`
+  /// last saw.
+  CollectionSaver get _saver =>
+      CollectionSaver(ref: ref, collections: _collections, pair: widget.pair);
 
-  /// The learner's own collections, and only the ones this word can actually go into.
-  ///
-  /// FILTERED BY THE WHOLE PAIR, both halves. The server's gate checks only the studied language —
-  /// that is the rule that makes a card answerable — but a collection whose SUPPORT language
-  /// differs would show this word's translation in a language it does not hold, so offering it
-  /// would be offering a collection that half-works.
-  List<WordCollection> get _collectionsForPair {
-    // From the LOCAL mirror, like every other screen — the shelf has to be listable offline.
-    final own = _collections.where((c) => c.isOwned && !c.isSubscribed);
-    final pair = widget.pair;
-
-    return (pair == null
-            ? own
-            : own.where((c) => c.targetLang == pair.learned && c.sourceLang == pair.support))
-        .toList();
-  }
-
-  /// «Сохранённые» exists and is of another pair — so the one-tap save into it cannot succeed.
-  ///
-  /// Only ever true of a default that EXISTS. A learner who has never saved anything has no default
-  /// folder yet, and the server makes it in the pair of the lookup itself, so the one-tap save is
-  /// exactly right for them.
-  bool get _defaultIsOfAnotherPair {
-    final pair = widget.pair;
-    if (pair == null) return false;
-    for (final c in _collections) {
-      if (!c.isDefault) continue;
-
-      return c.targetLang != pair.learned || c.sourceLang != pair.support;
-    }
-
-    return false;
-  }
+  bool get _defaultIsOfAnotherPair => _saver.defaultIsOfAnotherPair;
 
   Future<void> _pickCollection() async {
-    final l = AppLocalizations.of(context);
-    final offered = _collectionsForPair;
-    final holding = {for (final f in _subject.folders) f.id};
-
-    final choice = await showAppBottomSheet<String>(
-      context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-            child: Text(l.searchAddToCollection, style: AppText.sectionLabel),
-          ),
-          for (final collection in offered)
-            if (holding.contains(collection.id))
-              // Inert, and it says why: tapping it would spend a round trip to be told the word is
-              // already there. Shown rather than hidden, because a learner looking for a collection
-              // they remember putting this word in has to find it.
-              AppSheetRow(
-                enabled: false,
-                title: Text(
-                  l.searchAlreadyIn(collection.title),
-                  style: AppText.translation.copyWith(color: AppColors.tertiary),
-                ),
-              )
-            else
-              AppSheetRow(
-                title: Text(collection.title, style: AppText.translation),
-                onTap: () => Navigator.of(context).pop(collection.id),
-              ),
-          // ALWAYS present, and it names the pair. When the list above is empty — the learner's
-          // first word in this pair — it is the only way forward, and it must not read as an
-          // afterthought.
-          AppSheetRow(
-            leading: const Icon(LucideIcons.plus, size: 18, color: AppColors.ink),
-            title: Text(
-              widget.pair == null
-                  ? l.searchNewCollection
-                  : l.searchNewCollectionInPair(_pairLabel(widget.pair!)),
-              style: AppText.translation,
-            ),
-            onTap: () => Navigator.of(context).pop(_newCollectionSentinel),
-          ),
-        ],
-      ),
-    );
-
-    if (choice == null || !mounted) return;
-    if (choice == _newCollectionSentinel) {
-      final created = await _createCollection(
-        l,
-        learned: widget.pair?.learned,
-        support: widget.pair?.support,
-      );
-      if (created == null) return;
-      await _save(created);
-
-      return;
-    }
-    await _save(choice);
-  }
-
-  /// «English → Русский» — the pair as the learner reads it: endonyms, studied language first,
-  /// which is the order a collection's own pair is written in (DECISIONS п. 135).
-  static String _pairLabel(LearningPair pair) => _pairText(pair.learned, pair.support);
-
-  static String _pairText(String learned, String? support) => support == null
-      ? languageByCode(learned).endonym
-      : '${languageByCode(learned).endonym} → ${languageByCode(support).endonym}';
-
-  /// Make a collection and hand back its id.
-  ///
-  /// Born in the pair the caller states, so the word about to be saved into it passes the server's
-  /// gate rather than bouncing off it. A missing half is OMITTED from the request rather than
-  /// guessed: the server then fills it from the profile, which is exactly what «профиль — только
-  /// дефолт» means (DECISIONS п. 142). Guessing it here is how a collection would be born in a pair
-  /// nobody chose.
-  Future<String?> _createCollection(AppLocalizations l, {String? learned, String? support}) async {
-    final controller = TextEditingController(
-      text: learned == null ? '' : _pairText(learned, support),
-    );
-    final title = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceRaised,
-        title: Text(l.searchNewCollection, style: AppText.collectionNameCard),
-        content: TextField(controller: controller, autofocus: true, style: AppText.translation),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l.commonCancel)),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: Text(l.commonSave),
-          ),
-        ],
-      ),
-    );
-    if (title == null || title.isEmpty || !mounted) return null;
-
-    try {
-      final collection = await ref
-          .read(apiClientProvider)
-          .createCollection(title: title, sourceLang: support, targetLang: learned);
-
-      return collection.id;
-    } catch (_) {
-      if (mounted) _failed(l);
-
-      return null;
-    }
+    setState(() => _saving = true);
+    final saved = await _saver.pickAndSave(context, _subject);
+    if (!mounted) return;
+    await _apply(saved);
   }
 
   Future<void> _save(String? collectionId) async {
-    final l = AppLocalizations.of(context);
     setState(() => _saving = true);
-    SavedSearchResult? done;
-    try {
-      final saved = await ref
-          .read(apiClientProvider)
-          .addSearchResult(
-            lookupId: _subject.lookupId,
-            termId: _subject.termId,
-            collectionId: collectionId,
-          );
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _justSaved = true;
-        // The card STAYS — кадр 07 is the same card with a different button, not a screen the save
-        // dismisses. Folding the answer back into the subject is what turns the pair into its
-        // saved state without a second network round trip.
-        _subject = _subject.copyWith(
-          folders: [
-            SavedFolder(
-              id: saved.collectionId,
-              title: saved.collectionTitle,
-              isDefault: saved.collectionIsDefault,
-            ),
-            ..._subject.folders.where((f) => f.id != saved.collectionId),
-          ],
-        );
-      });
-      AppHaptics.light();
-      done = saved;
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _saving = false);
-      final mismatch = termLanguageMismatch(error);
-      if (mismatch == null) {
-        _failed(l);
-      } else {
-        await _offerCollectionOfItsOwnPair(l, mismatch);
-      }
-    }
+    final saved = await _saver.save(context, _subject, collectionId);
+    if (!mounted) return;
+    await _apply(saved);
+  }
 
-    // OUTSIDE the try, deliberately. What follows a save is bookkeeping — a sync nudge, a re-run
-    // of the free search — and the word is already in the folder by the time any of it runs.
-    // Letting those failures fall into the catch above made an offline device answer a SUCCESSFUL
-    // save with «Не удалось сохранить», which is the one lie this screen must not tell (caught on
-    // the simulator, DSN-2).
-    if (done == null) return;
+  /// Fold the server's answer back into the card.
+  Future<void> _apply(SavedSearchResult? saved) async {
+    setState(() {
+      _saving = false;
+      if (saved == null) return;
+      _justSaved = true;
+      // The card STAYS — кадр 07 is the same card with a different button, not a screen the save
+      // dismisses. Folding the answer back into the subject is what turns the pair into its
+      // saved state without a second network round trip.
+      _subject = _subject.copyWith(
+        folders: [
+          SavedFolder(
+            id: saved.collectionId,
+            title: saved.collectionTitle,
+            isDefault: saved.collectionIsDefault,
+          ),
+          ..._subject.folders.where((f) => f.id != saved.collectionId),
+        ],
+      );
+    });
+    if (saved == null) return;
+    AppHaptics.light();
+
+    // What follows a save is bookkeeping — a sync nudge, a re-run of the free search — and the word
+    // is already in the collection by the time any of it runs. Letting those failures reach the
+    // learner made an offline device answer a SUCCESSFUL save with «Не удалось сохранить», which is
+    // the one lie this screen must not tell (caught on the simulator, DSN-2).
     try {
-      await widget.onSaved?.call(done);
+      await widget.onSaved?.call(saved);
     } catch (_) {
       // The save stands. Nothing to tell the learner.
     }
-  }
-
-  /// The server refused the save: the word is not of that collection's pair.
-  ///
-  /// The sheet filters by pair, so reaching here means the list was built from a mirror the server
-  /// has since moved past — a collection re-created in another pair on another device, a sync that
-  /// has not landed. RARE IS NOT NEVER, and the one thing that must not happen is a silent nothing:
-  /// the learner tapped a collection and the word did not go in. So it is said in words, with both
-  /// languages named, and the way out is offered in the same breath — a collection of the word's
-  /// own pair, which is what «одна коллекция — одна пара» leaves as the only answer.
-  Future<void> _offerCollectionOfItsOwnPair(
-    AppLocalizations l,
-    ({String expected, String actual}) mismatch,
-  ) async {
-    final ok = await showCenterAlert(
-      context: context,
-      title: l.searchPairMismatchTitle,
-      message: l.searchPairMismatchMessage(
-        languageByCode(mismatch.expected).endonym,
-        languageByCode(mismatch.actual).endonym,
-      ),
-      confirmLabel: l.searchPairMismatchCreate,
-      cancelLabel: l.commonCancel,
-      destructive: false,
-    );
-    if (ok != true || !mounted) return;
-
-    // The word's OWN language leads, whatever the pill currently says — `actual_lang` came from the
-    // server and is the only half this refusal is certain about. The support side is the pill's if
-    // there is one and it is not the same language; otherwise it is left out and the server fills
-    // it from the profile.
-    final support = widget.pair?.support;
-    final created = await _createCollection(
-      l,
-      learned: mismatch.actual,
-      support: support == mismatch.actual ? null : support,
-    );
-    if (created == null || !mounted) return;
-    await _save(created);
-  }
-
-  void _failed(AppLocalizations l) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.searchSaveFailed)));
   }
 }
 
@@ -965,86 +772,6 @@ class _SquareButton extends StatelessWidget {
             border: Border.all(color: AppColors.track),
           ),
           child: Icon(icon, size: 21, color: AppColors.ink),
-        ),
-      ),
-    ),
-  );
-}
-
-/// Кадр 07 — the button gone out to a STATE: an outline on layered paper with a green tick. It is
-/// not disabled-looking, it is finished-looking, which is a different thing and the difference is
-/// the whole frame.
-class _OutlineState extends StatelessWidget {
-  const _OutlineState({required this.label});
-
-  final String label;
-
-  @override
-  /// GROWS rather than truncates. It was a fixed 54 pt of one clipped line, which was right while
-  /// the label was «В коллекции „…"» and wrong the moment it also had to say the word is now being
-  /// studied: on the simulator that sentence ended at «Сохранено в коллекцию „Сохранённ…», so the
-  /// half the learner could not otherwise know was the half that got cut.
-  @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: AppWordCard.actionHeight),
-    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      color: AppColors.surfaceRaised,
-      borderRadius: BorderRadius.circular(AppRadii.button),
-      border: Border.all(color: AppColors.dashed, width: 1.5),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(LucideIcons.check, size: 18, color: AppColors.verdictKnown),
-        const SizedBox(width: 9),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.sheetButton,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// The second action, as a line rather than a button — it is still there, it just no longer argues
-/// with the state above it (кадры 07/09).
-/// The second action under the main button — «Добавить в другую коллекцию».
-///
-/// Set in INK, not terracotta. Rule 01 keeps the interface monochrome and terracotta is reserved
-/// for what destroys: «Удалить аккаунт», the «Не то» verdict. Adding a word to one more collection
-/// destroys nothing, and painting it in the delete colour made the safest action on the card look
-/// like the dangerous one (QA-OBS-19).
-class _QuietLink extends StatelessWidget {
-  const _QuietLink({required this.icon, required this.label, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: label,
-    child: InkWell(
-      onTap: onTap,
-      child: SizedBox(
-        height: 46,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: AppColors.ink),
-            const SizedBox(width: AppSpacing.s8),
-            Text(
-              label,
-              style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.ink, fontSize: 15),
-            ),
-          ],
         ),
       ),
     ),
