@@ -980,8 +980,14 @@ class _OutlineState extends StatelessWidget {
   final String label;
 
   @override
+  /// GROWS rather than truncates. It was a fixed 54 pt of one clipped line, which was right while
+  /// the label was «В коллекции „…"» and wrong the moment it also had to say the word is now being
+  /// studied: on the simulator that sentence ended at «Сохранено в коллекцию „Сохранённ…», so the
+  /// half the learner could not otherwise know was the half that got cut.
+  @override
   Widget build(BuildContext context) => Container(
-    height: AppWordCard.actionHeight,
+    constraints: const BoxConstraints(minHeight: AppWordCard.actionHeight),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: AppColors.surfaceRaised,
@@ -996,7 +1002,7 @@ class _OutlineState extends StatelessWidget {
         Flexible(
           child: Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: AppText.sheetButton,
           ),
