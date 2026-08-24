@@ -151,11 +151,18 @@ it('shows the learner their OWN language when an example is glossed in two', fun
 
     // The whole point of the move: one example, two glosses, and each learner gets theirs. The old
     // column could hold only one of these and said nothing about whose it was.
+    // Which row the fallback lands on is «lowest id», and the two rows here are written in the same
+    // millisecond — inside which a ULID is 16 random characters and not an order (see Ulid). So the
+    // expectation is READ, not written out: the claim under test is that the fallback is
+    // deterministic and picks the lowest id, and a literal here made the test a coin flip.
+    $lowestId = (string) DB::table('example_translations')
+        ->where('term_example_id', $exampleId)->orderBy('id')->value('text');
+
     expect($read('ru'))->toBe('Мне нужно снять наличные.')
         ->and($read('uk'))->toBe('Мені треба зняти готівку.')
         // A language with no gloss falls back rather than blanking the card — see
-        // ExampleTranslationPick, and note the fallback is deterministic (lowest id).
-        ->and($read('de'))->toBe('Мне нужно снять наличные.');
+        // ExampleTranslationPick.
+        ->and($read('de'))->toBe($lowestId);
 
     // And the device receives the learner's own, not whichever row came first.
     $term = collect(sync($this, $token)['changes']['terms'])->firstWhere('id', $termId);
