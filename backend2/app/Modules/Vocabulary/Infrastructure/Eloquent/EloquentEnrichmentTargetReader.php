@@ -128,6 +128,13 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
             $variants[(string) $row->term_id][] = (string) $row->text;
         }
 
+        // Near-synonyms an earlier run already stored. Scoped to $ids, like the variants above and
+        // for the same reason: a sibling's synonyms are not this term's.
+        $synonyms = [];
+        foreach (DB::table('term_synonyms')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
+            $synonyms[(string) $row->term_id][] = (string) $row->text;
+        }
+
         // Distractors an earlier run already wrote against the pinned example. Read by example id, so
         // a term whose pinned example changed does not drag the old sentences along. Covers siblings
         // too, per $dedupIds above.
@@ -181,6 +188,7 @@ final class EloquentEnrichmentTargetReader implements EnrichmentTargetReader
                     ...($suppressed[$id] ?? []),
                     ...$siblingSentences,
                 ],
+                existingSynonyms: $synonyms[$id] ?? [],
             );
         }
 

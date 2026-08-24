@@ -81,4 +81,19 @@ enum PromptShape: string
     {
         return $this === self::Mechanics || $this === self::Machinery;
     }
+
+    /**
+     * Does this shape produce near-SYNONYMS of the term — other words on the studied side that mean
+     * nearly the same thing (`purpose` → `goal`, `aim`)?
+     *
+     * Only the machinery shape, and only from prompt v14. It is a different product from
+     * {@see hasForms()} and the difference is what each one is allowed to do downstream: a form is
+     * another spelling of the same word and widens the answer key everywhere, a synonym is another
+     * word and widens it only on a card that asked what the term MEANS. Two products, two fields,
+     * two tables — see the `term_synonyms` migration.
+     */
+    public function hasSynonyms(): bool
+    {
+        return $this === self::Machinery;
+    }
 }

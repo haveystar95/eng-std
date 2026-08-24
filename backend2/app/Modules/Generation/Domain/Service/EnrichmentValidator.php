@@ -63,6 +63,37 @@ final class EnrichmentValidator
      */
     public const MAX_VARIANT_EXTRA_TOKENS = 2;
 
+    /** A term gets at most three near-synonyms. Beyond that the model is padding, not answering. */
+    public const MAX_SYNONYMS = 3;
+
+    /**
+     * A term LONGER than this gets no synonyms at all, whatever the model returned.
+     *
+     * SYN-1 states the product rule in words — «только для одиночных слов и коротких именных/
+     * глагольных лемм; для фраз и предложений пусто» — and this is the language-neutral way to hold
+     * it. Whitespace runs, like {@see MAX_VARIANT_EXTRA_TOKENS}, so it assumes nothing about script
+     * or word order. Two tokens rather than one because a short lemma legitimately has two in most
+     * of the languages here (`get up`, `a se ocupa`, `sich freuen`), and because the term text of a
+     * phrasal verb is stored as two words.
+     *
+     * The reason for the ceiling is not tidiness. A "synonym" of a whole sentence is a PARAPHRASE,
+     * and a paraphrase accepted as an answer widens the key to a different utterance — the exact
+     * failure {@see MAX_VARIANT_EXTRA_TOKENS} was written for, in a place where the prompt cannot be
+     * trusted to hold the line on its own.
+     */
+    public const MAX_SYNONYM_TERM_TOKENS = 2;
+
+    /**
+     * How much longer than the term a synonym may be.
+     *
+     * Tighter than the variant budget, and for a reason that is about what each one IS: a variant is
+     * the same word respelled and stays the same length by construction, so its budget only has to
+     * absorb hyphenation; a synonym is a different word, and the direction it drifts in is towards
+     * an explanation («purpose» → «the reason for doing something»). One token of headroom buys the
+     * real cases (`aim` for `purpose`, `hand in` for `submit`) and stops the gloss.
+     */
+    public const MAX_SYNONYM_EXTRA_TOKENS = 1;
+
     /**
      * Phrases with which the model argues its own finding down. Two of the eight language findings on
      * the store run ended this way — «банкомат не является ошибкой», «но это корректно» — so the model
@@ -130,7 +161,16 @@ final class EnrichmentValidator
         $findings = [];
 
         $accepted = $this->normalizedSet($candidate->acceptedForms);
-        [$variants, $rejectedVariants] = $this->validVariants($candidate, $accepted);
+        // SYNONYMS FIRST, because a text can only be one of the two and the narrower reading has to
+        // win. The old prompt asked for `forms` and got synonyms back — `bank card`, `gadget`,
+        // `alight` are all live rows in `term_accepted_variants` — and a synonym stored as a form is
+        // accepted on every typed card, including the listening one, where the learner is being
+        // asked what they HEARD. Settling synonyms first and excluding them from the variants below
+        // makes the mistake unrepresentable rather than merely discouraged.
+        [$synonyms, $rejectedSynonyms] = $this->validSynonyms($candidate, $accepted);
+        $synonymSet = $this->normalizedSet($synonyms);
+
+        [$variants, $rejectedVariants] = $this->validVariants($candidate, $accepted + $synonymSet);
 
         // The two halves of "correct" are kept apart on purpose. Both kill a distractor, but only a
         // collision with a VARIANT is a contradiction worth a person's time: the same pack claimed
@@ -175,6 +215,8 @@ final class EnrichmentValidator
             proposedDistractors: $proposed,
             rejectedDistractors: $rejected,
             rejectedVariants: $rejectedVariants,
+            synonyms: $synonyms,
+            rejectedSynonyms: $rejectedSynonyms,
         );
     }
 
@@ -219,6 +261,68 @@ final class EnrichmentValidator
             }
             $seen[$key] = true;
             $kept[] = new RawVariant($text, $this->sanitizeNote($variant->note));
+        }
+
+        return [$kept, $rejected];
+    }
+
+    /**
+     * Synonyms worth storing.
+     *
+     * Everything here is a SHAPE check — there is no deterministic way to ask whether two words mean
+     * nearly the same thing, and pretending otherwise would be the decorative kind of validation
+     * this class exists to avoid. What can be checked is checked:
+     *
+     *  - the term is short enough to have synonyms at all ({@see MAX_SYNONYM_TERM_TOKENS});
+     *  - the candidate is non-empty and canonically distinct from the term and from every form the
+     *    key already accepts — a "synonym" that normalises onto the term is the term;
+     *  - it is not longer than a word or two ({@see MAX_SYNONYM_EXTRA_TOKENS});
+     *  - it is not one the term already has (a no-op, counted as neither kept nor rejected, exactly
+     *    like the variant rule — a well-behaved re-run must not look like a broken one);
+     *  - at most {@see MAX_SYNONYMS} survive.
+     *
+     * @param  array<string, true>  $accepted
+     * @return array{0: list<string>, 1: int}  kept, rejected
+     */
+    private function validSynonyms(EnrichmentCandidate $candidate, array $accepted): array
+    {
+        $term = $candidate->acceptedForms[0] ?? '';
+        $termTokens = $this->tokenCount($term);
+        if ($termTokens === 0 || $termTokens > self::MAX_SYNONYM_TERM_TOKENS) {
+            // A phrase asked for none, so a phrase that got some did not answer the question. They
+            // are rejections and counted as such: silence would hide a prompt that stopped working.
+            return [[], count($candidate->synonyms)];
+        }
+
+        $budget = $termTokens + self::MAX_SYNONYM_EXTRA_TOKENS;
+        $seen = $accepted + $this->normalizedSet($candidate->existingSynonyms);
+
+        $kept = [];
+        $rejected = 0;
+        foreach ($candidate->synonyms as $raw) {
+            $text = $this->stripEmphasis($raw);
+            $key = $text !== '' ? $this->normalizer->normalize($text) : '';
+            if ($text === '' || $key === '') {
+                $rejected++;
+
+                continue;
+            }
+            if (isset($seen[$key])) {
+                // Already the term, already an accepted form, or already stored. Not scrap.
+                continue;
+            }
+            if ($this->tokenCount($text) > $budget) {
+                $rejected++;
+
+                continue;
+            }
+            if (count($kept) >= self::MAX_SYNONYMS) {
+                $rejected++;
+
+                continue;
+            }
+            $seen[$key] = true;
+            $kept[] = $text;
         }
 
         return [$kept, $rejected];

@@ -19,6 +19,14 @@ final readonly class EnrichmentRunMetrics
         public int $distractorsWritten = 0,
         public int $variantsWritten = 0,
         public int $variantsRejected = 0,
+        /**
+         * Near-synonyms, counted apart from variants and never folded into them. The two products
+         * fail differently — a run can write plenty of synonyms and no forms at all, which is
+         * exactly what the machinery shape has done since 21.08 — and a single "extra answers"
+         * number would report that as healthy.
+         */
+        public int $synonymsWritten = 0,
+        public int $synonymsRejected = 0,
         public int $termsAmbiguous = 0,
         public int $termsLanguageFlagged = 0,
         public int $termsVariantConflict = 0,
@@ -46,6 +54,8 @@ final readonly class EnrichmentRunMetrics
             distractorsWritten: $this->distractorsWritten + $other->distractorsWritten,
             variantsWritten: $this->variantsWritten + $other->variantsWritten,
             variantsRejected: $this->variantsRejected + $other->variantsRejected,
+            synonymsWritten: $this->synonymsWritten + $other->synonymsWritten,
+            synonymsRejected: $this->synonymsRejected + $other->synonymsRejected,
             termsAmbiguous: $this->termsAmbiguous + $other->termsAmbiguous,
             termsLanguageFlagged: $this->termsLanguageFlagged + $other->termsLanguageFlagged,
             termsVariantConflict: $this->termsVariantConflict + $other->termsVariantConflict,

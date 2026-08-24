@@ -192,6 +192,31 @@ final class PromptLibrary implements PromptSource
                 '00-role', '16-given-core', '25-fields-machinery', '61-distractors', '99-closing',
             ],
         ],
+        // v14 is v13.1 plus a THIRD product: near-synonyms of the term (`purpose` → `goal`, `aim`).
+        //
+        // It is a new product and not a rescue of `forms`. The forms field has returned an empty
+        // list on every single machinery call since the shape went live — 217 of 217 answers between
+        // 21.08 and 24.08, under v12.1 (which spent a whole section on it) and under v13.1 (which
+        // spends three lines) alike — and that is the correct answer far more often than not: a real
+        // term genuinely has no second SPELLING. What the collection screen was reporting as
+        // «вариантов 0» is therefore not a broken pipeline, it is a product that had no data to
+        // show, and the data a learner would recognise as «другие варианты» for `purpose` is `goal`
+        // and `aim`, not `purpouse`.
+        //
+        // The section is written around ONE test the model can actually apply — substitute the
+        // candidate into the card's own example and read the sentence back — because that is the
+        // shape v13 established works on this model: a checkable instruction with a worked example
+        // beats an essay about meaning. The deterministic half (a phrase gets none, a synonym is a
+        // word or two, never the term itself) lives in EnrichmentValidator, where it can be tested
+        // off the network.
+        //
+        // v13.1 is not edited: 183 live rows record it as their generator version.
+        'v14' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '61-distractors', '63-synonyms',
+                '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}

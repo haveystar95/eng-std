@@ -21,6 +21,7 @@ final readonly class CandidateItem
      * @param  list<string>  $options  wrong-answer options, as produced
      * @param  list<string>  $forms  accepted alternative spellings of the term, as produced
      * @param  list<RawDistractor>  $distractors  wrong versions of the card's example, as produced
+     * @param  list<string>  $synonyms  near-synonyms of the term on its own side, as produced
      */
     public function __construct(
         public int $position,
@@ -36,6 +37,8 @@ final readonly class CandidateItem
         public array $forms = [],
         /** @var list<RawDistractor> wrong versions of the card's example (the machinery shape) */
         public array $distractors = [],
+        /** @var list<string> near-synonyms of the term, its own language (the machinery shape) */
+        public array $synonyms = [],
         public ?string $givenTerm = null,
         public ?string $sourceTermId = null,
     ) {}

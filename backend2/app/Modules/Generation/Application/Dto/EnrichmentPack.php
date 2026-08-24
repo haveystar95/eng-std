@@ -21,6 +21,8 @@ final readonly class EnrichmentPack
     /**
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
+     * @param  list<string>  $synonyms  near-synonyms of the term on the studied side, as produced.
+     *         Unvalidated like everything else here.
      * @param  list<RawLanguageNote>  $languageNotes
      * @param  bool  $backTranslationAsked  did the prompt behind this pack ask for the QA fields at
      *         all? A pack from a shape that produces no translations carries `null` because there was
@@ -37,5 +39,6 @@ final readonly class EnrichmentPack
         public ?int $tokensIn,
         public ?int $tokensOut,
         public bool $backTranslationAsked = true,
+        public array $synonyms = [],
     ) {}
 }

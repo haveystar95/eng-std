@@ -15,6 +15,7 @@ final readonly class EnrichmentVerdict
      * @param  list<RawDistractor>  $distractors  validated, safe to write
      * @param  list<RawVariant>  $variants  validated, safe to write
      * @param  list<EnrichmentFinding>  $findings
+     * @param  list<string>  $synonyms  validated near-synonyms, safe to write
      */
     public function __construct(
         public string $termId,
@@ -24,6 +25,8 @@ final readonly class EnrichmentVerdict
         public int $proposedDistractors,
         public int $rejectedDistractors,
         public int $rejectedVariants = 0,
+        public array $synonyms = [],
+        public int $rejectedSynonyms = 0,
     ) {}
 
     public function hasFinding(FindingKind $kind): bool

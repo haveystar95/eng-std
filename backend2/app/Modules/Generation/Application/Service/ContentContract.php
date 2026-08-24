@@ -41,6 +41,18 @@ final readonly class ContentContract
     private const MAX_DISTRACTORS = 5;
 
     /**
+     * How many near-synonyms a model may RETURN for one term.
+     *
+     * Deliberately equal to what is STORED ({@see \App\Modules\Generation\Domain\Service\EnrichmentValidator::MAX_SYNONYMS}),
+     * unlike the distractor ceiling above. The over-order there exists because the validator scraps
+     * roughly half of what comes back on a mechanical contract it can check character by character;
+     * a synonym has no such contract — it is a judgement about meaning, the deterministic checks are
+     * shape checks only, and a fourth candidate ordered "in case" is a candidate the model had to
+     * invent. Over-ordering a judgement buys padding, not yield.
+     */
+    private const MAX_SYNONYMS = 3;
+
+    /**
      * The error taxonomy, mirroring the CHECK on `example_distractors.error_type`. A closed set:
      * a report groups by it, and a value the table refuses would be a row the станок paid for and
      * could not store.
@@ -76,6 +88,14 @@ final readonly class ContentContract
             }
 
             $itemProps['forms'] = ['type' => 'array', 'items' => ['type' => 'string']];
+
+            if ($shape->hasSynonyms()) {
+                $itemProps['synonyms'] = [
+                    'type' => 'array',
+                    'maxItems' => self::MAX_SYNONYMS,
+                    'items' => ['type' => 'string'],
+                ];
+            }
 
             // Wrong versions of the card's own example: the only product here that a model has to
             // write, because the trainer's meaning options come from neighbouring terms for free.
@@ -202,6 +222,7 @@ final readonly class ContentContract
                 options: $this->strings($row['options'] ?? null),
                 forms: $this->strings($row['forms'] ?? null),
                 distractors: $this->distractors($row['distractors'] ?? null),
+                synonyms: $this->strings($row['synonyms'] ?? null),
                 givenTerm: $given['text'] ?? null,
                 sourceTermId: $given['id'] ?? null,
             );

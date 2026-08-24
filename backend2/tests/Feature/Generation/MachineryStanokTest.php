@@ -52,7 +52,7 @@ function packLive(array $config = []): void
     ));
 }
 
-it('asks v12 machinery for forms and example distractors — and for nothing else', function () {
+it('asks the machinery shape for forms, synonyms and example distractors — and for nothing else', function () {
     packLive();
 
     Http::assertSent(function (Request $request): bool {
@@ -69,7 +69,7 @@ it('asks v12 machinery for forms and example distractors — and for nothing els
             && ! array_key_exists('example', $props)
             // …and no wrong translations either, which is what v11 `mechanics` would have charged for.
             && ! array_key_exists('options', $props)
-            && array_keys($props) === ['text', 'forms', 'distractors'];
+            && array_keys($props) === ['text', 'forms', 'synonyms', 'distractors'];
     });
 });
 
@@ -144,7 +144,7 @@ it('puts the old four-product packer back on GENERATION_STACK=v1', function () {
 it('bumps the станок version, so every already-marked term is pending at the new one', function () {
     // The pin is the point: a prompt change that does NOT move this constant is invisible to the
     // journal, and every term already marked done is skipped by the very run meant to fix it.
-    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v13.1');
+    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v14');
 });
 
 it('shows the worked example as JSON, so the model cannot copy quotes into a field', function () {
@@ -177,4 +177,57 @@ it('runs the machinery on the measured prompt, not on the one it replaced', func
             && ! str_contains($system, 'other {{target_lang}} spellings of THIS term')
             && ! str_contains($system, 'Return an empty list rather than padding');
     });
+});
+
+
+it('asks v14 for near-synonyms, with the substitution test and the phrase ban', function () {
+    packLive();
+
+    Http::assertSent(function (Request $request): bool {
+        $system = $request->data()['messages'][0]['content'];
+
+        return str_contains($system, 'other {{target_lang}} words that mean nearly the same thing') === false
+            // The section is rendered, so the placeholder is already substituted.
+            && str_contains($system, 'other English words that mean nearly the same thing')
+            // The ONE test the model can actually apply: put it in the card's own example.
+            && str_contains($system, 'in place of the term')
+            && str_contains($system, 'TERM: purpose')
+            // Phrases get none — the deterministic half of this lives in EnrichmentValidator.
+            && str_contains($system, 'Only for a SINGLE WORD or a short lemma');
+    });
+});
+
+it('shows the model what the term already has, so it does not buy them twice', function () {
+    packLive();
+
+    Http::assertSent(function (Request $request): bool {
+        $user = $request->data()['messages'][1]['content'];
+
+        return str_contains($user, 'ALREADY ACCEPTED: bank account')
+            && str_contains($user, 'ALREADY SYNONYMS: —');
+    });
+});
+
+it('reads synonyms back off the answer', function () {
+    Http::fake(['*' => Http::response([
+        'model' => 'gpt-4o-mini-2024-07-18',
+        'choices' => [['message' => ['content' => json_encode(['items' => [[
+            'text' => 'purpose',
+            'forms' => [],
+            'synonyms' => ['goal', 'aim'],
+            'distractors' => [],
+        ]]])]]],
+        'usage' => ['prompt_tokens' => 5, 'completion_tokens' => 7],
+    ], 200)]);
+
+    $pack = livePacker()->pack(new EnrichmentBrief(
+        '01J0TERM', 'purpose', ['purpose'], 'цель',
+        'The purpose of this meeting is to agree a date.', 'Цель этой встречи — согласовать дату.',
+        'en', 'ru', ['objective'],
+    ));
+
+    expect($pack->synonyms)->toBe(['goal', 'aim'])
+        // Untouched by the addition: the shape still produces no core and no wrong translations.
+        ->and($pack->variants)->toBe([])
+        ->and($pack->backTranslation)->toBeNull();
 });

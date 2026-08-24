@@ -21,6 +21,7 @@ use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Dto\AcceptedVariantInput;
 use App\Modules\Vocabulary\Application\Dto\EnrichmentTargetView;
 use App\Modules\Vocabulary\Application\Dto\ExampleDistractorInput;
+use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 use Throwable;
 
@@ -74,8 +75,21 @@ final readonly class BuildTermEnrichmentsHandler
      * re-run on its own: the example quoted its field values, the model copied the quotes into them,
      * and 27% of the first v13 run's candidates were discarded as unfindable spans — good sentences,
      * lost to punctuation the prompt taught the model to add.
+     *
+     * `mech-v13.1` → `mech-v14` adds a THIRD product, near-synonyms of the term. It is the first
+     * bump that is not about fixing distractors: `purpose` → `goal`, `aim` is content the app has
+     * never had, and it is what three separate mechanics need — a synonym counts as a correct answer
+     * on a meaning card, it is a forbidden option beside its own term on a multiple-choice one, and
+     * it is the honest content behind the «вариантов 0» the collection screen has been showing since
+     * 21.08 (`forms` came back empty on 217 of 217 machinery calls, which for a real term is usually
+     * the correct answer — a word has no second spelling, it has other words).
+     *
+     * Worth re-paying for on the whole catalogue, but that is a RUN and a run is the owner's
+     * decision — nothing here starts one. Existing terms simply become pending again at the new
+     * version, and until someone spends the money the synonym-aware paths are inert rather than
+     * wrong: no synonyms means no extra accepted answers and no extra excluded options.
      */
-    public const VERSION = 'mech-v13.1';
+    public const VERSION = 'mech-v14';
 
     public function __construct(
         private EnrichmentTargetReader $targets,
@@ -134,6 +148,7 @@ final readonly class BuildTermEnrichmentsHandler
             translation: $target->translation,
             exampleSentence: $target->exampleSentence,
             exampleTranslation: $target->exampleTranslation,
+            existingSynonyms: $target->existingSynonyms,
             termLang: $target->lang,
             // A term with no translation has no prompt side; ru is the only learner language the
             // content actually has today, and the brief needs *a* value. If a second one ever shows
@@ -170,6 +185,8 @@ final readonly class BuildTermEnrichmentsHandler
             languageNotes: $pack->languageNotes,
             existingDistractors: $target->existingDistractors,
             backTranslationAsked: $pack->backTranslationAsked,
+            synonyms: $pack->synonyms,
+            existingSynonyms: $target->existingSynonyms,
         ));
 
         ($this->import)(new ImportTermEnrichment(
@@ -186,6 +203,10 @@ final readonly class BuildTermEnrichmentsHandler
                 $verdict->distractors,
             ),
             generatorVersion: $version,
+            synonyms: array_map(
+                static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
+                $verdict->synonyms,
+            ),
         ));
 
         $this->journal->recordFindings($verdict->findings, $version);
@@ -207,6 +228,8 @@ final readonly class BuildTermEnrichmentsHandler
             distractorsWritten: count($verdict->distractors),
             variantsWritten: count($verdict->variants),
             variantsRejected: $verdict->rejectedVariants,
+            synonymsWritten: count($verdict->synonyms),
+            synonymsRejected: $verdict->rejectedSynonyms,
             termsAmbiguous: $verdict->hasFinding(FindingKind::Ambiguity) ? 1 : 0,
             // "Any language problem" is the union of the three kinds, so a term that only has a
             // nonword still counts once in the headline language rate.

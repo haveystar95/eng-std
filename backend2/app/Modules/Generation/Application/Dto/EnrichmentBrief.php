@@ -15,6 +15,8 @@ namespace App\Modules\Generation\Application\Dto;
 final readonly class EnrichmentBrief
 {
     /**
+     * @param  list<string>  $existingSynonyms  near-synonyms the term already has — shown for the
+     *        same reason `acceptedForms` is, so the model does not buy tokens re-proposing them
      * @param  list<string>  $acceptedForms
      * @param  string  $termLang  the language being learned
      * @param  string  $translationLang  the learner's language — it decides which native-speaker
@@ -30,5 +32,6 @@ final readonly class EnrichmentBrief
         public ?string $exampleTranslation,
         public string $termLang = 'en',
         public string $translationLang = 'ru',
+        public array $existingSynonyms = [],
     ) {}
 }

@@ -23,6 +23,9 @@ final readonly class EnrichmentTargetView
      * @param  list<string>  $existingDistractors  wrong sentences already stored against the pinned
      *        example. A top-up run adds to what is there, so "already there" is part of the context it
      *        has to be judged against — otherwise it re-proposes a sibling it cannot see.
+     * @param  list<string>  $existingSynonyms  near-synonyms already stored for this term. Shown to
+     *        the model for the same reason `acceptedForms` is: so it does not spend output
+     *        re-proposing what the term already has, and so a re-run is genuinely a no-op.
      */
     public function __construct(
         public string $termId,
@@ -35,5 +38,6 @@ final readonly class EnrichmentTargetView
         public string $lang = 'en',
         public ?string $translationLang = null,
         public array $existingDistractors = [],
+        public array $existingSynonyms = [],
     ) {}
 }

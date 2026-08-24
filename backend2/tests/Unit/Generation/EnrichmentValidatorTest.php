@@ -27,6 +27,8 @@ function enrichmentCandidate(
     ?string $exampleId = '01J000000000000000000000EX',
     array $languageNotes = [],
     array $existingDistractors = [],
+    array $synonyms = [],
+    array $existingSynonyms = [],
 ): EnrichmentCandidate {
     return new EnrichmentCandidate(
         termId: '01J000000000000000000000TM',
@@ -40,6 +42,8 @@ function enrichmentCandidate(
         backTranslation: $backTranslation,
         languageNotes: $languageNotes,
         existingDistractors: $existingDistractors,
+        synonyms: $synonyms,
+        existingSynonyms: $existingSynonyms,
     );
 }
 
@@ -742,4 +746,79 @@ it('still flags a shape that WAS asked and answered with nothing', function () {
     ));
 
     expect($verdict->hasFinding(FindingKind::Ambiguity))->toBeTrue();
+});
+
+
+// ---- synonyms: the shape rules (SYN-1 Ч.2) -----------------------------------------------------
+
+/** A one-word term, which is where synonyms belong at all. */
+function synonymCandidate(array $synonyms, array $existingSynonyms = [], array $variants = []): EnrichmentCandidate
+{
+    return enrichmentCandidate(
+        variants: $variants,
+        acceptedForms: ['purpose'],
+        example: 'The purpose of this meeting is to agree a date.',
+        translation: 'цель',
+        exampleTranslation: 'Цель этой встречи — согласовать дату.',
+        synonyms: $synonyms,
+        existingSynonyms: $existingSynonyms,
+    );
+}
+
+it('keeps near-synonyms of a single-word term', function () {
+    $verdict = $this->validator->validate(synonymCandidate(['goal', 'aim']));
+
+    expect($verdict->synonyms)->toBe(['goal', 'aim'])
+        ->and($verdict->rejectedSynonyms)->toBe(0);
+});
+
+it('refuses synonyms for a PHRASE — what that would be is a paraphrase', function () {
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        acceptedForms: ['I would like to withdraw money from my account'],
+        synonyms: ['I want to take out cash'],
+    ));
+
+    expect($verdict->synonyms)->toBe([])
+        // Counted, not swallowed: silence would hide a prompt that had stopped holding the rule.
+        ->and($verdict->rejectedSynonyms)->toBe(1);
+});
+
+it('refuses a synonym that is really a definition', function () {
+    $verdict = $this->validator->validate(synonymCandidate(['the reason for doing something']));
+
+    expect($verdict->synonyms)->toBe([])->and($verdict->rejectedSynonyms)->toBe(1);
+});
+
+it('drops a synonym that is the term itself once normalised', function () {
+    $verdict = $this->validator->validate(synonymCandidate(['Purpose.']));
+
+    // Not scrap: the model said nothing new, and counting a no-op as a rejection would make a
+    // well-behaved run look broken. Same rule the variants follow.
+    expect($verdict->synonyms)->toBe([])->and($verdict->rejectedSynonyms)->toBe(0);
+});
+
+it('drops a synonym the term already has', function () {
+    $verdict = $this->validator->validate(synonymCandidate(['goal', 'aim'], existingSynonyms: ['goal']));
+
+    expect($verdict->synonyms)->toBe(['aim'])->and($verdict->rejectedSynonyms)->toBe(0);
+});
+
+it('stores at most three', function () {
+    $verdict = $this->validator->validate(synonymCandidate(['goal', 'aim', 'objective', 'intention']));
+
+    expect($verdict->synonyms)->toHaveCount(EnrichmentValidator::MAX_SYNONYMS)
+        ->and($verdict->rejectedSynonyms)->toBe(1);
+});
+
+it('a text proposed as BOTH a form and a synonym is kept only as the synonym', function () {
+    // The narrower reading wins. A synonym stored as a form would be accepted on a listening card,
+    // where the learner is being asked what they HEARD — which is how `bank card`, `gadget` and
+    // `alight` came to sit in `term_accepted_variants` under the old prompt.
+    $verdict = $this->validator->validate(synonymCandidate(
+        ['goal'],
+        variants: [new RawVariant('goal', 'синоним')],
+    ));
+
+    expect($verdict->synonyms)->toBe(['goal'])
+        ->and($verdict->variants)->toBe([]);
 });

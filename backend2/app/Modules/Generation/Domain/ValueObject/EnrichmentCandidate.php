@@ -21,6 +21,8 @@ final readonly class EnrichmentCandidate
      * @param  list<RawDistractor>  $distractors
      * @param  list<RawVariant>  $variants
      * @param  list<RawLanguageNote>  $languageNotes  the model's own lexis observations (see the validator)
+     * @param  list<string>  $synonyms  near-synonyms the model proposed, unvalidated
+     * @param  list<string>  $existingSynonyms  near-synonyms ALREADY stored for this term
      * @param  list<string>  $existingDistractors  sentences ALREADY stored against the pinned example
      * @param  bool  $backTranslationAsked  whether the shape that produced this pack was asked for a
      *         back-translation at all. It decides what a NULL one means, and the two meanings are
@@ -41,5 +43,7 @@ final readonly class EnrichmentCandidate
         public array $languageNotes = [],
         public array $existingDistractors = [],
         public bool $backTranslationAsked = true,
+        public array $synonyms = [],
+        public array $existingSynonyms = [],
     ) {}
 }
