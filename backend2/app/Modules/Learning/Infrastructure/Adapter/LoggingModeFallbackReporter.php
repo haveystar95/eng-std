@@ -22,6 +22,19 @@ final class LoggingModeFallbackReporter implements ModeFallbackReporter
         ]);
     }
 
+    public function closedByLanguage(UserId $userId, TermId $termId, string $lang, string $reason): void
+    {
+        // warning, and a level above the other two in seriousness: a term whose language trains
+        // nothing should never have reached a session at all (a reference collection does not
+        // enrol), so this line is a report about the POOL, not about this card.
+        Log::warning('No trainer exists for this term\'s language; no card was dealt', [
+            'user_id' => $userId->value,
+            'term_id' => $termId->value,
+            'lang' => $lang,
+            'reason' => $reason,
+        ]);
+    }
+
     public function tooFewOptions(UserId $userId, TermId $termId, string $mode, int $options): void
     {
         // warning for the same reason: the learner cannot see this and cannot fix it. The term needs

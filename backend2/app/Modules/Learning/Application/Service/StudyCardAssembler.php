@@ -13,6 +13,7 @@ use App\Modules\Learning\Domain\Service\DistractorSpanFilter;
 use App\Modules\Learning\Domain\Service\ExerciseSelector;
 use App\Modules\Learning\Domain\Service\PlayabilityAssessor;
 use App\Modules\Learning\Domain\Service\LearningLadder;
+use App\Modules\Learning\Domain\Service\ModePassport;
 use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
@@ -98,6 +99,26 @@ final readonly class StudyCardAssembler
             acquisition: $view->acquisition, learningStep: $view->learningStep,
             successfulReviews: $view->successfulReviews,
         );
+        // THE language gate, applied per CARD and not per session: what the product has switched on,
+        // narrowed to what this term's own language can carry (DECISIONS пп. 130, 143). A session
+        // mixing an English deck with a Polish one deals `pick_correct` on the first and not on the
+        // second, in the same sitting. Null = the language carries no trainer at all (zh/ja are
+        // reference-only, пп. 84, 136) — no card, the same refusal the option floor already uses.
+        $languageModes = $enabled->forLanguage($content->lang);
+        if ($languageModes === null) {
+            $this->fallbacks->closedByLanguage(
+                $user,
+                $view->termId,
+                $content->lang,
+                // The reason is stated in Domain, next to the table it comes from, and is kept
+                // apart from «закрыт матрицей / ниже паспорта» — see ModePassport.
+                ModePassport::languageReasonFor(ExerciseMode::MultipleChoice, $content->lang),
+            );
+
+            return null;
+        }
+        $enabled = $languageModes;
+
         $answer = $content->text;
         // Span-distinct, because that is what a card can actually use — see spanDistinct().
         $usableDistractors = $this->spanDistinct($content->exampleDistractors);
@@ -354,6 +375,15 @@ final readonly class StudyCardAssembler
         EnabledModes $enabled,
         ModeAdmission $admission,
     ): array {
+        // The same language gate as {@see assemble()}, through the same one function. A language
+        // that carries no trainer has no fan to deal — and the caller's «no mode applies» branch
+        // then produces the one card the assembler will refuse anyway.
+        $languageModes = $enabled->forLanguage($content->lang);
+        if ($languageModes === null) {
+            return [];
+        }
+        $enabled = $languageModes;
+
         $playable = $this->playability->assess(
             $content->text,
             $content->example,

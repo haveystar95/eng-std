@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Domain\Service;
 
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
+use App\Modules\Shared\Domain\Service\LanguageModeSupport;
 
 /**
  * The CONSTRUCTIVE MINIMUM phase a trainer needs to make sense at all.
@@ -70,6 +71,52 @@ final class ModePassport
     {
         return LearningLadder::stepFor(self::floorFor($mode), 0, LearningLadder::FIRST_LADDER_STEP)
             ?? LearningLadder::STEP_ASSEMBLY;
+    }
+
+    /**
+     * Is this trainer closed for this LANGUAGE — a different question from every other one on this
+     * class, and deliberately kept apart from it.
+     *
+     * The passport above and the admission matrix are both about the LEARNER: has this pair earned
+     * the trainer yet. This is about the CARD's language: can the trainer be honest in it at all
+     * (DECISIONS п. 130). The two produce the same visible outcome — the mode is not dealt — and
+     * have opposite cures: one is a threshold on an admin screen, the other is a judge or a
+     * recogniser that does not exist yet. Reporting them with one reason is how «включи pick_correct
+     * для польского» becomes a support request nobody can answer.
+     */
+    public static function closedByLanguage(ExerciseMode $mode, string $lang): bool
+    {
+        return ! LanguageModeSupport::supports($lang, $mode->value);
+    }
+
+    /**
+     * Why this trainer is closed FOR THIS LANGUAGE. Never mixed with {@see reasonFor()}, which
+     * answers «closed by the matrix / below the passport floor».
+     */
+    public static function languageReasonFor(ExerciseMode $mode, string $lang): string
+    {
+        if (LanguageModeSupport::modesFor($lang) === []) {
+            return "«{$lang}» в v1 не тренируется: коллекция на нём справочная — перевод и озвучка, "
+                . 'без пула и без расписания, поэтому тренажёров у неё нет ни одного.';
+        }
+
+        return match ($mode) {
+            ExerciseMode::PickCorrect => 'pick_correct открывается языку тогда, когда для него есть '
+                . "контроль качества дистракторов; в v1 он есть только для английского, для «{$lang}» — нет.",
+            default => "«{$mode->value}» закрыт для «{$lang}» языковым справочником — не матрицей и "
+                . 'не паспортом ступени.',
+        };
+    }
+
+    /**
+     * Available, but only with a network — the honest middle answer between «есть» and «нет»
+     * (DECISIONS п. 48). iOS has no on-device recognition for pl or ro, so the two listening
+     * trainers work online and, offline, are Skipped free of charge.
+     */
+    public static function onlineOnlyReasonFor(ExerciseMode $mode, string $lang): string
+    {
+        return "«{$mode->value}» для «{$lang}» работает только с сетью: оффлайн-распознавания речи "
+            . 'для этого языка в iOS нет, и без сети карточка пропускается без штрафа.';
     }
 
     /** A short, mode-specific reason a threshold below the floor is refused — not just "too low". */

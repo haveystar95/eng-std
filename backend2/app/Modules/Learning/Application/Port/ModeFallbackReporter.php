@@ -21,6 +21,17 @@ interface ModeFallbackReporter
     public function noApplicableMode(UserId $userId, TermId $termId, array $enabledModes): void;
 
     /**
+     * No card at all, because the term's LANGUAGE carries no trainer (DECISIONS пп. 130, 136).
+     *
+     * Its own method and not a third argument on the one above, for the reason
+     * {@see \App\Modules\Learning\Domain\Service\ModePassport::closedByLanguage()} gives: «закрыт
+     * языком» and «закрыт матрицей» look identical from the outside and have opposite cures. A zh
+     * word in the pool is a rule broken upstream (reference collections do not enrol); a
+     * `pick_correct` missing on a Polish card is the design working.
+     */
+    public function closedByLanguage(UserId $userId, TermId $termId, string $lang, string $reason): void;
+
+    /**
      * A choice card was REFUSED because the term could not furnish a second option (QA-15).
      *
      * The learner sees one card fewer, which is right — one option is not a question — but the
