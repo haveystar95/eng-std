@@ -22,11 +22,20 @@ final readonly class TermAnswerKeyView
     /**
      * @param  list<string>  $accepted  non-empty set of accepted target forms
      * @param  string|null   $example   the pinned example sentence, when the term has one
+     * @param  list<string>  $synonyms  near-synonyms of the term, on the SAME (target) side. Kept
+     *         out of `$accepted` deliberately: a synonym is not a form of this word, so it answers
+     *         only a card that asked what the word MEANS — the grader adds it where the mode says
+     *         it counts ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::acceptsSynonyms()})
+     *         and nowhere else. Folding it into `$accepted` here would make a listening card accept
+     *         a word the learner never heard, and there would be nothing left to tell the two apart.
+     *         The answer-key rule is untouched: this is still only target-language text the term
+     *         itself owns, never a translation.
      */
     public function __construct(
         public string $termId,
         public array $accepted,
         public bool $isPhrase,
         public ?string $example = null,
+        public array $synonyms = [],
     ) {}
 }

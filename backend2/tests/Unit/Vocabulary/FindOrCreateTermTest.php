@@ -61,7 +61,7 @@ it('merges new translations into an existing term', function () {
     expect($repo->findById($id)?->translations())->toHaveCount(2);
 });
 
-it('leaves exactly one primary translation when a dedup hit brings a different one (A7)', function () {
+it('keeps the FIRST primary when a dedup hit brings a different one (A7 + SYN-1)', function () {
     $repo = new InMemoryTermRepository();
     $handler = makeHandler($repo);
 
@@ -77,13 +77,64 @@ it('leaves exactly one primary translation when a dedup hit brings a different o
     $translations = $repo->findById($id)?->translations() ?? [];
     $primary = array_values(array_filter($translations, static fn (Translation $t): bool => $t->isPrimary));
 
-    // The older reading is demoted, never dropped: it stays a legitimate alternative.
+    // Still exactly one primary (A7) — and it is the one the learner is already being asked, not the
+    // one the newer generation would have preferred (SYN-1). The newcomer is kept as an alternative.
     expect($translations)->toHaveCount(2)
         ->and($primary)->toHaveCount(1)
-        ->and($primary[0]->text)->toBe('оставаться спокойным');
+        ->and($primary[0]->text)->toBe('Оставайтесь спокойны');
 });
 
-it('demotes only the primary of the SAME language', function () {
+it('pins a translation deliberately, demoting whatever held the pin', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $id = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('purpose'), TermType::Word, null, TermSource::Ai,
+        [new Translation(new LanguageCode('ru'), 'цель', true)],
+    ));
+
+    $term = $repo->findById($id);
+    // The learner confirmed «назначение» in the translator: an authority above the generator.
+    $term?->pinTranslation(new Translation(new LanguageCode('ru'), 'назначение', true));
+    if ($term !== null) {
+        $repo->save($term);
+    }
+
+    $translations = $repo->findById($id)?->translations() ?? [];
+    $primary = array_values(array_filter($translations, static fn (Translation $t): bool => $t->isPrimary));
+
+    expect($translations)->toHaveCount(2)
+        ->and($primary)->toHaveCount(1)
+        ->and($primary[0]->text)->toBe('назначение');
+});
+
+it('promotes an existing row rather than adding a twin when it is pinned', function () {
+    $repo = new InMemoryTermRepository();
+    $handler = makeHandler($repo);
+
+    $id = $handler(new FindOrCreateTerm(
+        new LanguageCode('en'), new TermText('purpose'), TermType::Word, null, TermSource::Ai,
+        [
+            new Translation(new LanguageCode('ru'), 'цель', true),
+            new Translation(new LanguageCode('ru'), 'задача', false),
+        ],
+    ));
+
+    $term = $repo->findById($id);
+    $term?->pinTranslation(new Translation(new LanguageCode('ru'), 'задача', true));
+    if ($term !== null) {
+        $repo->save($term);
+    }
+
+    $translations = $repo->findById($id)?->translations() ?? [];
+    $primary = array_values(array_filter($translations, static fn (Translation $t): bool => $t->isPrimary));
+
+    expect($translations)->toHaveCount(2)
+        ->and($primary)->toHaveCount(1)
+        ->and($primary[0]->text)->toBe('задача');
+});
+
+it('a primary of ANOTHER language is untouched — one question per language', function () {
     $repo = new InMemoryTermRepository();
     $handler = makeHandler($repo);
 

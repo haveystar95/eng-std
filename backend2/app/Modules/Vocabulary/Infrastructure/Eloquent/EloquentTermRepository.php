@@ -42,6 +42,7 @@ final class EloquentTermRepository implements TermRepository
     public function save(Term $term): void
     {
         DB::transaction(function () use ($term): void {
+            // Did anything a synced device holds about this term's translations change?
             $repinned = false;
 
             TermModel::query()->updateOrCreate(
@@ -66,23 +67,29 @@ final class EloquentTermRepository implements TermRepository
                     ],
                 );
 
-                // …and `is_primary` is the one column an EXISTING row still has to hear about.
-                // The aggregate demotes the previous primary when a newer one arrives (A7, see
-                // {@see Term::addTranslation()}), and a demotion that stopped at the aggregate would
-                // leave the table with the two primaries the rule exists to prevent. Text and
-                // provenance stay untouched: the row keeps saying what it said and who wrote it, it
-                // only stops being the question on the card.
+                // …and `is_primary` is the one column an EXISTING row still has to hear about. The
+                // pin only moves through {@see Term::pinTranslation()} now, and a promotion or
+                // demotion that stopped at the aggregate would leave the table saying the opposite.
+                // Text and provenance stay untouched: the row keeps saying what it said and who
+                // wrote it, it only stops (or starts) being the question on the card.
                 if (! $row->wasRecentlyCreated && $row->is_primary !== $translation->isPrimary) {
                     $row->forceFill(['is_primary' => $translation->isPrimary])->save();
+                    $repinned = true;
+                }
+                // A NEW alternative reading is a change the device has to hear about too, now that
+                // the client is shipped every translation beside the pinned one
+                // ({@see \App\Modules\Vocabulary\Application\Dto\TermContentView::$translations}).
+                // Before that list existed only the pin was visible, so only a re-pin mattered.
+                if ($row->wasRecentlyCreated) {
                     $repinned = true;
                 }
             }
 
             // The delta feed decides what to ship by `terms.updated_at`, and a translation lives in
-            // ANOTHER table — so a re-pinned primary would change the QUESTION on the card and never
-            // reach an already-synced phone (the QA-19 shape, seen there on a replaced example).
-            // Only when the pin actually moved: a merge that changed nothing must not re-send the
-            // term to every client.
+            // ANOTHER table — so a moved pin, or a reading added beside it, would never reach an
+            // already-synced phone (the QA-19 shape, seen there on a replaced example). Only when
+            // something actually changed: a merge that changed nothing must not re-send the term to
+            // every client.
             if ($repinned) {
                 TermModel::query()->where('id', $term->id()->value)->update(['updated_at' => now()]);
             }

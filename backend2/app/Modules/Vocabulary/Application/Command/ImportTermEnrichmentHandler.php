@@ -18,6 +18,7 @@ final readonly class ImportTermEnrichmentHandler
             $command->variants,
             $command->distractors,
             $command->generatorVersion,
+            $command->synonyms,
         );
     }
 }

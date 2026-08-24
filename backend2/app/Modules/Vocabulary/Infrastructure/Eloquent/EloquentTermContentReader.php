@@ -37,6 +37,14 @@ final class EloquentTermContentReader implements TermContentReader
             $translations += $this->pick->forTerms($groupIds, $lang);
         }
 
+        // EVERY reading this term has, in the language the pick actually landed on, ordered by the
+        // pick's own rule — so the first entry is the row `translation` above holds and the rest are
+        // its alternatives («цель», then «задача»). One list per term, not per language: the pick
+        // has already chosen the language, including its explicit last-resort fallback, and a list
+        // of «other ways to say the same thing» that quietly mixed languages would be worse than no
+        // list at all.
+        $allTranslations = $this->alternatives($ids, $translations);
+
         // A term may hold several examples (ImportTerm appends one per generation pass), but a card
         // shows exactly one — so which one must be PINNED, not whichever the heap hands back. Without
         // an explicit order an unordered scan can return a different row after any UPDATE to the
@@ -56,6 +64,15 @@ final class EloquentTermContentReader implements TermContentReader
         $variants = [];
         foreach (DB::table('term_accepted_variants')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
             $variants[(string) $row->term_id][] = (string) $row->text;
+        }
+
+        // Near-synonyms on the studied side. They ride with the term for the same reason the
+        // variants above do — the device grades typed answers offline and must know the same
+        // accepted set the server does — and they are kept as their OWN list because they are
+        // accepted on fewer cards than a variant is (see TermContentView).
+        $synonyms = [];
+        foreach (DB::table('term_synonyms')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
+            $synonyms[(string) $row->term_id][] = (string) $row->text;
         }
 
         // The description is written in the language BEING LEARNED — it is the question of the
@@ -120,7 +137,47 @@ final class EloquentTermContentReader implements TermContentReader
                 imageAuthorUrl: $term->image_author_url !== null ? (string) $term->image_author_url : null,
                 acceptedVariants: $variants[$id] ?? [],
                 exampleDistractors: $distractors[$id] ?? [],
+                synonyms: $synonyms[$id] ?? [],
+                // Every reading this term has in the asking language, the pinned one first. The
+                // single `translation` above is unchanged and is still what the card asks — this is
+                // the alternatives beside it, so a learner who types «задача» for `purpose` is not
+                // told they are wrong by a card that simply pinned «цель».
+                translations: $allTranslations[$id] ?? [],
             );
+        }
+
+        return $out;
+    }
+
+    /**
+     * Every translation a term has in the language its pinned one is in, that pinned one first.
+     *
+     * Grouped by the RESOLVED language rather than by the asked-for one, which is the whole subtlety:
+     * {@see TranslationPick} may fall back to a foreign-language row when a term has nothing in the
+     * asking language, and the alternatives of such a term are the alternatives of the row that
+     * actually won — not an empty list, and not a mixture.
+     *
+     * @param  list<string>  $ids
+     * @param  array<string, array{id: string, lang: string, text: string}>  $picked
+     * @return array<string, list<string>>
+     */
+    private function alternatives(array $ids, array $picked): array
+    {
+        /** @var array<string, list<string>> $byLang */
+        $byLang = [];
+        foreach ($ids as $id) {
+            $lang = $picked[$id]['lang'] ?? null;
+            if ($lang !== null) {
+                $byLang[$lang][] = $id;
+            }
+        }
+
+        $out = [];
+        foreach ($byLang as $lang => $groupIds) {
+            foreach (DB::table('term_translations')->whereIn('term_id', $groupIds)->where('lang', $lang)
+                ->orderByDesc('is_primary')->orderBy('id')->get(['term_id', 'text']) as $row) {
+                $out[(string) $row->term_id][] = (string) $row->text;
+            }
         }
 
         return $out;

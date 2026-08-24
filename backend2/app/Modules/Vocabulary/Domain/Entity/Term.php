@@ -110,24 +110,37 @@ final class Term
     /**
      * Add a translation, ignoring exact (lang,text) duplicates.
      *
-     * ## A7: exactly one primary per language, and it is the newest one
+     * ## Exactly one primary per language — and it is the FIRST one, not the newest
      *
      * A term is global and deduplicated, so it accumulates translations: every regeneration of the
-     * same text merges another reading in. Until this rule existed the merge simply appended, and a
-     * translation that arrived marked primary landed BESIDE the primary already there — ten live
-     * store terms ended up with two («stay calm» → «Оставайтесь спокойны» AND «оставаться
-     * спокойным»). The question on the card is then whichever row the reader's ordering happens to
-     * return, which is a coin flip over what the learner is asked.
+     * same text merges another reading in. Two rules have been needed here, in this order.
      *
-     * So a primary arriving for a language demotes the primary that language already had. The old
-     * row is NOT deleted — it is a genuine alternative reading and it stays available — it only
-     * stops being the question. Freshest wins, because a merge is the newer generation speaking and
-     * a term with no opinion beats a term with two.
+     * A7 (20.08) established that a language may only have ONE primary. Before it the merge simply
+     * appended, and a translation arriving marked primary landed BESIDE the primary already there —
+     * ten live store terms ended up with two («stay calm» → «Оставайтесь спокойны» AND «оставаться
+     * спокойным»), so the question on the card was whichever row the reader's ordering happened to
+     * return. That rule stands and is what the invariant test pins.
+     *
+     * SYN-1 (25.08) reversed which of the two wins. A7 demoted the incumbent on the reasoning that
+     * «a merge is the newer generation speaking»; that is true about MODELS and false about the
+     * person reading the card. Nothing about a re-run is evidence that the learner's existing
+     * question was wrong — but changing it is guaranteed to be felt, because the pinned translation
+     * IS the question every card of that term asks. A second lookup of a word already saved, a
+     * dedup merge from a generated collection, a re-enrichment: none of them may re-word a card
+     * somebody is already learning from. So an arriving primary for a language that already has one
+     * is stored as an ALTERNATIVE (`is_primary = false`) and the pin does not move.
+     *
+     * Nothing is lost either way — a demoted or unpromoted reading is a genuine alternative («cash
+     * register» → «касса» beside «кассовый аппарат»), it stays queryable, and it is now shipped to
+     * the client beside the primary ({@see \App\Modules\Vocabulary\Application\Dto\TermContentView::$translations}).
+     * It simply does not compete to be the question.
+     *
+     * Moving the pin deliberately is {@see pinTranslation()}, and only the two authorities above a
+     * generator call it: the learner (a translation they were shown in the translator and confirmed)
+     * and a curator.
      *
      * An exact (lang,text) duplicate is not an arrival at all: nothing new was said, so nothing is
-     * promoted or demoted. That is what keeps a re-run of the same generation a genuine no-op, and
-     * it is what stops a repeat generation from taking the primary flag off a row a curator moved it
-     * onto by hand.
+     * promoted or demoted. That is what keeps a re-run of the same generation a genuine no-op.
      */
     public function addTranslation(Translation $translation): void
     {
@@ -137,16 +150,65 @@ final class Term
             }
         }
 
-        if ($translation->isPrimary) {
-            $this->translations = array_map(
-                static fn (Translation $existing): Translation => $existing->lang->equals($translation->lang)
-                    ? $existing->demoted()
-                    : $existing,
-                $this->translations,
-            );
+        // A machine may fill an EMPTY pin, never move a set one.
+        if ($translation->isPrimary && $this->hasPrimaryIn($translation->lang)) {
+            $translation = $translation->demoted();
         }
 
         $this->translations[] = $translation;
+    }
+
+    /**
+     * Move the pin: make this text the primary translation for its language, demoting whatever held
+     * the pin before and adding the row if the term does not have it yet.
+     *
+     * The deliberate counterpart of {@see addTranslation()}'s refusal to move it. Reserved for the
+     * two authorities the trust hierarchy puts above a generator — the learner confirming the
+     * translation they were shown before pressing «Собрать карточку», and a curator correcting a
+     * card by hand. A generator never calls this, which is the whole point of it being a separate
+     * method rather than a flag on the other one.
+     */
+    public function pinTranslation(Translation $translation): void
+    {
+        $this->translations = array_map(
+            static fn (Translation $existing): Translation => $existing->lang->equals($translation->lang)
+                ? $existing->demoted()
+                : $existing,
+            $this->translations,
+        );
+
+        foreach ($this->translations as $index => $existing) {
+            if ($existing->lang->equals($translation->lang) && $existing->text === $translation->text) {
+                // Already there, merely not pinned: promote the ROW rather than adding a twin,
+                // which the unique index would refuse anyway. Its provenance stays its own.
+                $this->translations[$index] = new Translation(
+                    $existing->lang,
+                    $existing->text,
+                    true,
+                    $existing->provenance,
+                );
+
+                return;
+            }
+        }
+
+        $this->translations[] = new Translation(
+            $translation->lang,
+            $translation->text,
+            true,
+            $translation->provenance,
+        );
+    }
+
+    private function hasPrimaryIn(LanguageCode $lang): bool
+    {
+        foreach ($this->translations as $existing) {
+            if ($existing->isPrimary && $existing->lang->equals($lang)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Add a usage example, ignoring duplicates by sentence (case-insensitive). */

@@ -36,6 +36,12 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
             $variants[(string) $row->term_id][] = (string) $row->text;
         }
 
+        // Near-synonyms, read beside the variants and kept apart from them — see TermAnswerKeyView.
+        $synonyms = [];
+        foreach (DB::table('term_synonyms')->whereIn('term_id', $ids)->orderBy('id')->get(['term_id', 'text']) as $row) {
+            $synonyms[(string) $row->term_id][] = (string) $row->text;
+        }
+
         $out = [];
         foreach (DB::table('terms')->whereIn('id', $ids)->get(['id', 'text', 'type']) as $row) {
             $id = (string) $row->id;
@@ -44,6 +50,7 @@ final class EloquentTermAnswerKeyReader implements TermAnswerKeyReader
                 accepted: [(string) $row->text, ...($variants[$id] ?? [])],
                 isPhrase: TermType::from((string) $row->type)->isPhraseLike(),
                 example: $examples[$id] ?? null,
+                synonyms: $synonyms[$id] ?? [],
             );
         }
 

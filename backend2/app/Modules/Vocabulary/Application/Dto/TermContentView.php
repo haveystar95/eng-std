@@ -17,6 +17,14 @@ final readonly class TermContentView
      * @param  list<string>  $acceptedVariants  extra correct answers, beyond `text`
      * @param  list<array{sentence: string, error_type: string, error_span: string, correction: string}>  $exampleDistractors
      *         wrong versions of `example`; mirrored ahead of the trainer that will use them
+     * @param  list<string>  $synonyms  near-synonyms on the STUDIED side. Beside `acceptedVariants`
+     *         and not inside it, because the two are accepted on different cards: a variant is
+     *         another spelling of this word and counts wherever the word is typed, a synonym is
+     *         another word and only answers a card that asked for the MEANING
+     *         ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::acceptsSynonyms()}).
+     * @param  list<string>  $translations  every translation this term has in the asking language,
+     *         primary first — the one on `$translation` plus its alternatives. Additive: readers
+     *         that only want the question keep reading `$translation`.
      */
     public function __construct(
         public string $id,
@@ -38,5 +46,7 @@ final readonly class TermContentView
         public ?string $imageAuthorUrl = null,  // link to the photographer
         public array $acceptedVariants = [],
         public array $exampleDistractors = [],
+        public array $synonyms = [],
+        public array $translations = [],
     ) {}
 }
