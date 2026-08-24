@@ -52,7 +52,51 @@ class SearchPair {
   String toString() => '$source→$target';
 }
 
-/// What the server says the pill may offer. Codes only — the names and flags are the app's own.
+/// A pair with its ROLES named, which is the shape everything downstream of the search field wants.
+///
+/// [SearchPair] is a direction — «what I typed» → «what came back» — and it flips twice a minute.
+/// A COLLECTION's pair does not flip: it is «изучаемый → язык поддержки» (`target_lang` /
+/// `source_lang`), one per collection, forever (DECISIONS п. 81). This is the translation between
+/// the two, made once at the top of the save path so no screen further down has to work out which
+/// half of the direction was the taught one.
+class LearningPair {
+  const LearningPair({required this.learned, required this.support});
+
+  /// The language BEING LEARNED — a collection's `target_lang`, and the language of every term in
+  /// it. The one half the server's gate actually checks.
+  final String learned;
+
+  /// The language of SUPPORT — a collection's `source_lang`: which translation is shown.
+  final String support;
+
+  /// Which way round a [SearchPair] is, given the language this deployment teaches.
+  factory LearningPair.of(SearchPair pair, String taught) =>
+      LearningPair(learned: taught, support: pair.otherThan(taught));
+
+  @override
+  bool operator ==(Object other) =>
+      other is LearningPair && other.learned == learned && other.support == support;
+
+  @override
+  int get hashCode => Object.hash(learned, support);
+
+  @override
+  String toString() => '$learned←$support';
+}
+
+/// What the server says the pickers may offer, AND which role each language plays.
+///
+/// ROLES COME FROM HERE AND NOWHERE ELSE. `lib/l10n/language_endonyms.dart` is a table of NAMES —
+/// it says what a language is called and what flag it flies, not whether this deployment can teach
+/// it or read it. Those two lists are a capability of the server (`GET /search/languages`), they
+/// change by deployment rather than by release, and a client that held its own copy would offer a
+/// pair the server then refuses. So the «На какой» picker lists [learned] and the «С какого» picker
+/// lists [support], and neither is written out in the app.
+///
+/// [learned] HOLDS EXACTLY ONE ENTRY TODAY, because the server names exactly one: `SupportedLanguages`
+/// still requires the taught language on one side of every pair (`config/languages.php`), which
+/// DECISIONS п. 134 records as a v1 product limit due to be lifted (RS-3), not as the rule. The
+/// picker is written against a list so that lifting it on the server is the whole change.
 class SearchLanguages {
   const SearchLanguages({required this.taught, required this.natives, required this.defaultNative});
 
@@ -64,6 +108,17 @@ class SearchLanguages {
 
   /// Where the pill starts on a device that has never been set: the learner's own language.
   final String defaultNative;
+
+  /// What may occupy the LEARNED side of the pair — «На какой».
+  List<String> get learned => [taught];
+
+  /// What may occupy the SUPPORT side of the pair — «С какого».
+  List<String> get support => natives;
+
+  /// Which language may stand in the slot [code] currently occupies. The two pills are the two
+  /// SIDES of the direction, so the swap moves the roles between them and each pill has to ask
+  /// again which list it is offering.
+  List<String> optionsAt(String code) => code == taught ? learned : support;
 
   /// The pill's opening position — taught language into their own. Looking up a word they have
   /// just met is the commoner half of the job, so that is the way round it opens.

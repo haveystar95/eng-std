@@ -99,6 +99,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   SearchPairStore get _pairs => SearchPairStore(ref.read(appDatabaseProvider));
 
+  /// The pair a save from this screen has to obey — «изучаемый ← язык поддержки», the shape a
+  /// COLLECTION carries. Null while the pill has not loaded, which is also when every request omits
+  /// the pair and the server answers in the profile one: with nothing stated, nothing is filtered.
+  LearningPair? get _learningPair {
+    final pair = _pair;
+    final languages = _languages;
+    if (pair == null || languages == null) return null;
+
+    return LearningPair.of(pair, languages.taught);
+  }
+
   /// Terms the LOCAL mirror already holds, keyed by id — the only place a search result can get a
   /// photo from, since `/search` carries none. Filled for the word that was actually asked for, so
   /// its 88 pt plate in кадр 03 is a picture rather than an empty rectangle.
@@ -140,36 +151,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
-  /// A tap on the pill. The direction changes, so anything on screen answers the old question —
-  /// the results are re-asked at once rather than left to look current.
-  void _swapPair() {
-    final pair = _pair;
-    if (pair == null) return;
-    setState(() => _pair = pair.swapped);
-    unawaited(_pairs.save(pair.swapped));
-    _reaskCurrentQuery();
-  }
-
-  /// A long press on the pill: the other half of the pair.
-  void _pickOther(String code) {
-    final pair = _pair;
-    final languages = _languages;
-    if (pair == null || languages == null) return;
-    final next = pair.withOther(languages.taught, code);
+  /// A swap or a language picked in either pill — all the same event: remember the new pair and
+  /// re-ask, because anything on screen answers the old question.
+  void _changePair(SearchPair next) {
+    if (next == _pair || next.source == next.target) return;
     setState(() => _pair = next);
     unawaited(_pairs.save(next));
     _reaskCurrentQuery();
   }
 
-  /// Re-run whatever is on screen in the new pair. The echo is dropped first: a translation from
-  /// the previous direction sitting under a freshly flipped pill is the one thing this control
-  /// must never show.
+  /// Re-run whatever is on screen in the new pair.
+  ///
+  /// EVERYTHING PAIR-SHAPED IS DROPPED FIRST — the echo, the hits, the outcome flags. A translation
+  /// from the previous direction sitting under a freshly flipped pill is the one thing this control
+  /// must never show, and the hit list is no different: «invoice» found in EN→RU is not an answer
+  /// to the same word asked RU→PL. The mirror cache (`_mirrored`) is deliberately kept — it is
+  /// photos keyed by term id, and a term's photo does not depend on which way it was asked for.
   void _reaskCurrentQuery() {
     if (_query.isEmpty) return;
     setState(() {
       _hint = null;
+      _hits = const [];
       _lookupError = null;
+      _limitReached = false;
       _notRecognized = false;
+      _searching = true;
     });
     unawaited(_runFreeSearch(_query));
     unawaited(_fetchHint(_query));
@@ -402,6 +408,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       MaterialPageRoute<void>(
         builder: (_) => WordCardScreen(
           subject: subject,
+          // The pair the word was FOUND in. It decides which collections the save sheet may offer,
+          // and which pair a collection created from that sheet is born in — «одна коллекция —
+          // одна пара» (DECISIONS п. 81).
+          pair: _learningPair,
           onSpeak: () => _speak(subject.text, subject.type),
           onSaved: _afterSave,
         ),
@@ -451,25 +461,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _field(l),
-                    // UNDER the field rather than beside it: the right-hand end of the field is
-                    // already spoken for by the echo and the clear button, and a third thing there
-                    // would make the busiest corner of the screen the one nobody looks at.
+                    // OVER the field, not beside it: the right-hand end of the field is already
+                    // spoken for by the echo and the clear button, and a third thing there would
+                    // make the busiest corner of the screen the one nobody looks at. Above it, the
+                    // pair is read before the word is typed — which is the order it matters in.
                     if (_pair case final pair? when _languages != null)
                       Padding(
                         // Pulled back by the pill's own padding so its text lines up with the
                         // field's, which is what makes it read as a caption and not a control.
-                        padding: const EdgeInsets.only(top: 2, left: 18),
+                        padding: const EdgeInsets.only(bottom: 2, left: 20),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: LanguagePill(
+                          child: LanguagePairBar(
                             pair: pair,
                             languages: _languages!,
-                            onSwap: _swapPair,
-                            onPick: _pickOther,
+                            onChanged: _changePair,
                           ),
                         ),
                       ),
+                    _field(l),
                   ],
                 ),
               ),
@@ -766,10 +776,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
+  /// Spoken in the language BEING LEARNED, which is the language every search result is in — read
+  /// off the pair rather than pinned to English, or a Polish word would be pronounced by an English
+  /// voice the moment the deployment teaches more than one language.
   void _speak(String text, String type) {
     _pronouncer.speak(
       Word(termId: 'search', term: text, translation: '', type: type),
-      targetLang: 'en',
+      targetLang: _learningPair?.learned ?? 'en',
     );
   }
 }
