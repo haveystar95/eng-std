@@ -23,8 +23,13 @@ use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
+use App\Modules\Vocabulary\Application\Command\ImportTermEnrichment;
+use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
+use App\Modules\Vocabulary\Application\Command\PinTermTranslation;
+use App\Modules\Vocabulary\Application\Command\PinTermTranslationHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
+use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
 
@@ -48,6 +53,8 @@ final readonly class AddSearchResultHandler
     public function __construct(
         private SearchLookupCache $cache,
         private ImportTermHandler $importTerm,
+        private ImportTermEnrichmentHandler $importEnrichment,
+        private PinTermTranslationHandler $pinTranslation,
         private TermDescriptionWriter $descriptions,
         private AddTermToCollectionHandler $addTerm,
         private EnsureDefaultCollectionHandler $ensureDefault,
@@ -77,7 +84,7 @@ final readonly class AddSearchResultHandler
         [$termId, $collectionId, $added, $enrolled] = $this->tx->run(
             function () use ($command, $lookup, $langs, $savedLang): array {
                 $termId = $lookup !== null
-                    ? $this->termFromLookup($lookup, $savedLang)
+                    ? $this->termFromLookup($lookup, $savedLang, $command->fixedTranslation)
                     : ($command->termId ?? throw LookupNotFound::nothingToAdd());
 
                 // Ownership is asserted by the add itself, so an unowned folder never reaches the
@@ -152,8 +159,20 @@ final readonly class AddSearchResultHandler
      * two learners looked up separately — or one looked up twice — is ONE term, and the second save
      * merely adds it to another folder.
      */
-    private function termFromLookup(CachedLookup $lookup, string $nativeLang): TermId
+    private function termFromLookup(CachedLookup $lookup, string $nativeLang, ?string $confirmed = null): TermId
     {
+        $lang = new \App\Modules\Shared\Domain\ValueObject\LanguageCode($nativeLang);
+        // The reading the card asks. The learner's confirmed line outranks the model's — they read
+        // it and pressed the button — and the model's own becomes an alternative beside it rather
+        // than being thrown away, because it is a perfectly good second reading of the same word.
+        $primary = $confirmed !== null && trim($confirmed) !== '' ? trim($confirmed) : $lookup->translation;
+        $alternatives = [];
+        foreach ([$lookup->translation, ...$lookup->otherTranslations] as $other) {
+            if (trim($other) !== '' && mb_strtolower(trim($other)) !== mb_strtolower($primary)) {
+                $alternatives[] = new TranslationInput($lang, trim($other));
+            }
+        }
+
         $termId = ($this->importTerm)(new ImportTerm(
             lang: new \App\Modules\Shared\Domain\ValueObject\LanguageCode($lookup->lang),
             text: $lookup->text,
@@ -162,11 +181,10 @@ final readonly class AddSearchResultHandler
             // `user` and not `ai`: the model wrote the words, but the learner chose the word. The
             // catalogue's provenance columns below record which model, which prompt.
             source: 'user',
-            translations: [new TranslationInput(
-                new \App\Modules\Shared\Domain\ValueObject\LanguageCode($nativeLang),
-                $lookup->translation,
-                isPrimary: true,
-            )],
+            // The confirmed (or, absent one, the model's) reading pinned, every other reading of the
+            // same word beside it — additive, so a learner who types «берег» for `bank` is not told
+            // they are wrong by a card that pinned «банк» (SYN-1, механика 2).
+            translations: [new TranslationInput($lang, $primary, isPrimary: true), ...$alternatives],
             ipa: $lookup->transcription,
             examples: $lookup->example !== null
                 // The gloss is in the learner's own language — the same one the translation above
@@ -186,6 +204,34 @@ final readonly class AddSearchResultHandler
             promptVersion: $lookup->promptVersion,
             generationModel: $lookup->model,
         ));
+
+        // THE PIN, and only when the learner confirmed one.
+        //
+        // `ImportTerm` above cannot move a primary that is already set — that is the rule which
+        // stops a re-generation re-wording a card somebody is learning from — and this is exactly
+        // the case the rule needs an exception for: the term may already exist (a global catalogue
+        // word, or the same word saved before), and the learner has just read a translation and
+        // agreed with it. So the authority above the generator says so explicitly.
+        if ($confirmed !== null && trim($confirmed) !== '') {
+            ($this->pinTranslation)(new PinTermTranslation($termId, $lang, trim($confirmed)));
+        }
+
+        // The near-synonyms the lookup came back with, on the term's own side. Written through the
+        // enrichment path — one writer, one dedup, one `terms.updated_at` touch — and stamped with
+        // the prompt that proposed them, like every other generated row.
+        if ($lookup->synonyms !== []) {
+            ($this->importEnrichment)(new ImportTermEnrichment(
+                termId: $termId,
+                exampleId: null,
+                variants: [],
+                distractors: [],
+                generatorVersion: $lookup->promptVersion,
+                synonyms: array_map(
+                    static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
+                    $lookup->synonyms,
+                ),
+            ));
+        }
 
         // The description is written in the language BEING LEARNED — it is the question the
         // `description_match` trainer asks, not a gloss for the learner's own language.

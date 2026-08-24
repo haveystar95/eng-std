@@ -13,6 +13,8 @@ function lookupAnswer(
     string $description = 'A paper that says how much money you must pay for something.',
     ?string $example = 'They sent the invoice by email.',
     ?string $exampleTranslation = 'Они прислали счёт по почте.',
+    array $synonyms = [],
+    array $otherTranslations = [],
 ): WordLookupResult {
     return new WordLookupResult(
         text: $text,
@@ -24,6 +26,8 @@ function lookupAnswer(
         cefr: 'B1',
         transcription: null,
         imageApiPrompt: 'office desk paperwork',
+        synonyms: $synonyms,
+        otherTranslations: $otherTranslations,
         model: 'test',
         promptVersion: 'lookup.test',
     );
@@ -98,4 +102,38 @@ it('does not inflect a multi-word phrase, but still catches it whole', function 
         // «give» and «up» each appear; the phrase does not. Describing a phrase by using its
         // individual words is normal and must not be refused.
         ->and(DescriptionSelfReference::givesAway('When you give someone a lift up the hill.', 'give up'))->toBeFalse();
+});
+
+
+// ---- synonyms and other readings: DEGRADED, never fatal (SYN-1 Ч.2) -----------------------------
+
+it('keeps clean synonyms and other readings', function () {
+    $screened = (new LookupBarrier())->screen(
+        lookupAnswer(synonyms: ['bill', 'receipt'], otherTranslations: ['квитанция']),
+        'en',
+        'ru',
+    );
+
+    expect($screened->synonyms)->toBe(['bill', 'receipt'])
+        ->and($screened->otherTranslations)->toBe(['квитанция']);
+});
+
+it('drops a synonym written in the learner\'s language instead of refusing the card', function () {
+    $screened = (new LookupBarrier())->screen(lookupAnswer(synonyms: ['bill', 'квитанция']), 'en', 'ru');
+
+    // The card the learner came for survives; only the third-tier field loses a row.
+    expect($screened->synonyms)->toBe(['bill'])
+        ->and($screened->text)->toBe('invoice');
+});
+
+it('drops a synonym that is really the word itself', function () {
+    $screened = (new LookupBarrier())->screen(lookupAnswer(synonyms: ['Invoice', 'bill']), 'en', 'ru');
+
+    expect($screened->synonyms)->toBe(['bill']);
+});
+
+it('drops an "other reading" that repeats the answer the card asks', function () {
+    $screened = (new LookupBarrier())->screen(lookupAnswer(otherTranslations: ['Счёт', 'квитанция']), 'en', 'ru');
+
+    expect($screened->otherTranslations)->toBe(['квитанция']);
 });

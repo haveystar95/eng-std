@@ -34,6 +34,20 @@ final readonly class CachedLookup
         public string $model,
         public string $promptVersion,
         public DateTimeImmutable $createdAt,
+        /**
+         * Near-synonyms of the word, in the language being learned. Empty on every row cached
+         * before the v5 prompt existed — an absence, not a claim that the word has none.
+         *
+         * @var list<string>
+         */
+        public array $synonyms = [],
+        /**
+         * Other readings of the word in the learner's language, beside `translation`. Same caveat
+         * about older rows.
+         *
+         * @var list<string>
+         */
+        public array $otherTranslations = [],
         /** True when this call was paid for right now rather than served from the cache. */
         public bool $fresh = false,
         /**

@@ -59,6 +59,8 @@ final class SpyWordLookup implements WordLookupPort
                 cefr: 'A2',
                 transcription: null,
                 imageApiPrompt: 'people greeting each other',
+                synonyms: [],
+                otherTranslations: [],
                 model: 'spy',
                 promptVersion: 'lookup.spy',
                 tokensIn: 10,
@@ -70,7 +72,8 @@ final class SpyWordLookup implements WordLookupPort
         return new WordLookupResult(
             text: '', type: 'word', translation: '', description: '',
             example: null, exampleTranslation: null, cefr: null, transcription: null,
-            imageApiPrompt: null, model: 'spy', promptVersion: 'lookup.spy',
+            imageApiPrompt: null, synonyms: [], otherTranslations: [],
+            model: 'spy', promptVersion: 'lookup.spy',
             tokensIn: 10, tokensOut: 5, costUsd: '0.000010',
             notRecognized: true,
         );

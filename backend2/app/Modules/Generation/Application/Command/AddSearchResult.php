@@ -18,6 +18,11 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  * id and a term id were both valid ULIDs — which is every day.
  *
  * `collectionId` null means «Сохранённые», created on the spot if this is the first save.
+ *
+ * `fixedTranslation` is the line the learner was reading in the translator when they pressed
+ * «Собрать карточку». It is sent again HERE, and not only on the lookup, because the lookup may
+ * legitimately have been a free cache hit — a card somebody else's call paid for, worded their way —
+ * and the confirmation still has to reach the term the learner is about to study. See the handler.
  */
 final readonly class AddSearchResult
 {
@@ -26,5 +31,6 @@ final readonly class AddSearchResult
         public ?string $lookupId = null,
         public ?TermId $termId = null,
         public ?CollectionId $collectionId = null,
+        public ?string $fixedTranslation = null,
     ) {}
 }

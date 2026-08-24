@@ -45,5 +45,18 @@ final readonly class LookupWord
          * to dispute about a card that exists.
          */
         public bool $retry = false,
+        /**
+         * The translation the learner was looking at when they pressed the button.
+         *
+         * The translator line above «Собрать карточку» is answered by our catalogue, the shared
+         * hint cache or DeepL, and whichever it was, the learner read it and agreed with it. Passed
+         * on, it becomes the card's translation and is not re-decided by the model or by any later
+         * generation — see {@see \App\Modules\Generation\Application\Dto\WordLookupBrief::$fixedTranslation}
+         * and {@see \App\Modules\Vocabulary\Domain\Entity\Term::pinTranslation()}.
+         *
+         * Optional, and null on every client until SYN-1b: nothing about the old behaviour changes
+         * when it is absent.
+         */
+        public ?string $fixedTranslation = null,
     ) {}
 }

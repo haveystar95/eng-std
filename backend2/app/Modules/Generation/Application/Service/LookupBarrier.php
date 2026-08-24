@@ -82,11 +82,55 @@ final readonly class LookupBarrier
             // image query is neither the learner's language nor the target one — it is always
             // English by contract, so screening it here would reject every correct answer.
             imageApiPrompt: $result->imageApiPrompt,
+            // DEGRADED, never fatal — the same rule the example follows one field up. A synonym in
+            // the wrong language, or one that is really the word itself, is dropped; the card is
+            // still a card without it, and refusing the whole lookup over a third-tier field would
+            // cost the learner the word they came for.
+            synonyms: $this->clean($result->synonyms, $targetLang, [$result->text]),
+            // Other readings are the LEARNER's language, screened against that side and never
+            // allowed to repeat the answer the card asks.
+            otherTranslations: $this->clean($result->otherTranslations, $nativeLang, [$result->translation]),
             model: $result->model,
             promptVersion: $result->promptVersion,
             tokensIn: $result->tokensIn,
             tokensOut: $result->tokensOut,
             costUsd: $result->costUsd,
         );
+    }
+
+    /**
+     * Keep the entries that are in the language they claim and are not a restatement of `$reject`.
+     *
+     * Case- and whitespace-insensitive on the comparison only: what is stored is what the model
+     * wrote. Deliberately no cross-list check between synonyms and other translations — they are in
+     * different languages, so a collision between them is not a thing that can happen honestly.
+     *
+     * @param  list<string>  $values
+     * @param  list<string>  $reject
+     * @return list<string>
+     */
+    private function clean(array $values, string $lang, array $reject): array
+    {
+        $blocked = [];
+        foreach ($reject as $value) {
+            $blocked[$this->key($value)] = true;
+        }
+
+        $out = [];
+        foreach ($values as $value) {
+            $key = $this->key($value);
+            if ($key === '' || isset($blocked[$key]) || ! $this->purity->isClean($lang, $value)) {
+                continue;
+            }
+            $blocked[$key] = true;
+            $out[] = trim($value);
+        }
+
+        return $out;
+    }
+
+    private function key(string $value): string
+    {
+        return (string) preg_replace('/\s+/u', ' ', mb_strtolower(trim($value)));
     }
 }

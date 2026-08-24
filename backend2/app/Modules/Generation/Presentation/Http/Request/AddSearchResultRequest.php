@@ -27,6 +27,11 @@ final class AddSearchResultRequest extends FormRequest
             'lookup_id' => ['required_without:term_id', 'prohibits:term_id', 'string', 'ulid'],
             'term_id' => ['required_without:lookup_id', 'string', 'ulid'],
             'collection_id' => ['sometimes', 'nullable', 'string', 'ulid'],
+            // The translation the learner confirmed in the translator before building this card.
+            // Sent again on the SAVE and not only on the lookup, deliberately: the lookup may have
+            // been a free cache hit written by somebody else's call, and the confirmation still has
+            // to reach the term. See AddSearchResultHandler.
+            'fixed_translation' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

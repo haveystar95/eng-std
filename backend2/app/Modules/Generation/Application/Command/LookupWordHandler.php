@@ -28,6 +28,18 @@ use Throwable;
  * There is no retry. A lookup is a person watching a spinner over a fraction of a cent; a second
  * attempt doubles the wait for a model that has already had its say. A transport failure surfaces
  * as a refusal the learner can act on (type it again) rather than as a silent slow path.
+ *
+ * ## A confirmed translation does NOT reopen the cache
+ *
+ * `fixedTranslation` travels into the model call and nowhere near the cache key. A cache HIT is
+ * still served, free, exactly as before — the row is a fact about the word, the economics of п. 72
+ * are the whole reason this endpoint is affordable, and re-buying a card because one learner's
+ * translator line worded things differently would spend the daily cap on a card we already have.
+ *
+ * What honours the confirmation on a cache hit is the SAVE, not the lookup: `POST /search/add`
+ * takes the same confirmed translation and pins it on the term
+ * ({@see AddSearchResultHandler}). So the contract holds on both paths, and only the branch that
+ * was already paying for a call pays anything for it.
  */
 final readonly class LookupWordHandler
 {
@@ -96,6 +108,7 @@ final readonly class LookupWordHandler
                 query: $command->query,
                 targetLang: new LanguageCode($pair->termLang),
                 nativeLang: new LanguageCode($pair->translationLang),
+                fixedTranslation: $command->fixedTranslation,
             ));
         } catch (LookupRefused $e) {
             throw $e;

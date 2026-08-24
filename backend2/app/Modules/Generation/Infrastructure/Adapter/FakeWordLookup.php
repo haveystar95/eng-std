@@ -44,7 +44,8 @@ final class FakeWordLookup implements WordLookupPort
             return new WordLookupResult(
                 text: '', type: 'word', translation: '', description: '',
                 example: null, exampleTranslation: null, cefr: null, transcription: null,
-                imageApiPrompt: null, model: 'fake', promptVersion: 'lookup.fake',
+                imageApiPrompt: null, synonyms: [], otherTranslations: [],
+                model: 'fake', promptVersion: 'lookup.fake',
                 tokensIn: 180, tokensOut: 10, costUsd: '0.000034',
                 notRecognized: true,
             );
@@ -55,9 +56,12 @@ final class FakeWordLookup implements WordLookupPort
         return new WordLookupResult(
             text: $text,
             type: str_contains($text, ' ') ? 'phrase' : 'word',
-            // A query the lexicon knew was the native-language one, so it IS the translation —
-            // which is what makes «случай» and «occasion» visibly converge on one term.
-            translation: isset(self::LEXICON[$query]) ? $query : 'перевод',
+            // A confirmed translation is a DECISION, so the fake honours it exactly as the real
+            // adapter does — a test asserting that contract must not be asserting the fake's
+            // indifference to it instead. Otherwise: a query the lexicon knew was the
+            // native-language one, so it IS the translation — which is what makes «случай» and
+            // «occasion» visibly converge on one term.
+            translation: $brief->fixedTranslation ?? (isset(self::LEXICON[$query]) ? $query : 'перевод'),
             // No form of the query anywhere in it — the one rule the real description must keep.
             description: 'This is a common thing that people use every day.',
             example: 'We talked about ' . $text . ' at work yesterday.',
@@ -65,6 +69,16 @@ final class FakeWordLookup implements WordLookupPort
             cefr: 'B1',
             transcription: null,
             imageApiPrompt: 'office desk paperwork',
+            // Two synonyms, one alternative reading: enough for a test to see the lists travel end
+            // to end, few enough that no fixture is about their contents.
+            synonyms: ['sample', 'instance'],
+            // The model's own reading joins the alternatives when a confirmed one takes the pin —
+            // exactly what the real adapter does, so a test asserting the contract is asserting the
+            // contract and not the fake's convenience.
+            otherTranslations: array_values(array_filter(
+                [$brief->fixedTranslation !== null ? (isset(self::LEXICON[$query]) ? $query : 'перевод') : null, 'другой перевод'],
+                static fn (?string $v): bool => $v !== null,
+            )),
             model: 'fake',
             promptVersion: 'lookup.fake',
             tokensIn: 420,

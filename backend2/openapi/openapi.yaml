@@ -763,6 +763,20 @@ paths:
                     automatic path, where nobody is watching. It does not bypass the daily cap, and
                     it never re-buys a card that already exists: a positive answer is still served
                     from the cache whatever this says.
+                fixed_translation:
+                  type: string
+                  nullable: true
+                  maxLength: 120
+                  description: >-
+                    ADDITIVE. The translation the learner was looking at in the translator line when
+                    they pressed «Собрать карточку» — our catalogue's, the shared hint cache's or
+                    DeepL's, whichever rung answered. Given, it is a DECISION and not a suggestion:
+                    it goes into the prompt as data («build the card for THIS reading»), it is what
+                    comes back as the card's `translation` whatever the model wrote, and the model's
+                    own reading is kept beside it as an alternative rather than discarded. Omitted or
+                    null — every client before SYN-1b — and nothing changes: the model chooses, as
+                    it always did. It does NOT reopen the lookup cache: a cache hit is still served
+                    free, and the confirmation reaches the term through `POST /search/add`.
       responses:
         '200':
           description: An answer, or an honest «not today»
@@ -823,6 +837,19 @@ paths:
                 lookup_id: { type: string, minLength: 26, maxLength: 26 }
                 term_id: { type: string, minLength: 26, maxLength: 26 }
                 collection_id: { type: string, minLength: 26, maxLength: 26, nullable: true }
+                fixed_translation:
+                  type: string
+                  nullable: true
+                  maxLength: 255
+                  description: >-
+                    ADDITIVE. The same confirmed line `POST /search/lookup` takes, sent AGAIN on the
+                    save — deliberately, because the lookup may have been a free cache hit written by
+                    somebody else's call, worded their way, and the learner's confirmation still has
+                    to reach the term they are about to study. It becomes the term's primary
+                    translation (the question every card of that term asks); every other reading is
+                    stored beside it. Only meaningful with `lookup_id`: saving an existing `term_id`
+                    means tapping a row whose translation the learner can already see. Omitted or
+                    null, nothing changes.
               oneOf:
                 - required: [lookup_id]
                 - required: [term_id]

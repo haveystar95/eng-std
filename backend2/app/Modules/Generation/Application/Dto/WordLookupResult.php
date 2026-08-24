@@ -29,6 +29,25 @@ final readonly class WordLookupResult
          * pending-image reader treats a blank query as a deliberate refusal.
          */
         public ?string $imageApiPrompt,
+        /**
+         * Near-SYNONYMS of the word, in the language being LEARNED — `purpose` → `goal`, `aim`.
+         * Zero to three, and zero is the ordinary answer for anything longer than a short lemma.
+         *
+         * @var list<string>
+         */
+        public array $synonyms,
+        /**
+         * ADDITIONAL readings of the word in the learner's language, beside `translation`, when the
+         * word is genuinely polysemous — `bank` → «банк», and also «берег».
+         *
+         * At most two, and `translation` is not among them: that one is the answer the card asks and
+         * this is what else the word can mean. Kept as data only — there is no «other meanings» UI
+         * and this наряд does not add one; the point is that a learner who types «берег» for `bank`
+         * is not told they are wrong.
+         *
+         * @var list<string>
+         */
+        public array $otherTranslations,
         public string $model,
         public string $promptVersion,
         public ?int $tokensIn = null,
@@ -67,6 +86,8 @@ final readonly class WordLookupResult
             'cefr' => $this->cefr,
             'transcription' => $this->transcription,
             'image_api_prompt' => $this->imageApiPrompt,
+            'synonyms' => $this->synonyms,
+            'other_translations' => $this->otherTranslations,
         ];
     }
 }

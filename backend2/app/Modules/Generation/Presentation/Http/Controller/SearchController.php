@@ -114,6 +114,7 @@ final class SearchController
                 isset($data['taught_side']) ? (string) $data['taught_side'] : null,
             ),
             retry: (bool) ($data['retry'] ?? false),
+            fixedTranslation: $this->trimmedOrNull($data['fixed_translation'] ?? null),
         ));
 
         // The cap is a 200, not a 429. It is a normal answer the app has a screen for — «на сегодня
@@ -145,6 +146,7 @@ final class SearchController
             collectionId: ($data['collection_id'] ?? null) !== null
                 ? CollectionId::fromString((string) $data['collection_id'])
                 : null,
+            fixedTranslation: $this->trimmedOrNull($data['fixed_translation'] ?? null),
         ));
 
         return response()->json([
@@ -238,6 +240,14 @@ final class SearchController
     private function taughtSide(Request $request): ?TaughtSide
     {
         return TaughtSide::tryFromInput($request->string('taught_side')->toString());
+    }
+
+    /** A validated optional string, trimmed; blank and absent are one thing — «not given». */
+    private function trimmedOrNull(mixed $value): ?string
+    {
+        $trimmed = is_string($value) ? trim($value) : '';
+
+        return $trimmed !== '' ? $trimmed : null;
     }
 
     /** A query-string language code, or null when it was not given. Blank is «not given». */

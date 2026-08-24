@@ -40,6 +40,11 @@ final class LookupWordRequest extends FormRequest
             // recognised, so it cannot be a way to buy the same card twice — a positive answer is
             // still served from the cache whatever this says.
             'retry' => ['sometimes', 'boolean'],
+            // The translation the learner was looking at when they pressed the button. Bounded by
+            // the same ceiling as the query itself — it is a translation of that query, so anything
+            // longer is not one — and `nullable`, because a client that shows no hint line legibly
+            // says so with an explicit null rather than by omitting the key.
+            'fixed_translation' => ['sometimes', 'nullable', 'string', 'max:' . app(SearchQueryLength::class)->max()],
         ];
     }
 }
