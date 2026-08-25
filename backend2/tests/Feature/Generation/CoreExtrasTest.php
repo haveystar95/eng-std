@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Generation\Application\Service\ContentContract;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
+use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -67,4 +69,30 @@ it('refuses a synonym that is a KIND of the term — the rule three prompts coul
 it('ships the reading hint ON and the synonym OFF — the pilot decided each separately', function () {
     expect(config('services.generation.write_transliteration'))->toBeTrue()
         ->and(config('services.generation.write_synonyms'))->toBeFalse();
+});
+
+it('declares the v15 extras by version NUMBER, so v9 is not asked for fields its prompt never mentions', function () {
+    $contract = app(ContentContract::class);
+    $extras = ['synonyms', 'other_translations', 'transliteration'];
+
+    $props = fn (string $v): array => array_keys(
+        $contract->schema(PromptShape::Full, $v)['properties']['items']['items']['properties'],
+    );
+
+    // The bug this pins: written as a string compare, «v15» <= «v9» is TRUE — «1» sorts before «9» —
+    // so every core version from v2 to v9 had three properties declared for it. Strict Structured
+    // Outputs makes each declared property REQUIRED, so those versions were forced to emit fields
+    // their prompt never explains. v10 and up compared correctly by accident, which is why nothing
+    // looked wrong from the outside.
+    expect($props('v9'))->not->toContain('synonyms')
+        ->and($props('v9'))->not->toContain('transliteration')
+        ->and($props('v11.1'))->not->toContain('synonyms');
+
+    // At the floor and past it the fields are there — including a dotted version above it, which is
+    // the case an exact match would have dropped.
+    foreach ($extras as $field) {
+        expect($props('v15'))->toContain($field)
+            ->and($props('v15.1'))->toContain($field)
+            ->and($props('v16'))->toContain($field);
+    }
 });

@@ -58,10 +58,16 @@ final readonly class ContentContract
     /**
      * The first CORE version that produces synonyms, other readings and a transliteration.
      *
-     * Compared as a string rather than matched exactly, so a later `v16` inherits the fields instead
+     * Compared as a version rather than matched exactly, so a later `v16` inherits the fields instead
      * of silently dropping them — the failure mode of an exact match is a new version that quietly
-     * stops asking for a product nobody removed. Every core version before this one (`v9`…`v11.1`)
-     * sorts below it and is untouched.
+     * stops asking for a product nobody removed.
+     *
+     * The comparison has to be NUMERIC, and that is not a detail. Written as a string compare,
+     * `'v15' <= 'v9'` is TRUE — «1» sorts before «9» — so every core version from `v2` to `v9` was
+     * told to emit three fields its prompt never mentions, while strict Structured Outputs makes
+     * every declared property required. The docblock claimed the opposite («v9…v11.1 sorts below it
+     * and is untouched»); v10 upwards happened to compare correctly, which is exactly why nothing
+     * looked wrong.
      */
     private const CORE_EXTRAS_FROM = 'v15';
 
@@ -175,7 +181,7 @@ final readonly class ContentContract
         // exactly as the lookup declares its own extras only for v5: strict Structured Outputs makes
         // every declared property required, so a frozen older version that grows a field is a
         // version whose prompt never explains what the model is now forced to emit.
-        if ($version !== null && self::CORE_EXTRAS_FROM <= $version) {
+        if ($version !== null && $this->atLeastCoreVersion($version, self::CORE_EXTRAS_FROM)) {
             $itemProps['synonyms'] = [
                 'type' => 'array',
                 'maxItems' => self::MAX_SYNONYMS,
@@ -218,6 +224,17 @@ final readonly class ContentContract
             'properties' => $props,
             'required' => array_keys($props),
         ];
+    }
+
+    /**
+     * Is this prompt version at or past `$floor` — «v11.1» read as 11.1, not as text?
+     *
+     * `version_compare` is PHP's own dotted-number order, which is what these labels are once the `v`
+     * is off: it puts 9 below 11.1 below 15 below 15.1, where a string compare puts 15 below 9.
+     */
+    private function atLeastCoreVersion(string $version, string $floor): bool
+    {
+        return version_compare(ltrim($version, 'vV'), ltrim($floor, 'vV'), '>=');
     }
 
     /**
