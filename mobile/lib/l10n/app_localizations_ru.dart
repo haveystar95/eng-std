@@ -765,6 +765,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wordCardExampleLabel => 'Пример';
 
   @override
+  String wordCardAlso(String words) {
+    return 'также: $words';
+  }
+
+  @override
   String get wordCardFolderHint => 'Справа — выбрать другую коллекцию';
 
   @override
@@ -1050,6 +1055,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profileAutoPronounceHint => 'Озвучивать слово при показе карточки';
+
+  @override
+  String get profileRowTransliteration => 'Подсказка произношения';
+
+  @override
+  String get profileTransliterationHint => 'Показывать, как читается слово, вашими буквами';
 
   @override
   String get profileRowReminders => 'Напоминания';

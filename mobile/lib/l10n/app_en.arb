@@ -206,6 +206,8 @@
   "searchPairMismatchCreate": "Make a collection",
 
   "wordCardExampleLabel": "Example",
+  "wordCardAlso": "also: {words}",
+  "@wordCardAlso": { "placeholders": { "words": { "type": "String" } } },
   "wordCardFolderHint": "On the right — pick another collection",
   "wordCardSavedIn": "In “{folder}”",
   "@wordCardSavedIn": { "placeholders": { "folder": { "type": "String" } } },
@@ -285,6 +287,8 @@
   "profileRowUiLang": "Interface language",
   "profileRowAutoPronounce": "Auto-pronounce",
   "profileAutoPronounceHint": "Speak the word when the card appears",
+  "profileRowTransliteration": "Pronunciation hint",
+  "profileTransliterationHint": "Show how the word reads, in your own letters",
   "profileRowReminders": "Reminders",
   "profileRemindersHint": "One a day, when there's something to review",
   "profileRowReminderTime": "Time",

@@ -743,6 +743,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wordCardExampleLabel => 'Example';
 
   @override
+  String wordCardAlso(String words) {
+    return 'also: $words';
+  }
+
+  @override
   String get wordCardFolderHint => 'On the right — pick another collection';
 
   @override
@@ -1020,6 +1025,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileAutoPronounceHint => 'Speak the word when the card appears';
+
+  @override
+  String get profileRowTransliteration => 'Pronunciation hint';
+
+  @override
+  String get profileTransliterationHint => 'Show how the word reads, in your own letters';
 
   @override
   String get profileRowReminders => 'Reminders';

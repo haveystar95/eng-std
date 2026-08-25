@@ -1245,6 +1245,12 @@ abstract class AppLocalizations {
   /// **'Пример'**
   String get wordCardExampleLabel;
 
+  /// Строка синонимов под переводом на развёрнутой карточке слова. Рисуется только когда синонимы есть.
+  ///
+  /// In ru, this message translates to:
+  /// **'также: {words}'**
+  String wordCardAlso(String words);
+
   /// Подпись под парой кнопок на карточке слова (кадр 06).
   ///
   /// In ru, this message translates to:
@@ -1676,6 +1682,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Озвучивать слово при показе карточки'**
   String get profileAutoPronounceHint;
+
+  /// Строка профиля: показывать чтение слова своими буквами на карточке.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подсказка произношения'**
+  String get profileRowTransliteration;
+
+  /// Подпись подсказки произношения.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показывать, как читается слово, вашими буквами'**
+  String get profileTransliterationHint;
 
   /// Строка профиля: напоминания.
   ///

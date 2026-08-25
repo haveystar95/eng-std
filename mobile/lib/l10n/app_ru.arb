@@ -646,6 +646,11 @@
 
   "wordCardExampleLabel": "Пример",
   "@wordCardExampleLabel": { "description": "Лейбл над примером на карточке слова (кадры 06/09)." },
+  "wordCardAlso": "также: {words}",
+  "@wordCardAlso": {
+    "description": "Строка синонимов под переводом на развёрнутой карточке слова. Рисуется только когда синонимы есть.",
+    "placeholders": { "words": { "type": "String" } }
+  },
   "wordCardFolderHint": "Справа — выбрать другую коллекцию",
   "@wordCardFolderHint": { "description": "Подпись под парой кнопок на карточке слова (кадр 06)." },
   "wordCardSavedIn": "В коллекции «{folder}»",
@@ -842,6 +847,10 @@
   "@profileRowAutoPronounce": { "description": "Строка профиля: автопроизношение." },
   "profileAutoPronounceHint": "Озвучивать слово при показе карточки",
   "@profileAutoPronounceHint": { "description": "Подпись автопроизношения." },
+  "profileRowTransliteration": "Подсказка произношения",
+  "@profileRowTransliteration": { "description": "Строка профиля: показывать чтение слова своими буквами на карточке." },
+  "profileTransliterationHint": "Показывать, как читается слово, вашими буквами",
+  "@profileTransliterationHint": { "description": "Подпись подсказки произношения." },
   "profileRowReminders": "Напоминания",
   "@profileRowReminders": { "description": "Строка профиля: напоминания." },
   "profileRemindersHint": "Одно в день, если есть что повторить",

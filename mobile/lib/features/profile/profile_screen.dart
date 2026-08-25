@@ -105,6 +105,15 @@ class ProfileScreen extends ConsumerWidget {
               hint: l.profileAutoPronounceHint,
               value: settings.autoPronounce,
               onChanged: (v) => ref.read(appSettingsProvider.notifier).setAutoPronounce(v),
+            ),
+            // «Подсказка произношения». The switch shows the EFFECTIVE value — the stored decision
+            // if there is one, otherwise the one the learner's own alphabet implies — so it never
+            // reads «off» while the hint is on screen.
+            _SwitchRow(
+              label: l.profileRowTransliteration,
+              hint: l.profileTransliterationHint,
+              value: ref.watch(transliterationEnabledProvider),
+              onChanged: (v) => ref.read(appSettingsProvider.notifier).setTransliteration(v),
               last: true,
             ),
 
