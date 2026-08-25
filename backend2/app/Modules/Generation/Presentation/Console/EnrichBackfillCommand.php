@@ -157,6 +157,12 @@ final class EnrichBackfillCommand extends Command
                 : '0'],
             ['вариантов записано', (string) $m->variantsWritten],
             ['вариантов забраковано (длина)', $m->variantsRejected > 0 ? "<fg=yellow>{$m->variantsRejected}</>" : '0'],
+            // Their own two rows, never folded into the variants above: the two products fail
+            // differently, and one «сколько лишних ответов» would report a run that wrote plenty of
+            // synonyms and no forms at all as healthy — which is the state the станок has been in
+            // since 21.08 (SYN-1, docs/syn-1-findings.md §4).
+            ['синонимов записано', (string) $m->synonymsWritten],
+            ['синонимов забраковано (форма)', $m->synonymsRejected > 0 ? "<fg=yellow>{$m->synonymsRejected}</>" : '0'],
         ];
         // Demoted by default (store5: 31 of 41 flags were back-translation trivia, none useful) — the
         // finding is still written to the journal by BuildTermEnrichmentsHandler either way, only the

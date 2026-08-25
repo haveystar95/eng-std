@@ -16,6 +16,35 @@ uses(RefreshDatabase::class);
  * term carrying every enrichment product is in `docs/syn-1-findings.md` and shows exactly these two
  * additions.
  */
+/**
+ * A graduated, well-reviewed pair, so the matrix admits every trainer.
+ *
+ * Its own copy rather than PracticeFanTest's `graduate()`: Pest's helpers are plain global
+ * functions, so borrowing one only works while both files land in the SAME worker — which they do
+ * serially and do not under `--parallel`. A test that passes alone and fails in the suite is worse
+ * than a duplicated fixture.
+ */
+function graduateForSync(string $userId, string $termId): void
+{
+    DB::table('user_term_progress')->updateOrInsert(
+        ['user_id' => $userId, 'term_id' => $termId],
+        [
+            'state' => 'review',
+            'acquisition' => 'graduated',
+            'learning_step' => 0,
+            'reps' => 12,
+            'successful_reviews' => 12,
+            'lapses' => 0,
+            'ease_factor' => 2.5,
+            'interval_days' => 10,
+            'due_at' => now()->addDays(3),
+            'enrolled_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    );
+}
+
 function seedSyncTerm(object $ctx): array
 {
     [$user, $token] = learner();
@@ -77,7 +106,7 @@ it('puts synonyms on a card that asked for the meaning, and on no other', functi
     [$user, $token, $collectionId, $termId] = seedSyncTerm($this);
     // High enough on the ladder that the matrix admits every trainer, so one call returns both
     // kinds of card — the ones whose prompt is the meaning and the ones whose prompt is the word.
-    graduate($user->id, $termId);
+    graduateForSync($user->id, $termId);
 
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionId, 'practice' => true])

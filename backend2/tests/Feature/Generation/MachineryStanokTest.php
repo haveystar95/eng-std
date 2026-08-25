@@ -144,7 +144,7 @@ it('puts the old four-product packer back on GENERATION_STACK=v1', function () {
 it('bumps the станок version, so every already-marked term is pending at the new one', function () {
     // The pin is the point: a prompt change that does NOT move this constant is invisible to the
     // journal, and every term already marked done is skipped by the very run meant to fix it.
-    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v14');
+    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v14.2');
 });
 
 it('shows the worked example as JSON, so the model cannot copy quotes into a field', function () {
@@ -180,18 +180,26 @@ it('runs the machinery on the measured prompt, not on the one it replaced', func
 });
 
 
-it('asks v14 for near-synonyms, with the substitution test and the phrase ban', function () {
+it('asks for near-synonyms BEFORE the distractors, with worked substitutions', function () {
     packLive();
 
     Http::assertSent(function (Request $request): bool {
         $system = $request->data()['messages'][0]['content'];
+        $synonyms = strpos($system, 'other English words for the same thing');
+        // The distractor SECTION's own heading, not the phrase `16-given-core` also uses.
+        $distractors = strpos($system, '## `distractors`');
 
-        return str_contains($system, 'other {{target_lang}} words that mean nearly the same thing') === false
-            // The section is rendered, so the placeholder is already substituted.
-            && str_contains($system, 'other English words that mean nearly the same thing')
-            // The ONE test the model can actually apply: put it in the card's own example.
+        return $synonyms !== false && $distractors !== false
+            // ORDER IS THE FIX. v14 put this section after the ~900-word distractor block and got
+            // `synonyms: []` on all 20 terms of its pilot, `debit card` included.
+            && $synonyms < $distractors
+            // The ONE test the model can apply, shown working rather than described.
             && str_contains($system, 'in place of the term')
-            && str_contains($system, 'TERM: purpose')
+            && str_contains($system, 'TERM: debit card')
+            && str_contains($system, 'bank card')
+            // BOTH tests, and the second one by name: substitution alone passes a narrower word.
+            && str_contains($system, 'Test 2 — answer the translation with it')
+            && str_contains($system, 'savings account')
             // Phrases get none — the deterministic half of this lives in EnrichmentValidator.
             && str_contains($system, 'Only for a SINGLE WORD or a short lemma');
     });

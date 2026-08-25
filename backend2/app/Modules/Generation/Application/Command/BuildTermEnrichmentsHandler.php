@@ -84,12 +84,26 @@ final readonly class BuildTermEnrichmentsHandler
      * 21.08 (`forms` came back empty on 217 of 217 machinery calls, which for a real term is usually
      * the correct answer — a word has no second spelling, it has other words).
      *
+     * `mech-v14` → `mech-v14.1` is the synonym section rewritten after its own pilot returned
+     * nothing. Twenty terms of «В банке» on v14 produced 49 written distractors and `synonyms: []`
+     * on every card, `debit card` and `credit card` included — the section was buried behind the
+     * distractor block and spent its first three sentences discouraging an answer before showing
+     * one. That is the `forms` failure this наряд was written to diagnose, reproduced by the section
+     * meant to replace it. v14.1 puts synonyms first and leads with worked substitutions.
+     *
+     * `mech-v14.1` → `mech-v14.2` adds the second acceptance test. v14.1's substitution test bought
+     * synonyms (15 on the pilot's 20 terms, up from zero) and let a third of them through wrong: a
+     * NARROWER word passes substitution every time, because the example is a sentence about the term
+     * and a type of the term fits it. `bank account` → `savings account` is the shape. v14.2 asks
+     * the second question the retired `forms` section already knew to ask — cover the target side,
+     * read only the translation, would a speaker answer THAT with your word.
+     *
      * Worth re-paying for on the whole catalogue, but that is a RUN and a run is the owner's
      * decision — nothing here starts one. Existing terms simply become pending again at the new
      * version, and until someone spends the money the synonym-aware paths are inert rather than
      * wrong: no synonyms means no extra accepted answers and no extra excluded options.
      */
-    public const VERSION = 'mech-v14';
+    public const VERSION = 'mech-v14.2';
 
     public function __construct(
         private EnrichmentTargetReader $targets,

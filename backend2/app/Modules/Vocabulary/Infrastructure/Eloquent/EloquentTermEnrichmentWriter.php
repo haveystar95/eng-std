@@ -66,6 +66,9 @@ final class EloquentTermEnrichmentWriter implements TermEnrichmentWriter
                             'text' => $vo->text,
                             'lang' => $vo->lang->value,
                             'source' => $vo->source->value,
+                            // WHICH PROMPT wrote it — the same stamp the two tables below carry, and
+                            // the only thing that makes «undo what that version proposed» possible.
+                            'generator_version' => $generatorVersion,
                             'created_at' => $now,
                             'updated_at' => $now,
                         ];

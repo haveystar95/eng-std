@@ -217,6 +217,55 @@ final class PromptLibrary implements PromptSource
                 '99-closing',
             ],
         ],
+        // v14.1 fixes v14 by the same lesson v13 was written from, which v14 then walked straight
+        // back into: this model answers the instruction it reads FIRST and drowns in a long one.
+        //
+        // v14's synonym section sat AFTER the ~900-word distractor block, and it said «zero is a
+        // perfectly good answer», «fewer is better than looser» and «a paraphrase is discarded»
+        // before it ever showed what a good answer looks like. Measured on a 20-term pilot over «В
+        // банке»: 89 distractor candidates proposed, 49 written — and `synonyms: []` on every single
+        // term, including `debit card`, `credit card` and `bank account`. `debit card` → `bank card`
+        // is a synonym the OLD prompt used to return unprompted (it is a live row in
+        // `term_accepted_variants`), so this was the prompt suppressing an answer the model has.
+        //
+        // Exactly the shape of the `forms` failure this наряд diagnosed — buried section, tripled
+        // discouragement, no worked example — reproduced by the section written to replace it.
+        //
+        // So: the section moves BEFORE the distractors, `25-fields` lists the fields in that same
+        // order, and the text leads with three worked substitutions instead of with a warning. The
+        // strictness is kept, but stated ONCE and at the end, where v13 puts its counter-rules.
+        //
+        // v14 is not edited: 20 live terms record it as their generator version.
+        'v14.1' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '63-synonyms', '61-distractors',
+                '99-closing',
+            ],
+        ],
+        // v14.2 adds the SECOND test, and it is the one that was missing rather than a rewording.
+        //
+        // v14.1's rule was «substitute the candidate into the card's own example and read it back».
+        // That works and it is not sufficient: a NARROWER word passes it every time, because the
+        // example is a sentence about the term and a type of the term fits a sentence about the
+        // term. Measured on the same twenty terms of «В банке»: 15 synonyms written, and five of
+        // them were narrower or simply a different product — `bank account` → `savings account` and
+        // `checking account`, `credit card` → `charge card`, `withdrawal limit` → `cash withdrawal
+        // limit`, `direct debit` → `automatic payment`. One in three, on a field that is an ACCEPTED
+        // ANSWER: a card teaching «банковский счёт = savings account».
+        //
+        // The cure is not more prohibition. It is the test the RETIRED `forms` section already had
+        // and this наряд failed to carry over: cover the target side, read only the translation, and
+        // ask whether a competent speaker would answer THAT with your word. `savings account` fails
+        // it instantly. Its three worked counter-examples come back with it — they were paid for by
+        // an earlier run and they are about exactly this failure.
+        //
+        // v14.1 is not edited: 15 live rows record it as their generator version.
+        'v14.2' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '63-synonyms', '61-distractors',
+                '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}
