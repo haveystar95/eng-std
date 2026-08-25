@@ -219,6 +219,56 @@ it('leaves v11 frozen — 39 live terms record it as their passport', function (
     expect(shapesOf('v11.1'))->toBe(shapesOf('v11'));
 });
 
+/**
+ * v15.1's whole point. v15 asked for «0–3» synonyms and explained how to choose a good one, but
+ * never said that NONE is the ordinary answer — so the model filled the slot: 67% clean, 26%
+ * arguable, 7% wrong on the pilot (docs/syn-1-findings.md §8), against a threshold of 85/5.
+ */
+it('v15.1 makes an empty synonym list the default and adds the register test', function () {
+    foreach (shapesOf('v15.1') as $shape) {
+        $text = renderPrompt('v15.1', $shape);
+
+        expect($text)
+            // The default, in the words a model can act on rather than as a permitted range.
+            ->toContain('an empty list is the normal answer')
+            ->toContain('If you hesitate over a candidate, do not')
+            // The third test — what the arguable quarter failed: `amazed` for «удивлённый».
+            ->toContain('Test 3 — same strength, same colour')
+            ->toContain('«поражённый»')
+            ->toContain('«завистливый»')
+            // Hyponyms and hyperonyms stay banned; the deterministic half of that rule lives in
+            // EnrichmentValidator::synonymsFor() and is untouched.
+            ->toContain('a TYPE of the')
+            ->toContain('a BROADER word')
+            // A multi-word term is told outright what its expected answer is.
+            ->toContain('unless the WHOLE expression')
+            ->toContain('the expected answer for one is empty')
+            // …and the other readings are narrowed from «ambiguous» to a different MEANING of the
+            // card's own part of speech — the reading that produced «опрокинутый» for `upset`.
+            ->toContain('a genuinely DIFFERENT meaning, or nothing')
+            ->toContain('another PART OF SPEECH than the card');
+    }
+});
+
+it('v15.1 does not touch the transliteration section — 49/49 is not repaired', function () {
+    $v15 = trim((string) file_get_contents(
+        __DIR__ . '/../../../app/Modules/Generation/Infrastructure/Prompt/v15/21-extras.md'
+    ));
+    $section = substr($v15, (int) strpos($v15, '## `transliteration`'));
+
+    expect(renderPrompt('v15.1', PromptShape::Terms))
+        ->toContain(strtr($section, ['{{source_lang}}' => 'Russian', '{{target_lang}}' => 'English']));
+});
+
+it('leaves v15 frozen — its pilot is what the threshold decision rests on', function () {
+    expect(renderPrompt('v15', PromptShape::Terms))
+        ->not->toContain('Test 3 — same strength, same colour')
+        ->not->toContain('an empty list is the normal answer');
+
+    // Same shapes, so a rollback of the config value is a rollback and not a crash.
+    expect(shapesOf('v15.1'))->toBe(shapesOf('v15'));
+});
+
 it('v11 is materially shorter than v10 on the collection shape', function () {
     // The core shape stopped carrying the options rules and the duplicated key restatement, so the
     // call that runs on every generation got cheaper. Asserted as a number so a future edit that

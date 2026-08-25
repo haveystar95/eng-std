@@ -132,7 +132,7 @@ return [
         // forever, so it runs on the strong model (A/B decision К2, docs/bakeoff-v11-ab.md).
         'core_provider' => env('GENERATION_CORE_PROVIDER', 'openai'),
         'core_model' => env('GENERATION_CORE_MODEL', 'gpt-5.4'),
-        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v15'),
+        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v15.1'),
         // The MACHINERY around a finished core — accepted forms and the example's wrong versions.
         // Mechanical work over content that already exists: the cheap model does it at 1/200th of
         // the price of re-generating the core inside a full enrichment.

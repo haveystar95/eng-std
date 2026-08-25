@@ -303,6 +303,40 @@ final class PromptLibrary implements PromptSource
                 '91-self-check-options', '99-closing',
             ],
         ],
+        // v15.1 changes ONE section — `21-extras` — and the change is about SELECTIVITY rather than
+        // about how a synonym is written.
+        //
+        // v15's pilot measured the strong model at 67% clean synonyms, 26% arguable and 7% wrong
+        // (docs/syn-1-findings.md §8), against a threshold of ≥85% clean and ≤5% wrong. The wrong
+        // ones were not sloppiness: `jealous` → `envious`, `cheerful` → `bright`, `surprised` →
+        // `amazed` are a model doing its best to produce SOMETHING on an item whose honest answer is
+        // nothing. v15 asked for «0–3» and explained how to choose well; it never said that empty is
+        // the ordinary outcome, so the field read as a slot to fill.
+        //
+        // So the section now leads with the default — an empty list, and «if you hesitate, do not
+        // write it» in those words — and gains a third test (same strength, same register) beside
+        // the two that were already there, because that is what the arguable 26% failed: `nice` and
+        // `caring` for «добрый», `happy` for «жизнерадостный», `amazed` for «удивлённый». Multi-word
+        // terms and phrasal verbs are told outright that empty is the expected answer for them, and
+        // `other_translations` is narrowed from «ambiguous» to «a different MEANING, of the same part
+        // of speech as the card» — the reading that produced «опрокинутый» for the adjective `upset`.
+        //
+        // Deliberately NOT changed: the transliteration section, byte for byte. It measured 49/49 in
+        // the same pilot, its switch is on, and a working product is not edited beside a broken one.
+        //
+        // v15 is not edited: the pilots that measured it are what the threshold decision rests on,
+        // and 49 live reading hints record it as their generator version.
+        'v15.1' => [
+            PromptShape::Terms->value => [
+                '00-role', '10-select-topic', '20-fields', '21-extras', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '99-closing',
+            ],
+            PromptShape::Enrich->value => [
+                '00-role', '15-given-terms', '20-fields', '21-extras', '60-options', '62-forms',
+                '30-example', '40-translation-key', '50-purity', '90-self-check',
+                '91-self-check-options', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}
