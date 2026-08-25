@@ -42,8 +42,16 @@ final class EloquentDistractorReader implements DistractorReader
         $usedTranslations = $targetTranslations;
 
         // 1. Prefer the session's pool (its collection), minus the target itself.
+        //
+        // The pool is filtered by LANGUAGE, one level down in appendCandidates(), for the reason the
+        // top-up below has always been: a session's pool is no longer one collection's words, and a
+        // pool that mixes pairs is a pool that mixes languages. Shown «привет», the learner was
+        // offered `hello`, `hola` and `ciao` — every one of them a correct translation of the prompt,
+        // and only the one the answer key names counted (owner's device, 26.08). The language of a
+        // term IS the studied side of its pair, so this one comparison is the whole pair gate here:
+        // the options are term TEXTS, and a card of pair ru→en may show English and nothing else.
         $poolIds = array_values(array_filter($poolTermIds, static fn (string $id): bool => $id !== $targetId->value));
-        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned);
+        $this->appendCandidates($poolIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang);
 
         // 2. Top up from same-language terms of a similar level (same cefr first).
         if (count($picked) < $count) {
@@ -56,7 +64,7 @@ final class EloquentDistractorReader implements DistractorReader
                 ->pluck('id')
                 ->map(static fn (mixed $id): string => (string) $id)
                 ->all());
-            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned);
+            $this->appendCandidates($fallbackIds, $count, $picked, $usedTexts, $usedTranslations, $banned, (string) $target->lang);
         }
 
         return array_slice($picked, 0, $count);
@@ -69,15 +77,17 @@ final class EloquentDistractorReader implements DistractorReader
      * @param  array<string, true>  $usedTranslations  every meaning already on the card, prompt first
      * @param  array<string, true>  $banned  normalised texts that are the target's own answer under
      *         another name — its synonyms, and the terms that name IT as one of theirs
+     * @param  string  $lang  the card's own language: a candidate written in another one is not a
+     *         wrong answer, it is a different card, and the loop below never sees it
      */
-    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned = []): void
+    private function appendCandidates(array $candidateIds, int $count, array &$picked, array &$usedTexts, array &$usedTranslations, array $banned, string $lang): void
     {
         if ($candidateIds === [] || count($picked) >= $count) {
             return;
         }
 
         /** @var array<string, string> $texts */
-        $texts = DB::table('terms')->whereIn('id', $candidateIds)->pluck('text', 'id')->all();
+        $texts = DB::table('terms')->whereIn('id', $candidateIds)->where('lang', $lang)->pluck('text', 'id')->all();
         $translations = $this->translationsByTerm($candidateIds);
 
         foreach ($candidateIds as $id) {

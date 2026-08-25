@@ -126,6 +126,14 @@ final readonly class BuildStudySessionHandler
         // «аэропорт» makes a far option far in a way that gives the answer away by subject alone.
         // The assembler therefore prefers neighbours that SHARE a collection with the card's term,
         // and only then widens. Read once per session, and only when it can matter.
+        //
+        // `lang` and `support` ride along for a harder reason than the topic preference, and they are
+        // a FILTER rather than a preference: they are the card's PAIR. A pool session mixes pairs by
+        // design (пп. 128, 143), and shown «привет» the learner was offered `hello`, `hola` and
+        // `ciao` — three correct translations of the prompt, one of which the answer key happens to
+        // name. Knowing the word did not help; it could not. The two languages are carried
+        // separately because a pair is DIRECTED — ru→en and en→ru have the same two languages and
+        // are not the same pair, and their terms sit on opposite sides of the card.
         $termCollections = $this->termCollections($command, $renderable);
         $neighbours = array_map(
             static fn (DueTermView $v): array => [
@@ -133,6 +141,8 @@ final readonly class BuildStudySessionHandler
                 'text' => $content[$v->termId->value]->text,
                 'translation' => $content[$v->termId->value]->translation,
                 'type' => $content[$v->termId->value]->type,
+                'lang' => $content[$v->termId->value]->lang,
+                'support' => $langs->for($v->termId->value),
                 'collections' => $termCollections[$v->termId->value] ?? [],
             ],
             $renderable,
@@ -172,6 +182,9 @@ final readonly class BuildStudySessionHandler
                 isPractice: $command->isPractice, cardIndex: $cardIndex,
                 slotStep: $slot->ladderStep, neighbours: $neighbours,
                 modeOverride: $forcedModes[$cardIndex] ?? null,
+                // The asking side of this card's pair. The studied side is already on the content
+                // (`lang`); together they are what a far option has to match.
+                supportLang: $langs->for($slot->termId),
             );
             // A slot the assembler refused: the only card this term's data could produce here would
             // have had fewer than two options, which is not a question (QA-15). The slot is dropped

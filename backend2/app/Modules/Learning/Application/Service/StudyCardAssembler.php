@@ -71,7 +71,7 @@ final readonly class StudyCardAssembler
 
     /**
      * @param  list<string>  $poolTermIds
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
      *         the other terms in THIS session — the far-option pool for the recognition rungs
      * @param  int|null  $slotStep  the rung this particular card was laid out at; a session gives a
      *                              term up to three cards at different rungs ({@see SessionLayout})
@@ -79,6 +79,12 @@ final readonly class StudyCardAssembler
      *                              same three filters — the single-term practice FAN, which deals one
      *                              card per applicable mode instead of one card off the round-robin
      *                              ({@see BuildStudySessionHandler::practiceSlots()}). Null otherwise.
+     * @param  string|null  $supportLang  the ASKING side of this card's pair, the studied side being
+     *                              `$content->lang`. Both halves are needed because a pair is
+     *                              directed ({@see recognitionCard()}). Null means the caller could
+     *                              not name it, and the far options are then refused rather than
+     *                              guessed — the card falls through to ordinary multiple_choice,
+     *                              whose own pool is filtered by language one level down.
      */
     public function assemble(
         UserId $user,
@@ -92,6 +98,7 @@ final readonly class StudyCardAssembler
         ?int $slotStep = null,
         array $neighbours = [],
         ?ExerciseMode $modeOverride = null,
+        ?string $supportLang = null,
     ): ?SessionCardView {
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
@@ -164,14 +171,15 @@ final readonly class StudyCardAssembler
         if (LearningLadder::isRecognitionStep($step)
             && $mode === ExerciseMode::MultipleChoice
             && $admission->optionsPolicyFor($mode, $view->acquisition) === OptionsPolicy::Distant) {
-            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex);
+            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang);
             if ($card !== null) {
                 return $card;
             }
-            // No neighbour of the same shape with the right side translated (a one-term session, a
-            // deck of a single shape, or one whose translations have not landed yet). Fall through
-            // to the ordinary multiple_choice below rather than deal a one-option card: near options
-            // at a first meeting are a worse card, an unanswerable one is not a card at all.
+            // No neighbour of the same PAIR and the same shape with the right side translated (a
+            // one-term session, a deck of a single shape, a lone deck in its pair, or one whose
+            // translations have not landed yet). Fall through to the ordinary multiple_choice below
+            // rather than deal a one-option card: near options at a first meeting are a worse card,
+            // an unanswerable one is not a card at all.
         }
 
         $options = null;
@@ -459,11 +467,30 @@ final readonly class StudyCardAssembler
      * options are the ideal; two are worse and one is worse still, but every one of them asks the
      * question this card exists to ask, which a padded four does not.
      *
-     * Returns null when even ONE same-type option cannot be found: a one-term session, a deck of
-     * one shape, or one whose translations have not been generated yet. A single-option card is not
-     * a card, and the caller falls through to ordinary multiple_choice.
+     * THE PAIR GATE comes first and is a FILTER, not a preference: an option for a card of pair X→Y
+     * is a term of pair X→Y and nothing else. A pool session mixes pairs by design, and the two
+     * sides of this card are written in the two languages of its own pair — the prompt in the asking
+     * one, the options in the studied one (or the reverse, one rung up). A neighbour from another
+     * pair puts a THIRD language on the card, and where the two pairs share a prompt it puts a second
+     * correct answer there: shown «привет», the learner was offered `hello`, `hola` and `ciao`, tapped
+     * a right one and was marked wrong (owner's device, 26.08). Both languages are compared, because
+     * a pair is DIRECTED — ru→en and en→ru are different pairs whose terms sit on opposite sides of
+     * the card, so a `Stuhl` from the second must not appear as an option on the first.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * Unlike the shape filter this one has no «fewer rather than mixed» to fall back to and no
+     * preference form: an option of another pair is not a weaker option, it is a wrong card. So when
+     * the pair cannot fill even one slot the card is refused here, exactly as it is when the SHAPE
+     * cannot, and the caller falls through to ordinary multiple_choice — whose pool is filtered by
+     * the card's own language one level down, in the distractor reader.
+     *
+     * Returns null when even ONE option of the same pair and type cannot be found: a one-term
+     * session, a deck of one shape, a lone deck in its pair, or one whose translations have not been
+     * generated yet. A single-option card is not a card, and the caller falls through to ordinary
+     * multiple_choice.
+     *
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @param  string|null  $supportLang  the asking half of this card's pair; null = unknown, and an
+     *                                    unverifiable pair is treated as a failed one
      */
     private function recognitionCard(
         DueTermView $view,
@@ -471,7 +498,11 @@ final readonly class StudyCardAssembler
         int $step,
         array $neighbours,
         int $cardIndex,
+        ?string $supportLang = null,
     ): ?SessionCardView {
+        if ($supportLang === null) {
+            return null;
+        }
         $forward = $step === LearningLadder::STEP_RECOGNITION_FORWARD;
 
         $own = $forward ? $content->translation : $content->text;
@@ -485,6 +516,11 @@ final readonly class StudyCardAssembler
         $pool = [];
         foreach ($this->sameTopicFirst($this->rotate($neighbours, $cardIndex), $this->collectionsOf($neighbours, $view->termId->value)) as $neighbour) {
             if ($neighbour['term_id'] === $view->termId->value) {
+                continue;
+            }
+            // Same PAIR or not at all — both halves, in the same direction. See the docblock: this
+            // one is a filter with no fallback, because another pair's word is not a weaker option.
+            if ($neighbour['lang'] !== $content->lang || $neighbour['support'] !== $supportLang) {
                 continue;
             }
             // Same shape or not at all. A neighbour of another type is skipped, never taken as a
@@ -554,9 +590,9 @@ final readonly class StudyCardAssembler
      * fall back to distant ones rather than lose the card, which is the same rule the type filter
      * follows one level down.
      *
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @param  list<string>  $own  the card term's own collections
-     * @return list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>
      */
     private function sameTopicFirst(array $neighbours, array $own): array
     {
@@ -587,7 +623,7 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @return list<string>
      */
     private function collectionsOf(array $neighbours, string $termId): array
@@ -602,8 +638,8 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>  $neighbours
-     * @return list<array{term_id: string, text: string, translation: string|null, type: string, collections?: list<string>}>
+     * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
+     * @return list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>
      */
     private function rotate(array $neighbours, int $by): array
     {
