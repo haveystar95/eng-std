@@ -139,6 +139,27 @@ return [
         'mechanics_provider' => env('GENERATION_MECHANICS_PROVIDER', 'openai'),
         'mechanics_model' => env('GENERATION_MECHANICS_MODEL', 'gpt-4o-mini'),
         'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v14.2'),
+
+        /*
+         * Do the two synonym writers actually WRITE? Off by default (DECISIONS п. 32: a new product
+         * ships switched off globally — «включить себе → бете → всем»).
+         *
+         * Not caution for its own sake. A synonym is an ACCEPTED ANSWER, and three measured prompt
+         * iterations put the model's accuracy at roughly half (docs/syn-1-findings.md §7): the wrong
+         * ones are all «narrower» — `bank account` → `savings account`, `cont` → `factură` — and a
+         * card carrying one teaches an equivalence that does not hold. The mechanics around them
+         * (schema, grading, the option ban, the sync contract) are finished and correct, and with no
+         * rows they are inert rather than wrong.
+         *
+         * The switch is what makes «прогон остановлен» mean something on BOTH doors. Stopping the
+         * catalogue run stops the станок; it does nothing about `POST /search/add`, which enriches
+         * every newly saved word and had already written that `cont` → `factură` row live before
+         * anyone decided anything.
+         *
+         * Turned on by the owner's decision, once the accuracy question has an answer — a stronger
+         * model for this field, a deterministic anti-hyponym rule, or curated-only.
+         */
+        'write_synonyms' => (bool) env('GENERATION_WRITE_SYNONYMS', false),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
         // Chain the enrichment станок onto a finished generation (accepted variants + distractors).

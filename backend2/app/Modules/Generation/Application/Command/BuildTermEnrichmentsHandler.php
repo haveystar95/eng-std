@@ -114,6 +114,8 @@ final readonly class BuildTermEnrichmentsHandler
         private RecordsTermEnrichment $spend,
         private Clock $clock,
         private ModelCost $cost = new ModelCost(),
+        /** `GENERATION_WRITE_SYNONYMS` — off until the accuracy question is answered. See the config. */
+        private bool $writeSynonyms = false,
     ) {}
 
     public function __invoke(BuildTermEnrichments $command): EnrichmentRunMetrics
@@ -217,10 +219,15 @@ final readonly class BuildTermEnrichmentsHandler
                 $verdict->distractors,
             ),
             generatorVersion: $version,
-            synonyms: array_map(
-                static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
-                $verdict->synonyms,
-            ),
+            // Gated, and gated HERE rather than in the validator: the run still measures how many
+            // survive validation (the metrics below count them either way), so a switched-off
+            // product can still be evaluated from a real run's numbers without writing a row.
+            synonyms: $this->writeSynonyms
+                ? array_map(
+                    static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
+                    $verdict->synonyms,
+                )
+                : [],
         ));
 
         $this->journal->recordFindings($verdict->findings, $version);

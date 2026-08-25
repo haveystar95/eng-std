@@ -35,6 +35,7 @@ use App\Modules\Generation\Infrastructure\Adapter\UnavailableTranslator;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentInstantTranslationCache;
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
+use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Generation\Domain\Service\SearchQueryLength;
 use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
@@ -255,6 +256,14 @@ final class GenerationServiceProvider extends ServiceProvider
         $this->app->when(AddSearchResultHandler::class)
             ->needs('$autoEnrich')
             ->give(fn (): bool => config('services.generation.auto_enrich') === true);
+
+        // Whether the two synonym writers write at all — off by default, and bound in BOTH places
+        // for the reason the SYN-1 run found out the hard way: stopping the catalogue run stops the
+        // станок and leaves `POST /search/add` enriching every saved word. One product, two doors,
+        // one switch. Read here, like the one above, so Application stays clear of config().
+        $writeSynonyms = fn (): bool => config('services.generation.write_synonyms') === true;
+        $this->app->when(AddSearchResultHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
+        $this->app->when(BuildTermEnrichmentsHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
 
         $this->app->bind(ExampleRegeneratorPort::class, function (): ExampleRegeneratorPort {
             if (config('services.generation.driver') === 'fake') {

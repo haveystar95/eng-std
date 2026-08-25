@@ -77,6 +77,14 @@ final readonly class AddSearchResultHandler
         private EnrichmentValidator $validator = new EnrichmentValidator(),
         /** `GENERATION_AUTO_ENRICH` — the same switch that governs the post-generation chain. */
         private bool $autoEnrich = true,
+        /**
+         * `GENERATION_WRITE_SYNONYMS` — off by default, like the станок's own.
+         *
+         * This door is the one that needed it. Stopping the catalogue run stops the станок and does
+         * nothing here: every saved word is enriched, and this path had already written a live
+         * `cont` → `factură` before anybody decided whether the product was good enough to ship.
+         */
+        private bool $writeSynonyms = false,
     ) {}
 
     public function __invoke(AddSearchResult $command): SavedSearchResult
@@ -230,7 +238,9 @@ final readonly class AddSearchResultHandler
         // The near-synonyms the lookup came back with, on the term's own side. Written through the
         // enrichment path — one writer, one dedup, one `terms.updated_at` touch — and stamped with
         // the prompt that proposed them, like every other generated row.
-        [$synonyms] = $this->validator->synonymsFor([$lookup->text], $lookup->synonyms);
+        [$synonyms] = $this->writeSynonyms
+            ? $this->validator->synonymsFor([$lookup->text], $lookup->synonyms)
+            : [[], 0];
         if ($synonyms !== []) {
             ($this->importEnrichment)(new ImportTermEnrichment(
                 termId: $termId,

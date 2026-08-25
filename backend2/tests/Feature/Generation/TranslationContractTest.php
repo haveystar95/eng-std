@@ -91,7 +91,19 @@ it('a second save of the same word does not re-word the card', function () {
     expect($user)->not->toBeNull();
 });
 
-it('stores the synonyms the lookup came back with', function () {
+it('writes NO synonyms while the product is switched off — which is the default', function () {
+    [, $token] = learner();
+
+    // DECISIONS п. 32: a new product ships switched off globally. Pinned as a test because the
+    // default is the whole safety property — a live `POST /search/add` wrote `cont` → `factură`
+    // before this switch existed (docs/syn-1-findings.md §7).
+    $termId = buildAndSave($this, $token, 'случай', null);
+
+    expect(DB::table('term_synonyms')->where('term_id', $termId)->count())->toBe(0);
+});
+
+it('stores the synonyms the lookup came back with once it is switched on', function () {
+    config(['services.generation.write_synonyms' => true]);
     [, $token] = learner();
 
     $termId = buildAndSave($this, $token, 'случай', null);
@@ -104,6 +116,7 @@ it('stores the synonyms the lookup came back with', function () {
 
 
 it('holds a lookup\'s synonyms to the same shape rules the станок obeys', function () {
+    config(['services.generation.write_synonyms' => true]);
     [, $token] = learner();
 
     // «как дела» is a PHRASE. The fake proposes two synonyms for every word it answers; the shape
