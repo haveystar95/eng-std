@@ -36,7 +36,7 @@ class SessionIntroCard extends ConsumerStatefulWidget {
     this.photoUrl,
     this.photoResolved = false,
     this.autoPronounce = true,
-    this.speechLocaleId = 'en_US',
+    required this.speechLocaleId,
     this.isCurrent = _alwaysCurrent,
   });
 
@@ -51,7 +51,9 @@ class SessionIntroCard extends ConsumerStatefulWidget {
   final bool photoResolved;
   final bool autoPronounce;
 
-  /// Recognition locale for the echo — the language being learned.
+  /// Recognition locale for the echo — the language being learned, off THIS card's pair. Required,
+  /// with no default: a constant here would quietly listen for English on an Italian word, which is
+  /// the mixed-session bug this card's TTS side had (MIX-1b).
   final String speechLocaleId;
 
   /// Still the on-screen card? A fast «Понятно» must cancel a deferred pronounce rather than fire

@@ -121,6 +121,7 @@ class _IntroFrame extends StatelessWidget {
             ),
             child: SessionIntroCard(
               card: _introCard,
+              speechLocaleId: 'en_US',
               autoPronounce: false, // a preview must not talk
               onSpeak: (text, {bool slow = false}) async {},
             ),

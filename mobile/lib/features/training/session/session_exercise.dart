@@ -134,7 +134,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.onAnswered,
     required this.onSpeak,
     this.onSkipped,
-    this.speechLocaleId = 'en_US',
+    required this.speechLocaleId,
     this.isCurrent = _alwaysCurrent,
     this.photoUrl,
     this.photoResolved = false,
@@ -172,7 +172,9 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   final SessionSkipped? onSkipped;
 
   /// The recognition locale for the speaking card — the language being LEARNED, not the interface
-  /// language: the learner is speaking English, whatever the app is written in.
+  /// language: the learner is speaking Italian on an Italian card, whatever the app is written in
+  /// and whatever the profile says. Required, with no default: a constant here would listen for one
+  /// language while the card asks another (MIX-1b).
   final String speechLocaleId;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle

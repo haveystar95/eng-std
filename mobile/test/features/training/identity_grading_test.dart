@@ -139,6 +139,7 @@ void main() {
             body: SingleChildScrollView(
               child: SessionExerciseCard(
                 card: card,
+                speechLocaleId: 'en_US',
                 autoPronounce: false,
                 onAnswered: answers.add,
                 onSpeak: onSpeak,

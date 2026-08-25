@@ -49,6 +49,7 @@ void main() {
         body: SingleChildScrollView(
           child: SessionExerciseCard(
             card: c,
+            speechLocaleId: 'en_US',
             autoPronounce: false,
             onAnswered: (_) {},
             onSpeak: (text, {bool slow = false}) async {},

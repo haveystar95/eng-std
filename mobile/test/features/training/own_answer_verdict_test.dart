@@ -40,6 +40,7 @@ void main() {
           body: SingleChildScrollView(
             child: SessionExerciseCard(
               card: card,
+              speechLocaleId: 'en_US',
               autoPronounce: false,
               // The «когда снова» line reads the local DB, and its stream keeps a timer alive
               // past teardown. Nothing here is about the due date.

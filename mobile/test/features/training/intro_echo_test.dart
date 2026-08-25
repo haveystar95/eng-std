@@ -140,6 +140,7 @@ void main() {
         body: SingleChildScrollView(
           child: SessionIntroCard(
             card: introCard(),
+            speechLocaleId: 'en_US',
             autoPronounce: false,
             onSpeak: (String text, {bool slow = false}) async {},
           ),

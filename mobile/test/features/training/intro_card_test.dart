@@ -76,6 +76,7 @@ void main() {
           body: SingleChildScrollView(
             child: SessionIntroCard(
               card: c,
+              speechLocaleId: 'en_US',
               autoPronounce: false,
               onSpeak: (text, {bool slow = false}) async {},
             ),
