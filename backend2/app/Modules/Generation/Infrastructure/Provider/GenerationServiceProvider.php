@@ -49,6 +49,12 @@ use App\Modules\Generation\Application\Port\EnrichmentJournal;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
+use App\Modules\Generation\Application\Command\WriteTermReadingHandler;
+use App\Modules\Generation\Application\Port\DispatchesTermReading;
+use App\Modules\Generation\Application\Port\TermTransliteratorPort;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTermTransliterator;
+use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermTransliterator;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedTermReadingDispatcher;
 use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Dto\PracticeDialogConfig;
 use App\Modules\Generation\Application\Dto\RealtimeVad;
@@ -191,6 +197,42 @@ final class GenerationServiceProvider extends ServiceProvider
                 model: (string) config('services.openai.enrich_model', 'gpt-4o-mini'),
             );
         });
+
+        // ---- the reading hint on the two single-card doors -----------------------------------
+        // Both of them ask off the request thread; a card must not wait on a strong-model call.
+        $this->app->bind(DispatchesTermReading::class, QueuedTermReadingDispatcher::class);
+
+        $this->app->bind(TermTransliteratorPort::class, function (): TermTransliteratorPort {
+            if (config('services.generation.driver') === 'fake') {
+                return new FakeTermTransliterator();
+            }
+
+            // The CORE's model and the CORE's prompt version, read from the one place that resolves
+            // them — so the hint a saved word gets and the hint a generated collection gets cannot
+            // come from two different models under one `generator_version`.
+            $stack = $this->app->make(GenerationStackConfig::class);
+
+            if ($stack->coreProvider !== ProviderId::OpenAi) {
+                throw new RuntimeException(
+                    "The reading hint is written by the core's model, which is configured on provider "
+                    . "«{$stack->coreProvider->value}»; this adapter speaks OpenAI. Point "
+                    . 'GENERATION_CORE_PROVIDER back at openai, or give this port an adapter for that vendor.'
+                );
+            }
+
+            return new OpenAiTermTransliterator(
+                context: $this->app->make(OutboundCallContext::class),
+                apiKey: (string) config('services.openai.api_key'),
+                model: $stack->coreModel,
+                promptVersion: $stack->corePromptVersion,
+            );
+        });
+
+        // The same switch the core reads, bound onto the third door as well: «остановить чтения»
+        // has to mean it everywhere, and the SYN-1 run is what it costs when it does not.
+        $this->app->when(WriteTermReadingHandler::class)
+            ->needs('$writeTransliteration')
+            ->give(fn (): bool => config('services.generation.write_transliteration') === true);
 
         // ---- instant translation (the search field's grey line) ------------------------------
         $this->app->bind(InstantTranslationCache::class, EloquentInstantTranslationCache::class);

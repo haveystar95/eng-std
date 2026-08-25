@@ -12,6 +12,7 @@ use App\Modules\Vocabulary\Application\Port\TermExampleWriter;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
 use App\Modules\Vocabulary\Application\Query\EnrichableTermReader;
+use App\Modules\Vocabulary\Application\Query\TermReadingTargetReader;
 use App\Modules\Vocabulary\Application\Query\DistractorAuditReader;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 use App\Modules\Vocabulary\Application\Query\ExampleRegenContextReader;
@@ -31,6 +32,7 @@ use App\Modules\Vocabulary\Domain\Repository\TermRepository;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentAuthoredTermAnonymizer;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichableTermReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermReadingTargetReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentDistractorAuditReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentEnrichmentTargetReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentExampleRegenContextReader;
@@ -83,6 +85,10 @@ final class VocabularyServiceProvider extends ServiceProvider
         // A term's description («what this word means», in the language being learned).
         $this->app->bind(TermDescriptionWriter::class, EloquentTermDescriptionWriter::class);
         $this->app->bind(TermTransliterationWriter::class, EloquentTermTransliterationWriter::class);
+        // …and the gate in front of it: does this (term, support language) still need one at all.
+        // Asked BEFORE the model call, which is the whole point — the writer would refuse the second
+        // write, but by then the call is bought.
+        $this->app->bind(TermReadingTargetReader::class, EloquentTermReadingTargetReader::class);
         // The language audit: every learner-language string a user can actually reach.
         $this->app->bind(TermLanguageAuditReader::class, EloquentTermLanguageAuditReader::class);
         $this->app->bind(TranslationKeyReader::class, EloquentTranslationKeyReader::class);
