@@ -101,3 +101,16 @@ it('stores the synonyms the lookup came back with', function () {
         // The term's own language, read off the term and never from the caller.
         ->and(DB::table('term_synonyms')->where('term_id', $termId)->value('lang'))->toBe('en');
 });
+
+
+it('holds a lookup\'s synonyms to the same shape rules the станок obeys', function () {
+    [, $token] = learner();
+
+    // «как дела» is a PHRASE. The fake proposes two synonyms for every word it answers; the shape
+    // rules refuse them here for the same reason they refuse them on the станок path — what a
+    // "synonym" of a phrase would be is a paraphrase, and a paraphrase accepted as an answer widens
+    // the key to a different utterance. One table, one set of rules, whichever writer arrives.
+    $termId = buildAndSave($this, $token, 'как дела', null);
+
+    expect(DB::table('term_synonyms')->where('term_id', $termId)->count())->toBe(0);
+});

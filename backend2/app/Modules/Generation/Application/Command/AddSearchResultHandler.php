@@ -16,6 +16,7 @@ use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Port\SearchLookupCache;
 use App\Modules\Generation\Application\Service\LearnerLanguages;
 use App\Modules\Generation\Domain\Exception\LookupNotFound;
+use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Learning\Application\Command\EnrollTerm;
 use App\Modules\Learning\Application\Command\EnrollTermHandler;
 use App\Modules\Shared\Domain\Service\TransactionManager;
@@ -64,6 +65,16 @@ final readonly class AddSearchResultHandler
         private DispatchesImageAttachment $imageAttachment,
         private LearnerLanguages $languages,
         private TransactionManager $tx,
+        /**
+         * The SAME deterministic synonym rules the станок runs, applied to the lookup's proposals.
+         *
+         * Not because this path is less trusted — because it is a SECOND writer into one table, and
+         * a table whose rules live in whichever writer somebody remembered is a table with no rules.
+         * The lookup barrier already screened these for language and self-reference; what it cannot
+         * express is the SHAPE question («a phrase gets no synonyms, a synonym is not a paraphrase»),
+         * and that question is answered in exactly one place.
+         */
+        private EnrichmentValidator $validator = new EnrichmentValidator(),
         /** `GENERATION_AUTO_ENRICH` — the same switch that governs the post-generation chain. */
         private bool $autoEnrich = true,
     ) {}
@@ -219,7 +230,8 @@ final readonly class AddSearchResultHandler
         // The near-synonyms the lookup came back with, on the term's own side. Written through the
         // enrichment path — one writer, one dedup, one `terms.updated_at` touch — and stamped with
         // the prompt that proposed them, like every other generated row.
-        if ($lookup->synonyms !== []) {
+        [$synonyms] = $this->validator->synonymsFor([$lookup->text], $lookup->synonyms);
+        if ($synonyms !== []) {
             ($this->importEnrichment)(new ImportTermEnrichment(
                 termId: $termId,
                 exampleId: null,
@@ -228,7 +240,7 @@ final readonly class AddSearchResultHandler
                 generatorVersion: $lookup->promptVersion,
                 synonyms: array_map(
                     static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
-                    $lookup->synonyms,
+                    $synonyms,
                 ),
             ));
         }

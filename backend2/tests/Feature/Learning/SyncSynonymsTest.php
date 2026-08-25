@@ -13,13 +13,13 @@ uses(RefreshDatabase::class);
  *
  * `synonyms` and `translations` are new keys beside the ones the app already reads; nothing that
  * existed changed name, meaning or contents. The regression diff of the whole `/sync` payload for a
- * term carrying every enrichment product is in `docs/syn-1-sync-diff.md` and shows exactly these two
+ * term carrying every enrichment product is in `docs/syn-1-findings.md` and shows exactly these two
  * additions.
  */
 function seedSyncTerm(object $ctx): array
 {
     [$user, $token] = learner();
-    [, $termId] = seedCollectionWith($user, 'purpose', 'цель');
+    [$collectionId, $termId] = seedCollectionWith($user, 'purpose', 'цель');
 
     seedExample([
         'id' => str_pad('01SYNEX', 26, '0'),
@@ -41,11 +41,11 @@ function seedSyncTerm(object $ctx): array
         'source' => 'auto', 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    return [$token, $termId];
+    return [$user, $token, $collectionId, $termId];
 }
 
 it('carries synonyms and the full translation list, beside the fields that were already there', function () {
-    [$token] = seedSyncTerm($this);
+    [, $token] = seedSyncTerm($this);
 
     $term = $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/v1/sync?since=1970-01-01T00:00:00Z')
@@ -74,25 +74,28 @@ it('sends empty lists rather than omitting the keys, so the client shape never v
 });
 
 it('puts synonyms on a card that asked for the meaning, and on no other', function () {
-    [$token, $termId] = seedSyncTerm($this);
+    [$user, $token, $collectionId, $termId] = seedSyncTerm($this);
+    // High enough on the ladder that the matrix admits every trainer, so one call returns both
+    // kinds of card — the ones whose prompt is the meaning and the ones whose prompt is the word.
+    graduate($user->id, $termId);
 
-    // The whole fan for this pair, so both kinds of card are in one answer.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
-        ->postJson('/api/v1/study/sessions', ['term_id' => $termId, 'practice' => true])
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $collectionId, 'practice' => true])
         ->assertOk()
         ->json('data.cards');
 
+    $meaningModes = ['multiple_choice', 'word_bank', 'typing', 'description_match', 'speaking'];
     foreach ($cards as $card) {
-        $expected = in_array(
-            $card['exercise_mode'],
-            ['multiple_choice', 'word_bank', 'typing', 'description_match', 'speaking'],
-            true,
-        ) ? ['goal'] : [];
+        // A card that asks for the pinned EXAMPLE carries none whatever its mode — the key there is
+        // the sentence, and a synonym of the term is not a spelling of it.
+        $asksExample = $card['answer'] !== 'purpose';
+        $expected = ! $asksExample && in_array($card['exercise_mode'], $meaningModes, true) ? ['goal'] : [];
 
-        // `speaking` and the sentence modes read off the rung; a practice fan on a fresh pair deals
-        // the word form, so the expectation above holds for every card this call returns.
         expect($card['synonyms'])->toBe($expected, "mode {$card['exercise_mode']}");
     }
 
-    expect($cards)->not->toBeEmpty();
+    // The fan really did deal both kinds, or the loop above proved nothing.
+    $modes = array_column($cards, 'exercise_mode');
+    expect(array_intersect($modes, $meaningModes))->not->toBeEmpty()
+        ->and(array_diff($modes, $meaningModes))->not->toBeEmpty();
 });

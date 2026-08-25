@@ -286,20 +286,45 @@ final class EnrichmentValidator
      */
     private function validSynonyms(EnrichmentCandidate $candidate, array $accepted): array
     {
-        $term = $candidate->acceptedForms[0] ?? '';
+        return $this->synonymsFor(
+            $candidate->acceptedForms,
+            $candidate->synonyms,
+            $candidate->existingSynonyms,
+            $accepted,
+        );
+    }
+
+    /**
+     * The same rules, callable by anyone who has synonyms to store and no enrichment candidate.
+     *
+     * Public because the станок is not the only writer: the search lookup proposes synonyms too
+     * ({@see \App\Modules\Generation\Application\Command\AddSearchResultHandler}), and a second
+     * path into the same table with only the prompt guarding it would mean the deterministic rules
+     * apply to whichever writer somebody remembered. The whole reason this class exists is that a
+     * prompt rule is a request and a check is a guarantee — so both writers ask the same one.
+     *
+     * @param  list<string>  $acceptedForms  the term text first, then any stored variants
+     * @param  list<string>  $proposed
+     * @param  list<string>  $existing  synonyms the term already has
+     * @param  array<string, true>|null  $accepted  pre-normalised accepted set, when the caller has it
+     * @return array{0: list<string>, 1: int}  kept, rejected
+     */
+    public function synonymsFor(array $acceptedForms, array $proposed, array $existing = [], ?array $accepted = null): array
+    {
+        $term = $acceptedForms[0] ?? '';
         $termTokens = $this->tokenCount($term);
         if ($termTokens === 0 || $termTokens > self::MAX_SYNONYM_TERM_TOKENS) {
             // A phrase asked for none, so a phrase that got some did not answer the question. They
             // are rejections and counted as such: silence would hide a prompt that stopped working.
-            return [[], count($candidate->synonyms)];
+            return [[], count($proposed)];
         }
 
         $budget = $termTokens + self::MAX_SYNONYM_EXTRA_TOKENS;
-        $seen = $accepted + $this->normalizedSet($candidate->existingSynonyms);
+        $seen = ($accepted ?? $this->normalizedSet($acceptedForms)) + $this->normalizedSet($existing);
 
         $kept = [];
         $rejected = 0;
-        foreach ($candidate->synonyms as $raw) {
+        foreach ($proposed as $raw) {
             $text = $this->stripEmphasis($raw);
             $key = $text !== '' ? $this->normalizer->normalize($text) : '';
             if ($text === '' || $key === '') {
