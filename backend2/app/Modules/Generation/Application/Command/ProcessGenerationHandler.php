@@ -93,6 +93,12 @@ final readonly class ProcessGenerationHandler
         private LanguagePurity $purity = new LanguagePurity(),
         /** `GENERATION_WRITE_SYNONYMS` — off until the product earns its way on. */
         private bool $writeSynonyms = false,
+        /**
+         * `GENERATION_WRITE_OTHER_TRANSLATIONS` — its OWN switch since SYN-1e measured the two
+         * products apart: 67% clean synonyms against 29% clean other readings. Sharing one flag
+         * meant the worse field decided for the better one.
+         */
+        private bool $writeOtherTranslations = false,
         /** `GENERATION_WRITE_TRANSLITERATION` — its own switch, see writeExtras(). */
         private bool $writeTransliteration = false,
     ) {
@@ -303,11 +309,12 @@ final readonly class ProcessGenerationHandler
                 // and a learner who types the second one is not told they are wrong (SYN-1).
                 translations: [
                     new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true),
-                    // Behind the SAME switch as the synonyms, because it is the same kind of claim:
-                    // unvetted model output that widens what a learner may be told is right. It is
-                    // the gentler of the two — an extra reading never changes the card's question —
-                    // but a new product ships off (DECISIONS п. 32) and it ships off with its twin.
-                    ...($this->writeSynonyms ? $this->otherReadings($item, $request->sourceLang()) : []),
+                    // Behind its OWN switch, and that is the point of the split: it used to share the
+                    // synonym flag on the reasoning that both are unvetted output widening what a
+                    // learner may be told is right — true, and it cost the better product. Measured
+                    // apart (SYN-1e), the synonyms came back 67% clean and these 29%, so one flag
+                    // meant the worse field deciding for the better one.
+                    ...($this->writeOtherTranslations ? $this->otherReadings($item, $request->sourceLang()) : []),
                 ],
                 ipa: $item->transcription,
                 examples: $item->example !== null

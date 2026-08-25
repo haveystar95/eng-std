@@ -72,6 +72,18 @@ it('ships the reading hint ON and the synonym OFF — the pilot decided each sep
         ->and(config('services.generation.write_synonyms'))->toBeFalse();
 });
 
+it('gives the other readings a switch of their OWN, so the worse number stops deciding for the better', function () {
+    // They shared the synonym flag until SYN-1e measured them apart: 67% clean synonyms against 29%
+    // clean other readings with 29% wrong (`build` → «строить» on a noun card). One flag meant the
+    // synonyms could never be switched on without the field that failed its threshold riding along.
+    expect(config('services.generation.write_other_translations'))->toBeFalse()
+        ->and(config('services.generation.write_synonyms'))->toBeFalse();
+
+    // Two keys, not one read twice — the whole point of the split.
+    config(['services.generation.write_synonyms' => true]);
+    expect(config('services.generation.write_other_translations'))->toBeFalse();
+});
+
 it('declares the v15 extras by version NUMBER, so v9 is not asked for fields its prompt never mentions', function () {
     $contract = app(ContentContract::class);
     $extras = ['synonyms', 'other_translations', 'transliteration'];

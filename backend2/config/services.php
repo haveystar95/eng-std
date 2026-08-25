@@ -147,15 +147,15 @@ return [
         'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v14.3'),
 
         /*
-         * Do the two synonym writers actually WRITE? Off by default (DECISIONS п. 32: a new product
+         * Do the synonym writers actually WRITE? Off by default (DECISIONS п. 32: a new product
          * ships switched off globally — «включить себе → бете → всем»).
          *
          * Not caution for its own sake. A synonym is an ACCEPTED ANSWER, and three measured prompt
-         * iterations put the model's accuracy at roughly half (docs/syn-1-findings.md §7): the wrong
-         * ones are all «narrower» — `bank account` → `savings account`, `cont` → `factură` — and a
-         * card carrying one teaches an equivalence that does not hold. The mechanics around them
-         * (schema, grading, the option ban, the sync contract) are finished and correct, and with no
-         * rows they are inert rather than wrong.
+         * iterations put the CHEAP model's accuracy at roughly half (docs/syn-1-findings.md §7): the
+         * wrong ones are all «narrower» — `bank account` → `savings account`, `cont` → `factură` —
+         * and a card carrying one teaches an equivalence that does not hold. The mechanics around
+         * them (schema, grading, the option ban, the sync contract) are finished and correct, and
+         * with no rows they are inert rather than wrong.
          *
          * The switch is what makes «прогон остановлен» mean something on BOTH doors. Stopping the
          * catalogue run stops the станок; it does nothing about `POST /search/add`, which enriches
@@ -166,6 +166,25 @@ return [
          * model for this field, a deterministic anti-hyponym rule, or curated-only.
          */
         'write_synonyms' => (bool) env('GENERATION_WRITE_SYNONYMS', false),
+
+        /*
+         * The OTHER READINGS of a word («bank» → «банк», and also «берег»), on their own switch.
+         *
+         * They used to share the synonym flag, and sharing it cost the better product: the core's
+         * synonyms measured 67% clean while the other readings measured 29% clean with 29% wrong
+         * (docs/syn-1-findings.md §9), so one flag meant the field with the WORSE number decided for
+         * the field with the better one. Two products, two failure modes, two switches — the same
+         * argument that already split the reading hint off from both.
+         *
+         * OFF, and not a candidate for switching on: `build` → «строить» on a noun card is the shape
+         * of its failure, and curing it is its own piece of work.
+         *
+         * NOTE, so nobody reads this as complete: `POST /search/add` writes the LOOKUP's other
+         * readings unconditionally — they ride in as extra `term_translations` rows, and they never
+         * passed through the flag above either. Gating that door is a behaviour change and belongs
+         * to whoever decides the product, not to the split.
+         */
+        'write_other_translations' => (bool) env('GENERATION_WRITE_OTHER_TRANSLATIONS', false),
 
         /*
          * The reading hint («cómo estás» → «комо эстас»), on its own switch rather than sharing the

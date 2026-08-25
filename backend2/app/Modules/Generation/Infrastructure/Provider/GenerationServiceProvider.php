@@ -310,6 +310,12 @@ final class GenerationServiceProvider extends ServiceProvider
         $writeSynonyms = fn (): bool => config('services.generation.write_synonyms') === true;
         $this->app->when(AddSearchResultHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
         $this->app->when(ProcessGenerationHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
+        // The OTHER READINGS, on their own switch since they stopped sharing the one above: the two
+        // products measured 67% and 29% clean, and a shared flag let the worse number decide for the
+        // better one. See `services.generation.write_other_translations`.
+        $this->app->when(ProcessGenerationHandler::class)
+            ->needs('$writeOtherTranslations')
+            ->give(fn (): bool => config('services.generation.write_other_translations') === true);
         $this->app->when(ProcessGenerationHandler::class)
             ->needs('$writeTransliteration')
             ->give(fn (): bool => config('services.generation.write_transliteration') === true);
