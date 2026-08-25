@@ -55,7 +55,12 @@ final readonly class MachineryEnrichmentPacker implements EnrichmentPackerPort
         $answer = $this->model->complete(
             $prompt,
             $this->dataBlock($brief),
-            $this->contract->schema(PromptShape::Machinery),
+            // The VERSION goes with the shape, because the two halves of the contract have to agree:
+            // v14…v14.2 ask the model for near-synonyms and their schema carries the field, v14.3
+            // asks for neither. Passing the shape alone is what let a schema declare a property the
+            // prompt never explains — and strict Structured Outputs makes every declared property
+            // required, so the model would have had to invent one.
+            $this->contract->schema(PromptShape::Machinery, $this->promptVersion),
         );
 
         // Positional pairing, like the bake-off's: the prompt says one entry per given card in the

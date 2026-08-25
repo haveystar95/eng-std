@@ -6,8 +6,11 @@ use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
 use App\Modules\Generation\Application\Dto\EnrichmentBrief;
 use App\Modules\Generation\Application\Dto\GenerationStackConfig;
 use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
+use App\Modules\Generation\Application\Service\ContentContract;
+use App\Modules\Generation\Domain\ValueObject\PromptShape;
 use App\Modules\Generation\Infrastructure\Adapter\MachineryEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
+use App\Modules\Generation\Infrastructure\Prompt\PromptLibrary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -34,6 +37,21 @@ function livePacker(array $config = []): EnrichmentPackerPort
     return app(EnrichmentPackerPort::class);
 }
 
+/**
+ * The rendered machinery prompt for a version, without going near a model — for the assertions about
+ * a FROZEN version, which has no live call to watch.
+ *
+ * Its own helper rather than the one in DistractorOverOrderTest: a plain function declared in another
+ * test file is only visible here by the accident of serial load order, and this suite runs parallel.
+ */
+function machineryPrompt(string $version): string
+{
+    return (new PromptLibrary())->render($version, PromptShape::Machinery, [
+        'source_lang' => 'Russian',
+        'target_lang' => 'English',
+    ])->text;
+}
+
 function packLive(array $config = []): void
 {
     Http::fake(['*' => Http::response([
@@ -57,7 +75,7 @@ function packLive(array $config = []): void
     ));
 }
 
-it('asks the machinery shape for forms, synonyms and example distractors — and for nothing else', function () {
+it('asks the machinery shape for forms and example distractors — and for nothing else', function () {
     packLive();
 
     Http::assertSent(function (Request $request): bool {
@@ -74,7 +92,7 @@ it('asks the machinery shape for forms, synonyms and example distractors — and
             && ! array_key_exists('example', $props)
             // …and no wrong translations either, which is what v11 `mechanics` would have charged for.
             && ! array_key_exists('options', $props)
-            && array_keys($props) === ['text', 'forms', 'synonyms', 'distractors'];
+            && array_keys($props) === ['text', 'forms', 'distractors'];
     });
 });
 
@@ -149,7 +167,7 @@ it('puts the old four-product packer back on GENERATION_STACK=v1', function () {
 it('bumps the станок version, so every already-marked term is pending at the new one', function () {
     // The pin is the point: a prompt change that does NOT move this constant is invisible to the
     // journal, and every term already marked done is skipped by the very run meant to fix it.
-    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v14.2');
+    expect(BuildTermEnrichmentsHandler::VERSION)->toBe('mech-v14.3');
 });
 
 it('shows the worked example as JSON, so the model cannot copy quotes into a field', function () {
@@ -185,29 +203,45 @@ it('runs the machinery on the measured prompt, not on the one it replaced', func
 });
 
 
-it('asks for near-synonyms BEFORE the distractors, with worked substitutions', function () {
+it('does not buy the synonym question any more — not in the prompt, not in the schema', function () {
     packLive();
 
     Http::assertSent(function (Request $request): bool {
         $system = $request->data()['messages'][0]['content'];
-        $synonyms = strpos($system, 'other English words for the same thing');
-        // The distractor SECTION's own heading, not the phrase `16-given-core` also uses.
-        $distractors = strpos($system, '## `distractors`');
+        $schema = (string) json_encode($request->data()['response_format']['json_schema']['schema']);
 
-        return $synonyms !== false && $distractors !== false
-            // ORDER IS THE FIX. v14 put this section after the ~900-word distractor block and got
-            // `synonyms: []` on all 20 terms of its pilot, `debit card` included.
-            && $synonyms < $distractors
-            // The ONE test the model can apply, shown working rather than described.
-            && str_contains($system, 'in place of the term')
-            && str_contains($system, 'TERM: debit card')
-            && str_contains($system, 'bank card')
-            // BOTH tests, and the second one by name: substitution alone passes a narrower word.
-            && str_contains($system, 'Test 2 — answer the translation with it')
-            && str_contains($system, 'savings account')
-            // Phrases get none — the deterministic half of this lives in EnrichmentValidator.
-            && str_contains($system, 'Only for a SINGLE WORD or a short lemma');
+        return
+            // The section itself, and the two worked tests it was made of.
+            ! str_contains($system, 'other English words for the same thing')
+            && ! str_contains($system, 'Test 2 — answer the translation with it')
+            && ! str_contains($system, 'savings account')
+            // The clauses in the OTHER sections that named the field, which would otherwise describe
+            // a product the schema cannot carry.
+            && ! str_contains($system, 'near-synonyms')
+            && ! str_contains($system, '`synonyms`')
+            // And the schema: strict Structured Outputs makes a declared property REQUIRED, so a
+            // leftover field here is the model being forced to invent one.
+            && ! str_contains($schema, 'synonyms')
+            // What the section left behind still works: `forms` keeps its own definition, and it is
+            // still stated against synonyms rather than by pointing at a field that is now gone.
+            && str_contains($system, 'Not other WORDS that mean the same thing');
     });
+});
+
+it('keeps asking v14.2 for synonyms — a frozen version renders the schema its own prompt was written against', function () {
+    // Not nostalgia: `mech-v14`…`mech-v14.2` are recorded on live rows, and replaying one has to
+    // send the model the same two halves it was measured with.
+    $schema = app(ContentContract::class)->schema(PromptShape::Machinery, 'v14.2');
+    $props = $schema['properties']['items']['items']['properties'];
+
+    expect(array_keys($props))->toBe(['text', 'forms', 'synonyms', 'distractors'])
+        ->and(machineryPrompt('v14.2'))->toContain('other English words for the same thing');
+
+    // …and the versions BELOW the window never mentioned synonyms in their text either, so they stop
+    // being forced to emit the field.
+    expect(array_keys(app(ContentContract::class)
+        ->schema(PromptShape::Machinery, 'v13.1')['properties']['items']['items']['properties']))
+        ->toBe(['text', 'forms', 'distractors']);
 });
 
 it('shows the model what the term already has, so it does not buy them twice', function () {
@@ -221,7 +255,11 @@ it('shows the model what the term already has, so it does not buy them twice', f
     });
 });
 
-it('reads synonyms back off the answer', function () {
+// The READING side stays tolerant on purpose, and v14.3 is why it is worth a test of its own: the
+// current prompt does not ask for synonyms, so nothing in production produces this answer — but a
+// replay of `mech-v14.2` does, and a parser that had quietly stopped reading the field would turn a
+// perfectly good frozen version into a version that returns nothing.
+it('still reads synonyms back off an answer that carries them', function () {
     Http::fake(['*' => Http::response([
         'model' => 'gpt-4o-mini-2024-07-18',
         'choices' => [['message' => ['content' => json_encode(['items' => [[

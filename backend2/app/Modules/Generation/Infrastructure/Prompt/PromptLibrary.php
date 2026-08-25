@@ -266,6 +266,32 @@ final class PromptLibrary implements PromptSource
                 '99-closing',
             ],
         ],
+        // v14.3 is v14.2 with the synonym section TAKEN OUT, and it is a deletion rather than a
+        // fourth attempt at the product.
+        //
+        // The станок stopped WRITING synonyms in code: {@see \App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler}
+        // imports `synonyms: []` unconditionally, because a synonym is a CORE product from v15 on and
+        // one table wants one producer. The prompt, though, went on ASKING — ~600 words of section on
+        // the way in and a list of up to three on the way out, bought on every term and dropped on the
+        // floor by the very next statement. That is the whole change: the model is no longer asked a
+        // question whose answer has nowhere to go.
+        //
+        // `61-distractors` and `99-closing` are byte-identical copies of v14.2's. The other three lose
+        // only the clauses that named the field — the role's list of products, the job description,
+        // and the field list — because a prompt that describes a field the schema does not carry is
+        // the exact defect v13 was rescued from (a section the model obeys against a contract that
+        // cannot hold it).
+        //
+        // The schema stops declaring `synonyms` at this version too, in {@see \App\Modules\Generation\Application\Service\ContentContract}:
+        // strict Structured Outputs makes every declared property required, so leaving it in would
+        // force the model to emit a field this text never mentions.
+        //
+        // v14.2 is not edited: 27 live rows record it as their generator version.
+        'v14.3' => [
+            PromptShape::Machinery->value => [
+                '00-role', '16-given-core', '25-fields-machinery', '61-distractors', '99-closing',
+            ],
+        ],
         // v15 is the CORE, and it is where synonyms end up after the machinery failed to hold them.
         //
         // Three measured iterations on `gpt-4o-mini` (v14 → v14.2, docs/syn-1-findings.md §7) put

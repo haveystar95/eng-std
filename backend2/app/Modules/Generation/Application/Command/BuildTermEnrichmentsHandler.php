@@ -101,8 +101,22 @@ final readonly class BuildTermEnrichmentsHandler
      * decision — nothing here starts one. Existing terms simply become pending again at the new
      * version, and until someone spends the money the synonym-aware paths are inert rather than
      * wrong: no synonyms means no extra accepted answers and no extra excluded options.
+     *
+     * `mech-v14.2` → `mech-v14.3` takes the synonym section OUT of the prompt. DG-1 stopped the
+     * станок writing synonyms in code — the import below passes `[]` whatever comes back — but the
+     * prompt kept asking for them, so every term went on paying for ~600 words of section on the way
+     * in and for a list of up to three on the way out, to have it dropped by the next statement. The
+     * schema stops declaring the field at this version too, so «not asked» means it in both halves
+     * of the contract. Nothing else about the machinery changes.
+     *
+     * This is the FIRST bump that is not worth re-paying for. Every one above it changed what a term
+     * would come back with; this one changes only what the term is asked, and the answer to the
+     * removed question was already being thrown away — a v14.3 run produces the same rows a v14.2 run
+     * would have produced, for fewer tokens. The bump exists so a row's `generator_version` still
+     * names the text that wrote it. Terms marked at v14.2 do become pending again, and whether anyone
+     * spends money on that is the owner's decision; nothing here starts a run.
      */
-    public const VERSION = 'mech-v14.2';
+    public const VERSION = 'mech-v14.3';
 
     public function __construct(
         private EnrichmentTargetReader $targets,
@@ -224,9 +238,13 @@ final readonly class BuildTermEnrichmentsHandler
             // could not get the machinery's accuracy where a written row has to be, so this is a
             // decision rather than a pause, and it lives in the code instead of in a flag.
             //
-            // The validator still JUDGES what the pack proposed, and the metrics below still count it:
-            // a run's numbers stay readable, and nothing is written from them. `GENERATION_WRITE_SYNONYMS`
-            // is untouched and still governs its two real doors — the core and the lookup.
+            // From prompt v14.3 the pack does not even carry a proposal: the section was removed and
+            // the schema stopped declaring the field, so the code decision above finally reached the
+            // thing being paid for. The validator still JUDGES whatever a pack does propose — an
+            // older version replayed, or a bake-off task on one — and the metric below counts that
+            // judgement, not a write; which is why it is called `synonymsValidated`.
+            // `GENERATION_WRITE_SYNONYMS` is untouched and still governs its two real doors — the
+            // core and the lookup.
             synonyms: [],
         ));
 
@@ -249,7 +267,7 @@ final readonly class BuildTermEnrichmentsHandler
             distractorsWritten: count($verdict->distractors),
             variantsWritten: count($verdict->variants),
             variantsRejected: $verdict->rejectedVariants,
-            synonymsWritten: count($verdict->synonyms),
+            synonymsValidated: count($verdict->synonyms),
             synonymsRejected: $verdict->rejectedSynonyms,
             termsAmbiguous: $verdict->hasFinding(FindingKind::Ambiguity) ? 1 : 0,
             // "Any language problem" is the union of the three kinds, so a term that only has a

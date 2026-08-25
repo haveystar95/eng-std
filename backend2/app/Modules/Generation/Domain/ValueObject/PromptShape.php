@@ -86,7 +86,9 @@ enum PromptShape: string
      * Does this shape produce near-SYNONYMS of the term — other words on the studied side that mean
      * nearly the same thing (`purpose` → `goal`, `aim`)?
      *
-     * Only the machinery shape, and only from prompt v14. It is a different product from
+     * Only the machinery shape, and only for prompt versions v14…v14.2 — the WINDOW is not this
+     * enum's to know (a shape is orthogonal to a version), so it lives in ContentContract and this
+     * answer is «could this shape ever». It is a different product from
      * {@see hasForms()} and the difference is what each one is allowed to do downstream: a form is
      * another spelling of the same word and widens the answer key everywhere, a synonym is another
      * word and widens it only on a card that asked what the term MEANS. Two products, two fields,

@@ -1,0 +1,12 @@
+## Fields — every field is required for every card
+
+- `text` — the given term, copied verbatim (same words, spelling, casing, punctuation).
+- `forms` — other {{target_lang}} SPELLINGS of this same term that must also be accepted when the
+  learner types it: regional spellings ("organise"/"organize"), one-word/two-word/hyphenated variants
+  of one compound ("check-in"/"check in"). Not other WORDS that mean the same thing — you are not
+  asked for those here — not related words, not plurals. Almost every term has none: **return an
+  empty list unless you are certain.**
+- `distractors` — wrong versions of the card's example sentence, per the rules below.
+
+There is no field here for the term's meaning, its translation, its level or its example: this
+answer adds machinery to a finished card and changes nothing about the card itself.

@@ -157,11 +157,15 @@ final class EnrichBackfillCommand extends Command
                 : '0'],
             ['вариантов записано', (string) $m->variantsWritten],
             ['вариантов забраковано (длина)', $m->variantsRejected > 0 ? "<fg=yellow>{$m->variantsRejected}</>" : '0'],
-            // Their own two rows, never folded into the variants above: the two products fail
-            // differently, and one «сколько лишних ответов» would report a run that wrote plenty of
-            // synonyms and no forms at all as healthy — which is the state the станок has been in
-            // since 21.08 (SYN-1, docs/syn-1-findings.md §4).
-            ['синонимов записано', (string) $m->synonymsWritten],
+            // Их собственные две строки, никогда не сливаемые с вариантами выше: продукты ломаются
+            // по-разному, и одно «сколько лишних ответов» показало бы прогон с кучей одного и нулём
+            // другого как здоровый (SYN-1, docs/syn-1-findings.md §4).
+            //
+            // «Прошло валидацию», а НЕ «записано»: станок синонимов не пишет с DG-1 — импорт жёстко
+            // отдаёт пустой список, синонимы пишет ядро. С промпта v14.3 их и не спрашивают, так что
+            // на текущей версии здесь ноль; ненулевым число станет только на реплее версии, которая
+            // ещё спрашивала, и тогда оно про ПРОМПТ, а не про содержимое базы.
+            ['синонимов прошло валидацию (не записываются)', (string) $m->synonymsValidated],
             ['синонимов забраковано (форма)', $m->synonymsRejected > 0 ? "<fg=yellow>{$m->synonymsRejected}</>" : '0'],
         ];
         // Demoted by default (store5: 31 of 41 flags were back-translation trivia, none useful) — the

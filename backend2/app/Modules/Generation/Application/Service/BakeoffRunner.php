@@ -48,7 +48,9 @@ final readonly class BakeoffRunner
         ]);
 
         try {
-            $answer = $provider->complete($prompt, $task->userMessage, $this->contract->schema($shape));
+            // Same version the prompt was rendered from, one line up: a bake-off that measured a
+            // version against a schema belonging to another one would be measuring the mismatch.
+            $answer = $provider->complete($prompt, $task->userMessage, $this->contract->schema($shape, $promptVersion));
         } catch (Throwable $e) {
             // A dead call is data, not the end of the run — see BakeoffCallResult.
             return BakeoffCallResult::failed(

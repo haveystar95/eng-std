@@ -138,7 +138,10 @@ return [
         // the price of re-generating the core inside a full enrichment.
         'mechanics_provider' => env('GENERATION_MECHANICS_PROVIDER', 'openai'),
         'mechanics_model' => env('GENERATION_MECHANICS_MODEL', 'gpt-4o-mini'),
-        'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v14.2'),
+        // v14.3 = v14.2 without the synonym section. The станок has not written a synonym since DG-1
+        // (the import is hardcoded to an empty list); until this version it was still buying the
+        // question on every term.
+        'mechanics_prompt_version' => env('GENERATION_MECHANICS_PROMPT_VERSION', 'v14.3'),
 
         /*
          * Do the two synonym writers actually WRITE? Off by default (DECISIONS п. 32: a new product

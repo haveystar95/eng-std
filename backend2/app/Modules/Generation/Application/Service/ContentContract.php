@@ -72,6 +72,25 @@ final readonly class ContentContract
     private const CORE_EXTRAS_FROM = 'v15';
 
     /**
+     * The MACHINERY versions that ask for near-synonyms: from `v14`, and no longer from `v14.3`.
+     *
+     * A window and not a floor, because this product had both a beginning and an end here. v14 added
+     * it; v14.3 took it out, after the станок stopped being allowed to write one at all — the import
+     * in {@see \App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler} passes
+     * `synonyms: []` whatever comes back — and the section went on being paid for on every call.
+     *
+     * The versions inside the window keep asking, and that is the point of naming a window rather
+     * than deleting the branch: `mech-v14`…`mech-v14.2` are recorded on live rows, and a replay of
+     * one of them has to render the schema its prompt was written against. The versions BELOW it
+     * (v12…v13.1) never mentioned synonyms in their text either, so they now stop being forced to
+     * emit the field — the same defect this gate exists to prevent, fixed in the same line.
+     */
+    private const MACHINERY_SYNONYMS_FROM = 'v14';
+
+    /** Exclusive: the first machinery version that does NOT ask. */
+    private const MACHINERY_SYNONYMS_UNTIL = 'v14.3';
+
+    /**
      * The error taxonomy, mirroring the CHECK on `example_distractors.error_type`. A closed set:
      * a report groups by it, and a value the table refuses would be a row the станок paid for and
      * could not store.
@@ -108,7 +127,7 @@ final readonly class ContentContract
 
             $itemProps['forms'] = ['type' => 'array', 'items' => ['type' => 'string']];
 
-            if ($shape->hasSynonyms()) {
+            if ($shape->hasSynonyms() && $this->machineryAsksSynonyms($version)) {
                 $itemProps['synonyms'] = [
                     'type' => 'array',
                     'maxItems' => self::MAX_SYNONYMS,
@@ -181,7 +200,7 @@ final readonly class ContentContract
         // exactly as the lookup declares its own extras only for v5: strict Structured Outputs makes
         // every declared property required, so a frozen older version that grows a field is a
         // version whose prompt never explains what the model is now forced to emit.
-        if ($version !== null && $this->atLeastCoreVersion($version, self::CORE_EXTRAS_FROM)) {
+        if ($version !== null && $this->atLeastVersion($version, self::CORE_EXTRAS_FROM)) {
             $itemProps['synonyms'] = [
                 'type' => 'array',
                 'maxItems' => self::MAX_SYNONYMS,
@@ -227,12 +246,28 @@ final readonly class ContentContract
     }
 
     /**
+     * Does this MACHINERY version ask for near-synonyms — is it inside the v14…v14.3 window?
+     *
+     * A caller that names no version gets the field, and that default is deliberate: the only callers
+     * without one are ad-hoc (the bake-off's own tasks used to be, a unit test asking «what does this
+     * shape look like»), and silently narrowing what they see would change an answer nobody asked
+     * about. Production names its version.
+     */
+    private function machineryAsksSynonyms(?string $version): bool
+    {
+        return $version === null
+            || ($this->atLeastVersion($version, self::MACHINERY_SYNONYMS_FROM)
+                && ! $this->atLeastVersion($version, self::MACHINERY_SYNONYMS_UNTIL));
+    }
+
+    /**
      * Is this prompt version at or past `$floor` — «v11.1» read as 11.1, not as text?
      *
      * `version_compare` is PHP's own dotted-number order, which is what these labels are once the `v`
-     * is off: it puts 9 below 11.1 below 15 below 15.1, where a string compare puts 15 below 9.
+     * is off: it puts 9 below 11.1 below 14.3 below 15 below 15.1, where a string compare puts 15
+     * below 9 and 14.10 below 14.3.
      */
-    private function atLeastCoreVersion(string $version, string $floor): bool
+    private function atLeastVersion(string $version, string $floor): bool
     {
         return version_compare(ltrim($version, 'vV'), ltrim($floor, 'vV'), '>=');
     }
