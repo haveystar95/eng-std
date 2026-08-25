@@ -30,6 +30,20 @@ final readonly class WordLookupResult
          */
         public ?string $imageApiPrompt,
         /**
+         * How the word READS, written in the letters of the learner's own language — «джоб
+         * интервью». Shown beside the card the moment the learner searches, so they can say the word
+         * before they can spell it.
+         *
+         * SHOWN, never stored. `term_transliterations` keeps one canonical reading per (term, lang)
+         * and its two writers are the core and the single-card reading job, both on the strong model
+         * — that is where the 49/49 measurement was taken. This one is bought from the cheap search
+         * model as part of an answer that was being paid for anyway; letting it write the canonical
+         * row would silently move the product onto a different producer.
+         *
+         * Null on every version below v6 — an absence, not a claim that the word reads as spelled.
+         */
+        public ?string $transliteration,
+        /**
          * Near-SYNONYMS of the word, in the language being LEARNED — `purpose` → `goal`, `aim`.
          * Zero to three, and zero is the ordinary answer for anything longer than a short lemma.
          *
@@ -86,6 +100,12 @@ final readonly class WordLookupResult
             'cefr' => $this->cefr,
             'transcription' => $this->transcription,
             'image_api_prompt' => $this->imageApiPrompt,
+            // NOT cached, deliberately, and this is the line to change if the reading is ever
+            // switched on: the cache is keyed by (query, pair) and never by prompt version, so the
+            // only thing that brings an old row back to the model is a KEY it does not carry being
+            // added to the staleness check in LookupWordHandler. Writing the key now — always null,
+            // because no shipped version asks — would spend that mechanism on nothing and leave the
+            // real switch-on with no way to re-buy the 45 rows already in the table.
             'synonyms' => $this->synonyms,
             'other_translations' => $this->otherTranslations,
         ];

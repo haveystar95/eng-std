@@ -44,7 +44,7 @@ final class FakeWordLookup implements WordLookupPort
             return new WordLookupResult(
                 text: '', type: 'word', translation: '', description: '',
                 example: null, exampleTranslation: null, cefr: null, transcription: null,
-                imageApiPrompt: null, synonyms: [], otherTranslations: [],
+                imageApiPrompt: null, transliteration: null, synonyms: [], otherTranslations: [],
                 model: 'fake', promptVersion: 'lookup.fake',
                 tokensIn: 180, tokensOut: 10, costUsd: '0.000034',
                 notRecognized: true,
@@ -69,6 +69,10 @@ final class FakeWordLookup implements WordLookupPort
             cefr: 'B1',
             transcription: null,
             imageApiPrompt: 'office desk paperwork',
+            // Written in the NATIVE alphabet the fixtures use, so it survives the barrier's alphabet
+            // gate: a fake whose reading were dropped there would make every test about this field
+            // assert the drop instead of the field.
+            transliteration: 'фейк ридинг',
             // Two synonyms, one alternative reading: enough for a test to see the lists travel end
             // to end, few enough that no fixture is about their contents.
             synonyms: ['sample', 'instance'],

@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Application\Service;
 use App\Modules\Generation\Application\Dto\WordLookupResult;
 use App\Modules\Generation\Domain\Exception\LookupRefused;
 use App\Modules\Generation\Domain\Service\DescriptionSelfReference;
+use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\Service\TermOccurrence;
 use App\Modules\Shared\Domain\Service\LanguagePurity;
 
@@ -26,7 +27,16 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  */
 final readonly class LookupBarrier
 {
-    public function __construct(private LanguagePurity $purity = new LanguagePurity()) {}
+    public function __construct(
+        private LanguagePurity $purity = new LanguagePurity(),
+        /**
+         * The alphabet gate the READING has to pass — the validator's, not a second one written
+         * here. It is the same field the core writes and the same rule that judged it there
+         * ({@see \App\Modules\Generation\Application\Command\ProcessGenerationHandler::writeExtras()}),
+         * and one product judged by two gates is two products.
+         */
+        private EnrichmentValidator $extrasGate = new EnrichmentValidator(),
+    ) {}
 
     /**
      * @throws LookupRefused when the answer cannot be stored
@@ -82,6 +92,12 @@ final readonly class LookupBarrier
             // image query is neither the learner's language nor the target one — it is always
             // English by contract, so screening it here would reject every correct answer.
             imageApiPrompt: $result->imageApiPrompt,
+            // DEGRADED like everything else in this block, and by the ALPHABET rule rather than by
+            // `isClean`: a reading is deliberately the learner's letters spelling a foreign word, so
+            // the ordinary language check would be asking the wrong question. One Latin letter left
+            // in it defeats the field for the only reader it has, and a dropped reading costs a hint
+            // the card never promised.
+            transliteration: $this->extrasGate->transliterationFor($nativeLang, $result->transliteration),
             // DEGRADED, never fatal — the same rule the example follows one field up. A synonym in
             // the wrong language, or one that is really the word itself, is dropped; the card is
             // still a card without it, and refusing the whole lookup over a third-tier field would

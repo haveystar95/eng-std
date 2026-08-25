@@ -28,6 +28,34 @@ final class OpenAiWordLookup implements WordLookupPort
     /** At most two OTHER readings beside the one the card asks. */
     private const MAX_OTHER_TRANSLATIONS = 2;
 
+    /**
+     * The first lookup version that asks for the two per-word extras.
+     *
+     * Compared NUMERICALLY, not matched exactly. The exact match this replaces (`=== 'v5'`) is the
+     * shape that quietly drops a product the moment a version is added — v6 would have stopped
+     * asking for synonyms without anybody deciding to.
+     */
+    private const EXTRAS_FROM = 'v5';
+
+    /**
+     * The first lookup version that asks for the reading hint — MEASURED AND NOT SHIPPED.
+     *
+     * v6 exists because the question «can the cheap model do the mechanical part of this product»
+     * deserved a number rather than an opinion. The number is in `docs/syn-1-findings.md` §10: 22%
+     * readable against a threshold of 85%, and the dominant failure is not an inexact reading but the
+     * model answering with the TRANSLATION («honest» → «честный», 34 of 50 rows). The same section,
+     * byte for byte, scores 49/49 on the strong model.
+     *
+     * So `services.generation` never names v6 and the port's default stays v5: nothing asks for the
+     * field, nothing shows it, nothing stores it. What stays is the stand — the prompt, the quote,
+     * the schema gate and the alphabet gate — so that re-measuring on another model is one
+     * constructor argument rather than this наряд again.
+     */
+    private const READING_FROM = 'v6';
+
+    /** The heading the core's extras file gives the reading rules. The anchor the quote is cut from. */
+    private const READING_SECTION_MARKER = '## `transliteration`';
+
     public function __construct(
         private readonly OutboundCallContext $context,
         private readonly string $apiKey,
@@ -35,6 +63,11 @@ final class OpenAiWordLookup implements WordLookupPort
         private readonly string $promptVersion = 'v5',
         private readonly string $baseUrl = 'https://api.openai.com/v1',
         private readonly ModelCost $cost = new ModelCost(),
+        /**
+         * The CORE prompt version whose reading rules this prompt quotes — see {@see readingSection()}.
+         * Only read from {@see READING_FROM} onwards; the frozen versions below it never ask.
+         */
+        private readonly string $coreVersion = 'v15.1',
     ) {}
 
     public function lookUp(WordLookupBrief $brief): WordLookupResult
@@ -86,7 +119,7 @@ final class OpenAiWordLookup implements WordLookupPort
             return new WordLookupResult(
                 text: '', type: 'word', translation: '', description: '',
                 example: null, exampleTranslation: null, cefr: null, transcription: null,
-                imageApiPrompt: null,
+                imageApiPrompt: null, transliteration: null,
                 synonyms: [], otherTranslations: [],
                 model: $this->model,
                 promptVersion: 'lookup.' . $this->promptVersion,
@@ -117,6 +150,9 @@ final class OpenAiWordLookup implements WordLookupPort
             // query when the word cannot honestly be illustrated, and `optional()` turns that into
             // null — which the pending-image reader reads as «no photo», never as «guess one».
             imageApiPrompt: $this->optional($decoded, 'image_api_prompt'),
+            // Same reading as `image_api_prompt`: "" is the answer for a pair that shares an
+            // alphabet, and `optional()` turns it into null — «nothing to show», never «guess one».
+            transliteration: $this->optional($decoded, 'transliteration'),
             synonyms: $this->strings($decoded, 'synonyms'),
             otherTranslations: $this->otherReadings($decoded, $brief),
             model: $this->model,
@@ -211,14 +247,76 @@ final class OpenAiWordLookup implements WordLookupPort
         return $out;
     }
 
-    private function systemPrompt(WordLookupBrief $brief): string
+    public function systemPrompt(WordLookupBrief $brief): string
     {
         $template = (string) file_get_contents(__DIR__ . "/../Prompt/lookup_word.{$this->promptVersion}.md");
+
+        if ($this->atLeast(self::READING_FROM)) {
+            $template = strtr($template, ['{{transliteration_section}}' => $this->readingSection()]);
+        }
 
         return strtr($template, [
             '{{term_lang}}' => LanguageName::of($brief->targetLang->value),
             '{{translation_lang}}' => LanguageName::of($brief->nativeLang->value),
+            // The quoted section speaks the CORE's names for the two sides: `source_lang` is the
+            // support side (the alphabet the hint is written in) and `target_lang` the language being
+            // taught. Mapped onto this prompt's own two names here, exactly as
+            // {@see OpenAiTermTransliterator} maps them — the opposite mapping would ask for the
+            // reading in the alphabet the learner is trying to learn, which is the one they cannot
+            // read yet.
+            '{{source_lang}}' => LanguageName::of($brief->nativeLang->value),
+            '{{target_lang}}' => LanguageName::of($brief->targetLang->value),
         ]);
+    }
+
+    /**
+     * The `transliteration` section of the CORE's extras file, inlined byte for byte.
+     *
+     * Not restated in this prompt's own words, and that is the whole point: 49 live hints were
+     * written against that specification and a second wording of it would be a second product the
+     * day one of the two was improved. The same quote is what the single-card reading job sends
+     * ({@see OpenAiTermTransliterator::section()}); this path is the third reader of one text, not a
+     * third author of one field.
+     *
+     * The mechanical cut is duplicated there rather than shared, and deliberately: what must not
+     * drift is the SECTION, and it does not — both cut the same bytes out of the same file. A helper
+     * class holding four lines of `mb_strpos` would be a dependency between two adapters that have
+     * no other reason to know about each other.
+     *
+     * Cut at the next heading rather than at the end of the file: today it is the last section, and
+     * a quote that silently swallowed whatever followed it would depend on file order.
+     */
+    public function readingSection(): string
+    {
+        $path = __DIR__ . "/../Prompt/{$this->coreVersion}/21-extras.md";
+        $extras = is_file($path) ? (string) file_get_contents($path) : throw new RuntimeException(
+            "Prompt file not found: {$path}"
+        );
+
+        $start = mb_strpos($extras, self::READING_SECTION_MARKER);
+        if ($start === false) {
+            throw new RuntimeException(
+                "Core prompt {$this->coreVersion} has no «" . self::READING_SECTION_MARKER . "» section in "
+                . "{$path}; the lookup quotes it and cannot invent one."
+            );
+        }
+
+        $rest = mb_substr($extras, $start);
+        $next = mb_strpos($rest, "\n## ");
+
+        return trim($next === false ? $rest : mb_substr($rest, 0, $next));
+    }
+
+    /**
+     * Is this prompt version at or past `$floor` — «v15.1» read as 15.1, not as text?
+     *
+     * `version_compare` is PHP's own dotted-number order. As TEXT, `'v10' >= 'v5'` is false and
+     * `'v14.10' < 'v14.3'` is true; both are the kind of wrong that shows up as a field silently
+     * not being asked for.
+     */
+    private function atLeast(string $floor): bool
+    {
+        return version_compare(ltrim($this->promptVersion, 'vV'), ltrim($floor, 'vV'), '>=');
     }
 
     /**
@@ -233,15 +331,22 @@ final class OpenAiWordLookup implements WordLookupPort
             ? []
             : ['recognized' => ['type' => 'boolean']];
 
-        // Two products v5 added. Declared only for the version that asks for them, for the same
+        // Two products v5 added. Declared only from the version that asks for them, for the same
         // reason `recognized` is: strict Structured Outputs requires every declared property to be
         // required, so a frozen older version must not grow a field it never mentions.
-        $extras = $this->promptVersion === 'v5'
+        $extras = $this->atLeast(self::EXTRAS_FROM)
             ? [
                 'synonyms' => ['type' => 'array', 'maxItems' => self::MAX_SYNONYMS, 'items' => ['type' => 'string']],
                 'other_translations' => ['type' => 'array', 'maxItems' => self::MAX_OTHER_TRANSLATIONS, 'items' => ['type' => 'string']],
             ]
             : [];
+
+        // The reading hint, from v6. A string and not a nullable one, like `image_api_prompt`: the
+        // quoted rules ask for an EMPTY string when the two languages share an alphabet, so "" is a
+        // decision and a missing key would be a failure.
+        if ($this->atLeast(self::READING_FROM)) {
+            $extras['transliteration'] = ['type' => 'string'];
+        }
 
         return [
             'type' => 'object',

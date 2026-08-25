@@ -218,3 +218,90 @@ describe('v5 — synonyms, other readings, and the confirmed translation (нар
         ));
     });
 });
+
+describe('v6 — the reading hint, quoted from the core', function () {
+    /** The adapter as production builds it: the lookup version, plus the CORE version it quotes. */
+    function lookupV6(string $coreVersion = 'v15.1'): OpenAiWordLookup
+    {
+        return new OpenAiWordLookup(
+            app(OutboundCallContext::class), 'key', 'gpt-4o-mini', 'v6', coreVersion: $coreVersion,
+        );
+    }
+
+    it('inlines the CORE\'s reading section byte for byte, rather than restating it', function () {
+        $adapter = lookupV6();
+        $rendered = $adapter->systemPrompt(new WordLookupBrief(
+            'случай', new LanguageCode('en'), new LanguageCode('ru'),
+        ));
+
+        // The whole point of the quote: 49 live hints were written against this specification, and a
+        // second wording of it would be a second product the day one of the two was improved. The
+        // section is compared AFTER the same substitution the adapter makes, so this asserts the
+        // rules travelled — not that a placeholder survived.
+        $section = strtr($adapter->readingSection(), [
+            '{{source_lang}}' => 'Russian',
+            '{{target_lang}}' => 'English',
+        ]);
+
+        expect($rendered)->toContain($section)
+            // …and the field is announced where the model reads the field list, not only in a
+            // section further down. The v14 lesson: a section read last is answered with nothing.
+            ->and($rendered)->toContain('`transliteration` — see the rule immediately below')
+            ->and($rendered)->not->toContain('{{');
+    });
+
+    it('asks for the reading in the alphabet the learner can already read', function () {
+        // The mapping is the one thing a quote can get backwards, and backwards means asking for the
+        // hint in the letters the learner is trying to learn.
+        $rendered = lookupV6()->systemPrompt(new WordLookupBrief(
+            'случай', new LanguageCode('en'), new LanguageCode('ru'),
+        ));
+
+        expect($rendered)->toContain('using ONLY the letters of the Russian alphabet')
+            ->and($rendered)->not->toContain('letters of the English alphabet');
+    });
+
+    it('declares the field for v6 and leaves every frozen version alone', function () {
+        lookUpWith('v6');
+        Http::assertSent(function (Request $request): bool {
+            $props = $request->data()['response_format']['json_schema']['schema']['properties'];
+
+            return array_key_exists('transliteration', $props)
+                // Strict Structured Outputs: declared means required, so the two have to agree.
+                && in_array('transliteration', $request->data()['response_format']['json_schema']['schema']['required'], true);
+        });
+
+        lookUpWith('v5');
+        Http::assertSent(fn (Request $request): bool => ! array_key_exists(
+            'transliteration',
+            $request->data()['response_format']['json_schema']['schema']['properties'],
+        ));
+    });
+
+    it('reads the hint back off the answer', function () {
+        Http::fake(['*' => Http::response([
+            'choices' => [['message' => ['content' => json_encode([
+                'recognized' => true, 'text' => 'job interview', 'type' => 'phrase',
+                'translation' => 'собеседование', 'description' => 'A meeting where you answer questions to get work.',
+                'example' => 'I have a job interview tomorrow.', 'example_translation' => 'У меня завтра собеседование.',
+                'cefr' => 'B1', 'transcription' => 'dʒɒb ˈɪntəvjuː', 'image_api_prompt' => 'office job interview handshake',
+                'transliteration' => 'джоб интервью', 'synonyms' => [], 'other_translations' => [],
+            ], JSON_UNESCAPED_UNICODE)]]],
+            'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+        ], 200)]);
+
+        $result = lookupV6()->lookUp(new WordLookupBrief(
+            'собеседование', new LanguageCode('en'), new LanguageCode('ru'),
+        ));
+
+        expect($result->transliteration)->toBe('джоб интервью');
+    });
+
+    it('says which version it cannot quote, instead of sending a prompt with a hole in it', function () {
+        // A core version from before the extras existed. Pointing the lookup at one is a config
+        // error, and the failure has to name the file: a prompt silently rendered with a hole where
+        // the rules should be is how a field comes back as prose.
+        expect(fn () => lookupV6('v11.1')->readingSection())
+            ->toThrow(RuntimeException::class, 'Prompt file not found');
+    });
+});

@@ -15,6 +15,7 @@ function lookupAnswer(
     ?string $exampleTranslation = 'Они прислали счёт по почте.',
     array $synonyms = [],
     array $otherTranslations = [],
+    ?string $transliteration = null,
 ): WordLookupResult {
     return new WordLookupResult(
         text: $text,
@@ -26,6 +27,7 @@ function lookupAnswer(
         cefr: 'B1',
         transcription: null,
         imageApiPrompt: 'office desk paperwork',
+        transliteration: $transliteration,
         synonyms: $synonyms,
         otherTranslations: $otherTranslations,
         model: 'test',
@@ -136,4 +138,19 @@ it('drops an "other reading" that repeats the answer the card asks', function ()
     $screened = (new LookupBarrier())->screen(lookupAnswer(otherTranslations: ['Счёт', 'квитанция']), 'en', 'ru');
 
     expect($screened->otherTranslations)->toBe(['квитанция']);
+});
+
+it('keeps a reading written in the learner\'s letters', function () {
+    $screened = (new LookupBarrier())->screen(lookupAnswer(transliteration: 'инвойс'), 'en', 'ru');
+
+    expect($screened->transliteration)->toBe('инвойс');
+});
+
+it('drops a reading that leaks the alphabet the learner cannot read yet', function () {
+    // The one failure this field has: a hint spelled in the letters of the language being learned
+    // prints the word twice and helps nobody. Dropped, never fatal — the card is still a card.
+    $screened = (new LookupBarrier())->screen(lookupAnswer(transliteration: 'invoice'), 'en', 'ru');
+
+    expect($screened->transliteration)->toBeNull()
+        ->and($screened->text)->toBe('invoice');
 });
