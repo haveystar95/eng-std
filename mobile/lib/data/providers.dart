@@ -474,6 +474,11 @@ Word _toWord(CollectionTermRow r) {
     example: r.term.example,
     exampleTranslation: r.term.exampleTranslation,
     description: r.term.description,
+    // Ядро v15 — all three absent on every term written before the станок ran, which the card
+    // draws as «no such block» rather than as an empty one.
+    transliteration: r.term.transliteration,
+    translations: decodeStringList(r.term.translations),
+    synonyms: decodeStringList(r.term.synonyms),
     type: r.term.type,
     status: status,
     imageUrl: r.term.imageUrl, // Pexels photo (docks in via sync)

@@ -297,6 +297,13 @@ class SyncService {
           // string "null".
           acceptedVariants: Value(_jsonOrNull(t['accepted_variants'])),
           exampleDistractors: Value(_jsonOrNull(t['example_distractors'])),
+          // Ядро v15, all three ADDITIVE: a server that never heard of them sends nothing, and an
+          // absent key is the same legal state as an empty list — «this word has none». Nothing
+          // here may throw on a missing field, because a term feed that predates the станок is the
+          // ordinary case, not a fault.
+          synonyms: Value(_jsonOrNull(t['synonyms'])),
+          transliteration: Value(_stringOrNull(t['transliteration'])),
+          translations: Value(_jsonOrNull(t['translations'])),
         ),
       );
     }
@@ -423,4 +430,9 @@ class SyncService {
   /// A list from the wire, re-encoded for storage. An empty list stores as null so "the server said
   /// none" and "we haven't synced this yet" collapse into one cheap check at read time.
   static String? _jsonOrNull(Object? v) => v is List && v.isNotEmpty ? jsonEncode(v) : null;
+
+  /// A string from the wire, or null — including when the wire sent something that is not a string
+  /// at all. Defensive on purpose: an additive field is exactly the field a server might one day
+  /// send in a shape this build has never seen, and a card is not worth a crash.
+  static String? _stringOrNull(Object? v) => v is String && v.isNotEmpty ? v : null;
 }

@@ -46,7 +46,13 @@ void main() {
   test('every version the app has ever shipped can still open a partly-migrated file', () async {
     // Not just step 10: any of the addColumn steps can be the one that already ran, depending on
     // where the original failure landed. All of them have to be safe to re-run.
-    for (var from = 1; from <= 15; from++) {
+    // The bound moves with `schemaVersion` on purpose, so a new migration step is covered the day
+    // it is written rather than the day someone remembers to bump a literal here.
+    final probe = AppDatabase.forTesting(NativeDatabase.memory());
+    final current = probe.schemaVersion;
+    await probe.close();
+
+    for (var from = 1; from < current; from++) {
       final db = AppDatabase.forTesting(await partlyMigrated(from));
 
       await db.setMeta('probe', 'v$from');

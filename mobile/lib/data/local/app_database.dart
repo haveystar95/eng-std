@@ -95,6 +95,24 @@ class Terms extends Table {
   /// Wrong versions of [example], as a JSON array of objects. Mirrored ahead of the trainer that
   /// reads them, so it works offline the day it is switched on.
   TextColumn get exampleDistractors => text().nullable()();
+
+  /// Near-synonyms of the term, in the language being LEARNED, as a JSON array of strings.
+  ///
+  /// NOT [acceptedVariants] and deliberately not merged into it: a variant is another SPELLING of
+  /// this word, a synonym is another WORD. The card shows them; the local grader must not, or the
+  /// device would green-light an answer the server rejects. Empty/absent is the ordinary state —
+  /// the server writes none today.
+  TextColumn get synonyms => text().nullable()();
+
+  /// How the term READS, spelled in the letters of the pair's support language («knife» → «найф»).
+  /// Beside [transcription], never instead of it: that one is IPA, one per term; this one is per
+  /// PAIR, in an alphabet the learner already reads. Null when the pair has no hint.
+  TextColumn get transliteration => text().nullable()();
+
+  /// Every reading the term has in the support language, PINNED ONE FIRST, as a JSON array of
+  /// strings — so `translations[0]` is [translation] unchanged and the rest are alternatives.
+  /// Null when the server sent none, which is the same thing as «only the pinned one».
+  TextColumn get translations => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -423,7 +441,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   /// `addColumn`, but a no-op when the column is already there (QA-23).
   ///
@@ -569,6 +587,18 @@ class AppDatabase extends _$AppDatabase {
         // it does not have.
         await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
       }
+      if (from < 18) {
+        // Ядро v15: synonyms, the pair's transliteration, and the full translation list. All three
+        // are ADDITIVE — null is a legal, ordinary state, and every reader treats it as «none».
+        await _addColumnIfMissing(m, terms, terms.synonyms);
+        await _addColumnIfMissing(m, terms, terms.transliteration);
+        await _addColumnIfMissing(m, terms, terms.translations);
+        // …and a full snapshot on the next sync, for the same reason as v10, v11, v14, v15, v16 and
+        // v17: a delta carries only rows whose `updated_at` moved, so every term already mirrored
+        // here would keep the three columns null forever — and there is no offline stand-in for any
+        // of them, the server is the only place they exist.
+        await m.database.customStatement("DELETE FROM sync_meta WHERE key = 'sync_cursor'");
+      }
     },
   );
 
@@ -645,9 +675,9 @@ class AppDatabase extends _$AppDatabase {
     if (termIds.isEmpty) return const {};
 
     final query =
-        select(collectionItems).join([
-            innerJoin(collections, collections.id.equalsExp(collectionItems.collectionId)),
-          ])
+        select(
+            collectionItems,
+          ).join([innerJoin(collections, collections.id.equalsExp(collectionItems.collectionId))])
           ..where(collectionItems.termId.isIn(termIds))
           ..orderBy([OrderingTerm(expression: collections.id)]);
 

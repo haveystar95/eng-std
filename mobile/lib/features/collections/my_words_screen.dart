@@ -223,6 +223,11 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
     translation: r.term.translation ?? '',
     transcription: r.term.transcription,
     example: r.term.example,
+    // Ядро v15 — see the same three on providers.dart's `_toWord`. Null/empty is the ordinary
+    // state and draws nothing.
+    transliteration: r.term.transliteration,
+    translations: decodeStringList(r.term.translations),
+    synonyms: decodeStringList(r.term.synonyms),
     type: r.term.type,
     imageUrl: r.term.imageUrl,
     imageAuthor: r.term.imageAuthor,

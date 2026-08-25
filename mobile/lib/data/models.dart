@@ -2,6 +2,8 @@
 // different question at a different rung, and a second copy of «which rung is the dictation rung»
 // is exactly the kind of duplication the ladder's parity test exists to prevent. (The import is
 // mutual — `learning_ladder.dart` needs [ExerciseMode] — which Dart resolves without trouble.)
+import 'dart:convert';
+
 import 'practice/learning_ladder.dart';
 
 /// Grade sent to the SM-2 scheduler on backend2 (`again|hard|good|easy`).
@@ -111,6 +113,20 @@ class Word {
   final String? exampleTranslation;
   final String? description;
 
+  /// How the term READS in the letters of the support language («knife» → «найф»). Beside
+  /// [transcription] (IPA), never instead of it. Null is ordinary — most pairs have no hint, and
+  /// a pair whose two alphabets are the same deliberately never gets one.
+  final String? transliteration;
+
+  /// Every reading in the support language, the PINNED one first — `translations.first` is
+  /// [translation]. Empty when the server sent nothing, which reads as «only the pinned one»;
+  /// [readings] is what the card should draw.
+  final List<String> translations;
+
+  /// Near-synonyms in the language being LEARNED. Card material only: the local grader keeps
+  /// using `accepted_variants`, so the device is never looser than the server.
+  final List<String> synonyms;
+
   final String type; // word | phrase | idiom | phrasal_verb
   final String? audioUrl; // optional override; null → system TTS
   final String? ttsHint; // reading fix for system TTS, e.g. "ATM" → "A T M"
@@ -145,6 +161,9 @@ class Word {
     this.example,
     this.exampleTranslation,
     this.description,
+    this.transliteration,
+    this.translations = const [],
+    this.synonyms = const [],
     required this.type,
     this.audioUrl,
     this.ttsHint,
@@ -165,6 +184,11 @@ class Word {
   /// behaviour rather than being mis-treated as single words.
   bool get isPhrase => type != 'word';
 
+  /// What the card prints where the translation goes: the pinned reading first, the alternatives
+  /// after it. Falls back to the single [translation] whenever the list is missing — which is the
+  /// state every term was in before the станок started writing the list.
+  List<String> get readings => joinedReadings(translation, translations);
+
   factory Word.fromJson(Map<String, dynamic> j) => Word(
     termId: (j['term_id'] ?? j['id']) as String,
     term: ((j['text'] ?? j['term']) as String?) ?? '',
@@ -173,10 +197,52 @@ class Word {
     example: j['example'] as String?,
     exampleTranslation: j['example_translation'] as String?,
     description: j['description'] as String?,
+    // Additive and defensive: the study-card and collection-item shapes carry none of the three,
+    // and an absent key must read as «none», never as a parse failure.
+    transliteration: j['transliteration'] is String ? j['transliteration'] as String : null,
+    translations: stringList(j['translations']),
+    synonyms: stringList(j['synonyms']),
     type: (j['type'] as String?) ?? 'word',
     audioUrl: j['audio_url'] as String?,
     ttsHint: j['tts_hint'] as String?,
   );
+}
+
+/// A list of strings out of anything the wire or the local mirror might hold — a real list, a
+/// list with the odd non-string in it, a null, or junk. Never throws: all three v15 fields are
+/// ADDITIVE, so «this build has never seen that shape» has to degrade to «none».
+List<String> stringList(Object? v) {
+  if (v is! List) return const [];
+  return [
+    for (final e in v)
+      if (e is String && e.trim().isNotEmpty) e.trim(),
+  ];
+}
+
+/// The same, from the JSON TEXT the local `terms` mirror stores.
+List<String> decodeStringList(String? raw) {
+  if (raw == null || raw.isEmpty) return const [];
+  try {
+    return stringList(jsonDecode(raw));
+  } on FormatException {
+    return const [];
+  }
+}
+
+/// [pinned] first, then every other reading, de-duplicated and with the blanks dropped. An empty
+/// result means there is nothing to print, which is a legal state on a term with no translation.
+List<String> joinedReadings(String? pinned, List<String> all) {
+  final out = <String>[];
+  void add(String? s) {
+    final v = (s ?? '').trim();
+    if (v.isNotEmpty && !out.contains(v)) out.add(v);
+  }
+
+  add(pinned);
+  for (final s in all) {
+    add(s);
+  }
+  return out;
 }
 
 class ReviewCard {

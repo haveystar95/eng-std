@@ -1,7 +1,32 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
+import 'package:eng_std/data/api_client.dart';
 import 'package:eng_std/data/local/app_database.dart';
+import 'package:eng_std/data/local/sync_service.dart';
+import 'package:eng_std/data/models.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// One page of `/sync`, exactly as the wire shape allows it — used to pin the READER rather than
+/// the writer: what the service does with a field that is there, a field that is not, and a list
+/// that is empty.
+class _OnePageApi implements ApiClient {
+  _OnePageApi(this._terms);
+
+  final List<Map<String, dynamic>> _terms;
+
+  @override
+  Future<Map<String, dynamic>> syncDelta({String? since, String? cursor, int limit = 500}) async => {
+    'server_time': '2026-08-25T10:00:00Z',
+    'has_more': false,
+    'changes': {'terms': _terms},
+  };
+
+  @override
+  Future<Stats> stats() async => throw Exception('offline'); // the cache refresh is best-effort
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 /// The delta-application logic can't be exercised on-device from a unit test, but its correctness
 /// (upsert = last-write-wins, tombstone = row delete, inclusive-boundary re-send = no-op) is the
@@ -116,6 +141,76 @@ void main() {
       ],
     );
     expect(await db.triageEligible('c1'), isEmpty); // t1 marked → nothing eligible
+  });
+
+  /// Ч.1 — ядро v15 lands on the term through `/sync` and nowhere else. Three ADDITIVE fields, and
+  /// for each of them the same three states have to be legal: the server sent it, the server did
+  /// not send the key at all (every build before the станок), and the server sent an empty list.
+  /// None of the three is an error, and none of them may throw.
+  group('ридер /sync · синонимы, транслитерация, доп-переводы', () {
+    Future<Term?> readBack(Map<String, dynamic> term) async {
+      await SyncService(_OnePageApi([term]), db).sync();
+
+      return db.termById(term['id'] as String);
+    }
+
+    Map<String, dynamic> base(Map<String, dynamic> extra) => {
+      'id': 't1',
+      'op': 'upsert',
+      'updated_at': '2026-08-25T09:00:00Z',
+      'text': 'knife',
+      'translation': 'нож',
+      ...extra,
+    };
+
+    test('all three present — stored as sent, the lists as JSON', () async {
+      final term = await readBack(
+        base({
+          'synonyms': ['blade', 'dagger'],
+          'transliteration': 'найф',
+          'translations': ['нож', 'тесак'],
+        }),
+      );
+
+      expect(term?.transliteration, 'найф');
+      expect(decodeStringList(term?.synonyms), ['blade', 'dagger']);
+      expect(decodeStringList(term?.translations), ['нож', 'тесак']);
+      // The pinned translation is untouched — the list carries it, it does not replace it.
+      expect(term?.translation, 'нож');
+    });
+
+    test('none of the three keys present — a legal term, not a failure', () async {
+      final term = await readBack(base(const {}));
+
+      expect(term, isNotNull);
+      expect(term?.termText, 'knife');
+      expect(term?.transliteration, isNull);
+      expect(term?.synonyms, isNull);
+      expect(term?.translations, isNull);
+      expect(decodeStringList(term?.synonyms), isEmpty);
+    });
+
+    test('empty lists and a null reading read exactly like «none»', () async {
+      final term = await readBack(
+        base({'synonyms': const [], 'translations': const [], 'transliteration': null}),
+      );
+
+      expect(term?.synonyms, isNull);
+      expect(term?.translations, isNull);
+      expect(term?.transliteration, isNull);
+    });
+
+    test('a field in a shape this build has never seen degrades to «none»', () async {
+      // Defensive on purpose: an additive field is exactly the field a later server might send
+      // differently, and a word card is not worth a crash.
+      final term = await readBack(
+        base({'synonyms': 'blade', 'transliteration': 42, 'translations': const [null, 'тесак']}),
+      );
+
+      expect(term?.synonyms, isNull);
+      expect(term?.transliteration, isNull);
+      expect(decodeStringList(term?.translations), ['тесак']);
+    });
   });
 
   test('clearAll wipes every table and the cursor (sign-out / reinstall symmetry)', () async {

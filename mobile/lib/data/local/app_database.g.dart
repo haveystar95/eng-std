@@ -1402,6 +1402,39 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _synonymsMeta = const VerificationMeta(
+    'synonyms',
+  );
+  @override
+  late final GeneratedColumn<String> synonyms = GeneratedColumn<String>(
+    'synonyms',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _transliterationMeta = const VerificationMeta(
+    'transliteration',
+  );
+  @override
+  late final GeneratedColumn<String> transliteration = GeneratedColumn<String>(
+    'transliteration',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _translationsMeta = const VerificationMeta(
+    'translations',
+  );
+  @override
+  late final GeneratedColumn<String> translations = GeneratedColumn<String>(
+    'translations',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1428,6 +1461,9 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
     imageAuthorUrl,
     acceptedVariants,
     exampleDistractors,
+    synonyms,
+    transliteration,
+    translations,
     updatedAt,
   ];
   @override
@@ -1543,6 +1579,30 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         ),
       );
     }
+    if (data.containsKey('synonyms')) {
+      context.handle(
+        _synonymsMeta,
+        synonyms.isAcceptableOrUnknown(data['synonyms']!, _synonymsMeta),
+      );
+    }
+    if (data.containsKey('transliteration')) {
+      context.handle(
+        _transliterationMeta,
+        transliteration.isAcceptableOrUnknown(
+          data['transliteration']!,
+          _transliterationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('translations')) {
+      context.handle(
+        _translationsMeta,
+        translations.isAcceptableOrUnknown(
+          data['translations']!,
+          _translationsMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -1612,6 +1672,18 @@ class $TermsTable extends Terms with TableInfo<$TermsTable, Term> {
         DriftSqlType.string,
         data['${effectivePrefix}example_distractors'],
       ),
+      synonyms: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synonyms'],
+      ),
+      transliteration: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transliteration'],
+      ),
+      translations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}translations'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -1656,6 +1728,24 @@ class Term extends DataClass implements Insertable<Term> {
   /// Wrong versions of [example], as a JSON array of objects. Mirrored ahead of the trainer that
   /// reads them, so it works offline the day it is switched on.
   final String? exampleDistractors;
+
+  /// Near-synonyms of the term, in the language being LEARNED, as a JSON array of strings.
+  ///
+  /// NOT [acceptedVariants] and deliberately not merged into it: a variant is another SPELLING of
+  /// this word, a synonym is another WORD. The card shows them; the local grader must not, or the
+  /// device would green-light an answer the server rejects. Empty/absent is the ordinary state —
+  /// the server writes none today.
+  final String? synonyms;
+
+  /// How the term READS, spelled in the letters of the pair's support language («knife» → «найф»).
+  /// Beside [transcription], never instead of it: that one is IPA, one per term; this one is per
+  /// PAIR, in an alphabet the learner already reads. Null when the pair has no hint.
+  final String? transliteration;
+
+  /// Every reading the term has in the support language, PINNED ONE FIRST, as a JSON array of
+  /// strings — so `translations[0]` is [translation] unchanged and the rest are alternatives.
+  /// Null when the server sent none, which is the same thing as «only the pinned one».
+  final String? translations;
   final DateTime updatedAt;
   const Term({
     required this.id,
@@ -1671,6 +1761,9 @@ class Term extends DataClass implements Insertable<Term> {
     this.imageAuthorUrl,
     this.acceptedVariants,
     this.exampleDistractors,
+    this.synonyms,
+    this.transliteration,
+    this.translations,
     required this.updatedAt,
   });
   @override
@@ -1710,6 +1803,15 @@ class Term extends DataClass implements Insertable<Term> {
     }
     if (!nullToAbsent || exampleDistractors != null) {
       map['example_distractors'] = Variable<String>(exampleDistractors);
+    }
+    if (!nullToAbsent || synonyms != null) {
+      map['synonyms'] = Variable<String>(synonyms);
+    }
+    if (!nullToAbsent || transliteration != null) {
+      map['transliteration'] = Variable<String>(transliteration);
+    }
+    if (!nullToAbsent || translations != null) {
+      map['translations'] = Variable<String>(translations);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1752,6 +1854,15 @@ class Term extends DataClass implements Insertable<Term> {
       exampleDistractors: exampleDistractors == null && nullToAbsent
           ? const Value.absent()
           : Value(exampleDistractors),
+      synonyms: synonyms == null && nullToAbsent
+          ? const Value.absent()
+          : Value(synonyms),
+      transliteration: transliteration == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transliteration),
+      translations: translations == null && nullToAbsent
+          ? const Value.absent()
+          : Value(translations),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1779,6 +1890,9 @@ class Term extends DataClass implements Insertable<Term> {
       exampleDistractors: serializer.fromJson<String?>(
         json['exampleDistractors'],
       ),
+      synonyms: serializer.fromJson<String?>(json['synonyms']),
+      transliteration: serializer.fromJson<String?>(json['transliteration']),
+      translations: serializer.fromJson<String?>(json['translations']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1799,6 +1913,9 @@ class Term extends DataClass implements Insertable<Term> {
       'imageAuthorUrl': serializer.toJson<String?>(imageAuthorUrl),
       'acceptedVariants': serializer.toJson<String?>(acceptedVariants),
       'exampleDistractors': serializer.toJson<String?>(exampleDistractors),
+      'synonyms': serializer.toJson<String?>(synonyms),
+      'transliteration': serializer.toJson<String?>(transliteration),
+      'translations': serializer.toJson<String?>(translations),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -1817,6 +1934,9 @@ class Term extends DataClass implements Insertable<Term> {
     Value<String?> imageAuthorUrl = const Value.absent(),
     Value<String?> acceptedVariants = const Value.absent(),
     Value<String?> exampleDistractors = const Value.absent(),
+    Value<String?> synonyms = const Value.absent(),
+    Value<String?> transliteration = const Value.absent(),
+    Value<String?> translations = const Value.absent(),
     DateTime? updatedAt,
   }) => Term(
     id: id ?? this.id,
@@ -1842,6 +1962,11 @@ class Term extends DataClass implements Insertable<Term> {
     exampleDistractors: exampleDistractors.present
         ? exampleDistractors.value
         : this.exampleDistractors,
+    synonyms: synonyms.present ? synonyms.value : this.synonyms,
+    transliteration: transliteration.present
+        ? transliteration.value
+        : this.transliteration,
+    translations: translations.present ? translations.value : this.translations,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Term copyWithCompanion(TermsCompanion data) {
@@ -1875,6 +2000,13 @@ class Term extends DataClass implements Insertable<Term> {
       exampleDistractors: data.exampleDistractors.present
           ? data.exampleDistractors.value
           : this.exampleDistractors,
+      synonyms: data.synonyms.present ? data.synonyms.value : this.synonyms,
+      transliteration: data.transliteration.present
+          ? data.transliteration.value
+          : this.transliteration,
+      translations: data.translations.present
+          ? data.translations.value
+          : this.translations,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1895,6 +2027,9 @@ class Term extends DataClass implements Insertable<Term> {
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('acceptedVariants: $acceptedVariants, ')
           ..write('exampleDistractors: $exampleDistractors, ')
+          ..write('synonyms: $synonyms, ')
+          ..write('transliteration: $transliteration, ')
+          ..write('translations: $translations, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1915,6 +2050,9 @@ class Term extends DataClass implements Insertable<Term> {
     imageAuthorUrl,
     acceptedVariants,
     exampleDistractors,
+    synonyms,
+    transliteration,
+    translations,
     updatedAt,
   );
   @override
@@ -1934,6 +2072,9 @@ class Term extends DataClass implements Insertable<Term> {
           other.imageAuthorUrl == this.imageAuthorUrl &&
           other.acceptedVariants == this.acceptedVariants &&
           other.exampleDistractors == this.exampleDistractors &&
+          other.synonyms == this.synonyms &&
+          other.transliteration == this.transliteration &&
+          other.translations == this.translations &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -1951,6 +2092,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
   final Value<String?> imageAuthorUrl;
   final Value<String?> acceptedVariants;
   final Value<String?> exampleDistractors;
+  final Value<String?> synonyms;
+  final Value<String?> transliteration;
+  final Value<String?> translations;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TermsCompanion({
@@ -1967,6 +2111,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.imageAuthorUrl = const Value.absent(),
     this.acceptedVariants = const Value.absent(),
     this.exampleDistractors = const Value.absent(),
+    this.synonyms = const Value.absent(),
+    this.transliteration = const Value.absent(),
+    this.translations = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1984,6 +2131,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     this.imageAuthorUrl = const Value.absent(),
     this.acceptedVariants = const Value.absent(),
     this.exampleDistractors = const Value.absent(),
+    this.synonyms = const Value.absent(),
+    this.transliteration = const Value.absent(),
+    this.translations = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -2002,6 +2152,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Expression<String>? imageAuthorUrl,
     Expression<String>? acceptedVariants,
     Expression<String>? exampleDistractors,
+    Expression<String>? synonyms,
+    Expression<String>? transliteration,
+    Expression<String>? translations,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2019,6 +2172,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
       if (imageAuthorUrl != null) 'image_author_url': imageAuthorUrl,
       if (acceptedVariants != null) 'accepted_variants': acceptedVariants,
       if (exampleDistractors != null) 'example_distractors': exampleDistractors,
+      if (synonyms != null) 'synonyms': synonyms,
+      if (transliteration != null) 'transliteration': transliteration,
+      if (translations != null) 'translations': translations,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2038,6 +2194,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
     Value<String?>? imageAuthorUrl,
     Value<String?>? acceptedVariants,
     Value<String?>? exampleDistractors,
+    Value<String?>? synonyms,
+    Value<String?>? transliteration,
+    Value<String?>? translations,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2055,6 +2214,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
       imageAuthorUrl: imageAuthorUrl ?? this.imageAuthorUrl,
       acceptedVariants: acceptedVariants ?? this.acceptedVariants,
       exampleDistractors: exampleDistractors ?? this.exampleDistractors,
+      synonyms: synonyms ?? this.synonyms,
+      transliteration: transliteration ?? this.transliteration,
+      translations: translations ?? this.translations,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2102,6 +2264,15 @@ class TermsCompanion extends UpdateCompanion<Term> {
     if (exampleDistractors.present) {
       map['example_distractors'] = Variable<String>(exampleDistractors.value);
     }
+    if (synonyms.present) {
+      map['synonyms'] = Variable<String>(synonyms.value);
+    }
+    if (transliteration.present) {
+      map['transliteration'] = Variable<String>(transliteration.value);
+    }
+    if (translations.present) {
+      map['translations'] = Variable<String>(translations.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2127,6 +2298,9 @@ class TermsCompanion extends UpdateCompanion<Term> {
           ..write('imageAuthorUrl: $imageAuthorUrl, ')
           ..write('acceptedVariants: $acceptedVariants, ')
           ..write('exampleDistractors: $exampleDistractors, ')
+          ..write('synonyms: $synonyms, ')
+          ..write('transliteration: $transliteration, ')
+          ..write('translations: $translations, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6893,6 +7067,9 @@ typedef $$TermsTableCreateCompanionBuilder =
       Value<String?> imageAuthorUrl,
       Value<String?> acceptedVariants,
       Value<String?> exampleDistractors,
+      Value<String?> synonyms,
+      Value<String?> transliteration,
+      Value<String?> translations,
       required DateTime updatedAt,
       Value<int> rowid,
     });
@@ -6911,6 +7088,9 @@ typedef $$TermsTableUpdateCompanionBuilder =
       Value<String?> imageAuthorUrl,
       Value<String?> acceptedVariants,
       Value<String?> exampleDistractors,
+      Value<String?> synonyms,
+      Value<String?> transliteration,
+      Value<String?> translations,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6985,6 +7165,21 @@ class $$TermsTableFilterComposer extends Composer<_$AppDatabase, $TermsTable> {
 
   ColumnFilters<String> get exampleDistractors => $composableBuilder(
     column: $table.exampleDistractors,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get synonyms => $composableBuilder(
+    column: $table.synonyms,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transliteration => $composableBuilder(
+    column: $table.transliteration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get translations => $composableBuilder(
+    column: $table.translations,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7068,6 +7263,21 @@ class $$TermsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get synonyms => $composableBuilder(
+    column: $table.synonyms,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transliteration => $composableBuilder(
+    column: $table.transliteration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get translations => $composableBuilder(
+    column: $table.translations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7138,6 +7348,19 @@ class $$TermsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get synonyms =>
+      $composableBuilder(column: $table.synonyms, builder: (column) => column);
+
+  GeneratedColumn<String> get transliteration => $composableBuilder(
+    column: $table.transliteration,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get translations => $composableBuilder(
+    column: $table.translations,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -7183,6 +7406,9 @@ class $$TermsTableTableManager
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<String?> acceptedVariants = const Value.absent(),
                 Value<String?> exampleDistractors = const Value.absent(),
+                Value<String?> synonyms = const Value.absent(),
+                Value<String?> transliteration = const Value.absent(),
+                Value<String?> translations = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion(
@@ -7199,6 +7425,9 @@ class $$TermsTableTableManager
                 imageAuthorUrl: imageAuthorUrl,
                 acceptedVariants: acceptedVariants,
                 exampleDistractors: exampleDistractors,
+                synonyms: synonyms,
+                transliteration: transliteration,
+                translations: translations,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -7217,6 +7446,9 @@ class $$TermsTableTableManager
                 Value<String?> imageAuthorUrl = const Value.absent(),
                 Value<String?> acceptedVariants = const Value.absent(),
                 Value<String?> exampleDistractors = const Value.absent(),
+                Value<String?> synonyms = const Value.absent(),
+                Value<String?> transliteration = const Value.absent(),
+                Value<String?> translations = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => TermsCompanion.insert(
@@ -7233,6 +7465,9 @@ class $$TermsTableTableManager
                 imageAuthorUrl: imageAuthorUrl,
                 acceptedVariants: acceptedVariants,
                 exampleDistractors: exampleDistractors,
+                synonyms: synonyms,
+                transliteration: transliteration,
+                translations: translations,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
