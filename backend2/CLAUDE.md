@@ -81,6 +81,21 @@ ruleset entry, add a row to the table above, and write the module `README.md` fr
 PHP 8.4 · Laravel 12 · PostgreSQL 17 (+pgvector) · Redis/Horizon · Sanctum · Pest 3 ·
 PHPStan level 8 · Deptrac · OpenAPI 3.1 → generated Dart client.
 
+## Queue workers answer from memory
+
+A queued job runs inside a worker that booted before your edit and keeps the classes it booted with.
+After touching a job, anything a job calls, a prompt file or a config value the queue path reads,
+restart it: `docker compose restart horizon`. Then verify — a check against a stale worker measures
+the worker, not the change.
+
+**«Любой новый конфиг-флаг, читаемый в Application-слое, требует перезапуска Horizon — работающий
+воркер держит старый класс в памяти и врёт о состоянии флага.»**
+
+Paid for once already: the SYN-1d pilot wrote 10 synonyms while `GENERATION_WRITE_SYNONYMS` was off,
+because `wt_horizon` was still running the handler built before the gate existed
+(`docs/syn-1-findings.md` §8). The flag was right and the gate was right; the worker answered from
+memory, and a gate you cannot see is worse than no gate.
+
 ## Non-negotiables (short version)
 
 - `app/Modules/{Shared,Identity,Vocabulary,Collections,Learning,Generation,Observability}`, four layers each (Shared and Observability are thin — they omit layers they don't need).
