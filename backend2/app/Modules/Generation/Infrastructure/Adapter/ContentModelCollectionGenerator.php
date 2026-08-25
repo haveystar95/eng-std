@@ -54,7 +54,10 @@ final readonly class ContentModelCollectionGenerator implements CollectionGenera
         $answer = $this->model->complete(
             $prompt,
             $this->userMessage($brief),
-            $this->contract->schema(PromptShape::Terms),
+            // The version travels with the shape: which fields a core answer carries is a fact about
+            // the prompt that asks for them, and a schema that declared v15's three extras to a v11.1
+            // prompt would force a model to emit fields nothing had explained.
+            $this->contract->schema(PromptShape::Terms, $this->promptVersion),
         );
 
         $payload = $answer->payload;
@@ -123,10 +126,36 @@ final readonly class ContentModelCollectionGenerator implements CollectionGenera
                 // "" is the prompt's way of saying «un-illustratable», and it must not become an
                 // image search for an empty string.
                 imageApiPrompt: $this->str($row, 'image_api_prompt'),
+                synonyms: $this->strings($row, 'synonyms'),
+                otherTranslations: $this->strings($row, 'other_translations'),
+                // "" is the prompt's «this already reads as it is written», the same shape as the
+                // empty image query above — a deliberate answer, not a missing one.
+                transliteration: $this->str($row, 'transliteration'),
             );
         }
 
         return $items;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return list<string>
+     */
+    private function strings(array $row, string $key): array
+    {
+        $value = $row[$key] ?? null;
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($value as $entry) {
+            if (is_string($entry) && trim($entry) !== '') {
+                $out[] = trim($entry);
+            }
+        }
+
+        return $out;
     }
 
     /** @param array<string, mixed> $row */

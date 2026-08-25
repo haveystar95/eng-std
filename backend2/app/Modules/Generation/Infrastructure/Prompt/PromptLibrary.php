@@ -266,6 +266,43 @@ final class PromptLibrary implements PromptSource
                 '99-closing',
             ],
         ],
+        // v15 is the CORE, and it is where synonyms end up after the machinery failed to hold them.
+        //
+        // Three measured iterations on `gpt-4o-mini` (v14 → v14.2, docs/syn-1-findings.md §7) put
+        // the accuracy of «synonym vs narrower word» at about half, and the last of them produced
+        // `savings account` for «банковский счёт» after being shown that exact pair as a worked
+        // failure. The judgement is not the prompt's to fix: it is what a strong model is for, and
+        // the core call is already made by one (`gpt-5.4`, DECISIONS п. 60). So the field moves to
+        // the writer who can answer it, and the machinery keeps the two products it does well —
+        // wrong sentences and accepted spellings.
+        //
+        // v15 also carries the two other per-pair products this наряд adds, for the same reason:
+        // `other_translations` (a word's other readings) and `transliteration` (how the term reads,
+        // in the SUPPORT language's letters). Both are judgements about meaning or about how a word
+        // sounds to a particular reader, and both are cheapest where the core is already being
+        // written rather than as a second paid pass.
+        //
+        // The v14 lesson is obeyed in the layout: `21-extras` sits immediately after the field list,
+        // not at the end behind the long example and key sections. The section that gets read last
+        // gets answered with an empty list.
+        //
+        // v11.1 is not edited: it is what the published A/B measured and what the live catalogue
+        // records as its passport.
+        'v15' => [
+            PromptShape::Terms->value => [
+                '00-role', '10-select-topic', '20-fields', '21-extras', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '99-closing',
+            ],
+            // The REPAIR shape carries the same three extras, and it has to: it is what the showcase
+            // regeneration and the translation audit render at the CORE version, so a v15 without it
+            // would make those paths ask for a shape their version does not have. Same sections as
+            // v11.1's enrich, plus `21-extras` in the same early position.
+            PromptShape::Enrich->value => [
+                '00-role', '15-given-terms', '20-fields', '21-extras', '60-options', '62-forms',
+                '30-example', '40-translation-key', '50-purity', '90-self-check',
+                '91-self-check-options', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}

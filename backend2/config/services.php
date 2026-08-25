@@ -132,7 +132,7 @@ return [
         // forever, so it runs on the strong model (A/B decision К2, docs/bakeoff-v11-ab.md).
         'core_provider' => env('GENERATION_CORE_PROVIDER', 'openai'),
         'core_model' => env('GENERATION_CORE_MODEL', 'gpt-5.4'),
-        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v11.1'),
+        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v15'),
         // The MACHINERY around a finished core — accepted forms and the example's wrong versions.
         // Mechanical work over content that already exists: the cheap model does it at 1/200th of
         // the price of re-generating the core inside a full enrichment.
@@ -160,6 +160,15 @@ return [
          * model for this field, a deterministic anti-hyponym rule, or curated-only.
          */
         'write_synonyms' => (bool) env('GENERATION_WRITE_SYNONYMS', false),
+
+        /*
+         * The reading hint («cómo estás» → «комо эстас»), on its own switch rather than sharing the
+         * one above. Two products, two producers' worth of risk: a transliteration is judged by an
+         * alphabet check a machine CAN make, a synonym by a meaning judgement it cannot, so they can
+         * honestly earn their way on at different times. One flag would make the safer product wait
+         * for the riskier one.
+         */
+        'write_transliteration' => (bool) env('GENERATION_WRITE_TRANSLITERATION', false),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
         // Chain the enrichment станок onto a finished generation (accepted variants + distractors).

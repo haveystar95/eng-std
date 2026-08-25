@@ -1880,6 +1880,19 @@ paths:
                                     card for `purpose`, i.e. be LOOSER than the server. Empty when the
                                     станок has not run over the term. No client reads these yet.
                                   items: { type: string }
+                                transliteration:
+                                  type: string
+                                  nullable: true
+                                  description: >
+                                    ADDITIVE. How the TERM reads, spelled in the letters of the
+                                    pair's SUPPORT language — «cómo estás» → «комо эстас». Beside
+                                    `transcription` and never instead of it: that one is IPA, one per
+                                    term, in a notation the learner has to have been taught; this one
+                                    is per PAIR, in an alphabet they already read, and a Ukrainian
+                                    learner gets a different string from a Russian one for the same
+                                    word. Null when the pair has no hint — including, deliberately,
+                                    when the two languages share an alphabet and the word already
+                                    reads as it is written. No client reads this yet.
                                 translations:
                                   type: array
                                   description: >

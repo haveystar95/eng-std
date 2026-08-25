@@ -123,7 +123,7 @@ final readonly class AuditTranslationsHandler
                 $answer = $model->complete(
                     $prompt,
                     $this->dataBlock($target),
-                    $this->contract->schema(PromptShape::Enrich),
+                    $this->contract->schema(PromptShape::Enrich, $this->stack->corePromptVersion),
                 );
             } catch (Throwable $e) {
                 $failures[] = ['term_id' => $termId, 'error' => mb_substr($e->getMessage(), 0, 500)];

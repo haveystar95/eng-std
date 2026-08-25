@@ -36,6 +36,7 @@ use App\Modules\Generation\Infrastructure\Eloquent\EloquentInstantTranslationCac
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
 use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
+use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Generation\Domain\Service\SearchQueryLength;
 use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
@@ -264,6 +265,12 @@ final class GenerationServiceProvider extends ServiceProvider
         $writeSynonyms = fn (): bool => config('services.generation.write_synonyms') === true;
         $this->app->when(AddSearchResultHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
         $this->app->when(BuildTermEnrichmentsHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
+        // The CORE is the third door — and from prompt v15 it is the one that matters, because the
+        // machinery stopped being asked for synonyms at all.
+        $this->app->when(ProcessGenerationHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
+        $this->app->when(ProcessGenerationHandler::class)
+            ->needs('$writeTransliteration')
+            ->give(fn (): bool => config('services.generation.write_transliteration') === true);
 
         $this->app->bind(ExampleRegeneratorPort::class, function (): ExampleRegeneratorPort {
             if (config('services.generation.driver') === 'fake') {

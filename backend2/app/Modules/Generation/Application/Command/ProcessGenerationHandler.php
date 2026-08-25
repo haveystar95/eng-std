@@ -31,10 +31,17 @@ use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
+use App\Modules\Generation\Application\Dto\GeneratedItem;
+use App\Modules\Generation\Domain\Service\EnrichmentValidator;
+use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
+use App\Modules\Vocabulary\Application\Command\ImportTermEnrichment;
+use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
+use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
+use App\Modules\Vocabulary\Application\Port\TermTransliterationWriter;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 
 /**
@@ -73,6 +80,14 @@ final readonly class ProcessGenerationHandler
         private CoreReplacement $coreReplacement,
         private TransactionManager $tx,
         private Clock $clock,
+        // The per-pair side products of the core, and the one gate they both pass. See writeExtras().
+        private ImportTermEnrichmentHandler $importEnrichment,
+        private TermTransliterationWriter $transliterations,
+        private EnrichmentValidator $extrasGate = new EnrichmentValidator(),
+        /** `GENERATION_WRITE_SYNONYMS` — off until the product earns its way on. */
+        private bool $writeSynonyms = false,
+        /** `GENERATION_WRITE_TRANSLITERATION` — its own switch, see writeExtras(). */
+        private bool $writeTransliteration = false,
     ) {
         $this->pipeline = new GenerationPipeline($generator, $validator, $barrier);
     }
@@ -237,7 +252,13 @@ final readonly class ProcessGenerationHandler
                 type: $item->type,
                 pos: null,
                 source: 'ai',
-                translations: [new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true)],
+                // The pinned reading, plus any OTHER reading the model named for a genuinely
+                // ambiguous word — additive and never primary, so the card's question is unchanged
+                // and a learner who types the second one is not told they are wrong (SYN-1).
+                translations: [
+                    new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true),
+                    ...$this->otherReadings($item, $request->sourceLang()),
+                ],
                 ipa: $item->transcription,
                 examples: $item->example !== null
                     // The gloss is in the request's SOURCE language — the same one the term's
@@ -252,6 +273,8 @@ final readonly class ProcessGenerationHandler
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $request->userId()));
 
+            $this->writeExtras($termId, $item, $request);
+
             // First writer wins if two draft items dedup onto one term: the second is the same term
             // said twice, and refreshing its core twice would only pay the later reading over the
             // earlier one for no reason.
@@ -261,6 +284,76 @@ final readonly class ProcessGenerationHandler
         $this->refreshStaleCores($imported, $request, $model);
 
         return $collectionId;
+    }
+
+    /**
+     * The core's two per-pair side products, each behind its own switch and each through the SAME
+     * deterministic gate the станок's output goes through.
+     *
+     * Two switches rather than one, deliberately: they are different products with different
+     * producers and different failure modes, and one of them can earn its way on while the other has
+     * not. A single flag would make the better product wait for the worse one.
+     *
+     * Both gates are the validator's, not new code here. `synonymsFor` applies the shape rules and
+     * the anti-hyponym rule; `transliterationFor` applies the alphabet rule. A writer that judged
+     * for itself would be a second opinion about what this product is.
+     */
+    private function writeExtras(TermId $termId, GeneratedItem $item, GenerationRequest $request): void
+    {
+        if ($this->writeSynonyms && $item->synonyms !== []) {
+            [$synonyms] = $this->extrasGate->synonymsFor([$item->text], $item->synonyms);
+            if ($synonyms !== []) {
+                ($this->importEnrichment)(new ImportTermEnrichment(
+                    termId: $termId,
+                    exampleId: null,
+                    variants: [],
+                    distractors: [],
+                    generatorVersion: $request->promptVersion(),
+                    synonyms: array_map(
+                        static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
+                        $synonyms,
+                    ),
+                ));
+            }
+        }
+
+        if ($this->writeTransliteration) {
+            // The SUPPORT language of the pair — whose alphabet the hint must be in. Never the
+            // term's own, which is the whole reason this value is keyed per pair.
+            $support = $request->sourceLang()->value;
+            $hint = $this->extrasGate->transliterationFor($support, $item->transliteration);
+            if ($hint !== null) {
+                $this->transliterations->ensure(
+                    $termId,
+                    $support,
+                    $hint,
+                    generatorVersion: $request->promptVersion(),
+                );
+            }
+        }
+    }
+
+    /**
+     * The model's OTHER readings, cleaned of anything that is really the pinned one said twice.
+     *
+     * @return list<TranslationInput>
+     */
+    private function otherReadings(GeneratedItem $item, LanguageCode $lang): array
+    {
+        $pinned = mb_strtolower(trim($item->translation));
+
+        $out = [];
+        $seen = [$pinned => true];
+        foreach ($item->otherTranslations as $other) {
+            $key = mb_strtolower(trim($other));
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = new TranslationInput($lang, trim($other));
+        }
+
+        return $out;
     }
 
     /**

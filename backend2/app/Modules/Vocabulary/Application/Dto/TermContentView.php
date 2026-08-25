@@ -22,6 +22,11 @@ final readonly class TermContentView
      *         another spelling of this word and counts wherever the word is typed, a synonym is
      *         another word and only answers a card that asked for the MEANING
      *         ({@see \App\Modules\Learning\Domain\ValueObject\ExerciseMode::acceptsSynonyms()}).
+     * @param  string|null  $transliterationHint  how the TERM reads, spelled in the letters of the
+     *         asking (support) language — «cómo estás» → «комо эстас». Named apart from
+     *         `$transcription`, which is IPA and a different product: IPA is one per term in a
+     *         notation the learner has to have been taught, this is per PAIR in an alphabet they
+     *         already read. Neither replaces the other.
      * @param  list<string>  $translations  every translation this term has in the asking language,
      *         primary first — the one on `$translation` plus its alternatives. Additive: readers
      *         that only want the question keep reading `$translation`.
@@ -48,5 +53,6 @@ final readonly class TermContentView
         public array $exampleDistractors = [],
         public array $synonyms = [],
         public array $translations = [],
+        public ?string $transliterationHint = null,
     ) {}
 }

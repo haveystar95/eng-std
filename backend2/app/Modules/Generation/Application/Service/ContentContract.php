@@ -52,6 +52,19 @@ final readonly class ContentContract
      */
     private const MAX_SYNONYMS = 3;
 
+    /** At most two OTHER readings beside the one the card asks — see the v15 prompt. */
+    private const MAX_OTHER_TRANSLATIONS = 2;
+
+    /**
+     * The first CORE version that produces synonyms, other readings and a transliteration.
+     *
+     * Compared as a string rather than matched exactly, so a later `v16` inherits the fields instead
+     * of silently dropping them — the failure mode of an exact match is a new version that quietly
+     * stops asking for a product nobody removed. Every core version before this one (`v9`…`v11.1`)
+     * sorts below it and is untouched.
+     */
+    private const CORE_EXTRAS_FROM = 'v15';
+
     /**
      * The error taxonomy, mirroring the CHECK on `example_distractors.error_type`. A closed set:
      * a report groups by it, and a value the table refuses would be a row the станок paid for and
@@ -69,7 +82,7 @@ final readonly class ContentContract
      *
      * @return array<string, mixed>
      */
-    public function schema(PromptShape $shape): array
+    public function schema(PromptShape $shape, ?string $version = null): array
     {
         // The mechanics and machinery shapes are handed a finished core and return only the
         // machinery. Asking them for the core fields would invite a rewrite of content that has
@@ -156,6 +169,27 @@ final readonly class ContentContract
         }
         if ($shape->hasForms()) {
             $itemProps['forms'] = ['type' => 'array', 'items' => ['type' => 'string']];
+        }
+
+        // The three per-pair products v15 added to the core. Declared for THAT VERSION and no other,
+        // exactly as the lookup declares its own extras only for v5: strict Structured Outputs makes
+        // every declared property required, so a frozen older version that grows a field is a
+        // version whose prompt never explains what the model is now forced to emit.
+        if ($version !== null && self::CORE_EXTRAS_FROM <= $version) {
+            $itemProps['synonyms'] = [
+                'type' => 'array',
+                'maxItems' => self::MAX_SYNONYMS,
+                'items' => ['type' => 'string'],
+            ];
+            $itemProps['other_translations'] = [
+                'type' => 'array',
+                'maxItems' => self::MAX_OTHER_TRANSLATIONS,
+                'items' => ['type' => 'string'],
+            ];
+            // A string and not a nullable one: «this word already reads as it is written» is an
+            // EMPTY string, the same way `image_api_prompt` says «un-illustratable». A missing key
+            // would mean the model failed; "" means it decided.
+            $itemProps['transliteration'] = ['type' => 'string'];
         }
 
         $item = [

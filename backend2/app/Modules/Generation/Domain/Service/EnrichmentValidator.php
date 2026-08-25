@@ -95,6 +95,16 @@ final class EnrichmentValidator
     public const MAX_SYNONYM_EXTRA_TOKENS = 1;
 
     /**
+     * Punctuation a reading hint may carry beside the letters of its alphabet.
+     *
+     * A transliteration is a word said out loud, written down: it has spaces between words, a hyphen
+     * where the source has one («check-in» → «чек-ин»), and an apostrophe in the languages that use
+     * one. Nothing else — a digit, a bracket or a stress mark is either the model annotating instead
+     * of transliterating, or a fragment of another notation leaking in.
+     */
+    private const TRANSLITERATION_PUNCTUATION = [' ', '-', '\'', '’', '‑'];
+
+    /**
      * Phrases with which the model argues its own finding down. Two of the eight language findings on
      * the store run ended this way — «банкомат не является ошибкой», «но это корректно» — so the model
      * filled the field, cost a human a read, and concluded there was nothing there. The prompt now
@@ -341,6 +351,11 @@ final class EnrichmentValidator
 
                 continue;
             }
+            if ($this->sharesHeadWith($term, $text)) {
+                $rejected++;
+
+                continue;
+            }
             if (count($kept) >= self::MAX_SYNONYMS) {
                 $rejected++;
 
@@ -351,6 +366,71 @@ final class EnrichmentValidator
         }
 
         return [$kept, $rejected];
+    }
+
+    /**
+     * THE ANTI-HYPONYM RULE: two compounds that end in the same word are two KINDS of that word, not
+     * two names for one thing.
+     *
+     * `bank account` / `savings account`, `credit card` / `charge card`, `withdrawal limit` / `cash
+     * withdrawal limit` — in every one of them the shared head names the category and the differing
+     * modifier names which member of it, so accepting the candidate teaches «банковский счёт =
+     * savings account». This is the single failure mode three measured prompt iterations could not
+     * talk a model out of (docs/syn-1-findings.md §7): v14.2 was shown `savings account` as a worked
+     * counter-example and produced it anyway.
+     *
+     * Deterministic, so it does not have to be talked out of anything. Checked on the pilot data it
+     * was written from: it kills 4 of the 5 bad rows v14.1 wrote and 3 of the 3 v14.2 wrote, and it
+     * is not free — it also kills `debit card` → `bank card`, which is a genuine synonym. That trade
+     * is deliberate and it is the conservative direction: a lost synonym costs a learner one accepted
+     * answer they never find out about, and a kept hyponym marks a different word right.
+     *
+     * Only for MULTI-WORD pairs. Two single words that happen to be one word cannot share a head
+     * with each other in any useful sense, and single words are where most real synonyms live.
+     */
+    private function sharesHeadWith(string $term, string $candidate): bool
+    {
+        $termTokens = preg_split('/\s+/u', trim($term)) ?: [];
+        $candidateTokens = preg_split('/\s+/u', trim($candidate)) ?: [];
+        if (count($termTokens) < 2 || count($candidateTokens) < 2) {
+            return false;
+        }
+
+        $termHead = $this->normalizer->normalize((string) end($termTokens));
+        $candidateHead = $this->normalizer->normalize((string) end($candidateTokens));
+
+        return $termHead !== '' && $termHead === $candidateHead;
+    }
+
+    /**
+     * A reading hint that may be stored, or null.
+     *
+     * The one question a machine can answer here is the ALPHABET, and it is the question that
+     * matters: the field exists for a learner who cannot read the target language's spelling, so a
+     * hint carrying a single letter of that spelling («комо estás») fails the only reader it has.
+     * Whether it reads anything like the word is a human's judgement and is audited, not checked.
+     *
+     * The script comes from {@see LanguagePurity}, which is where this product states what alphabet a
+     * language uses — no second list here. A language it has no opinion about passes: silence is a
+     * pass everywhere else in that class and an invented alphabet would be worse than none.
+     *
+     * @param  string  $supportLang  whose alphabet the hint must be written in — NOT the term's
+     */
+    public function transliterationFor(string $supportLang, ?string $raw): ?string
+    {
+        $text = $this->nullIfBlank($raw !== null ? $this->stripEmphasis($raw) : null);
+        if ($text === null) {
+            return null;
+        }
+
+        // Everything that is not a letter and not one of the marks a spoken word legitimately
+        // carries. A digit or a bracket means the model annotated instead of transliterating.
+        $stripped = str_replace(self::TRANSLITERATION_PUNCTUATION, '', $text);
+        if (preg_match('/^\p{L}*$/u', $stripped) !== 1) {
+            return null;
+        }
+
+        return $this->purity->foreignScriptLetters($supportLang, $text) === [] ? $text : null;
     }
 
     /** Whitespace-run token count — script-agnostic on purpose. */

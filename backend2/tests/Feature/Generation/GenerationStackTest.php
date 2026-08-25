@@ -124,7 +124,7 @@ it('uses the ContentModel adapter on v2', function () {
 it('records on the request the version that will actually be rendered', function () {
     liveGenerator();
 
-    expect(app(GenerationStackConfig::class)->corePromptVersion)->toBe('v11.1');
+    expect(app(GenerationStackConfig::class)->corePromptVersion)->toBe('v15');
 
     app()->forgetInstance(GenerationStackConfig::class);
     config(['services.generation.stack' => 'v1']);

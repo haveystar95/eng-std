@@ -75,6 +75,18 @@ final class EloquentTermContentReader implements TermContentReader
             $synonyms[(string) $row->term_id][] = (string) $row->text;
         }
 
+        // The reading hint, picked by the SUPPORT language — that is the whole key of the value, and
+        // the reason it lives in its own table rather than as a column on a translation row (see the
+        // `term_transliterations` migration). Grouped per distinct language like the translations
+        // above, so a mixed-pair session asks once per language and not once per term.
+        $transliterations = [];
+        foreach ($langs->group($ids) as $lang => $groupIds) {
+            foreach (DB::table('term_transliterations')->whereIn('term_id', $groupIds)->where('lang', $lang)
+                ->get(['term_id', 'text']) as $row) {
+                $transliterations[(string) $row->term_id] = (string) $row->text;
+            }
+        }
+
         // The description is written in the language BEING LEARNED — it is the question of the
         // description_match card, not a gloss for the learner's own language, so it is picked by
         // the TERM's language and not by the support language.
@@ -143,6 +155,7 @@ final class EloquentTermContentReader implements TermContentReader
                 // the alternatives beside it, so a learner who types «задача» for `purpose` is not
                 // told they are wrong by a card that simply pinned «цель».
                 translations: $allTranslations[$id] ?? [],
+                transliterationHint: $transliterations[$id] ?? null,
             );
         }
 

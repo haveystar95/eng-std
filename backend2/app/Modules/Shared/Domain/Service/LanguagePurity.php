@@ -160,6 +160,53 @@ final class LanguagePurity
     }
 
     /**
+     * The SCRIPT each language is written in — the one place this product states it.
+     *
+     * A narrower table than {@see LanguageCatalog}, deliberately: the catalogue says how a language
+     * is NAMED, which every runtime needs, while this says which letters it is written with, which
+     * only a checker needs. Membership is the catalogue's, so a language that can be a support side
+     * (DECISIONS п. 85 — any catalogue language) has an entry here or gets an honest «no opinion».
+     *
+     * Null is that «no opinion», and it is a pass, not a fail — the same default
+     * {@see foreignLetters()} takes for a language nobody has taught this class about.
+     */
+    private const SCRIPTS = [
+        'ru' => '\p{Cyrillic}', 'uk' => '\p{Cyrillic}',
+        'en' => '\p{Latin}', 'ro' => '\p{Latin}', 'es' => '\p{Latin}', 'de' => '\p{Latin}',
+        'fr' => '\p{Latin}', 'it' => '\p{Latin}', 'pt' => '\p{Latin}', 'pl' => '\p{Latin}',
+        'tr' => '\p{Latin}',
+        'zh' => '\p{Han}',
+        'ja' => '\p{Han}\p{Hiragana}\p{Katakana}',
+    ];
+
+    /**
+     * EVERY letter that is not in `$lang`'s own script — the strict sibling of
+     * {@see isWrongScript()}, which asks only whether MOST of them are.
+     *
+     * The two thresholds answer two different questions and both are right where they are used. A
+     * translation may legitimately carry a foreign fragment («пароль от Wi-Fi»), so the barrier that
+     * judges one asks about the majority. A TRANSLITERATION may not: its whole job is to be readable
+     * by someone who reads only this alphabet, so a single Latin letter in a Russian hint («комо
+     * estás») defeats the field for exactly the reader it exists for.
+     *
+     * Letters only. Spaces, hyphens and apostrophes are not letters and are not this method's
+     * business — the caller decides which punctuation a hint may carry.
+     *
+     * @return list<string>  the offending characters, deduped, in order; empty = clean
+     */
+    public function foreignScriptLetters(string $lang, string $value): array
+    {
+        $script = self::SCRIPTS[strtolower(trim($lang))] ?? null;
+        if ($script === null) {
+            return [];
+        }
+
+        $expected = '/[' . $script . ']/u';
+
+        return $this->matchAll('/[\p{L}]/u', $value, static fn (string $ch): bool => preg_match($expected, $ch) !== 1);
+    }
+
+    /**
      * @param  callable(string): bool  $offends
      * @return list<string>
      */

@@ -219,6 +219,12 @@ final class SyncController
             // device can eventually stop telling a learner who typed «задача» for «цель» that they
             // are wrong; nothing consumes it yet.
             'translations' => $c->translations ?? [],
+            // ADDITIVE. How the TERM reads, in the letters of the pair's SUPPORT language. Beside
+            // `transcription` (IPA) and never instead of it: one is a notation the learner has to
+            // have been taught, the other is an alphabet they already read, and the two are for
+            // different moments. Null when the pair has no hint — including, deliberately, when the
+            // two languages share an alphabet and the word already reads as it is written.
+            'transliteration' => $c->transliterationHint ?? null,
         ];
     }
 

@@ -34,6 +34,7 @@ use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
+use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Command\ReplaceTermCoreHandler;
 use App\Modules\Vocabulary\Application\Command\ReplaceTermExampleHandler;
@@ -46,6 +47,8 @@ use Tests\Doubles\FakeStaleCoreReader;
 use Tests\Doubles\FakeUserTierReader;
 use Tests\Doubles\FixedClock;
 use Tests\Doubles\ImmediateTransactionManager;
+use Tests\Doubles\NullTermEnrichmentWriter;
+use Tests\Doubles\NullTransliterationWriter;
 use Tests\Doubles\InMemoryCollectionRepository;
 use Tests\Doubles\InMemoryGenerationRequestRepository;
 use Tests\Doubles\InMemoryTermRepository;
@@ -90,6 +93,10 @@ beforeEach(function () {
         coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
+        // The core's per-pair side products. Both switches stay OFF here — these tests are about the
+        // pipeline, and a fixture that quietly turned a product on would be testing the product.
+        importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
+        transliterations: new NullTransliterationWriter(),
     );
 });
 
@@ -159,6 +166,8 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         coreReplacement: coreReplacement($ctx->coreWriter, $ctx->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
+        importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
+        transliterations: new NullTransliterationWriter(),
     );
 }
 
@@ -401,6 +410,8 @@ it('records tokens, cost and raw response even when the draft fails validation',
         coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
+        importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
+        transliterations: new NullTransliterationWriter(),
     );
 
     expect(fn () => ($process)(new ProcessGeneration($id)))->toThrow(InvalidGeneratedDraft::class);
@@ -449,6 +460,8 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         coreReplacement: coreReplacement($this->coreWriter, $this->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $this->clock,
+        importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
+        transliterations: new NullTransliterationWriter(),
     );
 
     // Second identical request (same prompt/langs/version) → cache hit.
@@ -514,6 +527,8 @@ function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, Lan
         coreReplacement: coreReplacement($ctx->coreWriter, $ctx->exampleWriter),
         tx: new ImmediateTransactionManager(),
         clock: $ctx->clock,
+        importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
+        transliterations: new NullTransliterationWriter(),
     );
 }
 
