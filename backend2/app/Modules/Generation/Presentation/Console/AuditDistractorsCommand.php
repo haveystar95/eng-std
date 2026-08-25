@@ -9,7 +9,7 @@ use App\Modules\Generation\Application\Command\AuditDistractorsHandler;
 use Illuminate\Console\Command;
 
 /**
- * Re-asks the validator's four questions of every stored distractor. Dry by default — `--apply` is
+ * Re-asks the validator's questions of every stored distractor. Dry by default — `--apply` is
  * what writes.
  *
  * A sweep that exists only in a terminal history is a sweep nobody can re-run or verify; that is the
@@ -32,7 +32,7 @@ final class AuditDistractorsCommand extends Command
         $outcome = $audit(new AuditDistractors($apply));
 
         $rows = [];
-        foreach (['equality', 'dedup', 'noop', 'circular'] as $check) {
+        foreach (['equality', 'script', 'dedup', 'noop', 'circular'] as $check) {
             $rows[] = [$check, (string) ($outcome->fixed[$check] ?? 0), (string) ($outcome->deleted[$check] ?? 0)];
         }
         $rows[] = ['<options=bold>итого</>', "<options=bold>{$outcome->totalFixed()}</>", "<options=bold>{$outcome->totalDeleted()}</>"];
