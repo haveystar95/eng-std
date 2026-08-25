@@ -43,6 +43,7 @@ use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 use App\Modules\Vocabulary\Application\Port\TermTransliterationWriter;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
+use Throwable;
 
 /**
  * The heavy step, run in the background (or inline from the console). Talks to Vocabulary
@@ -92,7 +93,46 @@ final readonly class ProcessGenerationHandler
         $this->pipeline = new GenerationPipeline($generator, $validator, $barrier);
     }
 
+    /**
+     * The run, plus the one thing the queue cannot do for us: keep the reason.
+     *
+     * `GenerateCollectionJob` has `tries = 3` and Laravel calls `failed()` only after the LAST
+     * attempt, so without this the recorded reason is whatever the last attempt tripped over. Three
+     * of the owner's generations died on 25.08 with «Cannot move a generation from running to
+     * running» — an artefact of the state machine, and the real cause of all three is not recoverable
+     * from anything we stored. {@see GenerationRequest::markRunning()} closed the artefact; this
+     * closes the loss, by writing the FIRST attempt's cause down while the request is still running.
+     *
+     * Here and not in the job because the console path ({@see \App\Modules\Generation\Presentation\Console\GenerateCollectionCommand})
+     * runs this handler directly, and a failure reason that depends on which door the run came
+     * through is the kind of gap this whole fix is about.
+     */
     public function __invoke(ProcessGeneration $command): void
+    {
+        try {
+            $this->run($command);
+        } catch (Throwable $e) {
+            $this->noteAttemptFailure($command, $e);
+
+            throw $e;
+        }
+    }
+
+    /** Nothing is recorded for a request that is not running — it never started an attempt. */
+    private function noteAttemptFailure(ProcessGeneration $command, Throwable $e): void
+    {
+        $request = $this->requests->findById($command->id);
+        if ($request === null) {
+            return;
+        }
+
+        // Trimmed to the same 500 characters the job's terminal reason is trimmed to: this lands in
+        // the same column and is read by the same eyes.
+        $request->noteAttemptFailure(mb_substr($e->getMessage(), 0, 500));
+        $this->requests->save($request);
+    }
+
+    private function run(ProcessGeneration $command): void
     {
         $request = $this->requests->findById($command->id)
             ?? throw GenerationRequestNotFound::withId($command->id);

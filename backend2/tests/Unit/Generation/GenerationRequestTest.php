@@ -95,6 +95,31 @@ it('lets a retry re-enter its own run instead of replacing the real error', func
     expect($request->status())->toBe(GenerationStatus::Running);
 });
 
+it('keeps the first attempt reason when the terminal one arrives later', function () {
+    // `failed()` runs after the LAST attempt and hands over the LAST throwable. The first cause is
+    // the one that describes why this generation went wrong; the later ones describe a run already
+    // half-finished (or, before markRunning became idempotent, the state machine describing itself).
+    $request = openRequest();
+    $request->markRunning();
+
+    $request->noteAttemptFailure('openai: 500 upstream_error');
+    $request->noteAttemptFailure('cURL error 28: Connection timed out');
+    $request->markFailed('cURL error 28: Connection timed out', new DateTimeImmutable('2026-07-27T10:00:09Z'));
+
+    expect($request->status())->toBe(GenerationStatus::Failed)
+        ->and($request->error())->toBe('openai: 500 upstream_error');
+});
+
+it('notes an attempt failure only while running, and still fails from pending with its own reason', function () {
+    $pending = openRequest();
+    $pending->noteAttemptFailure('nothing has been attempted yet');
+    expect($pending->error())->toBeNull();
+
+    // …so a quota refusal, which never runs, records exactly what the caller passed.
+    $pending->markFailed('quota', new DateTimeImmutable('2026-07-27T10:00:01Z'));
+    expect($pending->error())->toBe('quota');
+});
+
 it('still refuses to resurrect a request that has already finished', function () {
     // The other half, and a different question: terminal is final. The quota is settled and a
     // collection may exist, so re-running one would be a second charge for work that is over.

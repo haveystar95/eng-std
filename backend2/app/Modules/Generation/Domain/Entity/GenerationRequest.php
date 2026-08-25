@@ -172,13 +172,40 @@ final class GenerationRequest
         $this->finishedAt = $finishedAt;
     }
 
+    /**
+     * Why THIS attempt died, recorded while the request is still running and the queue still has
+     * retries left. The status does not move: the run is not over until the tries are.
+     *
+     * The other half of the retry story above. Making `markRunning()` idempotent stops the state
+     * machine from inventing a reason, but it does not preserve the real one: `failed()` fires only
+     * after the LAST attempt, so what it records is whatever the last attempt tripped over — a
+     * timeout on a call whose first attempt died of a rejected draft, say. The cause worth keeping is
+     * the FIRST one, because it is the one that has not yet been contaminated by a half-finished run.
+     *
+     * So the first attempt writes its cause here and every later one is a no-op, and
+     * {@see markFailed()} then keeps what is already recorded instead of overwriting it. A retry that
+     * SUCCEEDS clears the note ({@see markSucceeded()} nulls `error`) — a request that finished well
+     * carries no error, whatever happened on the way.
+     */
+    public function noteAttemptFailure(string $reason): void
+    {
+        if ($this->status !== GenerationStatus::Running || $this->error !== null || trim($reason) === '') {
+            return;
+        }
+        $this->error = trim($reason);
+    }
+
+    /**
+     * @param  string  $reason  used only when no attempt has already recorded one — see
+     *         {@see noteAttemptFailure()}. The first cause is the one worth reading.
+     */
     public function markFailed(string $reason, DateTimeImmutable $finishedAt): void
     {
         if ($this->status === GenerationStatus::Succeeded) {
             throw InvalidGenerationTransition::from($this->status, GenerationStatus::Failed);
         }
         $this->status = GenerationStatus::Failed;
-        $this->error = $reason;
+        $this->error ??= $reason;
         $this->finishedAt = $finishedAt;
     }
 

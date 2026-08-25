@@ -616,3 +616,71 @@ it('a retry of a request left running finishes it, instead of dying on the state
     expect($this->requests->findById($id)?->status())->toBe(GenerationStatus::Succeeded)
         ->and($this->requests->findById($id)?->error())->toBeNull();
 });
+
+it('records the FIRST attempt reason and does not let the retries overwrite it', function () {
+    // The other half of the same 25.08 incident. `failed()` fires only after the LAST attempt, so
+    // the reason it hands over describes the third try — and the cause worth reading is the first.
+    $id = openGeneration($this);
+
+    $generator = new class implements CollectionGeneratorPort
+    {
+        public int $calls = 0;
+
+        public function generate(GenerationBrief $brief): GeneratedCollectionDraft
+        {
+            $this->calls++;
+
+            throw new RuntimeException($this->calls === 1
+                ? 'openai: 500 upstream_error on the primary call'
+                : 'cURL error 28: Connection timed out');
+        }
+    };
+    $process = processWith($this, $generator);
+
+    // Attempt 1: dies of the real thing, and says so while the request stays running.
+    expect(fn () => $process(new ProcessGeneration($id)))->toThrow(RuntimeException::class);
+    expect($this->requests->findById($id)?->status())->toBe(GenerationStatus::Running)
+        ->and($this->requests->findById($id)?->error())->toBe('openai: 500 upstream_error on the primary call');
+
+    // Attempts 2 and 3: re-enter the run (no state-machine error any more) and die of something else.
+    expect(fn () => $process(new ProcessGeneration($id)))->toThrow(RuntimeException::class);
+    expect(fn () => $process(new ProcessGeneration($id)))->toThrow(RuntimeException::class);
+
+    // …and then the queue gives up and `failed()` records what the LAST attempt threw.
+    (new FailGenerationHandler($this->requests, $this->clock))(
+        new FailGeneration($id, 'cURL error 28: Connection timed out'),
+    );
+
+    $failed = $this->requests->findById($id);
+    expect($failed?->status())->toBe(GenerationStatus::Failed)
+        ->and($failed?->error())->toBe('openai: 500 upstream_error on the primary call')
+        ->and($generator->calls)->toBe(3);
+});
+
+it('leaves no error behind when a retry succeeds', function () {
+    // A noted cause is not a verdict: the request that finishes well carries no error, whatever the
+    // first attempt tripped over on the way.
+    $id = openGeneration($this);
+
+    $generator = new class implements CollectionGeneratorPort
+    {
+        public int $calls = 0;
+
+        public function generate(GenerationBrief $brief): GeneratedCollectionDraft
+        {
+            $this->calls++;
+            if ($this->calls === 1) {
+                throw new RuntimeException('openai: 503 service_unavailable');
+            }
+
+            return (new FakeCollectionGenerator())->generate($brief);
+        }
+    };
+    $process = processWith($this, $generator);
+
+    expect(fn () => $process(new ProcessGeneration($id)))->toThrow(RuntimeException::class);
+    $process(new ProcessGeneration($id));
+
+    expect($this->requests->findById($id)?->status())->toBe(GenerationStatus::Succeeded)
+        ->and($this->requests->findById($id)?->error())->toBeNull();
+});
