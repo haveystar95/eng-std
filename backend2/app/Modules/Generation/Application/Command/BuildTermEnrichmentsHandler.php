@@ -21,7 +21,6 @@ use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Dto\AcceptedVariantInput;
 use App\Modules\Vocabulary\Application\Dto\EnrichmentTargetView;
 use App\Modules\Vocabulary\Application\Dto\ExampleDistractorInput;
-use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Query\EnrichmentTargetReader;
 use Throwable;
 
@@ -114,8 +113,6 @@ final readonly class BuildTermEnrichmentsHandler
         private RecordsTermEnrichment $spend,
         private Clock $clock,
         private ModelCost $cost = new ModelCost(),
-        /** `GENERATION_WRITE_SYNONYMS` — off until the accuracy question is answered. See the config. */
-        private bool $writeSynonyms = false,
     ) {}
 
     public function __invoke(BuildTermEnrichments $command): EnrichmentRunMetrics
@@ -220,15 +217,17 @@ final readonly class BuildTermEnrichmentsHandler
                 $verdict->distractors,
             ),
             generatorVersion: $version,
-            // Gated, and gated HERE rather than in the validator: the run still measures how many
-            // survive validation (the metrics below count them either way), so a switched-off
-            // product can still be evaluated from a real run's numbers without writing a row.
-            synonyms: $this->writeSynonyms
-                ? array_map(
-                    static fn (string $text): TermSynonymInput => new TermSynonymInput($text),
-                    $verdict->synonyms,
-                )
-                : [],
+            // ALWAYS empty, and not because a switch is off: the станок is not a synonym writer any
+            // more. Synonyms are a CORE product (prompt v15 onwards) — one producer, one place where
+            // the accuracy question is answered — and the enrichment path that also proposed them was
+            // the second door onto one table. Three measured prompt iterations (v14 → v14.1 → v14.2)
+            // could not get the machinery's accuracy where a written row has to be, so this is a
+            // decision rather than a pause, and it lives in the code instead of in a flag.
+            //
+            // The validator still JUDGES what the pack proposed, and the metrics below still count it:
+            // a run's numbers stay readable, and nothing is written from them. `GENERATION_WRITE_SYNONYMS`
+            // is untouched and still governs its two real doors — the core and the lookup.
+            synonyms: [],
         ));
 
         $this->journal->recordFindings($verdict->findings, $version);

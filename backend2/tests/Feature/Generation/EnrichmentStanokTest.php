@@ -69,10 +69,36 @@ function countingEnrichmentPacker(EnrichmentPack $pack): object
     };
 }
 
-function enrichPack(array $distractors = [], array $variants = [], ?string $backTranslation = 'withdraw money'): EnrichmentPack
-{
-    return new EnrichmentPack($distractors, $variants, $backTranslation, [], 'test', 10, 20);
+function enrichPack(
+    array $distractors = [],
+    array $variants = [],
+    ?string $backTranslation = 'withdraw money',
+    array $synonyms = [],
+): EnrichmentPack {
+    return new EnrichmentPack($distractors, $variants, $backTranslation, [], 'test', 10, 20, synonyms: $synonyms);
 }
+
+// SYN-1e: the станок is not a synonym writer any more, and that is a decision in code rather than a
+// flag position. Three measured prompt iterations (v14 → v14.1 → v14.2) could not get the machinery's
+// accuracy where a written row has to be; synonyms are a CORE product now, with one producer and one
+// place the accuracy question is answered. The switch still governs its two real doors, so the test
+// turns it ON — a flag that cannot re-open this path is the property being pinned.
+it('writes no synonyms from the станок at any flag value', function () {
+    config(['services.generation.write_synonyms' => true]);
+    seedEnrichmentTerm();
+    app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(enrichPack(
+        synonyms: ['take out money', 'draw money'],
+    )));
+
+    $metrics = app(BuildTermEnrichmentsHandler::class)(new BuildTermEnrichments([ENRICH_TERM_ID], 'enrich-syn'));
+
+    expect(DB::table('term_synonyms')->where('term_id', ENRICH_TERM_ID)->count())->toBe(0)
+        // Still JUDGED and still counted: a run's numbers stay readable without a row being written,
+        // which is what lets the product be evaluated from a real run instead of from a guess. The
+        // count that shows it here is the REJECTED one — this fixture's term is a phrase, and the
+        // shape rules refuse synonyms for a phrase before accuracy is ever in question.
+        ->and($metrics->synonymsRejected)->toBe(2);
+});
 
 it('writes validated distractors and variants, and marks the term at the version', function () {
     seedEnrichmentTerm();

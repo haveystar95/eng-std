@@ -35,7 +35,6 @@ use App\Modules\Generation\Infrastructure\Adapter\UnavailableTranslator;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentInstantTranslationCache;
 use App\Modules\Generation\Application\Port\WordLookupPort;
 use App\Modules\Generation\Application\Command\AddSearchResultHandler;
-use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
 use App\Modules\Generation\Application\Command\ProcessGenerationHandler;
 use App\Modules\Generation\Domain\Service\SearchLookupDailyLimit;
 use App\Modules\Generation\Domain\Service\SearchQueryLength;
@@ -258,15 +257,16 @@ final class GenerationServiceProvider extends ServiceProvider
             ->needs('$autoEnrich')
             ->give(fn (): bool => config('services.generation.auto_enrich') === true);
 
-        // Whether the two synonym writers write at all — off by default, and bound in BOTH places
-        // for the reason the SYN-1 run found out the hard way: stopping the catalogue run stops the
-        // станок and leaves `POST /search/add` enriching every saved word. One product, two doors,
-        // one switch. Read here, like the one above, so Application stays clear of config().
+        // Whether the synonym writers write at all — off by default, and bound in BOTH remaining
+        // places for the reason the SYN-1 run found out the hard way: stopping the catalogue run
+        // stops one door and leaves `POST /search/add` enriching every saved word. One product, two
+        // doors, one switch. Read here, like the one above, so Application stays clear of config().
+        //
+        // The станок used to be a third door and is not one any more: BuildTermEnrichmentsHandler
+        // writes no synonyms at any flag value, so it takes no switch. See the note where it passes
+        // an empty list.
         $writeSynonyms = fn (): bool => config('services.generation.write_synonyms') === true;
         $this->app->when(AddSearchResultHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
-        $this->app->when(BuildTermEnrichmentsHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
-        // The CORE is the third door — and from prompt v15 it is the one that matters, because the
-        // machinery stopped being asked for synonyms at all.
         $this->app->when(ProcessGenerationHandler::class)->needs('$writeSynonyms')->give($writeSynonyms);
         $this->app->when(ProcessGenerationHandler::class)
             ->needs('$writeTransliteration')
