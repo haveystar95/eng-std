@@ -19,6 +19,7 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Tests\Doubles\CountingTermTransliterator;
 
 uses(RefreshDatabase::class);
@@ -184,6 +185,31 @@ it('gives a word typed into a folder its reading too', function () {
     expect($this->model->calls)->toHaveCount(1)
         ->and($this->model->calls[0]->supportLang)->toBe('ru')
         ->and(DB::table('term_transliterations')->where('term_id', $termId)->where('lang', 'ru')->count())->toBe(1);
+});
+
+it('books the reading call in the outbound log, under a purpose of its own', function () {
+    Http::fake(['*' => Http::response([
+        'model' => 'gpt-5.4-2026-03-05',
+        'usage' => ['prompt_tokens' => 422, 'completion_tokens' => 16],
+        'choices' => [['message' => ['content' => '{"transliteration":"дисмисэл"}']]],
+    ], 200)]);
+
+    $result = (new OpenAiTermTransliterator(
+        context: app(OutboundCallContext::class),
+        apiKey: 'test-key',
+        model: 'gpt-5.4',
+        promptVersion: 'v15.1',
+    ))->read(new TermReadingBrief('dismissal', 'en', 'ru'));
+
+    expect($result->text)->toBe('дисмисэл')
+        ->and($result->promptVersion)->toBe('v15.1')
+        ->and($result->tokensIn)->toBe(422);
+
+    // The row is what the whitelist migration bought. `purpose` is CHECK-constrained, and
+    // `LogOutboundHttp` swallows a refused insert on purpose — so a value missing from the list
+    // does not fail loudly, it just makes the most expensive call in the app invisible. That is how
+    // this was found, on the live run, and this is what stops it coming back.
+    expect(DB::table('api_request_logs')->where('purpose', 'term_reading')->count())->toBe(1);
 });
 
 it('quotes the core prompt\'s transliteration section byte for byte', function () {
