@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Command;
 
 use App\Modules\Generation\Application\Dto\TermEnrichmentBrief;
+use App\Modules\Generation\Application\Port\DispatchesTermReading;
 use App\Modules\Generation\Application\Port\ImageSearchPort;
 use App\Modules\Generation\Application\Port\RecordsTermEnrichment;
 use App\Modules\Generation\Application\Port\TermEnricherPort;
@@ -26,7 +27,9 @@ use App\Modules\Vocabulary\Application\Query\PendingTermImageReader;
  *     that is the idempotency gate, so a job retry never re-spends on the model.
  *  2. call the enricher, merge translation/IPA/example/image-query into the term (ImportTerm merges
  *     into the existing term by dedup), and record the spend.
- *  3. attach a Pexels photo for the term's image query — this runs whether the term was just
+ *  3. ask for the term's reading hint, if the pair needs one and it has none — a separate job, so
+ *     this is a dispatch and not a call, and the card never waits on it;
+ *  4. attach a Pexels photo for the term's image query — this runs whether the term was just
  *     enriched or a prior run already enriched it but the photo is still pending, so a transient
  *     image failure (which throws → the job retries) resumes only the photo, never the paid LLM call.
  */
@@ -42,6 +45,7 @@ final readonly class EnrichTermHandler
         private ImageSearchPort $images,
         private AttachTermImageHandler $attachImage,
         private Clock $clock,
+        private DispatchesTermReading $reading,
     ) {}
 
     public function __invoke(EnrichTerm $command): void
@@ -85,6 +89,12 @@ final readonly class EnrichTermHandler
                 $this->clock->now(),
             );
         }
+
+        // The READING, before the photo rather than after it: the image search can throw (that is
+        // what the retry below is for), and a word must not lose its reading hint because a stock
+        // photo vendor was down. Asked whether or not the LLM step above ran — a retry that skipped
+        // the paid enrichment is still a card that may have no hint.
+        $this->reading->writeReading($command->termId, $command->translationLang->value);
 
         // Best-effort photo. The reader returns the term only while it lacks an image but carries a
         // query, so this is a no-op once imaged; a transient search error throws and the job retries.

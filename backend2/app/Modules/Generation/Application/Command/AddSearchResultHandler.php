@@ -8,11 +8,13 @@ use App\Modules\Collections\Application\Command\AddTermToCollection;
 use App\Modules\Collections\Application\Command\AddTermToCollectionHandler;
 use App\Modules\Collections\Application\Command\EnsureDefaultCollection;
 use App\Modules\Collections\Application\Command\EnsureDefaultCollectionHandler;
+use App\Modules\Collections\Application\Port\CollectionPairReader;
 use App\Modules\Collections\Application\Port\TermFolderMembershipReader;
 use App\Modules\Generation\Application\Dto\CachedLookup;
 use App\Modules\Generation\Application\Dto\SavedSearchResult;
 use App\Modules\Generation\Application\Port\DispatchesEnrichment;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
+use App\Modules\Generation\Application\Port\DispatchesTermReading;
 use App\Modules\Generation\Application\Port\SearchLookupCache;
 use App\Modules\Generation\Application\Service\LearnerLanguages;
 use App\Modules\Generation\Domain\Exception\LookupNotFound;
@@ -60,9 +62,12 @@ final readonly class AddSearchResultHandler
         private AddTermToCollectionHandler $addTerm,
         private EnsureDefaultCollectionHandler $ensureDefault,
         private TermFolderMembershipReader $folders,
+        /** Which pair the word actually landed in — the support language its reading is written in. */
+        private CollectionPairReader $pairs,
         private EnrollTermHandler $enroll,
         private DispatchesEnrichment $enrichment,
         private DispatchesImageAttachment $imageAttachment,
+        private DispatchesTermReading $reading,
         private LearnerLanguages $languages,
         private TransactionManager $tx,
         /**
@@ -147,6 +152,19 @@ final readonly class AddSearchResultHandler
         // searches. Not gated on `auto_enrich` either: that switch governs the paid станок, and an
         // image search is a different vendor and a different budget.
         $this->imageAttachment->dispatch($collectionId);
+
+        // The READING, on the same terms as the photo and for the same reason: it is asked on every
+        // save rather than only on the first, because a word saved before this door existed — or
+        // saved into a second folder in a second pair — is exactly the word missing one, and the
+        // job's own gate makes the repeat a single SELECT rather than a call.
+        //
+        // In the FOLDER's support language, read off the folder the word actually landed in. Not
+        // `$savedLang`: that value is the lookup's (or, absent one, the profile's), and the two part
+        // company on the branch that saves an existing term into a named folder — «сохранить в
+        // папку en→uk» would otherwise write a Russian reading onto a Ukrainian card. The pair is a
+        // property of the collection (DECISIONS п. 81) and this is the reader that says so.
+        $pair = $this->pairs->pairFor($collectionId->value);
+        $this->reading->writeReading($termId, $pair !== null ? $pair->sourceLang : $savedLang);
 
         // The станок, on the other hand, IS one paid model call per term — so it fires once, when
         // the word is genuinely new to this folder.
