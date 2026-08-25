@@ -25,6 +25,11 @@ function livePacker(array $config = []): EnrichmentPackerPort
 {
     config(['services.generation.driver' => 'openai', 'services.openai.api_key' => 'key', ...$config]);
     app()->forgetInstance(GenerationStackConfig::class);
+    // The Feature suite binds FakeEnrichmentPacker over this port for every test (tests/Pest.php), so
+    // that a test which merely walks through a door does not buy a model call. THIS file is the one
+    // that wants the real adapter — with `Http::fake()` underneath it, so still nothing on the wire —
+    // and forgetting the instance is how it asks for it.
+    app()->forgetInstance(EnrichmentPackerPort::class);
 
     return app(EnrichmentPackerPort::class);
 }

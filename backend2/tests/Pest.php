@@ -8,10 +8,18 @@ use App\Modules\Collections\Application\Command\AddWordToCollectionHandler;
 use App\Modules\Collections\Application\Command\CreateCustomCollection;
 use App\Modules\Collections\Application\Command\CreateCustomCollectionHandler;
 use App\Modules\Collections\Application\Service\DefaultCollectionPair;
+use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
+use App\Modules\Generation\Application\Port\ImageSearchPort;
+use App\Modules\Generation\Application\Port\TermEnricherPort;
 use App\Modules\Generation\Application\Port\TermTransliteratorPort;
 use App\Modules\Generation\Application\Port\TranslationProvider;
+use App\Modules\Generation\Application\Port\WordLookupPort;
+use App\Modules\Generation\Infrastructure\Adapter\FakeEnrichmentPacker;
+use App\Modules\Generation\Infrastructure\Adapter\FakePexelsImageSearch;
+use App\Modules\Generation\Infrastructure\Adapter\FakeTermEnricher;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTermTransliterator;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTranslator;
+use App\Modules\Generation\Infrastructure\Adapter\FakeWordLookup;
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
 use App\Modules\Identity\Infrastructure\Eloquent\User;
 use App\Modules\Learning\Application\Command\EnrollTerm;
@@ -42,13 +50,35 @@ use Tests\Doubles\SpyStatsProjector;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
-    // The reading hint is bought from the STRONG model, and it is now asked for by BOTH doors that
-    // build a single card — `POST /search/add` and a word typed into a folder. Dozens of tests walk
-    // through those doors for reasons that have nothing to do with readings, and the queue is `sync`
-    // here, so without this every one of them would put a real gpt-5.4 call on the wire. Bound for
-    // the whole Feature suite rather than file by file, because the file that forgets is the file
-    // that spends money. A test that wants to WATCH this call binds its own double over it.
-    ->beforeEach(fn () => app()->instance(TermTransliteratorPort::class, new FakeTermTransliterator()))
+    // EVERY VENDOR THIS SUITE CAN REACH BY ACCIDENT IS FAKED HERE, for the whole Feature suite and
+    // not file by file — because the file that forgets is the file that spends money.
+    //
+    // The queue is `sync` under test, so the two doors that build a single card — `POST /search/add`
+    // and a word typed into a folder — run their follow-up jobs INSIDE the request: the reading hint,
+    // the станок, the bare-term enricher and the stock photo. Dozens of tests walk through those
+    // doors for reasons that have nothing to do with any of that.
+    //
+    // Measured before this bound anything but the transliterator: one full run put 289 unfaked calls
+    // on the wire to `api.openai.com` and 20 to `api.pexels.com`. Worse, they were INVISIBLE — the
+    // станок catches a throwing term and counts it (BuildTermEnrichmentsHandler), so a suite that was
+    // buying gpt-4o-mini on every run looked exactly like a suite that was not.
+    //
+    // A test that wants to WATCH one of these calls binds its own double over the instance, or —
+    // when it wants the real adapter with `Http::fake()` underneath — forgets the instance first
+    // (`app()->forgetInstance(...)`, see MachineryStanokTest::livePacker()).
+    ->beforeEach(function (): void {
+        app()->instance(TermTransliteratorPort::class, new FakeTermTransliterator());
+        // The станок: one gpt-4o-mini call per term, chained onto every newly saved word.
+        app()->instance(EnrichmentPackerPort::class, new FakeEnrichmentPacker());
+        // «Учить это слово»: one call per bare term added to a folder without a translation.
+        app()->instance(TermEnricherPort::class, new FakeTermEnricher());
+        // `POST /search/lookup` — the one paid call a LEARNER can trigger by typing. Most files that
+        // use it already bind this fake; the one that forgot bought a live lookup on every run.
+        app()->instance(WordLookupPort::class, new FakeWordLookup());
+        // Not a model and not billed, but the same shape of accident: the photo job follows the
+        // enricher, so faking the enricher without this one merely moves the stray call downstream.
+        app()->instance(ImageSearchPort::class, new FakePexelsImageSearch(FakePexelsImageSearch::FOUND));
+    })
     ->in('Feature');
 
 // Every helper below is shared across more than one test file. It lives here — the one file Pest

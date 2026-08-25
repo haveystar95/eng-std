@@ -6,6 +6,7 @@ use App\Modules\Generation\Application\Command\BuildTermEnrichmentsHandler;
 use App\Modules\Generation\Application\Command\RegenerateShowcase;
 use App\Modules\Generation\Application\Command\RegenerateShowcaseHandler;
 use App\Modules\Generation\Application\Dto\GenerationStackConfig;
+use App\Modules\Generation\Application\Port\EnrichmentPackerPort;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,11 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     config(['services.generation.driver' => 'openai', 'services.openai.api_key' => 'key']);
     app()->forgetInstance(GenerationStackConfig::class);
+    // This file WATCHES the станок's own call — `fakeCoreAndMechanics()` queues two responses and
+    // the second one is the machinery's. The Feature suite binds FakeEnrichmentPacker over that port
+    // (tests/Pest.php) so no test buys a model call by accident; here the real adapter is the
+    // subject, with `Http::fake()` underneath it, so the instance is forgotten first.
+    app()->forgetInstance(EnrichmentPackerPort::class);
 });
 
 /** A store term as the catalogue actually holds one: written by an old prompt, with an example. */
