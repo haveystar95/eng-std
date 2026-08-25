@@ -166,9 +166,16 @@ return [
          * one above. Two products, two producers' worth of risk: a transliteration is judged by an
          * alphabet check a machine CAN make, a synonym by a meaning judgement it cannot, so they can
          * honestly earn their way on at different times. One flag would make the safer product wait
-         * for the riskier one.
+         * for the riskier one — which is exactly what happened, and why they are two.
+         *
+         * ON by default since 25.08. Its pilot passed and was not close: 49 hints over two generated
+         * collections, 49 readable, none rejected by the alphabet gate, and the model got the hard
+         * ones right on its own — silent letters («honest» → «онист», «calm» → «кам») and
+         * non-rhotic endings («under pressure» → «андер преша»). The threshold was ≥85% clean;
+         * the measured number is 100% (docs/syn-1-findings.md §8). Its twin above stayed off in the
+         * same run at 67%.
          */
-        'write_transliteration' => (bool) env('GENERATION_WRITE_TRANSLITERATION', false),
+        'write_transliteration' => (bool) env('GENERATION_WRITE_TRANSLITERATION', true),
         // 'pexels' (default) or 'fake' — the image-search adapter for AttachImagesJob.
         'image_driver' => env('IMAGE_DRIVER', 'pexels'),
         // Chain the enrichment станок onto a finished generation (accepted variants + distractors).

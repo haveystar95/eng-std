@@ -69,6 +69,12 @@ function seedSyncTerm(object $ctx): array
         'id' => (string) Ulid::generate(), 'term_id' => $termId, 'text' => 'goal', 'lang' => 'en',
         'source' => 'auto', 'created_at' => now(), 'updated_at' => now(),
     ]);
+    // The reading hint is keyed by the SUPPORT language, not the term's — «purpose» read by a
+    // Russian speaker. That is the whole reason it lives in its own table (SYN-1d Ч.7).
+    DB::table('term_transliterations')->insert([
+        'id' => (string) Ulid::generate(), 'term_id' => $termId, 'text' => 'пёрпэс', 'lang' => 'ru',
+        'source' => 'auto', 'generator_version' => 'v15', 'created_at' => now(), 'updated_at' => now(),
+    ]);
 
     return [$user, $token, $collectionId, $termId];
 }
@@ -82,6 +88,10 @@ it('carries synonyms and the full translation list, beside the fields that were 
         ->json('data.changes.terms.0');
 
     expect($term['synonyms'])->toBe(['goal'])
+        // Picked by the pair's SUPPORT language, and beside `transcription` (IPA), never instead
+        // of it — the two are different products for different moments.
+        ->and($term['transliteration'])->toBe('пёрпэс')
+        ->and($term['transcription'])->toBeNull()
         // Pinned first, so `translations[0]` is always the `translation` field.
         ->and($term['translations'])->toBe(['цель', 'задача'])
         ->and($term['translation'])->toBe('цель')
@@ -99,7 +109,9 @@ it('sends empty lists rather than omitting the keys, so the client shape never v
         ->json('data.changes.terms.0');
 
     expect($term['synonyms'])->toBe([])
-        ->and($term['translations'])->toBe(['счёт']);
+        ->and($term['translations'])->toBe(['счёт'])
+        // Null rather than an absent key: the client shape never varies.
+        ->and($term['transliteration'])->toBeNull();
 });
 
 it('puts synonyms on a card that asked for the meaning, and on no other', function () {

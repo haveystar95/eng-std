@@ -156,6 +156,12 @@ final readonly class LanguageBarrier
                 transcription: $item->transcription,
                 exampleTranslation: $repaired->exampleTranslation ?? $item->exampleTranslation,
                 imageApiPrompt: $item->imageApiPrompt,
+                // Carried over with the rest of the untouched side: the repair rewrites the
+                // LEARNER-language fields and nothing else, and a rebuild that forgot these would
+                // delete them for exactly the items that needed repairing.
+                synonyms: $item->synonyms,
+                otherTranslations: $item->otherTranslations,
+                transliteration: $item->transliteration,
             );
 
             $offence = $this->offence($item, self::LEARNER_FIELDS, $brief->sourceLang->value);

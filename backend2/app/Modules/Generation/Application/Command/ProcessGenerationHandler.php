@@ -257,7 +257,11 @@ final readonly class ProcessGenerationHandler
                 // and a learner who types the second one is not told they are wrong (SYN-1).
                 translations: [
                     new TranslationInput($request->sourceLang(), $item->translation, isPrimary: true),
-                    ...$this->otherReadings($item, $request->sourceLang()),
+                    // Behind the SAME switch as the synonyms, because it is the same kind of claim:
+                    // unvetted model output that widens what a learner may be told is right. It is
+                    // the gentler of the two — an extra reading never changes the card's question —
+                    // but a new product ships off (DECISIONS п. 32) and it ships off with its twin.
+                    ...($this->writeSynonyms ? $this->otherReadings($item, $request->sourceLang()) : []),
                 ],
                 ipa: $item->transcription,
                 examples: $item->example !== null

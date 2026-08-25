@@ -68,6 +68,14 @@ final class DraftValidator
                 transcription: $this->nullableText($item->transcription),
                 exampleTranslation: $example !== null ? $this->nullableText($item->exampleTranslation) : null,
                 imageApiPrompt: $this->nullableText($item->imageApiPrompt), // "" (un-illustratable) → null
+                // Carried through untouched. This validator judges the CORE — the key, the example,
+                // the level — and has no opinion about the per-pair products; each of those has its
+                // own gate further down ({@see \App\Modules\Generation\Domain\Service\EnrichmentValidator}).
+                // Dropping them here is how they silently never reached the database: the item is
+                // REBUILT, so a field this constructor does not name is a field that ceases to exist.
+                synonyms: $item->synonyms,
+                otherTranslations: $item->otherTranslations,
+                transliteration: $this->nullableText($item->transliteration),
             );
             $all[] = $usable;
             if ($this->withinLevel($cefr, $min, $max)) {

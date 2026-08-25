@@ -73,13 +73,6 @@ final class EloquentTermCoreWriter implements TermCoreWriter
         Provenance $provenance,
         mixed $now,
     ): void {
-        // The same total order a reader asking in this language would use, so the row that is
-        // rewritten is the row the card was showing.
-        $existing = TranslationPick::ordered(
-            DB::table('term_translations')->where('term_id', $termId->value),
-            $lang,
-        )->first(['id']);
-
         $stamp = [
             'text' => $text,
             'lang' => $lang,
@@ -88,6 +81,43 @@ final class EloquentTermCoreWriter implements TermCoreWriter
             'generation_model' => $provenance->model,
             'updated_at' => $now,
         ];
+
+        // THE TERM MAY ALREADY HOLD THIS EXACT READING, on a row that is not the one the card shows.
+        // Then there is nothing to rewrite: the text is already there, and the only thing the fresh
+        // core is really saying is «that one is the answer now». Promote it.
+        //
+        // Rewriting the winner's text instead would collide with `term_translations_uidx`
+        // (term_id, lang, text) and take the whole generation down with a 23505 — which is exactly
+        // what it did the first time a v15 collection landed on a term the store already had. The
+        // same generation had just added the model's other readings as alternatives, and the core
+        // refresh then tried to rewrite the primary onto one of them. Latent before v15 (it needed a
+        // term that already carried the new reading as a second row) and routine after it.
+        $sameText = DB::table('term_translations')
+            ->where('term_id', $termId->value)
+            ->where('lang', $lang)
+            ->where('text', $text)
+            ->first(['id']);
+
+        if ($sameText !== null) {
+            // Everything but the text, which is already what it should be. Re-stamped like any row
+            // this writer touches: `replaceCore` is the one deliberate exception to «provenance is
+            // never re-written» (see the port), and the fresh core is now asserting this reading.
+            $keep = $stamp;
+            unset($keep['text']);
+            DB::table('term_translations')->where('id', $sameText->id)->update($keep);
+            $primaryId = (string) $sameText->id;
+
+            $this->demoteOthers($termId, $primaryId, $now);
+
+            return;
+        }
+
+        // The same total order a reader asking in this language would use, so the row that is
+        // rewritten is the row the card was showing.
+        $existing = TranslationPick::ordered(
+            DB::table('term_translations')->where('term_id', $termId->value),
+            $lang,
+        )->first(['id']);
 
         if ($existing !== null) {
             DB::table('term_translations')->where('id', $existing->id)->update($stamp);
@@ -102,7 +132,12 @@ final class EloquentTermCoreWriter implements TermCoreWriter
             ]);
         }
 
-        // A7: exactly one primary per term, and it is the one just written.
+        $this->demoteOthers($termId, $primaryId, $now);
+    }
+
+    /** A7: exactly one primary per term, and it is the one just written. */
+    private function demoteOthers(TermId $termId, string $primaryId, mixed $now): void
+    {
         DB::table('term_translations')
             ->where('term_id', $termId->value)
             ->where('id', '!=', $primaryId)
