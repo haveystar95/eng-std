@@ -50,7 +50,8 @@ final class EloquentDistractorAuditReader implements DistractorAuditReader
             ->orderBy('d.example_id')
             ->orderBy('d.id')
             ->get([
-                't.id as term_id', 't.text as term_text', 'e.id as example_id', 'e.sentence as example_sentence',
+                't.id as term_id', 't.text as term_text', 't.lang as term_lang',
+                'e.id as example_id', 'e.sentence as example_sentence',
                 'd.sentence', 'd.error_type', 'd.error_span', 'd.correction', 'd.generator_version',
             ]) as $row) {
             $out[] = new DistractorAuditRow(
@@ -63,6 +64,7 @@ final class EloquentDistractorAuditReader implements DistractorAuditReader
                 errorSpan: (string) $row->error_span,
                 correction: (string) $row->correction,
                 generatorVersion: (string) $row->generator_version,
+                termLang: (string) $row->term_lang,
             );
         }
 

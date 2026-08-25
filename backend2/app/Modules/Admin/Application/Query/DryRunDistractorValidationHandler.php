@@ -109,6 +109,7 @@ final readonly class DryRunDistractorValidationHandler
                 existingDistractors: $target->existingDistractors,
                 stored: $this->storedSentences($target->termId),
                 suppressed: $this->suppressedSentences($target->termId),
+                termLang: $target->lang,
             ),
             'source' => 'term',
             'matchedTermId' => null,

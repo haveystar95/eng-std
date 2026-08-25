@@ -512,6 +512,29 @@ final class EnrichmentValidator
             }
             $seen[$key] = true;
 
+            // The sentence has to be written in the alphabet of the language it teaches. This is a
+            // property of the sentence alone, which is why it is asked here and not further down
+            // among the checks that relate the row to its example.
+            //
+            // «He always knows how to начать a conversation.», span «начать» → «start»: internally
+            // consistent, repairs to the example, passes every other gate — and the learner picks the
+            // right sentence by noticing which one is not in the Latin alphabet. Nothing was looking
+            // at this: the purity check only ever read the example and the two Russian fields, and it
+            // REPORTS there rather than refusing. Three such rows are live, and the newest of them was
+            // written by the current станок (a Polish example with «к поздna» in it), so the prompt
+            // rule that forbids it — v13.1/00-role.md: «A {{source_lang}} letter inside a
+            // {{target_lang}} field is not a typo, it is a broken card» — is demonstrably not enough.
+            //
+            // The alphabet comes from LanguagePurity, which is where this product states what script a
+            // language uses; a null language is its «no opinion» and passes. `correction` needs no
+            // separate check — the circular check below already requires it to reproduce the example.
+            if ($candidate->termLang !== null
+                && $this->purity->foreignScriptLetters($candidate->termLang, $text) !== []) {
+                $gates?->record($index, DistractorGate::ForeignScript);
+
+                continue;
+            }
+
             // A "wrong" sentence our own grader would accept is not wrong. Escalate only when it was
             // a VARIANT that made it correct — see the note where the two sets are built.
             if (isset($correct[$key])) {

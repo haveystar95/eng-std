@@ -29,6 +29,7 @@ function enrichmentCandidate(
     array $existingDistractors = [],
     array $synonyms = [],
     array $existingSynonyms = [],
+    ?string $termLang = 'en',
 ): EnrichmentCandidate {
     return new EnrichmentCandidate(
         termId: '01J000000000000000000000TM',
@@ -44,6 +45,7 @@ function enrichmentCandidate(
         existingDistractors: $existingDistractors,
         synonyms: $synonyms,
         existingSynonyms: $existingSynonyms,
+        termLang: $termLang,
     );
 }
 
@@ -312,6 +314,69 @@ it('folds a contraction on BOTH sides at once', function () {
     // the OTHER side's single key, so two sentences that both needed expanding never met.
     expect($this->validator->sentenceEquals("It'll be fine and he's gone.", 'It will be fine and he is gone.'))
         ->toBeTrue();
+});
+
+// ---- alphabet: the learner's own language leaking into the sentence being taught ------------------
+//
+// Nothing was looking at this before. LanguagePurity only ever read the example and the two Russian
+// fields, and there it REPORTS rather than refuses, so a distractor sentence could carry any script at
+// all. Three such rows are live; the newest was written by the current станок, which is why the prompt
+// rule forbidding it (v13.1/00-role.md) is not the answer on its own.
+
+it('scraps a distractor with Cyrillic inside an English sentence', function () {
+    // Live: term «start a conversation», станок enrich-v1-topup3, labelled `false_friend`. Every other
+    // check passes — the row repairs to the example exactly — and the learner picks the right sentence
+    // by alphabet instead of by grammar.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('He always knows how to начать a conversation.', 'false_friend', 'начать', 'start')],
+        acceptedForms: ['start a conversation'],
+        example: 'He always knows how to start a conversation.',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('scraps a distractor with Cyrillic inside a POLISH sentence', function () {
+    // Live: term «Rozmowa», станок mech-v13.1 — the current one. The reason this test exists separately
+    // from the English one: LanguagePurity::isClean() has no opinion about `pl` at all, so a check
+    // built on it would have passed this row. foreignScriptLetters() knows pl is written in Latin.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Nasza rozmowa trwała к поздna.', 'preposition', 'к поздna', 'do późna')],
+        acceptedForms: ['rozmowa'],
+        example: 'Nasza rozmowa trwała do późna.',
+        termLang: 'pl',
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('keeps a Polish distractor written in Polish, diacritics and all', function () {
+    // The guard: «ł ó ż ą» are Latin. A gate that fell back to plain ASCII would scrap every correct
+    // Polish row there is.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('Nasza rozmowa trwał do późna.', 'tense', 'trwał', 'trwała')],
+        acceptedForms: ['rozmowa'],
+        example: 'Nasza rozmowa trwała do późna.',
+        termLang: 'pl',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
+it('passes a distractor when nobody declared the term\'s language', function () {
+    // The playground's manual path: an operator types a term and an example, and no language is
+    // declared anywhere. «No opinion» is a pass — the same default LanguagePurity takes for a language
+    // it was never taught — because inventing an alphabet is worse than not checking one.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor('He always knows how to начать a conversation.', 'false_friend', 'начать', 'start')],
+        acceptedForms: ['start a conversation'],
+        example: 'He always knows how to start a conversation.',
+        termLang: null,
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
 });
 
 it('scraps a distractor that only re-types the apostrophe of a sibling already stored', function () {

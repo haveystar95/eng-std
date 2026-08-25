@@ -24,5 +24,7 @@ final readonly class DistractorAuditRow
         public string $errorSpan,
         public string $correction,
         public string $generatorVersion,
+        /** The language being learned — whose alphabet the sentence has to be written in. */
+        public string $termLang = 'en',
     ) {}
 }

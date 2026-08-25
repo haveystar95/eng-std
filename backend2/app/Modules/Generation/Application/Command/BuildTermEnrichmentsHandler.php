@@ -203,6 +203,7 @@ final readonly class BuildTermEnrichmentsHandler
             backTranslationAsked: $pack->backTranslationAsked,
             synonyms: $pack->synonyms,
             existingSynonyms: $target->existingSynonyms,
+            termLang: $target->lang,
         ));
 
         ($this->import)(new ImportTermEnrichment(

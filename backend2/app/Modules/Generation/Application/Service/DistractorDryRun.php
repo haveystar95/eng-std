@@ -77,6 +77,7 @@ final readonly class DistractorDryRun
             existingDistractors: $reference->existingDistractors,
             // Never asked, so the ambiguity check stays silent instead of flagging every run.
             backTranslationAsked: false,
+            termLang: $reference->termLang,
         ), $log);
 
         $kept = [];

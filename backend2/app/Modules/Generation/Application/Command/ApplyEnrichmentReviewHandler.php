@@ -222,6 +222,7 @@ final readonly class ApplyEnrichmentReviewHandler
                 // The term itself: this candidate is not being judged for ambiguity, and passing the
                 // target keeps the (unused here) back-translation check from inventing a finding.
                 backTranslation: $target->text,
+                termLang: $target->lang,
             ));
 
             if ($verdict->variants === []) {

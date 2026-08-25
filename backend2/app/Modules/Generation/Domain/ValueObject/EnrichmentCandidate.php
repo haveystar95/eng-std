@@ -29,6 +29,11 @@ final readonly class EnrichmentCandidate
      *         opposite: for a shape that had to return one, null is a defect worth a human's time;
      *         for a shape that was never asked (the machinery shape produces no translations at all),
      *         null is silence, and reporting silence as a finding buries the real ones.
+     * @param  string|null  $termLang  the language BEING LEARNED — whose alphabet a distractor sentence
+     *         has to be written in. Null is «no opinion» and passes: the playground's manual path has
+     *         a term nobody typed a language for, and inventing one there would be worse than not
+     *         checking ({@see \App\Modules\Shared\Domain\Service\LanguagePurity} takes the same
+     *         default for a language it was never taught).
      */
     public function __construct(
         public string $termId,
@@ -45,5 +50,6 @@ final readonly class EnrichmentCandidate
         public bool $backTranslationAsked = true,
         public array $synonyms = [],
         public array $existingSynonyms = [],
+        public ?string $termLang = null,
     ) {}
 }

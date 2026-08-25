@@ -7,6 +7,7 @@ namespace App\Modules\Generation\Application\Command;
 use App\Modules\Generation\Application\Dto\DistractorAuditOutcome;
 use App\Modules\Generation\Domain\Service\DistractorRepair;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
+use App\Modules\Shared\Domain\Service\LanguagePurity;
 use App\Modules\Shared\Domain\Service\LexicalNormalizer;
 use App\Modules\Vocabulary\Application\Dto\DistractorAuditRow;
 use App\Modules\Vocabulary\Application\Port\TermReviewWriter;
@@ -18,12 +19,12 @@ use App\Modules\Vocabulary\Application\Query\DistractorAuditReader;
  * The станок only ever judged a row on its way IN. Everything already in the database was judged by
  * whatever the validator knew on the day it was generated, so tightening the validator quietly splits
  * the content into "new rows that pass" and "old rows nobody re-asked". This closes that: the same
- * four questions, asked of the whole table, with the answer written back.
+ * questions, asked of the whole table, with the answer written back.
  *
  * The verdict per row is deliberately not uniform — the checks disagree about what a failure means:
  *
- *   · equality / dedup — the SENTENCE is the problem (it is the example, or a sibling). Nothing to
- *     repair; the row is scrap.
+ *   · equality / dedup / script — the SENTENCE is the problem (it is the example, it is a sibling, or
+ *     it is not written in the language's own alphabet). Nothing to repair; the row is scrap.
  *   · no-op / circular — the sentence may be perfectly good and only its LABEL wrong. The span and
  *     correction are derivable from the sentence itself (see {@see DistractorRepair}), so a row that
  *     breaks exactly one place is relabelled and kept. One that breaks two is not a distractor under
@@ -39,6 +40,7 @@ final readonly class AuditDistractorsHandler
         private EnrichmentValidator $validator,
         private DistractorRepair $repair,
         private LexicalNormalizer $normalizer,
+        private LanguagePurity $purity = new LanguagePurity(),
     ) {}
 
     public function __invoke(AuditDistractors $command): DistractorAuditOutcome
@@ -94,7 +96,7 @@ final readonly class AuditDistractorsHandler
     }
 
     /**
-     * Which check this row fails, or null when it passes all four. Order matches the validator's, so
+     * Which check this row fails, or null when it passes them all. Order matches the validator's, so
      * a row that is both the example and mislabelled is reported as the more fundamental problem.
      *
      * @param  array<string, true>  $seen  normalised sentences already kept on this example
@@ -103,6 +105,13 @@ final readonly class AuditDistractorsHandler
     {
         if ($this->validator->sentenceEquals($row->sentence, $row->exampleSentence)) {
             return 'equality';
+        }
+        // Letters from an alphabet the term's language is not written in — «He always knows how to
+        // начать a conversation». Grouped with equality rather than with the label checks, and that
+        // placement IS the verdict: a sentence in the wrong alphabet is wrong as a SENTENCE, so there
+        // is no span/correction that would rescue it and nothing for the repair below to derive.
+        if ($this->purity->foreignScriptLetters($row->termLang, $row->sentence) !== []) {
+            return 'script';
         }
         if (isset($seen[$key])) {
             return 'dedup';

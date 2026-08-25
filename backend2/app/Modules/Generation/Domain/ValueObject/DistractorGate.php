@@ -44,6 +44,17 @@ enum DistractorGate: string
     /** The same sentence was proposed as a correct variant AND as a distractor. One claim is false. */
     case VariantConflict = 'variant_conflict';
 
+    /**
+     * The sentence carries letters from an alphabet the term's language is not written in — the
+     * learner's own language leaking into the sentence being taught.
+     *
+     * «He always knows how to начать a conversation» against «…how to start a conversation», labelled
+     * `false_friend`: every other check passes, because the row is internally consistent and its
+     * repair does give back the example. The card is still broken twice over — the wrong option is
+     * spotted by alphabet rather than by grammar, and the reveal prints the answer under it.
+     */
+    case ForeignScript = 'foreign_script';
+
     /** `error_type` is not one of the six the schema allows. */
     case UnknownErrorType = 'unknown_error_type';
 
@@ -87,6 +98,7 @@ enum DistractorGate: string
             self::Duplicate => 'такое предложение уже есть — в базе, среди подавленных или выше в этом же списке.',
             self::EqualsAcceptedAnswer => 'наш же грейдер засчитал бы это как верный ответ — это не дистрактор.',
             self::VariantConflict => 'то же предложение предложено и как верный вариант, и как дистрактор.',
+            self::ForeignScript => 'в предложении буквы чужого алфавита — язык подсказки протёк в изучаемый язык.',
             self::UnknownErrorType => 'error_type не из шести разрешённых значений.',
             self::SpanNotFound => 'error_span пуст или не встречается в своём же предложении — подчёркивать нечего.',
             self::SpanInsideAcceptedForm => 'error_span попал внутрь собственной формулировки термина — это разметка верного ответа как ошибки.',

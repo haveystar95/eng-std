@@ -22,6 +22,11 @@ final readonly class DryRunReference
      * @param  list<string>  $existingDistractors  prod-identical dedup set
      * @param  list<string>  $stored  sentences currently stored against the pinned example
      * @param  list<string>  $suppressed  sentences removed by a review or the audit
+     * @param  string|null  $termLang  the language being learned, when the reference came from a real
+     *        term. Null on the MANUAL path, where an operator types a term and an example and no
+     *        language is declared anywhere — so the alphabet gate stays silent there rather than
+     *        guessing. That is one place the sandbox is knowingly softer than production; a manual
+     *        run cannot reproduce a check whose input it does not have.
      */
     public function __construct(
         public ?string $termId,
@@ -32,5 +37,6 @@ final readonly class DryRunReference
         public array $existingDistractors = [],
         public array $stored = [],
         public array $suppressed = [],
+        public ?string $termLang = null,
     ) {}
 }

@@ -13,14 +13,18 @@ uses(RefreshDatabase::class);
 const AUDIT_EXAMPLE = 'I think I have a cold.';
 
 /** @param  list<array{0: string, 1: string, 2: string}>  $distractors  sentence, span, correction */
-function seedAuditTarget(array $distractors, string $example = AUDIT_EXAMPLE): string
-{
+function seedAuditTarget(
+    array $distractors,
+    string $example = AUDIT_EXAMPLE,
+    string $lang = 'en',
+    string $termText = 'cold',
+): string {
     $termId = Ulid::generate();
     $exampleId = Ulid::generate();
 
     DB::table('terms')->insert([
-        'id' => $termId, 'text' => 'cold', 'normalized_text' => 'cold',
-        'lang' => 'en', 'type' => 'word', 'source' => 'ai',
+        'id' => $termId, 'text' => $termText, 'normalized_text' => $termText,
+        'lang' => $lang, 'type' => 'word', 'source' => 'ai',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     seedExample([
@@ -83,6 +87,63 @@ it('deletes a row that is the example with a bare apostrophe-s spelled out, caug
 
     expect($outcome->deleted['equality'] ?? 0)->toBe(1)
         ->and(DB::table('example_distractors')->count())->toBe(0);
+});
+
+// The two classes the retro-audit could not see until the gates existed. Both are SCRAP, not relabel:
+// the sentence is what is wrong, so no span/correction pair would rescue the row.
+
+it('deletes a stored row that is the example with a contraction spelled out', function () {
+    // The live «Piece of cake» shape, retro. Equality now asks by clitic, so «it will» folds onto
+    // «it'll»; before this it did not, and the row passed all four checks on its way through the audit.
+    seedAuditTarget(
+        [["Don't worry about the test — it will be a piece of cake.", 'it will', "it'll"]],
+        "Don't worry about the test — it'll be a piece of cake.",
+    );
+
+    $outcome = app(AuditDistractorsHandler::class)(new AuditDistractors(apply: true));
+
+    expect($outcome->deleted['equality'] ?? 0)->toBe(1)
+        ->and(DB::table('example_distractors')->count())->toBe(0);
+});
+
+it('deletes a stored row written in the wrong alphabet', function () {
+    seedAuditTarget(
+        [['He always knows how to начать a conversation.', 'начать', 'start']],
+        'He always knows how to start a conversation.',
+    );
+
+    $outcome = app(AuditDistractorsHandler::class)(new AuditDistractors(apply: true));
+
+    expect($outcome->deleted['script'] ?? 0)->toBe(1)
+        ->and(DB::table('example_distractors')->count())->toBe(0);
+});
+
+it('deletes a stored POLISH row carrying Cyrillic, which a language-name check would have passed', function () {
+    seedAuditTarget(
+        [['Nasza rozmowa trwała к поздna.', 'к поздna', 'do późna']],
+        'Nasza rozmowa trwała do późna.',
+        lang: 'pl',
+        termText: 'rozmowa',
+    );
+
+    $outcome = app(AuditDistractorsHandler::class)(new AuditDistractors(apply: true));
+
+    expect($outcome->deleted['script'] ?? 0)->toBe(1)
+        ->and(DB::table('example_distractors')->count())->toBe(0);
+});
+
+it('leaves a correct Polish row alone', function () {
+    seedAuditTarget(
+        [['Nasza rozmowa trwał do późna.', 'trwał', 'trwała']],
+        'Nasza rozmowa trwała do późna.',
+        lang: 'pl',
+        termText: 'rozmowa',
+    );
+
+    $outcome = app(AuditDistractorsHandler::class)(new AuditDistractors(apply: true));
+
+    expect($outcome->totalDeleted())->toBe(0)
+        ->and(DB::table('example_distractors')->count())->toBe(1);
 });
 
 it('deletes the second of two sentences that normalise to the same thing', function () {
