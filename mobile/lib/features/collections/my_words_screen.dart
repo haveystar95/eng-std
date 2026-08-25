@@ -185,17 +185,25 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
     _Phase.review => l.myWordsFilterReview,
   };
 
-  /// The profile's target language, and only that: the pool mixes collections by design, so there
-  /// is no single set whose language could be borrowed the way the collection screen borrows one.
-  String get _speakLang => ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+  /// The language THIS word is in, off its own pair — the pool mixes collections by design, so the
+  /// screen has no single language to borrow and the profile's is simply a different word's. Asked
+  /// through [AppDatabase.pairByTerms], the one place that answers «which pair does this term belong
+  /// to» (first collection by id wins, as on the server), so the card and the session agree.
+  ///
+  /// The fallback is the profile's target language: a word whose collections have left the mirror
+  /// still has to be pronounceable.
+  String get _fallbackLang => ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
 
   /// The same card the collection screen opens — one card for a word, wherever it is met.
   ///
   /// No folder is named here on purpose: the pool mixes collections, and a word may have come from
   /// several or from one that no longer exists. «Добавить в другую папку» still works — it simply
   /// has no «current» shelf to contrast with.
-  void _openCard(PoolWordRow row) {
+  Future<void> _openCard(PoolWordRow row) async {
     final word = _toWord(row);
+    final pairs = await ref.read(appDatabaseProvider).pairByTerms([word.termId]);
+    final speakLang = pairs[word.termId]?.learned ?? _fallbackLang;
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => WordCardScreen(
@@ -203,7 +211,7 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
           mode: WordCardMode.folder,
           onSpeak: () {
             AppHaptics.light();
-            _pronouncer.speak(word, targetLang: _speakLang);
+            _pronouncer.speak(word, targetLang: speakLang);
           },
           onTrain: () => Navigator.of(context).push(
             MaterialPageRoute<void>(

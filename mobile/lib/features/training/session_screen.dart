@@ -227,7 +227,9 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     PerfLog.instance.screen = 'session'; // stall monitor: which screen a hitch belongs to
     // Raise the iOS audio session and prime the synthesizer ONCE, behind the loading spinner —
     // never on the first listening card, whose whole content is the sound (F20-r).
-    unawaited(_pronouncer.warmUp(targetLang: _targetLang));
+    // The pairs are not resolved yet, so this primes the engine with the session's fallback; every
+    // utterance sets the language of the card it belongs to before speaking.
+    unawaited(_pronouncer.warmUp(targetLang: _sessionLang));
     // F20: warm the first few cards' photos up front so opening photo cards aren't cold network
     // loads (the lag the user saw was photo cards fetching + decoding late).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -309,17 +311,27 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     super.dispose();
   }
 
-  /// The scoped collection's language wins (F16); a cross-collection session has none and falls
-  /// back to the profile's target language.
-  String get _targetLang =>
+  /// The session's FALLBACK language: the scoped collection's (F16), else the profile's. It is what
+  /// a card is spoken in only while its own pair is unknown — the warm-up, which runs before
+  /// [_resolvePairs] has answered, and a card whose collection is not in the local mirror.
+  String get _sessionLang =>
       widget.targetLang ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
 
-  Future<void> _speak(String text, {bool slow = false}) async {
+  /// The language a CARD is in — read off that card's own pair, the way the pair badge is.
+  ///
+  /// A study session is mixed by design (DECISIONS п. 128), so «what language is this» is a property
+  /// of the card, never of the session or of the profile. Pinned to the profile it was the bug from
+  /// the owner's phone: an Italian card read out by an English voice, in a session that also held
+  /// English cards, with listening and dictation — whose whole content IS the sound — asking one
+  /// language and pronouncing another.
+  String _langOfCard(SessionCard card) => _pairs[card.termId]?.learned ?? _sessionLang;
+
+  Future<void> _speak(String lang, String text, {bool slow = false}) async {
     // Reuse the Pronouncer, which speaks a Word — wrap the raw target text. [slow] backs the
     // listening card's «замедленно» replay.
     await _pronouncer.speak(
       Word(termId: '', term: text, translation: '', type: 'word'),
-      targetLang: _targetLang,
+      targetLang: lang,
       slow: slow,
     );
   }
@@ -470,6 +482,17 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
 
     final builtAt = _pos; // the index this card is built for — used to cancel its deferred effects
     final isIntro = _card.mode == ExerciseMode.intro;
+    // Bound to THIS CARD rather than to «the current position»: a verdict's auto-pronounce fires
+    // after [RecognitionReplay.record], by which point the slot may resolve to a different term —
+    // and the word being spoken is still the one the learner just answered.
+    //
+    // The LOOKUP, though, happens at speak time, not here: [_resolvePairs] answers asynchronously,
+    // and a card built before it landed would otherwise carry the fallback language for as long as
+    // it is on screen — which is precisely the first card of the session.
+    final played = _card;
+    final cardLang = _langOfCard(played);
+    Future<void> speakCard(String text, {bool slow = false}) =>
+        _speak(_langOfCard(played), text, slow: slow);
     // The intro is not an exercise, so it is not the exercise widget. It has no options, no input
     // and no verdict — giving it its own widget is what keeps an "answer" with no answer in it out
     // of the card that owns answering.
@@ -478,10 +501,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             key: ValueKey(_pos),
             card: _card,
             autoPronounce: autoPronounce,
-            onSpeak: _speak,
+            onSpeak: speakCard,
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
-            speechLocaleId: sttLocaleFor(_targetLang),
+            speechLocaleId: sttLocaleFor(cardLang),
             isCurrent: () => mounted && _pos == builtAt,
           )
         : SessionExerciseCard(
@@ -489,11 +512,11 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             card: _card,
             autoPronounce: autoPronounce,
             onAnswered: _onAnswered,
-            onSpeak: _speak,
+            onSpeak: speakCard,
             onSkipped: _skipCard,
             // The learner is speaking the language being LEARNED, whatever the app's own language
-            // is — the same value the pronouncer speaks in.
-            speechLocaleId: sttLocaleFor(_targetLang),
+            // is — the same value the pronouncer speaks in, off the same card's pair.
+            speechLocaleId: sttLocaleFor(cardLang),
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
             showDue: !widget.practice,

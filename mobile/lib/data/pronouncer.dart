@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'models.dart';
@@ -22,6 +22,9 @@ class Pronouncer {
   // per-answer stall that landed on the card-transition animation (F20).
   String? _lastLocale;
   double? _lastRate;
+
+  /// Locales iOS has already refused, so the log says it once instead of once per card.
+  final Set<String> _missingVoices = {};
 
   /// When we last asked the engine to say something, and how long the iOS audio route stays awake
   /// after that. Drives [_wakeRoute].
@@ -59,11 +62,7 @@ class Pronouncer {
       await _tts.autoStopSharedSession(false);
       await _tts.setSharedInstance(true);
     }
-    final locale = ttsLocaleFor(targetLang);
-    if (_lastLocale != locale) {
-      _lastLocale = locale;
-      await _tts.setLanguage(locale);
-    }
+    await _applyLocale(ttsLocaleFor(targetLang));
     if (_lastRate != _rateNormal) {
       _lastRate = _rateNormal;
       await _tts.setSpeechRate(_rateNormal);
@@ -105,14 +104,10 @@ class Pronouncer {
     // `stopSpeaking(.immediate)`, which raises `didCancel`, NOT `didFinish` — so it never trips the
     // session teardown that [warmUp] disables.
     await _tts.stop();
-    final locale = ttsLocaleFor(targetLang);
     final rate = slow ? _rateSlow : _rateNormal;
     // Only touch the engine when a setting actually changes — otherwise speak() is one channel call,
     // not three, so it stops stalling the card transition (F20).
-    if (_lastLocale != locale) {
-      _lastLocale = locale;
-      await _tts.setLanguage(locale);
-    }
+    await _applyLocale(ttsLocaleFor(targetLang));
     if (_lastRate != rate) {
       _lastRate = rate;
       await _tts.setSpeechRate(rate);
@@ -145,6 +140,32 @@ class Pronouncer {
     await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
       IosTextToSpeechAudioCategoryOptions.mixWithOthers,
     ], IosTextToSpeechAudioMode.defaultMode);
+  }
+
+  /// Push a locale to the engine, and only when it actually changes (a repeat [speak] is then ONE
+  /// channel call, not two — F20).
+  ///
+  /// iOS answers 0 when it has no voice for the locale: the language pack is simply not installed.
+  /// It leaves its own language untouched in that case, so the word is read by whatever the engine
+  /// already had — the system default on a fresh engine. That is the degradation we want (a word in
+  /// the wrong accent beats a crash or a silent card), and it is the behaviour a card got everywhere
+  /// before the pair started deciding the locale, so nothing gets worse for an unsupported language.
+  ///
+  /// It is LOGGED, once per locale, because it is otherwise invisible: «почему у него не тот голос»
+  /// has to be answerable from the log rather than by guessing at Settings → Accessibility.
+  Future<void> _applyLocale(String locale) async {
+    if (_lastLocale == locale) return;
+    final accepted = await _tts.setLanguage(locale);
+    if (accepted == 1) {
+      _lastLocale = locale;
+      return;
+    }
+    // Deliberately NOT cached: the engine is not in this locale, and remembering it as if it were
+    // would skip the next attempt and leave a later card reading in some earlier card's language.
+    _lastLocale = null;
+    if (_missingVoices.add(locale)) {
+      debugPrint('[tts] no installed voice for $locale — using the system default voice');
+    }
   }
 
   Future<void> stop() => _tts.stop();
