@@ -72,6 +72,17 @@ final readonly class ContentContract
     private const CORE_EXTRAS_FROM = 'v15';
 
     /**
+     * The first CORE version that also writes the term's DESCRIPTION — what the word means, said in
+     * the language being learned.
+     *
+     * Its own floor rather than a fourth field under {@see CORE_EXTRAS_FROM}, because it arrived two
+     * versions later and the frozen ones in between must keep rendering the schema their text was
+     * written against: strict Structured Outputs makes every declared property required, so v15 and
+     * v15.1 would otherwise be forced to emit a field their prompts never mention.
+     */
+    private const CORE_DESCRIPTION_FROM = 'v15.2';
+
+    /**
      * The MACHINERY versions that ask for near-synonyms: from `v14`, and no longer from `v14.3`.
      *
      * A window and not a floor, because this product had both a beginning and an end here. v14 added
@@ -215,6 +226,12 @@ final readonly class ContentContract
             // EMPTY string, the same way `image_api_prompt` says «un-illustratable». A missing key
             // would mean the model failed; "" means it decided.
             $itemProps['transliteration'] = ['type' => 'string'];
+        }
+
+        // The description — the `description_match` card's own question, and until v15.2 a product
+        // only the search lookup ever wrote. Declared from its own version, see the floor's docblock.
+        if ($version !== null && $this->atLeastVersion($version, self::CORE_DESCRIPTION_FROM)) {
+            $itemProps['description'] = ['type' => 'string'];
         }
 
         $item = [

@@ -27,5 +27,11 @@ final readonly class GeneratedItem
         public array $otherTranslations = [],
         /** How `text` reads, spelled in the SOURCE language's letters. Null = the model said "". */
         public ?string $transliteration = null,
+        /**
+         * What `text` MEANS, said in the TARGET language — the question the `description_match`
+         * trainer asks. From core prompt v15.2; null on every version below it, which is an absence
+         * and not a claim that the word cannot be described.
+         */
+        public ?string $description = null,
     ) {}
 }

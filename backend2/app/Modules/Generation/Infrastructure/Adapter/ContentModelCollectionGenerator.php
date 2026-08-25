@@ -131,6 +131,8 @@ final readonly class ContentModelCollectionGenerator implements CollectionGenera
                 // "" is the prompt's «this already reads as it is written», the same shape as the
                 // empty image query above — a deliberate answer, not a missing one.
                 transliteration: $this->str($row, 'transliteration'),
+                // Absent below core v15.2, which is where the schema starts declaring it.
+                description: $this->str($row, 'description'),
             );
         }
 

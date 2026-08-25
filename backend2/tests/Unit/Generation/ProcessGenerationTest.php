@@ -32,7 +32,9 @@ use App\Modules\Generation\Infrastructure\Adapter\FakeCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\FakeTranslationRepairer;
 use App\Modules\Shared\Domain\ValueObject\GenerationRequestId;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
+use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
+use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
 use App\Modules\Vocabulary\Application\Command\FindOrCreateTermHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermEnrichmentHandler;
 use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
@@ -97,8 +99,40 @@ beforeEach(function () {
         // pipeline, and a fixture that quietly turned a product on would be testing the product.
         importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
         transliterations: new NullTransliterationWriter(),
+        descriptions: $this->descriptions = recordingDescriptionWriter(),
     );
 });
+
+/**
+ * A {@see TermDescriptionWriter} that records instead of writing, and honours the port's one
+ * promise: `ensure()` never overwrites, so a second call for the same (term, lang) is a no-op and
+ * says so. An anonymous class rather than a file in `tests/Doubles`, because only this file needs it.
+ */
+function recordingDescriptionWriter(): TermDescriptionWriter
+{
+    return new class implements TermDescriptionWriter
+    {
+        /** @var array<string, string> keyed by "termId|lang" */
+        public array $written = [];
+
+        public function ensure(
+            TermId $termId,
+            string $lang,
+            string $text,
+            string $source = 'ai',
+            ?string $promptVersion = null,
+            ?string $generationModel = null,
+        ): bool {
+            $key = $termId->value . '|' . $lang;
+            if (array_key_exists($key, $this->written)) {
+                return false;
+            }
+            $this->written[$key] = $text;
+
+            return true;
+        }
+    };
+}
 
 /**
  * The real {@see CoreReplacement} over recording writers: the service under test here is the ORDER
@@ -168,6 +202,7 @@ function processWith(object $ctx, CollectionGeneratorPort $generator): ProcessGe
         clock: $ctx->clock,
         importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
         transliterations: new NullTransliterationWriter(),
+        descriptions: recordingDescriptionWriter(),
     );
 }
 
@@ -412,6 +447,7 @@ it('records tokens, cost and raw response even when the draft fails validation',
         clock: $this->clock,
         importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
         transliterations: new NullTransliterationWriter(),
+        descriptions: recordingDescriptionWriter(),
     );
 
     expect(fn () => ($process)(new ProcessGeneration($id)))->toThrow(InvalidGeneratedDraft::class);
@@ -462,6 +498,7 @@ it('reuses a cached term set on an identical prompt without calling the model ag
         clock: $this->clock,
         importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
         transliterations: new NullTransliterationWriter(),
+        descriptions: recordingDescriptionWriter(),
     );
 
     // Second identical request (same prompt/langs/version) → cache hit.
@@ -529,6 +566,7 @@ function processWithBarrier(object $ctx, CollectionGeneratorPort $generator, Lan
         clock: $ctx->clock,
         importEnrichment: new ImportTermEnrichmentHandler(new NullTermEnrichmentWriter()),
         transliterations: new NullTransliterationWriter(),
+        descriptions: recordingDescriptionWriter(),
     );
 }
 

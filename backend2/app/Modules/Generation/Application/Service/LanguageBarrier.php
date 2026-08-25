@@ -162,6 +162,7 @@ final readonly class LanguageBarrier
                 synonyms: $item->synonyms,
                 otherTranslations: $item->otherTranslations,
                 transliteration: $item->transliteration,
+                description: $item->description,
             );
 
             $offence = $this->offence($item, self::LEARNER_FIELDS, $brief->sourceLang->value);

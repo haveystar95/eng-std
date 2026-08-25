@@ -76,6 +76,7 @@ final class DraftValidator
                 synonyms: $item->synonyms,
                 otherTranslations: $item->otherTranslations,
                 transliteration: $this->nullableText($item->transliteration),
+                description: $this->nullableText($item->description),
             );
             $all[] = $usable;
             if ($this->withinLevel($cefr, $min, $max)) {

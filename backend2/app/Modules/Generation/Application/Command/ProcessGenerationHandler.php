@@ -32,7 +32,9 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
 use App\Modules\Shared\Domain\ValueObject\CollectionId;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Generation\Application\Dto\GeneratedItem;
+use App\Modules\Generation\Domain\Service\DescriptionSelfReference;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
+use App\Modules\Shared\Domain\Service\LanguagePurity;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 use App\Modules\Vocabulary\Application\Command\ImportTerm;
 use App\Modules\Vocabulary\Application\Command\ImportTermEnrichment;
@@ -41,6 +43,7 @@ use App\Modules\Vocabulary\Application\Command\ImportTermHandler;
 use App\Modules\Vocabulary\Application\Dto\ExampleInput;
 use App\Modules\Vocabulary\Application\Dto\TermSynonymInput;
 use App\Modules\Vocabulary\Application\Dto\TranslationInput;
+use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
 use App\Modules\Vocabulary\Application\Port\TermTransliterationWriter;
 use App\Modules\Vocabulary\Application\Query\StaleCoreReader;
 use Throwable;
@@ -84,7 +87,10 @@ final readonly class ProcessGenerationHandler
         // The per-pair side products of the core, and the one gate they both pass. See writeExtras().
         private ImportTermEnrichmentHandler $importEnrichment,
         private TermTransliterationWriter $transliterations,
+        /** The description's writer — write-once per (term, lang). See writeDescription(). */
+        private TermDescriptionWriter $descriptions,
         private EnrichmentValidator $extrasGate = new EnrichmentValidator(),
+        private LanguagePurity $purity = new LanguagePurity(),
         /** `GENERATION_WRITE_SYNONYMS` — off until the product earns its way on. */
         private bool $writeSynonyms = false,
         /** `GENERATION_WRITE_TRANSLITERATION` — its own switch, see writeExtras(). */
@@ -375,6 +381,50 @@ final readonly class ProcessGenerationHandler
                 );
             }
         }
+
+        $this->writeDescription($termId, $item, $request);
+    }
+
+    /**
+     * The DESCRIPTION — what the word means, said in the language being learned.
+     *
+     * Not behind a switch, unlike the two products above it, and the difference is what each one
+     * does downstream. A synonym is an ACCEPTED ANSWER, so a wrong one marks a learner wrong for
+     * knowing the language and the flag exists to keep that off until the accuracy question has an
+     * answer. A description is the QUESTION one card asks, and the failure mode of a poor one is a
+     * card that is harder than it should be — while the failure mode of NO description is a term the
+     * `description_match` trainer refuses outright (`ContentGap::NoDescription`), which is where
+     * every generated term has been since the mode shipped.
+     *
+     * Write-once per (term, lang) through Vocabulary's own port: a term is global, and the word this
+     * generation just wrote may already carry a description written by the search lookup for another
+     * learner. `ensure()` never overwrites — the lookup's truth, and the user's, stay put.
+     *
+     * Two deterministic gates, and both are the LOOKUP's, not a second pair written here: the same
+     * self-reference check that decides a lookup answer, and the same purity check. A description
+     * that names its own word asks nothing; one written in the learner's language is a translation
+     * wearing the wrong field's name. Either way it is DROPPED, never fatal — this is a side product
+     * of a call that produced a whole card.
+     */
+    private function writeDescription(TermId $termId, GeneratedItem $item, GenerationRequest $request): void
+    {
+        $text = trim((string) $item->description);
+        $lang = $request->targetLang()->value;
+
+        if ($text === ''
+            || ! $this->purity->isClean($lang, $text)
+            || DescriptionSelfReference::givesAway($text, $item->text)) {
+            return;
+        }
+
+        $this->descriptions->ensure(
+            $termId,
+            $lang,
+            $text,
+            source: 'ai',
+            promptVersion: $request->promptVersion(),
+            generationModel: $request->model(),
+        );
     }
 
     /**

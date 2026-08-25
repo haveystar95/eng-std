@@ -132,7 +132,10 @@ return [
         // forever, so it runs on the strong model (A/B decision К2, docs/bakeoff-v11-ab.md).
         'core_provider' => env('GENERATION_CORE_PROVIDER', 'openai'),
         'core_model' => env('GENERATION_CORE_MODEL', 'gpt-5.4'),
-        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v15.1'),
+        // v15.2 = v15.1 plus the term's DESCRIPTION. Until it, the core never asked for one and the
+        // only writer of `term_descriptions` was the search lookup — so every word born inside a
+        // generated collection had none, and `description_match` refused all of them.
+        'core_prompt_version' => env('GENERATION_CORE_PROMPT_VERSION', 'v15.2'),
         // The MACHINERY around a finished core — accepted forms and the example's wrong versions.
         // Mechanical work over content that already exists: the cheap model does it at 1/200th of
         // the price of re-generating the core inside a full enrichment.

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Generation\Application\Port\PromptSource;
 use App\Modules\Generation\Application\Service\ContentContract;
 use App\Modules\Generation\Domain\Service\EnrichmentValidator;
 use App\Modules\Generation\Domain\ValueObject\PromptShape;
@@ -95,4 +96,91 @@ it('declares the v15 extras by version NUMBER, so v9 is not asked for fields its
             ->and($props('v15.1'))->toContain($field)
             ->and($props('v16'))->toContain($field);
     }
+});
+
+it('asks the core for a DESCRIPTION only from v15.2, where the section explaining it lives', function () {
+    $contract = app(ContentContract::class);
+    $props = fn (string $v): array => array_keys(
+        $contract->schema(PromptShape::Terms, $v)['properties']['items']['items']['properties'],
+    );
+
+    // The floor is its own, two versions above the other extras: strict Structured Outputs makes a
+    // declared property required, and v15/v15.1 are frozen texts that never mention this field.
+    expect($props('v15'))->not->toContain('description')
+        ->and($props('v15.1'))->not->toContain('description')
+        ->and($props('v15.2'))->toContain('description')
+        ->and($props('v16'))->toContain('description');
+});
+
+it('gives the description its own section in v15.2 and lists it with the fields', function () {
+    $rendered = fn (string $v): string => app(PromptSource::class)->render($v, PromptShape::Terms, [
+        'source_lang' => 'Russian', 'target_lang' => 'English', 'levels' => 'A2, B1', 'size' => '10',
+    ])->text;
+
+    expect($rendered('v15.2'))
+        ->toContain('## `description` — what it means, in English, without naming it')
+        // Announced where the field list is read, in the order the sections come — the v14 lesson.
+        ->and($rendered('v15.2'))->toContain('`description` — what `text` MEANS')
+        // The rule that makes the product usable at all, and the one the deterministic gate enforces.
+        ->and($rendered('v15.2'))->toContain('It must NOT contain `text`, or any form of it')
+        // v15.1 is untouched: it is what the selectivity pilot measured.
+        ->and($rendered('v15.1'))->not->toContain('## `description`');
+});
+
+it('runs production on the version that asks for a description', function () {
+    expect(config('services.generation.core_prompt_version'))->toBe('v15.2');
+});
+
+describe('the ENRICH shape — what a future showcase re-generation would be handed', function () {
+    it('asks for the description and the reading, exactly as the collection shape does', function () {
+        $contract = app(ContentContract::class);
+        $props = array_keys(
+            $contract->schema(PromptShape::Enrich, 'v15.2')['properties']['items']['items']['properties'],
+        );
+
+        expect($props)->toContain('description')
+            ->and($props)->toContain('transliteration')
+            ->and($props)->toContain('synonyms');
+
+        $rendered = app(PromptSource::class)->render('v15.2', PromptShape::Enrich, [
+            'source_lang' => 'Russian', 'target_lang' => 'English', 'levels' => 'A2, B1', 'size' => '10',
+        ])->text;
+
+        expect($rendered)->toContain('## `description` — what it means, in English, without naming it')
+            ->and($rendered)->toContain('## `transliteration`');
+    });
+
+    it('READS BACK neither of them — the shape asks and the parser drops (READ-2 finding)', function () {
+        // Not a pin on desirable behaviour: a pin on the gap, so it cannot be discovered twice.
+        //
+        // `ContentContract::items()` is the reader for every ENRICH-shape caller — the showcase
+        // regeneration and the translation audit — and it builds a CandidateItem, which has no field
+        // for a description, a reading or an other-reading. So the enrich path has been BUYING a
+        // transliteration on every v15/v15.1 call since the extras shipped and dropping it on the
+        // floor, and a description would go the same way. The collection shape does not share this
+        // reader (ContentModelCollectionGenerator has its own, and it does read them).
+        //
+        // Consequence for the owner's question: re-generating the showcase on v15.2 would NOT give
+        // old terms their descriptions or readings. Making it do so is a change to this parser, to
+        // CandidateItem and to what the showcase handler writes — deliberately not done here, since
+        // nothing changes until somebody pays for that run.
+        $item = app(ContentContract::class)->items([
+            'items' => [[
+                'text' => 'invoice',
+                'translation' => 'счёт',
+                'description' => 'A paper that says how much money you have to pay.',
+                'transliteration' => 'инвойс',
+                'other_translations' => ['накладная'],
+                'synonyms' => ['bill'],
+            ]],
+        ])[0];
+
+        expect($item->text)->toBe('invoice')
+            ->and($item->translation)->toBe('счёт')
+            // Parsed and used elsewhere…
+            ->and($item->synonyms)->toBe(['bill'])
+            // …while these two have nowhere to land at all.
+            ->and(property_exists($item, 'description'))->toBeFalse()
+            ->and(property_exists($item, 'transliteration'))->toBeFalse();
+    });
 });

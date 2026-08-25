@@ -363,6 +363,36 @@ final class PromptLibrary implements PromptSource
                 '91-self-check-options', '99-closing',
             ],
         ],
+        // v15.2 adds a FOURTH per-item product to the extras: `description` — what the word means,
+        // said in the language being learned.
+        //
+        // It is not a new invention. The product exists, it is what the `description_match` trainer
+        // asks, and it has had exactly one writer: the search lookup, from `lookup_word.v*`. So every
+        // word a learner saved from search has one and every word born inside a generated collection
+        // has none — 22 of 22 in the collection generated on 25.08 — and the trainer refuses those
+        // terms with `ContentGap::NoDescription`. The hole was in the CORE, which never asked.
+        //
+        // The section is written to the lookup's own rules (one or two A2–B1 sentences, never
+        // containing the word) rather than to a second wording of them, and it is judged downstream
+        // by the same deterministic gate the lookup answer passes, `DescriptionSelfReference`. One
+        // product, one specification, one gate — the alternative is two descriptions that drift.
+        //
+        // Placed FIRST in the extras and listed in that order in `20-fields`, for the reason v14 paid
+        // to learn: the section that gets read last gets answered with the least.
+        //
+        // v15.1 is not edited: it is what the selectivity pilot measured (§9) and what the live
+        // catalogue records as its passport.
+        'v15.2' => [
+            PromptShape::Terms->value => [
+                '00-role', '10-select-topic', '20-fields', '21-extras', '30-example',
+                '40-translation-key', '50-purity', '90-self-check', '99-closing',
+            ],
+            PromptShape::Enrich->value => [
+                '00-role', '15-given-terms', '20-fields', '21-extras', '60-options', '62-forms',
+                '30-example', '40-translation-key', '50-purity', '90-self-check',
+                '91-self-check-options', '99-closing',
+            ],
+        ],
     ];
 
     public function __construct(private readonly string $directory = __DIR__) {}
