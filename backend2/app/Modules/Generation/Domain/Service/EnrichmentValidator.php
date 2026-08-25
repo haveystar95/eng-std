@@ -105,6 +105,34 @@ final class EnrichmentValidator
     private const TRANSLITERATION_PUNCTUATION = [' ', '-', '\'', '’', '‑'];
 
     /**
+     * Clitics that expand ONE way, because the grammar leaves no choice: "'ll" is always "will",
+     * "n't" is always "not". Applied in order, so the three irregulars settle before the generic
+     * rule reaches them — it would otherwise turn "won't" into "wo not" and "can't" into "ca not".
+     *
+     * "cannot" is folded to "can not" as well, so the two spellings of one word stop being a
+     * difference a "distractor" could be built out of.
+     *
+     * "ain't" is excluded by name from the generic rule rather than given an entry. Its expansion is
+     * genuinely multi-valued (is not / are not / has not / have not), so a curated entry would have to
+     * guess and the generic rule would produce the nonsense "ai not"; left unexpanded it simply never
+     * folds, which is the honest outcome for a form nothing can resolve deterministically.
+     *
+     * {@see contractionReadings()} — the ambiguous "'s" and "'d" are NOT here, they get both readings.
+     */
+    private const DETERMINISTIC_CLITICS = [
+        "/\bcan't\b/iu" => 'can not',
+        "/\bwon't\b/iu" => 'will not',
+        "/\bshan't\b/iu" => 'shall not',
+        "/\bcannot\b/iu" => 'can not',
+        "/\blet's\b/iu" => 'let us',
+        "/\b(?!ain't\b)(\w+)n't\b/iu" => '$1 not',
+        "/\b(\w+)'ll\b/iu" => '$1 will',
+        "/\b(\w+)'re\b/iu" => '$1 are',
+        "/\b(\w+)'ve\b/iu" => '$1 have',
+        "/\b(\w+)'m\b/iu" => '$1 am',
+    ];
+
+    /**
      * Phrases with which the model argues its own finding down. Two of the eight language findings on
      * the store run ended this way — «банкомат не является ошибкой», «но это корректно» — so the model
      * filled the field, cost a human a read, and concluded there was nothing there. The prompt now
@@ -778,60 +806,104 @@ final class EnrichmentValidator
     }
 
     /**
-     * Sentence equality, tolerant of a bare 's contraction on either side.
+     * Sentence equality, tolerant of a contraction spelled out on either side.
      *
-     * {@see LexicalNormalizer::expandContractions()} only resolves the curated pronouns — "it's",
-     * "that's", "there's" — because an arbitrary "'s" is genuinely ambiguous between "is" and "has".
-     * Left unresolved, an arbitrary "'s" (e.g. "How's", "Here's") is not expanded at all: the
-     * apostrophe is stripped as punctuation and the "s" survives as its own dangling token, so
-     * normalize() never folds it onto the spelled-out form. A distractor that only spells out such a
-     * contraction is not a distractor — it's the example — and the risk is one-sided: missing the
-     * match writes a card that marks the correct answer wrong. Both readings are cheap to try, and
-     * either matching is enough to settle it, so this is deliberately over-eager rather than exact.
+     * {@see LexicalNormalizer::expandContractions()} resolves a CURATED list of pronoun+clitic pairs —
+     * "i'll", "you'll", "we'll", "they'll" are in it and "it'll" is not. Anything outside that list is
+     * not expanded at all: the apostrophe is stripped as punctuation and the clitic survives as its
+     * own dangling token, so normalize() folds "it'll" onto "it ll" and never onto "it will". A
+     * distractor that only spells such a contraction out is not a distractor — it IS the example — and
+     * the card then marks the correct answer wrong. That is exactly how the live row on «Piece of
+     * cake» reached a learner: «…it'll be a piece of cake» offered against «…it will be a piece of
+     * cake», with `it will` → `it'll` as its "correction".
+     *
+     * So equality asks the question by CLITIC rather than by curated word, and compares the two
+     * readings SETS: a reading of either side matching a reading of the other settles it. Comparing
+     * readings against the other side's single key (which is what this did before) leaves the case
+     * where both sides need expanding uncovered.
      *
      * Scoped to the two callers that ask "is this sentence secretly the example" — the generation-time
      * check above and {@see AuditDistractorsHandler}'s retro-audit of the same question on stored rows.
      * Grading (LexicalNormalizer, used directly by the answer grader) and the circular check
-     * ({@see repairsTo}) are untouched.
+     * ({@see repairsTo}) are untouched: widening the shared normaliser makes the SERVER more lenient
+     * than the client that mirrors it, which is a different decision with a Flutter half.
      */
     public function sentenceEquals(string $a, string $b): bool
     {
-        $keyA = $this->normalizer->normalize($a);
-        $keyB = $this->normalizer->normalize($b);
-        if ($keyA === $keyB) {
-            return true;
-        }
-        foreach ($this->contractionReadings($a) as $reading) {
-            if ($this->normalizer->normalize($reading) === $keyB) {
-                return true;
-            }
-        }
-        foreach ($this->contractionReadings($b) as $reading) {
-            if ($keyA === $this->normalizer->normalize($reading)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_intersect_key($this->equalityKeys($a), $this->equalityKeys($b)) !== [];
     }
 
     /**
-     * Both readings of every bare 's in the text — "is" and "has" — or an empty list when there is
-     * none to expand. Matches possessives too ("Tom's"), which is harmless here: a bogus reading like
-     * "Tom is" simply matches nothing, so it costs an extra comparison and never a false positive.
+     * Every normalised form this text could be read as: itself, plus one entry per contraction
+     * reading. Keys, so equality is a set intersection and the ambiguous readings cost nothing to
+     * carry.
+     *
+     * @return array<string, true>
+     */
+    private function equalityKeys(string $text): array
+    {
+        $keys = [$this->normalizer->normalize($text) => true];
+        foreach ($this->contractionReadings($text) as $reading) {
+            $keys[$this->normalizer->normalize($reading)] = true;
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Every reading of the text's contractions, or an empty list when it has none.
+     *
+     * Two stages, because the clitics are not equally decidable. The deterministic ones
+     * ({@see DETERMINISTIC_CLITICS}) expand in place. What is left is "'s" and "'d", which are
+     * genuinely ambiguous — "is"/"has" and "would"/"had" — so each gets both readings applied
+     * UNIFORMLY across the string, up to four combinations.
+     *
+     * Uniform, not per-occurrence: a sentence carrying two different "'s" readings at once is a
+     * sentence nobody writes, and the combinatorial version costs an exponent for it.
+     *
+     * Over-eager on purpose, and the direction is the point. Applying "'s" → "is" everywhere folds the
+     * example «He's been running» onto the honestly-broken «He is been running», so that distractor is
+     * scrapped although it was a real one. Measured, not theoretical — and NOT new here: the previous
+     * version read the example's "'s" both ways too and lost the same row. It is the trade this method
+     * exists to make: a lost distractor costs a card one option, while a missed match ships a card that
+     * marks the right answer wrong. ({@see LexicalNormalizer::expandPerfectAuxiliary()} resolves «'s
+     * been» → «has been» for GRADING, but it runs inside normalize(), i.e. after these readings are
+     * built, so it does not narrow them.)
+     *
+     * Apostrophe glyphs are folded first: the typographic «’» arrives from the model often enough that
+     * a check keyed on the ASCII one would silently see no contraction at all.
      *
      * @return list<string>
      */
     private function contractionReadings(string $text): array
     {
-        if (! preg_match("/\b[a-zA-Z]+'s\b/", $text)) {
-            return [];
+        $base = str_replace(['’', '‘', '`', '´'], "'", $text);
+        $expanded = $base;
+        foreach (self::DETERMINISTIC_CLITICS as $pattern => $replacement) {
+            $expanded = (string) (preg_replace($pattern, $replacement, $expanded) ?? $expanded);
         }
 
-        return [
-            (string) preg_replace("/\b([a-zA-Z]+)'s\b/", '$1 is', $text),
-            (string) preg_replace("/\b([a-zA-Z]+)'s\b/", '$1 has', $text),
-        ];
+        $hasS = preg_match("/\b\w+'s\b/iu", $expanded) === 1;
+        $hasD = preg_match("/\b\w+'d\b/iu", $expanded) === 1;
+        if (! $hasS && ! $hasD) {
+            return $expanded === $text ? [] : [$expanded];
+        }
+
+        $readings = [];
+        foreach ($hasS ? ['is', 'has'] : [null] as $s) {
+            foreach ($hasD ? ['would', 'had'] : [null] as $d) {
+                $reading = $expanded;
+                if ($s !== null) {
+                    $reading = (string) (preg_replace("/\b(\w+)'s\b/iu", '$1 ' . $s, $reading) ?? $reading);
+                }
+                if ($d !== null) {
+                    $reading = (string) (preg_replace("/\b(\w+)'d\b/iu", '$1 ' . $d, $reading) ?? $reading);
+                }
+                $readings[] = $reading;
+            }
+        }
+
+        return array_values(array_unique($readings));
     }
 
     /**

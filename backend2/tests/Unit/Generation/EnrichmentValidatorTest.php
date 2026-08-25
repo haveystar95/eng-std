@@ -226,6 +226,94 @@ it('scraps a distractor that is the example with a bare apostrophe-s spelled out
         ->and($verdict->rejectedDistractors)->toBe(1);
 });
 
+// ---- contractions: the CLASS, not the four strings that happened to reach a learner ---------------
+//
+// Every test above this block names one live row, and that is exactly how «закрыт 's» came to be read
+// as «класс закрыт»: the curated pronoun list in LexicalNormalizer has i'll/you'll/we'll/they'll and
+// not it'll, so the class stayed open in every form nobody had yet seen on a phone. These ask by
+// CLITIC instead. Each pair is the same sentence twice — contracted and spelled out — so whichever
+// side the станок proposes, the row must die.
+dataset('contraction pairs', [
+    "'ll — it" => ["It'll be a piece of cake.", 'It will be a piece of cake.'],
+    "'ll — he" => ["He'll call you back.", 'He will call you back.'],
+    "'ll — she" => ["She'll be late again.", 'She will be late again.'],
+    "'ll — that" => ["That'll do nicely.", 'That will do nicely.'],
+    "'re — they" => ["They're waiting outside.", 'They are waiting outside.'],
+    "'re — we" => ["We're closing at six.", 'We are closing at six.'],
+    "'ve — should" => ["You should've called first.", 'You should have called first.'],
+    "'ve — would" => ["I would've paid in cash.", 'I would have paid in cash.'],
+    "'ve — could" => ["He could've told me.", 'He could have told me.'],
+    "n't — mustn't" => ["You mustn't touch that.", 'You must not touch that.'],
+    "n't — needn't" => ["You needn't worry at all.", 'You need not worry at all.'],
+    "n't — won't" => ["It won't take long.", 'It will not take long.'],
+    "n't — can't" => ["I can't hear you.", 'I cannot hear you.'],
+    "'d — he" => ["He'd rather stay home.", 'He would rather stay home.'],
+    "'d — she" => ["She'd already left.", 'She had already left.'],
+    "'d — it" => ["It'd be easier by train.", 'It would be easier by train.'],
+    "'m" => ["I'm on my way now.", 'I am on my way now.'],
+    "let's" => ["Let's take the next one.", 'Let us take the next one.'],
+]);
+
+it('scraps a distractor that only spells the example out, whichever side is contracted', function (string $contracted, string $spelled) {
+    // Contraction pinned, distractor spelled out — the live shape («Piece of cake»).
+    $spelledOut = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor($spelled, 'tense', $spelled, $contracted)],
+        example: $contracted,
+    ));
+
+    // And the mirror: the spelled-out form pinned, the contraction offered as the "error".
+    $contractedRow = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor($contracted, 'tense', $contracted, $spelled)],
+        example: $spelled,
+    ));
+
+    expect($spelledOut->distractors)->toBeEmpty()
+        ->and($contractedRow->distractors)->toBeEmpty();
+})->with('contraction pairs');
+
+it('scraps the live «Piece of cake» row that reached a learner', function () {
+    // example_distractors 01M0QZM5HM5FC0WA0N78RHR9YM, станок mech-v13.1. Both options were correct
+    // English, so picking the right sentence was marked wrong. Its `error_type` says `modal_to` while
+    // there is no modal with `to` anywhere in it — the label lies, which is why nothing keys on labels.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor("Don't worry about the test — it will be a piece of cake.", 'modal_to', 'it will', "it'll")],
+        example: "Don't worry about the test — it'll be a piece of cake.",
+    ));
+
+    expect($verdict->distractors)->toBeEmpty()
+        ->and($verdict->rejectedDistractors)->toBe(1);
+});
+
+it('keeps a distractor whose difference is a real error and not a re-spelling', function () {
+    // The guard on the block above: «will be» → «will been» is broken English that merely happens to
+    // sit where a contraction could. A check that folded by apostrophe alone would eat it.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor("Don't worry about the test — it'll been a piece of cake.", 'tense', "it'll been", "it'll be")],
+        example: "Don't worry about the test — it'll be a piece of cake.",
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
+it('leaves «ain\'t» unexpanded, because nothing can resolve it deterministically', function () {
+    // is not / are not / has not / have not — four readings, no rule. The generic n't rule would make
+    // «ai not» and a curated entry would have to guess, so the form simply never folds. That means a
+    // row like this one survives; a false NEGATIVE here is the direction we chose everywhere else.
+    $verdict = $this->validator->validate(enrichmentCandidate(
+        [new RawDistractor("It ain't ready yet.", 'tense', "ain't", 'is not')],
+        example: 'It is not ready yet.',
+    ));
+
+    expect($verdict->distractors)->toHaveCount(1);
+});
+
+it('folds a contraction on BOTH sides at once', function () {
+    // The case the previous implementation could not reach: it compared each side's readings against
+    // the OTHER side's single key, so two sentences that both needed expanding never met.
+    expect($this->validator->sentenceEquals("It'll be fine and he's gone.", 'It will be fine and he is gone.'))
+        ->toBeTrue();
+});
+
 it('scraps a distractor that only re-types the apostrophe of a sibling already stored', function () {
     // «Can I get this to go?» carried «I'd like the pasta for go, please.» from the first run, and the
     // top-up added the same sentence with a typographic apostrophe. The pack dedupes against itself
