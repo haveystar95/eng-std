@@ -23,7 +23,10 @@ class WordCardSubject {
     this.termId,
     this.lookupId,
     this.transcription,
+    this.transliteration,
     this.translation,
+    this.translations = const [],
+    this.synonyms = const [],
     this.description,
     this.example,
     this.exampleTranslation,
@@ -46,7 +49,22 @@ class WordCardSubject {
   final String text;
   final String type;
   final String? transcription;
+
+  /// How the term reads in the letters of the SUPPORT language. A reading hint, not a notation:
+  /// it sits beside the IPA and never replaces it, and it is drawn only where the learner is
+  /// READING the word — the card, never a trainer that asks them to produce it.
+  final String? transliteration;
+
   final String? translation;
+
+  /// Alternative readings beside [translation], which stays first and untouched. Empty on every
+  /// word the станок has not been over, and on every source that does not carry the list.
+  final List<String> translations;
+
+  /// Near-synonyms in the language being learned — the «также: …» line. Empty is the normal case
+  /// today: the server's write flag is off, so nothing carries them yet.
+  final List<String> synonyms;
+
   final String? description;
   final String? example;
   final String? exampleTranslation;
@@ -68,9 +86,16 @@ class WordCardSubject {
 
   bool get hasPhoto => (imageUrl ?? '').isNotEmpty;
 
+  /// What goes on the translation line: the pinned reading first, the alternatives after it. The
+  /// card joins them with « / »; a card with one reading is unchanged from before v15.
+  List<String> get readings => joinedReadings(translation, translations);
+
   /// The folder the card names once the word is in one.
   SavedFolder? get savedIn => folders.isEmpty ? null : folders.first;
 
+  /// A hit from `/search`. The endpoint carries no v15 field either — like the photo, the only
+  /// reading hint a search result can have is one the LOCAL mirror already holds, and the caller
+  /// passes it in (see `_subjectFor` on the search screen) when it does.
   factory WordCardSubject.fromHit(
     SearchHit hit, {
     String? imageUrl,
@@ -95,6 +120,10 @@ class WordCardSubject {
     folders: hit.folders,
   );
 
+  /// A word the model has just looked up. It carries NONE of the three v15 fields: they live on
+  /// the term, and `/search/lookup` deliberately writes no term — the word gets them once it is
+  /// saved and the станок has been over it. So the reading hint and the «также» line simply are
+  /// not drawn here, which is the same «no block» every other missing field gets.
   factory WordCardSubject.fromLookup(LookupCard card) => WordCardSubject(
     lookupId: card.lookupId,
     text: card.text,
@@ -113,7 +142,10 @@ class WordCardSubject {
         text: word.term,
         type: word.type,
         transcription: word.transcription,
+        transliteration: word.transliteration,
         translation: word.translation,
+        translations: word.translations,
+        synonyms: word.synonyms,
         description: word.description,
         example: word.example,
         exampleTranslation: word.exampleTranslation,
@@ -137,7 +169,10 @@ class WordCardSubject {
     text: text,
     type: type,
     transcription: transcription,
+    transliteration: transliteration,
     translation: translation,
+    translations: translations,
+    synonyms: synonyms,
     description: description,
     example: example,
     exampleTranslation: exampleTranslation,

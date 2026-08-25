@@ -372,6 +372,35 @@ abstract final class AppText {
     color: AppColors.secondary,
   );
 
+  /// Чтение термина буквами родного алфавита («knife» → «найф») — на карточке, рядом с IPA.
+  /// Inter 14.5 tertiary: тише транскрипции ровно на одну ступень, потому что это подсказка, а не
+  /// нотация. Словарный набор — в квадратных скобках, как в бумажном словаре (слэши заняты IPA).
+  static const cardTransliteration = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 14.5,
+    color: AppColors.tertiary,
+  );
+
+  /// То же чтение в мини-карточке результата поиска. Inter 12.5 tertiary — на ступень тише
+  /// [transcription], которая стоит там же.
+  static const transliteration = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w400,
+    fontSize: 12.5,
+    color: AppColors.tertiary,
+  );
+
+  /// Строка «также: …» на карточке — синонимы термина. Literata 15.5 / 1.4 secondary: словарная
+  /// врезка под переводом, не самостоятельный блок.
+  static const cardSynonyms = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 15.5,
+    height: 1.4,
+    color: AppColors.secondary,
+  );
+
   /// Уровень на карточке — плашка с заливкой ink-body и бумажной подписью.
   static const cardLevelBadge = TextStyle(
     fontFamily: AppFonts.inter,

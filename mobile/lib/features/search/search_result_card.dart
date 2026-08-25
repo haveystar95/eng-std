@@ -17,14 +17,28 @@ import '../word_card/word_card_subject.dart';
 /// on the card, which is what the terracotta line under this leaf opens, and the two photos share a
 /// [Hero] so the small one becomes the big one instead of being replaced by it.
 class SearchResultCard extends StatelessWidget {
-  const SearchResultCard({super.key, required this.subject, required this.onOpen});
+  const SearchResultCard({
+    super.key,
+    required this.subject,
+    required this.onOpen,
+    this.showTransliteration = false,
+  });
 
   final WordCardSubject subject;
   final VoidCallback onOpen;
 
+  /// «Подсказка произношения», passed in rather than watched: this leaf stays a dumb drawing of
+  /// the subject, and the screen above it reads the one provider — the same one the word card
+  /// reads, so the hint cannot be on in one place and off in the other.
+  final bool showTransliteration;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // A freshly looked-up word simply has no hint to show — it is not a term yet.
+    final transliteration = showTransliteration ? (subject.transliteration ?? '') : '';
+    // Pinned reading first, alternatives after it — «цель / задача». One reading prints as before.
+    final translation = subject.readings.join(' / ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,14 +86,39 @@ class SearchResultCard extends StatelessWidget {
                             ],
                           ],
                         ),
-                        if ((subject.transcription ?? '').isNotEmpty) ...[
+                        if ((subject.transcription ?? '').isNotEmpty ||
+                            transliteration.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.s4),
-                          Text('/${subject.transcription}/', style: AppText.transcription),
+                          Row(
+                            children: [
+                              if ((subject.transcription ?? '').isNotEmpty)
+                                Flexible(
+                                  child: Text(
+                                    '/${subject.transcription}/',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppText.transcription,
+                                  ),
+                                ),
+                              if (transliteration.isNotEmpty) ...[
+                                if ((subject.transcription ?? '').isNotEmpty)
+                                  const SizedBox(width: AppSpacing.s8),
+                                Flexible(
+                                  child: Text(
+                                    '[$transliteration]',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppText.transliteration,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ],
-                        if ((subject.translation ?? '').isNotEmpty) ...[
+                        if (translation.isNotEmpty) ...[
                           const SizedBox(height: 7),
                           Text(
-                            subject.translation!,
+                            translation,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppText.translation.copyWith(fontSize: 16, color: AppColors.ink),

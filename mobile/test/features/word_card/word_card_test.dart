@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/api_client.dart';
+import 'package:eng_std/data/app_settings.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
@@ -51,6 +52,7 @@ Future<void> _pump(
   VoidCallback? onTrain,
   VoidCallback? onEnroll,
   VoidCallback? onUnenroll,
+  bool showTransliteration = false,
 }) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
@@ -60,6 +62,9 @@ Future<void> _pump(
         appDatabaseProvider.overrideWithValue(db),
         apiClientProvider.overrideWithValue(api ?? _Api()),
         collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+        // «Подсказка произношения» stated, not derived: these tests are about the CARD, and the
+        // setting's own default (the learner's alphabet) is pinned in its own test.
+        transliterationEnabledProvider.overrideWithValue(showTransliteration),
       ],
       child: MaterialApp(
         locale: const Locale('ru'),
@@ -172,6 +177,104 @@ void main() {
       );
       expect(find.text('заполнять (форму)'), findsOneWidget);
       expect(find.text('+ Сохранённые'), findsOneWidget);
+    });
+  });
+
+  /// Ч.2 — the three additive products of ядро v15 on the expanded card. All three obey one rule:
+  /// present → a block, absent → NO block. An empty «также:» or a bare pair of brackets would be
+  /// the card making a claim about the word that nobody made.
+  group('ядро v15 · чтение, доп-переводы, синонимы', () {
+    WordCardSubject knife({
+      String? transliteration,
+      List<String> translations = const [],
+      List<String> synonyms = const [],
+    }) => WordCardSubject(
+      termId: 'ID',
+      text: 'knife',
+      type: 'word',
+      transcription: 'naɪf',
+      transliteration: transliteration,
+      translation: 'нож',
+      translations: translations,
+      synonyms: synonyms,
+      cefr: 'A2',
+    );
+
+    testWidgets('the reading stands under the term, beside the IPA, in brackets', (tester) async {
+      await _pump(tester, subject: knife(transliteration: 'найф'), showTransliteration: true);
+
+      expect(find.text('/naɪf/'), findsOneWidget); // IPA is untouched — the two coexist
+      expect(find.text('[найф]'), findsOneWidget);
+      expect(find.text('A2'), findsOneWidget); // and the level keeps its place on the same line
+    });
+
+    testWidgets('the reading is muted dictionary type, one step quieter than the IPA', (
+      tester,
+    ) async {
+      await _pump(tester, subject: knife(transliteration: 'найф'), showTransliteration: true);
+
+      final reading = tester.widget<Text>(find.text('[найф]'));
+      expect(reading.style?.color, AppColors.tertiary);
+      expect(reading.style?.fontFamily, AppFonts.inter);
+      final ipa = tester.widget<Text>(find.text('/naɪf/'));
+      expect(ipa.style?.color, AppColors.secondary);
+    });
+
+    testWidgets('the setting switched OFF removes the reading and leaves the IPA', (tester) async {
+      await _pump(tester, subject: knife(transliteration: 'найф'));
+
+      expect(find.text('[найф]'), findsNothing);
+      expect(find.text('/naɪf/'), findsOneWidget);
+      expect(find.text('нож'), findsOneWidget);
+    });
+
+    testWidgets('a word the server sent no reading for draws no brackets', (tester) async {
+      await _pump(tester, subject: knife(), showTransliteration: true);
+
+      expect(find.textContaining('['), findsNothing);
+    });
+
+    testWidgets('extra translations follow the primary one through « / », primary first', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        subject: WordCardSubject(
+          termId: 'ID',
+          text: 'purpose',
+          type: 'word',
+          translation: 'цель',
+          translations: const ['цель', 'задача', 'назначение'],
+        ),
+      );
+
+      expect(find.text('цель / задача / назначение'), findsOneWidget);
+    });
+
+    testWidgets('a one-reading word prints the translation exactly as before', (tester) async {
+      await _pump(tester, subject: knife(translations: const ['нож']));
+
+      expect(find.text('нож'), findsOneWidget);
+    });
+
+    testWidgets('an empty translations list falls back to the pinned translation', (tester) async {
+      // The ordinary state of every term the станок has not been over. It is not an error and it
+      // is not «no translation» — it is «one reading».
+      await _pump(tester, subject: knife());
+
+      expect(find.text('нож'), findsOneWidget);
+    });
+
+    testWidgets('synonyms are a «также: …» line under the translation', (tester) async {
+      await _pump(tester, subject: knife(synonyms: const ['blade', 'dagger']));
+
+      expect(find.text('также: blade, dagger'), findsOneWidget);
+    });
+
+    testWidgets('no synonyms — no block at all, not an empty one', (tester) async {
+      await _pump(tester, subject: knife());
+
+      expect(find.textContaining('также'), findsNothing);
     });
   });
 

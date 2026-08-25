@@ -10,6 +10,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/app_settings.dart';
 import '../../data/local/cached_image_provider.dart';
 import '../../data/models.dart';
 import '../../data/practice/learning_ladder.dart';
@@ -96,6 +97,9 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
     // got «no collections at all» on a cold open — and, watching it only in one branch, never
     // rebuilt when it arrived.
     _collections = ref.watch(collectionsProvider).value ?? const <WordCollection>[];
+    // «Подсказка произношения» — the learner's own switch, defaulted from their own alphabet. The
+    // card is one of the two places it is honoured; the trainers read it nowhere.
+    final showTransliteration = ref.watch(transliterationEnabledProvider);
     final heroHeight = !_subject.hasPhoto
         ? AppWordCard.heroHeightPlate
         : fromFolder
@@ -131,6 +135,7 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
                           subject: _subject,
                           fromFolder: fromFolder,
                           onSpeak: widget.onSpeak,
+                          showTransliteration: showTransliteration,
                           l: l,
                         ),
                       ],
@@ -480,19 +485,28 @@ class _Article extends StatelessWidget {
     required this.subject,
     required this.fromFolder,
     required this.onSpeak,
+    required this.showTransliteration,
     required this.l,
   });
 
   final WordCardSubject subject;
   final bool fromFolder;
   final VoidCallback? onSpeak;
+
+  /// «Подсказка произношения». False hides the reading line and nothing else — the IPA, which is
+  /// a different thing and has no switch, stays where it is.
+  final bool showTransliteration;
   final AppLocalizations l;
 
   @override
   Widget build(BuildContext context) {
-    final translation = subject.translation ?? '';
+    // The pinned reading first, the alternatives after it, joined by « / ». A word with one
+    // reading prints exactly what it printed before the list existed.
+    final translation = subject.readings.join(' / ');
     final description = subject.description ?? '';
     final example = subject.example ?? '';
+    final transliteration = showTransliteration ? (subject.transliteration ?? '') : '';
+    final synonyms = subject.synonyms;
 
     return Container(
       decoration: const BoxDecoration(
@@ -513,18 +527,26 @@ class _Article extends StatelessWidget {
               ],
             ],
           ),
-          // Transcription and level share ONE line under the term (кадр 06) — the term keeps the
-          // line above it to itself, which is what makes it read as a headword.
-          if ((subject.transcription ?? '').isNotEmpty || (subject.cefr ?? '').isNotEmpty) ...[
+          // Transcription, the reading hint and the level share ONE line under the term (кадр 06) —
+          // the term keeps the line above it to itself, which is what makes it read as a headword.
+          //
+          // The reading sits BESIDE the IPA, never in place of it: one is a notation the learner
+          // has to have been taught, the other is the same word in letters they already read, and
+          // a dictionary prints both. Slashes are the IPA's, so this takes the brackets.
+          if ((subject.transcription ?? '').isNotEmpty ||
+              transliteration.isNotEmpty ||
+              (subject.cefr ?? '').isNotEmpty) ...[
             const SizedBox(height: 10),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.s12,
+              runSpacing: AppSpacing.s4,
               children: [
                 if ((subject.transcription ?? '').isNotEmpty)
                   Text('/${subject.transcription}/', style: AppText.cardTranscription),
-                if ((subject.cefr ?? '').isNotEmpty) ...[
-                  const SizedBox(width: AppSpacing.s12),
-                  _LevelBadge(subject.cefr!),
-                ],
+                if (transliteration.isNotEmpty)
+                  Text('[$transliteration]', style: AppText.cardTransliteration),
+                if ((subject.cefr ?? '').isNotEmpty) _LevelBadge(subject.cefr!),
               ],
             ),
           ],
@@ -541,6 +563,13 @@ class _Article extends StatelessWidget {
           if (translation.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s16),
             Text(translation, style: AppText.cardTranslation),
+          ],
+          // «также: goal, aim» — the word's near-synonyms, in the language being learned. Drawn
+          // ONLY when there are some: an empty «также:» would be the card claiming the станок has
+          // been over this word and found nothing, which is not what an empty list means.
+          if (synonyms.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s8),
+            Text(l.wordCardAlso(synonyms.join(', ')), style: AppText.cardSynonyms),
           ],
           if (description.isNotEmpty) ...[
             const SizedBox(height: 20),

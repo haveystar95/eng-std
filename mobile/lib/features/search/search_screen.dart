@@ -9,6 +9,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 
+import '../../data/app_settings.dart';
 import '../../data/local/app_database.dart' show Term;
 import '../../data/models.dart';
 import '../../data/pronouncer.dart';
@@ -347,7 +348,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final hint = await ref
           .read(apiClientProvider)
-          .instantHint(query, source: _pair?.source, target: _pair?.target, taughtSide: _taughtSide);
+          .instantHint(
+            query,
+            source: _pair?.source,
+            target: _pair?.target,
+            taughtSide: _taughtSide,
+          );
       // Kept when there is something to SAY — a translation, or the one honest «this is too long
       // to be a word» the field does put a line up for. An answerless hint is still dropped: it
       // has nothing to add and would only overwrite one that had.
@@ -463,6 +469,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// `/search` carries no image, so the only picture a search result can have is one already on
   /// the device — which is exactly the case for a word the learner has met before, and exactly the
   /// case where they would notice it missing.
+  ///
+  /// The three ядро-v15 fields come from the mirror for exactly the same reason: `/search` does not
+  /// carry them either, and a word the learner has saved is precisely the word whose reading hint
+  /// and alternative translations the device already holds.
   WordCardSubject _subjectFor(SearchHit hit) {
     final term = _mirrored[hit.termId];
     if (term == null) return WordCardSubject.fromHit(hit);
@@ -472,7 +482,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       text: hit.text,
       type: hit.type,
       transcription: hit.transcription ?? term.transcription,
+      transliteration: term.transliteration,
       translation: hit.translation ?? term.translation,
+      translations: decodeStringList(term.translations),
+      synonyms: decodeStringList(term.synonyms),
       description: hit.description ?? term.description,
       example: hit.example ?? term.example,
       exampleTranslation: hit.exampleTranslation ?? term.exampleTranslation,
@@ -487,9 +500,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Open the card the result IS — a hit, or the one this screen built. Remembered under the word
   /// being learned, like every other way into кадр 06.
   Future<void> _openResultCard(WordCardSubject result) async {
-    unawaited(
-      _remember(word: result.text, translation: result.translation, cefr: result.cefr),
-    );
+    unawaited(_remember(word: result.text, translation: result.translation, cefr: result.cefr));
     await _openCard(result);
   }
 
@@ -863,7 +874,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return [
       const SizedBox(height: AppSpacing.s26),
-      SearchResultCard(subject: result, onOpen: () => _openResultCard(result)),
+      SearchResultCard(
+        subject: result,
+        onOpen: () => _openResultCard(result),
+        showTransliteration: ref.watch(transliterationEnabledProvider),
+      ),
       const SizedBox(height: AppSpacing.s8),
       if (saved != null) ...[
         SavedStateLine(label: l.searchAlreadyIn(saved.title)),

@@ -8,7 +8,11 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 /// Кадр 03 in one sentence: the word that was asked for is the only lifted leaf on the page, it
 /// shows enough to be recognised, and the way on is a single terracotta line.
-Future<int> _pump(WidgetTester tester, WordCardSubject subject) async {
+Future<int> _pump(
+  WidgetTester tester,
+  WordCardSubject subject, {
+  bool showTransliteration = false,
+}) async {
   var opened = 0;
   await tester.pumpWidget(
     MaterialApp(
@@ -16,7 +20,11 @@ Future<int> _pump(WidgetTester tester, WordCardSubject subject) async {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: const [Locale('ru')],
       home: Scaffold(
-        body: SearchResultCard(subject: subject, onOpen: () => opened++),
+        body: SearchResultCard(
+          subject: subject,
+          onOpen: () => opened++,
+          showTransliteration: showTransliteration,
+        ),
       ),
     ),
   );
@@ -92,5 +100,69 @@ void main() {
       ),
     );
     expect(thumb.width, 88);
+  });
+
+  /// Ч.3 — the translator's own card. Same three additive products as the word card, same rule:
+  /// a missing one is a missing block, never an empty one.
+  group('ядро v15 · чтение и доп-переводы', () {
+    WordCardSubject saved({
+      String? transliteration,
+      List<String> translations = const [],
+      List<String> synonyms = const [],
+    }) => WordCardSubject(
+      termId: 'ID',
+      text: 'knife',
+      type: 'word',
+      transcription: 'naɪf',
+      transliteration: transliteration,
+      translation: 'нож',
+      translations: translations,
+      synonyms: synonyms,
+    );
+
+    testWidgets('the reading sits beside the IPA, in brackets — and only when the switch is on', (
+      tester,
+    ) async {
+      await _pump(tester, saved(transliteration: 'найф'), showTransliteration: true);
+
+      expect(find.text('/naɪf/'), findsOneWidget); // the IPA never moves
+      expect(find.text('[найф]'), findsOneWidget);
+    });
+
+    testWidgets('the switch off hides the reading and nothing else', (tester) async {
+      await _pump(tester, saved(transliteration: 'найф'));
+
+      expect(find.text('[найф]'), findsNothing);
+      expect(find.text('/naɪf/'), findsOneWidget);
+      expect(find.text('нож'), findsOneWidget);
+    });
+
+    testWidgets('a word with no reading draws no bracket at all', (tester) async {
+      await _pump(tester, saved(), showTransliteration: true);
+
+      expect(find.textContaining('['), findsNothing);
+      expect(find.text('/naɪf/'), findsOneWidget);
+    });
+
+    testWidgets('extra readings follow the pinned one through « / »', (tester) async {
+      await _pump(tester, saved(translations: const ['нож', 'тесак']));
+
+      expect(find.text('нож / тесак'), findsOneWidget);
+    });
+
+    testWidgets('one reading prints exactly as it did before the list existed', (tester) async {
+      await _pump(tester, saved(translations: const ['нож']));
+
+      expect(find.text('нож'), findsOneWidget);
+    });
+
+    testWidgets('synonyms belong to the CARD — the leaf stays a recognition aid', (tester) async {
+      // The «также: …» line is part of the article, like the description above it. Putting it on
+      // the leaf would make «Открыть карточку» a link to something already read.
+      await _pump(tester, saved(synonyms: const ['blade']));
+
+      expect(find.textContaining('также'), findsNothing);
+      expect(find.text('blade'), findsNothing);
+    });
   });
 }
