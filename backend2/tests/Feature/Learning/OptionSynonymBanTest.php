@@ -89,3 +89,38 @@ it('changes nothing for a term with no synonyms', function () {
     // honest state, not a defect: the ban can only act on data that exists.
     expect(optionsFor($target))->toContain('goal');
 });
+
+
+/**
+ * The Ч.5 control, on the pairs a REAL run produced.
+ *
+ * These five came out of the SYN-1 pilots over «В банке» (docs/syn-1-findings.md §7). Three of them
+ * are pairs the pilot got WRONG — `savings account` is a type of `bank account`, not a synonym —
+ * and they are used here anyway on purpose: the ban is about what the data SAYS, and a bad synonym
+ * row is exactly the row that would otherwise put a second correct-looking answer on the card. The
+ * question this test asks is not «is the synonym good» but «does a synonym ever reach the options».
+ */
+dataset('pilot synonym pairs', [
+    'bank account → savings account' => ['bank account', 'банковский счёт', 'savings account', 'сберегательный счёт'],
+    'credit card → charge card' => ['credit card', 'кредитная карта', 'charge card', 'платёжная карта'],
+    'debit card → bank card' => ['debit card', 'дебетовая карта', 'bank card', 'банковская карта'],
+    'financial advisor → financial consultant' => ['financial advisor', 'финансовый консультант', 'financial consultant', 'консультант по финансам'],
+    'interest rate → rate of interest' => ['interest rate', 'процентная ставка', 'rate of interest', 'ставка процента'],
+]);
+
+it('keeps the synonym out of the options', function (string $term, string $gloss, string $synonym, string $synGloss) {
+    $target = seedBanTerm($term, $gloss);
+    seedBanTerm($synonym, $synGloss);
+    // Three ordinary neighbours, so the card has somewhere else to draw from and the absence of the
+    // synonym is a choice rather than an empty pool.
+    seedBanTerm('boarding pass', 'посадочный талон');
+    seedBanTerm('luggage tag', 'багажная бирка');
+    seedBanTerm('window seat', 'место у окна');
+    seedBanSynonym($target, $synonym);
+
+    $options = optionsFor($target);
+
+    expect($options)->not->toContain($synonym)
+        // …and the card is still playable: the ban removed an option, it did not empty the card.
+        ->and($options)->not->toBeEmpty();
+})->with('pilot synonym pairs');
