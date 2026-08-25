@@ -74,7 +74,8 @@ character ceiling is visible.
 POST /generations → RequestCollectionGeneration (quota check, insert pending) → 202 {id}
                   → dispatch GenerateCollectionJob
 GenerateCollectionJob → ProcessGeneration:
-     markRunning → CollectionGeneratorPort::generate (slow, OUTSIDE any tx) — ask ceil(size×1.3)
+     markRunning (IDEMPOTENT — a retry re-enters its own run) → CollectionGeneratorPort::generate
+       (slow, OUTSIDE any tx) — ask ceil(size×1.3)
      → DraftValidator (CEFR/dedup, cap at MAX_ITEMS) → trimToRequested (down to `size`)
      → if still short: ONE top-up with an avoid list → merge+dedup+cap (tokens/cost SUMMED)
      → [tx: CreateGeneratedCollection + ImportTerm×N + AddTerm]
@@ -84,6 +85,14 @@ GET /generations/{id} → the client polls until succeeded|failed; reads `reques
 
 The console command `php artisan generation:make {user} {prompt}` runs the same
 `ProcessGeneration` **synchronously** and prints the result — no queue, handy from the terminal.
+
+`markRunning` is idempotent from `running` on purpose. The job has `tries = 3`, so an attempt that
+marks the request running and then dies of something else is followed by a retry that arrives at a
+request already running. While that threw, the transition error REPLACED the real cause and was what
+`failed()` recorded — three of the owner's generations died on 25.08 reporting «Cannot move a
+generation from running to running», and why they really failed is not in anything we stored. A
+terminal request is still refused: succeeded and failed are final, the quota is settled, and
+re-running one would be a second charge for finished work.
 
 ## The port
 

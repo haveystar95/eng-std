@@ -96,8 +96,33 @@ final class GenerationRequest
         );
     }
 
+    /**
+     * Start (or RE-start) the run. Idempotent from `running`, refused from a terminal state.
+     *
+     * The re-entry is the point, and it was found by paying for it. `GenerateCollectionJob` has
+     * `tries = 3`: attempt 1 marks the request running and then dies of something else, attempt 2
+     * calls this method on a request that is already running, and — while this threw — the domain
+     * exception REPLACED the real cause. All three attempts then ended the same way, and what
+     * `failed()` recorded was «Cannot move a generation from running to running», an artefact of the
+     * state machine describing nothing about why the generation actually failed. Three of the
+     * owner's own generations died that way on 25.08, at $0.043 each, and the reason for all three
+     * is not recoverable from anything we stored.
+     *
+     * A retry re-entering its own run is not an illegal transition — it is the same job saying «I am
+     * running» a second time, which is true. So it is a no-op, and whatever really goes wrong on the
+     * retry is what reaches `markFailed()`.
+     *
+     * A TERMINAL state is still refused, and that is a different question: succeeded and failed are
+     * final (see {@see GenerationStatus}), the quota has been settled and a collection may already
+     * exist, so re-running one would be a second charge for work that is over. The handler returns
+     * early on terminal anyway; this stays as the domain's own guarantee rather than a courtesy the
+     * caller extends.
+     */
     public function markRunning(): void
     {
+        if ($this->status === GenerationStatus::Running) {
+            return;
+        }
         if ($this->status !== GenerationStatus::Pending) {
             throw InvalidGenerationTransition::from($this->status, GenerationStatus::Running);
         }

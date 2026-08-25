@@ -596,3 +596,23 @@ it('drops an unfixable item, tops up the hole, and records the rejection', funct
     }
     expect($translations)->not->toContain('на одній хвилі');
 });
+
+
+it('a retry of a request left running finishes it, instead of dying on the state machine', function () {
+    // The shape that cost the owner three generations on 25.08. `GenerateCollectionJob` has
+    // tries = 3: attempt 1 marks the request running and dies of something else, and attempt 2 used
+    // to die on `markRunning` — which then became the RECORDED reason, hiding the real one. Now the
+    // retry re-enters its own run and reaches whatever outcome the attempt actually has.
+    $id = openGeneration($this);
+
+    $request = $this->requests->findById($id);
+    $request?->markRunning();               // attempt 1 got this far…
+    if ($request !== null) {
+        $this->requests->save($request);    // …and then died without recording anything.
+    }
+
+    ($this->process)(new ProcessGeneration($id));
+
+    expect($this->requests->findById($id)?->status())->toBe(GenerationStatus::Succeeded)
+        ->and($this->requests->findById($id)?->error())->toBeNull();
+});

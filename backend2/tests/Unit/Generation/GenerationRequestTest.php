@@ -82,11 +82,32 @@ it('can fail straight from pending', function () {
         ->and($request->error())->toBe('quota');
 });
 
-it('cannot run a request twice', function () {
+it('lets a retry re-enter its own run instead of replacing the real error', function () {
+    // `GenerateCollectionJob` has tries = 3. Attempt 1 marks the request running and then dies of
+    // something else; attempt 2 arrives here. While this threw, the domain exception REPLACED the
+    // real cause, and `failed()` recorded «Cannot move a generation from running to running» —
+    // an artefact describing nothing. Three of the owner's own generations died that way on 25.08
+    // and the reason for all three is not recoverable from anything stored.
     $request = openRequest();
     $request->markRunning();
+    $request->markRunning();
 
-    expect(fn () => $request->markRunning())->toThrow(InvalidGenerationTransition::class);
+    expect($request->status())->toBe(GenerationStatus::Running);
+});
+
+it('still refuses to resurrect a request that has already finished', function () {
+    // The other half, and a different question: terminal is final. The quota is settled and a
+    // collection may exist, so re-running one would be a second charge for work that is over.
+    $succeeded = openRequest();
+    $succeeded->markRunning();
+    $succeeded->markSucceeded(
+        CollectionId::generate(), 'gpt-4o', null, null, null, 8, new DateTimeImmutable('2026-07-27T10:00:02Z'),
+    );
+    expect(fn () => $succeeded->markRunning())->toThrow(InvalidGenerationTransition::class);
+
+    $failed = openRequest();
+    $failed->markFailed('boom', new DateTimeImmutable('2026-07-27T10:00:01Z'));
+    expect(fn () => $failed->markRunning())->toThrow(InvalidGenerationTransition::class);
 });
 
 it('cannot succeed after failing', function () {
