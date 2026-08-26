@@ -3164,6 +3164,24 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Опишите ситуацию — ИИ подберёт слова и фразы под неё'**
   String get homeFirstDayOwnHint;
+
+  /// Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}'**
+  String homeSortOffer(int count, String title);
+
+  /// Кнопка свайп-прохода в состоянии Б (кадр 17d).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
+  String homeTriageAction(int count);
+
+  /// Заголовок вместо «Всё повторено», когда в работе ещё ничего нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пора разобрать слова'**
+  String get homeSortFirstTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

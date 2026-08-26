@@ -2095,4 +2095,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeFirstDayOwnHint => 'Опишите ситуацию — ИИ подберёт слова и фразы под неё';
+
+  @override
+  String homeSortOffer(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Можно разобрать ещё $count слова из «$title»',
+      many: 'Можно разобрать ещё $count слов из «$title»',
+      few: 'Можно разобрать ещё $count слова из «$title»',
+      one: 'Можно разобрать ещё $count слово из «$title»',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeTriageAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Разобрать $count слова',
+      many: 'Разобрать $count слов',
+      few: 'Разобрать $count слова',
+      one: 'Разобрать $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSortFirstTitle => 'Пора разобрать слова';
 }

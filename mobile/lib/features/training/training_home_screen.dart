@@ -172,15 +172,22 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           today: plan.today,
           session: session,
           nextReview: plan.nextReview,
-          unfinished: plan.unfinished,
-          onExtra: () => _openTriage(plan.unfinished!.collectionId, plan.unfinished!.title),
+          onExtra: () => _openTriage(
+            session.triageCollectionId!,
+            session.triageCollectionTitle ?? '',
+          ),
         )
       else
         _IdleCard(
           key: HomeBlockKeys.idle,
           inWork: plan.inWork,
+          session: session,
           nextReview: plan.nextReview,
           onTakeNew: () => _openSession(learn: true),
+          onSort: () => _openTriage(
+            session.triageCollectionId!,
+            session.triageCollectionTitle ?? '',
+          ),
         ),
       gap,
       _InWorkRow(
@@ -223,21 +230,11 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     ];
   }
 
-  /// «Начать» — the day's one button.
+  /// «Начать» — the day's one button, and it opens the day: the study session.
   ///
-  /// The routing keeps the existing priority (study first, then the swipe pass) because the two are
-  /// two different mechanics and this наряд changes neither: study cards are dealt by the server,
-  /// swipes are a local deck over a collection. The composition line above the button says what the
-  /// day holds; the button opens the part of it that comes first.
-  void _startDay(HomePlan plan) {
-    final session = plan.session;
-    if (session.repeat + session.newTerms > 0) {
-      _openSession();
-      return;
-    }
-    final id = session.triageCollectionId;
-    if (id != null) _openTriage(id, session.triageCollectionTitle ?? '');
-  }
+  /// No branch to the swipe pass any more. The card is drawn only while repeats are due, and the
+  /// swipe pass has its own offer for when they are not — one button, one meaning.
+  void _startDay(HomePlan plan) => _openSession();
 
   Future<void> _openSession({bool learn = false}) async {
     AppHaptics.light();
@@ -375,9 +372,15 @@ class _StreakDots extends StatelessWidget {
 /// «Сессия на сегодня: 32 слова · ≈ 9 минут» (кадр 17a) — the one dark surface on the screen, and
 /// therefore the one primary action.
 ///
-/// The composition is drawn twice: as a bar whose three segments are in proportion, and as three
-/// labelled lines. A part whose number is 0 is drawn in NEITHER — a zero-width segment and a
-/// «0 новых» line are the same lie in two typefaces.
+/// It counts the POOL and nothing else: repeats and the new words the day's quota allows. Words
+/// sitting unsorted in a collection are catalogue, not queue — they are offered further down, once
+/// the repeats are done — because counting them here means every set the learner adds arrives as
+/// work they owe, and a shelf of five sets announces a two-hundred-word day to someone who takes
+/// thirty.
+///
+/// The composition is drawn twice: as a bar whose segments are in proportion, and as labelled
+/// lines. A part whose number is 0 is drawn in NEITHER — a zero-width segment and a «0 новых» line
+/// are the same lie in two typefaces.
 class _SessionCard extends StatelessWidget {
   const _SessionCard({super.key, required this.session, required this.onStart});
 
@@ -393,8 +396,6 @@ class _SessionCard extends StatelessWidget {
         (count: session.repeat, opacity: 1, label: l.homeSessionPartRepeat(session.repeat)),
       if (session.newTerms > 0)
         (count: session.newTerms, opacity: 0.55, label: l.homeSessionPartNew(session.newTerms)),
-      if (session.triage > 0)
-        (count: session.triage, opacity: 0.28, label: l.homeSessionPartTriage(session.triage)),
     ];
 
     return Container(
@@ -528,14 +529,12 @@ class _DoneCard extends StatelessWidget {
     required this.today,
     required this.session,
     required this.nextReview,
-    required this.unfinished,
     required this.onExtra,
   });
 
   final HomeToday? today;
   final HomeSession session;
   final HomeNextReview? nextReview;
-  final HomeContinue? unfinished;
   final VoidCallback onExtra;
 
   @override
@@ -547,10 +546,13 @@ class _DoneCard extends StatelessWidget {
     // is due), while leftover new words and unswiped cards are «сверх плана» — counting them into
     // the denominator would print «32 из 47» on a day that was finished.
     final planned = answered + session.repeat;
+    // The swipe offer comes from the day's own count, not from the «продолжить» candidate: that one
+    // requires a collection the learner has already started, and a set added an hour ago and never
+    // opened is exactly the case this offer is for.
+    final canSort = session.triage > 0 && session.triageCollectionId != null;
     final lines = <String>[
       if (nextReview != null) _nextReviewLine(context, l, nextReview!),
-      if (unfinished != null)
-        l.homeExtraFromCollection(unfinished!.remaining, unfinished!.title),
+      if (canSort) l.homeExtraFromCollection(session.triage, session.triageCollectionTitle ?? ''),
     ];
 
     return PaperCard(
@@ -593,9 +595,9 @@ class _DoneCard extends StatelessWidget {
               ),
             ),
           ],
-          if (unfinished != null) ...[
+          if (canSort) ...[
             const SizedBox(height: AppSpacing.s16),
-            QuietButton(label: l.homeExtraButton(unfinished!.remaining), onPressed: onExtra),
+            QuietButton(label: l.homeExtraButton(session.triage), onPressed: onExtra),
           ],
         ],
       ),
@@ -606,19 +608,39 @@ class _DoneCard extends StatelessWidget {
 /// «Всё повторено» (кадр 17d): nothing is due and nothing was answered — the schedule is simply
 /// ahead. One button, and it is the one thing that would move the day: take new words.
 class _IdleCard extends StatelessWidget {
-  const _IdleCard({super.key, required this.inWork, required this.nextReview, required this.onTakeNew});
+  const _IdleCard({
+    super.key,
+    required this.inWork,
+    required this.session,
+    required this.nextReview,
+    required this.onTakeNew,
+    required this.onSort,
+  });
 
   final HomeInWork inWork;
+  final HomeSession session;
   final HomeNextReview? nextReview;
   final VoidCallback onTakeNew;
+  final VoidCallback onSort;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // Two offers, in the order they are useful: take the words already queued, or sort more out of
+    // a collection. Neither is work the day claimed — this is the state where the day claimed none.
     final canTakeNew = inWork.waiting > 0 && inWork.newRemaining > 0;
+    final canSort = session.triage > 0 && session.triageCollectionId != null;
+    final sortOffer = canSort
+        ? [
+            l.homeSortOffer(session.triage, session.triageCollectionTitle ?? ''),
+            if (session.triageMinutes != null) l.homeSessionCardMinutes(session.triageMinutes!),
+          ].join(' · ')
+        : null;
+
     final lines = <String>[
       if (nextReview != null) _nextReviewLine(context, l, nextReview!),
       if (canTakeNew) l.homeIdleQueueStalled,
+      if (!canTakeNew && sortOffer != null) sortOffer,
     ];
 
     return PaperCard(
@@ -629,7 +651,12 @@ class _IdleCard extends StatelessWidget {
         children: [
           Text(l.homeDoneTitle.toUpperCase(), style: AppText.sectionLabel),
           const SizedBox(height: 9),
-          Text(l.homeIdleTitle, style: AppText.counterLarge.copyWith(fontSize: 28)),
+          Text(
+            // «Всё повторено» to someone who has never taken a word into study is a strange thing to
+            // say — they repeated nothing. With an empty pool the honest headline is the invitation.
+            inWork.total == 0 && canSort ? l.homeSortFirstTitle : l.homeIdleTitle,
+            style: AppText.counterLarge.copyWith(fontSize: 28),
+          ),
           if (lines.isNotEmpty) ...[
             const SizedBox(height: 9),
             Text(
@@ -644,6 +671,13 @@ class _IdleCard extends StatelessWidget {
           if (canTakeNew) ...[
             const SizedBox(height: AppSpacing.s16),
             PrimaryButton(label: l.homeIdleTakeNew, minHeight: 52, onPressed: onTakeNew),
+          ] else if (canSort) ...[
+            const SizedBox(height: AppSpacing.s16),
+            PrimaryButton(
+              label: l.homeTriageAction(session.triage),
+              minHeight: 52,
+              onPressed: onSort,
+            ),
           ],
         ],
       ),

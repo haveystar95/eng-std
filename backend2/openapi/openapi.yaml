@@ -2454,12 +2454,13 @@ components:
           type: string
           enum: [plan, done, idle, empty]
           description: >
-            Which of the four home frames this is. `plan` — the day asks for something
-            (`session.repeat + session.triage > 0`); `done` — it does not, and something was
-            answered today, so leftovers are «сверх плана»; `idle` — it does not and nothing was
-            answered: the schedule is simply ahead, and a queue of untaught words is an OFFER
-            («Взять новые слова»), not a session; `empty` — the very first day: no collections, no
-            pool, nothing answered. Named on the server so two screens cannot derive it two ways.
+            Which of the four home frames this is. `plan` — repeats are due (`session.repeat > 0`);
+            `done` — none are, and something was answered today, so what is left is «сверх плана»;
+            `idle` — none are and nothing was answered: the schedule is simply ahead. Untaught pool
+            words and unsorted collection words are OFFERS in those two states («Взять новые слова»,
+            «Разобрать ещё N»), never work the day claims. `empty` — the very first day: no
+            collections, no pool, nothing answered. Named on the server so two screens cannot derive
+            it two ways.
         session:
           type: object
           required: [repeat, new, triage, total, avg_seconds_per_card]
@@ -2474,29 +2475,33 @@ components:
               type: integer
               description: >
                 Terms of the learner's collections with neither a verdict nor a progress row — the
-                swipe pass. Not study cards: a word enters the pool by being swiped.
+                swipe pass, and deliberately NOT part of `total`. Those words are CATALOGUE: a
+                collection is a catalogue of a topic and the pool is the queue, so adding a
+                twenty-word set must not add twenty words to «сегодня». Offered once the repeats are
+                done, priced by `triage_minutes`.
             total:
               type: integer
-              description: repeat + new + triage — the day, not the study session.
+              description: repeat + new — the pool's work for today. See `triage`.
             estimated_minutes:
               type: integer
               nullable: true
               description: >
-                (`repeat` + `new`) × `avg_seconds_per_card` + `triage` × `avg_seconds_per_swipe`,
-                rounded to minutes, minimum 1. Null when there is nothing to do.
+                `total` × `avg_seconds_per_card`, rounded to minutes, minimum 1. Null when there is
+                nothing to do. The swipe pass is priced separately, in `triage_minutes`.
             avg_seconds_per_card:
               type: integer
               description: >
                 The learner's own pace on an EXERCISE — a winsorised (60 s ceiling) mean over their
                 last 200 non-practice answers, clamped to 3..30 s. Falls back to a measured default
                 (8 s) below 20 answers.
-            avg_seconds_per_swipe:
+            triage_minutes:
               type: integer
+              nullable: true
               description: >
-                The same figure for a TRIAGE swipe, measured the same way over `term_triages`.
-                Separate because a swipe is a different act and measures like one — 3 s against
-                8–11 — and `estimated_minutes` prices the swipe pass at this rate rather than at a
-                card's. Falls back to a measured default (3 s).
+                What the swipe pass would cost, in minutes; null when there is nothing to sort.
+                Priced at the learner's own SWIPE rate (measured over `term_triages` the same way),
+                which is a different act and measures like one — ≈3 s against ≈8–11 s — so a
+                hundred-word pass reads as the five minutes it is rather than as twenty.
             triage_collection_id:
               type: string
               nullable: true

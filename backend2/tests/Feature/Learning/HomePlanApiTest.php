@@ -83,9 +83,10 @@ it('names the state and the whole composition of the day (17a)', function () {
     expect($plan['state'])->toBe('plan')
         ->and($plan['session']['repeat'])->toBe(1)
         ->and($plan['session']['new'])->toBe(1)
+        // The swipe is COUNTED and offered, and deliberately not in the total: those words are
+        // catalogue, not queue, and a set the learner adds must not announce itself as work.
         ->and($plan['session']['triage'])->toBe(1)
-        // total is NOT repeat + new: the swipe pass is part of the day, not of the study session.
-        ->and($plan['session']['total'])->toBe(3)
+        ->and($plan['session']['total'])->toBe(2)
         ->and($plan['session']['triage_collection_id'])->toBe($col)
         ->and($plan['session']['triage_collection_title'])->toBe('apple');
 });
@@ -109,24 +110,26 @@ it('counts the DAY, not one sitting — a backlog bigger than a session is repor
         ->and($plan['total'])->toBe(26);
 });
 
-it('estimates the session from cards times the learner own seconds per card', function () {
+it('estimates the day from its cards, and the swipe pass at a swipe rate', function () {
     [$user, $token] = learner();
-    [$col] = seedCollectionWith($user, 'apple', 'яблоко', enroll: false);
+    [$col] = seedCollectionWith($user, 'apple', 'яблоко');            // 5 pool words, never shown
     foreach (['bank', 'chair', 'door', 'egg'] as $word) {
-        addWordTo($col, $user->id, $word, 'x', enroll: false);
+        addWordTo($col, $user->id, $word, 'x');
+    }
+    foreach (range(1, 40) as $i) {                                    // …and 40 words nobody sorted
+        addWordTo($col, $user->id, "w{$i}", 'x', enroll: false);
     }
 
-    $plan = homePlan($this, $token);
-    $session = $plan['session'];
+    $session = homePlan($this, $token)['session'];
 
-    // No answers yet ⇒ no personal pace ⇒ the documented defaults. All five cards here are SWIPES,
-    // so the estimate is priced at the swipe rate — pricing a swipe pass like an exercise pass is
-    // what turned a seven-minute day into a forty-minute one.
+    // No answers yet ⇒ no personal pace ⇒ the documented defaults.
     expect($session['total'])->toBe(5)
-        ->and($session['triage'])->toBe(5)
         ->and($session['avg_seconds_per_card'])->toBe(8)
-        ->and($session['avg_seconds_per_swipe'])->toBe(3)
-        ->and($session['estimated_minutes'])->toBe(1);
+        ->and($session['estimated_minutes'])->toBe(1)
+        // The swipe pass is priced apart, at a swipe's rate: 40 × 3 s = 2 min. Priced as exercises
+        // it would read 5, and it would have been added to the day on top of that.
+        ->and($session['triage'])->toBe(40)
+        ->and($session['triage_minutes'])->toBe(2);
 });
 
 it('says nothing rather than zero when there is nothing to do (17c, the first day)', function () {
@@ -204,7 +207,7 @@ it('does not call a queue of untaught words a session (17d)', function () {
         ->and($plan['in_work']['new_remaining'])->toBeGreaterThan(0);
 });
 
-it('leaves a closed day closed, and calls the leftovers extra (17b)', function () {
+it('does not let an unsorted collection hold the day open (17b)', function () {
     [$user, $token] = learner();
     [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
     addWordTo($col, $user->id, 'leash', 'поводок', enroll: false); // a swipe left over
@@ -212,23 +215,13 @@ it('leaves a closed day closed, and calls the leftovers extra (17b)', function (
     answerTimes($this, $token, $apple, 'apple', times: 3);
     scheduleAhead($user->id, $apple, 3);
 
-    // The swipe is still on the shelf and still counted — but it is «сверх плана», not a reason to
-    // reopen the day.
+    // The swipe is still on the shelf and still counted — and the day is CLOSED anyway. A word
+    // nobody has chosen to study is catalogue, and catalogue does not keep a finished day open.
     $plan = homePlan($this, $token);
 
-    expect($plan['session']['triage'])->toBe(1)
-        ->and($plan['state'])->toBe('plan');
-
-    // …until the swipe is done too, and then the day is closed with its answers still standing.
-    DB::table('term_triages')->insert([
-        'id' => Ulid::generate(), 'user_id' => $user->id,
-        'term_id' => DB::table('collection_items')->where('collection_id', $col)
-            ->where('term_id', '<>', $apple)->value('term_id'),
-        'verdict' => 'known', 'decided_at' => now(), 'created_at' => now(), 'client_seq' => 1,
-    ]);
-
-    $plan = homePlan($this, $token);
     expect($plan['state'])->toBe('done')
+        ->and($plan['session']['triage'])->toBe(1)
+        ->and($plan['session']['total'])->toBe(0)
         ->and($plan['today']['answered'])->toBe(1);
 });
 

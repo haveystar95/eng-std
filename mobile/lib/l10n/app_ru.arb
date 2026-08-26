@@ -1524,5 +1524,20 @@
   "@homeFirstDayOwnTitle": { "description": "Вторая карточка первого дня (кадр 17c)." },
 
   "homeFirstDayOwnHint": "Опишите ситуацию — ИИ подберёт слова и фразы под неё",
-  "@homeFirstDayOwnHint": { "description": "Подпись карточки генерации (кадр 17c)." }
+  "@homeFirstDayOwnHint": { "description": "Подпись карточки генерации (кадр 17c)." },
+
+  "homeSortOffer": "{count, plural, one{Можно разобрать ещё {count} слово из «{title}»} few{Можно разобрать ещё {count} слова из «{title}»} many{Можно разобрать ещё {count} слов из «{title}»} other{Можно разобрать ещё {count} слова из «{title}»}}",
+  "@homeSortOffer": {
+    "description": "Предложение свайп-прохода, когда день закрыт (кадры 17b/17d).",
+    "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
+  },
+
+  "homeTriageAction": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
+  "@homeTriageAction": {
+    "description": "Кнопка свайп-прохода в состоянии Б (кадр 17d).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSortFirstTitle": "Пора разобрать слова",
+  "@homeSortFirstTitle": { "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет." }
 }

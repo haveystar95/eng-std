@@ -703,5 +703,20 @@
   "@homeFirstDayOwnTitle": { "description": "Second card of the first day (frame 17c)." },
 
   "homeFirstDayOwnHint": "Describe a situation — AI will pick the words and phrases for it",
-  "@homeFirstDayOwnHint": { "description": "Caption of the generation card (frame 17c)." }
+  "@homeFirstDayOwnHint": { "description": "Caption of the generation card (frame 17c)." },
+
+  "homeSortOffer": "{count, plural, one{You can sort {count} more word from “{title}”} other{You can sort {count} more words from “{title}”}}",
+  "@homeSortOffer": {
+    "description": "The swipe-pass offer once the day is closed (frames 17b/17d).",
+    "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
+  },
+
+  "homeTriageAction": "{count, plural, one{Sort {count} word} other{Sort {count} words}}",
+  "@homeTriageAction": {
+    "description": "The swipe-pass button in state B (frame 17d).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSortFirstTitle": "Time to sort your words",
+  "@homeSortFirstTitle": { "description": "Headline instead of «All reviewed» when nothing is in progress yet." }
 }

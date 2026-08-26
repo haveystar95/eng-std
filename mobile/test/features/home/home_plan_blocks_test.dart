@@ -17,16 +17,25 @@ import 'package:eng_std/data/locale_controller.dart';
 ///
 /// The four states of кадры 17a–17d are asserted the same way — by which keys are present.
 void main() {
-  HomeSession session({int repeat = 0, int newTerms = 0, int triage = 0, int? minutes}) =>
-      HomeSession(
-        repeat: repeat,
-        newTerms: newTerms,
-        triage: triage,
-        total: repeat + newTerms + triage,
-        estimatedMinutes: minutes,
-        avgSecondsPerCard: 8,
-        avgSecondsPerSwipe: 3,
-      );
+  // `total` is the POOL's work — repeats and new words — and never the swipe pass: a collection is
+  // a catalogue, so adding one must not add its size to «сегодня».
+  HomeSession session({
+    int repeat = 0,
+    int newTerms = 0,
+    int triage = 0,
+    int? minutes,
+    String? triageCollectionId,
+  }) => HomeSession(
+    repeat: repeat,
+    newTerms: newTerms,
+    triage: triage,
+    total: repeat + newTerms,
+    estimatedMinutes: minutes,
+    avgSecondsPerCard: 8,
+    triageMinutes: triage > 0 ? 1 : null,
+    triageCollectionId: triage > 0 ? (triageCollectionId ?? 'col') : null,
+    triageCollectionTitle: triage > 0 ? 'Ветклиника' : null,
+  );
 
   HomePlan plan({
     HomeStateKind state = HomeStateKind.plan,
@@ -123,9 +132,18 @@ void main() {
       await pumpHome(tester, plan(session_: session(repeat: 12, minutes: 2)));
 
       expect(find.textContaining('12'), findsWidgets);
-      // «0 новых» / «0 разобрать» do not exist on this screen.
+      // «0 новых» does not exist on this screen.
       expect(find.textContaining('0 новых'), findsNothing);
-      expect(find.textContaining('0 разобрать'), findsNothing);
+    });
+
+    testWidgets('an unsorted collection is not part of the day', (tester) async {
+      // 12 repeats and 131 words nobody has sorted. The card is about the pool: the swipe pass is
+      // an offer for later, and counting it here is what made every added set inflate «сегодня».
+      await pumpHome(tester, plan(session_: session(repeat: 12, triage: 131, minutes: 2)));
+
+      expect(find.textContaining('12'), findsWidgets);
+      expect(find.textContaining('143'), findsNothing);
+      expect(find.textContaining('131'), findsNothing);
     });
   });
 

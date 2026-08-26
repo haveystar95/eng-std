@@ -1229,16 +1229,21 @@ class HomeSession {
     required this.total,
     required this.estimatedMinutes,
     required this.avgSecondsPerCard,
-    required this.avgSecondsPerSwipe,
+    this.triageMinutes,
     this.triageCollectionId,
     this.triageCollectionTitle,
   });
 
+  /// [total] is `repeat + newTerms` — the POOL, which is the queue. [triage] is counted beside it
+  /// and is NOT in it: those words are catalogue, and a set the learner adds must not announce
+  /// itself as work they owe.
   final int repeat, newTerms, triage, total;
 
-  /// What the estimate priced an exercise at, and what it priced a SWIPE at. Two figures because a
-  /// swipe is a different act and measures like one (≈3 s against ≈8–11 s).
-  final int avgSecondsPerCard, avgSecondsPerSwipe;
+  final int avgSecondsPerCard;
+
+  /// What the swipe pass costs, in minutes — null when there is nothing to sort. Priced at the
+  /// learner's own swipe rate (≈3 s), not at an exercise's (≈8–11 s).
+  final int? triageMinutes;
 
   /// Null when there is nothing to do — «≈ 0 минут» is not a thing the screen says.
   final int? estimatedMinutes;
@@ -1254,7 +1259,7 @@ class HomeSession {
     total: (j['total'] as int?) ?? 0,
     estimatedMinutes: j['estimated_minutes'] as int?,
     avgSecondsPerCard: (j['avg_seconds_per_card'] as int?) ?? 0,
-    avgSecondsPerSwipe: (j['avg_seconds_per_swipe'] as int?) ?? 0,
+    triageMinutes: j['triage_minutes'] as int?,
     triageCollectionId: j['triage_collection_id'] as String?,
     triageCollectionTitle: j['triage_collection_title'] as String?,
   );

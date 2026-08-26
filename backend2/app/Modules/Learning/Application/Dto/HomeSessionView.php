@@ -7,12 +7,10 @@ namespace App\Modules\Learning\Application\Dto;
 /**
  * «Сессия на сегодня: N слов · ~M минут», and what it is made of.
  *
- * `repeat` and `new` are the REAL planner answer — the same {@see \App\Modules\Learning\Application\Query\GetDueTermsHandler}
- * call the session builder makes, under the same session size and the same remaining new-term quota
- * — so the card can never promise a session the server would come back empty from. `triage` is the
- * swipe pass beside it: terms of the learner's collections that have neither progress nor a triage
- * verdict. It is not part of a study session and never has been; it is part of the DAY, which is
- * what this card is about.
+ * `total` is `repeat + new` — THE POOL, which is the queue. `triage` is counted beside it and is
+ * deliberately NOT in the total: those terms are CATALOGUE, words the learner owns and has not
+ * chosen to study, and adding a set would otherwise add its whole size to «сегодня». It is offered
+ * once the repeats are done, priced by `triageMinutes`.
  *
  * A count of 0 is a real answer here (the client draws no line for it) — the whole card is absent
  * only when {@see HomePlanView::$state} says so.
@@ -28,8 +26,12 @@ final readonly class HomeSessionView
         public ?int $estimatedMinutes,
         /** The per-card figure the estimate was built from; see {@see \App\Modules\Learning\Application\Port\HomePlanReader::averageCardSeconds()}. */
         public int $avgSecondsPerCard,
-        /** …and the per-SWIPE one. A swipe is a different act and measures like one (3 s against 8–11). */
-        public int $avgSecondsPerSwipe,
+        /**
+         * What the swipe pass would cost, in minutes — null when there is nothing to sort. Priced at
+         * the learner's own SWIPE rate, which is a different act and measures like one (≈3 s against
+         * ≈8–11 s), so a hundred-word pass reads as the five minutes it is.
+         */
+        public ?int $triageMinutes,
         /** Where the swipe pass leads; null when `triage` is 0. */
         public ?string $triageCollectionId = null,
         public ?string $triageCollectionTitle = null,

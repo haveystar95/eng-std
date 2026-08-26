@@ -41,7 +41,7 @@ final class HomePlanResource extends JsonResource
                 'total' => $session->total,
                 'estimated_minutes' => $session->estimatedMinutes,
                 'avg_seconds_per_card' => $session->avgSecondsPerCard,
-                'avg_seconds_per_swipe' => $session->avgSecondsPerSwipe,
+                'triage_minutes' => $session->triageMinutes,
                 'triage_collection_id' => $session->triageCollectionId,
                 'triage_collection_title' => $session->triageCollectionTitle,
             ],

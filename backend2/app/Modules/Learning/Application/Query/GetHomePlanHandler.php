@@ -42,14 +42,18 @@ use DateTimeZone;
  * learner comes back for the rest, so capping the card at a session's size makes it report the same
  * twenty after every run — and sit still while sixty repeats drain behind it.
  *
- * Two things are deliberately NOT session cards and still belong to the day:
+ * THE DAY IS THE POOL, and nothing else. A collection is a CATALOGUE of a topic; the pool is the
+ * queue. Terms nobody has swiped yet are catalogue, so they are counted (`triage`) and OFFERED, but
+ * they are not part of `total`, of the estimate, or of the composition on the card — otherwise
+ * adding a twenty-word set would add twenty words to «сегодня», and a shelf of five sets would
+ * announce a two-hundred-word day to someone who takes thirty. The learner decides what to study;
+ * the app does not decide it for them by counting everything they own.
  *
- *  - «разобрать» — the swipe pass over terms of the learner's collections that carry neither a
- *    verdict nor a progress row. A study session is built from the POOL, and a word enters the pool
- *    by being swiped. Counting the swipes into the day's total is what the design asks for
- *    («15 карточек на свайп»), and it is why `total` is not `repeat + new`.
- *  - «продолжить» — one collection that was started and left. One, because a list of them is a
- *    shelf, and the shelf already has a tab.
+ * The swipe pass is offered where it belongs: once the day's repeats are done («Разобрать ещё N из
+ * „X"»), which is also the only moment it is the most useful thing on the screen.
+ *
+ * «Продолжить» rides beside it — one collection that was started and left. One, because a list of
+ * them is a shelf, and the shelf already has a tab.
  *
  * The empty rule runs through the whole read model: a block with nothing in it comes back null or
  * empty, never as a zero. «0 слов» is not a sentence this screen says.
@@ -140,10 +144,9 @@ final readonly class GetHomePlanHandler
             }
         }
 
-        $total = $repeat + $new + $triage;
+        $total = $repeat + $new;
         $seconds = $this->home->averageCardSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_CARD_SECONDS;
         $swipeSeconds = $this->home->averageSwipeSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_SWIPE_SECONDS;
-        $estimate = ($repeat + $new) * $seconds + $triage * $swipeSeconds;
 
         // ── the schedule just ahead, and what today produced ────────────────────────────────────
         // The window is «the next N calendar days», so it ends at the start of the day after them.
@@ -167,15 +170,15 @@ final readonly class GetHomePlanHandler
         $store = $this->store->summaryFor($user, $langs->sourceLang, $langs->targetLang, self::STORE_SAMPLE);
 
         return new HomePlanView(
-            state: $this->state($repeat + $triage, $today->answered, $poolSize, $summaries === []),
+            state: $this->state($repeat, $today->answered, $poolSize, $summaries === []),
             session: new HomeSessionView(
                 repeat: $repeat,
                 new: $new,
                 triage: $triage,
                 total: $total,
-                estimatedMinutes: $total > 0 ? max(1, (int) round($estimate / 60)) : null,
+                estimatedMinutes: $total > 0 ? max(1, (int) round($total * $seconds / 60)) : null,
                 avgSecondsPerCard: $seconds,
-                avgSecondsPerSwipe: $swipeSeconds,
+                triageMinutes: $triage > 0 ? max(1, (int) round($triage * $swipeSeconds / 60)) : null,
                 triageCollectionId: $triageTarget === null ? null : $triageTarget['id'],
                 triageCollectionTitle: $triageTarget === null ? null : $triageTarget['title'],
             ),
@@ -198,12 +201,10 @@ final readonly class GetHomePlanHandler
     /**
      * Which screen this is.
      *
-     * `$owed` is repeats plus swipes — the work the day ASKS FOR. New words are deliberately not in
-     * it, and that is the whole difference between кадры 17a and 17d: a queue of untaught words is
-     * not a session, it is an offer. With repeats due they ride along inside the day's card («5
-     * новых»); alone they leave the screen saying «Всё повторено» over one button that takes them.
-     * Treating them as work would mean a learner who finished everything is told they have 20 cards
-     * waiting, which is true of the queue and false of the day.
+     * `$owed` is REPEATS — the only thing the day asks for. Neither new words nor swipes are in it,
+     * and for the same reason: both are OFFERS. A queue of untaught words is not a session (кадр
+     * 17d — «Всё повторено» over one button that takes them), and a shelf of unsorted collections is
+     * not a session either, or every set the learner adds would announce itself as work they owe.
      *
      * The order matters twice more. `done` comes before `idle`, so leftovers a closed day did not
      * touch read as «сверх плана» rather than reopening it. And `empty` is last and narrow — no
