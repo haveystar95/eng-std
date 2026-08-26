@@ -20,7 +20,13 @@ final readonly class SavedSearchResult
         public bool $collectionIsDefault,
         /** False when the word was already in this folder — the tap was a replay, not a save. */
         public bool $added,
-        /** False when the pair was already in the pool; the word resumes, it does not restart. */
+        /**
+         * Did this call put the word into the trainer's QUEUE?
+         *
+         * False for two different reasons and the client treats them alike, because the learner
+         * does: «Сохранить» never asked for the queue (`enroll: false`), and «Учить сразу» on a word
+         * already in it has nothing left to do — the word resumes, it does not restart.
+         */
         public bool $enrolled,
     ) {}
 }

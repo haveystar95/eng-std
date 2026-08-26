@@ -32,6 +32,10 @@ final class AddSearchResultRequest extends FormRequest
             // been a free cache hit written by somebody else's call, and the confirmation still has
             // to reach the term. See AddSearchResultHandler.
             'fixed_translation' => ['sometimes', 'nullable', 'string', 'max:255'],
+            // Which of the two acts this is: «Сохранить» (shelf only, false) or «Учить сразу»
+            // (shelf AND queue, true). ABSENT means true — the door's old behaviour, kept for the
+            // build already on a phone, which has one button and no field to send.
+            'enroll' => ['sometimes', 'boolean'],
         ];
     }
 }

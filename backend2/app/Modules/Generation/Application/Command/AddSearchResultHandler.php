@@ -37,14 +37,20 @@ use App\Modules\Vocabulary\Application\Dto\TranslationInput;
 use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
 
 /**
- * The tap that saves a word: term → folder → POOL.
+ * The tap that saves a word: term → folder → and, IF THE LEARNER ASKED FOR IT, the pool.
  *
- * The third step is the one worth being explicit about. Enrolling here does not break the pool rule
- * — «слово учится, только когда зачислено осознанным актом» — it OBEYS it: saving a word you went
- * looking for, typed out and read a card about is as deliberate as an act gets, and it is the same
- * door «Учить это слово» opens ({@see EnrollTerm}). What the rule forbids is enrolling by side
- * effect (adding a collection, generating one, answering a practice card), and none of those is
- * what happened here.
+ * The third step is the one worth being explicit about, and it is the one that changed. It used to
+ * be unconditional, on the argument that going looking for a word and reading its card is as
+ * deliberate an act as the rule wants. The argument was sound about DELIBERATENESS and wrong about
+ * WHICH ACT: «сохранить» is a shelving verb, and a learner filing a word for later was silently
+ * given a queue item they never asked for. The shelf and the queue are separate (полка ≠ очередь),
+ * so the translator now offers the two as two named buttons and this handler is told which one was
+ * pressed ({@see AddSearchResult::$enroll}). «Учить сразу» is still the same door «Учить это слово»
+ * opens ({@see EnrollTerm}); «Сохранить» leaves the word on the shelf, where the swipe pass finds it.
+ *
+ * Nothing about the rule itself moved: what it forbids is enrolling by SIDE EFFECT (adding a
+ * collection, generating one, answering a practice card), and both branches here are still an
+ * answer to a button the learner pressed.
  *
  * IDEMPOTENT throughout, because the button is one tap on a phone with a flaky connection: the term
  * dedups on its normalized text, adding it to a folder it is already in is a no-op, the description
@@ -150,7 +156,10 @@ final readonly class AddSearchResultHandler
                     actorId: $command->actorId,
                 ));
 
-                $enrolled = ($this->enroll)(new EnrollTerm($command->actorId, $termId));
+                // The queue, only when the learner asked for it. `false` here is not «failed to
+                // enrol» — it is «the word was shelved», which is what the confirmation says.
+                $enrolled = $command->enroll
+                    && ($this->enroll)(new EnrollTerm($command->actorId, $termId));
 
                 return [$termId, $collectionId, ! $wasThere, $enrolled];
             },

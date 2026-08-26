@@ -23,6 +23,16 @@ use App\Modules\Shared\Domain\ValueObject\UserId;
  * «Собрать карточку». It is sent again HERE, and not only on the lookup, because the lookup may
  * legitimately have been a free cache hit — a card somebody else's call paid for, worded their way —
  * and the confirmation still has to reach the term the learner is about to study. See the handler.
+ *
+ * `enroll` is the SECOND half of the save, and the caller now states it. The shelf and the queue are
+ * different things (полка ≠ очередь): saving a word files it, and only a deliberate act puts it in
+ * the trainer's queue. The translator offers both as two named buttons — «Сохранить» (shelf, then
+ * the swipe pass sorts it) and «Учить сразу» (shelf AND queue) — so the choice belongs to the
+ * learner rather than to this handler.
+ *
+ * It defaults to TRUE, which is this door's old behaviour to the letter. That default is for the
+ * app already on somebody's phone, which sends no such field and must go on working exactly as it
+ * did; the current client always says which one it means.
  */
 final readonly class AddSearchResult
 {
@@ -32,5 +42,6 @@ final readonly class AddSearchResult
         public ?TermId $termId = null,
         public ?CollectionId $collectionId = null,
         public ?string $fixedTranslation = null,
+        public bool $enroll = true,
     ) {}
 }

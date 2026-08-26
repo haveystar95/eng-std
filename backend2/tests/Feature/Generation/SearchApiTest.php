@@ -219,7 +219,9 @@ it('gives a saved word an image query, so its photo can be fetched', function ()
     expect(DB::table('terms')->where('id', $termId)->value('image_api_prompt'))->not->toBeEmpty();
 });
 
-it('saves a looked-up word into «Сохранённые» and enrols it', function () {
+// The COMPATIBILITY branch: no `enroll` field at all, which is what the build already on a phone
+// sends. It must keep doing exactly what it always did — file the word AND enrol it.
+it('saves a looked-up word into «Сохранённые» and, with no `enroll` said, enrols it', function () {
     [$user, $token] = learner();
     $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
@@ -240,9 +242,94 @@ it('saves a looked-up word into «Сохранённые» and enrols it', funct
     expect(DB::table('collection_items')
         ->where('collection_id', $saved['collection_id'])->where('term_id', $saved['term_id'])
         ->whereNull('deleted_at')->count())->toBe(1);
-    // …and in the pool: saving a word you went looking for IS the deliberate act.
+    // …and in the pool, because an unsaid `enroll` means true — this endpoint's old behaviour.
     expect(DB::table('user_term_progress')
         ->where('user_id', $user->id)->where('term_id', $saved['term_id'])
+        ->whereNotNull('enrolled_at')->count())->toBe(1);
+});
+
+it('«Сохранить» shelves the word without putting it in the queue', function () {
+    [$user, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $saved = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId, 'enroll' => false])
+        ->assertCreated()
+        ->assertJsonPath('data.added', true)
+        // The word was filed, not taken into study — and the confirmation says exactly that.
+        ->assertJsonPath('data.enrolled', false)
+        ->json('data');
+
+    // On the shelf…
+    expect(DB::table('collection_items')
+        ->where('collection_id', $saved['collection_id'])->where('term_id', $saved['term_id'])
+        ->whereNull('deleted_at')->count())->toBe(1);
+    // …and NOT in the pool. Nothing was enrolled by the side effect of filing it.
+    expect(DB::table('user_term_progress')
+        ->where('user_id', $user->id)->where('term_id', $saved['term_id'])
+        ->whereNotNull('enrolled_at')->count())->toBe(0);
+});
+
+it('a shelved word is waiting in the swipe pass, which is where «Сохранить» sends it', function () {
+    [, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $saved = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId, 'enroll' => false])
+        ->assertCreated()->json('data');
+
+    // «в очереди на разбор» is a promise the shelf has to keep: the word must actually turn up in
+    // the pass. It does because the pass asks for never-shown, never-triaged terms of a folder,
+    // and a shelved word is both.
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/triage/queue?collection_id=' . $saved['collection_id'])
+        ->assertOk()->json('data.cards');
+
+    expect(array_column($cards, 'term_id'))->toContain($saved['term_id']);
+});
+
+it('«Учить сразу» files the word AND puts it in the queue', function () {
+    [$user, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    $saved = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId, 'enroll' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.enrolled', true)
+        ->json('data');
+
+    expect(DB::table('user_term_progress')
+        ->where('user_id', $user->id)->where('term_id', $saved['term_id'])
+        ->whereNotNull('enrolled_at')->count())->toBe(1);
+});
+
+it('shelving first and enrolling after reaches the same place as enrolling outright', function () {
+    [$user, $token] = learner();
+    $lookupId = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+        ->json('data.lookup.lookup_id');
+
+    // «Сохранить», then a change of mind — the two acts are independent, and the second one is not
+    // blocked by the first having already filed the word.
+    $first = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId, 'enroll' => false])
+        ->assertCreated()->json('data');
+    $second = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/search/add', ['lookup_id' => $lookupId, 'enroll' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.added', false)      // the folder already had it
+        ->assertJsonPath('data.enrolled', true)    // the pool did not
+        ->json('data');
+
+    expect($second['term_id'])->toBe($first['term_id']);
+    expect(DB::table('user_term_progress')
+        ->where('user_id', $user->id)->where('term_id', $first['term_id'])
         ->whereNotNull('enrolled_at')->count())->toBe(1);
 });
 

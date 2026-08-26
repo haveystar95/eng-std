@@ -813,16 +813,22 @@ paths:
   /search/add:
     post:
       tags: [Search]
-      summary: Save a search result — term, folder, POOL
+      summary: Save a search result — term, folder, and the POOL when asked
       description: >
         Names either `lookup_id` (a freshly looked-up word: the cached answer becomes a term, with
         its description) or `term_id` (a word the database already had) — never both. `collection_id`
         omitted means «Сохранённые», created on the spot if this is the first save.
 
-        It ENROLS the word. That obeys the pool rule rather than bending it: going looking for a
-        word, typing it out and reading its card is as deliberate an act as «Учить это слово», and
-        it is the same door. What the rule forbids is enrolling by side effect, which this is not.
-        The enrichment станок is chained exactly as it is after a generation (`GENERATION_AUTO_ENRICH`).
+        THE QUEUE IS A SEPARATE ACT, and `enroll` is where the caller says which one this is. The
+        shelf and the trainer's queue are different things: «Сохранить» files the word (it then waits
+        in the swipe pass, like every other shelved word), «Учить сразу» files it AND puts it in the
+        queue — the same door «Учить это слово» opens. What the pool rule forbids is enrolling by
+        side effect, and both branches here answer a button the learner pressed.
+
+        `enroll` DEFAULTS TO TRUE, which is this endpoint's behaviour before the two acts were split
+        apart, so a client that does not know the field keeps working unchanged.
+        The enrichment станок is chained exactly as it is after a generation (`GENERATION_AUTO_ENRICH`),
+        on both branches — a shelved word still gets its card built.
 
         Idempotent throughout — the term dedups on its normalized text, the folder add is a no-op
         when the word is already there, the description is write-once, and re-enrolling an enrolled
@@ -850,6 +856,15 @@ paths:
                     stored beside it. Only meaningful with `lookup_id`: saving an existing `term_id`
                     means tapping a row whose translation the learner can already see. Omitted or
                     null, nothing changes.
+                enroll:
+                  type: boolean
+                  default: true
+                  description: >-
+                    WHICH ACT this is. `false` = «Сохранить»: the word goes on the shelf and waits in
+                    the swipe pass. `true` = «Учить сразу»: the shelf AND the trainer's queue.
+                    Omitted means `true` — the endpoint enrolled unconditionally before the two acts
+                    were named separately, and a build that predates the field must not change
+                    behaviour under it.
               oneOf:
                 - required: [lookup_id]
                 - required: [term_id]
@@ -869,7 +884,12 @@ paths:
                       collection_title: { type: string, description: the folder's CURRENT name — the learner may have renamed it }
                       collection_is_default: { type: boolean }
                       added: { type: boolean, description: false when the word was already in this folder }
-                      enrolled: { type: boolean, description: false when the pair was already in the pool }
+                      enrolled:
+                        type: boolean
+                        description: >-
+                          Did THIS call put the word into the trainer's queue? False for two
+                          different reasons: `enroll` was false (the word was shelved), or the pair
+                          was already in the pool.
         '403':
           description: The folder is not the caller's (code `collection_not_editable`) — nothing is enrolled
           content:

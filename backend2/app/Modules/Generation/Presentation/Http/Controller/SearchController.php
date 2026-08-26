@@ -32,7 +32,7 @@ use Illuminate\Http\Response;
  *  * `GET /search` — free, instant, over what the database already has. Safe to call on a keystroke.
  *  * `POST /search/lookup` — ONE cheap model call for a word we don't have. Costs money, so it is a
  *    POST the learner taps and never something a debounce fires.
- *  * `POST /search/add` — the save: term, folder, pool.
+ *  * `POST /search/add` — the save: term, folder, and the pool when `enroll` says so.
  *
  * Splitting the second one out is the whole reason this is not a single «search» endpoint that
  * falls back to the model: a search box that generates on its own would spend the daily cap while
@@ -147,6 +147,9 @@ final class SearchController
                 ? CollectionId::fromString((string) $data['collection_id'])
                 : null,
             fixedTranslation: $this->trimmedOrNull($data['fixed_translation'] ?? null),
+            // Absent = true, deliberately: this endpoint enrolled unconditionally until the shelf
+            // and the queue came apart, and the app already on a phone sends no such field.
+            enroll: ! array_key_exists('enroll', $data) || (bool) $data['enroll'],
         ));
 
         return response()->json([
