@@ -41,6 +41,7 @@ void main() {
             child: SessionExerciseCard(
               card: card,
               speechLocaleId: 'en_US',
+              answerLang: 'en',
               autoPronounce: false,
               // The «когда снова» line reads the local DB, and its stream keeps a timer alive
               // past teardown. Nothing here is about the due date.

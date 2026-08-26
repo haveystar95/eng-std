@@ -1088,6 +1088,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionDontRemember => 'Don\'t remember';
 
   @override
+  String get sessionWrongKeyboard =>
+      'That looks like the wrong keyboard — switch it and type again';
+
+  @override
   String get sessionCheck => 'Check';
 
   @override

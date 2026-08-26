@@ -1839,6 +1839,12 @@ abstract class AppLocalizations {
   /// **'Не помню'**
   String get sessionDontRemember;
 
+  /// Тихая подсказка под полем ввода: ответ целиком набран алфавитом, которым язык карточки не пишется. Ничего не засчитано, попытка не потрачена — поэтому это подсказка, а не вердикт.
+  ///
+  /// In ru, this message translates to:
+  /// **'Похоже, раскладка не та — переключи клавиатуру и введи ещё раз'**
+  String get sessionWrongKeyboard;
+
   /// Кнопка проверки собранного ответа (word_bank) — сабмит, до фидбека.
   ///
   /// In ru, this message translates to:

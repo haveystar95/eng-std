@@ -1112,6 +1112,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionDontRemember => 'Не помню';
 
   @override
+  String get sessionWrongKeyboard =>
+      'Похоже, раскладка не та — переключи клавиатуру и введи ещё раз';
+
+  @override
   String get sessionCheck => 'Проверить';
 
   @override

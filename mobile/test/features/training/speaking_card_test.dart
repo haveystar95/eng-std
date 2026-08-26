@@ -134,6 +134,7 @@ void main() {
             onSkipped: () => skips++,
             onSpeak: (String text, {bool slow = false}) async {},
             speechLocaleId: 'en_US',
+            answerLang: 'en',
             showDue: false,
           ),
         ),

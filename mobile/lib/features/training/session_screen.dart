@@ -517,6 +517,10 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
             // The learner is speaking the language being LEARNED, whatever the app's own language
             // is — the same value the pronouncer speaks in, off the same card's pair.
             speechLocaleId: sttLocaleFor(cardLang),
+            // And TYPING it in the same language. One value, three consumers (voice out, voice in,
+            // keyboard + the layout guard) — a mixed session must not judge an Italian answer by
+            // English's alphabet any more than it may read it out in an English voice.
+            answerLang: cardLang,
             photoUrl: _photoUrl[_pos],
             photoResolved: _photoUrl.containsKey(_pos),
             showDue: !widget.practice,

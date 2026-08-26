@@ -8,6 +8,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../../data/languages.dart' show keyboardLocaleFor, looksLikeWrongKeyboard;
 import '../../../data/local/app_database.dart';
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
@@ -15,6 +16,13 @@ import '../../../data/perf_log.dart';
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import 'session_grading.dart';
+
+/// The wrong-keyboard hint, by name — «похоже, раскладка не та».
+///
+/// A key rather than a text match because what the test is pinning is that NOTHING WAS GRADED: the
+/// line's presence and the untouched attempt are one fact, and a finder that went looking for the
+/// copy would start failing the day the copy was reworded.
+const Key sessionWrongKeyboardKey = Key('session-wrong-keyboard');
 
 /// Where an `error_span` really sits in its sentence: the first occurrence that is not buried inside
 /// a longer word, falling back to a plain search when no standalone one exists.
@@ -135,6 +143,7 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
     required this.onSpeak,
     this.onSkipped,
     required this.speechLocaleId,
+    required this.answerLang,
     this.isCurrent = _alwaysCurrent,
     this.photoUrl,
     this.photoResolved = false,
@@ -176,6 +185,15 @@ class SessionExerciseCard extends ConsumerStatefulWidget {
   /// and whatever the profile says. Required, with no default: a constant here would listen for one
   /// language while the card asks another (MIX-1b).
   final String speechLocaleId;
+
+  /// The two-letter code of the language the ANSWER is written in — this card's studied side, the
+  /// same value [speechLocaleId] is built from and the same one the pronouncer speaks in.
+  ///
+  /// It does two things on a typed card: it asks the keyboard to open in that language, and it is
+  /// what [looksLikeWrongKeyboard] judges the answer against. Required, with no default, for the
+  /// reason [speechLocaleId] is: a session mixes pairs by design (DECISIONS п. 128), so a constant
+  /// here would judge an Italian answer by English's alphabet.
+  final String answerLang;
 
   /// Pronounce a target-language string via the shell's TTS (respects the auto-pronounce toggle
   /// at call sites; here it's an explicit speak). [slow] backs the listening «замедленно» replay.
@@ -487,9 +505,30 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     _commit(_assembled);
   }
 
+  /// The answer was typed on the wrong keyboard — «ФЕЬ» at an English card. Cleared by the next
+  /// keystroke, so the hint lives exactly as long as the text that caused it.
+  bool _wrongKeyboard = false;
+
   void _submitTyped() {
     final text = _input.text.trim();
     if (text.isEmpty) return;
+    // THE LAYOUT GUARD, before anything is graded. An answer with not one letter of the card's own
+    // alphabet in it is a keyboard left on, not a wrong answer — the learner knew the word and the
+    // device did not tell them which language it wanted. Charging a mistake for that teaches the
+    // scheduler something untrue about the word, so the attempt is not spent: the field keeps the
+    // text, the card says what happened, and the next Enter goes through whatever it holds.
+    //
+    // It cannot swallow an honest miss: a wrong English answer contains English letters and fails
+    // this test outright (see [looksLikeWrongKeyboard], which is all-or-nothing on purpose).
+    if (looksLikeWrongKeyboard(widget.answerLang, text)) {
+      if (!_wrongKeyboard) {
+        AppHaptics.warning();
+        setState(() => _wrongKeyboard = true);
+      }
+      _focus.requestFocus();
+
+      return;
+    }
     _commit(text);
   }
 
@@ -1010,12 +1049,44 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // [borderless] + [hideText] together make an invisible keyboard-capture field (cloze types into
     // the sentence blank, so the field itself must not show a stray underline).
     const noBorder = UnderlineInputBorder(borderSide: BorderSide(color: Colors.transparent));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _field(hideText: hideText, borderless: borderless, noBorder: noBorder),
+        // The layout hint. A quiet line, not a verdict: nothing was graded and nothing was spent,
+        // and dressing it as an error would say the opposite of what happened.
+        if (_wrongKeyboard) ...[
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            AppLocalizations.of(context).sessionWrongKeyboard,
+            key: sessionWrongKeyboardKey,
+            textAlign: TextAlign.center,
+            style: AppTextExercise.answerAuxButton.copyWith(color: AppColors.secondary),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _field({
+    required bool hideText,
+    required bool borderless,
+    required UnderlineInputBorder noBorder,
+  }) {
     return TextField(
       controller: _input,
       focusNode: _focus,
       // Focus is requested AFTER the slide (see initState) so the keyboard-raise doesn't stall the
       // transition (F20); listening never auto-focuses (let the user hear first).
       autofocus: false,
+      // The keyboard is told which language this card is answered in — the card's own studied side,
+      // not the app's language and not the profile's, exactly as the voice is (MIX-1b). On iOS this
+      // is a statement with no listener (Flutter honours `hintLocales` on Android only, and no iOS
+      // app may switch the keyboard anyway); it is still the right thing to say, and the layout
+      // guard in [_submitTyped] is what actually catches the case here.
+      hintLocales: [keyboardLocaleFor(widget.answerLang)],
       style: hideText
           ? const TextStyle(color: Colors.transparent, height: 0.01)
           : AppTextExercise.typingInput,
@@ -1024,6 +1095,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
       autocorrect: false,
       enableSuggestions: false,
       textCapitalization: TextCapitalization.none,
+      // The hint lives exactly as long as the text that caused it: the first keystroke after it
+      // takes it away, so a learner who switches the keyboard and starts retyping is not left
+      // reading an accusation about characters that are gone.
+      onChanged: _wrongKeyboard ? (_) => setState(() => _wrongKeyboard = false) : null,
       onSubmitted: (_) => _submitTyped(),
       decoration: InputDecoration(
         isDense: true,

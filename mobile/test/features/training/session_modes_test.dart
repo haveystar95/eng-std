@@ -37,6 +37,7 @@ void main() {
           child: SessionExerciseCard(
             card: card,
             speechLocaleId: 'en_US',
+            answerLang: 'en',
             autoPronounce: true,
             onAnswered: (_) {},
             onSpeak: onSpeak,

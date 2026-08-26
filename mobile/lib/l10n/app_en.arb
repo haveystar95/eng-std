@@ -323,6 +323,7 @@
 
   "sessionHintFirstLetter": "Hint: first letter",
   "sessionDontRemember": "Don't remember",
+  "sessionWrongKeyboard": "That looks like the wrong keyboard — switch it and type again",
   "sessionCheck": "Check",
   "sessionNext": "Next",
   "sessionDone": "Done",

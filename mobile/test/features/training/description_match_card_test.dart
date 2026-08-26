@@ -148,6 +148,7 @@ void main() {
               child: SessionExerciseCard(
                 card: c,
                 speechLocaleId: 'en_US',
+                answerLang: 'en',
                 autoPronounce: false,
                 onAnswered: answers.add,
                 onSpeak: onSpeak,
