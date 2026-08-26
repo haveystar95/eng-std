@@ -509,6 +509,18 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// keystroke, so the hint lives exactly as long as the text that caused it.
   bool _wrongKeyboard = false;
 
+  /// May the layout guard speak on THIS card at all?
+  ///
+  /// Only when the card's own answer is written in the language's script. A term can legitimately
+  /// be foreign to the language that holds it — «Wi-Fi» and «IT» are Russian vocabulary written in
+  /// Latin — and on such a card the correct answer is exactly the shape the guard was built to
+  /// stop. Blocking it would make the card unanswerable, which is a client refusing what the server
+  /// would accept: the one direction the local check is forbidden to take.
+  ///
+  /// Asked of the ANSWER rather than of the term, because on cloze and dictation the answer is the
+  /// example sentence — the text the learner is actually typing is the text to judge against.
+  bool get _admitsLayoutGuard => !looksLikeWrongKeyboard(widget.answerLang, _card.answerText);
+
   void _submitTyped() {
     final text = _input.text.trim();
     if (text.isEmpty) return;
@@ -520,7 +532,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     //
     // It cannot swallow an honest miss: a wrong English answer contains English letters and fails
     // this test outright (see [looksLikeWrongKeyboard], which is all-or-nothing on purpose).
-    if (looksLikeWrongKeyboard(widget.answerLang, text)) {
+    if (_admitsLayoutGuard && looksLikeWrongKeyboard(widget.answerLang, text)) {
       if (!_wrongKeyboard) {
         AppHaptics.warning();
         setState(() => _wrongKeyboard = true);

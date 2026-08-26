@@ -183,6 +183,57 @@ void main() {
       expect(answers.single.verdict, LocalCheck.wrong);
     });
 
+    testWidgets('a card whose ANSWER is foreign to its language keeps quiet', (tester) async {
+      // «Wi-Fi» and «IT» are Russian vocabulary written in Latin. On such a card the correct answer
+      // is exactly the shape the guard was built to stop, and blocking it would make the card
+      // unanswerable — a client refusing what the server accepts, which is the one direction the
+      // local check may never take. (Found by the invariant review before this shipped.)
+      final answers = <SessionAnswer>[];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWith((ref) {
+              final db = AppDatabase.forTesting(NativeDatabase.memory());
+              ref.onDispose(db.close);
+              return db;
+            }),
+          ],
+          child: MaterialApp(
+            locale: const Locale('ru'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: const [Locale('ru'), Locale('en')],
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: SessionExerciseCard(
+                  card: SessionCard(
+                    termId: 'T2',
+                    mode: ExerciseMode.typing,
+                    type: 'word',
+                    prompt: 'беспроводная сеть',
+                    answer: 'Wi-Fi',
+                  ),
+                  speechLocaleId: 'ru_RU',
+                  answerLang: 'ru',
+                  autoPronounce: false,
+                  onAnswered: answers.add,
+                  onSpeak: (text, {bool slow = false}) async {},
+                  showDue: false,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.enterText(find.byType(TextField), 'Wi-Fi');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      expect(find.byKey(sessionWrongKeyboardKey), findsNothing);
+      expect(answers.single.verdict, LocalCheck.correct);
+    });
+
     testWidgets('the field asks the keyboard for the card\'s own language', (tester) async {
       await tester.pumpWidget(host(typingCard(), (_) {}));
       await tester.pump(const Duration(milliseconds: 300));
