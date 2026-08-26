@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Provider;
 
 use App\Modules\Learning\Application\Port\DueTermsReader;
 use App\Modules\Learning\Application\Port\LearningAccountEraser;
+use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LatencyMedianReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
@@ -37,6 +38,7 @@ use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentHomePlanReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentIntroducedTermsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentLearningAccountEraser;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentProgressExistenceReader;
@@ -81,6 +83,7 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(ProgressExistenceReader::class, EloquentProgressExistenceReader::class);
         $this->app->bind(ProgressSnapshotReader::class, EloquentProgressSnapshotReader::class);
         $this->app->bind(IntroducedTermsReader::class, EloquentIntroducedTermsReader::class);
+        $this->app->bind(HomePlanReader::class, EloquentHomePlanReader::class);
         $this->app->bind(StatsProjector::class, EloquentDailyStatsProjector::class);
         $this->app->bind(StatsReader::class, EloquentStatsReader::class);
         $this->app->bind(LearningAccountEraser::class, EloquentLearningAccountEraser::class);

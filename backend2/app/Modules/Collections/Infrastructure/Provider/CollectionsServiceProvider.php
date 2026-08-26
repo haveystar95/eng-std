@@ -8,6 +8,7 @@ use App\Modules\Collections\Application\Port\CollectionPairReader;
 use App\Modules\Collections\Application\Port\CollectionsAccountEraser;
 use App\Modules\Collections\Application\Port\CollectionSubscriptions;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
+use App\Modules\Collections\Application\Port\StoreCatalogueReader;
 use App\Modules\Collections\Application\Port\StoreCollectionsReader;
 use App\Modules\Collections\Application\Port\StorePreviewReader;
 use App\Modules\Collections\Application\Port\TermFolderMembershipReader;
@@ -24,6 +25,7 @@ use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionsAccountEr
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSubscriptions;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentCollectionSyncReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentPendingCollectionImageReader;
+use App\Modules\Collections\Infrastructure\Eloquent\EloquentStoreCatalogueReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentStoreCollectionsReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentStorePreviewReader;
 use App\Modules\Collections\Infrastructure\Eloquent\EloquentTermDeckTitleReader;
@@ -50,6 +52,7 @@ final class CollectionsServiceProvider extends ServiceProvider
         $this->app->bind(TermFolderMembershipReader::class, EloquentTermFolderMembershipReader::class);
         $this->app->bind(PendingCollectionImageReader::class, EloquentPendingCollectionImageReader::class);
         $this->app->bind(StoreCollectionsReader::class, EloquentStoreCollectionsReader::class);
+        $this->app->bind(StoreCatalogueReader::class, EloquentStoreCatalogueReader::class);
         $this->app->bind(StorePreviewReader::class, EloquentStorePreviewReader::class);
         $this->app->bind(CollectionSubscriptions::class, EloquentCollectionSubscriptions::class);
         $this->app->bind(CollectionsAccountEraser::class, EloquentCollectionsAccountEraser::class);

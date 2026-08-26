@@ -1462,6 +1462,41 @@ paths:
                   data: { $ref: '#/components/schemas/Stats' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /home-plan:
+    get:
+      tags: [Study]
+      summary: The home screen's day — session composition, the pool's size, the schedule just ahead
+      description: >-
+        Everything the main screen draws, in one read. `session.repeat` and `session.new` come from
+        the SAME planner call `POST /study/sessions` makes (same session size, same remaining
+        new-term quota), so the card can never offer a session the server would return empty;
+        `session.triage` is the swipe pass beside it and is why `total` is not `repeat + new`.
+
+
+        Read-only: producing this writes nothing — no session, no exposure, no quota spent.
+
+
+        Every block the design draws has a state in which it is not drawn at all, and this contract
+        says so with `null` / `[]` rather than with a zero. `today`, `next_review`, `continue`,
+        `estimated_minutes`, `triage_collection_id` and `days_until_queue` are all nullable for that
+        reason: the screen's rule is «блок без данных не рисуется», and «0 слов» is a line it never
+        shows.
+
+
+        Deliberately NOT part of `/stats`: that endpoint is the dashboard's aggregate (totals,
+        mastered, the activity calendar) and the Progress screen reads it too. This one runs the
+        session planner and hydrates term and collection content to say what it says.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/HomePlan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /triage/queue:
     get:
       tags: [Study]
@@ -2410,6 +2445,183 @@ components:
           type: string
           nullable: true
           description: Optional; pairs with `example`. Reserved for future exercise modes.
+
+    HomePlan:
+      type: object
+      required: [state, session, in_work, edge, hardest, store]
+      properties:
+        state:
+          type: string
+          enum: [plan, done, idle, empty]
+          description: >
+            Which of the four home frames this is. `plan` — there is a session to run today;
+            `done` — it is finished and something was answered today; `idle` — nothing to do and
+            nothing answered, the schedule is simply ahead; `empty` — the very first day: no
+            collections, no pool, nothing answered. Named on the server so two screens cannot
+            derive it two ways.
+        session:
+          type: object
+          required: [repeat, new, triage, total, avg_seconds_per_card]
+          properties:
+            repeat:
+              type: integer
+              description: Due repeats the session would deal.
+            new:
+              type: integer
+              description: First meetings it would introduce, under the day's remaining quota.
+            triage:
+              type: integer
+              description: >
+                Terms of the learner's collections with neither a verdict nor a progress row — the
+                swipe pass. Not study cards: a word enters the pool by being swiped.
+            total:
+              type: integer
+              description: repeat + new + triage — the day, not the study session.
+            estimated_minutes:
+              type: integer
+              nullable: true
+              description: >
+                total × `avg_seconds_per_card`, rounded, minimum 1. Null when there is nothing to do.
+            avg_seconds_per_card:
+              type: integer
+              description: >
+                The learner's own pace — a winsorised (60 s ceiling) mean over their last 200
+                non-practice answers, clamped to 3..30 s. Falls back to a measured default (8 s)
+                below 20 answers.
+            triage_collection_id:
+              type: string
+              nullable: true
+              description: The collection holding most of the swipes — where «Начать» leads. Null when `triage` is 0.
+            triage_collection_title:
+              type: string
+              nullable: true
+        in_work:
+          type: object
+          required: [total, waiting, per_day, new_remaining]
+          properties:
+            total:
+              type: integer
+              description: Pool size — every word taken into study.
+            waiting:
+              type: integer
+              description: Of those, the ones never shown, waiting for a day's quota.
+            per_day:
+              type: integer
+              description: The daily new-term quota, as the session builder applies it.
+            new_remaining:
+              type: integer
+              description: >
+                Today's leftover quota. The same figure as `/stats.new_remaining` and from the same
+                source — repeated here so the whole home screen reads from one payload.
+            days_until_queue:
+              type: integer
+              nullable: true
+              description: >
+                Days until the last waiting word gets its first card (today's leftover quota first,
+                then whole days of `per_day`). Null when nothing waits, and null when `per_day` is 0.
+        edge:
+          type: array
+          description: >
+            «На грани забывания» — up to 3 pool words falling due within the next 3 calendar days,
+            soonest first. Empty when none are near; words due TODAY are not here, they are in the
+            session.
+          items:
+            type: object
+            required: [term_id, text, due_on, in_days]
+            properties:
+              term_id:
+                type: string
+              text:
+                type: string
+              translation:
+                type: string
+                nullable: true
+              due_on:
+                type: string
+                format: date
+                description: In the learner's own timezone.
+              in_days:
+                type: integer
+                minimum: 1
+                description: 1 = «выпадет завтра».
+        today:
+          type: object
+          nullable: true
+          description: >
+            What today produced. STUDY answers only — practice is activity and keeps the streak, but
+            it is not the day's plan. Null when nothing was answered today.
+          required: [answered, seconds]
+          properties:
+            answered:
+              type: integer
+            seconds:
+              type: integer
+              description: Sum of the answers' own latencies.
+        next_review:
+          type: object
+          nullable: true
+          description: The next scheduled day and how much lands on it. Null when nothing is scheduled ahead.
+          required: [date, count]
+          properties:
+            date:
+              type: string
+              format: date
+            count:
+              type: integer
+        hardest:
+          type: array
+          description: >
+            «Далось труднее всего» — the terms most often answered wrong in today's last study
+            session, worst first. Empty when the run had no mistakes, or there was no run today.
+          items:
+            type: object
+            required: [term_id, text, errors]
+            properties:
+              term_id:
+                type: string
+              text:
+                type: string
+              translation:
+                type: string
+                nullable: true
+              errors:
+                type: integer
+        continue:
+          type: object
+          nullable: true
+          description: >
+            One collection the learner started and left — «продолжить», and in the evening
+            «можно добить N слов сверх плана». Null when there is none: a set nobody has opened is
+            new, not abandoned.
+          required: [collection_id, title, done, total, remaining]
+          properties:
+            collection_id:
+              type: string
+            title:
+              type: string
+            done:
+              type: integer
+              description: Terms carrying a verdict or a progress row.
+            total:
+              type: integer
+            remaining:
+              type: integer
+            abandoned_days:
+              type: integer
+              nullable: true
+              description: Whole days since the last swipe or answer in it.
+        store:
+          type: object
+          required: [count, topics]
+          properties:
+            count:
+              type: integer
+              description: Ready-made sets of the learner's pair they are NOT subscribed to — «выбрать из 17 готовых».
+            topics:
+              type: array
+              items:
+                type: string
+              description: Up to 3 of their titles, in the store's own order — the first-day card's chips.
 
     Stats:
       type: object

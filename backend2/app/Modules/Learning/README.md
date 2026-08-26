@@ -148,6 +148,16 @@ Swap in an `FsrsScheduler` later without touching handlers.
 - Queries: `GetDueTerms` (pool repeats + pool first meetings, read under separate limits so a
   freshly triaged pool cannot crowd out the repeats), `GetTriageQueue`, `GetCollectionsProgress`,
   `GetUserStats`.
+- `GetHomePlan` (`GET /home-plan`) — the MAIN SCREEN's whole day in one read model: the session's
+  composition (`GetDueTerms` under the client's own session size, so the card cannot promise a
+  session the server returns empty) plus the swipe pass, the size of the pool and when its queue
+  moves, the words falling due in the next three days, what today produced, what the last run got
+  wrong, and one collection that was started and left. A dry run — it writes nothing, exactly like
+  the admin day-simulator. It is deliberately **not** part of `/stats`: that one is the dashboard's
+  aggregate and the Progress screen reads it too, while this one runs the planner and hydrates
+  content from Vocabulary and Collections. Its «разобрать» count asks a slightly different question
+  than `GetTriageQueue` does — see `HomePlanReader::progressTermIds()`, which excludes a word
+  already in the pool so one card cannot be counted twice in the day's total.
 
 One card is dealt from OUTSIDE the pool, on purpose: a `known` self-assessment whose verification
 check has come due. That is the system auditing a claim rather than the learner's queue, and
