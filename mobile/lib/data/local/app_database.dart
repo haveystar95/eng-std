@@ -1286,6 +1286,17 @@ class AppDatabase extends _$AppDatabase {
     await transaction(() async {
       await (delete(collections)..where((t) => t.id.equals(id))).go();
       await (delete(collectionItems)..where((t) => t.collectionId.equals(id))).go();
+      // …AND the generation card that points at it. A `pending_generations` row survives its
+      // collection, and the ready card then renders «Готово — загружаю „X"…» forever: the branch it
+      // takes when the collection is not in the mirror yet is a SHIMMER, written for the second
+      // between the generation landing and the sync arriving, and a deleted collection never
+      // arrives. Found on the phone: delete a generated set and the ghost sits on the Collections
+      // tab until the app is restarted.
+      //
+      // Deleted rather than left for the reaper, and deleted HERE rather than in the controller:
+      // `reconcileCollections` deliberately never touches these rows (a just-generated collection
+      // is kept alive by exactly this reference), so nothing else was ever going to clear it.
+      await (delete(pendingGenerations)..where((t) => t.collectionId.equals(id))).go();
     });
   }
 

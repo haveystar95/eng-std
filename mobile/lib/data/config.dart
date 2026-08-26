@@ -17,11 +17,42 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 /// `DEV_LOGIN_ENABLED`), so a leaked client would still find no door.
 const bool kDevLoginEnabled = kDebugMode;
 
-/// The QA account the dev door signs into. One address, hard-coded, because the point of the QA
-/// bench is that every run happens under the SAME account — the one `qa:time-travel` and
-/// `qa:reset` are allowed to touch. A text field here would mean a run could quietly happen
-/// somewhere else.
-const String kDevLoginEmail = 'qa@wt.test';
+/// The QA account the dev door signs into.
+///
+/// `qa@wt.test` unless the BUILD says otherwise, and what it may say is narrow: an address of the
+/// form `qa-<slug>@wt.test`, and nothing else ([isDevLoginEmail]). Anything that does not match is
+/// ignored and the default stands — a malformed define must not become a run under an address
+/// nobody meant.
+///
+/// The address moved because the ACCOUNT is a run's most basic fixture and a clean one was reachable
+/// only by editing this constant: a pass that needs an empty shelf (first-day states, a fresh swipe
+/// pass, an untouched pool) had to be committed for, run, and reverted. It is now
+/// `--dart-define=DEV_LOGIN_EMAIL=qa-input1@wt.test` and the source is untouched.
+///
+/// What has NOT moved is the point of the bench: every run still happens under an address the QA
+/// commands are allowed to touch, and the login screen still has no text field — a free-text entry
+/// is how a run quietly happens against the owner's real account. And the door itself is still
+/// [kDevLoginEnabled], which is `kDebugMode` and nothing else: a `--dart-define` cannot open it, it
+/// can only say which QA account it opens onto.
+/// `final` rather than `const`, and only because Dart has no const functions: the value is a
+/// validated string and the validator below is a function. That is a safe difference — release
+/// safety rests on [kDevLoginEnabled], which stays `const kDebugMode`, so the branches that read
+/// this address are folded away whatever kind of binding it has.
+final String kDevLoginEmail = isDevLoginEmail(_devLoginEmailOverride)
+    ? _devLoginEmailOverride
+    : kCanonicalDevLoginEmail;
+
+/// Where a run happens unless the build says otherwise.
+const String kCanonicalDevLoginEmail = 'qa@wt.test';
+
+const String _devLoginEmailOverride = String.fromEnvironment('DEV_LOGIN_EMAIL');
+
+/// The QA bench's own address shape: `qa@wt.test`, or `qa-<slug>@wt.test` for a run that needs an
+/// account of its own. Deterministic and narrow on purpose — this is the rule that keeps a
+/// mistyped define from becoming a sign-in somewhere real.
+bool isDevLoginEmail(String email) =>
+    email == kCanonicalDevLoginEmail ||
+    (email.startsWith('qa-') && email.endsWith('@wt.test') && email.length > 'qa-@wt.test'.length);
 
 /// Feature flags.
 ///

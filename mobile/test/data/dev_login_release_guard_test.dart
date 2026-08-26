@@ -116,8 +116,23 @@ void main() {
     }
   });
 
-  test('the dev door targets the QA account and no other', () {
-    expect(kDevLoginEmail, 'qa@wt.test');
+  test('the dev door targets a QA BENCH account and no other', () {
+    // The address is a build's to choose and the SHAPE is not. `qa@wt.test` by default, and a run
+    // that needs a clean account says so at launch — which is why this asserts the rule rather than
+    // one literal: pinning the literal is what made a fresh-account run a source edit.
+    expect(kDevLoginEmail, kCanonicalDevLoginEmail, reason: 'the default, with no define given');
+    expect(isDevLoginEmail(kDevLoginEmail), isTrue);
+
+    expect(isDevLoginEmail('qa@wt.test'), isTrue);
+    expect(isDevLoginEmail('qa-input1@wt.test'), isTrue);
+    // Everything else, including the near misses that would actually be typed by mistake.
+    expect(isDevLoginEmail('qa-@wt.test'), isFalse, reason: 'a slug of nothing is a typo');
+    expect(isDevLoginEmail('haveystar95@gmail.com'), isFalse);
+    expect(isDevLoginEmail('qa@wt.test.evil.com'), isFalse);
+    expect(isDevLoginEmail('qa-1@example.com'), isFalse);
+    expect(isDevLoginEmail('someone-qa-1@wt.test'), isFalse);
+    expect(isDevLoginEmail(''), isFalse);
+
     // No free-text entry: a run that could happen under any address is a run whose data
     // qa:time-travel / qa:reset are not allowed to touch.
     final screen = File('lib/features/auth/login_screen.dart').readAsStringSync();

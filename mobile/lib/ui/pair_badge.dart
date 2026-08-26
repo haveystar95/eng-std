@@ -6,7 +6,7 @@ import 'package:eng_std/theme/theme.dart';
 
 import 'mini_flag.dart';
 
-/// 🇬🇧→🇪🇸 — which pair a collection, or a card in a mixed session, belongs to.
+/// 🇬🇧 EN → RU — which pair a collection, or a card in a mixed session, belongs to.
 ///
 /// ## Why it exists
 ///
@@ -15,7 +15,7 @@ import 'mini_flag.dart';
 /// learner meets a Polish word in what they took to be an English session and reads the app as
 /// broken. The badge is the smallest thing that answers «which language is this».
 ///
-/// ## Flags, not codes — and what that cost
+/// ## One flag and two codes — how the format settled
 ///
 /// Rule 14 of `tokens.html` §4б used to end «на карточках слов и коллекций флагов нет», and the
 /// first cut of this badge obeyed it: two uppercase codes, `EN→ES`, set in type. The owner overruled
@@ -23,6 +23,14 @@ import 'mini_flag.dart';
 /// read, not glanced at. The rule was amended rather than quietly broken (DECISIONS п. 148): the
 /// pair badge is a LANGUAGE context, which is the very thing rule 14 admits flags for; what stays
 /// forbidden is decorative flags beside a word or a title that is not about languages.
+///
+/// Two flags then turned out to be a glance with nothing to check it against: half the flags in the
+/// catalogue are a tricolour, and `pl` beside `ru` is two horizontal bands of white-over-red versus
+/// white-over-blue-over-red at 12 pt. The format is now **`🇬🇧 EN → RU`** — the flag carries the
+/// glance for the language being LEARNED, which is the half that matters most, and the codes carry
+/// the certainty for both halves. One flag rather than two because two saturated circles at the end
+/// of a title line become the brightest thing on the screen (see below), and this way only the
+/// studied side spends that.
 ///
 /// ## Inside a quiet chip, and small
 ///
@@ -97,6 +105,8 @@ class PairBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             MiniFlag(languageCode: learned, size: size),
+            SizedBox(width: size * 0.34),
+            _Code(learned, size: size),
             // Hairline and tertiary: the arrow says «into», it is not part of the colour.
             Padding(
               padding: EdgeInsets.symmetric(horizontal: size * 0.25),
@@ -106,12 +116,34 @@ class PairBadge extends StatelessWidget {
                 color: AppColors.tertiary,
               ),
             ),
-            MiniFlag(languageCode: support, size: size),
+            _Code(support, size: size),
           ],
         ),
       ),
     );
   }
+}
+
+/// A language code inside the badge — `EN`, `RU`. Set in the same weight and colour the reference
+/// badge uses, so the two chips read as one family.
+class _Code extends StatelessWidget {
+  const _Code(this.code, {required this.size});
+
+  final String code;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    code.toUpperCase(),
+    style: TextStyle(
+      fontFamily: AppFonts.inter,
+      fontWeight: FontWeight.w700,
+      fontSize: size * 0.72,
+      letterSpacing: 0.4,
+      color: AppColors.secondary,
+      height: 1,
+    ),
+  );
 }
 
 /// The quiet ground the badge sits on: a `faintInk` pill, fully rounded, with just enough padding to

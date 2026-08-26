@@ -15,11 +15,12 @@ import 'package:eng_std/ui/pair_badge.dart';
 
 /// A3.9 store surface (кадр 2.8): list renders by topic sections, premium sets carry the lock badge,
 /// and tapping a premium set routes through the preview to the paywall.
-/// The flags INSIDE the card's pair badge. The filter row above the grid draws two of its own, and
-/// a bare `byType(MiniFlag)` counts those too — which is how this file's first cut managed to fail
-/// on a screen that was rendering correctly.
+/// The flag INSIDE a CARD's pair badge. The filter row above the grid draws the same badge (Ч.5а —
+/// one format, one direction, everywhere), so it has to be excluded by key rather than by type: a
+/// bare `byType(MiniFlag)` counts the filter's too, which is how this file's first cut managed to
+/// fail on a screen that was rendering correctly.
 final _badgeFlags = find.descendant(
-  of: find.byType(PairBadge),
+  of: find.byWidgetPredicate((w) => w is PairBadge && w.key != storePairFilterKey),
   matching: find.byType(MiniFlag),
 );
 
@@ -260,7 +261,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('СПРАВОЧНИК'), findsNothing);
-      expect(_badgeFlags, findsNWidgets(2));
+      expect(_badgeFlags, findsOneWidget);
     });
 
     testWidgets('an older server that says nothing is read as «not a phrasebook»', (tester) async {
@@ -276,7 +277,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('СПРАВОЧНИК'), findsNothing);
-      expect(_badgeFlags, findsNWidgets(2));
+      expect(_badgeFlags, findsOneWidget);
     });
   });
 }

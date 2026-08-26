@@ -6,13 +6,19 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/mini_flag.dart';
 import 'package:eng_std/ui/pair_badge.dart';
 
-/// The pair badge: two flags and an arrow.
+/// The pair badge: 🇬🇧 EN → RU.
 ///
-/// The first cut set it in TYPE — «EN→ES» — on the letter of rule 14 («на карточках слов и
+/// The first cut set it in TYPE alone — «EN→ES» — on the letter of rule 14 («на карточках слов и
 /// коллекций флагов нет»). The owner overruled it on sight: a pair is glanced at, and two
 /// two-letter codes are read instead. Rule 14 was amended rather than quietly broken — a pair badge
-/// IS a language context (DECISIONS п. 148) — and what these tests hold is the amended shape, plus
-/// the two things that did not change with it: the direction never flips, and a phrasebook says a
+/// IS a language context (DECISIONS п. 148).
+///
+/// Two bare flags was the second cut and lost for the opposite reason: half the catalogue is a
+/// tricolour, and `pl` beside `ru` at 12 pt is white-over-red against white-over-blue-over-red.
+/// The format settled at ONE flag for the language being learned and codes for both sides — the
+/// flag carries the glance, the codes carry the certainty (Ч.5а).
+///
+/// Two things did not change with any of it: the direction never flips, and a phrasebook says a
 /// word instead of promising a course.
 void main() {
   Widget host(Widget child, {Locale locale = const Locale('ru')}) => MaterialApp(
@@ -22,22 +28,25 @@ void main() {
     home: Scaffold(body: Center(child: child)),
   );
 
-  testWidgets('draws the two flags of the pair, learned first', (tester) async {
+  testWidgets('one flag — the studied side — and both codes', (tester) async {
     await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'ru')));
 
     final flags = tester.widgetList<MiniFlag>(find.byType(MiniFlag)).toList();
-    expect(flags, hasLength(2));
-    expect(flags.first.languageCode, 'en');
-    expect(flags.last.languageCode, 'ru');
+    expect(flags, hasLength(1));
+    expect(flags.single.languageCode, 'en', reason: 'the flag is the language being LEARNED');
+    expect(find.text('EN'), findsOneWidget);
+    expect(find.text('RU'), findsOneWidget);
   });
 
   testWidgets('does not flip: a collection\'s pair is a fact, not a direction', (tester) async {
     // The search pill flips — it is a question the learner asks. This is what a folder IS.
     await tester.pumpWidget(host(const PairBadge(learned: 'pl', support: 'ru')));
 
-    final flags = tester.widgetList<MiniFlag>(find.byType(MiniFlag)).toList();
-    expect(flags.first.languageCode, 'pl');
-    expect(flags.last.languageCode, 'ru');
+    expect(tester.widget<MiniFlag>(find.byType(MiniFlag)).languageCode, 'pl');
+    // …and it is the codes, not the flags, that make «pl → ru» readable at all: two tricolours at
+    // this size are the same two tricolours.
+    expect(find.text('PL'), findsOneWidget);
+    expect(find.text('RU'), findsOneWidget);
   });
 
   testWidgets('a code outside the catalogue still draws — the pair is never half-missing', (
@@ -46,10 +55,11 @@ void main() {
     // Every CATALOGUE language now has a painter (`mini_flag_test`), so the fallback is reached only
     // by a code that should not exist — a typo, or a language added to one runtime and forgotten in
     // another. It must still render: a half-drawn badge would be worse than a plain one.
-    await tester.pumpWidget(host(const PairBadge(learned: 'en', support: 'xx')));
+    await tester.pumpWidget(host(const PairBadge(learned: 'xx', support: 'ru')));
 
-    expect(find.byType(MiniFlag), findsNWidgets(2));
-    expect(find.text('XX'), findsOneWidget);
+    expect(find.byType(MiniFlag), findsOneWidget);
+    // Twice: the fallback flag draws the code, and the badge names it too.
+    expect(find.text('XX'), findsNWidgets(2));
   });
 
   testWidgets('sits in a quiet chip — the colour must not float on the paper', (tester) async {

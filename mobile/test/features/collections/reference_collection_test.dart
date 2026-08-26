@@ -141,7 +141,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('СПРАВОЧНИК'), findsNothing);
     expect(find.byType(PairBadge), findsOneWidget);
-    expect(find.byType(MiniFlag), findsNWidgets(2)); // the pair, drawn as flags (п. 148)
+    // One flag — the language being LEARNED — and the two codes beside it (Ч.5а).
+    expect(find.byType(MiniFlag), findsOneWidget);
+    expect(find.text('EN'), findsOneWidget);
+    expect(find.text('RU'), findsOneWidget);
     expect(find.text('Свободная тренировка'), findsOneWidget);
     await close(tester);
   });

@@ -70,6 +70,13 @@ class StoreView extends ConsumerWidget {
   }
 }
 
+/// The pair badge in the FILTER row above the grid, as opposed to the one on each card.
+///
+/// The row and the cards now draw the same badge (Ч.5а — the row used to have a format and a
+/// direction of its own), which is the point and is also why a test asking «does this card name a
+/// pair» needs a way to leave the filter out of the count.
+const Key storePairFilterKey = Key('store-pair-filter');
+
 class _LangPairRow extends ConsumerWidget {
   const _LangPairRow({required this.pair});
   final StoreLangPair pair;
@@ -99,15 +106,20 @@ class _LangPairRow extends ConsumerWidget {
           AppHaptics.light();
           _pickTarget(context, ref);
         },
+        // THE SAME BADGE the cards under it carry, and pointing the same way. This row used to
+        // draw its own pair — `source → target`, i.e. «Русский → English» — while every other pair
+        // on the screen read «изучаемый → язык поддержки», so the filter above the grid and the
+        // cards inside it described one pair in two opposite directions (Ч.5а). The endonym of the
+        // LEARNED language stays beside it: this row is a picker, and «English» is what the sheet
+        // it opens is a list of.
         child: Row(
           children: [
-            MiniFlag(languageCode: pair.source, size: 20),
-            const SizedBox(width: 9),
-            Text(languageByCode(pair.source).endonym, style: _pairName),
-            const SizedBox(width: 9),
-            const Icon(LucideIcons.arrowRight, size: 14, color: AppColors.tertiary),
-            const SizedBox(width: 9),
-            MiniFlag(languageCode: pair.target, size: 20),
+            PairBadge(
+              key: storePairFilterKey,
+              learned: pair.target,
+              support: pair.source,
+              size: 15,
+            ),
             const SizedBox(width: 9),
             Expanded(child: Text(languageByCode(pair.target).endonym, style: _pairName)),
             const Icon(LucideIcons.chevronDown, size: 16, color: AppColors.tertiary),
