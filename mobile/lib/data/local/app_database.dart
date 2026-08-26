@@ -1178,6 +1178,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<TermProgressData>> allProgress() => select(termProgress).get();
 
+  /// One `sync_meta` value, reactive — the read side of the aggregates the delta feed doesn't
+  /// carry (the home screen's day). Same shape as [watchStatsSources]: the screen reads the local
+  /// DB, and a background refresh pushes the new value into it.
+  Stream<String?> watchMeta(String key) =>
+      (select(syncMeta)..where((t) => t.key.equals(key))).watchSingleOrNull().map((r) => r?.value);
+
   Future<String?> getMeta(String key) async {
     final row = await (select(syncMeta)..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;

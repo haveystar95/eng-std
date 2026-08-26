@@ -91,92 +91,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get homeDailyGoal => 'Дневная цель';
-
-  @override
-  String homeGoalCount(int done, int total) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$done / $total слова',
-      many: '$done / $total слов',
-      few: '$done / $total слова',
-      one: '$done / $total слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeStreakActive(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Стрик — $count дня',
-      many: 'Стрик — $count дней',
-      few: 'Стрик — $count дня',
-      one: 'Стрик — $count день',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeStreakStartToday => 'Стрик начнётся сегодня';
-
-  @override
-  String homeReviewButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Повторить $count слова',
-      many: 'Повторить $count слов',
-      few: 'Повторить $count слова',
-      one: 'Повторить $count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeLearnButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Учить $count слова',
-      many: 'Учить $count слов',
-      few: 'Учить $count слова',
-      one: 'Учить $count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeLearnSubtitle => 'Новые слова — первый разбор';
-
-  @override
-  String homeTriageButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Разобрать $count слова',
-      many: 'Разобрать $count слов',
-      few: 'Разобрать $count слова',
-      one: 'Разобрать $count слово',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homePracticeButton => 'Повторить';
-
-  @override
-  String get homePracticeSubtitle => 'Учебная тренировка';
-
-  @override
-  String get homeGenerateTitle => 'Опиши тему — соберём коллекцию';
-
-  @override
-  String get homeGenerateSubtitle => 'ИИ подберёт слова и фразы, которые реально нужны';
-
-  @override
   String get homeGeneratePlaceholder => 'Например: визит к врачу';
 
   @override
@@ -187,18 +101,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeGenerateChipInterview => 'Собеседование';
-
-  @override
-  String get homeGenerateFreeTier => '3 генерации в день на бесплатном тарифе';
-
-  @override
-  String get homeWordOfDay => 'Слово дня';
-
-  @override
-  String get homeMyCollections => 'Мои коллекции';
-
-  @override
-  String get homeSeeAll => 'Все';
 
   @override
   String homeCollectionProgress(int done, int total) {
@@ -909,28 +811,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get homeLimitReachedHint =>
       'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.';
-
-  @override
-  String get homeAllDoneTitle => 'На сегодня всё';
-
-  @override
-  String homeAllDoneSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count повторений сделано, новых слов в очереди нет.',
-      many: '$count повторений сделано, новых слов в очереди нет.',
-      few: '$count повторения сделано, новых слов в очереди нет.',
-      one: '$count повторение сделано, новых слов в очереди нет.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeAllDonePractice => 'Свободная тренировка';
-
-  @override
-  String get homeAllDoneGenerate => 'Собрать новую коллекцию';
 
   @override
   String get homeOfflineBanner =>
@@ -1905,4 +1785,314 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get topicSessionTitle => 'Выбери тему';
+
+  @override
+  String homeStreakBadge(int count) {
+    return 'Стрик $count';
+  }
+
+  @override
+  String get homeSessionCardTitle => 'Сессия на сегодня';
+
+  @override
+  String homeSessionCardWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionCardMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '≈ $count минуты',
+      many: '≈ $count минут',
+      few: '≈ $count минуты',
+      one: '≈ $count минута',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartRepeat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count повторить',
+      many: '$count повторить',
+      few: '$count повторить',
+      one: '$count повторить',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count новых',
+      many: '$count новых',
+      few: '$count новых',
+      one: '$count новое',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartTriage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count разобрать',
+      many: '$count разобрать',
+      few: '$count разобрать',
+      one: '$count разобрать',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSessionStart => 'Начать';
+
+  @override
+  String homeInWorkTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'В работе — $count слова',
+      many: 'В работе — $count слов',
+      few: 'В работе — $count слова',
+      one: 'В работе — $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ждут очереди',
+      many: '$count ждут очереди',
+      few: '$count ждут очереди',
+      one: '$count ждёт очереди',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkPace(int perDay, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'при $perDay в день новым до очереди ~$days дня',
+      many: 'при $perDay в день новым до очереди ~$days дней',
+      few: 'при $perDay в день новым до очереди ~$days дня',
+      one: 'при $perDay в день новым до очереди ~$days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkQueueStands(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'возьмёте $count сейчас — очередь двинется сегодня',
+      many: 'возьмёте $count сейчас — очередь двинется сегодня',
+      few: 'возьмёте $count сейчас — очередь двинется сегодня',
+      one: 'возьмёте $count сейчас — очередь двинется сегодня',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeEdgeTitle => 'На грани забывания';
+
+  @override
+  String get homeEdgeTomorrow => 'выпадет завтра';
+
+  @override
+  String homeEdgeInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'через $count дня',
+      many: 'через $count дней',
+      few: 'через $count дня',
+      one: 'через $count день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeHardestTitle => 'Далось труднее всего';
+
+  @override
+  String homeHardestErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ошибки',
+      many: '$count ошибок',
+      few: '$count ошибки',
+      one: '$count ошибка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeDoneTitle => 'Сегодня закрыто';
+
+  @override
+  String homeDoneOf(int done, int total) {
+    return '$done из $total';
+  }
+
+  @override
+  String homeDoneDuration(int minutes, int seconds) {
+    return '$minutes мин $seconds с';
+  }
+
+  @override
+  String homeDoneDurationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count секунды',
+      many: '$count секунд',
+      few: '$count секунды',
+      one: '$count секунда',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeIdleTitle => 'Всё повторено';
+
+  @override
+  String get homeIdleTakeNew => 'Взять новые слова';
+
+  @override
+  String get homeIdleQueueStalled => 'Новые слова на сегодня не взяты — очередь стоит.';
+
+  @override
+  String homeNextReviewLine(String when, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Следующий повтор — $when, $count слова.',
+      many: 'Следующий повтор — $when, $count слов.',
+      few: 'Следующий повтор — $when, $count слова.',
+      one: 'Следующий повтор — $when, $count слово.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeWhenTomorrow => 'завтра';
+
+  @override
+  String homeExtraFromCollection(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Можно добить $count слова из «$title» сверх плана.',
+      many: 'Можно добить $count слов из «$title» сверх плана.',
+      few: 'Можно добить $count слова из «$title» сверх плана.',
+      one: 'Можно добить $count слово из «$title» сверх плана.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeExtraButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ещё $count слова',
+      many: 'Ещё $count слов',
+      few: 'Ещё $count слова',
+      one: 'Ещё $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeContinueLabel => 'Продолжить';
+
+  @override
+  String homeContinueAbandoned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'брошено $count дня назад',
+      many: 'брошено $count дней назад',
+      few: 'брошено $count дня назад',
+      one: 'брошено $count день назад',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeGenerateRow => 'Собрать коллекцию по теме';
+
+  @override
+  String homeStoreLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'или выбрать из $count готовых',
+      many: 'или выбрать из $count готовых',
+      few: 'или выбрать из $count готовых',
+      one: 'или выбрать из $count готового',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFirstDayTitle => 'Начнём с первого набора';
+
+  @override
+  String homeFirstDayReadyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Взять готовый набор ($count темы)',
+      many: 'Взять готовый набор ($count тем)',
+      few: 'Взять готовый набор ($count темы)',
+      one: 'Взять готовый набор ($count тема)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFirstDayReadyHint => 'Слова уже отобраны, озвучены и размечены по уровню';
+
+  @override
+  String get homeFirstDayOwnTitle => 'Собрать свою по описанию';
+
+  @override
+  String get homeFirstDayOwnHint => 'Опишите ситуацию — ИИ подберёт слова и фразы под неё';
 }

@@ -193,17 +193,22 @@ void main() {
       expect(ring.goal, kDefaultDailyGoal, reason: 'no /stats and no profile yet → the default');
     });
 
-    // A source guard, in the family of test/data/dev_login_release_guard_test.dart: the two screens
-    // agreeing is not a property any single widget test can observe, but it IS a property of where
-    // they read the number from. The summary used to compute its own from `reviews_today`.
-    test('the home screen and the session summary read the SAME counter', () {
+    // A source guard, in the family of test/data/dev_login_release_guard_test.dart. It used to say
+    // «both screens read the same counter»; кадры 17a–17d moved the goalpost, and the guard with it.
+    //
+    // The HOME no longer has a daily goal at all: its progress for the day is ANSWERED CARDS
+    // («32 из 32»), which arrives inside the server's plan. The session summary keeps the counter,
+    // because a summary is about the run that just happened and «взял в работу N новых» is a true
+    // thing about it. What must not come back is either screen deriving a goal out of ANSWERS —
+    // that was QA-BUG-2, and it is why the counter has one definition and one home.
+    test('the goal counter lives in the summary, and the home does not have one', () {
       final home = File('lib/features/training/training_home_screen.dart').readAsStringSync();
       final session = File('lib/features/training/session_screen.dart').readAsStringSync();
 
-      expect(home.contains('dailyGoalProvider'), isTrue);
       expect(session.contains('dailyGoalProvider'), isTrue);
+      expect(home.contains('dailyGoalProvider'), isFalse);
 
-      // …and neither builds a goal out of answers any more.
+      // …and neither builds a goal out of answers.
       for (final src in [home, session]) {
         expect(src.contains('todayReviewCount'), isFalse);
         expect(src.contains('dailyActivityProvider'), isFalse);

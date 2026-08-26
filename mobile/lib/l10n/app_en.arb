@@ -24,26 +24,10 @@
   "triageRemainingAfterSync": "{count, plural, one{{count} more after syncing} other{{count} more after syncing}}",
   "triageLoadError": "Couldn't load: {error}",
 
-  "homeDailyGoal": "Daily goal",
-  "homeGoalCount": "{total, plural, one{{done} / {total} word} other{{done} / {total} words}}",
-  "homeStreakActive": "{count, plural, one{Streak — {count} day} other{Streak — {count} days}}",
-  "homeStreakStartToday": "Your streak starts today",
-  "homeReviewButton": "{count, plural, one{Review {count} word} other{Review {count} words}}",
-  "homeLearnButton": "{count, plural, one{Learn {count} word} other{Learn {count} words}}",
-  "homeLearnSubtitle": "New words — first study",
-  "homeTriageButton": "{count, plural, one{Triage {count} word} other{Triage {count} words}}",
-  "homePracticeButton": "Practice",
-  "homePracticeSubtitle": "Study session",
-  "homeGenerateTitle": "Describe a topic — we'll build a set",
-  "homeGenerateSubtitle": "AI picks the words and phrases you'll actually need",
   "homeGeneratePlaceholder": "e.g. a visit to the doctor",
   "homeGenerateChipDoctor": "At the doctor",
   "homeGenerateChipRent": "Renting",
   "homeGenerateChipInterview": "Job interview",
-  "homeGenerateFreeTier": "3 generations a day on the free plan",
-  "homeWordOfDay": "Word of the day",
-  "homeMyCollections": "My collections",
-  "homeSeeAll": "All",
   "homeCollectionProgress": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
   "tabHome": "Home",
   "tabCollections": "Collections",
@@ -240,10 +224,6 @@
   "progressAllWords": "{count, plural, one{All {count} word} other{All {count} words}}",
   "homeLimitReachedTitle": "Daily new-word limit reached",
   "homeLimitReachedHint": "New words resume tomorrow. For now, free-practice any collection.",
-  "homeAllDoneTitle": "All done for today",
-  "homeAllDoneSubtitle": "{count, plural, one{{count} review done, no new words queued.} other{{count} reviews done, no new words queued.}}",
-  "homeAllDonePractice": "Free practice",
-  "homeAllDoneGenerate": "Build a new collection",
   "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
   "homeGenerateOfflineNote": "Generation needs a connection. Your topic is saved and will run once you're back online.",
 
@@ -543,5 +523,185 @@
   "myWordsNothingFound": "Nothing found",
 
   "topicSessionAction": "Session by topic",
-  "topicSessionTitle": "Pick a topic"
+  "topicSessionTitle": "Pick a topic",
+
+  "homeStreakBadge": "Streak {count}",
+  "@homeStreakBadge": {
+    "description": "Streak badge in the home header (frame 17a).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionCardTitle": "Today's session",
+  "@homeSessionCardTitle": { "description": "Title of the day's dark card (frame 17a)." },
+
+  "homeSessionCardWords": "{count, plural, one{{count} word} other{{count} words}}",
+  "@homeSessionCardWords": {
+    "description": "Session size on the dark card (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionCardMinutes": "{count, plural, one{≈ {count} minute} other{≈ {count} minutes}}",
+  "@homeSessionCardMinutes": {
+    "description": "Estimated session length (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartRepeat": "{count, plural, one{{count} to review} other{{count} to review}}",
+  "@homeSessionPartRepeat": {
+    "description": "Session composition: repeats.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartNew": "{count, plural, one{{count} new} other{{count} new}}",
+  "@homeSessionPartNew": {
+    "description": "Session composition: first meetings.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartTriage": "{count, plural, one{{count} to sort} other{{count} to sort}}",
+  "@homeSessionPartTriage": {
+    "description": "Session composition: triage swipes.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionStart": "Start",
+  "@homeSessionStart": { "description": "Button on the day's dark card (frame 17a)." },
+
+  "homeInWorkTitle": "{count, plural, one{In progress — {count} word} other{In progress — {count} words}}",
+  "@homeInWorkTitle": {
+    "description": "«In progress» heading — the pool's size (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeInWorkWaiting": "{count, plural, one{{count} waiting in line} other{{count} waiting in line}}",
+  "@homeInWorkWaiting": {
+    "description": "Pool words never shown yet (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeInWorkPace": "{days, plural, one{at {perDay} new a day the queue clears in ~{days} day} other{at {perDay} new a day the queue clears in ~{days} days}}",
+  "@homeInWorkPace": {
+    "description": "When the queue reaches the last waiting word (ICU plural on days).",
+    "placeholders": { "perDay": { "type": "int" }, "days": { "type": "int" } }
+  },
+
+  "homeInWorkQueueStands": "{count, plural, one{take {count} now and the queue moves today} other{take {count} now and the queue moves today}}",
+  "@homeInWorkQueueStands": {
+    "description": "«In progress» line in state B (frame 17d): the day's quota is untouched.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeEdgeTitle": "About to slip",
+  "@homeEdgeTitle": { "description": "Heading of the soonest-due words section (frame 17a)." },
+
+  "homeEdgeTomorrow": "due tomorrow",
+  "@homeEdgeTomorrow": { "description": "A word's due day: tomorrow." },
+
+  "homeEdgeInDays": "{count, plural, one{in {count} day} other{in {count} days}}",
+  "@homeEdgeInDays": {
+    "description": "A word's due day (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeHardestTitle": "Hardest today",
+  "@homeHardestTitle": { "description": "Heading of the evening mistakes section (frame 17b)." },
+
+  "homeHardestErrors": "{count, plural, one{{count} mistake} other{{count} mistakes}}",
+  "@homeHardestErrors": {
+    "description": "How often a word was missed in the last session (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSectionCount": "{count, plural, one{{count} word} other{{count} words}}",
+  "@homeSectionCount": {
+    "description": "Counter beside a section heading (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeDoneTitle": "Done for today",
+  "@homeDoneTitle": { "description": "Title of the evening card (frame 17b)." },
+
+  "homeDoneOf": "{done} of {total}",
+  "@homeDoneOf": {
+    "description": "The day's progress: answered cards out of planned.",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "homeDoneDuration": "{minutes} min {seconds} s",
+  "@homeDoneDuration": {
+    "description": "How long the session took.",
+    "placeholders": { "minutes": { "type": "int" }, "seconds": { "type": "int" } }
+  },
+
+  "homeDoneDurationSeconds": "{count, plural, one{{count} second} other{{count} seconds}}",
+  "@homeDoneDurationSeconds": {
+    "description": "A session shorter than a minute (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeIdleTitle": "All reviewed",
+  "@homeIdleTitle": { "description": "Title of state B: no session, the schedule is ahead (frame 17d)." },
+
+  "homeIdleTakeNew": "Take new words",
+  "@homeIdleTakeNew": { "description": "Primary button of state B (frame 17d)." },
+
+  "homeIdleQueueStalled": "No new words taken today — the queue is standing still.",
+  "@homeIdleQueueStalled": { "description": "Note under «All reviewed» (frame 17d)." },
+
+  "homeNextReviewLine": "{count, plural, one{Next review {when}, {count} word.} other{Next review {when}, {count} words.}}",
+  "@homeNextReviewLine": {
+    "description": "When the next repeats fall and how many (ICU plural).",
+    "placeholders": { "when": { "type": "String" }, "count": { "type": "int" } }
+  },
+
+  "homeWhenTomorrow": "tomorrow",
+  "@homeWhenTomorrow": { "description": "The «when» substitution for the next review — tomorrow." },
+
+  "homeExtraFromCollection": "{count, plural, one{You can add {count} more word from “{title}”.} other{You can add {count} more words from “{title}”.}}",
+  "@homeExtraFromCollection": {
+    "description": "Offer to top up from an unfinished collection (frame 17b).",
+    "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
+  },
+
+  "homeExtraButton": "{count, plural, one{{count} more word} other{{count} more words}}",
+  "@homeExtraButton": {
+    "description": "«N more words» button on the evening card (frame 17b).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeContinueLabel": "Continue",
+  "@homeContinueLabel": { "description": "Label of the abandoned-collection card (frame 17a)." },
+
+  "homeContinueAbandoned": "{count, plural, one{left {count} day ago} other{left {count} days ago}}",
+  "@homeContinueAbandoned": {
+    "description": "How long ago the collection was last touched (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeGenerateRow": "Build a collection on a topic",
+  "@homeGenerateRow": { "description": "Entry row into generation on the home screen (frame 17a)." },
+
+  "homeStoreLink": "{count, plural, one{or pick from {count} ready-made} other{or pick from {count} ready-made}}",
+  "@homeStoreLink": {
+    "description": "Quiet store entry line under generation (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFirstDayTitle": "Let's start with a first set",
+  "@homeFirstDayTitle": { "description": "First-day greeting (frame 17c)." },
+
+  "homeFirstDayReadyTitle": "{count, plural, one{Take a ready-made set ({count} topic)} other{Take a ready-made set ({count} topics)}}",
+  "@homeFirstDayReadyTitle": {
+    "description": "First card of the first day (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFirstDayReadyHint": "The words are already chosen, voiced and levelled",
+  "@homeFirstDayReadyHint": { "description": "Caption of the ready-made sets card (frame 17c)." },
+
+  "homeFirstDayOwnTitle": "Build your own from a description",
+  "@homeFirstDayOwnTitle": { "description": "Second card of the first day (frame 17c)." },
+
+  "homeFirstDayOwnHint": "Describe a situation — AI will pick the words and phrases for it",
+  "@homeFirstDayOwnHint": { "description": "Caption of the generation card (frame 17c)." }
 }

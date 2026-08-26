@@ -17,7 +17,7 @@ theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `li
 
 - `theme/` — paper/ink design tokens (colors, typography, geometry, motion, haptics, shadows) + `buildAppTheme()`. `ui/` — base components (PaperCard, buttons, chips, InkSegments, FloatingTabBar, CenterAlert, …).
 - `data/` — `models.dart`, `api_client.dart` (Dio + bearer token), `auth_repository.dart` (Google/Apple → backend token exchange, throws an `AuthError` code the login screen localizes), `config.dart` (API_BASE_URL + GOOGLE_IOS_CLIENT_ID via `--dart-define`), `languages.dart` (CEFR + TTS locale + endonym re-export), `pronouncer.dart` (system TTS), `token_store.dart`, `providers.dart`, the offline pipelines (`review_sync`, `triage_sync`, `pool_sync`, `seq_counter`, `local/app_database.dart` drift mirror).
-- `features/` — `auth/`, `home/`, `training/` (`training_home_screen.dart` dashboard, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/` (incl. `my_words_screen.dart` = «Мои слова», the pool), `progress/`, `onboarding/`, `profile/`.
+- `features/` — `auth/`, `home/` (the tab shell + the daily-goal counter the session summary reads), `training/` (`training_home_screen.dart` = «Главная», кадры 17a–17d, `triage_screen.dart`, `session_screen.dart` + `session/` = the exercise session, A3.8), `collections/` (incl. `my_words_screen.dart` = «Мои слова», the pool), `progress/`, `onboarding/`, `profile/`.
 - `l10n/` — `app_ru.arb` (source of truth) + `app_en.arb` (complete); both `ru` and `en` are in `kSupportedLocales`. All UI copy routes through `AppLocalizations` (guarded by `test/l10n/no_cyrillic_outside_l10n_test.dart`, allowlist now **empty**).
 - `tool/preview.dart` — design preview harness with mock data: `flutter run -d chrome --target tool/preview.dart` (no backend/login needed). Lives outside `lib/` so its sample Russian data is exempt from the cyrillic guard.
 
@@ -44,6 +44,24 @@ Membership is one nullable column on the mirrored progress row (`enrolled_at`), 
 Pinned by `test/data/pool_lifecycle_test.dart` (the device's half of the story) and the pool section
 of `test/data/practice/ladder_parity_test.dart`; the server's half is
 `backend2/tests/Feature/Learning/PoolApiTest.php`.
+
+## «Главная» — one question, and the server answers it (кадры 17a–17d)
+
+The main screen asks «что мне делать прямо сейчас и сколько это займёт», and everything on it is a
+part of that answer. It reads ONE payload — `GET /home-plan`, cached into `sync_meta` by
+`SyncService` and watched out of the local DB by `homePlanProvider`, like every other screen here.
+
+- The server names the STATE (`plan` / `done` / `idle` / `empty` = кадры 17a / 17b / 17d / 17c). The
+  client does not re-derive it: the composition on the card is what the session builder would deal,
+  and two places deciding that separately is how a screen promises a session that comes back empty.
+- **A block with no data is not drawn.** Not as a zero, not greyed out — absent. «0 слов» is not a
+  sentence this screen says. Guarded by `test/features/home/home_plan_blocks_test.dart` against the
+  keys in `HomeBlockKeys`.
+- «Дневная цель» in the old sense is gone from here: the day's progress is ANSWERED CARDS
+  («32 из 32»). The counter itself lives on — the session summary still shows it (`dailyGoalProvider`).
+- Gone with the rewrite: «Слово дня» (`word_of_day.dart`), the collections carousel
+  (`collections_strip.dart`) which duplicated the Collections tab, and `computeHomeCta` — the home
+  no longer picks one verb for the day, it states the day's composition.
 
 ## Design
 
@@ -97,7 +115,8 @@ Hard-won gotchas (all already resolved once — needed again on a fresh machine/
 The data layer targets **backend2** (`{API_BASE_URL}/api/v1`, bearer token, responses wrapped
 in `data`, ULID string ids). The study surface is `POST /study/sessions` (self-contained package)
 + `POST /reviews/batch`; `GET /study/due` was removed on 2026-07-30 and is not a thing. Alongside
-them: `GET /study/progress`, `GET /stats`, `/triage/*`, `/pool/terms/{id}`, `GET /sync?since=` +
+them: `GET /study/progress`, `GET /stats`, `GET /home-plan` (the main screen's whole day — see
+«Главная» above), `/triage/*`, `/pool/terms/{id}`, `GET /sync?since=` +
 `GET /sync/cursor`, `/collections/*`, `/generations`, `/search` + `/search/instant`. `lib/data/`
 (`models.dart`, `api_client.dart`, `providers.dart`) was hand-adapted to the OpenAPI contract
 (not codegen).

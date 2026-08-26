@@ -1191,3 +1191,243 @@ class InstantHint {
     queryTooLong: (j['query_too_long'] as bool?) ?? false,
   );
 }
+
+// ---- The home screen's day (`GET /home-plan`) --------------------------------
+
+/// WHICH home screen this is (кадры 17a–17d). The server names it, so the app and the API can't
+/// disagree about the state the same numbers describe.
+enum HomeStateKind {
+  /// 17a — there is a session to run today.
+  plan,
+
+  /// 17b — it is done and something was answered today.
+  done,
+
+  /// 17d — nothing to do and nothing answered: the schedule is simply ahead.
+  idle,
+
+  /// 17c — the very first day: no collections, no pool, nothing answered.
+  empty;
+
+  static HomeStateKind parse(String? raw) => switch (raw) {
+    'plan' => HomeStateKind.plan,
+    'done' => HomeStateKind.done,
+    'idle' => HomeStateKind.idle,
+    _ => HomeStateKind.empty,
+  };
+}
+
+/// «Сессия на сегодня: N слов · ~M минут», and what it is made of.
+///
+/// [total] is deliberately NOT `repeat + new`: [triage] is the swipe pass over words the learner
+/// has not decided about yet, which is part of the DAY and not of the study session.
+class HomeSession {
+  const HomeSession({
+    required this.repeat,
+    required this.newTerms,
+    required this.triage,
+    required this.total,
+    required this.estimatedMinutes,
+    required this.avgSecondsPerCard,
+    this.triageCollectionId,
+    this.triageCollectionTitle,
+  });
+
+  final int repeat, newTerms, triage, total, avgSecondsPerCard;
+
+  /// Null when there is nothing to do — «≈ 0 минут» is not a thing the screen says.
+  final int? estimatedMinutes;
+
+  /// Where the swipe pass leads; null when [triage] is 0.
+  final String? triageCollectionId;
+  final String? triageCollectionTitle;
+
+  factory HomeSession.fromJson(Map<String, dynamic> j) => HomeSession(
+    repeat: (j['repeat'] as int?) ?? 0,
+    newTerms: (j['new'] as int?) ?? 0,
+    triage: (j['triage'] as int?) ?? 0,
+    total: (j['total'] as int?) ?? 0,
+    estimatedMinutes: j['estimated_minutes'] as int?,
+    avgSecondsPerCard: (j['avg_seconds_per_card'] as int?) ?? 0,
+    triageCollectionId: j['triage_collection_id'] as String?,
+    triageCollectionTitle: j['triage_collection_title'] as String?,
+  );
+}
+
+/// «В работе — N слов · K ждут очереди · при T в день новым до очереди ~D дней».
+class HomeInWork {
+  const HomeInWork({
+    required this.total,
+    required this.waiting,
+    required this.perDay,
+    required this.newRemaining,
+    this.daysUntilQueue,
+  });
+
+  final int total, waiting, perDay, newRemaining;
+
+  /// Null when nothing waits, and null when the learner takes no new words at all.
+  final int? daysUntilQueue;
+
+  factory HomeInWork.fromJson(Map<String, dynamic> j) => HomeInWork(
+    total: (j['total'] as int?) ?? 0,
+    waiting: (j['waiting'] as int?) ?? 0,
+    perDay: (j['per_day'] as int?) ?? 0,
+    newRemaining: (j['new_remaining'] as int?) ?? 0,
+    daysUntilQueue: j['days_until_queue'] as int?,
+  );
+}
+
+/// One word of «На грани забывания» — with the day it falls due, not just a count.
+class HomeEdgeTerm {
+  const HomeEdgeTerm({
+    required this.termId,
+    required this.text,
+    required this.inDays,
+    this.translation,
+  });
+
+  final String termId, text;
+  final String? translation;
+
+  /// Whole days until the repeat; 1 = «выпадет завтра».
+  final int inDays;
+
+  factory HomeEdgeTerm.fromJson(Map<String, dynamic> j) => HomeEdgeTerm(
+    termId: j['term_id'] as String? ?? '',
+    text: j['text'] as String? ?? '',
+    translation: j['translation'] as String?,
+    inDays: (j['in_days'] as int?) ?? 1,
+  );
+}
+
+/// One word of «Далось труднее всего» — and how often the last run missed it.
+class HomeHardTerm {
+  const HomeHardTerm({required this.termId, required this.text, required this.errors, this.translation});
+
+  final String termId, text;
+  final String? translation;
+  final int errors;
+
+  factory HomeHardTerm.fromJson(Map<String, dynamic> j) => HomeHardTerm(
+    termId: j['term_id'] as String? ?? '',
+    text: j['text'] as String? ?? '',
+    translation: j['translation'] as String?,
+    errors: (j['errors'] as int?) ?? 0,
+  );
+}
+
+/// What today produced — STUDY answers only, so a free practice run never closes the day.
+class HomeToday {
+  const HomeToday({required this.answered, required this.seconds});
+
+  final int answered, seconds;
+
+  factory HomeToday.fromJson(Map<String, dynamic> j) =>
+      HomeToday(answered: (j['answered'] as int?) ?? 0, seconds: (j['seconds'] as int?) ?? 0);
+}
+
+/// «Следующий повтор — 28 августа, 14 слов».
+class HomeNextReview {
+  const HomeNextReview({required this.date, required this.count});
+
+  /// The learner's own calendar day, `YYYY-MM-DD`.
+  final String date;
+  final int count;
+
+  factory HomeNextReview.fromJson(Map<String, dynamic> j) =>
+      HomeNextReview(date: j['date'] as String? ?? '', count: (j['count'] as int?) ?? 0);
+}
+
+/// «Продолжить „Ветклинику“ — 4 из 16 слов · брошено 5 дней назад».
+class HomeContinue {
+  const HomeContinue({
+    required this.collectionId,
+    required this.title,
+    required this.done,
+    required this.total,
+    required this.remaining,
+    this.abandonedDays,
+  });
+
+  final String collectionId, title;
+  final int done, total, remaining;
+  final int? abandonedDays;
+
+  factory HomeContinue.fromJson(Map<String, dynamic> j) => HomeContinue(
+    collectionId: j['collection_id'] as String? ?? '',
+    title: j['title'] as String? ?? '',
+    done: (j['done'] as int?) ?? 0,
+    total: (j['total'] as int?) ?? 0,
+    remaining: (j['remaining'] as int?) ?? 0,
+    abandonedDays: j['abandoned_days'] as int?,
+  );
+}
+
+/// «…или выбрать из 17 готовых» — the store as the home needs it: a number and a taste.
+class HomeStore {
+  const HomeStore({required this.count, required this.topics});
+
+  final int count;
+  final List<String> topics;
+
+  factory HomeStore.fromJson(Map<String, dynamic> j) => HomeStore(
+    count: (j['count'] as int?) ?? 0,
+    topics: ((j['topics'] as List?) ?? const []).map((e) => e as String).toList(),
+  );
+}
+
+/// THE HOME SCREEN'S DAY (`GET /home-plan`, кадры 17a–17d).
+///
+/// Every nullable field here is a block the design does not draw when it has nothing to say. The
+/// screen's rule — «блок без данных не рисуется» — is enforced against exactly these nulls, which
+/// is why they are nullable instead of zeroed.
+class HomePlan {
+  const HomePlan({
+    required this.state,
+    required this.session,
+    required this.inWork,
+    required this.edge,
+    required this.hardest,
+    required this.store,
+    this.today,
+    this.nextReview,
+    this.unfinished,
+  });
+
+  final HomeStateKind state;
+  final HomeSession session;
+  final HomeInWork inWork;
+  final List<HomeEdgeTerm> edge;
+  final List<HomeHardTerm> hardest;
+  final HomeStore store;
+
+  /// Null when nothing was answered today.
+  final HomeToday? today;
+
+  /// Null when nothing is scheduled ahead at all.
+  final HomeNextReview? nextReview;
+
+  /// Null when no collection was started and left.
+  final HomeContinue? unfinished;
+
+  factory HomePlan.fromJson(Map<String, dynamic> j) => HomePlan(
+    state: HomeStateKind.parse(j['state'] as String?),
+    session: HomeSession.fromJson((j['session'] as Map<String, dynamic>?) ?? const {}),
+    inWork: HomeInWork.fromJson((j['in_work'] as Map<String, dynamic>?) ?? const {}),
+    edge: ((j['edge'] as List?) ?? const [])
+        .map((e) => HomeEdgeTerm.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    hardest: ((j['hardest'] as List?) ?? const [])
+        .map((e) => HomeHardTerm.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    store: HomeStore.fromJson((j['store'] as Map<String, dynamic>?) ?? const {}),
+    today: j['today'] == null ? null : HomeToday.fromJson(j['today'] as Map<String, dynamic>),
+    nextReview: j['next_review'] == null
+        ? null
+        : HomeNextReview.fromJson(j['next_review'] as Map<String, dynamic>),
+    unfinished: j['continue'] == null
+        ? null
+        : HomeContinue.fromJson(j['continue'] as Map<String, dynamic>),
+  );
+}

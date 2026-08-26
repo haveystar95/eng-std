@@ -43,10 +43,25 @@ void main() {
   });
 
   group('the neighbours: bare counts, counting forms', () {
-    test('«Повторить N слово/слова/слов»', () {
-      expect(l.homeReviewButton(1), 'Повторить 1 слово');
-      expect(l.homeReviewButton(3), 'Повторить 3 слова');
-      expect(l.homeReviewButton(5), 'Повторить 5 слов');
+    // Was «Повторить N слово/слова/слов» — that button died with кадры 17a–17d, where the day's
+    // size is stated once on the session card instead of inside a verb. The paradigm it guarded is
+    // the same one, so the guard moved to the string that now carries it.
+    test('«N слово/слова/слов» on the session card', () {
+      expect(l.homeSessionCardWords(1), '1 слово');
+      expect(l.homeSessionCardWords(3), '3 слова');
+      expect(l.homeSessionCardWords(5), '5 слов');
+    });
+
+    test('«В работе — N слово/слова/слов»', () {
+      expect(l.homeInWorkTitle(1), 'В работе — 1 слово');
+      expect(l.homeInWorkTitle(2), 'В работе — 2 слова');
+      expect(l.homeInWorkTitle(41), 'В работе — 41 слово');
+    });
+
+    test('«выпадет через N день/дня/дней»', () {
+      expect(l.homeEdgeInDays(1), 'через 1 день');
+      expect(l.homeEdgeInDays(2), 'через 2 дня');
+      expect(l.homeEdgeInDays(5), 'через 5 дней');
     });
 
     test('«N слово/слова/слов» in a collection', () {

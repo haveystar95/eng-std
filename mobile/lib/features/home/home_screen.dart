@@ -79,6 +79,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     }
   }
 
+  /// «или выбрать из N готовых →» on the home: the Collections tab, on its «Готовые» segment.
+  ///
+  /// The segment is a shared bit of state rather than a constructor argument because the tab's
+  /// screen is already built and living in the IndexedStack — a second instance would be a second
+  /// scroll position and a second store request.
+  void _openStore() {
+    ref.read(collectionsSegmentProvider).value = kCollectionsSegmentStore;
+    _select(1);
+  }
+
   void _select(int i) {
     if (i == _index) return;
     AppHaptics.light();
@@ -105,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     // «about me» ones. Adding it in the MIDDLE moves Progress and Profile one place right, which is
     // the reason _select's indices are read from this list rather than written as literals anywhere.
     final pages = [
-      TrainingHomeScreen(onOpenCollections: () => _select(1)),
+      TrainingHomeScreen(onOpenStore: _openStore),
       const CollectionsScreen(),
       const SearchScreen(),
       const ProgressScreen(),

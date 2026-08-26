@@ -477,6 +477,18 @@ class ApiClient {
     return Stats.fromJson(_data(r) as Map<String, dynamic>);
   }
 
+  /// The home screen's whole day (`GET /home-plan`, кадры 17a–17d): what today's session is made
+  /// of, how big the pool is and when its queue moves, what is about to fall out of memory, what
+  /// today produced, and the one collection that was started and left.
+  ///
+  /// Returned as the RAW map as well as the parsed plan: the sync service caches the map verbatim
+  /// in the local DB, and the screen reads it back from there like every other screen in this app.
+  Future<({HomePlan plan, Map<String, dynamic> raw})> homePlan() async {
+    final r = await _dio.get('/home-plan');
+    final raw = _data(r) as Map<String, dynamic>;
+    return (plan: HomePlan.fromJson(raw), raw: raw);
+  }
+
   /// Upload a batch of graded answers (idempotent by each review's client ULID).
   /// Returns backend2's tally so the caller can reconcile the local queue.
   Future<({int accepted, int duplicates, int unknown})> submitReviews(

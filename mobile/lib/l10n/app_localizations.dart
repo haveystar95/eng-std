@@ -225,78 +225,6 @@ abstract class AppLocalizations {
   /// **'Не удалось загрузить: {error}'**
   String triageLoadError(String error);
 
-  /// Лейбл блока дневной цели (кадр 2.1).
-  ///
-  /// In ru, this message translates to:
-  /// **'Дневная цель'**
-  String get homeDailyGoal;
-
-  /// Прогресс дневной цели, «8 / 20 слов» (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{total, plural, one{{done} / {total} слово} few{{done} / {total} слова} many{{done} / {total} слов} other{{done} / {total} слова}}'**
-  String homeGoalCount(int done, int total);
-
-  /// Строка стрика, «Стрик — 5 дней» (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Стрик — {count} день} few{Стрик — {count} дня} many{Стрик — {count} дней} other{Стрик — {count} дня}}'**
-  String homeStreakActive(int count);
-
-  /// Строка стрика для нового пользователя (кадр 2b).
-  ///
-  /// In ru, this message translates to:
-  /// **'Стрик начнётся сегодня'**
-  String get homeStreakStartToday;
-
-  /// Главная кнопка: есть due-повторения (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Повторить {count} слово} few{Повторить {count} слова} many{Повторить {count} слов} other{Повторить {count} слова}}'**
-  String homeReviewButton(int count);
-
-  /// Главная кнопка: есть отриаженные «не знаю» новые слова к изучению (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Учить {count} слово} few{Учить {count} слова} many{Учить {count} слов} other{Учить {count} слова}}'**
-  String homeLearnButton(int count);
-
-  /// Подстрока кнопки «Учить N».
-  ///
-  /// In ru, this message translates to:
-  /// **'Новые слова — первый разбор'**
-  String get homeLearnSubtitle;
-
-  /// Главная кнопка: есть новые неразобранные термины (ICU plural).
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
-  String homeTriageButton(int count);
-
-  /// Главная кнопка: свободная тренировка (нет due и разбора).
-  ///
-  /// In ru, this message translates to:
-  /// **'Повторить'**
-  String get homePracticeButton;
-
-  /// Подстрока: учебная тренировка (главный экран) — в отличие от свободной тренировки в коллекции.
-  ///
-  /// In ru, this message translates to:
-  /// **'Учебная тренировка'**
-  String get homePracticeSubtitle;
-
-  /// Антиква-заголовок карточки генерации.
-  ///
-  /// In ru, this message translates to:
-  /// **'Опиши тему — соберём коллекцию'**
-  String get homeGenerateTitle;
-
-  /// Подзаголовок карточки генерации.
-  ///
-  /// In ru, this message translates to:
-  /// **'ИИ подберёт слова и фразы, которые реально нужны'**
-  String get homeGenerateSubtitle;
-
   /// Плейсхолдер поля темы на карточке генерации.
   ///
   /// In ru, this message translates to:
@@ -320,30 +248,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Собеседование'**
   String get homeGenerateChipInterview;
-
-  /// Заметка о бесплатной квоте (кадр 2b, новый пользователь).
-  ///
-  /// In ru, this message translates to:
-  /// **'3 генерации в день на бесплатном тарифе'**
-  String get homeGenerateFreeTier;
-
-  /// Лейбл блока «Слово дня».
-  ///
-  /// In ru, this message translates to:
-  /// **'Слово дня'**
-  String get homeWordOfDay;
-
-  /// Лейбл ленты коллекций.
-  ///
-  /// In ru, this message translates to:
-  /// **'Мои коллекции'**
-  String get homeMyCollections;
-
-  /// Ссылка «Все» рядом с лейблом ленты коллекций.
-  ///
-  /// In ru, this message translates to:
-  /// **'Все'**
-  String get homeSeeAll;
 
   /// Прогресс коллекции на карточке ленты, «18 из 24 слов» (ICU plural). Предлог «из» требует родительного падежа, поэтому формы здесь НЕ счётные: 1 → «из 1 слова», 2 → «из 2 слов», 5 → «из 5 слов» (QA-OBS-5).
   ///
@@ -1424,30 +1328,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.'**
   String get homeLimitReachedHint;
-
-  /// Заголовок карточки «всё повторено» (кадр 9b).
-  ///
-  /// In ru, this message translates to:
-  /// **'На сегодня всё'**
-  String get homeAllDoneTitle;
-
-  /// Подзаголовок карточки «всё повторено».
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} повторение сделано, новых слов в очереди нет.} few{{count} повторения сделано, новых слов в очереди нет.} many{{count} повторений сделано, новых слов в очереди нет.} other{{count} повторений сделано, новых слов в очереди нет.}}'**
-  String homeAllDoneSubtitle(int count);
-
-  /// Кнопка свободной тренировки в карточке «всё повторено».
-  ///
-  /// In ru, this message translates to:
-  /// **'Свободная тренировка'**
-  String get homeAllDonePractice;
-
-  /// Ссылка на генерацию в карточке «всё повторено».
-  ///
-  /// In ru, this message translates to:
-  /// **'Собрать новую коллекцию'**
-  String get homeAllDoneGenerate;
 
   /// Тихий офлайн-баннер на главной (кадр 9c).
   ///
@@ -3056,6 +2936,234 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Выбери тему'**
   String get topicSessionTitle;
+
+  /// Бейдж стрика в шапке главной (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Стрик {count}'**
+  String homeStreakBadge(int count);
+
+  /// Заголовок тёмной карточки дня (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сессия на сегодня'**
+  String get homeSessionCardTitle;
+
+  /// Размер сессии на тёмной карточке, «32 слова» (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String homeSessionCardWords(int count);
+
+  /// Оценка времени сессии, «≈ 9 минут» (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}'**
+  String homeSessionCardMinutes(int count);
+
+  /// Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}'**
+  String homeSessionPartRepeat(int count);
+
+  /// Состав сессии: новые слова (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}'**
+  String homeSessionPartNew(int count);
+
+  /// Состав сессии: свайпы разбора.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}'**
+  String homeSessionPartTriage(int count);
+
+  /// Кнопка тёмной карточки дня (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get homeSessionStart;
+
+  /// Заголовок блока «В работе» — размер пула (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}'**
+  String homeInWorkTitle(int count);
+
+  /// Сколько слов пула ещё ни разу не показывали (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}'**
+  String homeInWorkWaiting(int count);
+
+  /// Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}'**
+  String homeInWorkPace(int perDay, int days);
+
+  /// Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}'**
+  String homeInWorkQueueStands(int count);
+
+  /// Заголовок секции слов с ближайшей датой повтора (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'На грани забывания'**
+  String get homeEdgeTitle;
+
+  /// Дата выпадения слова: завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'выпадет завтра'**
+  String get homeEdgeTomorrow;
+
+  /// Дата выпадения слова, «через 2 дня» (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}'**
+  String homeEdgeInDays(int count);
+
+  /// Заголовок вечерней секции ошибок сессии (кадр 17b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Далось труднее всего'**
+  String get homeHardestTitle;
+
+  /// Сколько раз слово ответили неверно в последней сессии (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}'**
+  String homeHardestErrors(int count);
+
+  /// Счётчик справа от заголовка секции, «2 слова» (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String homeSectionCount(int count);
+
+  /// Заголовок вечерней карточки (кадр 17b).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня закрыто'**
+  String get homeDoneTitle;
+
+  /// Прогресс дня: отвеченные карточки из запланированных, «32 из 32».
+  ///
+  /// In ru, this message translates to:
+  /// **'{done} из {total}'**
+  String homeDoneOf(int done, int total);
+
+  /// Сколько заняла сессия, «6 мин 40 с».
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes} мин {seconds} с'**
+  String homeDoneDuration(int minutes, int seconds);
+
+  /// Длительность сессии короче минуты (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}'**
+  String homeDoneDurationSeconds(int count);
+
+  /// Заголовок состояния Б: сессии нет, расписание впереди (кадр 17d).
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё повторено'**
+  String get homeIdleTitle;
+
+  /// Главная кнопка состояния Б (кадр 17d).
+  ///
+  /// In ru, this message translates to:
+  /// **'Взять новые слова'**
+  String get homeIdleTakeNew;
+
+  /// Пояснение под «Всё повторено» (кадр 17d).
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые слова на сегодня не взяты — очередь стоит.'**
+  String get homeIdleQueueStalled;
+
+  /// Когда и сколько ждёт следующий повтор (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}'**
+  String homeNextReviewLine(String when, int count);
+
+  /// Подстановка «когда» для следующего повтора — завтра.
+  ///
+  /// In ru, this message translates to:
+  /// **'завтра'**
+  String get homeWhenTomorrow;
+
+  /// Предложение добрать слова из недоразобранной коллекции (кадр 17b).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
+  String homeExtraFromCollection(int count, String title);
+
+  /// Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}'**
+  String homeExtraButton(int count);
+
+  /// Лейбл карточки брошенной коллекции (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get homeContinueLabel;
+
+  /// Давность последнего касания коллекции (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}'**
+  String homeContinueAbandoned(int count);
+
+  /// Строка входа в генерацию на главной (кадр 17a).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать коллекцию по теме'**
+  String get homeGenerateRow;
+
+  /// Тихая строка входа в магазин под генерацией (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{или выбрать из {count} готового} few{или выбрать из {count} готовых} many{или выбрать из {count} готовых} other{или выбрать из {count} готовых}}'**
+  String homeStoreLink(int count);
+
+  /// Приветствие первого дня (кадр 17c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Начнём с первого набора'**
+  String get homeFirstDayTitle;
+
+  /// Первая карточка первого дня (ICU plural).
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}'**
+  String homeFirstDayReadyTitle(int count);
+
+  /// Подпись карточки готовых наборов (кадр 17c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова уже отобраны, озвучены и размечены по уровню'**
+  String get homeFirstDayReadyHint;
+
+  /// Вторая карточка первого дня (кадр 17c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать свою по описанию'**
+  String get homeFirstDayOwnTitle;
+
+  /// Подпись карточки генерации (кадр 17c).
+  ///
+  /// In ru, this message translates to:
+  /// **'Опишите ситуацию — ИИ подберёт слова и фразы под неё'**
+  String get homeFirstDayOwnHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

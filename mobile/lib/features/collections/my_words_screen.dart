@@ -200,7 +200,7 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
   /// several or from one that no longer exists. «Добавить в другую папку» still works — it simply
   /// has no «current» shelf to contrast with.
   Future<void> _openCard(PoolWordRow row) async {
-    final word = _toWord(row);
+    final word = poolWordToWord(row);
     final pairs = await ref.read(appDatabaseProvider).pairByTerms([word.termId]);
     final speakLang = pairs[word.termId]?.learned ?? _fallbackLang;
     if (!mounted) return;
@@ -225,25 +225,6 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
     );
   }
 
-  Word _toWord(PoolWordRow r) => Word(
-    termId: r.term.id,
-    term: r.term.termText ?? '',
-    translation: r.term.translation ?? '',
-    transcription: r.term.transcription,
-    example: r.term.example,
-    // Ядро v15 — see the same three on providers.dart's `_toWord`. Null/empty is the ordinary
-    // state and draws nothing.
-    transliteration: r.term.transliteration,
-    translations: decodeStringList(r.term.translations),
-    synonyms: decodeStringList(r.term.synonyms),
-    type: r.term.type,
-    imageUrl: r.term.imageUrl,
-    imageAuthor: r.term.imageAuthor,
-    imageAuthorUrl: r.term.imageAuthorUrl,
-    ladderStep: r.position.step,
-    isKnown: r.position.isKnown,
-    enrolled: true, // every row on this screen is in the pool by construction
-  );
 }
 
 class _Header extends StatelessWidget {

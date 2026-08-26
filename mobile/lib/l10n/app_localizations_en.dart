@@ -89,82 +89,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeDailyGoal => 'Daily goal';
-
-  @override
-  String homeGoalCount(int done, int total) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$done / $total words',
-      one: '$done / $total word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeStreakActive(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Streak — $count days',
-      one: 'Streak — $count day',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeStreakStartToday => 'Your streak starts today';
-
-  @override
-  String homeReviewButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Review $count words',
-      one: 'Review $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeLearnButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Learn $count words',
-      one: 'Learn $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeLearnSubtitle => 'New words — first study';
-
-  @override
-  String homeTriageButton(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Triage $count words',
-      one: 'Triage $count word',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homePracticeButton => 'Practice';
-
-  @override
-  String get homePracticeSubtitle => 'Study session';
-
-  @override
-  String get homeGenerateTitle => 'Describe a topic — we\'ll build a set';
-
-  @override
-  String get homeGenerateSubtitle => 'AI picks the words and phrases you\'ll actually need';
-
-  @override
   String get homeGeneratePlaceholder => 'e.g. a visit to the doctor';
 
   @override
@@ -175,18 +99,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGenerateChipInterview => 'Job interview';
-
-  @override
-  String get homeGenerateFreeTier => '3 generations a day on the free plan';
-
-  @override
-  String get homeWordOfDay => 'Word of the day';
-
-  @override
-  String get homeMyCollections => 'My collections';
-
-  @override
-  String get homeSeeAll => 'All';
 
   @override
   String homeCollectionProgress(int done, int total) {
@@ -881,26 +793,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeLimitReachedHint =>
       'New words resume tomorrow. For now, free-practice any collection.';
-
-  @override
-  String get homeAllDoneTitle => 'All done for today';
-
-  @override
-  String homeAllDoneSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count reviews done, no new words queued.',
-      one: '$count review done, no new words queued.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get homeAllDonePractice => 'Free practice';
-
-  @override
-  String get homeAllDoneGenerate => 'Build a new collection';
 
   @override
   String get homeOfflineBanner =>
@@ -1848,4 +1740,277 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topicSessionTitle => 'Pick a topic';
+
+  @override
+  String homeStreakBadge(int count) {
+    return 'Streak $count';
+  }
+
+  @override
+  String get homeSessionCardTitle => 'Today\'s session';
+
+  @override
+  String homeSessionCardWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionCardMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '≈ $count minutes',
+      one: '≈ $count minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartRepeat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to review',
+      one: '$count to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new',
+      one: '$count new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSessionPartTriage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to sort',
+      one: '$count to sort',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSessionStart => 'Start';
+
+  @override
+  String homeInWorkTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In progress — $count words',
+      one: 'In progress — $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting in line',
+      one: '$count waiting in line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkPace(int perDay, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'at $perDay new a day the queue clears in ~$days days',
+      one: 'at $perDay new a day the queue clears in ~$days day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeInWorkQueueStands(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'take $count now and the queue moves today',
+      one: 'take $count now and the queue moves today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeEdgeTitle => 'About to slip';
+
+  @override
+  String get homeEdgeTomorrow => 'due tomorrow';
+
+  @override
+  String homeEdgeInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'in $count days',
+      one: 'in $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeHardestTitle => 'Hardest today';
+
+  @override
+  String homeHardestErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mistakes',
+      one: '$count mistake',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeSectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeDoneTitle => 'Done for today';
+
+  @override
+  String homeDoneOf(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String homeDoneDuration(int minutes, int seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String homeDoneDurationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '$count second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeIdleTitle => 'All reviewed';
+
+  @override
+  String get homeIdleTakeNew => 'Take new words';
+
+  @override
+  String get homeIdleQueueStalled => 'No new words taken today — the queue is standing still.';
+
+  @override
+  String homeNextReviewLine(String when, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Next review $when, $count words.',
+      one: 'Next review $when, $count word.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeWhenTomorrow => 'tomorrow';
+
+  @override
+  String homeExtraFromCollection(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You can add $count more words from “$title”.',
+      one: 'You can add $count more word from “$title”.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeExtraButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more words',
+      one: '$count more word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeContinueLabel => 'Continue';
+
+  @override
+  String homeContinueAbandoned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'left $count days ago',
+      one: 'left $count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeGenerateRow => 'Build a collection on a topic';
+
+  @override
+  String homeStoreLink(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'or pick from $count ready-made',
+      one: 'or pick from $count ready-made',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFirstDayTitle => 'Let\'s start with a first set';
+
+  @override
+  String homeFirstDayReadyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Take a ready-made set ($count topics)',
+      one: 'Take a ready-made set ($count topic)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeFirstDayReadyHint => 'The words are already chosen, voiced and levelled';
+
+  @override
+  String get homeFirstDayOwnTitle => 'Build your own from a description';
+
+  @override
+  String get homeFirstDayOwnHint =>
+      'Describe a situation — AI will pick the words and phrases for it';
 }

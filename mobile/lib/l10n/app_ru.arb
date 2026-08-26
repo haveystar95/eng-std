@@ -84,57 +84,6 @@
     "placeholders": { "error": { "type": "String" } }
   },
 
-  "homeDailyGoal": "Дневная цель",
-  "@homeDailyGoal": { "description": "Лейбл блока дневной цели (кадр 2.1)." },
-
-  "homeGoalCount": "{total, plural, one{{done} / {total} слово} few{{done} / {total} слова} many{{done} / {total} слов} other{{done} / {total} слова}}",
-  "@homeGoalCount": {
-    "description": "Прогресс дневной цели, «8 / 20 слов» (ICU plural).",
-    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
-  },
-
-  "homeStreakActive": "{count, plural, one{Стрик — {count} день} few{Стрик — {count} дня} many{Стрик — {count} дней} other{Стрик — {count} дня}}",
-  "@homeStreakActive": {
-    "description": "Строка стрика, «Стрик — 5 дней» (ICU plural).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "homeStreakStartToday": "Стрик начнётся сегодня",
-  "@homeStreakStartToday": { "description": "Строка стрика для нового пользователя (кадр 2b)." },
-
-  "homeReviewButton": "{count, plural, one{Повторить {count} слово} few{Повторить {count} слова} many{Повторить {count} слов} other{Повторить {count} слова}}",
-  "@homeReviewButton": {
-    "description": "Главная кнопка: есть due-повторения (ICU plural).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "homeLearnButton": "{count, plural, one{Учить {count} слово} few{Учить {count} слова} many{Учить {count} слов} other{Учить {count} слова}}",
-  "@homeLearnButton": {
-    "description": "Главная кнопка: есть отриаженные «не знаю» новые слова к изучению (ICU plural).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "homeLearnSubtitle": "Новые слова — первый разбор",
-  "@homeLearnSubtitle": { "description": "Подстрока кнопки «Учить N»." },
-
-  "homeTriageButton": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
-  "@homeTriageButton": {
-    "description": "Главная кнопка: есть новые неразобранные термины (ICU plural).",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "homePracticeButton": "Повторить",
-  "@homePracticeButton": { "description": "Главная кнопка: свободная тренировка (нет due и разбора)." },
-
-  "homePracticeSubtitle": "Учебная тренировка",
-  "@homePracticeSubtitle": { "description": "Подстрока: учебная тренировка (главный экран) — в отличие от свободной тренировки в коллекции." },
-
-  "homeGenerateTitle": "Опиши тему — соберём коллекцию",
-  "@homeGenerateTitle": { "description": "Антиква-заголовок карточки генерации." },
-
-  "homeGenerateSubtitle": "ИИ подберёт слова и фразы, которые реально нужны",
-  "@homeGenerateSubtitle": { "description": "Подзаголовок карточки генерации." },
-
   "homeGeneratePlaceholder": "Например: визит к врачу",
   "@homeGeneratePlaceholder": { "description": "Плейсхолдер поля темы на карточке генерации." },
 
@@ -146,18 +95,6 @@
 
   "homeGenerateChipInterview": "Собеседование",
   "@homeGenerateChipInterview": { "description": "Чип-пример темы." },
-
-  "homeGenerateFreeTier": "3 генерации в день на бесплатном тарифе",
-  "@homeGenerateFreeTier": { "description": "Заметка о бесплатной квоте (кадр 2b, новый пользователь)." },
-
-  "homeWordOfDay": "Слово дня",
-  "@homeWordOfDay": { "description": "Лейбл блока «Слово дня»." },
-
-  "homeMyCollections": "Мои коллекции",
-  "@homeMyCollections": { "description": "Лейбл ленты коллекций." },
-
-  "homeSeeAll": "Все",
-  "@homeSeeAll": { "description": "Ссылка «Все» рядом с лейблом ленты коллекций." },
 
   "homeCollectionProgress": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
   "@homeCollectionProgress": {
@@ -742,21 +679,6 @@
 
   "homeLimitReachedHint": "Новые слова — завтра. Сейчас можно повторять свободной тренировкой в коллекциях.",
   "@homeLimitReachedHint": { "description": "Подсказка под «Лимит новых на сегодня» — свободная тренировка не тратит квоту." },
-
-  "homeAllDoneTitle": "На сегодня всё",
-  "@homeAllDoneTitle": { "description": "Заголовок карточки «всё повторено» (кадр 9b)." },
-
-  "homeAllDoneSubtitle": "{count, plural, one{{count} повторение сделано, новых слов в очереди нет.} few{{count} повторения сделано, новых слов в очереди нет.} many{{count} повторений сделано, новых слов в очереди нет.} other{{count} повторений сделано, новых слов в очереди нет.}}",
-  "@homeAllDoneSubtitle": {
-    "description": "Подзаголовок карточки «всё повторено».",
-    "placeholders": { "count": { "type": "int" } }
-  },
-
-  "homeAllDonePractice": "Свободная тренировка",
-  "@homeAllDonePractice": { "description": "Кнопка свободной тренировки в карточке «всё повторено»." },
-
-  "homeAllDoneGenerate": "Собрать новую коллекцию",
-  "@homeAllDoneGenerate": { "description": "Ссылка на генерацию в карточке «всё повторено»." },
 
   "homeOfflineBanner": "Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.",
   "@homeOfflineBanner": { "description": "Тихий офлайн-баннер на главной (кадр 9c)." },
@@ -1422,5 +1344,185 @@
   "topicSessionAction": "Тренировка по теме",
   "@topicSessionAction": { "description": "Вход на главном экране: учебная сессия, суженная до одной коллекции-источника." },
   "topicSessionTitle": "Выбери тему",
-  "@topicSessionTitle": { "description": "Заголовок шита выбора коллекции для тематической тренировки." }
+  "@topicSessionTitle": { "description": "Заголовок шита выбора коллекции для тематической тренировки." },
+
+  "homeStreakBadge": "Стрик {count}",
+  "@homeStreakBadge": {
+    "description": "Бейдж стрика в шапке главной (кадр 17a).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionCardTitle": "Сессия на сегодня",
+  "@homeSessionCardTitle": { "description": "Заголовок тёмной карточки дня (кадр 17a)." },
+
+  "homeSessionCardWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@homeSessionCardWords": {
+    "description": "Размер сессии на тёмной карточке, «32 слова» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionCardMinutes": "{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}",
+  "@homeSessionCardMinutes": {
+    "description": "Оценка времени сессии, «≈ 9 минут» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
+  "@homeSessionPartRepeat": {
+    "description": "Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartNew": "{count, plural, one{{count} новое} few{{count} новых} many{{count} новых} other{{count} новых}}",
+  "@homeSessionPartNew": {
+    "description": "Состав сессии: новые слова (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionPartTriage": "{count, plural, one{{count} разобрать} few{{count} разобрать} many{{count} разобрать} other{{count} разобрать}}",
+  "@homeSessionPartTriage": {
+    "description": "Состав сессии: свайпы разбора.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionStart": "Начать",
+  "@homeSessionStart": { "description": "Кнопка тёмной карточки дня (кадр 17a)." },
+
+  "homeInWorkTitle": "{count, plural, one{В работе — {count} слово} few{В работе — {count} слова} many{В работе — {count} слов} other{В работе — {count} слова}}",
+  "@homeInWorkTitle": {
+    "description": "Заголовок блока «В работе» — размер пула (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeInWorkWaiting": "{count, plural, one{{count} ждёт очереди} few{{count} ждут очереди} many{{count} ждут очереди} other{{count} ждут очереди}}",
+  "@homeInWorkWaiting": {
+    "description": "Сколько слов пула ещё ни разу не показывали (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeInWorkPace": "{days, plural, one{при {perDay} в день новым до очереди ~{days} день} few{при {perDay} в день новым до очереди ~{days} дня} many{при {perDay} в день новым до очереди ~{days} дней} other{при {perDay} в день новым до очереди ~{days} дня}}",
+  "@homeInWorkPace": {
+    "description": "Когда очередь дойдёт до последнего ждущего слова (ICU plural по дням).",
+    "placeholders": { "perDay": { "type": "int" }, "days": { "type": "int" } }
+  },
+
+  "homeInWorkQueueStands": "{count, plural, one{возьмёте {count} сейчас — очередь двинется сегодня} few{возьмёте {count} сейчас — очередь двинется сегодня} many{возьмёте {count} сейчас — очередь двинется сегодня} other{возьмёте {count} сейчас — очередь двинется сегодня}}",
+  "@homeInWorkQueueStands": {
+    "description": "Строка «В работе» в состоянии Б (кадр 17d): квота дня цела, очередь стоит.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeEdgeTitle": "На грани забывания",
+  "@homeEdgeTitle": { "description": "Заголовок секции слов с ближайшей датой повтора (кадр 17a)." },
+
+  "homeEdgeTomorrow": "выпадет завтра",
+  "@homeEdgeTomorrow": { "description": "Дата выпадения слова: завтра." },
+
+  "homeEdgeInDays": "{count, plural, one{через {count} день} few{через {count} дня} many{через {count} дней} other{через {count} дня}}",
+  "@homeEdgeInDays": {
+    "description": "Дата выпадения слова, «через 2 дня» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeHardestTitle": "Далось труднее всего",
+  "@homeHardestTitle": { "description": "Заголовок вечерней секции ошибок сессии (кадр 17b)." },
+
+  "homeHardestErrors": "{count, plural, one{{count} ошибка} few{{count} ошибки} many{{count} ошибок} other{{count} ошибки}}",
+  "@homeHardestErrors": {
+    "description": "Сколько раз слово ответили неверно в последней сессии (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSectionCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@homeSectionCount": {
+    "description": "Счётчик справа от заголовка секции, «2 слова» (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeDoneTitle": "Сегодня закрыто",
+  "@homeDoneTitle": { "description": "Заголовок вечерней карточки (кадр 17b)." },
+
+  "homeDoneOf": "{done} из {total}",
+  "@homeDoneOf": {
+    "description": "Прогресс дня: отвеченные карточки из запланированных, «32 из 32».",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "homeDoneDuration": "{minutes} мин {seconds} с",
+  "@homeDoneDuration": {
+    "description": "Сколько заняла сессия, «6 мин 40 с».",
+    "placeholders": { "minutes": { "type": "int" }, "seconds": { "type": "int" } }
+  },
+
+  "homeDoneDurationSeconds": "{count, plural, one{{count} секунда} few{{count} секунды} many{{count} секунд} other{{count} секунды}}",
+  "@homeDoneDurationSeconds": {
+    "description": "Длительность сессии короче минуты (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeIdleTitle": "Всё повторено",
+  "@homeIdleTitle": { "description": "Заголовок состояния Б: сессии нет, расписание впереди (кадр 17d)." },
+
+  "homeIdleTakeNew": "Взять новые слова",
+  "@homeIdleTakeNew": { "description": "Главная кнопка состояния Б (кадр 17d)." },
+
+  "homeIdleQueueStalled": "Новые слова на сегодня не взяты — очередь стоит.",
+  "@homeIdleQueueStalled": { "description": "Пояснение под «Всё повторено» (кадр 17d)." },
+
+  "homeNextReviewLine": "{count, plural, one{Следующий повтор — {when}, {count} слово.} few{Следующий повтор — {when}, {count} слова.} many{Следующий повтор — {when}, {count} слов.} other{Следующий повтор — {when}, {count} слова.}}",
+  "@homeNextReviewLine": {
+    "description": "Когда и сколько ждёт следующий повтор (ICU plural).",
+    "placeholders": { "when": { "type": "String" }, "count": { "type": "int" } }
+  },
+
+  "homeWhenTomorrow": "завтра",
+  "@homeWhenTomorrow": { "description": "Подстановка «когда» для следующего повтора — завтра." },
+
+  "homeExtraFromCollection": "{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}",
+  "@homeExtraFromCollection": {
+    "description": "Предложение добрать слова из недоразобранной коллекции (кадр 17b).",
+    "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
+  },
+
+  "homeExtraButton": "{count, plural, one{Ещё {count} слово} few{Ещё {count} слова} many{Ещё {count} слов} other{Ещё {count} слова}}",
+  "@homeExtraButton": {
+    "description": "Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeContinueLabel": "Продолжить",
+  "@homeContinueLabel": { "description": "Лейбл карточки брошенной коллекции (кадр 17a)." },
+
+  "homeContinueAbandoned": "{count, plural, one{брошено {count} день назад} few{брошено {count} дня назад} many{брошено {count} дней назад} other{брошено {count} дня назад}}",
+  "@homeContinueAbandoned": {
+    "description": "Давность последнего касания коллекции (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeGenerateRow": "Собрать коллекцию по теме",
+  "@homeGenerateRow": { "description": "Строка входа в генерацию на главной (кадр 17a)." },
+
+  "homeStoreLink": "{count, plural, one{или выбрать из {count} готового} few{или выбрать из {count} готовых} many{или выбрать из {count} готовых} other{или выбрать из {count} готовых}}",
+  "@homeStoreLink": {
+    "description": "Тихая строка входа в магазин под генерацией (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFirstDayTitle": "Начнём с первого набора",
+  "@homeFirstDayTitle": { "description": "Приветствие первого дня (кадр 17c)." },
+
+  "homeFirstDayReadyTitle": "{count, plural, one{Взять готовый набор ({count} тема)} few{Взять готовый набор ({count} темы)} many{Взять готовый набор ({count} тем)} other{Взять готовый набор ({count} темы)}}",
+  "@homeFirstDayReadyTitle": {
+    "description": "Первая карточка первого дня (ICU plural).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFirstDayReadyHint": "Слова уже отобраны, озвучены и размечены по уровню",
+  "@homeFirstDayReadyHint": { "description": "Подпись карточки готовых наборов (кадр 17c)." },
+
+  "homeFirstDayOwnTitle": "Собрать свою по описанию",
+  "@homeFirstDayOwnTitle": { "description": "Вторая карточка первого дня (кадр 17c)." },
+
+  "homeFirstDayOwnHint": "Опишите ситуацию — ИИ подберёт слова и фразы под неё",
+  "@homeFirstDayOwnHint": { "description": "Подпись карточки генерации (кадр 17c)." }
 }

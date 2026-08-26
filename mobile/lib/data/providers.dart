@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -316,6 +316,45 @@ final statsProvider = StreamProvider<Stats>((ref) async* {
   }
 });
 
+/// «Мои» / «Готовые» on the Collections tab — [kCollectionsSegmentMine] / [kCollectionsSegmentStore].
+///
+/// Shared state, not a constructor argument: the home screen's quiet «или выбрать из N готовых →»
+/// line has to LAND on the store, and the Collections screen it lands on is already built and alive
+/// inside the shell's IndexedStack, so its constructor ran long ago.
+///
+/// A plain [ValueNotifier] behind a Provider, like the sync pipeline's own flags: the value is a
+/// request from one screen to another, not state anything rebuilds on.
+final collectionsSegmentProvider = Provider<ValueNotifier<int>>((ref) {
+  final notifier = ValueNotifier<int>(kCollectionsSegmentMine);
+  ref.onDispose(notifier.dispose);
+  return notifier;
+});
+
+const int kCollectionsSegmentMine = 0;
+const int kCollectionsSegmentStore = 1;
+
+/// THE HOME SCREEN'S DAY (`GET /home-plan`, кадры 17a–17d) — read from the local DB, like every
+/// other screen, so the home opens on a plane with the last known day instead of a spinner.
+///
+/// The plan is a SERVER answer and not a local fold: its «повторить»/«новых» come from the same
+/// planner call the session itself is built from, which is the whole point — the card can never
+/// promise a session that comes back empty. [SyncService] refreshes it on app start, on resume, on
+/// network return and after a session; this provider just watches the cached row.
+///
+/// Null while nothing has ever been cached (a fresh install, still offline) — the screen shows its
+/// own quiet placeholder for that rather than inventing zeros.
+final homePlanProvider = StreamProvider<HomePlan?>((ref) {
+  return ref.watch(appDatabaseProvider).watchMeta(SyncKeys.homePlan).map((raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return HomePlan.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      // A cached shape this build has never seen is not worth a crash on the first screen.
+      return null;
+    }
+  });
+});
+
 /// Derived per-collection progress (total/learned/mastered/due), keyed by collection id — folded
 /// locally over the synced (item, progress) pairs, the same way the server derives it.
 final collectionsProgressProvider = StreamProvider<Map<String, CollectionProgress>>((ref) {
@@ -457,6 +496,29 @@ List<dynamic>? _decodeList(String? raw) {
     return null;
   }
 }
+
+/// One POOL row as a [Word] — «Мои слова», and the home screen's «на грани забывания» rows, open
+/// the SAME word card, so the mapping lives once. `enrolled` is true by construction: every row
+/// that comes out of the pool query is in the pool.
+Word poolWordToWord(PoolWordRow r) => Word(
+  termId: r.term.id,
+  term: r.term.termText ?? '',
+  translation: r.term.translation ?? '',
+  transcription: r.term.transcription,
+  example: r.term.example,
+  // Ядро v15 — see the same three on `_toWord` below. Null/empty is the ordinary state and draws
+  // nothing.
+  transliteration: r.term.transliteration,
+  translations: decodeStringList(r.term.translations),
+  synonyms: decodeStringList(r.term.synonyms),
+  type: r.term.type,
+  imageUrl: r.term.imageUrl,
+  imageAuthor: r.term.imageAuthor,
+  imageAuthorUrl: r.term.imageAuthorUrl,
+  ladderStep: r.position.step,
+  isKnown: r.position.isKnown,
+  enrolled: true,
+);
 
 Word _toWord(CollectionTermRow r) {
   final s = r.state;

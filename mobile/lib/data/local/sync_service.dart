@@ -25,6 +25,14 @@ abstract final class SyncKeys {
   // The acquisition-ladder admission matrix, stored as the JSON the server sent. Which rung opens
   // which trainer: the offline builder needs it to avoid dealing a word a mode it has not earned.
   static const modeAdmission = 'mode_admission';
+
+  /// The home screen's whole day, as the JSON `GET /home-plan` sent (кадры 17a–17d).
+  ///
+  /// Cached like `streak`/`reviews_today` and for the same reason: it is a server-side aggregate the
+  /// delta feed does not carry, and the home screen — like every screen here — reads it out of the
+  /// local DB rather than off the network, so it opens on a plane with the last known day rather
+  /// than with a spinner or a zero.
+  static const homePlan = 'home_plan';
 }
 
 const _kCursor = SyncKeys.cursor;
@@ -35,6 +43,7 @@ const _kNewGoal = SyncKeys.newGoal;
 const _kNewRemaining = SyncKeys.newRemaining;
 const _kExerciseModes = SyncKeys.exerciseModes;
 const _kModeAdmission = SyncKeys.modeAdmission;
+const _kHomePlan = SyncKeys.homePlan;
 
 /// A human-readable summary of the last sync, surfaced on the Profile diagnostics panel so the
 /// device acceptance run is verifiable on-screen (release hides debugPrint). Records exactly the
@@ -421,6 +430,21 @@ class SyncService {
       if (s.streakDays > best) await _db.setMeta(_kBestStreak, '${s.streakDays}');
     } catch (_) {
       // leave the last-known values in place
+    }
+
+    await _refreshHomePlan();
+  }
+
+  /// The home screen's day. Its own try/catch, not folded into the stats one: the two are separate
+  /// endpoints, and a home plan that fails must not cost the streak its refresh (nor the other way
+  /// round). Stored as the JSON it arrived as — re-encoding it here would put a second copy of the
+  /// contract in this file.
+  Future<void> _refreshHomePlan() async {
+    try {
+      final home = await _api.homePlan();
+      await _db.setMeta(_kHomePlan, jsonEncode(home.raw));
+    } catch (_) {
+      // leave the last-known day in place — stale is honest, a zeroed screen is not
     }
   }
 

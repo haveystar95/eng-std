@@ -50,7 +50,25 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
   late int _segment = widget.initialSegment; // 0 = Мои, 1 = Готовые (store)
 
   @override
+  void initState() {
+    super.initState();
+    // The shell keeps this screen alive in an IndexedStack, so a caller that wants to LAND on the
+    // store (the home screen's «или выбрать из N готовых →») cannot pass a constructor argument to
+    // an instance that was built long ago. It sets the shared segment instead, and this listener is
+    // how the request reaches a screen that is not being rebuilt for it.
+    _segmentRequest = ref.read(collectionsSegmentProvider)..addListener(_applySegmentRequest);
+  }
+
+  late final ValueNotifier<int> _segmentRequest;
+
+  void _applySegmentRequest() {
+    final next = _segmentRequest.value;
+    if (mounted && next != _segment) setState(() => _segment = next);
+  }
+
+  @override
   void dispose() {
+    _segmentRequest.removeListener(_applySegmentRequest);
     _refresher?.dispose();
     super.dispose();
   }
@@ -101,6 +119,9 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
             onChanged: (i) {
               AppHaptics.light();
               setState(() => _segment = i);
+              // Keep the shared value in step, so «открыть магазин» from the home does not have to
+              // fight a stale one the next time it is asked for.
+              _segmentRequest.value = i;
             },
           ),
         ),
