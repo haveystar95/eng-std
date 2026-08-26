@@ -239,9 +239,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     if (id != null) _openTriage(id, session.triageCollectionTitle ?? '');
   }
 
-  void _openSession({bool learn = false}) {
+  Future<void> _openSession({bool learn = false}) async {
     AppHaptics.light();
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SessionScreen(
           title: AppLocalizations.of(context).homeSessionTitle,
@@ -249,13 +249,26 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         ),
       ),
     );
+    _refreshDay();
   }
 
-  void _openTriage(String collectionId, String title) {
+  Future<void> _openTriage(String collectionId, String title) async {
     AppHaptics.light();
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => TriageScreen(collectionId: collectionId, title: title)),
     );
+    _refreshDay();
+  }
+
+  /// Re-read the day after the learner did something that changes it.
+  ///
+  /// The plan is a cached server answer, refreshed by [SyncService] on start, on resume, on the
+  /// network returning and on entering the tab. Coming BACK from a pushed session is none of those:
+  /// the home was never disposed and nothing fires, so the card kept yesterday's arithmetic until
+  /// something else happened to sync. Twenty answered cards and an unchanged «Сессия на сегодня» is
+  /// the app calling the learner's work invisible.
+  void _refreshDay() {
+    if (mounted) ref.read(syncServiceProvider).sync();
   }
 
   /// A word from «На грани забывания» / «Далось труднее всего» opens THE word card — the same one

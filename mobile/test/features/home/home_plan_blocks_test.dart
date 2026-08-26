@@ -25,6 +25,7 @@ void main() {
         total: repeat + newTerms + triage,
         estimatedMinutes: minutes,
         avgSecondsPerCard: 8,
+        avgSecondsPerSwipe: 3,
       );
 
   HomePlan plan({

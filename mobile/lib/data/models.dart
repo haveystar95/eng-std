@@ -1229,11 +1229,16 @@ class HomeSession {
     required this.total,
     required this.estimatedMinutes,
     required this.avgSecondsPerCard,
+    required this.avgSecondsPerSwipe,
     this.triageCollectionId,
     this.triageCollectionTitle,
   });
 
-  final int repeat, newTerms, triage, total, avgSecondsPerCard;
+  final int repeat, newTerms, triage, total;
+
+  /// What the estimate priced an exercise at, and what it priced a SWIPE at. Two figures because a
+  /// swipe is a different act and measures like one (≈3 s against ≈8–11 s).
+  final int avgSecondsPerCard, avgSecondsPerSwipe;
 
   /// Null when there is nothing to do — «≈ 0 минут» is not a thing the screen says.
   final int? estimatedMinutes;
@@ -1249,6 +1254,7 @@ class HomeSession {
     total: (j['total'] as int?) ?? 0,
     estimatedMinutes: j['estimated_minutes'] as int?,
     avgSecondsPerCard: (j['avg_seconds_per_card'] as int?) ?? 0,
+    avgSecondsPerSwipe: (j['avg_seconds_per_swipe'] as int?) ?? 0,
     triageCollectionId: j['triage_collection_id'] as String?,
     triageCollectionTitle: j['triage_collection_title'] as String?,
   );
