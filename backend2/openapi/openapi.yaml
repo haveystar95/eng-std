@@ -2572,8 +2572,10 @@ components:
         hardest:
           type: array
           description: >
-            «Далось труднее всего» — the terms most often answered wrong in today's last study
-            session, worst first. Empty when the run had no mistakes, or there was no run today.
+            «Далось труднее всего» — the terms most often answered wrong in TODAY's study answers,
+            worst first. The day, not the last session: an ordinary evening is a real run plus a
+            two-card mop-up, and the last-session rule emptied this block exactly on the days that
+            had something to say. Empty when the day had no mistakes.
           items:
             type: object
             required: [term_id, text, errors]

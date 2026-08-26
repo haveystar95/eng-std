@@ -276,7 +276,7 @@ it('lists the words about to fall out, dated — and only those near the edge', 
         ->and($edge[1]['in_days'])->toBe(2);
 });
 
-it('names what the last run got wrong, worst first', function () {
+it('names what the day got wrong, worst first — across every run in it', function () {
     [$user, $token] = learner();
     [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
     addWordTo($col, $user->id, 'bank', 'банк');
@@ -307,6 +307,32 @@ it('names what the last run got wrong, worst first', function () {
         ->and($hardest[0]['term_id'])->toBe($apple)
         ->and($hardest[0]['text'])->toBe('apple')
         ->and($hardest[0]['errors'])->toBeGreaterThanOrEqual(1);
+
+    // A second, CLEAN run does not erase what the day got wrong. This is the whole reason the block
+    // is about the day rather than about the last session: the trainer deals twenty cards at a time,
+    // so an evening is a real run followed by a two-card mop-up, and under the last-session rule the
+    // list emptied itself exactly on the days that had something to say.
+    $mop = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col])
+        ->assertOk()->json('data');
+
+    $clean = [];
+    foreach ($mop['cards'] as $card) {
+        if ($card['exercise_mode'] === 'intro') {
+            continue;
+        }
+        $clean[] = [
+            'id' => Ulid::generate(), 'term_id' => $card['term_id'], 'session_id' => $mop['session_id'],
+            'exercise_mode' => $card['exercise_mode'], 'response' => $card['answer'],
+            'answered_at' => now()->toIso8601String(), 'client_seq' => ++$seq,
+        ];
+    }
+    if ($clean !== []) {
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/reviews/batch', ['reviews' => $clean])->assertOk();
+    }
+
+    expect(homePlan($this, $token)['hardest'][0]['term_id'])->toBe($apple);
 });
 
 it('offers to continue the collection that was started and left', function () {

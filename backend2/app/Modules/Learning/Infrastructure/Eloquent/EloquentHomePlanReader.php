@@ -133,25 +133,13 @@ final class EloquentHomePlanReader implements HomePlanReader
         );
     }
 
-    public function hardestOfLastSession(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $limit): array
+    public function hardestToday(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $limit): array
     {
         if ($limit <= 0) {
             return [];
         }
 
-        $sessionId = $this->studyAnswersToday($userId, $now, $tz)
-            ->whereNotNull('session_id')
-            ->orderByDesc('answered_at')
-            ->value('session_id');
-
-        if ($sessionId === null) {
-            return [];
-        }
-
-        $rows = DB::table('reviews')
-            ->where('user_id', $userId->value)
-            ->where('session_id', (string) $sessionId)
-            ->where('is_practice', false)
+        $rows = $this->studyAnswersToday($userId, $now, $tz)
             ->where('is_correct', false)
             ->groupBy('term_id')
             ->selectRaw('term_id, count(*) AS errors')

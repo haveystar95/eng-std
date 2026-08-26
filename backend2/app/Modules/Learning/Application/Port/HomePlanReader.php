@@ -67,15 +67,21 @@ interface HomePlanReader
     public function todayAnswers(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): HomeTodayView;
 
     /**
-     * The terms most often answered WRONG in the learner's most recent study session, provided that
-     * session happened today — the evening screen's «далось труднее всего». Worst first.
+     * The terms most often answered WRONG in the learner's STUDY answers TODAY — the evening
+     * screen's «далось труднее всего». Worst first.
      *
-     * Restricted to today because the block sits under «сегодня закрыто»: yesterday's mistakes under
-     * today's heading would be a lie about which run they came from.
+     * Today rather than «the last session», which is what this was written as first. A day is not
+     * one session: the trainer deals twenty cards at a time, so an ordinary evening is a real run
+     * followed by a two-card mop-up, and under the last-session rule the block was empty exactly on
+     * the days that had something to say. The heading it sits under is «Сегодня закрыто», so the
+     * day is the honest unit — and yesterday's mistakes stay out of it, which was the point of the
+     * restriction in the first place.
+     *
+     * Practice is excluded with the rest of the day's counters: free practice never moves the plan.
      *
      * @return list<TermErrorFact>
      */
-    public function hardestOfLastSession(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $limit): array;
+    public function hardestToday(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $limit): array;
 
     /**
      * The learner's own seconds-per-card, from their last `$sampleSize` study answers — the honest

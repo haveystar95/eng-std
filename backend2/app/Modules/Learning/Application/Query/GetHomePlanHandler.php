@@ -149,7 +149,7 @@ final readonly class GetHomePlanHandler
             $todayStart->modify('+' . (self::EDGE_HORIZON_DAYS + 1) . ' days'),
             self::EDGE_LIMIT,
         );
-        $hardest = $this->home->hardestOfLastSession($user, $now, $tz, self::HARDEST_LIMIT);
+        $hardest = $this->home->hardestToday($user, $now, $tz, self::HARDEST_LIMIT);
         $today = $this->home->todayAnswers($user, $now, $tz);
         $nextReview = $this->home->nextReview($user, $dayEnd, $tz);
 
