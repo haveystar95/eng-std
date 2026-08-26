@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ResolvesQaUser;
+use DateTimeImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -198,10 +199,47 @@ final class QaTimeTravelCommand extends Command
                 [$days, $days, $days, $days, $userId],
             );
 
-            DB::update(
-                "UPDATE daily_user_stats SET date = date - (? * interval '1 day') WHERE user_id = ?",
-                [$days, $userId],
-            );
+            $this->shiftDailyStats($userId, $days);
         });
+    }
+
+    /**
+     * `daily_user_stats` shifts by REBUILDING its rows, not by moving them.
+     *
+     * A blanket `UPDATE ... SET date = date - interval` collides with the table's own primary key
+     * the moment two shifted days would land on one: `duplicate key value violates unique
+     * constraint "daily_user_stats_pkey"`, the whole transaction rolls back, and the command
+     * reports nothing shifted at all. That is reachable on any account whose history already has a
+     * row on the day another row is moving onto — which, walking a QA account forward a day at a
+     * time, is most of them after the second walk.
+     *
+     * Two days landing on one is not a conflict to avoid, though: this table is a PROJECTION of the
+     * append-only review log (see the Learning README), and merging its counters is exactly what a
+     * replay of those two days would produce. So the rows are read, re-keyed in PHP, summed where
+     * they meet, and written back.
+     */
+    private function shiftDailyStats(string $userId, int $days): void
+    {
+        $rows = DB::table('daily_user_stats')->where('user_id', $userId)->get();
+
+        /** @var array<string, array{reviews_count: int, new_terms_count: int, correct_count: int, study_seconds: int}> $merged */
+        $merged = [];
+        foreach ($rows as $row) {
+            $date = (new DateTimeImmutable((string) $row->date))
+                ->modify('-' . $days . ' days')
+                ->format('Y-m-d');
+
+            $merged[$date] ??= ['reviews_count' => 0, 'new_terms_count' => 0, 'correct_count' => 0, 'study_seconds' => 0];
+            $merged[$date]['reviews_count'] += (int) $row->reviews_count;
+            $merged[$date]['new_terms_count'] += (int) $row->new_terms_count;
+            $merged[$date]['correct_count'] += (int) $row->correct_count;
+            $merged[$date]['study_seconds'] += (int) $row->study_seconds;
+        }
+
+        DB::table('daily_user_stats')->where('user_id', $userId)->delete();
+
+        foreach ($merged as $date => $counts) {
+            DB::table('daily_user_stats')->insert(['user_id' => $userId, 'date' => $date, ...$counts]);
+        }
     }
 }
