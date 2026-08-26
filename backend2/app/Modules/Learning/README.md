@@ -21,6 +21,14 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
   never schedules — and they are dealt only what the matrix opens at
   `LearningLadder::STEP_UNENROLLED_PRACTICE`, never typed production or dictation. Pool terms lead
   the session and keep their own rung. UNSCOPED free practice still reads the pool alone.
+- **The pool is part of the SYNC SCOPE**, whatever became of the folders its words came from. The
+  feed's term scope was the learner's live collections alone, and the pool is not a collection: a
+  word survives its folder's deletion, and it can enter the pool with no folder at all. So the feed
+  shipped such a word's progress and not its content — the phone held a queued pair it could not
+  draw, the word vanished from «Мои слова», and the next full snapshot reaped it while the server
+  went on dealing it in sessions. `ProgressSyncReader::pooledTermIds()` closes it, and
+  `newlyEnrolledTermRefs()` closes the incremental half: enrolment writes `enrolled_at` and touches
+  the term not at all, so an old word taken into study today would otherwise miss the window.
 - **Leaving the pool is a PAUSE.** `enrolled_at → NULL` and nothing else moves — the review log, the
   rung, the counter and the due date all stand, so re-enrolling resumes exactly where the word was
   left. Enrolment is idempotent and keeps its first moment.

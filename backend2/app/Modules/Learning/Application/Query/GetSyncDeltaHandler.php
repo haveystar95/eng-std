@@ -10,6 +10,7 @@ use App\Modules\Collections\Application\Dto\SubscribedTermRef;
 use App\Modules\Collections\Application\Port\CollectionSyncReader;
 use App\Modules\Learning\Application\Dto\CollectionChange;
 use App\Modules\Learning\Application\Dto\CollectionItemChange;
+use App\Modules\Learning\Application\Dto\PooledTermRef;
 use App\Modules\Learning\Application\Dto\ProgressSyncRow;
 use App\Modules\Learning\Application\Dto\SyncCursor;
 use App\Modules\Learning\Application\Dto\SyncDeltaView;
@@ -63,13 +64,29 @@ final readonly class GetSyncDeltaHandler
         // The id set also carries terms that just LEFT the user's scope: a retired term is gone
         // from every live item by the time we look, so without them its tombstone would have
         // nothing to ride and the word would stay in the phone's mirror forever.
+        // …and THE POOL, whatever became of the folders its words came from. The pool is the queue
+        // and a collection is a catalogue: deleting a folder pauses nothing, and a word can join the
+        // pool with no folder at all. Scoped by collections alone, such a word's content stopped
+        // being shipped while its progress kept coming — so the phone held a queued pair it could
+        // not draw, and the next full snapshot (every pull-to-refresh) reaped it, while the server
+        // went on dealing it in sessions.
         $scopedTermIds = array_values(array_unique([
             ...$this->collectionSync->liveTermIds($query->userId),
             ...$this->collectionSync->recentlyRemovedTermIds($query->userId, $since, $upper),
+            ...$this->progressSync->pooledTermIds($query->userId),
         ]));
         $termRefs = $this->mergeTermRefs(
             $this->termChanges->changedTermIds($scopedTermIds, $since, $upper),
-            $this->collectionSync->newlySubscribedTermRefs($query->userId, $since, $upper),
+            array_map(
+                static fn (SubscribedTermRef $ref): TermChangeRef => new TermChangeRef($ref->id, $ref->updatedAt),
+                $this->collectionSync->newlySubscribedTermRefs($query->userId, $since, $upper),
+            ),
+            // Enrolment touches the term not at all, so a word taken into study today can carry a
+            // timestamp from months ago and be missed by the window above.
+            array_map(
+                static fn (PooledTermRef $ref): TermChangeRef => new TermChangeRef($ref->id, $ref->updatedAt),
+                $this->progressSync->newlyEnrolledTermRefs($query->userId, $since, $upper),
+            ),
         );
         $progress = $this->progressSync->changedProgress($query->userId, $since, $upper);
         // Triage verdicts the delta feed carries so a signed-out client (which wiped its local
@@ -159,23 +176,28 @@ final readonly class GetSyncDeltaHandler
     }
 
     /**
-     * Union changed terms with newly-subscribed terms, deduped by id (keeping the later timestamp),
-     * ordered by (updatedAt, id) so the concatenated stream pages deterministically.
+     * Union the term refs from every source, deduped by id (keeping the later timestamp), ordered by
+     * (updatedAt, id) so the concatenated stream pages deterministically.
      *
-     * @param  list<TermChangeRef>  $changed
-     * @param  list<SubscribedTermRef>  $subscribed
+     * Three sources today: terms that CHANGED in the window, terms a fresh subscription pulled in,
+     * and terms that entered the POOL. The last two exist for the same reason — neither act touches
+     * the term itself, so its own timestamp cannot carry it into the window.
+     *
+     * @param  list<TermChangeRef>  ...$lists  changed refs FIRST: only they carry tombstones
      * @return list<TermChangeRef>
      */
-    private function mergeTermRefs(array $changed, array $subscribed): array
+    private function mergeTermRefs(array ...$lists): array
     {
         $byId = [];
-        foreach ($changed as $ref) {
-            $byId[$ref->id] = $ref;
-        }
-        foreach ($subscribed as $ref) {
-            $existing = $byId[$ref->id] ?? null;
-            if ($existing === null || $ref->updatedAt > $existing->updatedAt) {
-                $byId[$ref->id] = new TermChangeRef($ref->id, $ref->updatedAt);
+        foreach ($lists as $list) {
+            foreach ($list as $ref) {
+                $existing = $byId[$ref->id] ?? null;
+                // The first list wins ties: it is the CHANGED one, and only it can carry a
+                // tombstone. A ref pulled in by a subscription or an enrolment says «ship this
+                // term's content», never «drop it».
+                if ($existing === null || $ref->updatedAt > $existing->updatedAt) {
+                    $byId[$ref->id] = $ref;
+                }
             }
         }
 

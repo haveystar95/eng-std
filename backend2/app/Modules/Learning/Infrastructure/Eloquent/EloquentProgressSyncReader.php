@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Infrastructure\Eloquent;
 
+use App\Modules\Learning\Application\Dto\PooledTermRef;
 use App\Modules\Learning\Application\Dto\ProgressSyncRow;
 use App\Modules\Learning\Application\Port\ProgressSyncReader;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -40,5 +41,38 @@ final class EloquentProgressSyncReader implements ProgressSyncReader
                 successfulReviews: (int) $r->successful_reviews,
                 enrolledAt: $r->enrolled_at !== null ? new DateTimeImmutable((string) $r->enrolled_at) : null,
             ))->all());
+    }
+
+    public function pooledTermIds(UserId $userId): array
+    {
+        $rows = DB::table('user_term_progress')
+            ->where('user_id', $userId->value)
+            ->whereNotNull('enrolled_at')
+            ->pluck('term_id');
+
+        return array_values(array_map(static fn ($id): string => (string) $id, $rows->all()));
+    }
+
+    public function newlyEnrolledTermRefs(UserId $userId, ?DateTimeImmutable $since, DateTimeImmutable $upper): array
+    {
+        // A snapshot already ships every scoped term, and the pool is now part of that scope.
+        if ($since === null) {
+            return [];
+        }
+
+        $rows = DB::table('user_term_progress as p')
+            ->join('terms as t', 't.id', '=', 'p.term_id')
+            ->where('p.user_id', $userId->value)
+            ->whereNotNull('p.enrolled_at')
+            ->where('p.enrolled_at', '>=', UtcInstant::bind($since))
+            ->where('p.enrolled_at', '<=', UtcInstant::bind($upper))
+            ->orderBy('t.updated_at')
+            ->orderBy('t.id')
+            ->get(['t.id', 't.updated_at']);
+
+        return array_values($rows->map(static fn (object $r): PooledTermRef => new PooledTermRef(
+            (string) $r->id,
+            new DateTimeImmutable((string) $r->updated_at),
+        ))->all());
     }
 }

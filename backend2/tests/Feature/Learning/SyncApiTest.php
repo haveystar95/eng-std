@@ -98,7 +98,11 @@ it('returns an empty delta when the client is caught up', function () {
     DB::table('collections')->where('id', $col)->update(['updated_at' => now()->subDay()]);
     DB::table('collection_items')->where('collection_id', $col)->update(['updated_at' => now()->subDay()]);
     DB::table('terms')->where('id', $term)->update(['updated_at' => now()->subDay()]);
-    DB::table('user_term_progress')->where('term_id', $term)->update(['updated_at' => now()->subDay()]);
+    // …including the ENROLMENT. The pool is part of the feed's scope now, and a word that entered
+    // it inside the window is shipped whatever its own timestamp says — so «everything is in the
+    // past» has to include the moment the learner took this word into study.
+    DB::table('user_term_progress')->where('term_id', $term)
+        ->update(['updated_at' => now()->subDay(), 'enrolled_at' => now()->subDay()]);
 
     $data = sync($this, $token, 'since=' . urlencode(now()->toIso8601String()));
 
@@ -275,4 +279,96 @@ it('paginates with next_cursor until has_more is false', function () {
         ->and($collections)->toContain($col)
         ->and(count($terms))->toBe(6)
         ->and(count($items))->toBe(6);
+});
+
+/**
+ * THE POOL IS PART OF THE FEED'S SCOPE, whatever became of the folders its words came from.
+ *
+ * The scope used to be the learner's live collections and nothing else, and the pool is not a
+ * collection: a word stays in the trainer when its folder is deleted, and it can enter the pool with
+ * no folder at all. So the feed shipped such a word's PROGRESS and not its CONTENT — the phone held
+ * a queued pair it could not draw, the word was missing from «Мои слова», and the next full snapshot
+ * (every pull-to-refresh is one) reaped it, while the server went on dealing it in sessions.
+ * Reported from the device on an Italian word whose collection had been deleted.
+ */
+it('keeps an orphaned pool word in the snapshot after its collection is deleted', function () {
+    [$user, $token] = learner();
+    [$col, $grazie] = seedCollectionWith($user, 'grazie', 'спасибо');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$col}")->assertSuccessful();
+
+    // A FULL snapshot — what pull-to-refresh asks for, and what the client reconciles against by
+    // reaping every local row the snapshot does not name.
+    $data = sync($this, $token);
+
+    $term = collect($data['changes']['terms'])->firstWhere('id', $grazie);
+    expect($term)->not->toBeNull()
+        ->and($term['op'])->toBe('upsert')
+        // …with the content the word card and «Мои слова» are drawn from, not just an id.
+        ->and($term['text'])->toBe('grazie')
+        ->and($term['translation'])->toBe('спасибо');
+
+    // …and its progress, so the row that says «this is in the trainer» survives with it.
+    $progress = collect($data['changes']['progress'])->firstWhere('term_id', $grazie);
+    expect($progress)->not->toBeNull()
+        ->and($progress['enrolled_at'])->not->toBeNull();
+});
+
+it('does not disturb a word that still lives in another collection', function () {
+    [$user, $token] = learner();
+    [$doomed, $grazie] = seedCollectionWith($user, 'grazie', 'спасибо');
+    $kept = adminSeedTerm($user, 'Italiano', 'ciao', 'привет');
+    // The SAME term in a second folder — terms are globally deduplicated, so this is one word.
+    $again = addWordTo($kept[0], $user->id, 'grazie', 'спасибо');
+    expect($again)->toBe($grazie);
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->deleteJson("/api/v1/collections/{$doomed}")->assertSuccessful();
+
+    $data = sync($this, $token);
+
+    $memberships = collect($data['changes']['collection_items'])->where('term_id', $grazie);
+
+    expect(array_column($data['changes']['terms'], 'id'))->toContain($grazie)
+        // The surviving membership rides as an ordinary upsert, and the word keeps its place in the
+        // trainer. What the DELETED folder's own rows say is Collections' business and is left
+        // exactly as it was — this change adds ids to the term scope and touches nothing else.
+        ->and($memberships->firstWhere('collection_id', $kept[0])['op'])->toBe('upsert')
+        ->and(collect($data['changes']['progress'])->firstWhere('term_id', $grazie)['enrolled_at'])
+        ->not->toBeNull();
+});
+
+it('ships a word taken into study with no collection at all', function () {
+    [$user, $token] = learner();
+    // «Учить это слово» straight from search: the word reaches the pool without a folder. Modelled
+    // as the term plus the enrolment, which is exactly what that door writes.
+    $termId = seedWordFor($user, 'grazie', 'спасибо', enroll: false);
+    DB::table('collection_items')->where('term_id', $termId)->delete();
+    enrollTerm($user, $termId);
+
+    $data = sync($this, $token);
+
+    $term = collect($data['changes']['terms'])->firstWhere('id', $termId);
+    expect($term)->not->toBeNull()->and($term['text'])->toBe('grazie');
+});
+
+it('carries an orphan into an INCREMENTAL delta, though enrolment never touches the term', function () {
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'grazie', 'спасибо', enroll: false);
+    DB::table('collection_items')->where('term_id', $termId)->delete();
+    // An OLD word: its own updated_at is far outside the window, so the changed-terms query cannot
+    // reach it. This is the case a scope fix ALONE would still have missed — enrolment writes
+    // `enrolled_at` and nothing on the term, so the window has to be asked about the enrolment.
+    DB::table('terms')->where('id', $termId)->update(['updated_at' => now()->subYear()]);
+
+    $t1 = sync($this, $token)['server_time'];
+    enrollTerm($user, $termId);
+
+    $data = sync($this, $token, 'since=' . urlencode($t1));
+
+    $term = collect($data['changes']['terms'])->firstWhere('id', $termId);
+    expect($term)->not->toBeNull()
+        ->and($term['op'])->toBe('upsert')
+        ->and($term['text'])->toBe('grazie');
 });
