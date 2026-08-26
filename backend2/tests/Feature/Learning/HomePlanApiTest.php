@@ -165,6 +165,50 @@ it('counts only STUDY answers into the day — practice keeps the streak, not th
     expect(homePlan($this, $token)['today'])->toBeNull();
 });
 
+it('does not call a queue of untaught words a session (17d)', function () {
+    [$user, $token] = learner();
+    [$col] = seedCollectionWith($user, 'apple', 'яблоко');   // enrolled, never shown
+    addWordTo($col, $user->id, 'bank', 'банк');
+
+    $plan = homePlan($this, $token);
+
+    // The words ARE offered — they are in the day's composition and the box says they are waiting —
+    // but nothing is DUE, so the screen is «Всё повторено» over one button, not a session card.
+    expect($plan['state'])->toBe('idle')
+        ->and($plan['session']['new'])->toBe(2)
+        ->and($plan['session']['repeat'])->toBe(0)
+        ->and($plan['in_work']['waiting'])->toBe(2)
+        ->and($plan['in_work']['new_remaining'])->toBeGreaterThan(0);
+});
+
+it('leaves a closed day closed, and calls the leftovers extra (17b)', function () {
+    [$user, $token] = learner();
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    addWordTo($col, $user->id, 'leash', 'поводок', enroll: false); // a swipe left over
+
+    answerTimes($this, $token, $apple, 'apple', times: 3);
+    scheduleAhead($user->id, $apple, 3);
+
+    // The swipe is still on the shelf and still counted — but it is «сверх плана», not a reason to
+    // reopen the day.
+    $plan = homePlan($this, $token);
+
+    expect($plan['session']['triage'])->toBe(1)
+        ->and($plan['state'])->toBe('plan');
+
+    // …until the swipe is done too, and then the day is closed with its answers still standing.
+    DB::table('term_triages')->insert([
+        'id' => Ulid::generate(), 'user_id' => $user->id,
+        'term_id' => DB::table('collection_items')->where('collection_id', $col)
+            ->where('term_id', '<>', $apple)->value('term_id'),
+        'verdict' => 'known', 'decided_at' => now(), 'created_at' => now(), 'client_seq' => 1,
+    ]);
+
+    $plan = homePlan($this, $token);
+    expect($plan['state'])->toBe('done')
+        ->and($plan['today']['answered'])->toBe(1);
+});
+
 it('is idle, not empty, when the words exist and the schedule is simply ahead (17d)', function () {
     [$user, $token] = learner();
     $apple = seedWordFor($user, 'apple', 'яблоко');

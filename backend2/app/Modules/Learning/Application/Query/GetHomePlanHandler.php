@@ -164,7 +164,7 @@ final readonly class GetHomePlanHandler
         $store = $this->store->summaryFor($user, $langs->sourceLang, $langs->targetLang, self::STORE_SAMPLE);
 
         return new HomePlanView(
-            state: $this->state($total, $today->answered, $poolSize, $summaries === []),
+            state: $this->state($repeat + $triage, $today->answered, $poolSize, $summaries === []),
             session: new HomeSessionView(
                 repeat: $repeat,
                 new: $new,
@@ -192,14 +192,23 @@ final readonly class GetHomePlanHandler
     }
 
     /**
-     * Which screen this is. The order matters: «нечего делать» is an empty FIRST DAY only when there
-     * is nothing at all — no shelf, no pool, nothing answered today. A learner who finished
-     * everything is not a new user, and showing them the welcome card would be the rudest possible
-     * reading of a good day.
+     * Which screen this is.
+     *
+     * `$owed` is repeats plus swipes — the work the day ASKS FOR. New words are deliberately not in
+     * it, and that is the whole difference between кадры 17a and 17d: a queue of untaught words is
+     * not a session, it is an offer. With repeats due they ride along inside the day's card («5
+     * новых»); alone they leave the screen saying «Всё повторено» over one button that takes them.
+     * Treating them as work would mean a learner who finished everything is told they have 20 cards
+     * waiting, which is true of the queue and false of the day.
+     *
+     * The order matters twice more. `done` comes before `idle`, so leftovers a closed day did not
+     * touch read as «сверх плана» rather than reopening it. And `empty` is last and narrow — no
+     * shelf, no pool — because a learner who finished everything is not a new user, and showing
+     * them the welcome card would be the rudest possible reading of a good day.
      */
-    private function state(int $total, int $answeredToday, int $poolSize, bool $shelfIsEmpty): HomeState
+    private function state(int $owed, int $answeredToday, int $poolSize, bool $shelfIsEmpty): HomeState
     {
-        if ($total > 0) {
+        if ($owed > 0) {
             return HomeState::Plan;
         }
         if ($answeredToday > 0) {

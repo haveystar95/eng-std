@@ -2454,11 +2454,12 @@ components:
           type: string
           enum: [plan, done, idle, empty]
           description: >
-            Which of the four home frames this is. `plan` — there is a session to run today;
-            `done` — it is finished and something was answered today; `idle` — nothing to do and
-            nothing answered, the schedule is simply ahead; `empty` — the very first day: no
-            collections, no pool, nothing answered. Named on the server so two screens cannot
-            derive it two ways.
+            Which of the four home frames this is. `plan` — the day asks for something
+            (`session.repeat + session.triage > 0`); `done` — it does not, and something was
+            answered today, so leftovers are «сверх плана»; `idle` — it does not and nothing was
+            answered: the schedule is simply ahead, and a queue of untaught words is an OFFER
+            («Взять новые слова»), not a session; `empty` — the very first day: no collections, no
+            pool, nothing answered. Named on the server so two screens cannot derive it two ways.
         session:
           type: object
           required: [repeat, new, triage, total, avg_seconds_per_card]
