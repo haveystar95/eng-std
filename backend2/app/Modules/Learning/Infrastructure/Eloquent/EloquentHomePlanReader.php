@@ -55,6 +55,35 @@ final class EloquentHomePlanReader implements HomePlanReader
         return $set;
     }
 
+    public function owedCount(UserId $userId, DateTimeImmutable $now): int
+    {
+        $bound = UtcInstant::bind($now);
+
+        // Mirrors EloquentDueTermsReader::selectableInPool()'s predicate, term for term: unfinished
+        // on the ladder, or graduated and owed a review, or a `known` claim whose check came due.
+        return DB::table(self::PROGRESS)
+            ->where('user_id', $userId->value)
+            ->where(static function (BuilderContract $q) use ($bound): void {
+                $q->where(static function (BuilderContract $q) use ($bound): void {
+                    $q->whereNotNull('enrolled_at')
+                        ->where(static function (BuilderContract $q) use ($bound): void {
+                            $q->where('acquisition', Acquisition::Learning->value)
+                                ->orWhere(static function (BuilderContract $q) use ($bound): void {
+                                    $q->where('acquisition', Acquisition::Graduated->value)
+                                        ->where(static fn (BuilderContract $q) => $q
+                                            ->whereNull('due_at')
+                                            ->orWhere('due_at', '<=', $bound));
+                                });
+                        });
+                })->orWhere(static function (BuilderContract $q) use ($bound): void {
+                    $q->where('state', LearningState::Known->value)
+                        ->whereNotNull('due_at')
+                        ->where('due_at', '<=', $bound);
+                });
+            })
+            ->count();
+    }
+
     public function poolSize(UserId $userId): int
     {
         return $this->pool($userId)->count();
@@ -164,6 +193,20 @@ final class EloquentHomePlanReader implements HomePlanReader
             ->limit(max(1, $sampleSize))
             ->select(['latency_ms']);
 
+        return $this->winsorisedSeconds($recent);
+    }
+
+    /**
+     * The winsorised mean of a latency column, in whole seconds — or null below {@see MIN_SAMPLES}.
+     *
+     * One implementation for answers and for swipes: the two differ in which log they read, never in
+     * how the average is taken, and a second copy of the ceiling and the clamp is a second place for
+     * them to drift.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $recent  a sub-select of `latency_ms`
+     */
+    private function winsorisedSeconds(Builder $recent): ?int
+    {
         /** @var object{n: int|string, ms: float|string|null}|null $row */
         $row = DB::query()
             ->fromSub($recent, 'recent')
@@ -177,6 +220,18 @@ final class EloquentHomePlanReader implements HomePlanReader
         $seconds = (int) round(((float) $row->ms) / 1000);
 
         return max(self::MIN_CARD_SECONDS, min(self::MAX_CARD_SECONDS, $seconds));
+    }
+
+    public function averageSwipeSeconds(UserId $userId, int $sampleSize): ?int
+    {
+        $recent = DB::table('term_triages')
+            ->where('user_id', $userId->value)
+            ->whereNotNull('latency_ms')
+            ->orderByDesc('decided_at')
+            ->limit(max(1, $sampleSize))
+            ->select(['latency_ms']);
+
+        return $this->winsorisedSeconds($recent);
     }
 
     public function lastTouchedAt(UserId $userId, array $termIds): ?DateTimeImmutable

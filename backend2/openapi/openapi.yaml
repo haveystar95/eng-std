@@ -2482,13 +2482,21 @@ components:
               type: integer
               nullable: true
               description: >
-                total × `avg_seconds_per_card`, rounded, minimum 1. Null when there is nothing to do.
+                (`repeat` + `new`) × `avg_seconds_per_card` + `triage` × `avg_seconds_per_swipe`,
+                rounded to minutes, minimum 1. Null when there is nothing to do.
             avg_seconds_per_card:
               type: integer
               description: >
-                The learner's own pace — a winsorised (60 s ceiling) mean over their last 200
-                non-practice answers, clamped to 3..30 s. Falls back to a measured default (8 s)
-                below 20 answers.
+                The learner's own pace on an EXERCISE — a winsorised (60 s ceiling) mean over their
+                last 200 non-practice answers, clamped to 3..30 s. Falls back to a measured default
+                (8 s) below 20 answers.
+            avg_seconds_per_swipe:
+              type: integer
+              description: >
+                The same figure for a TRIAGE swipe, measured the same way over `term_triages`.
+                Separate because a swipe is a different act and measures like one — 3 s against
+                8–11 — and `estimated_minutes` prices the swipe pass at this rate rather than at a
+                card's. Falls back to a measured default (3 s).
             triage_collection_id:
               type: string
               nullable: true

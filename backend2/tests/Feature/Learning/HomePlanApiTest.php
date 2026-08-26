@@ -90,6 +90,25 @@ it('names the state and the whole composition of the day (17a)', function () {
         ->and($plan['session']['triage_collection_title'])->toBe('apple');
 });
 
+it('counts the DAY, not one sitting — a backlog bigger than a session is reported whole', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['daily_goal' => 30, 'timezone' => 'UTC']);
+    [$col, $first] = seedCollectionWith($user, 'w0', 'x');
+    scheduleAhead($user->id, $first, -1);
+    for ($i = 1; $i < 26; $i++) {
+        $term = addWordTo($col, $user->id, "w{$i}", 'x');
+        scheduleAhead($user->id, $term, -1); // due yesterday: 26 repeats owed
+    }
+
+    $plan = homePlan($this, $token)['session'];
+
+    // «Начать» deals the first twenty and the learner comes back. Reporting twenty here made the
+    // card sit still through run after run while the backlog drained behind it — the number could
+    // not move until the backlog itself fell under the cap.
+    expect($plan['repeat'])->toBe(26)
+        ->and($plan['total'])->toBe(26);
+});
+
 it('estimates the session from cards times the learner own seconds per card', function () {
     [$user, $token] = learner();
     [$col] = seedCollectionWith($user, 'apple', 'яблоко', enroll: false);
@@ -100,10 +119,14 @@ it('estimates the session from cards times the learner own seconds per card', fu
     $plan = homePlan($this, $token);
     $session = $plan['session'];
 
-    // No answers yet ⇒ no personal pace ⇒ the documented default, and the estimate follows from it.
+    // No answers yet ⇒ no personal pace ⇒ the documented defaults. All five cards here are SWIPES,
+    // so the estimate is priced at the swipe rate — pricing a swipe pass like an exercise pass is
+    // what turned a seven-minute day into a forty-minute one.
     expect($session['total'])->toBe(5)
+        ->and($session['triage'])->toBe(5)
         ->and($session['avg_seconds_per_card'])->toBe(8)
-        ->and($session['estimated_minutes'])->toBe((int) round(5 * 8 / 60) ?: 1);
+        ->and($session['avg_seconds_per_swipe'])->toBe(3)
+        ->and($session['estimated_minutes'])->toBe(1);
 });
 
 it('says nothing rather than zero when there is nothing to do (17c, the first day)', function () {

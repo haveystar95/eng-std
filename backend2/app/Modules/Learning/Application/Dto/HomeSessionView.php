@@ -28,6 +28,8 @@ final readonly class HomeSessionView
         public ?int $estimatedMinutes,
         /** The per-card figure the estimate was built from; see {@see \App\Modules\Learning\Application\Port\HomePlanReader::averageCardSeconds()}. */
         public int $avgSecondsPerCard,
+        /** …and the per-SWIPE one. A swipe is a different act and measures like one (3 s against 8–11). */
+        public int $avgSecondsPerSwipe,
         /** Where the swipe pass leads; null when `triage` is 0. */
         public ?string $triageCollectionId = null,
         public ?string $triageCollectionTitle = null,

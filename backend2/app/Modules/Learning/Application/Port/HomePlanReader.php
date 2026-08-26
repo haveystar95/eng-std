@@ -38,6 +38,21 @@ interface HomePlanReader
      */
     public function progressTermIds(UserId $userId, array $termIds): array;
 
+    /**
+     * How many cards the trainer owes RIGHT NOW — the day's repeats, not one sitting's worth.
+     *
+     * The same population {@see DueTermsReader::selectableInPool()} deals, counted instead of
+     * materialised: pool pairs unfinished on the ladder or due (or never scheduled), plus a `known`
+     * verification whose check has come due. So «повторить N» is 0 exactly when a session would come
+     * back empty, which is the property that matters, and N is the honest size of the backlog.
+     *
+     * Counted rather than read through the session builder ON PURPOSE. Asking the builder means
+     * asking it for a SESSION, and a session is capped at its size — which made the card say
+     * «20 повторить» to a learner with sixty due, and made the number sit still through two runs
+     * because the cap refilled from the backlog each time.
+     */
+    public function owedCount(UserId $userId, DateTimeImmutable $now): int;
+
     /** Pool size: pairs with `enrolled_at IS NOT NULL`. */
     public function poolSize(UserId $userId): int;
 
@@ -91,6 +106,17 @@ interface HomePlanReader
      * latency of minutes and is not how long a card takes.
      */
     public function averageCardSeconds(UserId $userId, int $sampleSize): ?int;
+
+    /**
+     * The learner's own seconds per SWIPE, from their last `$sampleSize` triage decisions.
+     * Null when there are too few to say.
+     *
+     * A separate figure from {@see averageCardSeconds()} because a swipe is a different act and the
+     * measurements say so plainly: 3.0 s against 8–11 s in the development database. The day's
+     * estimate needs both — a hundred-word swipe pass priced as a hundred exercises turns «~20
+     * минут» into «~40» and makes the one number the research called most useful into a deterrent.
+     */
+    public function averageSwipeSeconds(UserId $userId, int $sampleSize): ?int;
 
     /**
      * The last moment the learner touched any of these terms — a triage swipe or an answer.

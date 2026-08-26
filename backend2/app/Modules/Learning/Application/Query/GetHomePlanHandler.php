@@ -8,7 +8,6 @@ use App\Modules\Collections\Application\Port\StoreCatalogueReader;
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Service\DefaultCollectionPair;
-use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Dto\HomeContinueView;
 use App\Modules\Learning\Application\Dto\HomeEdgeTermView;
 use App\Modules\Learning\Application\Dto\HomeHardTermView;
@@ -24,7 +23,6 @@ use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Port\TriagedTermsReader;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
-use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
@@ -35,12 +33,14 @@ use DateTimeZone;
 /**
  * THE HOME SCREEN'S DAY — assembled from the planner, not reconstructed beside it.
  *
- * Everything the card promises is read through the pieces that would actually serve it:
- * {@see GetDueTermsHandler} decides «повторить» and «новых» under the same session size and the same
- * remaining quota a real `POST /study/sessions` would use, so the composition on screen is the
- * composition the learner gets. Nothing here schedules, grades or introduces anything — the query
- * is a dry run, exactly like the admin day-simulator, and for the same reason: a screen that
- * disagrees with the session it opens is worse than a screen with no numbers on it.
+ * Everything the card promises is counted over the same populations the trainer would deal from —
+ * {@see HomePlanReader::owedCount()} mirrors the session builder's own predicate — so «повторить N»
+ * is 0 exactly when a session would come back empty. Nothing here schedules, grades or introduces
+ * anything: the query is a dry run, like the admin day-simulator.
+ *
+ * The numbers describe THE DAY, not one sitting. «Начать» deals the first twenty cards and the
+ * learner comes back for the rest, so capping the card at a session's size makes it report the same
+ * twenty after every run — and sit still while sixty repeats drain behind it.
  *
  * Two things are deliberately NOT session cards and still belong to the day:
  *
@@ -56,12 +56,6 @@ use DateTimeZone;
  */
 final readonly class GetHomePlanHandler
 {
-    /**
-     * The session size the CLIENT asks for (`ApiClient.buildSession`'s default). The plan is capped
-     * the same way, or the card offers forty repeats and the session deals twenty.
-     */
-    private const SESSION_SIZE = 20;
-
     /** How far ahead «на грани забывания» looks. Beyond this a word is scheduled, not slipping. */
     private const EDGE_HORIZON_DAYS = 3;
     private const EDGE_LIMIT = 3;
@@ -87,11 +81,20 @@ final readonly class GetHomePlanHandler
      */
     private const DEFAULT_CARD_SECONDS = 8;
 
+    /**
+     * …and seconds per SWIPE, which is a different act and measures like one: 3.0 s winsorised over
+     * the 278 triage decisions in the same database (median 1.6 s).
+     *
+     * Priced at a card's rate instead, a 131-word swipe pass added seventeen minutes to a day that
+     * actually holds seven — and «≈ N минут» is the element the product research called the most
+     * useful on the screen, which makes overstating it the most expensive thing to get wrong.
+     */
+    private const DEFAULT_SWIPE_SECONDS = 3;
+
     /** Example topics on the first-day card — enough to make «17 тем» concrete, few enough to read. */
     private const STORE_SAMPLE = 3;
 
     public function __construct(
-        private GetDueTermsHandler $dueTerms,
         private HomePlanReader $home,
         private LearnerProfileReader $profile,
         private IntroducedTermsReader $introduced,
@@ -112,18 +115,17 @@ final readonly class GetHomePlanHandler
         $todayStart = $now->setTimezone($tz)->setTime(0, 0, 0);
         $dayEnd = $todayStart->modify('+1 day');
 
-        // ── the study half of the day, straight out of the planner ──────────────────────────────
+        // ── the study half of the day ───────────────────────────────────────────────────────────
+        //
+        // THE DAY, not one sitting. Both numbers are counted over the whole backlog: «Начать» deals
+        // the first twenty and the learner comes back, so a card capped at twenty would report the
+        // same twenty after every run and sit still while sixty repeats drained behind it. Which is
+        // exactly what it did.
         $perDay = $this->profile->newTermsPerDay($user);
         $newRemaining = max(0, $perDay - $this->introduced->countForDay($user, $now));
-        $due = ($this->dueTerms)(new GetDueTerms(
-            userId: $user,
-            now: $now,
-            sessionSize: self::SESSION_SIZE,
-            newTermsRemaining: min(self::SESSION_SIZE, $newRemaining),
-        ));
-
-        $new = count(array_filter($due, static fn (DueTermView $v): bool => $v->acquisition === Acquisition::New));
-        $repeat = count($due) - $new;
+        $repeat = $this->home->owedCount($user, $now);
+        $waiting = $this->home->waitingInPool($user);
+        $new = min($waiting, $newRemaining);
 
         // ── the swipe half, and the collection that was started and left ────────────────────────
         $summaries = $this->collections->forUser($user, null, self::COLLECTIONS_CAP)->items;
@@ -140,6 +142,8 @@ final readonly class GetHomePlanHandler
 
         $total = $repeat + $new + $triage;
         $seconds = $this->home->averageCardSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_CARD_SECONDS;
+        $swipeSeconds = $this->home->averageSwipeSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_SWIPE_SECONDS;
+        $estimate = ($repeat + $new) * $seconds + $triage * $swipeSeconds;
 
         // ── the schedule just ahead, and what today produced ────────────────────────────────────
         // The window is «the next N calendar days», so it ends at the start of the day after them.
@@ -159,7 +163,6 @@ final readonly class GetHomePlanHandler
         ]);
 
         $poolSize = $this->home->poolSize($user);
-        $waiting = $this->home->waitingInPool($user);
         $langs = $this->defaultPair->forOwner($user);
         $store = $this->store->summaryFor($user, $langs->sourceLang, $langs->targetLang, self::STORE_SAMPLE);
 
@@ -170,8 +173,9 @@ final readonly class GetHomePlanHandler
                 new: $new,
                 triage: $triage,
                 total: $total,
-                estimatedMinutes: $total > 0 ? max(1, (int) round($total * $seconds / 60)) : null,
+                estimatedMinutes: $total > 0 ? max(1, (int) round($estimate / 60)) : null,
                 avgSecondsPerCard: $seconds,
+                avgSecondsPerSwipe: $swipeSeconds,
                 triageCollectionId: $triageTarget === null ? null : $triageTarget['id'],
                 triageCollectionTitle: $triageTarget === null ? null : $triageTarget['title'],
             ),
