@@ -529,7 +529,11 @@ class _DoneCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final answered = today?.answered ?? 0;
-    final planned = answered + session.total;
+    // What the day HELD: what was answered plus what is still owed. `repeat` alone, and not
+    // `total`: in this state it is 0 by construction (the day is closed precisely because nothing
+    // is due), while leftover new words and unswiped cards are «сверх плана» — counting them into
+    // the denominator would print «32 из 47» on a day that was finished.
+    final planned = answered + session.repeat;
     final lines = <String>[
       if (nextReview != null) _nextReviewLine(context, l, nextReview!),
       if (unfinished != null)
