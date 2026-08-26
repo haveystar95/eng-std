@@ -609,9 +609,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String searchSavedTo(String collection) {
-    return 'Saved to “$collection” — it is being studied now';
+  String searchSavedShelf(String collection) {
+    return 'Saved to “$collection” · waiting to be sorted';
   }
+
+  @override
+  String searchSavedLearning(String collection) {
+    return 'Saved to “$collection” · in progress';
+  }
+
+  @override
+  String get searchLearnNow => 'Learn it now';
 
   @override
   String get searchAddToCollection => 'Add to collection';

@@ -56,9 +56,11 @@ const int kDefaultDailyGoal = 20;
 ///
 /// The goal is a number of NEW WORDS TAKEN INTO STUDY today, and «taken into study» is a deliberate
 /// act with four doors: a «не знаю» swipe, a «не уверен» swipe, «Учить это слово» on the word card,
-/// and saving a word from search. «Знаю» is not one of them — it means the opposite. All four write
-/// exactly one thing, `term_progress.enrolled_at`, and they write it once (the column keeps the
-/// FIRST moment), so a word counts once however many trainers it then passes today.
+/// and «Учить сразу» in the translator. «Знаю» is not one of them — it means the opposite, and
+/// neither is plain «Сохранить», which files a word on a shelf and leaves it for the swipe pass
+/// (that door used to enrol too, silently, which is how a word saved for later became a debt). All
+/// four write exactly one thing, `term_progress.enrolled_at`, and they write it once (the column
+/// keeps the FIRST moment), so a word counts once however many trainers it then passes today.
 ///
 /// It is deliberately NOT a count of answers. The session summary used to print today's ANSWERS
 /// under the label «Дневная цель» while the home screen printed the new words — «8 / 20» against

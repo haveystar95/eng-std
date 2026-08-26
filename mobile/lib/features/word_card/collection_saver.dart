@@ -71,8 +71,12 @@ class CollectionSaver {
   }
 
   /// Open the sheet, then save into whatever it returns. Null when the learner backed out, or when
-  /// the save did not happen.
-  Future<SavedSearchResult?> pickAndSave(BuildContext context, WordCardSubject subject) async {
+  /// the save did not happen. [enroll] names WHICH ACT this is — see [save].
+  Future<SavedSearchResult?> pickAndSave(
+    BuildContext context,
+    WordCardSubject subject, {
+    required bool enroll,
+  }) async {
     final l = AppLocalizations.of(context);
     final offered = collectionsForPair;
     final holding = {for (final f in subject.folders) f.id};
@@ -124,18 +128,24 @@ class CollectionSaver {
       final created = await _createCollection(context, l, learned: pair?.learned, support: pair?.support);
       if (created == null || !context.mounted) return null;
 
-      return save(context, subject, created);
+      return save(context, subject, created, enroll: enroll);
     }
 
-    return save(context, subject, choice);
+    return save(context, subject, choice, enroll: enroll);
   }
 
   /// The save itself. [collectionId] null means «Сохранённые» — the server makes it if it has to.
+  ///
+  /// [enroll] is the ACT the learner chose, and the two are genuinely different things rather than
+  /// a setting on one thing. «Сохранить» (false) files the word on a shelf, where the swipe pass
+  /// finds it; «Учить сразу» (true) files it AND puts it in the trainer's queue. It is required, not
+  /// defaulted: a default is how one of the two would get picked by accident at a new call site.
   Future<SavedSearchResult?> save(
     BuildContext context,
     WordCardSubject subject,
-    String? collectionId,
-  ) async {
+    String? collectionId, {
+    required bool enroll,
+  }) async {
     final l = AppLocalizations.of(context);
     try {
       return await ref
@@ -144,6 +154,7 @@ class CollectionSaver {
             lookupId: subject.lookupId,
             termId: subject.termId,
             collectionId: collectionId,
+            enroll: enroll,
           );
     } catch (error) {
       if (!context.mounted) return null;
@@ -154,7 +165,7 @@ class CollectionSaver {
         return null;
       }
 
-      return _offerCollectionOfItsOwnPair(context, l, subject, mismatch);
+      return _offerCollectionOfItsOwnPair(context, l, subject, mismatch, enroll: enroll);
     }
   }
 
@@ -170,8 +181,9 @@ class CollectionSaver {
     BuildContext context,
     AppLocalizations l,
     WordCardSubject subject,
-    ({String expected, String actual}) mismatch,
-  ) async {
+    ({String expected, String actual}) mismatch, {
+    required bool enroll,
+  }) async {
     final ok = await showCenterAlert(
       context: context,
       title: l.searchPairMismatchTitle,
@@ -198,7 +210,7 @@ class CollectionSaver {
     );
     if (created == null || !context.mounted) return null;
 
-    return save(context, subject, created);
+    return save(context, subject, created, enroll: enroll);
   }
 
   /// Make a collection and hand back its id.
@@ -249,6 +261,29 @@ class CollectionSaver {
 
   void failed(BuildContext context, AppLocalizations l) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.searchSaveFailed)));
+  }
+
+  /// «Сохранено в „X" · в очереди на разбор» / «Сохранено в „X" · учится» — WHAT JUST HAPPENED, in
+  /// the words the rest of the app uses for those two states.
+  ///
+  /// Read off the ACT, never off `saved.enrolled`. The two disagree in exactly one case and the
+  /// server is right about a different question there: «Учить сразу» on a word already in the queue
+  /// answers `enrolled: false` («this call changed nothing»), and a toast that repeated it would
+  /// tell the learner their word is waiting to be sorted when it is being studied.
+  static String savedLine(AppLocalizations l, SavedSearchResult saved, {required bool enroll}) =>
+      enroll ? l.searchSavedLearning(saved.collectionTitle) : l.searchSavedShelf(saved.collectionTitle);
+
+  /// The same sentence as a toast. Every save shows one, on both screens, so the act names itself
+  /// even when the line under the button is off-screen or the screen has no such line.
+  static void toastSaved(
+    BuildContext context,
+    AppLocalizations l,
+    SavedSearchResult saved, {
+    required bool enroll,
+  }) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(savedLine(l, saved, enroll: enroll))));
   }
 
   /// «English → Русский» — the pair as the learner reads it: endonyms, studied language first,

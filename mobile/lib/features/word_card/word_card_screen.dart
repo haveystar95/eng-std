@@ -83,6 +83,13 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
   /// коллекции» — a statement about a moment versus a statement about a fact.
   bool _justSaved = false;
 
+  /// What that save was — the server's answer and WHICH ACT produced it. Kept together because the
+  /// line after a save names both, and the act is not recoverable from the answer: «Учить сразу» on
+  /// a word already in the queue comes back `enrolled: false`, which is true about the call and
+  /// false about the word.
+  SavedSearchResult? _lastSaved;
+  bool? _lastEnroll;
+
   /// The learner's shelf as the LOCAL mirror last had it — written by `build`, read by the sheet.
   /// The sheet opens from a tap, where watching a provider is not allowed, and it must not open on
   /// a list it fetched itself.
@@ -186,6 +193,11 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
   /// a square folder picker beside it (кадр 06) — until the word is in a folder, at which point the
   /// button gutters to an outline that STATES where it is, and the second action moves under it on
   /// its own line (кадр 07). The pair never changes place; only its weight does.
+  ///
+  /// SAVING IS TWO ACTS, and both are on this card. «Сохранить» puts the word on a shelf, where the
+  /// swipe pass finds it; «Учить сразу», quieter and underneath, puts it on the shelf AND into the
+  /// trainer's queue. One button used to do both silently, which is how a word filed for later
+  /// became work the learner owed without ever asking for it.
   Widget _actions(AppLocalizations l, bool fromFolder) {
     final saved = _subject.savedIn;
 
@@ -197,18 +209,20 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
           if (fromFolder)
             ..._folderActions(l)
           else if (saved != null) ...[
-            // Straight after a save the line says what just HAPPENED — the collection and the fact
-            // that the word is now being studied, which is the half a learner cannot see. On a card
-            // opened later the same slot states where the word lives; nothing «just happened» then,
-            // and claiming it did would be a lie about the pool.
+            // Straight after a save the line says what just HAPPENED — the collection AND which of
+            // the two acts it was, which is the half a learner cannot see. On a card opened later
+            // the same slot states where the word lives; nothing «just happened» then, and claiming
+            // it did would be a lie about the queue.
             SavedStateLine(
-              label: _justSaved ? l.searchSavedTo(saved.title) : l.wordCardSavedIn(saved.title),
+              label: _justSaved && _lastEnroll != null
+                  ? CollectionSaver.savedLine(l, _lastSaved!, enroll: _lastEnroll!)
+                  : l.wordCardSavedIn(saved.title),
             ),
             const SizedBox(height: AppSpacing.s12),
             QuietLinkAction(
               icon: LucideIcons.folderPlus,
               label: l.wordCardAddToAnother,
-              onTap: _saving ? null : _pickCollection,
+              onTap: _saving ? null : () => _pickCollection(enroll: false),
             ),
           ] else if (_defaultIsOfAnotherPair) ...[
             // «Сохранённые» exists and studies another language, so the one-tap save has nowhere to
@@ -219,8 +233,10 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
               label: l.searchAddToCollection,
               minHeight: AppWordCard.actionHeight,
               enabled: !_saving,
-              onPressed: _pickCollection,
+              onPressed: () => _pickCollection(enroll: false),
             ),
+            const SizedBox(height: AppSpacing.s12),
+            ..._learnNow(l, pick: true),
             const SizedBox(height: 9),
             Text(l.searchPairNoDefault, textAlign: TextAlign.center, style: AppText.searchFootnote),
           ] else ...[
@@ -231,17 +247,19 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
                     label: l.searchSaveToDefault,
                     minHeight: AppWordCard.actionHeight,
                     enabled: !_saving,
-                    onPressed: () => _save(null),
+                    onPressed: () => _save(null, enroll: false),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s12),
                 _SquareButton(
                   icon: LucideIcons.folderPlus,
                   label: l.searchAddToCollection,
-                  onTap: _saving ? null : _pickCollection,
+                  onTap: _saving ? null : () => _pickCollection(enroll: false),
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.s12),
+            ..._learnNow(l, pick: false),
             const SizedBox(height: 9),
             Text(l.wordCardFolderHint, textAlign: TextAlign.center, style: AppText.searchFootnote),
           ],
@@ -249,6 +267,28 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
       ),
     );
   }
+
+  /// «Учить сразу» — the second act, in the quiet line style the card already uses for its second
+  /// offers. Quieter than «Сохранить» deliberately: filing a word is the common case and skipping
+  /// the swipe pass is the deliberate one, so the louder button is the one that commits to less.
+  ///
+  /// [pick] routes it through the collection sheet, for the branch where the default folder is of
+  /// another pair and no one-tap target exists.
+  List<Widget> _learnNow(AppLocalizations l, {required bool pick}) => [
+    QuietLinkAction(
+      icon: LucideIcons.graduationCap,
+      label: l.searchLearnNow,
+      onTap: _saving
+          ? null
+          : () {
+              if (pick) {
+                unawaited(_pickCollection(enroll: true));
+              } else {
+                unawaited(_save(null, enroll: true));
+              }
+            },
+    ),
+  ];
 
   /// Кадр 09. The rung decides the verb, exactly as the compact sheet decided it: a word outside
   /// the pool is offered the DECISION («Учить это слово»), a word inside it the run — inert with a
@@ -292,7 +332,10 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
       QuietLinkAction(
         icon: LucideIcons.folderPlus,
         label: l.wordCardAddToAnother,
-        onTap: _saving ? null : _pickCollection,
+        // Filing only. This word is already in the learner's own folder — whether it is being
+        // studied is a decision they made elsewhere, and putting it on a second shelf must not
+        // quietly re-make it.
+        onTap: _saving ? null : () => unawaited(_pickCollection(enroll: false)),
       ),
     ];
   }
@@ -343,26 +386,28 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
 
   bool get _defaultIsOfAnotherPair => _saver.defaultIsOfAnotherPair;
 
-  Future<void> _pickCollection() async {
+  Future<void> _pickCollection({required bool enroll}) async {
     setState(() => _saving = true);
-    final saved = await _saver.pickAndSave(context, _subject);
+    final saved = await _saver.pickAndSave(context, _subject, enroll: enroll);
     if (!mounted) return;
-    await _apply(saved);
+    await _apply(saved, enroll: enroll);
   }
 
-  Future<void> _save(String? collectionId) async {
+  Future<void> _save(String? collectionId, {required bool enroll}) async {
     setState(() => _saving = true);
-    final saved = await _saver.save(context, _subject, collectionId);
+    final saved = await _saver.save(context, _subject, collectionId, enroll: enroll);
     if (!mounted) return;
-    await _apply(saved);
+    await _apply(saved, enroll: enroll);
   }
 
   /// Fold the server's answer back into the card.
-  Future<void> _apply(SavedSearchResult? saved) async {
+  Future<void> _apply(SavedSearchResult? saved, {required bool enroll}) async {
     setState(() {
       _saving = false;
       if (saved == null) return;
       _justSaved = true;
+      _lastSaved = saved;
+      _lastEnroll = enroll;
       // The card STAYS — кадр 07 is the same card with a different button, not a screen the save
       // dismisses. Folding the answer back into the subject is what turns the pair into its
       // saved state without a second network round trip.
@@ -379,6 +424,10 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
     });
     if (saved == null) return;
     AppHaptics.light();
+    // The toast NAMES the act, in the app's own words for the two states — «в очереди на разбор» or
+    // «учится». The line under the button says the same thing and stays; the toast is what reaches
+    // a learner whose eye is still on the article.
+    CollectionSaver.toastSaved(context, AppLocalizations.of(context), saved, enroll: enroll);
 
     // What follows a save is bookkeeping — a sync nudge, a re-run of the free search — and the word
     // is already in the collection by the time any of it runs. Letting those failures reach the

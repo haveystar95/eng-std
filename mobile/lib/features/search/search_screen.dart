@@ -533,18 +533,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// is the same decision (see [CollectionSaver]). Offered straight on the result so a word whose
   /// card already exists — an orphan, or one just built — has a way into a collection without
   /// having to guess that the way in is behind the card.
-  Future<void> _addToCollection(WordCardSubject subject) async {
+  ///
+  /// [enroll] names WHICH ACT this is, exactly as on the card: false files the word (it then waits
+  /// in the swipe pass), true files it and puts it in the trainer's queue.
+  Future<void> _addToCollection(WordCardSubject subject, {required bool enroll}) async {
     if (_saving) return;
     setState(() => _saving = true);
     final saved = await CollectionSaver(
       ref: ref,
       collections: _collections,
       pair: _learningPair,
-    ).pickAndSave(context, subject);
+    ).pickAndSave(context, subject, enroll: enroll);
     if (!mounted) return;
     setState(() => _saving = false);
     if (saved == null) return;
     AppHaptics.light();
+    CollectionSaver.toastSaved(context, AppLocalizations.of(context), saved, enroll: enroll);
     await _afterSave(saved, subject);
   }
 
@@ -885,14 +889,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         QuietLinkAction(
           icon: LucideIcons.folderPlus,
           label: l.wordCardAddToAnother,
-          onTap: _saving ? null : () => _addToCollection(result),
+          onTap: _saving ? null : () => _addToCollection(result, enroll: false),
         ),
       ] else ...[
+        // The two acts, in the same order and the same weights the word card gives them: filing is
+        // the loud, common one; skipping the swipe pass is the quiet, deliberate one.
         PrimaryButton(
           label: l.searchAddToCollection,
           minHeight: 54,
           enabled: !_saving,
-          onPressed: () => _addToCollection(result),
+          onPressed: () => _addToCollection(result, enroll: false),
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        QuietLinkAction(
+          icon: LucideIcons.graduationCap,
+          label: l.searchLearnNow,
+          onTap: _saving ? null : () => _addToCollection(result, enroll: true),
         ),
       ],
       if (rest.isNotEmpty) ...[

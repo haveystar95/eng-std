@@ -349,18 +349,30 @@ class ApiClient {
     return LookupOutcome.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// Save a search result: term → folder → POOL. [collectionId] null means «Сохранённые».
+  /// Save a search result: term → folder → and the QUEUE only if [enroll] says so.
+  /// [collectionId] null means «Сохранённые».
   ///
   /// Exactly one of [lookupId] / [termId]: the first saves a freshly looked-up word, the second one
   /// the database already had. Idempotent — `added`/`enrolled` say what actually happened.
+  ///
+  /// [enroll] is the ACT, and it is required here rather than defaulted: the shelf and the queue are
+  /// separate (полка ≠ очередь), the two buttons in the translator mean two different things, and a
+  /// default would let a new call site pick one of them by accident. The SERVER still defaults an
+  /// absent field to `true` for the build already on a phone; this client always says which.
   Future<SavedSearchResult> addSearchResult({
     String? lookupId,
     String? termId,
     String? collectionId,
+    required bool enroll,
   }) async {
     final r = await _dio.post(
       '/search/add',
-      data: {'lookup_id': ?lookupId, 'term_id': ?termId, 'collection_id': ?collectionId},
+      data: {
+        'lookup_id': ?lookupId,
+        'term_id': ?termId,
+        'collection_id': ?collectionId,
+        'enroll': enroll,
+      },
     );
     return SavedSearchResult.fromJson(_data(r) as Map<String, dynamic>);
   }

@@ -26,8 +26,11 @@ theme); the «Слова» paper/ink design lives in `lib/theme/` (tokens) + `li
 A collection is a CATALOGUE of a topic; what the trainer works through is the learner's **pool**.
 Membership is one nullable column on the mirrored progress row (`enrolled_at`), never a collection:
 
-- a word joins the pool only by a deliberate act — a `не знаю` / `не уверен` triage swipe, or
-  «Учить это слово» on the word card (кадр 16e). Adding or generating a collection enrols nothing.
+- a word joins the pool only by a deliberate act — a `не знаю` / `не уверен` triage swipe, «Учить
+  это слово» on the word card (кадр 16e), or «Учить сразу» in the translator. Adding or generating a
+  collection enrols nothing, and neither does plain **«Сохранить»**: saving from search files the
+  word on a shelf and it then waits in the swipe pass (`POST /search/add` carries `enroll`; the
+  two buttons are two acts, and the toast names which one happened).
 - every **study** session is built from the pool — «Учить N», due repeats, the main-screen session.
 - **free practice over a collection is the one exception**: «Тренировка по теме» drills the whole
   collection, untriaged words included, so a topic is usable the moment it exists. It still moves

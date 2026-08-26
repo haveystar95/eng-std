@@ -1071,11 +1071,23 @@ abstract class AppLocalizations {
   /// **'Уже в коллекции «{collection}»'**
   String searchAlreadyIn(String collection);
 
-  /// Подтверждение сразу после сохранения из поиска: называет коллекцию И говорит, что слово зачислено в пул. Плейсхолдер переименован с folder на collection в A-3.
+  /// Подтверждение после «Сохранить»: слово легло на полку и ждёт разбора. Тост и строка состояния — один текст, потому что это один факт.
   ///
   /// In ru, this message translates to:
-  /// **'Сохранено в коллекцию «{collection}» — слово учится'**
-  String searchSavedTo(String collection);
+  /// **'Сохранено в «{collection}» · в очереди на разбор'**
+  String searchSavedShelf(String collection);
+
+  /// Подтверждение после «Учить сразу»: слово на полке И в очереди тренажёра.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранено в «{collection}» · учится'**
+  String searchSavedLearning(String collection);
+
+  /// Второе, тихое действие рядом с «Сохранить»: слово идёт на полку и сразу в очередь тренажёра, минуя разбор.
+  ///
+  /// In ru, this message translates to:
+  /// **'Учить сразу'**
+  String get searchLearnNow;
 
   /// Заголовок шита выбора коллекции на карточке слова и подпись квадратной кнопки рядом с главной. Была обрывком фразы со строчной буквы — «в коллекцию…» (QA-OBS-20).
   ///

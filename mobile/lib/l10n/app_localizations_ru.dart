@@ -621,9 +621,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String searchSavedTo(String collection) {
-    return 'Сохранено в коллекцию «$collection» — слово учится';
+  String searchSavedShelf(String collection) {
+    return 'Сохранено в «$collection» · в очереди на разбор';
   }
+
+  @override
+  String searchSavedLearning(String collection) {
+    return 'Сохранено в «$collection» · учится';
+  }
+
+  @override
+  String get searchLearnNow => 'Учить сразу';
 
   @override
   String get searchAddToCollection => 'Добавить в коллекцию';

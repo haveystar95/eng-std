@@ -21,14 +21,20 @@ class _Api implements ApiClient {
   int addCalls = 0;
   String? lastCollectionId;
 
+  /// Which ACT the card asked for, last time. The whole point of Ч.1 is that the card has two and
+  /// says which — a fake that dropped this would let either button pass for the other.
+  bool? lastEnroll;
+
   @override
   Future<SavedSearchResult> addSearchResult({
     String? lookupId,
     String? termId,
     String? collectionId,
+    required bool enroll,
   }) async {
     addCalls++;
     lastCollectionId = collectionId;
+    lastEnroll = enroll;
 
     return const SavedSearchResult(
       termId: 'ID',
@@ -53,6 +59,7 @@ Future<void> _pump(
   VoidCallback? onEnroll,
   VoidCallback? onUnenroll,
   bool showTransliteration = false,
+  List<WordCollection> collections = const <WordCollection>[],
 }) async {
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
@@ -61,7 +68,7 @@ Future<void> _pump(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         apiClientProvider.overrideWithValue(api ?? _Api()),
-        collectionsProvider.overrideWith((ref) => Stream.value(const <WordCollection>[])),
+        collectionsProvider.overrideWith((ref) => Stream.value(collections)),
         // «Подсказка произношения» stated, not derived: these tests are about the CARD, and the
         // setting's own default (the learner's alphabet) is pinned in its own test.
         transliterationEnabledProvider.overrideWithValue(showTransliteration),
@@ -291,9 +298,16 @@ void main() {
 
       expect(api.addCalls, 1);
       expect(api.lastCollectionId, isNull, reason: 'the one-tap save goes to the default folder');
-      // Straight after the save the line reports what HAPPENED, enrolment included — «В коллекции»
-      // is what a card opened later says instead (A-3, ч.3).
-      expect(find.text('Сохранено в коллекцию «Сохранённые» — слово учится'), findsOneWidget);
+      // Straight after the save the line reports what HAPPENED, the ACT included — «В коллекции»
+      // is what a card opened later says instead (A-3, ч.3). The toast says the same sentence, so
+      // the text is on screen twice by design.
+      expect(
+        find.descendant(
+          of: find.byType(SavedStateLine),
+          matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('+ Сохранённые'), findsNothing);
       // The learner opened the card to READ it. A save that closed it would take the article away
       // at the exact moment they decided they wanted it.
@@ -317,6 +331,108 @@ void main() {
       final link = tester.widget<Text>(find.text('Добавить в другую коллекцию'));
       expect(link.style?.color, AppColors.ink);
       expect(link.style?.color, isNot(AppColors.destructiveText));
+    });
+
+    /// Ч.1 — «полка ≠ очередь». The card offers TWO acts and the server is told which one was
+    /// pressed; the confirmation names it in the app's own words for the two states.
+    group('два действия · сохранить vs учить сразу', () {
+      testWidgets('«+ Сохранённые» files the word and does NOT put it in the queue', (
+        tester,
+      ) async {
+        final api = _Api();
+        await _pump(tester, subject: _fillOut(), api: api);
+
+        await tester.tap(find.text('+ Сохранённые'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(api.lastEnroll, isFalse);
+        expect(
+          find.descendant(
+            of: find.byType(SavedStateLine),
+            matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('«Учить сразу» is offered beside it, quieter, and enrols', (tester) async {
+        final api = _Api();
+        await _pump(tester, subject: _fillOut(), api: api);
+
+        expect(find.text('Учить сразу'), findsOneWidget);
+        await tester.ensureVisible(find.text('Учить сразу'));
+        await tester.pump();
+        await tester.tap(find.text('Учить сразу'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(api.addCalls, 1);
+        expect(api.lastEnroll, isTrue);
+        expect(api.lastCollectionId, isNull, reason: 'it saves into the same default folder');
+        expect(
+          find.descendant(
+            of: find.byType(SavedStateLine),
+            matching: find.text('Сохранено в «Сохранённые» · учится'),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('the toast says the same sentence as the line, for both acts', (tester) async {
+        // The toast is what reaches a learner whose eye is still on the article. It must not
+        // contradict the line under the button, so both read off the same act.
+        await _pump(tester, subject: _fillOut(), api: _Api());
+
+        await tester.tap(find.text('+ Сохранённые'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(
+          find.descendant(
+            of: find.byType(SnackBar),
+            matching: find.text('Сохранено в «Сохранённые» · в очереди на разбор'),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('adding an owned word to a SECOND collection never re-decides the queue', (
+        tester,
+      ) async {
+        // «Добавить в другую коллекцию» is filing, and filing only: whether this word is being
+        // studied was decided elsewhere, and a second shelf must not quietly re-make that decision.
+        final api = _Api();
+        await _pump(
+          tester,
+          subject: _fillOut(
+            folders: const [SavedFolder(id: 'FOLDER', title: 'Сохранённые', isDefault: true)],
+          ),
+          api: api,
+          collections: [
+            WordCollection(
+              id: 'BANK',
+              title: 'Банк',
+              source: 'user',
+              type: 'custom',
+              wordsCount: 0,
+              sourceLang: 'ru',
+              targetLang: 'en',
+            ),
+          ],
+        );
+
+        await tester.ensureVisible(find.text('Добавить в другую коллекцию'));
+        await tester.pump();
+        await tester.tap(find.text('Добавить в другую коллекцию'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Банк'));
+        await tester.pumpAndSettle();
+
+        expect(api.addCalls, 1);
+        expect(api.lastCollectionId, 'BANK');
+        expect(api.lastEnroll, isFalse);
+      });
     });
 
     testWidgets('a word that arrives already saved opens in the saved state', (tester) async {

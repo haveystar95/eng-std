@@ -35,6 +35,7 @@ class _Api implements ApiClient {
     String? lookupId,
     String? termId,
     String? collectionId,
+    required bool enroll,
   }) async {
     addCalls++;
     lastCollectionId = collectionId;
@@ -343,7 +344,7 @@ void main() {
       // support side is the pill's.
       expect(api.created, [(title: 'English → Русский', source: 'ru', target: 'en')]);
       expect(api.lastCollectionId, 'MADE');
-      expect(find.text('Сохранено в коллекцию «Polski → Русский» — слово учится'), findsOneWidget);
+      expect(find.text('Сохранено в «Polski → Русский» · в очереди на разбор'), findsWidgets);
     });
 
     testWidgets('a refusal is never silent — declining it leaves the card as it was', (

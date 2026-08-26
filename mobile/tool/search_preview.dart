@@ -290,7 +290,13 @@ class _RoutingApi implements ApiClient {
     String? lookupId,
     String? termId,
     String? collectionId,
-  }) => delegate.addSearchResult(lookupId: lookupId, termId: termId, collectionId: collectionId);
+    required bool enroll,
+  }) => delegate.addSearchResult(
+    lookupId: lookupId,
+    termId: termId,
+    collectionId: collectionId,
+    enroll: enroll,
+  );
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -438,6 +444,7 @@ class _FakeApi implements ApiClient {
     String? lookupId,
     String? termId,
     String? collectionId,
+    required bool enroll,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
 

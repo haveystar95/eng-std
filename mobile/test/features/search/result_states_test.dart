@@ -47,6 +47,10 @@ class _SpyApi implements ApiClient {
   String? addedTermId;
   String? addedLookupId;
 
+  /// WHICH ACT the screen asked for — «Сохранить» (false) or «Учить сразу» (true). The two are
+  /// different things, and a spy that dropped this would let either button pass for the other.
+  bool? addedEnroll;
+
   @override
   Future<List<SearchHit>> search(
     String query, {
@@ -83,10 +87,12 @@ class _SpyApi implements ApiClient {
     String? lookupId,
     String? termId,
     String? collectionId,
+    required bool enroll,
   }) async {
     addCalls++;
     addedTermId = termId;
     addedLookupId = lookupId;
+    addedEnroll = enroll;
 
     return const SavedSearchResult(
       termId: 'ID-hola',
@@ -299,7 +305,40 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(api.addedLookupId, 'LK-1', reason: 'a word nobody saved yet has only its lookup');
+      // «Добавить в коллекцию» is the SHELVING act: the word goes on a shelf and waits in the swipe
+      // pass. It used to enrol silently, which is how a word filed for later became a debt.
+      expect(api.addedEnroll, isFalse);
       expect(find.text('Уже в коллекции «Испанский»'), findsOneWidget);
+    });
+
+    testWidgets('«Учить сразу» sits beside it and asks for the queue', (tester) async {
+      final api = _SpyApi(
+        hint: 'hola',
+        outcome: const LookupOutcome(
+          card: LookupCard(
+            lookupId: 'LK-1',
+            text: 'hola',
+            type: 'word',
+            translation: 'привет',
+            description: 'Un saludo.',
+          ),
+          dailyCap: 5,
+        ),
+      );
+      await _pump(tester, api);
+      await _submit(tester, 'привет');
+      await tester.tap(find.text('Собрать карточку'));
+      await tester.pumpAndSettle();
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Учить сразу'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Испанский').last);
+      await tester.pumpAndSettle();
+
+      expect(api.addedLookupId, 'LK-1');
+      expect(api.addedEnroll, isTrue);
     });
   });
 
