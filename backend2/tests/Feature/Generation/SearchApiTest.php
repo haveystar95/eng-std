@@ -337,3 +337,105 @@ it('shows a saved word\'s description on the next free search', function () {
         ->and($hit['folders'])->toHaveCount(1)
         ->and($hit['folders'][0]['is_default'])->toBeTrue();
 });
+
+/**
+ * LKP-1 — the OTHER READINGS, and the switch this door never asked.
+ *
+ * `GENERATION_WRITE_OTHER_TRANSLATIONS` was born beside the станок's core and bound only there, so
+ * from the day the save button existed until now every looked-up word wrote its alternative readings
+ * into `term_translations` unconditionally — the same shape of hole the synonym flag had, found the
+ * same way. SYN-1e measured the product at 29% clean, which is why the switch is off.
+ *
+ * The PRIMARY is not part of this and never was (SYN-1a): it is the reading the learner read and
+ * confirmed, and it is written at every flag value. That is what these tests are mostly about.
+ */
+describe('the other readings, on the same switch as the станок', function (): void {
+    /** @return array{0: string, 1: string} term id, the token that saved it */
+    $saveLookedUpWord = function (object $ctx, ?string $confirmed = null): array {
+        [, $token] = learner();
+        $lookupId = $ctx->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/search/lookup', ['query' => 'reimbursement'])
+            ->json('data.lookup.lookup_id');
+
+        $termId = $ctx->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/search/add', array_filter([
+                'lookup_id' => $lookupId,
+                'fixed_translation' => $confirmed,
+            ], static fn (?string $v): bool => $v !== null))
+            ->assertCreated()->json('data.term_id');
+
+        return [$termId, $token];
+    };
+
+    it('writes ONLY the primary while the switch is off — today\'s value', function () use ($saveLookedUpWord) {
+        config(['services.generation.write_other_translations' => false]);
+
+        [$termId] = $saveLookedUpWord($this);
+
+        $rows = DB::table('term_translations')->where('term_id', $termId)->get(['text', 'is_primary']);
+
+        // One row, and it is the pinned one. The fake's «другой перевод» is the alternative this
+        // door used to write regardless; its absence is the whole fix.
+        expect($rows)->toHaveCount(1)
+            ->and($rows[0]->is_primary)->toBeTrue()
+            ->and($rows[0]->text)->toBe('перевод');
+    });
+
+    it('writes them beside the primary while the switch is on', function () use ($saveLookedUpWord) {
+        config(['services.generation.write_other_translations' => true]);
+
+        [$termId] = $saveLookedUpWord($this);
+
+        $rows = DB::table('term_translations')->where('term_id', $termId)
+            ->orderByDesc('is_primary')->get(['text', 'is_primary']);
+
+        expect($rows)->toHaveCount(2)
+            ->and($rows[0]->is_primary)->toBeTrue()
+            ->and($rows[0]->text)->toBe('перевод')
+            // Additive and never primary — the gate changes whether they are written, not what a
+            // card asks.
+            ->and($rows[1]->is_primary)->toBeFalse()
+            ->and($rows[1]->text)->toBe('другой перевод');
+    });
+
+    it('pins the CONFIRMED reading at either flag value — the primary is nobody\'s switch', function () use ($saveLookedUpWord) {
+        // The case the gate must not touch: the learner edited the reading before saving. With the
+        // switch off the model's own reading is not kept beside it any more — and the line the
+        // learner typed is still exactly what the card carries.
+        config(['services.generation.write_other_translations' => false]);
+        [$offTermId] = $saveLookedUpWord($this, 'компенсация');
+
+        config(['services.generation.write_other_translations' => true]);
+        [$onTermId] = $saveLookedUpWord($this, 'компенсация');
+
+        $primaryOf = fn (string $id): ?string => DB::table('term_translations')
+            ->where('term_id', $id)->where('is_primary', true)->value('text');
+
+        expect($primaryOf($offTermId))->toBe('компенсация')
+            ->and($primaryOf($onTermId))->toBe('компенсация')
+            // Same term twice (terms dedup on their text), so «either value» is literal here.
+            ->and($onTermId)->toBe($offTermId);
+    });
+
+    it('writes no translation at all on the term_id branch, at either flag value', function () {
+        // The second door of the same endpoint: «save a word that already exists into this folder».
+        // It carries no lookup and no reading, so it has never written a translation row — pinned
+        // here so the branch cannot grow one quietly.
+        foreach ([false, true] as $flag) {
+            config(['services.generation.write_other_translations' => $flag]);
+
+            [$user, $token] = learner();
+            [, $termId] = seedCollectionWith($user, 'invoice', 'счёт', enroll: false);
+            $before = DB::table('term_translations')->where('term_id', $termId)->count();
+
+            $folder = $this->withHeader('Authorization', "Bearer {$token}")
+                ->postJson('/api/v1/collections', ['title' => 'Банк'])->json('data.id');
+
+            $this->withHeader('Authorization', "Bearer {$token}")
+                ->postJson('/api/v1/search/add', ['term_id' => $termId, 'collection_id' => $folder])
+                ->assertCreated();
+
+            expect(DB::table('term_translations')->where('term_id', $termId)->count())->toBe($before);
+        }
+    });
+});

@@ -313,9 +313,18 @@ final class GenerationServiceProvider extends ServiceProvider
         // The OTHER READINGS, on their own switch since they stopped sharing the one above: the two
         // products measured 67% and 29% clean, and a shared flag let the worse number decide for the
         // better one. See `services.generation.write_other_translations`.
+        //
+        // Bound in BOTH doors, for the reason written three comments up and learned twice now: the
+        // switch was born beside the core and `POST /search/add` kept writing other readings on
+        // every saved word regardless of it (LKP-1). One product, two writers, one switch — and the
+        // rule is that a flag naming a PRODUCT binds everywhere that product is written.
+        $writeOtherTranslations = fn (): bool => config('services.generation.write_other_translations') === true;
         $this->app->when(ProcessGenerationHandler::class)
             ->needs('$writeOtherTranslations')
-            ->give(fn (): bool => config('services.generation.write_other_translations') === true);
+            ->give($writeOtherTranslations);
+        $this->app->when(AddSearchResultHandler::class)
+            ->needs('$writeOtherTranslations')
+            ->give($writeOtherTranslations);
         $this->app->when(ProcessGenerationHandler::class)
             ->needs('$writeTransliteration')
             ->give(fn (): bool => config('services.generation.write_transliteration') === true);

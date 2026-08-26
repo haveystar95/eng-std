@@ -90,6 +90,21 @@ final readonly class AddSearchResultHandler
          * `cont` → `factură` before anybody decided whether the product was good enough to ship.
          */
         private bool $writeSynonyms = false,
+        /**
+         * `GENERATION_WRITE_OTHER_TRANSLATIONS` — the same switch the станок's core reads, and for
+         * the same product: every reading of the word written BESIDE the pinned one.
+         *
+         * The flag was born with the core and never reached this door, so it governed one writer of
+         * two while this one kept writing other readings on every save — the identical hole the
+         * synonym flag had, found the identical way. SYN-1e measured the product at 29% clean
+         * (`build` → «строить» is a different part of speech, `wardrobe` → «гардероб» is the primary
+         * said again), which is why the switch is off and not a candidate to be turned on.
+         *
+         * The PRIMARY is not behind this or any gate: it is the reading the learner read and
+         * confirmed, it is what the card asks, and SYN-1a says it is untouchable. This gate is only
+         * ever about the rows above one.
+         */
+        private bool $writeOtherTranslations = false,
     ) {}
 
     public function __invoke(AddSearchResult $command): SavedSearchResult
@@ -203,10 +218,15 @@ final readonly class AddSearchResultHandler
         // it and pressed the button — and the model's own becomes an alternative beside it rather
         // than being thrown away, because it is a perfectly good second reading of the same word.
         $primary = $confirmed !== null && trim($confirmed) !== '' ? trim($confirmed) : $lookup->translation;
+        // The other readings, behind the switch that governs the same product on the станок's side.
+        // Off means the card carries exactly the reading that was confirmed — nothing is lost that
+        // the learner ever saw, because these rows were never the question the card asks.
         $alternatives = [];
-        foreach ([$lookup->translation, ...$lookup->otherTranslations] as $other) {
-            if (trim($other) !== '' && mb_strtolower(trim($other)) !== mb_strtolower($primary)) {
-                $alternatives[] = new TranslationInput($lang, trim($other));
+        if ($this->writeOtherTranslations) {
+            foreach ([$lookup->translation, ...$lookup->otherTranslations] as $other) {
+                if (trim($other) !== '' && mb_strtolower(trim($other)) !== mb_strtolower($primary)) {
+                    $alternatives[] = new TranslationInput($lang, trim($other));
+                }
             }
         }
 
@@ -218,9 +238,11 @@ final readonly class AddSearchResultHandler
             // `user` and not `ai`: the model wrote the words, but the learner chose the word. The
             // catalogue's provenance columns below record which model, which prompt.
             source: 'user',
-            // The confirmed (or, absent one, the model's) reading pinned, every other reading of the
-            // same word beside it — additive, so a learner who types «берег» for `bank` is not told
-            // they are wrong by a card that pinned «банк» (SYN-1, механика 2).
+            // The confirmed (or, absent one, the model's) reading pinned, and — when the switch above
+            // is on — every other reading of the same word beside it, additive, so a learner who
+            // types «берег» for `bank` is not told they are wrong by a card that pinned «банк»
+            // (SYN-1, механика 2). `$alternatives` is empty while the switch is off, which is
+            // today's value; the primary is written either way.
             translations: [new TranslationInput($lang, $primary, isPrimary: true), ...$alternatives],
             ipa: $lookup->transcription,
             examples: $lookup->example !== null

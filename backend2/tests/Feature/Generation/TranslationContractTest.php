@@ -51,7 +51,12 @@ it('pins the translation the learner confirmed, not the one the model preferred'
     expect($primary)->toBe('событие');
 });
 
-it('keeps the model\'s own reading beside it rather than throwing it away', function () {
+it('keeps the model\'s own reading beside it rather than throwing it away — while the switch is on', function () {
+    // Was unconditional until LKP-1: this door wrote the alternatives at every flag value, because
+    // `GENERATION_WRITE_OTHER_TRANSLATIONS` was bound to the станок's core and to nothing else. The
+    // contract this test names is real and unchanged — an alternative never competes to be the
+    // question — it is just no longer the shipped default.
+    config(['services.generation.write_other_translations' => true]);
     [, $token] = learner();
 
     $termId = buildAndSave($this, $token, 'случай', 'событие');
@@ -61,6 +66,18 @@ it('keeps the model\'s own reading beside it rather than throwing it away', func
     // The fake answers «случай» and offers «другой перевод» as another reading; both survive as
     // alternatives, and neither competes to be the question.
     expect($all)->toContain('событие')->toContain('случай')->toContain('другой перевод');
+    expect(DB::table('term_translations')->where('term_id', $termId)->where('is_primary', true)->count())->toBe(1);
+});
+
+it('keeps ONLY the confirmed reading while the switch is off — which is the default (LKP-1)', function () {
+    [, $token] = learner();
+
+    $termId = buildAndSave($this, $token, 'случай', 'событие');
+
+    // The same save, at the shipped flag value: the line the learner confirmed, and nothing the
+    // model wanted to add beside it. The product measured 29% clean (SYN-1e), which is why.
+    expect(DB::table('term_translations')->where('term_id', $termId)->pluck('text')->all())
+        ->toBe(['событие']);
 });
 
 it('leaves the model in charge when nothing was confirmed', function () {
