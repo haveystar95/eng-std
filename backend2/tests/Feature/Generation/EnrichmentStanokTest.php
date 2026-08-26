@@ -232,3 +232,75 @@ it('books the call even when the validator keeps nothing from it', function () {
 
     expect(DB::table('term_enrichments')->where('term_id', ENRICH_TERM_ID)->count())->toBe(1);
 });
+
+/**
+ * MECH-1 — a term that throws is skipped, and SAID SO.
+ *
+ * The per-term catch is right and stays: one malformed pack must not take down the other nineteen.
+ * What was wrong is that it bound nothing and logged nothing, so a run of live paid calls with dead
+ * terms in it looked exactly like a clean one — the only thing that moved was a count in a metrics
+ * object the job never printed.
+ */
+it('enriches the rest of the batch when one term throws, and names the one that died', function () {
+    seedEnrichmentTerm();
+
+    // A second term beside the first, so «the batch survived» is an observation and not a tautology.
+    $otherId = '01J000000000000000000000T2';
+    DB::table('terms')->insert([
+        'id' => $otherId, 'lang' => 'en', 'text' => 'open an account', 'normalized_text' => 'open an account',
+        'type' => 'phrase', 'source' => 'ai', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('term_translations')->insert([
+        'id' => str_pad('01TR2', 26, '0'), 'term_id' => $otherId, 'lang' => 'ru',
+        'text' => 'открыть счёт', 'is_primary' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // The packer dies on exactly one term — the shape of a malformed answer for one word, which is
+    // the case the blanket catch exists for and the case it used to hide.
+    app()->instance(EnrichmentPackerPort::class, new class(enrichPack(variants: [new RawVariant('withdrew money', null)])) implements EnrichmentPackerPort
+    {
+        public function __construct(private readonly EnrichmentPack $pack) {}
+
+        public function pack(EnrichmentBrief $brief): EnrichmentPack
+        {
+            if ($brief->text === 'open an account') {
+                throw new RuntimeException('unparseable pack');
+            }
+
+            return $this->pack;
+        }
+    });
+
+    $metrics = app(BuildTermEnrichmentsHandler::class)(
+        new BuildTermEnrichments([ENRICH_TERM_ID, $otherId], 'enrich-mech1'),
+    );
+
+    // The healthy term was enriched — the failure did not take the batch with it.
+    expect(DB::table('term_accepted_variants')->where('term_id', ENRICH_TERM_ID)->count())->toBe(1);
+
+    // Counted…
+    expect($metrics->termsSeen)->toBe(2)
+        ->and($metrics->termsFailed)->toBe(1)
+        ->and($metrics->hasFailures())->toBeTrue()
+        // …and summarised in one line the caller can print.
+        ->and($metrics->failureSummary())->toBe('1 of 2 failed');
+
+    // …and, the part that was missing entirely: WHICH term, and WHY.
+    expect($metrics->failures)->toHaveCount(1)
+        ->and($metrics->failures[0]['term_id'])->toBe($otherId)
+        ->and($metrics->failures[0]['text'])->toBe('open an account')
+        ->and($metrics->failures[0]['reason'])->toContain('unparseable pack')
+        // The class as well as the message, so an exception with an empty message still says something.
+        ->and($metrics->failures[0]['reason'])->toContain('RuntimeException');
+});
+
+it('says «0 of N failed» on a clean run rather than saying nothing', function () {
+    seedEnrichmentTerm();
+    app()->instance(EnrichmentPackerPort::class, countingEnrichmentPacker(enrichPack()));
+
+    $metrics = app(BuildTermEnrichmentsHandler::class)(new BuildTermEnrichments([ENRICH_TERM_ID], 'enr-mech1-ok'));
+
+    expect($metrics->hasFailures())->toBeFalse()
+        ->and($metrics->failures)->toBe([])
+        ->and($metrics->failureSummary())->toBe('0 of 1 failed');
+});

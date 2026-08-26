@@ -70,13 +70,28 @@ final class EnrichTermsChunkJob implements ShouldQueue
             )),
         );
 
-        // A chunk where EVERY term threw is the shape of "the provider is down", not "the content is
-        // odd" — worth a loud line, because the per-term catch would otherwise swallow it entirely.
-        if ($metrics->termsFailed > 0 && $metrics->termsFailed === $metrics->termsSeen) {
-            Log::warning('Enrichment chunk failed on every term — check the provider', [
-                'generator_version' => $this->generatorVersion,
-                'terms' => $metrics->termsSeen,
-            ]);
+        // ANY term that threw gets a line now (MECH-1). The old rule — speak up only when the whole
+        // chunk died — is the reason a run with three dead terms out of twenty looked exactly like a
+        // clean one: the count lived in a metrics object the job dropped on the floor, and the
+        // exception was discarded unbound at the catch. Partial failure is the interesting case
+        // precisely because it is the one nothing else reveals.
+        if ($metrics->hasFailures()) {
+            $everyTerm = $metrics->termsFailed === $metrics->termsSeen;
+
+            Log::warning(
+                // A chunk where EVERY term threw is the shape of "the provider is down", not "the
+                // content is odd", and it still deserves to be named as such.
+                $everyTerm
+                    ? 'Enrichment chunk failed on every term — check the provider'
+                    : 'Enrichment chunk: some terms failed and were skipped',
+                [
+                    'generator_version' => $this->generatorVersion,
+                    'terms' => $metrics->termsSeen,
+                    'summary' => $metrics->failureSummary(),
+                    // Which word, and what killed it — the two facts the silent catch used to eat.
+                    'failures' => $metrics->failures,
+                ],
+            );
         }
     }
 

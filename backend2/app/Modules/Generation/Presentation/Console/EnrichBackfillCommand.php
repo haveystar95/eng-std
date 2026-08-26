@@ -146,7 +146,12 @@ final class EnrichBackfillCommand extends Command
     {
         $rows = [
             ['термины обработаны', (string) $m->termsSeen],
-            ['термины упали (модель/JSON)', $m->termsFailed > 0 ? "<fg=red>{$m->termsFailed}</>" : '0'],
+            // «N of M failed», а не голое число: доля — это то, по чему прогон читают, и она же
+            // отличает «одно слово с кривым JSON» от «провайдер лежит». Причины печатаются под
+            // таблицей (MECH-1).
+            ['термины упали (модель/JSON)', $m->hasFailures()
+                ? "<fg=red>{$m->termsFailed}</> ({$m->failureSummary()})"
+                : '0 (' . $m->failureSummary() . ')'],
             ['дистракторов предложено', (string) $m->distractorsProposed],
             ['дистракторов записано', (string) $m->distractorsWritten],
             ['<options=bold>% брака дистракторов</>', '<options=bold>' . $m->scrapRatePct() . '%</> (' . $m->distractorsRejected . ')'],
@@ -181,6 +186,20 @@ final class EnrichBackfillCommand extends Command
         $rows[] = ['конфликтов вариант↔дистрактор', (string) $m->termsVariantConflict];
 
         $this->table(['метрика', 'значение'], $rows);
+
+        // Какое слово упало и от чего. До MECH-1 этого не знал никто: пер-терминный catch не
+        // связывал исключение, и прогон с тремя мёртвыми терминами выглядел как чистый.
+        if ($m->hasFailures()) {
+            $this->newLine();
+            $this->warn("Упавшие термины ({$m->failureSummary()}):");
+            $this->table(
+                ['термин', 'term_id', 'причина'],
+                array_map(
+                    static fn (array $f): array => [$f['text'], $f['term_id'], $f['reason']],
+                    $m->failures,
+                ),
+            );
+        }
     }
 
     /** @param  list<CollectionId>  $collectionIds */

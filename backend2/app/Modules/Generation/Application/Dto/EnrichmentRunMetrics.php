@@ -49,6 +49,21 @@ final readonly class EnrichmentRunMetrics
          * number is the decision input for asking the model for 3–4 instead of 2–3.
          */
         public int $examplesUnderTwoDistractors = 0,
+        /**
+         * WHICH terms threw, and WHY — MECH-1.
+         *
+         * `termsFailed` has always been counted; the term and the reason were not, because the
+         * per-term catch bound nothing and said nothing. That is how a suite of live paid runs came
+         * back looking healthy: the count sat in a metrics row nobody printed, and the exception —
+         * the only thing that could say WHICH term and WHAT went wrong — was gone.
+         *
+         * A list rather than a log line, because this is Application: the handler records the fact,
+         * and the Infrastructure/Presentation caller decides whether it becomes a warning in the log
+         * or a red row in a console table. Bounded by the chunk size, so it is a handful of entries.
+         *
+         * @var list<array{term_id: string, text: string, reason: string}>
+         */
+        public array $failures = [],
     ) {}
 
     public function plus(self $other): self
@@ -70,7 +85,25 @@ final readonly class EnrichmentRunMetrics
             termsMisspelled: $this->termsMisspelled + $other->termsMisspelled,
             termsWithExample: $this->termsWithExample + $other->termsWithExample,
             examplesUnderTwoDistractors: $this->examplesUnderTwoDistractors + $other->examplesUnderTwoDistractors,
+            failures: [...$this->failures, ...$other->failures],
         );
+    }
+
+    /**
+     * The one line a run is read by when something went wrong: «N of M failed».
+     *
+     * Always answerable — «0 of 20 failed» is a statement, and a run that says nothing is exactly
+     * what MECH-1 was about. The reasons live in {@see $failures} beside it.
+     */
+    public function failureSummary(): string
+    {
+        return "{$this->termsFailed} of {$this->termsSeen} failed";
+    }
+
+    /** Did anything throw? The caller's cue to print the reasons rather than just the count. */
+    public function hasFailures(): bool
+    {
+        return $this->termsFailed > 0;
     }
 
     /** % of proposed distractor rows the validator threw away. */

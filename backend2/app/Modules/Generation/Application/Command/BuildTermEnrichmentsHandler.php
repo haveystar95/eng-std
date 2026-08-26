@@ -38,6 +38,13 @@ use Throwable;
  *    failures — the API being down — surface from the packer as exceptions on every term in the
  *    chunk, and `termsFailed == termsSeen` is the signal the caller reports.
  *
+ * Skipped is not the same as unseen (MECH-1). The catch keeps the term's id, its text and the
+ * exception in {@see EnrichmentRunMetrics::$failures}, and every caller can print
+ * {@see EnrichmentRunMetrics::failureSummary()} — «N of M failed». Before that, a chunk where some
+ * terms threw was indistinguishable from one where none did: the count went into a metrics row the
+ * job never printed, and the exception was discarded unbound. A suite of live paid runs read as
+ * healthy for exactly that reason.
+ *
  * Cross-module work goes through Vocabulary's Application only; this handler never sees a table.
  */
 final readonly class BuildTermEnrichmentsHandler
@@ -158,8 +165,23 @@ final readonly class BuildTermEnrichmentsHandler
 
             try {
                 $metrics = $metrics->plus($this->enrichOne($target, $command->generatorVersion));
-            } catch (Throwable) {
-                $metrics = $metrics->plus(new EnrichmentRunMetrics(termsSeen: 1, termsFailed: 1));
+            } catch (Throwable $e) {
+                // Still swallowed, deliberately — one bad term must not take down the other
+                // nineteen. What changes is that it stops being SILENT: the term and the reason ride
+                // out in the metrics, so the caller can say which word died and of what. Counting
+                // alone was not enough (MECH-1) — a run of paid calls read as healthy because the
+                // only number that moved was one nobody printed.
+                $metrics = $metrics->plus(new EnrichmentRunMetrics(
+                    termsSeen: 1,
+                    termsFailed: 1,
+                    failures: [[
+                        'term_id' => $target->termId,
+                        'text' => $target->text,
+                        // The class as well as the message: an empty message is common enough that
+                        // the reason would otherwise read as a blank.
+                        'reason' => $e::class . ': ' . $e->getMessage(),
+                    ]],
+                ));
             }
         }
 
