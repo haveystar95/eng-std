@@ -95,21 +95,36 @@ void main() {
     });
   });
 
+  /// Ч.4 — the collection bar in the STATUS VOCABULARY: освоено · в работе · разобрать.
+  ///
+  /// It reads the POOL and not the scheduler, which is the whole correction. `state` says WHEN a
+  /// word comes back; the bar is asking WHETHER the learner is studying it, and those are different
+  /// questions about a word that has been taken in and not yet dealt.
   group('classifyDensity — partitions every term into one bucket (§4)', () {
-    test('mastered → confirmed (known, or review with long interval)', () {
-      expect(classifyDensity('known', 0), DensityBucket.confirmed);
-      expect(classifyDensity('review', 21), DensityBucket.confirmed);
+    DensityBucket row({String? state, int interval = 0, bool enrolled = false}) =>
+        classifyDensity(state: state, intervalDays: interval, enrolled: enrolled);
+
+    test('mastered wins over everything — «Освоено»', () {
+      expect(row(state: 'known', enrolled: true), DensityBucket.mastered);
+      expect(row(state: 'review', interval: 21, enrolled: true), DensityBucket.mastered);
     });
 
-    test('in SRS but not mastered → familiar', () {
-      expect(classifyDensity('review', 5), DensityBucket.familiar);
-      expect(classifyDensity('learning', 0), DensityBucket.familiar);
-      expect(classifyDensity('relearning', 0), DensityBucket.familiar);
+    test('in the queue and not mastered → «В работе», whatever the scheduler says', () {
+      expect(row(state: 'review', interval: 5, enrolled: true), DensityBucket.inWork);
+      expect(row(state: 'learning', enrolled: true), DensityBucket.inWork);
+      expect(row(state: 'relearning', enrolled: true), DensityBucket.inWork);
+      // The case the old rule got backwards: taken into study, never dealt. `state` is still `new`,
+      // and the old bar drew it in the segment its own legend called «в работе» while meaning
+      // «ещё не тронуто» — one phrase, two opposite meanings, one screen apart.
+      expect(row(state: 'new', enrolled: true), DensityBucket.inWork);
     });
 
-    test('new / untouched / triaged-unknown → in-progress', () {
-      expect(classifyDensity('new', 0), DensityBucket.inProgress);
-      expect(classifyDensity(null, 0), DensityBucket.inProgress);
+    test('not in the queue → «Разобрать»', () {
+      expect(row(state: 'new'), DensityBucket.toSort);
+      expect(row(), DensityBucket.toSort);
+      // The stated limit: a PAUSED word lands here too. From the shelf's point of view it is again
+      // a word nobody has decided to study, and the mirror does not keep «was this ever enrolled».
+      expect(row(state: 'review', interval: 5), DensityBucket.toSort);
     });
   });
 }

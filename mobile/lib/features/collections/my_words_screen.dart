@@ -13,6 +13,7 @@ import '../../data/practice/learning_ladder.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
 import '../training/session_screen.dart';
+import 'ladder_legend.dart';
 import '../word_card/word_card_screen.dart';
 import '../word_card/word_card_subject.dart';
 
@@ -344,10 +345,26 @@ class _PoolRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.s8),
+              // Five dots and no words, which is right for a list of two hundred rows and wrong for
+              // somebody meeting it. The dots are their own tap target now: the row still opens the
+              // word, and the dots open the legend that says what they mean (Ч.4). A key rather
+              // than a hit-test guess is what keeps the two taps apart in a test.
               if (row.position.isKnown)
                 LadderKnownDash(label: l.ladderKnownDash)
               else
-                LadderDots(step: row.position.step),
+                GestureDetector(
+                  key: ladderDotsLegendKey,
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    AppHaptics.light();
+                    showLadderLegend(context);
+                  },
+                  child: Padding(
+                    // Room for a finger without moving the dots: they sit where they always did.
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                    child: LadderDots(step: row.position.step),
+                  ),
+                ),
             ],
           ),
         ),

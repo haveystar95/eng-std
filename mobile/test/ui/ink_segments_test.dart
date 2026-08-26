@@ -15,7 +15,7 @@ void main() {
   testWidgets('three densities render proportionally (2:1:1)', (tester) async {
     // width 206, gap 3 ×2 = 6 → avail 200; shares 100 / 50 / 50
     await tester.pumpWidget(
-      _host(InkSegments.fromCounts(confirmed: 2, familiar: 1, inProgress: 1)),
+      _host(InkSegments.fromCounts(mastered: 2, inWork: 1, toSort: 1)),
     );
 
     double w(InkDensity d) => tester.getSize(find.byKey(ValueKey(d))).width;
@@ -26,7 +26,7 @@ void main() {
 
   testWidgets('zero-count segment is omitted (rule 12 numbers must add up)', (tester) async {
     await tester.pumpWidget(
-      _host(InkSegments.fromCounts(confirmed: 0, familiar: 3, inProgress: 0)),
+      _host(InkSegments.fromCounts(mastered: 0, inWork: 3, toSort: 0)),
     );
     expect(find.byKey(const ValueKey(InkDensity.filled)), findsNothing);
     expect(find.byKey(const ValueKey(InkDensity.outline)), findsNothing);

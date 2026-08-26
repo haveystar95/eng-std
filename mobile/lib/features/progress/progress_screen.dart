@@ -26,7 +26,7 @@ class ProgressScreen extends ConsumerWidget {
     final activity = ref.watch(dailyActivityProvider).value ?? const <String, int>{};
     final density =
         ref.watch(globalDensityProvider).value ??
-        const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
+        const CollectionDensity(mastered: 0, inWork: 0, toSort: 0);
 
     final now = DateTime.now();
     final streak = stats?.streakDays ?? 0;
@@ -275,18 +275,18 @@ class _DensityBar extends StatelessWidget {
         Text(l.progressAllWords(density.total), style: AppText.sectionLabel),
         const SizedBox(height: 11),
         InkSegments.fromCounts(
-          confirmed: density.confirmed,
-          familiar: density.familiar,
-          inProgress: density.inProgress,
+          mastered: density.mastered,
+          inWork: density.inWork,
+          toSort: density.toSort,
         ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 14,
           runSpacing: 6,
           children: [
-            _item(InkDensity.filled, l.collectionDensityConfirmed(density.confirmed)),
-            _item(InkDensity.halftone, l.collectionDensityFamiliar(density.familiar)),
-            _item(InkDensity.outline, l.collectionDensityInProgress(density.inProgress)),
+            _item(InkDensity.filled, l.collectionDensityMastered(density.mastered)),
+            _item(InkDensity.halftone, l.collectionDensityInWork(density.inWork)),
+            _item(InkDensity.outline, l.collectionDensityToSort(density.toSort)),
           ],
         ),
       ],

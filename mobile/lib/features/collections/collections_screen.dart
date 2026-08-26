@@ -426,7 +426,7 @@ class _CollectionRow extends ConsumerWidget {
     final prog = ref.watch(collectionsProgressProvider).value?[collection.id];
     final density =
         ref.watch(collectionDensityProvider(collection.id)).value ??
-        const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
+        const CollectionDensity(mastered: 0, inWork: 0, toSort: 0);
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[collection.id] ?? 0;
     final learnable = ref.watch(learnableByCollectionProvider).value?[collection.id] ?? 0;
     final total = prog?.total ?? collection.wordsCount;
@@ -496,9 +496,9 @@ class _CollectionRow extends ConsumerWidget {
                       if (!collection.isReference) ...[
                         const SizedBox(height: 11),
                         InkSegments.fromCounts(
-                          confirmed: density.confirmed,
-                          familiar: density.familiar,
-                          inProgress: density.inProgress,
+                          mastered: density.mastered,
+                          inWork: density.inWork,
+                          toSort: density.toSort,
                           height: 6,
                         ),
                       ],

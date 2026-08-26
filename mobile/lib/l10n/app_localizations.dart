@@ -291,23 +291,23 @@ abstract class AppLocalizations {
   /// **'{count} к повторению сегодня'**
   String collectionDueSuffix(int count);
 
-  /// Легенда плотности: подтверждено упражнениями.
+  /// Легенда плотности, СЛОВАРЬ СТАТУСОВ (Ч.4): слово прошло все ступени. Было «Подтверждено».
   ///
   /// In ru, this message translates to:
-  /// **'Подтверждено {count}'**
-  String collectionDensityConfirmed(int count);
+  /// **'Освоено {count}'**
+  String collectionDensityMastered(int count);
 
-  /// Легенда плотности: знакомое, не освоено.
-  ///
-  /// In ru, this message translates to:
-  /// **'Знакомое {count}'**
-  String collectionDensityFamiliar(int count);
-
-  /// Легенда плотности: новые / не разобрано.
+  /// Легенда плотности: слово в очереди тренажёра. Было «Знакомое». Фраза «В работе» в этой легенде раньше стояла на ТРЕТЬЕМ сегменте и значила «ещё не тронуто» — одно словосочетание с двумя противоположными значениями на соседних экранах.
   ///
   /// In ru, this message translates to:
   /// **'В работе {count}'**
-  String collectionDensityInProgress(int count);
+  String collectionDensityInWork(int count);
+
+  /// Легенда плотности: слово на полке, ждёт решения. Было «В работе».
+  ///
+  /// In ru, this message translates to:
+  /// **'Разобрать {count}'**
+  String collectionDensityToSort(int count);
 
   /// Главная кнопка коллекции: есть неразобранные слова.
   ///
@@ -2013,6 +2013,54 @@ abstract class AppLocalizations {
   /// **'диктант'**
   String get ladderStep5;
 
+  /// СЛОВАРЬ СТАТУСОВ (Ч.4), одно из пяти. Слово лежит на полке и ждёт решения. Заменил «В работе» в легенде коллекции (там оно значило противоположное — «ещё не тронуто») и «в каталоге» в списке слов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разобрать'**
+  String get statusToSort;
+
+  /// СЛОВАРЬ СТАТУСОВ: слово в очереди тренажёра — само возвращается на тренировках. Заменил «Знакомое».
+  ///
+  /// In ru, this message translates to:
+  /// **'В работе'**
+  String get statusInWork;
+
+  /// СЛОВАРЬ СТАТУСОВ: слово прошло все ступени. Заменил «Подтверждено».
+  ///
+  /// In ru, this message translates to:
+  /// **'Освоено'**
+  String get statusMastered;
+
+  /// СЛОВАРЬ СТАТУСОВ: слово убрано из очереди — пауза, не удаление: ступень и дата возврата сохранены.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отложено'**
+  String get statusPaused;
+
+  /// СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ступень {step} из {total}: {rung}'**
+  String statusLadderStep(int step, int total, String rung);
+
+  /// «Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}'**
+  String statusCountToSort(int count);
+
+  /// Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Что значат точки'**
+  String get statusLegendTitle;
+
+  /// Строка легенды про прочерк вместо точек: слово вне лестницы, а не в её начале.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово помечено «знаю» — по лестнице оно не шло.'**
+  String get poolKnownLegend;
+
   /// Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e).
   ///
   /// In ru, this message translates to:
@@ -2823,10 +2871,10 @@ abstract class AppLocalizations {
   /// **'Ответы не уходят на сервер — проверь соединение'**
   String get syncStuckBanner;
 
-  /// Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет.
+  /// Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет. «На полке», а не «в каталоге»: слово ждёт разбора, и словарь статусов зовёт это состояние «Разобрать» (Ч.4).
   ///
   /// In ru, this message translates to:
-  /// **'Слово в каталоге — ты его пока не учишь.'**
+  /// **'Слово на полке — ты его пока не учишь.'**
   String get poolNotStudyingNote;
 
   /// Кнопка карточки слова: зачислить пару в пул (16e).
@@ -2864,12 +2912,6 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Убрать'**
   String get poolUnenrollConfirm;
-
-  /// Пометка в списке слов коллекции: слово есть в каталоге, но не в пуле — тренажёр его не выдаёт.
-  ///
-  /// In ru, this message translates to:
-  /// **'в каталоге'**
-  String get poolInCatalogue;
 
   /// Экран пула: все слова, которые пользователь взял в изучение.
   ///

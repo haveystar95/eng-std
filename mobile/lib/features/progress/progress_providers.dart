@@ -12,22 +12,26 @@ final dailyActivityProvider = StreamProvider<Map<String, int>>((ref) {
       .map((rows) => {for (final r in rows) r.day: r.reviews});
 });
 
-/// The global density bar («Все N слов»): every term folded into one of confirmed/familiar/
-/// in-progress by the same [classifyDensity] rule the collection screen uses. Local + reactive.
+/// The global density bar («Все N слов»): every term folded into one of освоено / в работе /
+/// разобрать by the same [classifyDensity] rule the collection screen uses. Local + reactive.
 final globalDensityProvider = StreamProvider<CollectionDensity>((ref) {
   return ref.watch(appDatabaseProvider).watchTermStates().map((rows) {
-    var confirmed = 0, familiar = 0, inProgress = 0;
+    var mastered = 0, inWork = 0, toSort = 0;
     for (final r in rows) {
-      switch (classifyDensity(r.state, r.intervalDays ?? 0)) {
-        case DensityBucket.confirmed:
-          confirmed++;
-        case DensityBucket.familiar:
-          familiar++;
-        case DensityBucket.inProgress:
-          inProgress++;
+      switch (classifyDensity(
+        state: r.state,
+        intervalDays: r.intervalDays ?? 0,
+        enrolled: r.enrolledAt != null,
+      )) {
+        case DensityBucket.mastered:
+          mastered++;
+        case DensityBucket.inWork:
+          inWork++;
+        case DensityBucket.toSort:
+          toSort++;
       }
     }
-    return CollectionDensity(confirmed: confirmed, familiar: familiar, inProgress: inProgress);
+    return CollectionDensity(mastered: mastered, inWork: inWork, toSort: toSort);
   });
 });
 

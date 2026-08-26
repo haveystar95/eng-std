@@ -126,21 +126,21 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "collectionDensityConfirmed": "Подтверждено {count}",
-  "@collectionDensityConfirmed": {
-    "description": "Легенда плотности: подтверждено упражнениями.",
+  "collectionDensityMastered": "Освоено {count}",
+  "@collectionDensityMastered": {
+    "description": "Легенда плотности, СЛОВАРЬ СТАТУСОВ (Ч.4): слово прошло все ступени. Было «Подтверждено».",
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "collectionDensityFamiliar": "Знакомое {count}",
-  "@collectionDensityFamiliar": {
-    "description": "Легенда плотности: знакомое, не освоено.",
+  "collectionDensityInWork": "В работе {count}",
+  "@collectionDensityInWork": {
+    "description": "Легенда плотности: слово в очереди тренажёра. Было «Знакомое». Фраза «В работе» в этой легенде раньше стояла на ТРЕТЬЕМ сегменте и значила «ещё не тронуто» — одно словосочетание с двумя противоположными значениями на соседних экранах.",
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "collectionDensityInProgress": "В работе {count}",
-  "@collectionDensityInProgress": {
-    "description": "Легенда плотности: новые / не разобрано.",
+  "collectionDensityToSort": "Разобрать {count}",
+  "@collectionDensityToSort": {
+    "description": "Легенда плотности: слово на полке, ждёт решения. Было «В работе».",
     "placeholders": { "count": { "type": "int" } }
   },
 
@@ -944,6 +944,28 @@
   "@ladderStep4": { "description": "Подпись ступени печати (кадр 16e)." },
   "ladderStep5": "диктант",
   "@ladderStep5": { "description": "Подпись верхней ступени — диктант (кадр 16e)." },
+  "statusToSort": "Разобрать",
+  "@statusToSort": { "description": "СЛОВАРЬ СТАТУСОВ (Ч.4), одно из пяти. Слово лежит на полке и ждёт решения. Заменил «В работе» в легенде коллекции (там оно значило противоположное — «ещё не тронуто») и «в каталоге» в списке слов." },
+  "statusInWork": "В работе",
+  "@statusInWork": { "description": "СЛОВАРЬ СТАТУСОВ: слово в очереди тренажёра — само возвращается на тренировках. Заменил «Знакомое»." },
+  "statusMastered": "Освоено",
+  "@statusMastered": { "description": "СЛОВАРЬ СТАТУСОВ: слово прошло все ступени. Заменил «Подтверждено»." },
+  "statusPaused": "Отложено",
+  "@statusPaused": { "description": "СЛОВАРЬ СТАТУСОВ: слово убрано из очереди — пауза, не удаление: ступень и дата возврата сохранены." },
+  "statusLadderStep": "Ступень {step} из {total}: {rung}",
+  "@statusLadderStep": {
+    "description": "СЛОВАРЬ СТАТУСОВ: где слово внутри очереди. Ступеней пять — два узнавания (прямое и обратное) читаются как одна, потому что счёт идёт про пройденный путь, а не про направление вопроса.",
+    "placeholders": { "step": { "type": "int" }, "total": { "type": "int" }, "rung": { "type": "String" } }
+  },
+  "statusCountToSort": "{count, plural, one{Разобрать {count} слово} few{Разобрать {count} слова} many{Разобрать {count} слов} other{Разобрать {count} слова}}",
+  "@statusCountToSort": {
+    "description": "«Разобрать N слов» — единственная форма, в которой разбор называется в интерфейсе. Слова «триаж»/«стряж» в UI не живут.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "statusLegendTitle": "Что значат точки",
+  "@statusLegendTitle": { "description": "Заголовок шита-легенды, который открывается тапом по пяти точкам в «Моих словах» (Ч.4)." },
+  "poolKnownLegend": "Слово помечено «знаю» — по лестнице оно не шло.",
+  "@poolKnownLegend": { "description": "Строка легенды про прочерк вместо точек: слово вне лестницы, а не в её начале." },
   "ladderTitle": "ЛЕСТНИЦА СЛОВА",
   "@ladderTitle": { "description": "Заголовок блока лестницы в развёрнутой карточке слова (кадр 16e)." },
   "ladderKnownDash": "знаю",
@@ -1299,8 +1321,8 @@
   "@sessionLoadFailed": { "description": "Прочие ошибки построения сессии. Текст исключения уходит только в лог, не на экран." },
   "syncStuckBanner": "Ответы не уходят на сервер — проверь соединение",
   "@syncStuckBanner": { "description": "Очередь ответов упёрлась в потолок и содержит неотправленные ответы, влияющие на прогресс. Показывается вместо тихой потери данных (F20-r2)." },
-  "poolNotStudyingNote": "Слово в каталоге — ты его пока не учишь.",
-  "@poolNotStudyingNote": { "description": "Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет." },
+  "poolNotStudyingNote": "Слово на полке — ты его пока не учишь.",
+  "@poolNotStudyingNote": { "description": "Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет. «На полке», а не «в каталоге»: слово ждёт разбора, и словарь статусов зовёт это состояние «Разобрать» (Ч.4)." },
   "poolEnrollAction": "Учить это слово",
   "@poolEnrollAction": { "description": "Кнопка карточки слова: зачислить пару в пул (16e)." },
   "poolEnrollNote": "Слово встанет в очередь и начнёт приходить на тренировках.",
@@ -1316,8 +1338,6 @@
   "@poolUnenrollMessage": { "description": "Текст подтверждения: это пауза, а не удаление." },
   "poolUnenrollConfirm": "Убрать",
   "@poolUnenrollConfirm": { "description": "Подтверждающая кнопка паузы слова." },
-  "poolInCatalogue": "в каталоге",
-  "@poolInCatalogue": { "description": "Пометка в списке слов коллекции: слово есть в каталоге, но не в пуле — тренажёр его не выдаёт." },
 
   "myWordsTitle": "Мои слова",
   "@myWordsTitle": { "description": "Экран пула: все слова, которые пользователь взял в изучение." },

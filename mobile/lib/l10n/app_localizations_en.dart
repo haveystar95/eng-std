@@ -41,10 +41,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triageTermTypePhrasalVerb => 'phrasal verb';
 
   @override
-  String get triageAllDoneTitle => 'All triaged';
+  String get triageAllDoneTitle => 'All sorted';
 
   @override
-  String get triageAllDoneBody => 'No new words left to triage in this set.';
+  String get triageAllDoneBody => 'No new words left to sort in this set.';
 
   @override
   String get triageMoreLaterTitle => 'That\'s all for now';
@@ -58,10 +58,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triageDone => 'Done';
 
   @override
-  String get triageSummaryBatchTitle => 'Batch triaged';
+  String get triageSummaryBatchTitle => 'Batch sorted';
 
   @override
-  String get triageSummaryDoneTitle => 'Triage complete';
+  String get triageSummaryDoneTitle => 'Sorting complete';
 
   @override
   String get triageTallyKnown => 'Know';
@@ -140,23 +140,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String collectionDensityConfirmed(int count) {
-    return 'Confirmed $count';
+  String collectionDensityMastered(int count) {
+    return 'Mastered $count';
   }
 
   @override
-  String collectionDensityFamiliar(int count) {
-    return 'Familiar $count';
-  }
-
-  @override
-  String collectionDensityInProgress(int count) {
+  String collectionDensityInWork(int count) {
     return 'In progress $count';
   }
 
   @override
+  String collectionDensityToSort(int count) {
+    return 'To sort $count';
+  }
+
+  @override
   String collectionTriageButton(int count) {
-    return 'Triage $count';
+    return 'Sort $count';
   }
 
   @override
@@ -209,7 +209,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collectionEmptyBody => 'Tap “Add a word” to start';
 
   @override
-  String get collectionTriageBannerTitle => 'Triage the set';
+  String get collectionTriageBannerTitle => 'Sort the set';
 
   @override
   String get collectionTriageBannerBody => 'Mark what you already know — the rest goes to practice';
@@ -844,7 +844,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onbLevelTitle => 'How confidently do you read?';
 
   @override
-  String get onbLevelSubtitle => 'Roughly — we\'ll refine it from your triage answers.';
+  String get onbLevelSubtitle => 'Roughly — we\'ll refine it from how you sort your words.';
 
   @override
   String onbLevelExample(String level) {
@@ -1178,6 +1178,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ladderStep5 => 'dictation';
+
+  @override
+  String get statusToSort => 'To sort';
+
+  @override
+  String get statusInWork => 'In progress';
+
+  @override
+  String get statusMastered => 'Mastered';
+
+  @override
+  String get statusPaused => 'Paused';
+
+  @override
+  String statusLadderStep(int step, int total, String rung) {
+    return 'Step $step of $total: $rung';
+  }
+
+  @override
+  String statusCountToSort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sort $count words',
+      one: 'Sort $count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statusLegendTitle => 'What the dots mean';
+
+  @override
+  String get poolKnownLegend => 'Marked “I know it” — it never walked the ladder.';
 
   @override
   String get ladderTitle => 'WORD LADDER';
@@ -1557,7 +1591,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallBenefitModes => 'Future training modes';
 
   @override
-  String get paywallFreeForever => 'Reviews, triage and offline — always free.';
+  String get paywallFreeForever => 'Reviews, sorting and offline — always free.';
 
   @override
   String get paywallPeriodYear => 'Year';
@@ -1676,7 +1710,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncStuckBanner => 'Answers aren\'t reaching the server — check your connection';
 
   @override
-  String get poolNotStudyingNote => 'This word is in the catalogue — you are not studying it yet.';
+  String get poolNotStudyingNote => 'This word is on the shelf — you are not studying it yet.';
 
   @override
   String get poolEnrollAction => 'Learn this word';
@@ -1698,9 +1732,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get poolUnenrollConfirm => 'Stop';
-
-  @override
-  String get poolInCatalogue => 'in the catalogue';
 
   @override
   String get myWordsTitle => 'My words';

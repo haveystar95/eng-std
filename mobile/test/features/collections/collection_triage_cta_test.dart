@@ -48,7 +48,7 @@ void main() {
           collectionWordsProvider('c1').overrideWith((ref) => Stream.value([word])),
           collectionDensityProvider('c1').overrideWith(
             (ref) =>
-                Stream.value(const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 1)),
+                Stream.value(const CollectionDensity(mastered: 0, inWork: 0, toSort: 1)),
           ),
           collectionsProgressProvider.overrideWith(
             (ref) => Stream.value({
@@ -121,7 +121,12 @@ void main() {
   testWidgets('the last word swiped → the button goes away', (tester) async {
     await pump(tester, untriaged: 0, learnable: 40);
 
-    expect(find.textContaining('Разобрать'), findsNothing);
+    // The BUTTON, by its label — not «any text saying Разобрать». The density legend uses the same
+    // word for the same state (Ч.4: one vocabulary), and a finder that could not tell the two apart
+    // would fail the day the legend started speaking the app's own language.
+    expect(find.text('Разобрать 0'), findsNothing);
+    // …and the primary CTA is «Учить», capped at the day's remaining new-term quota (F13b).
+    expect(find.text('Учить 20'), findsOneWidget);
   });
 }
 

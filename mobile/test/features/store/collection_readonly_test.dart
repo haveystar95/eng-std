@@ -69,7 +69,7 @@ void main() {
             collectionWordsProvider('c1').overrideWith((ref) => Stream.value([word])),
             collectionDensityProvider('c1').overrideWith(
               (ref) =>
-                  Stream.value(const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 1)),
+                  Stream.value(const CollectionDensity(mastered: 0, inWork: 0, toSort: 1)),
             ),
             collectionsProgressProvider.overrideWith(
               (ref) => Stream.value(const <String, CollectionProgress>{}),

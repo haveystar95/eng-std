@@ -10,10 +10,10 @@ class InkSegment {
 }
 
 /// Полоса плотности чернил (§4) — единственный способ показать «степень» в
-/// бесцветной системе (rule 03). Три сегмента экрана коллекции:
-/// подтверждено (залито) · знакомое (полутон) · в работе (контур). Ширины
-/// пропорциональны значениям; сегменты с нулём не рисуются. Сумма значений
-/// должна сходиться с «всего» (rule 12) на стороне вызова.
+/// бесцветной системе (rule 03). Три сегмента экрана коллекции, в словаре
+/// статусов (Ч.4): освоено (залито) · в работе (полутон) · разобрать (контур).
+/// Ширины пропорциональны значениям; сегменты с нулём не рисуются. Сумма
+/// значений должна сходиться с «всего» (rule 12) на стороне вызова.
 class InkSegments extends StatelessWidget {
   const InkSegments({
     super.key,
@@ -29,9 +29,9 @@ class InkSegments extends StatelessWidget {
   /// Удобный конструктор из трёх счётчиков (порядок = порядок плотностей).
   factory InkSegments.fromCounts({
     Key? key,
-    required num confirmed,
-    required num familiar,
-    required num inProgress,
+    required num mastered,
+    required num inWork,
+    required num toSort,
     double height = AppProgress.heightScreen,
     double gap = 3,
   }) {
@@ -40,9 +40,9 @@ class InkSegments extends StatelessWidget {
       height: height,
       gap: gap,
       segments: [
-        InkSegment(confirmed.toDouble(), InkDensity.filled),
-        InkSegment(familiar.toDouble(), InkDensity.halftone),
-        InkSegment(inProgress.toDouble(), InkDensity.outline),
+        InkSegment(mastered.toDouble(), InkDensity.filled),
+        InkSegment(inWork.toDouble(), InkDensity.halftone),
+        InkSegment(toSort.toDouble(), InkDensity.outline),
       ],
     );
   }

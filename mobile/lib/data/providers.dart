@@ -400,52 +400,69 @@ final learnableByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
   return ref.watch(appDatabaseProvider).watchLearnableByCollection();
 });
 
-/// The three ink-density buckets (§4) for one collection, partitioning its total:
-/// confirmed (mastered) · familiar (in SRS, not yet mastered) · in-progress (new /
-/// untouched). Local + reactive.
+/// The three ink-density buckets (§4) for one collection, partitioning its total in the STATUS
+/// VOCABULARY: освоено (filled) · в работе (halftone) · разобрать (outline). Local + reactive.
 final collectionDensityProvider = StreamProvider.family<CollectionDensity, String>((
   ref,
   collectionId,
 ) {
   return ref.watch(appDatabaseProvider).watchItemProgress().map((rows) {
-    var confirmed = 0, familiar = 0, inProgress = 0;
+    var mastered = 0, inWork = 0, toSort = 0;
     for (final r in rows) {
       if (r.collectionId != collectionId) continue;
-      switch (classifyDensity(r.state, r.intervalDays ?? 0)) {
-        case DensityBucket.confirmed:
-          confirmed++;
-        case DensityBucket.familiar:
-          familiar++;
-        case DensityBucket.inProgress:
-          inProgress++;
+      switch (classifyDensity(
+        state: r.state,
+        intervalDays: r.intervalDays ?? 0,
+        enrolled: r.enrolledAt != null,
+      )) {
+        case DensityBucket.mastered:
+          mastered++;
+        case DensityBucket.inWork:
+          inWork++;
+        case DensityBucket.toSort:
+          toSort++;
       }
     }
-    return CollectionDensity(confirmed: confirmed, familiar: familiar, inProgress: inProgress);
+    return CollectionDensity(mastered: mastered, inWork: inWork, toSort: toSort);
   });
 });
 
-/// Ink-density bucket for a progress state (§4). Partitions every term into exactly
-/// one bucket; verdict colours never participate. Extracted for unit tests.
-enum DensityBucket { confirmed, familiar, inProgress }
+/// Ink-density bucket for one shelved term (§4). Partitions every term into exactly one bucket;
+/// verdict colours never participate. Extracted for unit tests.
+enum DensityBucket { mastered, inWork, toSort }
 
-DensityBucket classifyDensity(String? state, int intervalDays) {
-  if (_isMastered(state, intervalDays)) return DensityBucket.confirmed; // filled
-  if (state == 'review' || state == 'learning' || state == 'relearning') {
-    return DensityBucket.familiar; // halftone — seen, not yet mastered
-  }
-  return DensityBucket.inProgress; // outline — new / untouched / triaged-unknown
+/// THE POOL DECIDES, and the scheduler only breaks the top tie.
+///
+/// It used to be read off `state` alone, which asked a question the bar was not about: `state` says
+/// WHEN a word comes back, and the bar is asking WHETHER the learner is studying it. A word taken
+/// into study and not yet dealt has `state = 'new'` and was drawn as «в работе» in a legend where
+/// that phrase meant «ещё не тронуто» — the one word in the old vocabulary that meant its own
+/// opposite from one screen to the next.
+///
+/// LIMIT, stated rather than hidden: a PAUSED word lands in `toSort`. From a shelf's point of view
+/// that is honest — it is again a word the learner has not decided to study — and the mirror does
+/// not keep «was this ever enrolled», so the bar cannot tell the two apart. The word card can, and
+/// says «Отложено» there ({@link wordStatusOf}).
+DensityBucket classifyDensity({
+  required String? state,
+  required int intervalDays,
+  required bool enrolled,
+}) {
+  if (_isMastered(state, intervalDays)) return DensityBucket.mastered; // filled
+  if (enrolled) return DensityBucket.inWork; // halftone — in the trainer's queue
+  return DensityBucket.toSort; // outline — on the shelf, waiting for a decision
 }
 
-/// The three counts behind a collection's density bar. `confirmed + familiar +
-/// inProgress == collection total`.
+/// The three counts behind a collection's density bar, in the status vocabulary.
+/// `mastered + inWork + toSort == collection total`.
 class CollectionDensity {
   const CollectionDensity({
-    required this.confirmed,
-    required this.familiar,
-    required this.inProgress,
+    required this.mastered,
+    required this.inWork,
+    required this.toSort,
   });
-  final int confirmed, familiar, inProgress;
-  int get total => confirmed + familiar + inProgress;
+  final int mastered, inWork, toSort;
+  int get total => mastered + inWork + toSort;
 }
 
 /// Study cards stay on the network — sessions are online-only (out of the offline scope). Consumers

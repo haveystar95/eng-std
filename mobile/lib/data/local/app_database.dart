@@ -723,14 +723,16 @@ class AppDatabase extends _$AppDatabase {
   /// Every term's (state, intervalDays) — all terms left-joined with their progress, so untouched
   /// terms (no progress row) surface as null. Feeds the global density bar on the Progress screen
   /// («Все N слов»): each term folds into exactly one of confirmed/familiar/in-progress. Reactive.
-  Stream<List<({String? state, int? intervalDays})>> watchTermStates() {
+  Stream<List<({String? state, int? intervalDays, DateTime? enrolledAt})>> watchTermStates() {
     final query = select(
       terms,
     ).join([leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id))]);
     return query.watch().map(
       (rows) => rows.map((r) {
         final p = r.readTableOrNull(termProgress);
-        return (state: p?.state, intervalDays: p?.intervalDays);
+        // `enrolledAt` rides along because the density bar asks about the POOL — whether the learner
+        // is studying the word — and `state` answers a different question (when it comes back).
+        return (state: p?.state, intervalDays: p?.intervalDays, enrolledAt: p?.enrolledAt);
       }).toList(),
     );
   }

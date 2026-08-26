@@ -146,18 +146,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String collectionDensityConfirmed(int count) {
-    return 'Подтверждено $count';
+  String collectionDensityMastered(int count) {
+    return 'Освоено $count';
   }
 
   @override
-  String collectionDensityFamiliar(int count) {
-    return 'Знакомое $count';
-  }
-
-  @override
-  String collectionDensityInProgress(int count) {
+  String collectionDensityInWork(int count) {
     return 'В работе $count';
+  }
+
+  @override
+  String collectionDensityToSort(int count) {
+    return 'Разобрать $count';
   }
 
   @override
@@ -1202,6 +1202,42 @@ class AppLocalizationsRu extends AppLocalizations {
   String get ladderStep5 => 'диктант';
 
   @override
+  String get statusToSort => 'Разобрать';
+
+  @override
+  String get statusInWork => 'В работе';
+
+  @override
+  String get statusMastered => 'Освоено';
+
+  @override
+  String get statusPaused => 'Отложено';
+
+  @override
+  String statusLadderStep(int step, int total, String rung) {
+    return 'Ступень $step из $total: $rung';
+  }
+
+  @override
+  String statusCountToSort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Разобрать $count слова',
+      many: 'Разобрать $count слов',
+      few: 'Разобрать $count слова',
+      one: 'Разобрать $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statusLegendTitle => 'Что значат точки';
+
+  @override
+  String get poolKnownLegend => 'Слово помечено «знаю» — по лестнице оно не шло.';
+
+  @override
   String get ladderTitle => 'ЛЕСТНИЦА СЛОВА';
 
   @override
@@ -1719,7 +1755,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get syncStuckBanner => 'Ответы не уходят на сервер — проверь соединение';
 
   @override
-  String get poolNotStudyingNote => 'Слово в каталоге — ты его пока не учишь.';
+  String get poolNotStudyingNote => 'Слово на полке — ты его пока не учишь.';
 
   @override
   String get poolEnrollAction => 'Учить это слово';
@@ -1741,9 +1777,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get poolUnenrollConfirm => 'Убрать';
-
-  @override
-  String get poolInCatalogue => 'в каталоге';
 
   @override
   String get myWordsTitle => 'Мои слова';

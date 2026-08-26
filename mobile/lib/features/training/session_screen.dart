@@ -450,6 +450,12 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     return leave ?? false;
   }
 
+  /// The rung names are captions first («узнавание», under a dot) and a header second. One string
+  /// in the deck rather than two, capitalised where the layout calls for it — two entries would be
+  /// two entries to keep in step, and this is exactly the drift Ч.4 exists to undo.
+  static String _capitalized(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -470,9 +476,15 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
     final total = _cards.length;
     final phaseLabel = widget.practice
         ? l.sessionPhasePractice
+        // The RUNG's own name wherever the card has one — the same five words the word card, the
+        // pool row and the ladder strip use (Ч.4). Capitalised here because it is a header; the
+        // ladder strip sets the identical words in lower case as captions.
         : switch (sessionHeaderFor(mode: _card.mode, ladderStep: _card.ladderStep)) {
-            SessionHeader.intro => l.sessionHeaderIntro,
-            SessionHeader.recognition => l.sessionHeaderRecognition,
+            SessionHeader.rungMeeting => _capitalized(l.ladderStep0),
+            SessionHeader.rungRecognition => _capitalized(l.ladderStep1),
+            SessionHeader.rungAssembly => _capitalized(l.ladderStep3),
+            SessionHeader.rungWriting => _capitalized(l.ladderStep4),
+            SessionHeader.rungDictation => _capitalized(l.ladderStep5),
             SessionHeader.phaseIntro => l.sessionPhaseIntro,
             SessionHeader.phaseAssemble => l.sessionPhaseAssemble,
             SessionHeader.phaseReview => l.sessionPhaseReview,

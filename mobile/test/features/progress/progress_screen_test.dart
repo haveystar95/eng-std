@@ -42,7 +42,7 @@ void main() {
           dailyActivityProvider.overrideWith((ref) => Stream.value({today: 12})),
           globalDensityProvider.overrideWith(
             (ref) =>
-                Stream.value(const CollectionDensity(confirmed: 82, familiar: 41, inProgress: 23)),
+                Stream.value(const CollectionDensity(mastered: 82, inWork: 41, toSort: 23)),
           ),
         ],
         child: const MaterialApp(
@@ -62,6 +62,7 @@ void main() {
     expect(find.text('Лучший результат — 19 дней'), findsOneWidget);
     expect(find.text('82'), findsOneWidget); // «Выучено всего» = mastered
     expect(find.text('12'), findsNWidgets(2)); // «За неделю» + «Повторений сегодня», both local
-    expect(find.text('Подтверждено 82'), findsOneWidget);
+    // The status vocabulary, the same three words the collection screen uses (Ч.4).
+    expect(find.text('Освоено 82'), findsOneWidget);
   });
 }

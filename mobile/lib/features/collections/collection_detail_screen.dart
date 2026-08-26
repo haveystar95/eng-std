@@ -14,6 +14,7 @@ import '../../data/pronouncer.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../../data/store_providers.dart';
+import '../../data/word_status.dart';
 import '../home/home_cta.dart';
 import '../home/limit_reached_card.dart';
 import '../practice_dialog/dialog_entry_button.dart';
@@ -322,7 +323,7 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final isReference = collection?.isReference ?? false;
     final density =
         ref.watch(collectionDensityProvider(widget.collectionId)).value ??
-        const CollectionDensity(confirmed: 0, familiar: 0, inProgress: 0);
+        const CollectionDensity(mastered: 0, inWork: 0, toSort: 0);
     final cprog = ref.watch(collectionsProgressProvider).value?[widget.collectionId];
     final untriaged = ref.watch(untriagedByCollectionProvider).value?[widget.collectionId] ?? 0;
     final learnable = ref.watch(learnableByCollectionProvider).value?[widget.collectionId] ?? 0;
@@ -419,9 +420,9 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                       if (!isReference) ...[
                       const SizedBox(height: AppSpacing.s16),
                       InkSegments.fromCounts(
-                        confirmed: density.confirmed,
-                        familiar: density.familiar,
-                        inProgress: density.inProgress,
+                        mastered: density.mastered,
+                        inWork: density.inWork,
+                        toSort: density.toSort,
                       ),
                       const SizedBox(height: 11),
                       _DensityLegend(density: density),
@@ -644,9 +645,9 @@ class _DensityLegend extends StatelessWidget {
       spacing: 14,
       runSpacing: 6,
       children: [
-        _item(InkDensity.filled, l.collectionDensityConfirmed(density.confirmed)),
-        _item(InkDensity.halftone, l.collectionDensityFamiliar(density.familiar)),
-        _item(InkDensity.outline, l.collectionDensityInProgress(density.inProgress)),
+        _item(InkDensity.filled, l.collectionDensityMastered(density.mastered)),
+        _item(InkDensity.halftone, l.collectionDensityInWork(density.inWork)),
+        _item(InkDensity.outline, l.collectionDensityToSort(density.toSort)),
       ],
     );
   }
@@ -1266,13 +1267,18 @@ class _RowBody extends StatelessWidget {
             // term it pronounces. A row cannot carry both without becoming a control panel.
             //
             // A word that is not in the POOL gets neither: it has no rung, because the ladder
-            // measures progress THROUGH a word and this one has not been started. It carries a
-            // quiet «в каталоге» instead — the collection is a catalogue now, and most of what it
-            // holds is honestly that. Neutral by design: nothing here is wrong or missing.
+            // measures progress THROUGH a word and this one has not been started. It carries the
+            // STATUS instead, in the vocabulary the rest of the app uses — «Разобрать», the same
+            // word the button that reaches these words is labelled with. It used to read «в
+            // каталоге», which named the shelf rather than the state and appeared nowhere else.
+            // Neutral by design: nothing here is wrong or missing.
             if (word.isKnown)
               LadderKnownDash(label: AppLocalizations.of(context).ladderKnownDash)
             else if (!word.enrolled)
-              Text(AppLocalizations.of(context).poolInCatalogue, style: AppText.ladderLockedNote)
+              Text(
+                wordStatusLabel(AppLocalizations.of(context), WordStatus.toSort).toLowerCase(),
+                style: AppText.ladderLockedNote,
+              )
             else if (word.ladderStep != null)
               LadderDots(step: word.ladderStep),
           ],

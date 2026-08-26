@@ -1,5 +1,5 @@
 import '../../../data/models.dart';
-import '../../../data/practice/learning_ladder.dart';
+import '../../../data/word_status.dart';
 
 /// The client's INSTANT read of an answer — for feedback only. The server is the sole grader
 /// (invariant): it re-grades every raw answer and schedules from that. This check exists so the
@@ -477,16 +477,22 @@ SessionPhase phaseFor(ExerciseMode mode) => switch (mode) {
 /// name of the step BEFORE them (QA-OBS-4). What the header is asking about is the RUNG the card was
 /// dealt at, and the card carries it ([SessionCard.ladderStep]).
 ///
-/// Above the recognition rungs nothing changes: a graduated word's card is still named by its phase,
-/// which is what the device pass confirmed as correct.
+/// Ч.4 finished the same correction upwards. Above the recognition rungs the header still named a
+/// PHASE — «Сборка», «Повторение» — while the word card, the pool row and the ladder strip named a
+/// RUNG, so «написание» and «диктант» existed everywhere except in the header of the session that
+/// was dealing them. The rung wins wherever the card has one; the phase is what is left for a card
+/// dealt off the ladder entirely (a `known` verification), where there is no rung to name.
 enum SessionHeader {
-  /// The intro card itself (кадры 16a–16b) — «Знакомство».
-  intro,
+  /// The named rungs, in ladder order — «Знакомство», «Узнавание», «Сборка», «Написание», «Диктант».
+  /// One entry for both recognition steps: the header is about how far the word has come, and the
+  /// direction a recognition asks in is not that.
+  rungMeeting,
+  rungRecognition,
+  rungAssembly,
+  rungWriting,
+  rungDictation,
 
-  /// Recognition, rungs 1–2 (кадры 16c-1, 16c-2) — «Узнавание».
-  recognition,
-
-  /// A graduated word's card, named by [SessionPhase] as before.
+  /// A card with no rung at all, named by its [SessionPhase] as the header always was.
   phaseIntro,
   phaseAssemble,
   phaseReview,
@@ -495,8 +501,21 @@ enum SessionHeader {
 /// The header for a card, from the rung first and the mode second. A practice session names the
 /// whole header «Свободная тренировка» and never asks (handled by the caller).
 SessionHeader sessionHeaderFor({required ExerciseMode mode, required int? ladderStep}) {
-  if (mode == ExerciseMode.intro) return SessionHeader.intro;
-  if (LearningLadder.isRecognitionStep(ladderStep)) return SessionHeader.recognition;
+  // The intro CARD is the meeting rung whatever the stored step says — it is the only card that is
+  // its own rung.
+  if (mode == ExerciseMode.intro) return SessionHeader.rungMeeting;
+
+  final rung = ladderRungFor(ladderStep);
+  if (rung != null) {
+    return switch (rung) {
+      LadderRung.meeting => SessionHeader.rungMeeting,
+      LadderRung.recognition => SessionHeader.rungRecognition,
+      LadderRung.assembly => SessionHeader.rungAssembly,
+      LadderRung.writing => SessionHeader.rungWriting,
+      LadderRung.dictation => SessionHeader.rungDictation,
+    };
+  }
+
   return switch (phaseFor(mode)) {
     SessionPhase.intro => SessionHeader.phaseIntro,
     SessionPhase.assemble => SessionHeader.phaseAssemble,
