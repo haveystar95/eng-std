@@ -18,11 +18,15 @@ use App\Modules\Learning\Application\Dto\HomeState;
 use App\Modules\Learning\Application\Dto\HomeStoreView;
 use App\Modules\Learning\Application\Dto\ScheduledTermFact;
 use App\Modules\Learning\Application\Dto\TermErrorFact;
+use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
 use App\Modules\Learning\Application\Port\LearnerProfileReader;
+use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\TriagedTermsReader;
 use App\Modules\Learning\Application\Service\CardLanguageResolver;
+use App\Modules\Learning\Domain\Service\LearningLadder;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
@@ -109,6 +113,17 @@ final readonly class GetHomePlanHandler
         private DefaultCollectionPair $defaultPair,
         private TermContentReader $content,
         private CardLanguageResolver $cardLanguages,
+        /**
+         * The two halves of «is the intro trainer dealt at all», read exactly as
+         * {@see \App\Modules\Learning\Application\Command\BuildStudySessionHandler} reads them.
+         *
+         * They are here for ONE number: a first meeting is a three-card chain with the intro on and
+         * a two-card one with it off, and the day card promises how long the session takes. Asking
+         * a different question than the builder asks is how the promise and the session would come
+         * to disagree the day somebody switched the trainer off.
+         */
+        private EnabledModesReader $enabledModes,
+        private ModeAdmissionReader $admission,
     ) {}
 
     public function __invoke(GetHomePlan $query): HomePlanView
@@ -145,6 +160,9 @@ final readonly class GetHomePlanHandler
         }
 
         $total = $repeat + $new;
+        // THE DAY IN CARDS, which is the unit the session counts and the unit a minute is spent in.
+        // Owed words bring the rest of their chain; a word met today brings its whole one.
+        $cards = $this->home->owedCardCount($user, $now) + $new * $this->firstMeetingCards($user);
         $seconds = $this->home->averageCardSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_CARD_SECONDS;
         $swipeSeconds = $this->home->averageSwipeSeconds($user, self::LATENCY_SAMPLE) ?? self::DEFAULT_SWIPE_SECONDS;
 
@@ -176,7 +194,10 @@ final readonly class GetHomePlanHandler
                 new: $new,
                 triage: $triage,
                 total: $total,
-                estimatedMinutes: $total > 0 ? max(1, (int) round($total * $seconds / 60)) : null,
+                cards: $cards,
+                // Cards × seconds-per-card. Words × seconds-per-card was two units multiplied
+                // together, and it under-sold every day that had a new word in it.
+                estimatedMinutes: $cards > 0 ? max(1, (int) round($cards * $seconds / 60)) : null,
                 avgSecondsPerCard: $seconds,
                 triageMinutes: $triage > 0 ? max(1, (int) round($triage * $swipeSeconds / 60)) : null,
                 triageCollectionId: $triageTarget === null ? null : $triageTarget['id'],
@@ -195,6 +216,23 @@ final readonly class GetHomePlanHandler
             hardest: $this->hardestViews($hardest, $content),
             unfinished: $this->unfinished($user, $shelf, $tz, $todayStart),
             store: new HomeStoreView($store->count, $store->topics),
+        );
+    }
+
+    /**
+     * How many cards ONE never-met word costs today: the whole chain from the rung it starts on.
+     *
+     * With the intro trainer on that is rung 0 and three cards; with it off a first meeting starts
+     * at recognition and it is two. The condition is the session builder's own, term for term —
+     * a plan that answered this question its own way would price a day the trainer does not deal.
+     */
+    private function firstMeetingCards(UserId $user): int
+    {
+        $introDealt = $this->enabledModes->forUser($user)->has(ExerciseMode::Intro)
+            && $this->admission->matrixFor($user)->allows(ExerciseMode::Intro, LearningLadder::STEP_INTRO);
+
+        return LearningLadder::chainLength(
+            $introDealt ? LearningLadder::STEP_INTRO : LearningLadder::STEP_RECOGNITION_FORWARD,
         );
     }
 

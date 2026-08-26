@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Dto;
 
 /**
- * «Сессия на сегодня: N слов · ~M минут», and what it is made of.
+ * «Сессия на сегодня: N слов · ~K карточек · ~M минут», and what it is made of.
  *
  * `total` is `repeat + new` — THE POOL, which is the queue. `triage` is counted beside it and is
  * deliberately NOT in the total: those terms are CATALOGUE, words the learner owns and has not
  * chosen to study, and adding a set would otherwise add its whole size to «сегодня». It is offered
  * once the repeats are done, priced by `triageMinutes`.
+ *
+ * WORDS AND CARDS ARE BOTH HERE because the day is honestly both, and the card promised only the
+ * first while the session counted the second. They are not proportional: a word met today brings
+ * its intro and both recognitions in one sitting, a graduated one brings a single card, so twenty
+ * words is anything from twenty to sixty. `total` is the work, `cards` is the length.
  *
  * A count of 0 is a real answer here (the client draws no line for it) — the whole card is absent
  * only when {@see HomePlanView::$state} says so.
@@ -22,7 +27,18 @@ final readonly class HomeSessionView
         public int $new,
         public int $triage,
         public int $total,
-        /** null when there is nothing to do — «≈ 0 минут» is not a thing the screen says. */
+        /**
+         * How many CARDS those `total` words will be dealt — the number the session's own counter
+         * will count up to, from the same rungs the session builder reads.
+         */
+        public int $cards,
+        /**
+         * null when there is nothing to do — «≈ 0 минут» is not a thing the screen says.
+         *
+         * Priced in CARDS × seconds-per-card. It used to be words × seconds-per-card, which is two
+         * different units multiplied together: a first day of twenty new words was sold as three
+         * minutes and dealt sixty cards.
+         */
         public ?int $estimatedMinutes,
         /** The per-card figure the estimate was built from; see {@see \App\Modules\Learning\Application\Port\HomePlanReader::averageCardSeconds()}. */
         public int $avgSecondsPerCard,

@@ -53,6 +53,20 @@ interface HomePlanReader
      */
     public function owedCount(UserId $userId, DateTimeImmutable $now): int;
 
+    /**
+     * The SAME population as {@see owedCount()}, counted in CARDS rather than in words.
+     *
+     * A word and a card are not the same unit, and the day card promises one while the session
+     * deals the other: a pair still on the recognition rungs owes the rest of its chain in one
+     * sitting ({@see LearningLadder::chainLength()}), so twenty owed words can be thirty cards.
+     * Both numbers exist because both are true and the learner needs both — «сколько слов» is the
+     * work, «сколько карточек» is the time.
+     *
+     * NEW words are not here, exactly as they are not in `owedCount`: their chain length depends on
+     * whether the intro trainer is switched on, which is the caller's fact and not this reader's.
+     */
+    public function owedCardCount(UserId $userId, DateTimeImmutable $now): int;
+
     /** Pool size: pairs with `enrolled_at IS NOT NULL`. */
     public function poolSize(UserId $userId): int;
 

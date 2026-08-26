@@ -2501,13 +2501,25 @@ components:
                 done, priced by `triage_minutes`.
             total:
               type: integer
-              description: repeat + new — the pool's work for today. See `triage`.
+              description: repeat + new — the pool's work for today, in WORDS. See `triage` and `cards`.
+            cards:
+              type: integer
+              description: >
+                The same day in CARDS — what the session's own counter will count up to. Not
+                proportional to `total`: a word met today brings its intro and both recognitions in
+                one sitting, a graduated one brings a single card, so twenty words is anything from
+                twenty to sixty. Counted from the same rungs the session builder reads, and from the
+                same «is the intro trainer dealt» condition, so the promise and the session agree.
+                The client shows both — «N слов · ~K карточек» — because a button that promises words
+                while the session counts cards is a button that reads as broken halfway through.
             estimated_minutes:
               type: integer
               nullable: true
               description: >
-                `total` × `avg_seconds_per_card`, rounded to minutes, minimum 1. Null when there is
-                nothing to do. The swipe pass is priced separately, in `triage_minutes`.
+                `cards` × `avg_seconds_per_card`, rounded to minutes, minimum 1. Null when there is
+                nothing to do. The swipe pass is priced separately, in `triage_minutes`. It was
+                `total` × the per-card figure until Ч.3 — two different units multiplied together,
+                which under-sold every day with a new word in it.
             avg_seconds_per_card:
               type: integer
               description: >

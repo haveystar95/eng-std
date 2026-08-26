@@ -133,4 +133,29 @@ final class LearningLadder
     {
         return $step === self::STEP_RECOGNITION_FORWARD || $step === self::STEP_RECOGNITION_REVERSE;
     }
+
+    /**
+     * HOW MANY CARDS one session owes a term whose chain starts at `$step`.
+     *
+     * A word met today is not one card: the intro is followed by both recognitions IN THE SAME
+     * SITTING, because a word introduced and then not asked for a day has been met and abandoned
+     * ({@see SessionLayout}). A word already partway up the recognition rungs owes the rest of them;
+     * a graduated one owes exactly one.
+     *
+     * It lives here, next to the rungs, because two places need the answer and they must not
+     * disagree: the LAYOUT, which deals the chain, and the day plan, which promises how long the
+     * session will take. The plan used to price the day in TERMS at seconds-per-CARD, which is how
+     * «20 слов ≈ 3 минуты» introduced itself to a session of forty cards.
+     *
+     * A step above the recognition rungs — assembly, typing, dictation — is a graduated word by
+     * definition and gets the same 1 as one below zero: the chain only exists on rungs 0–2.
+     */
+    public static function chainLength(int $step): int
+    {
+        if ($step < self::STEP_INTRO || $step > self::STEP_RECOGNITION_REVERSE) {
+            return 1;
+        }
+
+        return self::STEP_RECOGNITION_REVERSE - $step + 1;
+    }
 }

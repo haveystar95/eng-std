@@ -9,6 +9,7 @@ use App\Modules\Learning\Application\Dto\HomeTodayView;
 use App\Modules\Learning\Application\Dto\ScheduledTermFact;
 use App\Modules\Learning\Application\Dto\TermErrorFact;
 use App\Modules\Learning\Application\Port\HomePlanReader;
+use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -57,10 +58,44 @@ final class EloquentHomePlanReader implements HomePlanReader
 
     public function owedCount(UserId $userId, DateTimeImmutable $now): int
     {
+        return $this->owed($userId, $now)->count();
+    }
+
+    public function owedCardCount(UserId $userId, DateTimeImmutable $now): int
+    {
+        // Grouped rather than fetched: the chain length depends only on `acquisition` and
+        // `learning_step`, so the whole answer is a handful of rows however large the backlog is.
+        // A pair that is not `learning` owes one card whatever its step column happens to hold.
+        $rows = $this->owed($userId, $now)
+            ->selectRaw('acquisition, learning_step, count(*) as n')
+            ->groupBy('acquisition', 'learning_step')
+            ->get();
+
+        $cards = 0;
+        foreach ($rows as $row) {
+            $n = (int) $row->n;
+            $cards += $n * ((string) $row->acquisition === Acquisition::Learning->value
+                ? LearningLadder::chainLength(
+                    LearningLadder::clampRecognitionStep((int) $row->learning_step),
+                )
+                : 1);
+        }
+
+        return $cards;
+    }
+
+    /**
+     * The owed population, as a query both counters run over.
+     *
+     * Mirrors EloquentDueTermsReader::selectableInPool()'s predicate, term for term: unfinished on
+     * the ladder, or graduated and owed a review, or a `known` claim whose check came due. Written
+     * once because two counters reading the same population by two predicates is how «повторить N»
+     * and «~K карточек» would come to describe different days.
+     */
+    private function owed(UserId $userId, DateTimeImmutable $now): Builder
+    {
         $bound = UtcInstant::bind($now);
 
-        // Mirrors EloquentDueTermsReader::selectableInPool()'s predicate, term for term: unfinished
-        // on the ladder, or graduated and owed a review, or a `known` claim whose check came due.
         return DB::table(self::PROGRESS)
             ->where('user_id', $userId->value)
             ->where(static function (BuilderContract $q) use ($bound): void {
@@ -80,8 +115,7 @@ final class EloquentHomePlanReader implements HomePlanReader
                         ->whereNotNull('due_at')
                         ->where('due_at', '<=', $bound);
                 });
-            })
-            ->count();
+            });
     }
 
     public function poolSize(UserId $userId): int

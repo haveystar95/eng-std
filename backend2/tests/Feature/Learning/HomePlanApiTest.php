@@ -66,6 +66,27 @@ function homeStoreDeck(string $title, string $topic = 'Быт'): string
     return $id;
 }
 
+/**
+ * How many cards ONE never-met word costs in the shipped configuration.
+ *
+ * Derived from the same two facts the planner and the session builder both read — is the intro
+ * trainer switched on, and does the matrix admit it at rung 0 — rather than written as a literal.
+ * A literal here would pin the number, which is exactly the thing that is allowed to change when
+ * somebody flips a trainer; what must not change is that the plan and the session agree about it.
+ */
+function firstMeetingCards(): int
+{
+    $modes = app(\App\Modules\Learning\Application\Port\EnabledModesReader::class)->globalDefault();
+    $matrix = app(\App\Modules\Learning\Application\Port\ModeAdmissionReader::class)->globalMatrix();
+    $intro = \App\Modules\Learning\Domain\ValueObject\ExerciseMode::Intro;
+
+    return \App\Modules\Learning\Domain\Service\LearningLadder::chainLength(
+        $modes->has($intro) && $matrix->allows($intro, \App\Modules\Learning\Domain\Service\LearningLadder::STEP_INTRO)
+            ? \App\Modules\Learning\Domain\Service\LearningLadder::STEP_INTRO
+            : \App\Modules\Learning\Domain\Service\LearningLadder::STEP_RECOGNITION_FORWARD,
+    );
+}
+
 it('names the state and the whole composition of the day (17a)', function () {
     [$user, $token] = learner();
 
@@ -108,6 +129,52 @@ it('counts the DAY, not one sitting — a backlog bigger than a session is repor
     // not move until the backlog itself fell under the cap.
     expect($plan['repeat'])->toBe(26)
         ->and($plan['total'])->toBe(26);
+});
+
+/**
+ * Ч.3 — «N слов · ~K карточек». A word and a card are different units and the day is honestly both:
+ * the card promised words while the session counted cards, so a run that said «20 слов» ran to
+ * forty and read as broken halfway through.
+ */
+it('counts the day in CARDS beside the words, from the same rungs the session deals', function () {
+    [$user, $token] = learner();
+
+    // A graduated repeat: one card.
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    answerTimes($this, $token, $apple, 'apple', times: 3, lastDaysAgo: 10);
+
+    // A pair partway up the recognition rungs: it owes the REST of its chain in this one sitting.
+    $chair = addWordTo($col, $user->id, 'chair', 'стул');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $chair)
+        ->update(['acquisition' => 'learning', 'learning_step' => 1, 'state' => 'learning']);
+
+    // …and a first meeting, which brings its whole chain.
+    addWordTo($col, $user->id, 'bank', 'банк');
+
+    $session = homePlan($this, $token)['session'];
+
+    // Three words. Not three cards: 1 (graduated) + 2 (rung 1 → rungs 1 and 2) + the first
+    // meeting's whole chain, whose length depends on whether the intro trainer is dealt.
+    expect($session['total'])->toBe(3);
+    expect($session['cards'])->toBeGreaterThan($session['total']);
+    expect($session['cards'])->toBe(1 + 2 + firstMeetingCards());
+});
+
+it('prices the day in cards, not in words — the two are different units', function () {
+    [$user, $token] = learner();
+    [$col] = seedCollectionWith($user, 'apple', 'яблоко');
+    foreach (['bank', 'chair', 'door', 'egg', 'fork', 'gate', 'hall', 'iron', 'jar'] as $word) {
+        addWordTo($col, $user->id, $word, 'x');
+    }
+
+    $session = homePlan($this, $token)['session'];
+
+    // Ten first meetings. `estimated_minutes` is the CARDS × the per-card pace, so it moves with the
+    // chain length: priced in words it read «1 минута» for a session two or three times that long.
+    expect($session['total'])->toBe(10)
+        ->and($session['cards'])->toBe(10 * firstMeetingCards())
+        ->and($session['estimated_minutes'])
+        ->toBe(max(1, (int) round($session['cards'] * $session['avg_seconds_per_card'] / 60)));
 });
 
 it('estimates the day from its cards, and the swipe pass at a swipe rate', function () {

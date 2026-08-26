@@ -39,6 +39,7 @@ final class HomePlanResource extends JsonResource
                 'new' => $session->new,
                 'triage' => $session->triage,
                 'total' => $session->total,
+                'cards' => $session->cards,
                 'estimated_minutes' => $session->estimatedMinutes,
                 'avg_seconds_per_card' => $session->avgSecondsPerCard,
                 'triage_minutes' => $session->triageMinutes,
