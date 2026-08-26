@@ -24,12 +24,17 @@ void main() {
     int newTerms = 0,
     int triage = 0,
     int? minutes,
+    int? cards,
     String? triageCollectionId,
   }) => HomeSession(
     repeat: repeat,
     newTerms: newTerms,
     triage: triage,
     total: repeat + newTerms,
+    // A repeat is one card, a first meeting is its whole chain — the shape the server sends. Stated
+    // rather than derived here: these tests are about which blocks exist, and the arithmetic behind
+    // the number is the server's and is pinned there.
+    cards: cards ?? (repeat + newTerms * 3),
     estimatedMinutes: minutes,
     avgSecondsPerCard: 8,
     triageMinutes: triage > 0 ? 1 : null,

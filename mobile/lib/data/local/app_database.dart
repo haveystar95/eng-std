@@ -392,12 +392,27 @@ class ItemProgressRow {
     this.state,
     this.intervalDays,
     this.dueAt,
+    this.acquisition,
+    this.learningStep = 0,
+    this.enrolledAt,
   });
   final String collectionId;
   final String termId;
   final String? state;
   final int? intervalDays;
   final DateTime? dueAt;
+
+  /// The ACQUISITION dimension, null when the term has no progress row at all. Carried here because
+  /// two questions on the collection screen need it and neither can be answered by `state`: how far
+  /// up the ladder a word is (the status word it is given), and how many CARDS its next session
+  /// owes it (a word on the recognition rungs owes the rest of its chain in one sitting).
+  final String? acquisition;
+  final int learningStep;
+
+  /// THE POOL. Non-null = the learner is studying this word. A word can have no `state` and still be
+  /// in the queue — enrolled and not yet dealt — so «нет строки прогресса» and «не в работе» are
+  /// different facts and the status vocabulary has to tell them apart.
+  final DateTime? enrolledAt;
 }
 
 /// Index of the on-disk image byte cache: one row per cached remote image.
@@ -1136,6 +1151,9 @@ class AppDatabase extends _$AppDatabase {
           state: prog?.state,
           intervalDays: prog?.intervalDays,
           dueAt: prog?.dueAt,
+          acquisition: prog?.acquisition,
+          learningStep: prog?.learningStep ?? 0,
+          enrolledAt: prog?.enrolledAt,
         );
       }).toList(),
     );

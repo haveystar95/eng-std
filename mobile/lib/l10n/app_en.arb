@@ -322,6 +322,8 @@
   "sessionChipReturnHint": "Tap a word in the line to send it back",
 
   "sessionHintFirstLetter": "Hint: first letter",
+  "sessionSizeCards": "~{count, plural, one{{count} card} other{{count} cards}}",
+  "@sessionSizeCards": { "placeholders": { "count": { "type": "int" } } },
   "sessionDontRemember": "Don't remember",
   "sessionWrongKeyboard": "That looks like the wrong keyboard — switch it and type again",
   "sessionCheck": "Check",

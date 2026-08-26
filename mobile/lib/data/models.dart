@@ -1227,6 +1227,7 @@ class HomeSession {
     required this.newTerms,
     required this.triage,
     required this.total,
+    required this.cards,
     required this.estimatedMinutes,
     required this.avgSecondsPerCard,
     this.triageMinutes,
@@ -1238,6 +1239,14 @@ class HomeSession {
   /// and is NOT in it: those words are catalogue, and a set the learner adds must not announce
   /// itself as work they owe.
   final int repeat, newTerms, triage, total;
+
+  /// The same day in CARDS — what the session's own counter counts up to.
+  ///
+  /// Not proportional to [total]: a word met today brings its intro and both recognitions in one
+  /// sitting, a graduated one brings a single card. The card promised words while the session dealt
+  /// cards, so a run that said «20 слов» ran to forty and read as broken halfway through. Counted
+  /// SERVER-SIDE, from the rungs the session builder itself reads.
+  final int cards;
 
   final int avgSecondsPerCard;
 
@@ -1257,6 +1266,9 @@ class HomeSession {
     newTerms: (j['new'] as int?) ?? 0,
     triage: (j['triage'] as int?) ?? 0,
     total: (j['total'] as int?) ?? 0,
+    // Absent on a server that predates the field, and then it is the word count — the honest
+    // fallback, since «~N карточек» equal to «N слов» is exactly what the old card implied.
+    cards: (j['cards'] as int?) ?? (j['total'] as int?) ?? 0,
     estimatedMinutes: j['estimated_minutes'] as int?,
     avgSecondsPerCard: (j['avg_seconds_per_card'] as int?) ?? 0,
     triageMinutes: j['triage_minutes'] as int?,

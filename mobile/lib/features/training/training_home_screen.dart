@@ -421,6 +421,25 @@ class _SessionCard extends StatelessWidget {
                 style: AppText.counterLarge.copyWith(color: paper),
               ),
               const SizedBox(width: 10),
+              // How many CARDS those words are, beside the minutes they cost. The headline is the
+              // work; this is the length, and it is the number the session's own counter counts up
+              // to — a card promising «32 слова» that ran to «14 / 61» is what put it here (Ч.3).
+              if (session.cards > 0)
+                Text(
+                  l.sessionSizeCards(session.cards),
+                  style: AppText.translation.copyWith(
+                    fontSize: 15,
+                    color: paper.withValues(alpha: 0.66),
+                  ),
+                ),
+              if (session.cards > 0 && session.estimatedMinutes != null)
+                Text(
+                  ' · ',
+                  style: AppText.translation.copyWith(
+                    fontSize: 15,
+                    color: paper.withValues(alpha: 0.4),
+                  ),
+                ),
               if (session.estimatedMinutes != null)
                 Text(
                   l.homeSessionCardMinutes(session.estimatedMinutes!),

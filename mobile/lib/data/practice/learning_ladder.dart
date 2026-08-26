@@ -137,6 +137,23 @@ abstract final class LearningLadder {
   /// then deals rung 0 its recognition card directly and passing it moves the pair up, so the word
   /// still leaves rung 0 by studying it.
   static bool admitsPractice(int? step) => step != stepIntro;
+
+  /// HOW MANY CARDS one session owes a term whose chain starts at [step]. Mirrors the server's
+  /// `LearningLadder::chainLength()`.
+  ///
+  /// A word met today is not one card: the intro is followed by BOTH recognitions in the same
+  /// sitting, because a word introduced and then not asked for a day has been met and abandoned.
+  /// A word partway up the recognition rungs owes the rest of them; anything above them — assembly,
+  /// typing, dictation — is a graduated word and owes exactly one.
+  ///
+  /// It exists on the client for the same reason it exists on the server: a button that promises N
+  /// words while the session counts cards reads as broken halfway through, and the two numbers have
+  /// to come from one rule.
+  static int chainLength(int step) {
+    if (step < stepIntro || step > stepRecognitionReverse) return 1;
+
+    return stepRecognitionReverse - step + 1;
+  }
 }
 
 /// Where one (user, term) pair stands, as mirrored locally — the inputs [LearningLadder.stepFor]

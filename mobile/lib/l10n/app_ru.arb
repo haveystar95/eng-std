@@ -1373,6 +1373,12 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
+  "sessionSizeCards": "~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
+  "@sessionSizeCards": {
+    "description": "Вторая половина честной подписи сессии: сколько КАРТОЧЕК получится из обещанных слов. Тильда неспроста — состав дня может дойти до тренажёра слегка другим. Склеивается со счётом слов через « · » (см. sessionSizeLabel), одной строкой на главной и на кнопках коллекции (Ч.3).",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
   "homeSessionPartRepeat": "{count, plural, one{{count} повторить} few{{count} повторить} many{{count} повторить} other{{count} повторить}}",
   "@homeSessionPartRepeat": {
     "description": "Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.",

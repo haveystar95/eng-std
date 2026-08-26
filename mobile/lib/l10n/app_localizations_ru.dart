@@ -1833,6 +1833,19 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String sessionSizeCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count карточки',
+      many: '$count карточек',
+      few: '$count карточки',
+      one: '$count карточка',
+    );
+    return '~$_temp0';
+  }
+
+  @override
   String homeSessionPartRepeat(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

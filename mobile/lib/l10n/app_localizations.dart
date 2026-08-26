@@ -2979,6 +2979,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{≈ {count} минута} few{≈ {count} минуты} many{≈ {count} минут} other{≈ {count} минуты}}'**
   String homeSessionCardMinutes(int count);
 
+  /// Вторая половина честной подписи сессии: сколько КАРТОЧЕК получится из обещанных слов. Тильда неспроста — состав дня может дойти до тренажёра слегка другим. Склеивается со счётом слов через « · » (см. sessionSizeLabel), одной строкой на главной и на кнопках коллекции (Ч.3).
+  ///
+  /// In ru, this message translates to:
+  /// **'~{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
+  String sessionSizeCards(int count);
+
   /// Состав сессии: повторения. Форма не склоняется — считается глагол, а не слова.
   ///
   /// In ru, this message translates to:

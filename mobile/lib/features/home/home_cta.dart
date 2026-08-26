@@ -1,4 +1,24 @@
+import 'package:eng_std/l10n/app_localizations.dart';
+
 import '../../data/local/day_key.dart';
+
+/// «5 слов · ~15 карточек» — THE HONEST SIZE of anything that offers a study session.
+///
+/// One function because every button that promises words has the same problem and must not solve it
+/// its own way: the button counts WORDS and the session counts CARDS, and the two are not
+/// proportional — a word met today brings its intro and both recognitions in one sitting, a
+/// graduated one brings a single card. «Учить 5» ran to fifteen and said nothing about it, so the
+/// counter in the session header looked like a different session from the one that was promised.
+///
+/// The tilde is on the cards and not on the words, deliberately. The word count is exact — those are
+/// the words the session will draw from — while the composition can still shift a little by the time
+/// the session is dealt (a chain that does not fit is deferred whole).
+///
+/// Returns the word count alone when there is nothing to say about cards: a screen that has not
+/// learned the card count yet must not print «~0 карточек».
+String sessionSizeLabel(AppLocalizations l, {required int words, required int cards}) =>
+    cards > 0 ? '${l.homeSessionCardWords(words)} · ${l.sessionSizeCards(cards)}'
+              : l.homeSessionCardWords(words);
 
 /// The COLLECTION screen's primary action, state-dependent. All inputs come from the local DB, so
 /// it resolves offline.

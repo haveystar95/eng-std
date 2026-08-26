@@ -329,6 +329,10 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
     final due = cprog?.due ?? 0;
     final total = cprog?.total ?? collection?.wordsCount ?? 0;
     final remainingNewQuota = ref.watch(statsProvider).value?.newRemaining ?? 0;
+    // The same rows the counts above came from, priced in cards — so «Учить 5» and «~15 карточек»
+    // can never describe different sets of words.
+    final cardCost =
+        ref.watch(collectionCardCostProvider).value?[widget.collectionId] ?? (due: 0, learn: 0);
     final cta = computeCollectionCta(
       untriaged: untriaged,
       learnable: learnable,
@@ -422,7 +426,12 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                       const SizedBox(height: 11),
                       _DensityLegend(density: density),
                       const SizedBox(height: 18),
-                      _CtaButton(cta: cta, onTriage: _openTriage, onSession: _openSession),
+                      _CtaButton(
+                        cta: cta,
+                        cardCost: cardCost,
+                        onTriage: _openTriage,
+                        onSession: _openSession,
+                      ),
                       // «Разобрать N» — the swipe pass over what is left, for as long as anything is
                       // left (QA-25). The primary CTA above outranks triage the moment the first swipes
                       // produce something to learn or to review, and the rest of the collection then had
@@ -670,8 +679,18 @@ class _DensityLegend extends StatelessWidget {
 /// State-dependent primary action. Triage/review are ink-filled; practice is a
 /// quiet outline (кадр 2.3 — «долг закрыт: кнопка становится тихой, контурной»).
 class _CtaButton extends StatelessWidget {
-  const _CtaButton({required this.cta, required this.onTriage, required this.onSession});
+  const _CtaButton({
+    required this.cta,
+    required this.cardCost,
+    required this.onTriage,
+    required this.onSession,
+  });
   final HomeCta cta;
+
+  /// How many CARDS this collection's two study offers really deal. The button's own number is
+  /// words, and the session counts cards — see [sessionSizeLabel].
+  final ({int due, int learn}) cardCost;
+
   final VoidCallback onTriage;
   final void Function(bool practice, {bool learn}) onSession;
 
@@ -684,6 +703,8 @@ class _CtaButton extends StatelessWidget {
     if (cta.kind == HomeCtaKind.limitReached) return const LimitReachedCard();
 
     final (String label, String subtitle, VoidCallback onTap, bool filled) = switch (cta.kind) {
+      // The swipe pass keeps its own subtitle: it deals no cards at all, so «~K карточек» there
+      // would be a promise about a thing that does not happen.
       HomeCtaKind.triage => (
         l.collectionTriageButton(cta.count),
         l.collectionTriageSubtitle,
@@ -692,13 +713,13 @@ class _CtaButton extends StatelessWidget {
       ),
       HomeCtaKind.learn => (
         l.collectionLearnButton(cta.count),
-        l.collectionLearnSubtitle,
+        sessionSizeLabel(l, words: cta.count, cards: cardCost.learn),
         () => onSession(false, learn: true),
         true,
       ),
       HomeCtaKind.review => (
         l.collectionReviewButton(cta.count),
-        l.collectionReviewSubtitle,
+        sessionSizeLabel(l, words: cta.count, cards: cardCost.due),
         () => onSession(false),
         true,
       ),

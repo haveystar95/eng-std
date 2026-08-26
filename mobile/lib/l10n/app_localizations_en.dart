@@ -1784,6 +1784,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sessionSizeCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cards',
+      one: '$count card',
+    );
+    return '~$_temp0';
+  }
+
+  @override
   String homeSessionPartRepeat(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

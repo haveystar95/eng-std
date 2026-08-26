@@ -361,6 +361,32 @@ final collectionsProgressProvider = StreamProvider<Map<String, CollectionProgres
   return ref.watch(appDatabaseProvider).watchItemProgress().map(_deriveCollectionsProgress);
 });
 
+/// What a collection's CTA is really promising, in CARDS — the number the session's own counter
+/// will count up to, beside the number of WORDS on the button.
+///
+/// The two are not proportional and the difference is the point: a word taken into study but never
+/// met brings its intro AND both recognitions in one sitting, a word partway up the recognition
+/// rungs brings the rest of its chain, a graduated one brings a single card. «Учить 5» ran to
+/// fifteen cards and the button said nothing about it.
+///
+/// Local, offline, and off the SAME rows the counts on the button come from ([watchItemProgress]),
+/// so the words and the cards can never describe different sets. The intro trainer's own switch is
+/// read out of the local mirror exactly as the offline session builder reads it — with it off, a
+/// first meeting starts at recognition and costs one card less.
+final collectionCardCostProvider = StreamProvider<Map<String, ({int due, int learn})>>((ref) async* {
+  final db = ref.watch(appDatabaseProvider);
+  final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
+  final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
+  final firstMeeting = LearningLadder.chainLength(
+    enabled.modes.contains(ExerciseMode.intro) &&
+            admission.allows(ExerciseMode.intro, LearningLadder.stepIntro)
+        ? LearningLadder.stepIntro
+        : LearningLadder.stepRecognitionForward,
+  );
+
+  yield* db.watchItemProgress().map((rows) => _deriveCardCost(rows, firstMeeting));
+});
+
 /// Eligible-for-triage term counts per collection (local DB, reactive) — powers the
 /// «Разобрать N» CTA on both the home and the collection screen.
 final untriagedByCollectionProvider = StreamProvider<Map<String, int>>((ref) {
@@ -596,6 +622,37 @@ Stats _deriveStats(
   );
 }
 
+/// Is this row one of the collection's DUE repeats — the population «Повторить N» counts?
+///
+/// Lifted out of [_deriveCollectionsProgress] so the card estimate runs over exactly the same rows
+/// the number on the button was counted from. Two predicates would be two different days.
+bool _isDueRow(ItemProgressRow r, DateTime now) =>
+    r.state != null && r.state != 'new' && r.dueAt != null && !r.dueAt!.isAfter(now);
+
+/// The card cost of each collection's two study CTAs. See [collectionCardCostProvider].
+Map<String, ({int due, int learn})> _deriveCardCost(List<ItemProgressRow> rows, int firstMeeting) {
+  final now = DateTime.now();
+  final agg = <String, ({int due, int learn})>{};
+  for (final r in rows) {
+    final cur = agg[r.collectionId] ?? (due: 0, learn: 0);
+    if (_isDueRow(r, now)) {
+      // Its own chain: `learning` owes the rungs it has left, anything else owes one card.
+      final step = r.acquisition == 'learning'
+          ? r.learningStep.clamp(
+              LearningLadder.stepRecognitionForward,
+              LearningLadder.stepRecognitionReverse,
+            )
+          : LearningLadder.stepAssembly;
+      agg[r.collectionId] = (due: cur.due + LearningLadder.chainLength(step), learn: cur.learn);
+    } else if (r.enrolledAt != null && r.acquisition == 'new') {
+      // «Учить N» — a first meeting, whole.
+      agg[r.collectionId] = (due: cur.due, learn: cur.learn + firstMeeting);
+    }
+  }
+
+  return agg;
+}
+
 Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow> rows) {
   final now = DateTime.now();
   final agg = <String, ({int total, int learned, int mastered, int due})>{};
@@ -603,7 +660,7 @@ Map<String, CollectionProgress> _deriveCollectionsProgress(List<ItemProgressRow>
     final cur = agg[r.collectionId] ?? (total: 0, learned: 0, mastered: 0, due: 0);
     final isLearned = r.state == 'review';
     final isMastered = _isMastered(r.state, r.intervalDays ?? 0);
-    final isDue = r.state != null && r.state != 'new' && r.dueAt != null && !r.dueAt!.isAfter(now);
+    final isDue = _isDueRow(r, now);
     agg[r.collectionId] = (
       total: cur.total + 1,
       learned: cur.learned + (isLearned ? 1 : 0),
