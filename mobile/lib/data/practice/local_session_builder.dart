@@ -4,6 +4,7 @@ import 'dart:math';
 import '../api_client.dart';
 import '../local/app_database.dart';
 import '../models.dart';
+import 'language_mode_support.dart';
 import 'learning_ladder.dart';
 import 'practice_distractors.dart';
 import 'practice_mode_selector.dart';
@@ -120,6 +121,8 @@ abstract final class LocalPracticeSessionBuilder {
     PracticeModes enabled = PracticeModes.serverDefault,
     Map<String, LadderPosition> ladder = const {},
     ModeAdmission admission = ModeAdmission.shipped,
+    Map<String, ({String learned, String support})> pairs = const {},
+    bool isOnline = true,
   }) {
     // Every term that could appear ON a card — as the question or as a wrong option.
     final playable = [
@@ -165,6 +168,8 @@ abstract final class LocalPracticeSessionBuilder {
           random: random,
           position: ladder[chosen.single.id] ?? LadderPosition.untouched,
           admission: admission,
+          pairs: pairs,
+          isOnline: isOnline,
         ),
         builtLocally: true,
       );
@@ -181,6 +186,8 @@ abstract final class LocalPracticeSessionBuilder {
           random: random,
           position: ladder[chosen[index].id] ?? LadderPosition.untouched,
           admission: admission,
+          pairs: pairs,
+          isOnline: isOnline,
         ),
     ];
 
@@ -205,6 +212,8 @@ abstract final class LocalPracticeSessionBuilder {
     required Random random,
     required LadderPosition position,
     required ModeAdmission admission,
+    required Map<String, ({String learned, String support})> pairs,
+    required bool isOnline,
   }) {
     final answer = (term.termText ?? '').trim();
     final playable = TermPlayability.of(
@@ -212,8 +221,17 @@ abstract final class LocalPracticeSessionBuilder {
       example: term.example,
       exampleTranslation: term.exampleTranslation,
       distractorCount: _spanDistinct(_distractorsOf(term)).length,
+      // The one argument the fan used to leave out, and the whole of BUGFIX-2 Ч.2б D1: without it
+      // `hasDescription` was false for every fanned card, so description_match could not enter the
+      // fan however much description the term had — on exactly the path («Тренировать это слово»)
+      // where the fan IS the veer the button promises. The round-robin below always passed it.
+      description: term.description,
     );
-    final modes = playable.only(_drillable(enabled, position, admission));
+    final drillable = _drillable(enabled, position, admission, pairs[term.id], isOnline);
+    // The language carries no trainer at all (`zh`, `ja` — reference-only in v1). Not a fan of one
+    // card: no card. Same refusal the server's assembler makes.
+    if (drillable == null) return const [];
+    final modes = playable.only(drillable);
 
     if (modes.isEmpty) {
       final floor = _card(
@@ -224,6 +242,8 @@ abstract final class LocalPracticeSessionBuilder {
         random: random,
         position: position,
         admission: admission,
+        pairs: pairs,
+        isOnline: isOnline,
       );
       return floor == null ? const [] : [floor];
     }
@@ -241,6 +261,8 @@ abstract final class LocalPracticeSessionBuilder {
           random: random,
           position: position,
           admission: admission,
+          pairs: pairs,
+          isOnline: isOnline,
           forcedMode: modes[i],
         ),
     ];
@@ -256,12 +278,17 @@ abstract final class LocalPracticeSessionBuilder {
     required Random random,
     required LadderPosition position,
     required ModeAdmission admission,
+    required Map<String, ({String learned, String support})> pairs,
+    required bool isOnline,
     ExerciseMode? forcedMode,
   }) {
     var answer = (term.termText ?? '').trim();
     final example = term.example;
     // Span-distinct, because that is what a card can actually use — see _spanDistinct.
     final usableDistractors = _spanDistinct(_distractorsOf(term));
+    final drillable = _drillable(enabled, position, admission, pairs[term.id], isOnline);
+    // A language that carries no trainer at all has no card, not a lesser one (see [_drillable]).
+    if (drillable == null) return null;
     final mode =
         forcedMode ??
         PracticeModeSelector.select(
@@ -271,9 +298,9 @@ abstract final class LocalPracticeSessionBuilder {
           // does. What the rung still decides is the card's SHAPE, below: where a choice card's
           // options come from, and which form `speaking` asks in.
           //
-          // For a pair with no rung of its own — outside the pool, or in it at rung 0 — the matrix
-          // DOES narrow the set, to the easy corner: see [_drillable].
-          enabled: PracticeModes(_drillable(enabled, position, admission)),
+          // For a pair with no rung of its own — outside the pool, or in it at rung 0 — the set is
+          // narrowed to the RECEPTIVE CORNER: see [_drillable].
+          enabled: PracticeModes(drillable),
           rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
           playable: TermPlayability.of(
             answer: answer,
@@ -308,12 +335,25 @@ abstract final class LocalPracticeSessionBuilder {
           // on sight, without knowing anything, and a word offered beside whole questions is a card
           // with two real options pretending to have four (QA-6). Too few same-shape neighbours
           // makes the card SHORTER, never mixed — mirroring the server's StudyCardAssembler.
+          // …and filtered for the PAIR, BOTH halves, exactly as the server's `recognitionCard()`
+          // does: a far option may be shown as the translation, and a pair is directed — ru→en and
+          // en→ru hold the same two languages and are not the same pair.
           ? [
-              for (final t in candidates)
+              for (final t in PracticeDistractors.samePairAs(
+                target: term,
+                pool: candidates,
+                pairs: pairs,
+                bothHalves: true,
+              ))
                 if (t.id != term.id && t.type == term.type && (t.termText ?? '').trim().isNotEmpty)
                   (t.termText ?? '').trim(),
             ].take(optionCount - 1).toList()
-          : PracticeDistractors.forTarget(target: term, pool: candidates, count: optionCount - 1);
+          : PracticeDistractors.forTarget(
+              target: term,
+              pool: candidates,
+              count: optionCount - 1,
+              pairs: pairs,
+            );
       options = [answer, ...distractors]..shuffle(random);
     } else if (mode == ExerciseMode.wordBank) {
       chips = _chips(answer, phrasalVerb: term.type == 'phrasal_verb', random: random);
@@ -349,6 +389,7 @@ abstract final class LocalPracticeSessionBuilder {
           target: term,
           pool: [...pool]..shuffle(random),
           count: optionCount - 1,
+          pairs: pairs,
         ),
       ]..shuffle(random);
     }
@@ -401,34 +442,57 @@ abstract final class LocalPracticeSessionBuilder {
   }
 
   /// The switched-on trainers this pair may be drilled in — mirror of the server's
-  /// `ExerciseSelector::drillable()` plus the one filter free practice still applies.
+  /// `ExerciseSelector::drillable()` plus the two filters free practice still applies.
   ///
   /// `intro` is toggled like a trainer but is not one: it can never be an answer to «what can this
   /// term be drilled in», so it is dropped here, once.
   ///
-  /// The admission matrix then applies to the pairs with NO RUNG OF THEIR OWN — a word outside the
-  /// pool, and a pool word still at rung 0. For them the rung is not a fact: nothing has been
-  /// earned, and the honest reading is the easy half of the matrix
-  /// ([LearningLadder.stepUnenrolledPractice]): choice and assembly, never «напиши по памяти» or a
-  /// whole sentence from hearing it once. A pair that HAS a rung is unfiltered, exactly as QA-26
-  /// left it: the rung it stands on says when a word comes back and as what, not what a drill may
-  /// ask of it.
+  /// **The LANGUAGE gate**, first and for every pair, exactly as the server's assembler applies it
+  /// per card (DECISIONS пп. 130, 143): the product matrix intersected with what this card's studied
+  /// language can actually carry ([modesForLanguage]). It was missing here entirely, so an offline
+  /// card could be a trainer the server would have refused — a `pick_correct` on a Polish word, the
+  /// full set on a reference-only `zh` term (BUGFIX-2 Ч.2б D3/D4). **null** is its one hard answer:
+  /// the language carries nothing, so there is no card, and the caller refuses rather than falling
+  /// back. When the pair is unknown — an orphan word whose folders have all left the mirror — the
+  /// gate cannot be applied and is skipped, which is the honest superset and what happened before.
   ///
-  /// An empty result is fine and is not repaired here: [PracticeModeSelector.select] floors it to
-  /// multiple_choice, the one trainer every term supports — the same floor the server uses.
-  static List<ExerciseMode> _drillable(
+  /// **Offline**, the online-only trainers of this language drop out ([LanguageModeSupport.isOnlineOnly]):
+  /// `speaking` and `dictation` in `pl`/`ro` have no on-device recognition, and a card that opens a
+  /// microphone nothing is listening to is worse than a card that is not dealt. Available, not
+  /// absent — the trainer comes back the moment there is a network.
+  ///
+  /// **The RUNG** comes last, and only for pairs with NO RUNG OF THEIR OWN — a word outside the
+  /// pool, and a pool word still at rung 0. For them nothing has been earned, and the canon is the
+  /// RECEPTIVE CORNER ([ModeAdmission.onlyPracticeCorner]): «свободная практика ступени 0 =
+  /// рецептивные режимы; продуктивные (письмо по памяти, диктант) открываются лестницей». A pair
+  /// that HAS a rung is unfiltered by the matrix, exactly as QA-26 left it: the rung says when a
+  /// word comes back and as what, not what a drill may ask of it.
+  ///
+  /// An empty (non-null) result is fine and is not repaired here: [PracticeModeSelector.select]
+  /// floors it to multiple_choice, the one trainer every term supports — the same floor the server
+  /// uses.
+  static List<ExerciseMode>? _drillable(
     PracticeModes enabled,
     LadderPosition position,
     ModeAdmission admission,
+    ({String learned, String support})? pair,
+    bool isOnline,
   ) {
-    final graded = [
+    var graded = [
       for (final mode in enabled.modes)
         if (mode.isGraded) mode,
     ];
 
-    return position.drillsAtOwnRung
-        ? graded
-        : admission.only(graded, LearningLadder.stepUnenrolledPractice);
+    if (pair != null) {
+      final byLanguage = modesForLanguage(graded, pair.learned);
+      if (byLanguage == null) return null;
+      graded = [
+        for (final mode in byLanguage)
+          if (isOnline || !LanguageModeSupport.isOnlineOnly(pair.learned, mode)) mode,
+      ];
+    }
+
+    return position.drillsAtOwnRung ? graded : admission.onlyPracticeCorner(graded);
   }
 
   /// The term's example distractors, as mirrored by `/sync` (a JSON array in one column). Malformed
@@ -484,12 +548,22 @@ abstract final class LocalPracticeSessionBuilder {
     }
   }
 
-  /// Word chips for a phrase, letter chips for a single word — so word_bank never degenerates into
+  /// Word chips for a phrase, LETTER chips for a single word — so word_bank never degenerates into
   /// a one-chip card. The shuffle is retried until it differs from the answer's own order (with two
   /// chips a plain shuffle is the original half the time). Mirrors the server's ChipShuffler.
+  ///
+  /// The letter branch was unreachable until BUGFIX-2 Ч.2б D2: the playability gate asked for two
+  /// WORDS, so a single word never got here and every one-word term was simply missing its assembly
+  /// trainer. The gate now asks for two CHIPS, which is what this function actually deals.
+  ///
+  /// `runes`, not `split('')`: the count that opened this gate is code points
+  /// ([TermPlayability.answerCharCount], mirroring the server's `mb_strlen`), and splitting by
+  /// UTF-16 code units instead would deal a different number of chips than the gate counted.
   static List<String> _chips(String answer, {required bool phrasalVerb, required Random random}) {
     final words = answer.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    var tokens = words.length > 1 ? words : answer.trim().split('');
+    var tokens = words.length > 1
+        ? words
+        : [for (final rune in answer.trim().runes) String.fromCharCode(rune)];
 
     if (phrasalVerb && tokens.length >= 2) {
       tokens = [...tokens, ..._particleDecoys(tokens, random)];

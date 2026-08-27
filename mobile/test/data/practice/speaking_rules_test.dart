@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/models.dart';
@@ -100,6 +102,41 @@ void main() {
       // The one number both runtimes read. Moving it here without moving `SpokenCoverage` there
       // makes the phone show a verdict the server then contradicts.
       expect(SpokenAnswer.minCoverage, 0.7);
+    });
+
+    test('…and on WHICH answers are compared this way at all (BUGFIX-2 Ч.3б)', () {
+      // The half that had landed on one side only. QA-22 taught the CLIENT to grade a long term by
+      // coverage — a term is not always a word, and «Where do you see yourself in five years?» read
+      // correctly comes back mangled — while the server still demanded equality for the word form.
+      // So the phone showed «Верно» and the scheduler wrote a lapse underneath it. Both sides now
+      // read the same number, and it is read out of the PHP rather than transcribed: a
+      // transcription agrees on the day it is written and drifts silently after.
+      final php = File(
+        '../backend2/app/Modules/Learning/Domain/Service/SpokenCoverage.php',
+      );
+      expect(php.existsSync(), isTrue, reason: 'the server file moved: ${php.path}');
+
+      final match = RegExp(
+        r'const LONG_UTTERANCE_WORDS = (\d+);',
+      ).firstMatch(php.readAsStringSync());
+      expect(match, isNotNull, reason: 'the server constant is gone — this pins nothing now');
+      expect(SpokenAnswer.longTermWords, int.parse(match!.group(1)!));
+    });
+
+    test('the rule itself: a phrase by coverage, a short term by equality', () {
+      // Same words on both sides of the mirror, so the client is never STRICTER than the server —
+      // and never looser either, which is what «Верно» over a lapse was.
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: false, term: 'reservation'), isFalse);
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: false, term: 'front desk'), isFalse);
+      expect(
+        SpokenAnswer.gradesByCoverage(
+          asksForExample: false,
+          term: 'Where do you see yourself in five years?',
+        ),
+        isTrue,
+      );
+      // The example form is always a sentence, whatever the term behind it is.
+      expect(SpokenAnswer.gradesByCoverage(asksForExample: true, term: 'photo'), isTrue);
     });
   });
 

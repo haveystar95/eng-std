@@ -325,6 +325,26 @@ enum ExerciseMode {
   /// Modes whose content is heard, not read: the card plays on appearance and offers a replay.
   bool get isHeard => this == listening || this == dictation;
 
+  /// IS THIS TRAINER OPENED BY THE LADDER ALONE — the canon of free practice's rung-0 corner.
+  /// Client port of the server's `ExerciseMode::openedByLadderOnly()`.
+  ///
+  /// «Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по памяти, диктант)
+  /// открываются лестницей» (владелец/архитектор, BUGFIX-2 Ч.2б).
+  ///
+  /// Two trainers, and only two, ask the learner to write a word out of memory with nothing on
+  /// screen to lean on: [typing] and [dictation]. A word with no rung of its own — outside the pool,
+  /// or in it and still at rung 0 — has never been met, so being asked to spell it is not a harder
+  /// card, it is an unanswerable one. Everything else is RECEPTION: recognised, tapped, assembled
+  /// from tiles we dealt, said aloud, or written down from a sound played as often as the learner
+  /// likes. None of those needs a rung to be fair, so none is held back by one in free practice.
+  ///
+  /// Deliberately NOT «is it typed» ([isTyped]), which answers a different question and puts
+  /// [listening] on the wrong side of this one: writing what you just heard is production for the
+  /// GRADE and reception for the GATE.
+  ///
+  /// Read in exactly one place: [ModeAdmission.onlyPracticeCorner].
+  bool get openedByLadderOnly => this == typing || this == dictation;
+
   /// Does this card ask for the term's EXAMPLE SENTENCE rather than the term itself? Mirrors the
   /// server's `ExerciseMode::gradesAgainstExample()` — on these cards [SessionCard.answer] is the
   /// sentence, so the feedback must not also print it as "the example".

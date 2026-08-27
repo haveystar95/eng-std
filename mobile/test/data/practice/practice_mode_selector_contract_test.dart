@@ -70,6 +70,11 @@ void main() {
         reason: 'word count drift on "$answer" — this gates word_bank',
       );
       expect(
+        p.answerCharCount,
+        c['answer_char_count'],
+        reason: 'letter count drift on "$answer" — this is the other half of the word_bank gate',
+      );
+      expect(
         p.clozeable,
         c['clozeable'],
         reason: 'clozeable drift on "$answer" — this gates cloze',
@@ -123,6 +128,7 @@ void main() {
         rotation: c['rotation'] as int,
         playable: TermPlayability(
           answerWordCount: c['word_count'] as int,
+          answerCharCount: c['answer_char_count'] as int,
           clozeable: c['clozeable'] as bool,
           exampleTokenCount: c['example_token_count'] as int,
           hasExampleTranslation: c['has_example_translation'] as bool,

@@ -319,13 +319,10 @@ void main() {
     ).cards.single;
     expect(phrase.chips, containsAll(['front', 'desk']));
 
-    // A SINGLE word is gated out of word_bank (minWordBankWords is 2 — one chip is not a puzzle), so
-    // with only word_bank switched on the term falls to the floor. It used to come back as word_bank
-    // with letter chips, but only because the floor returned `enabled.first` and skipped the gate;
-    // the server has always answered multiple_choice here. ChipShuffler keeps its letter branch for a
-    // future policy that lowers the floor — nothing selects it today.
-    // The neighbour is here so the floor's multiple_choice can be BUILT — a deck of one leaves it
-    // with a single option and the card is refused (QA-15).
+    // A SINGLE word is assembled from its LETTERS (BUGFIX-2 Ч.2б D2). The letter branch had been
+    // sitting here unreachable since word_bank was written, because the gate asked for two WORDS; it
+    // now asks for two CHIPS, which is what the chip builder actually deals. The neighbour rides
+    // along only so the card has a deck around it, exactly as before.
     final pool = [terms[3], terms.first]; // "towel", + something to offer beside it
     final single = LocalPracticeSessionBuilder.build(
       terms: pool,
@@ -335,8 +332,9 @@ void main() {
       enabled: const PracticeModes([ExerciseMode.wordBank]),
       ladder: topOfLadder(pool),
     ).cards.firstWhere((c) => c.termId == terms[3].id);
-    expect(single.mode, ExerciseMode.multipleChoice, reason: 'the floor, exactly as on the server');
-    expect(single.chips, isNull);
+    expect(single.mode, ExerciseMode.wordBank, reason: 'letters are chips too');
+    expect(single.chips, containsAll(const ['t', 'o', 'w', 'e', 'l']));
+    expect(single.chips, hasLength('towel'.length));
   });
 
   test('a phrasal verb gets decoy particles that are never its own', () {
@@ -433,8 +431,10 @@ void main() {
       final bare = term('01KZETAAM18AQK14YFSBWW6KRP', text: 'towel', translation: 'полотенце');
       final modes = solo(bare).cards.map((c) => c.mode).toSet();
 
-      // No example and a single word: word_bank, cloze and scramble are all gated out by content.
-      expect(modes, isNot(contains(ExerciseMode.wordBank)));
+      // No example: cloze and scramble are gated out by content — there is no sentence to cut a
+      // blank from or to assemble. word_bank IS in the fan: a single word is assembled from its
+      // letters, so its gate is about chips and not about an example (BUGFIX-2 Ч.2б D2).
+      expect(modes, contains(ExerciseMode.wordBank));
       expect(modes, isNot(contains(ExerciseMode.cloze)));
       expect(modes, isNot(contains(ExerciseMode.scramble)));
     });

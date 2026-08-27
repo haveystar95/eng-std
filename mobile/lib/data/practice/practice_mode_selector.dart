@@ -91,6 +91,7 @@ class TermPlayability {
     this.exampleIsAnswer = false,
     this.distractorCount = 0,
     this.hasDescription = false,
+    this.answerCharCount = 0,
   });
 
   /// Derive it from a term's own content, exactly as the server's `PlayabilityAssessor` does.
@@ -102,8 +103,13 @@ class TermPlayability {
     String? description,
   }) {
     final hasExample = example != null && example.isNotEmpty;
+    final answerWordCount = wordsIn(answer);
     return TermPlayability(
-      answerWordCount: wordsIn(answer),
+      answerWordCount: answerWordCount,
+      // Only for a SINGLE word: that is the answer word_bank deals as LETTER chips. A phrase is
+      // assembled from its words, so counting its characters would say nothing about its card.
+      // `runes`, matching the server's `mb_strlen` — code points, not UTF-16 code units.
+      answerCharCount: answerWordCount == 1 ? answer.trim().runes.length : 0,
       clozeable:
           hasExample && answer.isNotEmpty && example.toLowerCase().contains(answer.toLowerCase()),
       exampleTokenCount: hasExample ? SentenceTokenizer.tokenize(example).length : 0,
@@ -117,8 +123,17 @@ class TermPlayability {
     );
   }
 
-  /// Nothing to assemble from a single word.
+  /// A phrase is assembled from its WORDS, and two of them is the least that is a puzzle.
   static const int minWordBankWords = 2;
+
+  /// A SINGLE word is assembled from its LETTERS, and the same floor applies to those.
+  ///
+  /// The letter branch has existed in [LocalPracticeSessionBuilder]'s chip builder (and in the
+  /// server's ChipShuffler) since word_bank was written, and was unreachable for exactly as long:
+  /// the gate asked for two WORDS, so a one-word term never got there (BUGFIX-2 Ч.2б D2). It showed
+  /// in free practice, where «Тренировать это слово» on an ordinary one-word term fanned out with
+  /// no assembly trainer in the fan at all.
+  static const int minWordBankChips = 2;
 
   /// Scramble's sentence-length window (see the server VO for why these numbers).
   static const int minScrambleTokens = 4;
@@ -134,6 +149,11 @@ class TermPlayability {
   static const int minPickCorrectDistractors = 2;
 
   final int answerWordCount;
+
+  /// Code points in a SINGLE-word answer — the letter chips word_bank deals for it. 0 for a
+  /// multi-word answer, which is assembled from words and never from letters.
+  final int answerCharCount;
+
   final bool clozeable;
   final int exampleTokenCount;
   final bool hasExampleTranslation;
@@ -148,7 +168,10 @@ class TermPlayability {
 
   /// Can this term be drilled in this mode at all?
   bool supports(ExerciseMode mode) => switch (mode) {
-    ExerciseMode.wordBank => answerWordCount >= minWordBankWords,
+    // Words for a phrase, letters for a single word — the two branches the chip builder has always
+    // had, and now both reachable. Either way the question is: does the card get two chips?
+    ExerciseMode.wordBank =>
+      answerWordCount >= minWordBankWords || answerCharCount >= minWordBankChips,
     ExerciseMode.cloze => clozeable, // needs an example holding the answer
     ExerciseMode.scramble =>
       !exampleIsAnswer && // else it is word_bank with extra steps

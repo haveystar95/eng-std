@@ -676,8 +676,13 @@ class AppDatabase extends _$AppDatabase {
   /// «Тренировать это слово» from «Мои слова» is exactly that session: the pool outlives the folder
   /// a word came from (п. 102), so the word may belong to several collections or to none, and there
   /// is no collection whose terms could furnish the wrong options. The mirror is the honest superset
-  /// — the same words the learner has synced — and the card's own filters (pair, shape, meaning)
-  /// narrow it down from there, exactly as they narrow a collection.
+  /// — every word the learner has synced, in every language they are learning.
+  ///
+  /// A SUPERSET IS NOT A CARD'S MATERIAL. This list mixes pairs, and the card's own filters are what
+  /// narrow it: shape, meaning, and — the one that was missing until BUGFIX-2 Ч.1 — the PAIR. Every
+  /// caller must resolve pairs through [pairByTerms] and hand them to the builder, or the English
+  /// card comes out with a Polish option on it, which is what the owner met from the phone. The
+  /// filter lives in `PracticeDistractors` so a caller cannot skip it by forgetting.
   Future<List<Term>> allTerms() => select(terms).get();
 
   /// WHICH PAIR each of these terms is being studied through — the device's half of the server's

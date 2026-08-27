@@ -62,9 +62,14 @@ void main() {
     ExerciseMode.intro,
   ]);
 
-  /// The trainers a word outside the pool must never be asked in — the owner's «без диктанта,
-  /// печати, аудирования».
-  const withheld = [ExerciseMode.typing, ExerciseMode.listening, ExerciseMode.dictation];
+  /// The trainers a word outside the pool must never be asked in: the two that ask it to be written
+  /// out of memory. «Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по
+  /// памяти, диктант) открываются лестницей» (владелец/архитектор, BUGFIX-2 Ч.2б).
+  ///
+  /// `listening` used to be on this list and is not any more: writing down a word the phone has just
+  /// said, as many times as asked, is RECEPTION — the sound is the question and it stays available
+  /// for as long as the learner wants it.
+  const withheld = [ExerciseMode.typing, ExerciseMode.dictation];
 
   /// A pair that has earned every rung, so the trainers it is dealt are the gate's doing.
   const topOfLadder = LadderPosition(

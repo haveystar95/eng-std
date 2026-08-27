@@ -380,4 +380,35 @@ class ModeAdmission {
     for (final mode in modes)
       if (allows(mode, step)) mode,
   ];
+
+  /// THE RUNG-0 CORNER OF FREE PRACTICE — what a pair with no rung of its own may be drilled in.
+  /// Client port of the server's `ModeAdmission::onlyPracticeCorner()`.
+  ///
+  /// The canon (владелец/архитектор, BUGFIX-2 Ч.2б): «свободная практика ступени 0 = рецептивные
+  /// режимы; продуктивные (письмо по памяти, диктант) открываются лестницей». So the corner is
+  /// узнавание/выбор, сборка, произнеси, аудио «услышал→напиши» and description_match при наличии
+  /// описания — everything except the two [ExerciseMode.openedByLadderOnly] names.
+  ///
+  /// Which is why this is not `only(modes, LearningLadder.stepUnenrolledPractice)`, the one line it
+  /// replaces: the matrix opens `listening` at the typed-production rung, because in a PLANNED
+  /// session it follows typing. Free practice is not a session — it schedules nothing, advances
+  /// nothing and spends nothing — so its corner is drawn by what a card ASKS, not by what a rung has
+  /// earned. Reading the rung straight off the matrix silently cost every rung-0 word its audio
+  /// trainer, which is what the owner met from the phone.
+  ///
+  /// The matrix still has the last word in both directions: a mode with no rule is admitted nowhere
+  /// (fail-closed, as everywhere else here), and a productive trainer is asked about at exactly the
+  /// rung such a word is drilled at, so a toggle in the panel still closes one.
+  List<ExerciseMode> onlyPracticeCorner(List<ExerciseMode> modes) => [
+    for (final mode in modes)
+      // A receptive trainer is asked about at the TOP rung: «is it on the ladder at all», never
+      // «has this word climbed to it».
+      if (allows(
+        mode,
+        mode.openedByLadderOnly
+            ? LearningLadder.stepUnenrolledPractice
+            : LearningLadder.stepDictation,
+      ))
+        mode,
+  ];
 }

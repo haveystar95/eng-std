@@ -9,12 +9,15 @@ Detailed rules live in the per-directory files linked below.
 | Dir | What it is | Status |
 |---|---|---|
 | `mobile/` | Flutter/iOS app (the product). paper/ink «Слова» design (light, typographic — no dark theme), Riverpod. | **Live on the phone.** See `mobile/CLAUDE.md`. |
-| `backend/` | **MVP API, currently LIVE** — the app talks to this. Flat Laravel (Http/Models/Services/Actions/Policies/Resources), SQLite, FSRS, Google auth, AI. | Working. Keep running; change only if asked. |
-| `backend2/` | **Paradigm rewrite in progress** — modular monolith + DDD. Postgres/pgvector/Redis/Horizon. Not yet wired to the app. | See `backend2/CLAUDE.md` + `backend2/docs/ROADMAP.md`. |
+| `backend/` | **The old MVP API.** Flat Laravel (Http/Models/Services/Actions/Policies/Resources), SQLite, FSRS, Google auth, AI. The app no longer talks to it. | Kept for reference. Change only if asked. |
+| `backend2/` | **THE LIVE API the app talks to** — modular monolith + DDD, `/api/v1`, ULIDs, RFC 7807. Postgres/pgvector/Redis/Horizon, and it owns the ngrok tunnel the phone uses. | See `backend2/CLAUDE.md` + `backend2/docs/ROADMAP.md`. |
 | `docs/` | `API_CONTRACT.md` (old backend ↔ Flutter contract). | — |
 
-There are **two backends on purpose**: the old `backend/` serves the app today; `backend2/`
-is the clean rebuild. The app is cut over to `backend2` only in ROADMAP Phase 4.
+There are **two backends on purpose**, and the cutover has HAPPENED: the app talks to `backend2`
+(ROADMAP Phase 4 is done), and `backend/` is kept as the reference for what the MVP did. Bring up
+`backend2` — not `backend` — when the phone needs a server: its compose owns the shared ngrok
+domain, and the free plan allows one tunnel, so running both stacks' ngrok at once is what causes
+`ERR_NGROK_334`.
 
 ## How to continue after a context reset
 

@@ -245,6 +245,32 @@ void main() {
       expect(skips, 0);
     });
 
+    testWidgets('prints what it is hearing WHILE it listens — the honest ear (Ч.3а)', (
+      tester,
+    ) async {
+      // The owner's complaint from the phone was «не видно, что услышано»: on a card with no
+      // keyboard, a microphone that shows nothing is indistinguishable from a microphone that is not
+      // listening. The recogniser reports partial results as they arrive
+      // ([SpeechRecognizer.listenOnce]'s `onPartial`), and they have to reach the screen — not only
+      // the final transcript after the verdict.
+      //
+      // `completeOnStop` keeps the attempt in flight, which is the only state this can be asserted
+      // in: once it settles, the card is answered and the controls are gone.
+      final recognizer = _FakeRecognizer([
+        const SpeechAttempt.heard('reserv'),
+      ], completeOnStop: true);
+      await tester.pumpWidget(host(wordCard(), recognizer));
+      await tester.pumpAndSettle();
+
+      await tester.tap(recordButton().first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(recognizer.calls, 1, reason: 'listening has begun, but the attempt has not settled');
+      expect(find.text('reserv'), findsOneWidget, reason: 'the partial must be on screen, live');
+      expect(answers, isEmpty, reason: 'a partial is not an answer');
+    });
+
     testWidgets('hands the recogniser the words it is hoping for', (tester) async {
       final recognizer = _FakeRecognizer([const SpeechAttempt.heard('reservation')]);
       await tester.pumpWidget(host(wordCard(), recognizer));

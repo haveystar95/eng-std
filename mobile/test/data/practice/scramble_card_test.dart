@@ -168,20 +168,30 @@ void main() {
   /// translated example of the right length), and the ladder is a separate filter with its own
   /// tests. Left out, every term here would be a never-shown one — held at rung 1, where the only
   /// trainer admitted is multiple_choice and no scramble card can be dealt at all.
-  List<SessionCard> scrambleCards() => LocalPracticeSessionBuilder.build(
-    terms: scrambleable,
-    limit: 20,
-    random: Random(8),
-    sessionId: 'SESSION',
-    ladder: {
-      for (final t in scrambleable)
-        t.id: const LadderPosition(
-          acquisition: Acquisition.graduated,
-          successfulReviews: 12,
-          enrolled: true,
-        ),
-    },
-  ).cards.where((c) => c.mode == ExerciseMode.scramble).toList();
+  ///
+  /// One session PER TERM (`onlyTermId`), because that is the FAN: every trainer the term can
+  /// furnish, dealt at once. A single many-word session would instead round-robin one mode per
+  /// term, and which mode each lands on is a hash — so «scramble is reachable» would be pinned by
+  /// luck and would move whenever the applicable set grows (it did, when word_bank stopped being
+  /// refused to single words — BUGFIX-2 Ч.2б D2).
+  List<SessionCard> scrambleCards() => [
+    for (final t in scrambleable)
+      ...LocalPracticeSessionBuilder.build(
+        terms: scrambleable,
+        limit: 20,
+        random: Random(8),
+        sessionId: 'SESSION',
+        onlyTermId: t.id,
+        ladder: {
+          for (final t in scrambleable)
+            t.id: const LadderPosition(
+              acquisition: Acquisition.graduated,
+              successfulReviews: 12,
+              enrolled: true,
+            ),
+        },
+      ).cards.where((c) => c.mode == ExerciseMode.scramble),
+  ];
 
   test('offline practice deals scramble cards without a network call', () {
     expect(

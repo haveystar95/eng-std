@@ -36,12 +36,37 @@ Membership is one nullable column on the mirrored progress row (`enrolled_at`), 
   and «Тренировка по теме» drills the whole collection, untriaged words included, so a topic is
   usable the moment it exists. It is allowed to be open because it moves nothing: no enrolment, no
   exposure, no quota, no rung, no schedule. **Only the planned session moves the ladder.** What the
-  rung still decides is the CARD: a pair with no rung of its own — outside the pool, or in it and
-  still at rung 0 — is dealt only what the matrix opens at `LearningLadder.stepUnenrolledPractice`
-  (choice and assembly), never typing, listening or dictation, and never an intro. A pair on a rung
-  of its own fans across every switched-on trainer. Pool words come first in the session.
-  `LadderPosition.drillsAtOwnRung` asks that one question; the server mirrors it as
-  `StudyCardAssembler::drillsAtOwnRung()`.
+  rung still decides is the CARD. The canon (владелец/архитектор, BUGFIX-2 Ч.2б), verbatim:
+
+  > **«Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по памяти, диктант)
+  > открываются лестницей.»**
+  >
+  > Угол ступени 0 = узнавание/выбор, сборка word_bank, произнеси/говорение, аудио «услышал→напиши»
+  > (listening-письмо — рецепция), description_match ПРИ НАЛИЧИИ описания. Ступени выше в свободной
+  > практике получают полный веер, доступный по материалу и языку.
+
+  So a pair with no rung of its own — outside the pool, or in it and still at rung 0 — is dealt the
+  RECEPTIVE CORNER (`ModeAdmission.onlyPracticeCorner`), never typing, never dictation, and never an
+  intro. A pair on a rung of its own fans across every switched-on trainer its material and its
+  language allow. Pool words come first in the session. `LadderPosition.drillsAtOwnRung` asks that
+  one question; the server mirrors it as `StudyCardAssembler::drillsAtOwnRung()`, and the corner as
+  `ModeAdmission::onlyPracticeCorner()`. The corner is deliberately NOT read off the matrix at a
+  rung: the matrix opens `listening` after `typing`, which is right for a PLANNED session and is
+  what silently cost every rung-0 word its audio trainer.
+- **What a card may be MADE OF is the pair, and what a card may BE is the language.** Both are per
+  card, because the pool mixes pairs by design (DECISIONS пп. 128, 143):
+  - the OPTIONS, the chips and the description-match candidates are terms of the card's own pair.
+    Free practice from «Мои слова» has no collection, so its material is the whole local mirror —
+    every language the learner is studying — and without this gate an English card came out with a
+    Polish option on it (BUGFIX-2 Ч.1). `PracticeDistractors` owns the rule so a call site cannot
+    forget it; the pair comes from `AppDatabase.pairByTerms` (there is no `lang` column on `terms`,
+    and deliberately none).
+  - the TRAINERS are intersected with what the studied language can carry
+    (`lib/data/practice/language_mode_support.dart`, a verbatim port of the server's
+    `LanguageModeSupport`, pinned by `test/data/practice/language_gate_parity_test.dart` which reads
+    the PHP table). `zh`/`ja` carry nothing, so they get no card at all; `speaking`/`dictation` in
+    `pl`/`ro` are online-only and are withheld with no network rather than opening a microphone
+    nothing is listening to.
 - **a word is a SCOPE of its own**: «Тренировать это слово» needs no collection («Мои слова» has none
   to give — the pool outlives folders), and the term list the session is built from stays wide, so a
   choice card still has neighbours to draw its wrong options from.

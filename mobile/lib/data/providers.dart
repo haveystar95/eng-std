@@ -795,6 +795,16 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
     final ladder = await db.ladderPositions(
       onlyTermId != null ? [onlyTermId] : [for (final t in terms) t.id],
     );
+    // WHICH PAIR each term is being studied in — for EVERY term in the list, not only the questioned
+    // ones, because this is what gates the card's MATERIAL. A term lends its text as a wrong option,
+    // and an option of another pair is not a weaker wrong answer but a word from a different card:
+    // shown the English `hello`, the owner's phone offered the Polish `Cześć` beside it (BUGFIX-2
+    // Ч.1). It also decides which TRAINERS the card may be, because the language gate is per card
+    // and the pool mixes pairs by design (DECISIONS пп. 130, 143).
+    //
+    // The same resolver the badge and the voice already read — `terms` carries no language of its
+    // own and is not getting a column for one.
+    final pairs = await db.pairByTerms([for (final t in terms) t.id]);
     return LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: args.limit,
@@ -804,6 +814,12 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
       enabled: enabled,
       ladder: ladder,
       admission: admission,
+      pairs: pairs,
+      // Read, not assumed: the two trainers that listen have no on-device recognition in `pl`/`ro`,
+      // so with no network they are withheld rather than opening a microphone nothing is listening
+      // to. `true` while connectivity is still resolving — the optimistic direction, and the one
+      // that matches what every other screen here assumes.
+      isOnline: ref.watch(connectivityProvider).value ?? true,
     );
   }
 

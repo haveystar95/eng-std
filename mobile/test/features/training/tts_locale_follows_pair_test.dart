@@ -8,10 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/languages.dart';
 import 'package:eng_std/data/local/app_database.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/review_sync.dart';
+import 'package:eng_std/features/training/session/session_exercise.dart';
 import 'package:eng_std/features/training/session_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
@@ -239,6 +241,52 @@ void main() {
 
     await close(tester);
   });
+
+  // ── the EAR follows the same pair as the voice (BUGFIX-2 Ч.3в) ──────────────────────────────
+  //
+  // «Мои слова» drills a WORD, with no collection to name — the pool outlives the folders its words
+  // came from — so the session has no `targetLang` to fall back on and every language on it is
+  // resolved per card. The voice was already pinned above; the MICROPHONE is the other half of the
+  // same fact, and it was never asserted: a Polish card listened to by an English recogniser hears
+  // English words, and the learner is marked wrong for saying the right thing.
+  //
+  // Both come off `_langOfCard`, which reads `pairByTerms` — so what is pinned here is that the two
+  // resolvers are ONE resolver, on the path where nothing else could supply the language.
+
+  /// The `speechLocaleId` the exercise card was actually handed.
+  String sttLocaleOnScreen(WidgetTester tester) =>
+      tester.widget<SessionExerciseCard>(find.byType(SessionExerciseCard)).speechLocaleId;
+
+  SessionCard speakingCard(String termId, String answer) => SessionCard(
+    termId: termId,
+    mode: ExerciseMode.speaking,
+    type: 'word',
+    prompt: 'перевод',
+    answer: answer,
+    ladderStep: null, // free practice carries no rung — the word form
+  );
+
+  for (final (name, termId, term, locale) in [
+    ('an Italian word', 'IT1', 'trattoria', 'it_IT'),
+    ('a Polish word', 'PL1', 'bagaż', 'pl_PL'),
+    ('an English word', 'EN1', 'luggage', 'en_US'),
+  ]) {
+    testWidgets('«Мои слова»: $name is listened to by its own recogniser', (tester) async {
+      await tester.pumpWidget(host([speakingCard(termId, term)]));
+      await tester.pumpAndSettle();
+
+      expect(sttLocaleOnScreen(tester), locale);
+      // …and it is the TTS locale of the same pair, spelled the way `speech_to_text` wants it.
+      // One table, one resolver — never two lists that agree today.
+      expect(sttLocaleOnScreen(tester), ttsLocaleFor(term == 'trattoria'
+          ? 'it'
+          : term == 'bagaż'
+              ? 'pl'
+              : 'en').replaceAll('-', '_'));
+
+      await close(tester);
+    });
+  }
 
   _noTrainerPinsItsOwnLocale();
 }
