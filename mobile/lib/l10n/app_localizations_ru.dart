@@ -1858,6 +1858,80 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeSessionCardTitle => 'Сессия на сегодня';
 
   @override
+  String get challengeLabel => 'Слово-вызов';
+
+  @override
+  String challengeStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'угадано $count подряд',
+      many: 'угадано $count подряд',
+      few: 'угадано $count подряд',
+      one: 'угадано $count подряд',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get challengeStreakReset => 'серия сброшена';
+
+  @override
+  String get challengePraise => 'Знаешь!';
+
+  @override
+  String challengeAnswer(String term, String translation) {
+    return '$term — $translation';
+  }
+
+  @override
+  String challengeExample(String sentence, String translation) {
+    return '$sentence — $translation';
+  }
+
+  @override
+  String challengeMistake(String chosen, String term) {
+    return 'Вы выбрали «$chosen» — это $term';
+  }
+
+  @override
+  String get challengeLearn => 'Учить';
+
+  @override
+  String get challengeTomorrow => 'Завтра новое';
+
+  @override
+  String get challengeCollapsed => 'Завтра новое слово';
+
+  @override
+  String get challengeLearning => 'Слово в очереди';
+
+  @override
+  String get homeSessionBadge => 'Сессия';
+
+  @override
+  String homeSessionUnitWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'слова',
+      many: 'слов',
+      few: 'слова',
+      one: 'слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSessionRowRepeat => 'Повторить';
+
+  @override
+  String get homeSessionRowNew => 'Новых';
+
+  @override
+  String get homeSessionRowTriage => 'Разобрать';
+
+  @override
   String homeSessionCardWords(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

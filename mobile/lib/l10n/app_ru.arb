@@ -1390,6 +1390,69 @@
   "homeSessionCardTitle": "Сессия на сегодня",
   "@homeSessionCardTitle": { "description": "Заголовок тёмной карточки дня (кадр 17a)." },
 
+  "challengeLabel": "Слово-вызов",
+  "@challengeLabel": { "description": "Лейбл карточки слова-вызова (кадр 19-4), брасовая мишень слева от него." },
+
+  "challengeStreak": "{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}",
+  "@challengeStreak": {
+    "description": "Счётчик серии справа в шапке карточки (кадр 19-4). При нуле не рисуется — «угадано 0 подряд» не предложение.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "challengeStreakReset": "серия сброшена",
+  "@challengeStreakReset": { "description": "То же место после неверного ответа (кадр 19-4в). Без красного и без слова «неверно»." },
+
+  "challengePraise": "Знаешь!",
+  "@challengePraise": { "description": "Похвала после верного ответа (кадр 19-4б) — одна и короткая, с галкой вместо эмодзи." },
+
+  "challengeAnswer": "{term} — {translation}",
+  "@challengeAnswer": {
+    "description": "Раскрытый ответ (кадры 19-4б/в): термин и перевод через тире.",
+    "placeholders": { "term": { "type": "String" }, "translation": { "type": "String" } }
+  },
+
+  "challengeExample": "{sentence} — {translation}",
+  "@challengeExample": {
+    "description": "Пример употребления с переводом (кадры 19-4б/в).",
+    "placeholders": { "sentence": { "type": "String" }, "translation": { "type": "String" } }
+  },
+
+  "challengeMistake": "Вы выбрали «{chosen}» — это {term}",
+  "@challengeMistake": {
+    "description": "Разбор ошибки (кадр 19-4в): чем на самом деле является выбранный вариант. Рисуется только когда неверный вариант — перевод известного термина.",
+    "placeholders": { "chosen": { "type": "String" }, "term": { "type": "String" } }
+  },
+
+  "challengeLearn": "Учить",
+  "@challengeLearn": { "description": "Кнопка: слово уходит в очередь тем же путём, что «Учить это слово» (кадр 19-4)." },
+
+  "challengeTomorrow": "Завтра новое",
+  "@challengeTomorrow": { "description": "Кнопка: свернуть карточку до завтра (кадр 19-4)." },
+
+  "challengeCollapsed": "Завтра новое слово",
+  "@challengeCollapsed": { "description": "Свёрнутая карточка одной строкой (кадр 19-4г) — та же типографика, что у «Завтра выпадет N слов»." },
+
+  "challengeLearning": "Слово в очереди",
+  "@challengeLearning": { "description": "Состояние кнопки «Учить» после нажатия: акт совершён, слово зачислено." },
+
+  "homeSessionBadge": "Сессия",
+  "@homeSessionBadge": { "description": "Бейдж брасом справа сверху на тёмной плите (кадр 19-1). Короче прежнего «Сессия на сегодня»: заголовок ушёл, вместо него метка." },
+
+  "homeSessionUnitWords": "{count, plural, one{слово} few{слова} many{слов} other{слова}}",
+  "@homeSessionUnitWords": {
+    "description": "Единица рядом с крупной цифрой на тёмной плите (кадр 19-1) — БЕЗ самого числа: цифра набрана антиквой в 60px, а слово рядом в 18px, и склеить их в одну строку нельзя.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeSessionRowRepeat": "Повторить",
+  "@homeSessionRowRepeat": { "description": "Подпись прейскурантной строки состава (кадр 19-1), число справа отдельно." },
+
+  "homeSessionRowNew": "Новых",
+  "@homeSessionRowNew": { "description": "Подпись прейскурантной строки состава (кадр 19-1)." },
+
+  "homeSessionRowTriage": "Разобрать",
+  "@homeSessionRowTriage": { "description": "Подпись прейскурантной строки состава (кадр 19-1) — свайп-проход по неразобранным словам коллекций." },
+
   "homeSessionCardWords": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
   "@homeSessionCardWords": {
     "description": "Размер сессии на тёмной карточке, «32 слова» (ICU plural).",

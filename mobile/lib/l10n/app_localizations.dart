@@ -3033,6 +3033,102 @@ abstract class AppLocalizations {
   /// **'Сессия на сегодня'**
   String get homeSessionCardTitle;
 
+  /// Лейбл карточки слова-вызова (кадр 19-4), брасовая мишень слева от него.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово-вызов'**
+  String get challengeLabel;
+
+  /// Счётчик серии справа в шапке карточки (кадр 19-4). При нуле не рисуется — «угадано 0 подряд» не предложение.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{угадано {count} подряд} few{угадано {count} подряд} many{угадано {count} подряд} other{угадано {count} подряд}}'**
+  String challengeStreak(int count);
+
+  /// То же место после неверного ответа (кадр 19-4в). Без красного и без слова «неверно».
+  ///
+  /// In ru, this message translates to:
+  /// **'серия сброшена'**
+  String get challengeStreakReset;
+
+  /// Похвала после верного ответа (кадр 19-4б) — одна и короткая, с галкой вместо эмодзи.
+  ///
+  /// In ru, this message translates to:
+  /// **'Знаешь!'**
+  String get challengePraise;
+
+  /// Раскрытый ответ (кадры 19-4б/в): термин и перевод через тире.
+  ///
+  /// In ru, this message translates to:
+  /// **'{term} — {translation}'**
+  String challengeAnswer(String term, String translation);
+
+  /// Пример употребления с переводом (кадры 19-4б/в).
+  ///
+  /// In ru, this message translates to:
+  /// **'{sentence} — {translation}'**
+  String challengeExample(String sentence, String translation);
+
+  /// Разбор ошибки (кадр 19-4в): чем на самом деле является выбранный вариант. Рисуется только когда неверный вариант — перевод известного термина.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы выбрали «{chosen}» — это {term}'**
+  String challengeMistake(String chosen, String term);
+
+  /// Кнопка: слово уходит в очередь тем же путём, что «Учить это слово» (кадр 19-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Учить'**
+  String get challengeLearn;
+
+  /// Кнопка: свернуть карточку до завтра (кадр 19-4).
+  ///
+  /// In ru, this message translates to:
+  /// **'Завтра новое'**
+  String get challengeTomorrow;
+
+  /// Свёрнутая карточка одной строкой (кадр 19-4г) — та же типографика, что у «Завтра выпадет N слов».
+  ///
+  /// In ru, this message translates to:
+  /// **'Завтра новое слово'**
+  String get challengeCollapsed;
+
+  /// Состояние кнопки «Учить» после нажатия: акт совершён, слово зачислено.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово в очереди'**
+  String get challengeLearning;
+
+  /// Бейдж брасом справа сверху на тёмной плите (кадр 19-1). Короче прежнего «Сессия на сегодня»: заголовок ушёл, вместо него метка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сессия'**
+  String get homeSessionBadge;
+
+  /// Единица рядом с крупной цифрой на тёмной плите (кадр 19-1) — БЕЗ самого числа: цифра набрана антиквой в 60px, а слово рядом в 18px, и склеить их в одну строку нельзя.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{слово} few{слова} many{слов} other{слова}}'**
+  String homeSessionUnitWords(int count);
+
+  /// Подпись прейскурантной строки состава (кадр 19-1), число справа отдельно.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторить'**
+  String get homeSessionRowRepeat;
+
+  /// Подпись прейскурантной строки состава (кадр 19-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Новых'**
+  String get homeSessionRowNew;
+
+  /// Подпись прейскурантной строки состава (кадр 19-1) — свайп-проход по неразобранным словам коллекций.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разобрать'**
+  String get homeSessionRowTriage;
+
   /// Размер сессии на тёмной карточке, «32 слова» (ICU plural).
   ///
   /// In ru, this message translates to:

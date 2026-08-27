@@ -1811,6 +1811,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSessionCardTitle => 'Today\'s session';
 
   @override
+  String get challengeLabel => 'Word challenge';
+
+  @override
+  String challengeStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in a row',
+      one: '$count in a row',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get challengeStreakReset => 'streak reset';
+
+  @override
+  String get challengePraise => 'You know it!';
+
+  @override
+  String challengeAnswer(String term, String translation) {
+    return '$term — $translation';
+  }
+
+  @override
+  String challengeExample(String sentence, String translation) {
+    return '$sentence — $translation';
+  }
+
+  @override
+  String challengeMistake(String chosen, String term) {
+    return 'You picked “$chosen” — that is $term';
+  }
+
+  @override
+  String get challengeLearn => 'Learn it';
+
+  @override
+  String get challengeTomorrow => 'New one tomorrow';
+
+  @override
+  String get challengeCollapsed => 'A new word tomorrow';
+
+  @override
+  String get challengeLearning => 'In your queue';
+
+  @override
+  String get homeSessionBadge => 'Session';
+
+  @override
+  String homeSessionUnitWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'words', one: 'word');
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSessionRowRepeat => 'To review';
+
+  @override
+  String get homeSessionRowNew => 'New';
+
+  @override
+  String get homeSessionRowTriage => 'To sort';
+
+  @override
   String homeSessionCardWords(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -106,7 +106,7 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('says how many CARDS the day is, beside how many words', (tester) async {
+    testWidgets('the headline is words and minutes — the card count is not on it', (tester) async {
       await pump(
         tester,
         const HomeSession(
@@ -121,11 +121,17 @@ void main() {
         ),
       );
 
-      expect(find.text('5 слов'), findsOneWidget);
-      expect(find.text('~11 карточек'), findsOneWidget);
+      // Number and unit are two widgets, because кадр 19-1 sets them at 56 pt and 18 pt.
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('слов'), findsOneWidget);
+      expect(find.textContaining('минут'), findsWidgets);
+      // The card count left the headline with кадр 19-1: it is a second unit for the same decision,
+      // and the one the learner acts on is time. `sessionSizeLabel` still names both — on the
+      // collection button, which is where that pair now lives.
+      expect(find.textContaining('карточ'), findsNothing);
     });
 
-    testWidgets('a day with no cards says nothing about cards', (tester) async {
+    testWidgets('a day with nothing in it draws no composition at all', (tester) async {
       // The empty rule, unchanged: a block with no data is not drawn, not drawn as a zero.
       await pump(
         tester,
@@ -142,6 +148,9 @@ void main() {
       );
 
       expect(find.textContaining('карточ'), findsNothing);
+      expect(find.text('Повторить'), findsNothing);
+      expect(find.text('Новых'), findsNothing);
+      expect(find.text('Разобрать'), findsNothing);
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/features/daily/word_challenge.dart';
 import 'package:eng_std/features/training/training_home_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/data/locale_controller.dart';
@@ -93,11 +94,20 @@ void main() {
     learnedWeek: learnedWeek,
   );
 
+  WordChallenge word() => const WordChallenge(
+    termId: 't1',
+    text: 'reluctant',
+    translation: 'неохотный',
+    options: ['неохотный', 'надёжный', 'заметный'],
+    streak: 6,
+  );
+
   Future<void> pumpHome(
     WidgetTester tester,
     HomePlan? day, {
     int streak = 5,
     int learned = 146,
+    WordChallenge? challenge,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -120,6 +130,7 @@ void main() {
             ),
           ),
           connectivityProvider.overrideWith((ref) => Stream.value(true)),
+          wordChallengeProvider.overrideWith((ref) => Stream.value(challenge)),
         ],
         child: MaterialApp(
           supportedLocales: kSupportedLocales,
@@ -186,22 +197,43 @@ void main() {
       expect(find.byKey(HomeBlockKeys.stats), findsNothing);
     });
 
-    testWidgets('a part whose count is 0 is not a line on the card', (tester) async {
+    testWidgets('the composition is a price list, and a row with 0 is not in it', (tester) async {
       await pumpHome(tester, plan(session_: session(repeat: 12, minutes: 2)));
 
-      expect(find.textContaining('12'), findsWidgets);
-      // «0 новых» does not exist on this screen.
+      // Label left, number right — and only the rows that have something in them. «12» twice: the
+      // headline and its one row, which on a repeats-only day are the same number.
+      expect(find.text('Повторить'), findsOneWidget);
+      expect(find.text('12'), findsNWidgets(2));
+      expect(find.text('Новых'), findsNothing);
+      expect(find.text('Разобрать'), findsNothing);
       expect(find.textContaining('0 новых'), findsNothing);
     });
 
-    testWidgets('an unsorted collection is not part of the day', (tester) async {
-      // 12 repeats and 131 words nobody has sorted. The card is about the pool: the swipe pass is
-      // an offer for later, and counting it here is what made every added set inflate «сегодня».
-      await pumpHome(tester, plan(session_: session(repeat: 12, triage: 131, minutes: 2)));
+    testWidgets('«Разобрать» is a row of the composition — but not part of the headline', (
+      tester,
+    ) async {
+      // 12 repeats, 5 new, and 131 words nobody has sorted.
+      await pumpHome(tester, plan(session_: session(repeat: 12, newTerms: 5, triage: 131, minutes: 2)));
 
-      expect(find.textContaining('12'), findsWidgets);
-      expect(find.textContaining('143'), findsNothing);
-      expect(find.textContaining('131'), findsNothing);
+      // Named, because a day that has 131 unsorted words is not honestly described without them.
+      expect(find.text('Разобрать'), findsOneWidget);
+      expect(find.text('131'), findsOneWidget);
+      // …and NOT added to the number over it: the headline is the server's `total`, which is the
+      // POOL's work. A collection is a catalogue, so adding a set must not add its size to «сегодня».
+      expect(find.text('17'), findsOneWidget);
+      expect(find.text('148'), findsNothing);
+    });
+
+    testWidgets('the card count is out of the headline — minutes are what a decision needs', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        plan(session_: session(repeat: 12, newTerms: 5, cards: 158, minutes: 26)),
+      );
+
+      expect(find.textContaining('26'), findsWidgets);
+      expect(find.textContaining('158'), findsNothing);
     });
   });
 
@@ -386,6 +418,36 @@ void main() {
 
       expect(find.text('16 слов'), findsOneWidget);
       expect(find.textContaining('·'), findsNothing);
+    });
+  });
+
+  group('слово-вызов (кадр 19-4)', () {
+    testWidgets('sits on all three screens, above the «завтра» row', (tester) async {
+      for (final state in [HomeStateKind.plan, HomeStateKind.done, HomeStateKind.empty]) {
+        await pumpHome(
+          tester,
+          plan(
+            state: state,
+            session_: session(repeat: 3, minutes: 1),
+            today: state == HomeStateKind.done ? const HomeToday(answered: 3, seconds: 30) : null,
+            edgeTomorrow: 14,
+          ),
+          challenge: word(),
+        );
+
+        expect(find.byKey(HomeBlockKeys.challenge), findsOneWidget, reason: '$state');
+        expect(find.text('reluctant'), findsOneWidget, reason: '$state');
+      }
+    });
+
+    testWidgets('a day the mirror cannot produce a word for draws no card', (tester) async {
+      // Null is a real answer — an empty mirror, a pair with fewer than three translations, a
+      // learner studying everything they own. None of them is a card apologising for itself.
+      await pumpHome(tester, plan(edgeTomorrow: 14));
+
+      expect(find.byKey(HomeBlockKeys.challenge), findsNothing);
+      // …and the row below it is still there: the column survives the gap.
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsOneWidget);
     });
   });
 

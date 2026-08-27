@@ -68,6 +68,17 @@ abstract final class AppColors {
   // ── Три вердикта разбора — единственный цвет UI (правило 02) ──
 
   /// «Не знаю». Заливка только здесь (правило 20). Подпись — [onVerdictUnknown].
+  /// БРАС — the one warm mark the product allows itself, and only on the dark plate.
+  ///
+  /// Кадры 19-1 / 19-4: the «СЕССИЯ» badge over the session tile and the target icon of the word
+  /// challenge. It is NOT a general accent — nothing on the paper ground wears it, and the rule
+  /// «один акцент на экран» is what keeps it meaning «начни отсюда».
+  ///
+  /// NOT YET IN `../backend2/docs/design/tokens.html`, which is the source of truth for this palette
+  /// — the frames introduced it and the token list has not caught up. Add the row there; if the
+  /// owner decides against brass, this constant is the one place to delete.
+  static const brass = Color(0xFFB79363);
+
   static const verdictUnknown = Color(0xFFB5533C);
 
   /// «Не уверен». Подпись — [onVerdictUnsure].

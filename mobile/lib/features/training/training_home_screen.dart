@@ -18,6 +18,8 @@ import '../../data/word_status.dart' show ladderRungFor, ladderRungLabel;
 import '../collections/generate_screen.dart';
 import '../collections/my_words_screen.dart';
 import '../collections/store_view.dart' show showStorePreview;
+import '../daily/word_challenge.dart';
+import '../daily/word_challenge_card.dart';
 import '../home/streak.dart';
 import '../search/search_pair.dart' show LearningPair;
 import '../word_card/word_card_screen.dart';
@@ -60,6 +62,9 @@ abstract final class HomeBlockKeys {
 
   /// «Завтра выпадет 14 слов →» (кадры 19-1, 19-2).
   static const tomorrow = Key('home-tomorrow');
+
+  /// Слово-вызов (кадр 19-4) — the same card on all three screens, above the «завтра» row.
+  static const challenge = Key('home-challenge');
 
   static const hardest = Key('home-hardest');
 
@@ -106,6 +111,13 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
   /// for nothing (and one more thing a widget test has to stand up).
   Pronouncer? _pronouncer;
 
+  /// Words taken into study FROM THE CHALLENGE this session.
+  ///
+  /// The button's own state, not the pool's: the enrolment rides a durable queue and the mirror
+  /// catches up a frame or three later, and a button that stays pressable in the meantime invites a
+  /// second tap on a word already taken.
+  final Set<String> _enrolledFromChallenge = {};
+
   @override
   void dispose() {
     _pronouncer?.release();
@@ -122,6 +134,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     // «Выучено» is the dashboard's own total and lives on `/stats`; the plan owns the other two
     // numbers of the tile. Reading it from there rather than adding a third copy to `/home-plan`.
     final learned = stats?.learned ?? 0;
+    // Null while it is still being built, and null when there is nothing to build — and both mean
+    // the same thing to this screen: no card. A challenge is never worth a placeholder.
+    final challenge = ref.watch(wordChallengeProvider).value;
     final online = ref.watch(connectivityProvider).value ?? true;
 
     final bottomInset =
@@ -161,8 +176,14 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
                 debugPrint('[home] the cached day could not be read: $e\n$st');
                 return [_UnreachableCard(key: HomeBlockKeys.unreadable)];
               },
-              data: (view) =>
-                  _blocks(context, view, streak: streak, learned: learned, online: online),
+              data: (view) => _blocks(
+                context,
+                view,
+                streak: streak,
+                learned: learned,
+                challenge: challenge,
+                online: online,
+              ),
             ),
           ),
         ),
@@ -177,6 +198,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     HomePlanView view, {
     required int streak,
     required int learned,
+    required WordChallenge? challenge,
     required bool online,
   }) {
     final l = AppLocalizations.of(context);
@@ -186,7 +208,14 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
       return [
         const _OfflineBanner(),
         gap,
-        ..._blocks(context, view, streak: streak, learned: learned, online: true),
+        ..._blocks(
+          context,
+          view,
+          streak: streak,
+          learned: learned,
+          challenge: challenge,
+          online: true,
+        ),
       ];
     }
 
@@ -234,8 +263,10 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
                   const SizedBox(height: AppSpacing.s16),
                 ],
                 _GenerateCard(key: HomeBlockKeys.generate, withField: true, withChips: true),
-                // [место слово-вызова — DAILY-1] Nothing is drawn here yet, and the column
-                // survives it — the Spacer below simply gives back less room.
+                if (challenge != null) ...[
+                  const SizedBox(height: AppSpacing.s12),
+                  _challengeCard(challenge),
+                ],
                 const Spacer(),
                 const SizedBox(height: AppSpacing.sectionAiry),
                 Center(
@@ -296,7 +327,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         // have to re-find.
         _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
       ],
-      // [место слово-вызова — DAILY-1]
+      if (challenge != null) ...[gap, _challengeCard(challenge)],
       if (plan.edgeTomorrow != null) ...[
         gap,
         _TomorrowRow(key: HomeBlockKeys.tomorrow, count: plan.edgeTomorrow!, onTap: _openMyWords),
@@ -353,6 +384,33 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     if (plan.learnedWeek != null) _StatCell(plan.learnedWeek!, l.homeStatWeek),
     if (plan.inWork.total > 0) _StatCell(plan.inWork.total, l.homeStatInWork),
   ];
+
+  /// The challenge, wired to the three acts it offers.
+  ///
+  /// «Учить» is a REAL enrolment — the same `PoolSync.enroll` the word card's own button calls — so
+  /// «Завтра выпадет N» and «В работе» move under it. That is the whole difference between a quiz
+  /// and a word the learner now owns.
+  Widget _challengeCard(WordChallenge challenge) => WordChallengeCard(
+    key: HomeBlockKeys.challenge,
+    challenge: challenge,
+    enrolled: _enrolledFromChallenge.contains(challenge.termId),
+    onAnswer: (option) {
+      AppHaptics.light();
+      ref
+          .read(wordChallengeStoreProvider)
+          .answer(now: DateTime.now(), challenge: challenge, option: option);
+    },
+    onLearn: () {
+      AppHaptics.light();
+      setState(() => _enrolledFromChallenge.add(challenge.termId));
+      ref.read(poolSyncProvider).enroll(challenge.termId);
+      _refreshDay();
+    },
+    onTomorrow: () {
+      AppHaptics.light();
+      ref.read(wordChallengeStoreProvider).collapse(now: DateTime.now());
+    },
+  );
 
   void _openMyWords() {
     AppHaptics.light();
@@ -509,18 +567,21 @@ class _StreakDots extends StatelessWidget {
   );
 }
 
-/// «Сессия на сегодня: 32 слова · ≈ 9 минут» (кадр 17a) — the one dark surface on the screen, and
-/// therefore the one primary action.
+/// «32 слова · ≈ 9 минут» (кадр 19-1) — the one dark surface on the screen, and therefore the one
+/// primary action. «Один акцент на экран»: it is the only thing here that gets a fill, and the brass
+/// badge is the only warm mark the product spends.
 ///
-/// It counts the POOL and nothing else: repeats and the new words the day's quota allows. Words
-/// sitting unsorted in a collection are catalogue, not queue — they are offered further down, once
-/// the repeats are done — because counting them here means every set the learner adds arrives as
-/// work they owe, and a shelf of five sets announces a two-hundred-word day to someone who takes
-/// thirty.
+/// THE COMPOSITION IS A PRICE LIST — «Повторить 12 / Новых 5 / Разобрать 15», label left, number
+/// right, hairline between. It was a proportional bar with a dot legend until the frames landed, and
+/// the bar was answering a question nobody asks: the ratio between repeats and new words is not a
+/// fact the learner acts on, while the three counts are. A row whose number is 0 is not drawn — «0
+/// новых» is the same lie a zero-width segment was.
 ///
-/// The composition is drawn twice: as a bar whose segments are in proportion, and as labelled
-/// lines. A part whose number is 0 is drawn in NEITHER — a zero-width segment and a «0 новых» line
-/// are the same lie in two typefaces.
+/// «Разобрать» is IN the list and not only in an offer below. What that row counts is genuinely a
+/// different population from the two above it — words in the learner's folders that have never been
+/// sorted, which the session does not deal — and the card names it because the day is not honestly
+/// described without it. What it does NOT do is join the headline: [HomeSession.total] is the
+/// server's `repeat + new`, and the swipe pass is priced separately in `triage_minutes`.
 class _SessionCard extends StatelessWidget {
   const _SessionCard({super.key, required this.session, required this.onStart});
 
@@ -531,11 +592,10 @@ class _SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final paper = AppColors.paper;
-    final parts = <({int count, double opacity, String label})>[
-      if (session.repeat > 0)
-        (count: session.repeat, opacity: 1, label: l.homeSessionPartRepeat(session.repeat)),
-      if (session.newTerms > 0)
-        (count: session.newTerms, opacity: 0.55, label: l.homeSessionPartNew(session.newTerms)),
+    final rows = <({String label, int count})>[
+      if (session.repeat > 0) (label: l.homeSessionRowRepeat, count: session.repeat),
+      if (session.newTerms > 0) (label: l.homeSessionRowNew, count: session.newTerms),
+      if (session.triage > 0) (label: l.homeSessionRowTriage, count: session.triage),
     ];
 
     return Container(
@@ -543,101 +603,113 @@ class _SessionCard extends StatelessWidget {
         color: AppColors.ink,
         borderRadius: BorderRadius.circular(AppRadii.card),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l.homeSessionCardTitle.toUpperCase(),
-            style: AppText.sectionLabel.copyWith(color: paper.withValues(alpha: 0.6)),
-          ),
-          const SizedBox(height: AppSpacing.s8),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                l.homeSessionCardWords(session.total),
-                style: AppText.counterLarge.copyWith(color: paper),
-              ),
-              const SizedBox(width: 10),
-              // How many CARDS those words are, beside the minutes they cost. The headline is the
-              // work; this is the length, and it is the number the session's own counter counts up
-              // to — a card promising «32 слова» that ran to «14 / 61» is what put it here (Ч.3).
-              if (session.cards > 0)
-                Text(
-                  l.sessionSizeCards(session.cards),
-                  style: AppText.translation.copyWith(
-                    fontSize: 15,
-                    color: paper.withValues(alpha: 0.66),
-                  ),
-                ),
-              if (session.cards > 0 && session.estimatedMinutes != null)
-                Text(
-                  ' · ',
-                  style: AppText.translation.copyWith(
-                    fontSize: 15,
-                    color: paper.withValues(alpha: 0.4),
-                  ),
-                ),
-              if (session.estimatedMinutes != null)
-                Text(
-                  l.homeSessionCardMinutes(session.estimatedMinutes!),
-                  style: AppText.translation.copyWith(
-                    fontSize: 15,
-                    color: paper.withValues(alpha: 0.66),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 13),
-          Row(
-            children: [
-              for (var i = 0; i < parts.length; i++) ...[
-                if (i > 0) const SizedBox(width: 3),
-                Expanded(
-                  flex: parts[i].count,
-                  child: Container(
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: paper.withValues(alpha: parts[i].opacity),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 13,
-            runSpacing: 6,
-            children: [
-              for (final part in parts)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+              // The number is the headline and the unit is not: 60 pt of Literata beside 18 pt, on
+              // one baseline. That is why the count and the word «слова» are two strings — one
+              // localised phrase could not be set in two sizes.
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: paper.withValues(alpha: part.opacity),
+                    Text(
+                      '${session.total}',
+                      style: AppText.counterLarge.copyWith(
+                        color: paper,
+                        fontSize: 56,
+                        height: 0.86,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      part.label,
-                      style: AppText.translation.copyWith(
-                        fontSize: 12.5,
-                        color: paper.withValues(alpha: part.opacity < 1 ? 0.8 : 1),
+                    const SizedBox(width: 11),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l.homeSessionUnitWords(session.total),
+                            style: AppText.stepTitle.copyWith(
+                              color: paper,
+                              fontSize: 18,
+                              height: 1.1,
+                            ),
+                          ),
+                          // Minutes and nothing else. The card count moved out of the headline: the
+                          // learner reads this to decide whether they have time, and «~158 карточек»
+                          // is a second unit for the same decision. It still has a home — the
+                          // collection button's own caption (INPUT-1).
+                          if (session.estimatedMinutes != null) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              l.homeSessionCardMinutes(session.estimatedMinutes!),
+                              style: AppText.translation.copyWith(
+                                fontSize: 12.5,
+                                color: paper.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 7, left: AppSpacing.s8),
+                child: Text(
+                  l.homeSessionBadge.toUpperCase(),
+                  style: AppText.sectionLabel.copyWith(color: AppColors.brass),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 15),
+          if (rows.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.s16),
+            for (var i = 0; i < rows.length; i++)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: paper.withValues(alpha: 0.14)),
+                    // Only the last row closes the list, so the hairlines read as separators
+                    // between items rather than as a box drawn around each of them.
+                    bottom: i == rows.length - 1
+                        ? BorderSide(color: paper.withValues(alpha: 0.14))
+                        : BorderSide.none,
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        rows[i].label,
+                        style: AppText.translation.copyWith(
+                          fontSize: 13.5,
+                          color: paper.withValues(alpha: 0.72),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${rows[i].count}',
+                      style: AppText.translation.copyWith(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: paper,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          const SizedBox(height: AppSpacing.s16),
           _InvertedButton(label: l.homeSessionStart, onPressed: onStart),
         ],
       ),
