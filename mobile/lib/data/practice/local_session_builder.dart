@@ -33,15 +33,18 @@ import 'practice_mode_selector.dart';
 /// where a choice card's wrong options come from ([OptionsPolicy]), so a pair still on the
 /// recognition rungs keeps its far options and its first meetings stay winnable.
 ///
-/// Three things practice deliberately does NOT do, all because it moves nothing:
+/// EVERY WORD IS DRILLABLE, ALWAYS. Practice moves nothing — no enrolment, no exposure, no quota,
+/// no rung, no schedule — so there is nothing to have earned before entering it, and the only thing
+/// left to decide is which CARD a word gets. A pair with no rung of its own (outside the pool, or in
+/// the pool and still at rung 0) is dealt the easy corner of the matrix; see
+/// [LadderPosition.drillsAtOwnRung]. Only the planned session moves the ladder.
+///
+/// Two things practice deliberately does NOT do, both because it moves nothing:
 ///
 ///  * it never deals an INTRO card. An intro is an introduction — it writes an exposure and spends
-///    the daily new-term quota — and practice introduces nothing.
-///  * and so it does not deal a POOL word standing at RUNG 0 at all: such a word is dropped, not
-///    handed the rung-1 card as a substitute. Substituting was a hole in the very gate this class
-///    applies — rung 0 is the one rung the matrix places a trainer at, and it was the one rung
-///    practice overrode. That word is enrolled and its first meeting is owed to a study session.
-///    See [LadderPosition.admitsPractice], where this is contrasted with a word outside the pool.
+///    the daily new-term quota — and practice introduces nothing. A rung-0 word is therefore drilled
+///    without being introduced: it is asked what it can be asked (choice, assembly), and its first
+///    real meeting still belongs to the study session.
 ///  * it never deals the IDENTITY-graded direction (term → translation, tap an option id). The
 ///    server refuses identity grading for practice answers, so a card built that way here would be
 ///    graded as text against the term's forms and marked wrong. Recognition in practice is always
@@ -58,9 +61,10 @@ import 'practice_mode_selector.dart';
 ///
 ///  * ORDER — the enrolled words come first ([build]). Their rungs are real, so their cards are the
 ///    ones the session is actually about; the catalogue fills the tail.
-///  * TRAINERS — a word outside the pool is dealt only what the matrix opens at
+///  * TRAINERS — a word with no rung of its own is dealt only what the matrix opens at
 ///    [LearningLadder.stepUnenrolledPractice] (choice and assembly), never typed production or
-///    dictation. A pool word keeps fanning across every switched-on trainer, exactly as before.
+///    dictation. A pool word that HAS a rung keeps fanning across every switched-on trainer,
+///    exactly as before.
 ///
 /// ONE WORD IS ALSO A SCOPE. «Тренировать это слово» drills a single term ([build]'s `onlyTermId`),
 /// and it does not need a collection to do it: from «Мои слова» there is no one folder to name — the
@@ -122,20 +126,16 @@ abstract final class LocalPracticeSessionBuilder {
       for (final term in terms)
         if ((term.termText ?? '').trim().isNotEmpty) term,
     ];
-    // …and the subset practice may actually QUESTION. An enrolled rung-0 word is only dropped as a
-    // question, not as a decoy: appearing among someone else's wrong options claims nothing about
-    // it, and dropping it there too would starve the far options in a collection full of new words.
-    //
-    // Split in two, and the order is the point (see the class doc): the words the learner is
-    // actually studying lead the session, and the untriaged rest of the collection follows. Each
-    // half is shuffled on its own, so a repeat run varies within the halves without mixing them —
-    // and a pool big enough to fill the session leaves the tail unread, which is correct: those
-    // words already have somewhere better to be.
+    // Nothing is filtered out here any more: every word is drillable, and a rung-0 pool word is
+    // dealt the easy corner rather than dropped (see the class doc). What is left is the ORDER, and
+    // it is the point: the words the learner is actually studying lead the session, and the
+    // untriaged rest of the collection follows. Each half is shuffled on its own, so a repeat run
+    // varies within the halves without mixing them — and a pool big enough to fill the session
+    // leaves the tail unread, which is correct: those words already have somewhere better to be.
     final enrolled = <Term>[];
     final catalogue = <Term>[];
     for (final term in playable) {
       final position = ladder[term.id] ?? LadderPosition.untouched;
-      if (!position.admitsPractice) continue;
       (position.enrolled ? enrolled : catalogue).add(term);
     }
     enrolled.shuffle(random);
@@ -193,7 +193,8 @@ abstract final class LocalPracticeSessionBuilder {
   /// `learning_mode_settings` and the sync feed hands over unchanged — so the fan walks the trainers
   /// in the order the product puts them in, not in whatever order the rotation seed happened to land
   /// on. Same filters as every other practice card and in the same order: switched on (narrowed by
-  /// the matrix for a word outside the pool — see [_drillable]), buildable from this term's data.
+  /// the matrix for a word with no rung of its own — see [_drillable]), buildable from this term's
+  /// data.
   ///
   /// A pair whose applicable set comes out empty still gets exactly ONE card — [PracticeModeSelector]'s
   /// floor. «Nothing applies» must not become «nothing to train».
@@ -264,13 +265,14 @@ abstract final class LocalPracticeSessionBuilder {
     final mode =
         forcedMode ??
         PracticeModeSelector.select(
-          // The switched-on trainers, minus `intro` — practice introduces nothing. For a POOL pair the
-          // ladder is NOT a filter here (QA-26): free practice drills every trainer the term's data can
-          // furnish, which is what the server's `selectForPractice` does. What the rung still decides is
-          // the card's SHAPE, below: where a choice card's options come from, and which form `speaking`
-          // asks in. An enrolled rung-0 pair never reaches this method — `build` drops it.
+          // The switched-on trainers, minus `intro` — practice introduces nothing. For a pair on a
+          // rung of its own the ladder is NOT a filter here (QA-26): free practice drills every
+          // trainer the term's data can furnish, which is what the server's `selectForPractice`
+          // does. What the rung still decides is the card's SHAPE, below: where a choice card's
+          // options come from, and which form `speaking` asks in.
           //
-          // For a pair OUTSIDE the pool the matrix DOES narrow the set — see [_drillable].
+          // For a pair with no rung of its own — outside the pool, or in it at rung 0 — the matrix
+          // DOES narrow the set, to the easy corner: see [_drillable].
           enabled: PracticeModes(_drillable(enabled, position, admission)),
           rotation: PracticeModeSelector.rotationFor(term.id, cardIndex),
           playable: TermPlayability.of(
@@ -353,8 +355,8 @@ abstract final class LocalPracticeSessionBuilder {
 
     // The rung this card is dealt at, echoed back with the answer like a server-built card's.
     // Never rung 1: practice does not deal the identity-graded direction (see the class doc), so a
-    // recognition card here reports the direction it actually asked. A word outside the pool reports
-    // the rung it was DEALT at, which is the one the matrix narrowed its trainers by.
+    // recognition card here reports the direction it actually asked. A word with no rung of its own
+    // reports the rung it was DEALT at, which is the one the matrix narrowed its trainers by.
     final cardStep = position.practiceCardStep;
 
     if (mode == ExerciseMode.speaking &&
@@ -404,12 +406,13 @@ abstract final class LocalPracticeSessionBuilder {
   /// `intro` is toggled like a trainer but is not one: it can never be an answer to «what can this
   /// term be drilled in», so it is dropped here, once.
   ///
-  /// The admission matrix then applies to ONE population and one only: words outside the pool. For
-  /// them the rung is not a fact — nobody has studied the word, so nothing has been earned — and
-  /// the honest reading is the easy half of the matrix ([LearningLadder.stepUnenrolledPractice]):
-  /// choice and assembly, never «напиши по памяти» or a whole sentence from hearing it once. A pool
-  /// pair is unfiltered, exactly as QA-26 left it: the rung it stands on says when a word comes back
-  /// and as what, not what a drill may ask of it.
+  /// The admission matrix then applies to the pairs with NO RUNG OF THEIR OWN — a word outside the
+  /// pool, and a pool word still at rung 0. For them the rung is not a fact: nothing has been
+  /// earned, and the honest reading is the easy half of the matrix
+  /// ([LearningLadder.stepUnenrolledPractice]): choice and assembly, never «напиши по памяти» or a
+  /// whole sentence from hearing it once. A pair that HAS a rung is unfiltered, exactly as QA-26
+  /// left it: the rung it stands on says when a word comes back and as what, not what a drill may
+  /// ask of it.
   ///
   /// An empty result is fine and is not repaired here: [PracticeModeSelector.select] floors it to
   /// multiple_choice, the one trainer every term supports — the same floor the server uses.
@@ -423,7 +426,7 @@ abstract final class LocalPracticeSessionBuilder {
         if (mode.isGraded) mode,
     ];
 
-    return position.enrolled
+    return position.drillsAtOwnRung
         ? graded
         : admission.only(graded, LearningLadder.stepUnenrolledPractice);
   }

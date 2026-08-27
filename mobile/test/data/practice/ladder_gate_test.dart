@@ -9,19 +9,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// WHAT THE LADDER STILL DECIDES ABOUT FREE PRACTICE — AND WHAT IT NO LONGER DOES.
 ///
-/// It decides two things, both about the POOL and the card's SHAPE:
+/// It no longer decides WHO may be drilled. Free practice is open to every word, always (BUG-2):
+/// a drill moves nothing — no enrolment, no exposure, no quota, no rung, no schedule — so there is
+/// nothing to have earned first, and only the planned session moves the ladder. The rule it
+/// replaced refused an enrolled pair standing at rung 0, which meant deciding to learn a word made
+/// it LESS practisable than leaving it in the catalogue, and «Тренировать это слово» was a grey
+/// button on exactly the words the learner had just chosen.
 ///
-///   * an ENROLLED pair standing at RUNG 0 gets no practice card at all. Practice introduces
-///     nothing — no exposure, no quota — and that pair's first meeting is owed to a study session.
-///     (A word OUTSIDE the pool is a different case entirely; see `catalogue_practice_test.dart`.)
+/// It decides two things, both about the CARD:
+///
+///   * a pair with NO RUNG OF ITS OWN — outside the pool, or in it at rung 0 — is dealt the easy
+///     corner of the matrix ([LearningLadder.stepUnenrolledPractice]) and reports that rung. A pair
+///     that HAS a rung fans across every switched-on trainer (QA-26): gating the mode set by the
+///     rung as well meant dictation (6 successful reviews) and typed production (4) were unreachable
+///     on any real pool, and the dictation card never appeared once.
 ///   * a pair still on the recognition rungs gets FAR options, so its first meetings stay winnable.
 ///
-/// It no longer decides WHICH TRAINERS may be dealt (QA-26). Practice fans across every switched-on
-/// trainer the term's data can furnish, which is what the server's own `selectForPractice` has
-/// always done; gating the mode set here as well meant dictation (6 successful reviews) and typed
-/// production (4) were unreachable in free practice on any real pool, and the dictation card never
-/// appeared once. Free practice is a drill, not a rung: it schedules nothing, so nothing has to be
-/// earned to enter it.
+/// And practice still deals no INTRO card at any rung: an intro writes an exposure and spends the
+/// daily quota, and practice pays neither.
 void main() {
   Term term(String id, String text, {String translation = 'перевод'}) => Term(
     id: id,
@@ -87,42 +92,44 @@ void main() {
         ladder: {for (final t in terms) t.id: position},
       ).cards;
 
-  test('an ENROLLED never-shown word gets NO practice card at all — the gate is fail-closed', () {
-    // The owner's rule: practice introduces nothing, so an enrolled word waiting for its first
-    // meeting has nothing for practice to drill — that meeting belongs to a study session, which is
-    // where the quota and the exposure are. Rung 0 used to be handed the rung-1 card as a
-    // substitute, which made the one rung the matrix places a trainer at the one rung the gate
-    // ignored.
+  test('an ENROLLED never-shown word IS drilled — the gate is gone (BUG-2)', () {
     for (final position in [
       const LadderPosition(acquisition: Acquisition.isNew, enrolled: true),
       // reps survived a `known` undo, but the pair still stands at rung 0.
       const LadderPosition(acquisition: Acquisition.isNew, successfulReviews: 3, enrolled: true),
     ]) {
       expect(position.step, LearningLadder.stepIntro);
-      expect(position.admitsPractice, isFalse);
-      expect(cardsAt(position), isEmpty);
+      expect(position.drillsAtOwnRung, isFalse, reason: 'rung 0 is not a rung it has earned');
+      expect(cardsAt(position), isNotEmpty, reason: 'and it is drilled anyway');
     }
   });
 
-  test('rung 0 in the pool is refused by the LADDER, which is the only place that refusal lives', () {
-    // The mode filter no longer says no to anything (QA-26), so this is the single gate keeping a
-    // never-introduced word out of practice. PracticeModeSelector floors an empty applicable set to
-    // multiple_choice, so a rung-0 word that reached the card builder WOULD come back as a card —
-    // which is exactly why `build` must drop it from the pool and not rely on the matrix.
-    expect(LearningLadder.admitsPractice(LearningLadder.stepIntro), isFalse);
+  test('…at the easy corner of the matrix, and never with an intro', () {
+    // The card, which is the one thing the rung still decides. A never-met word is asked what it
+    // CAN be asked — choice and assembly — and never «напиши по памяти», «послушай и напечатай» or
+    // a sentence from hearing it once: it may be on screen for the first time.
+    const unmet = LadderPosition(acquisition: Acquisition.isNew, enrolled: true);
+    final opened = ModeAdmission.shipped.only([
+      for (final m in everyMode.modes)
+        if (m.isGraded) m,
+    ], LearningLadder.stepUnenrolledPractice);
+
+    for (final card in cardsAt(unmet)) {
+      expect(opened, contains(card.mode), reason: '${card.mode} is not in the easy corner');
+      expect(card.mode, isNot(ExerciseMode.intro));
+      // …and the card reports the rung it was DEALT at, not the intro rung it was not.
+      expect(card.ladderStep, LearningLadder.stepUnenrolledPractice);
+    }
     expect(
-      ModeAdmission.shipped.only([
-        for (final m in everyMode.modes)
-          if (m.isGraded) m,
-      ], LearningLadder.stepIntro),
-      isEmpty,
+      cardsAt(unmet).map((c) => c.mode),
+      isNot(contains(ExerciseMode.dictation)),
+      reason: 'nothing typed or dictated at a rung nobody has climbed',
     );
   });
 
-  test('one introduced word is drilled while its rung-0 neighbours only lend their text', () {
-    // A half-new pool must still be practisable, and an enrolled rung-0 word is allowed to be
-    // someone else's WRONG option: appearing there claims nothing about it. Dropping it from the
-    // option pool as well would leave a one-option multiple choice.
+  test('a rung-0 word is drilled BESIDE an introduced one, not instead of it', () {
+    // The pool half of a half-new collection: the introduced word keeps its own trainers, the
+    // never-met ones are asked the easy questions, and every choice card is still a real question.
     final session = LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: 20,
@@ -140,7 +147,7 @@ void main() {
       },
     );
 
-    expect(session.cards.map((c) => c.termId).toSet(), {terms.first.id});
+    expect(session.cards.map((c) => c.termId).toSet(), {for (final t in terms) t.id});
     for (final card in session.cards) {
       // Whatever trainer was dealt, a choice card is never a one-option card.
       if (card.options != null) expect(card.options, hasLength(greaterThan(1)));

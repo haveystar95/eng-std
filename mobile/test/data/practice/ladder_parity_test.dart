@@ -175,31 +175,34 @@ void main() {
     );
   });
 
-  group('the POOL filter, in parity with the server', () {
-    // A collection's free practice reads the whole COLLECTION on both sides — the server's
-    // `GetPracticeTermsHandler` widened its scoped branch off `allInPool` at the same time this
-    // did — and both narrow a word outside the pool to the trainers the matrix opens at
-    // `stepUnenrolledPractice`. The device builds its own practice sessions offline, so the same
-    // rules exist twice and, like the rung, they drift silently: the phone would simply deal a card
-    // the server would not have dealt.
+  group('WHICH RUNG A DRILL IS DEALT AT, in parity with the server', () {
+    // Both sides answer ONE question about a practice card — «does this pair have a rung of its
+    // own?» — and both answer it the same way: the client's `LadderPosition.drillsAtOwnRung`, the
+    // server's `StudyCardAssembler::drillsAtOwnRung()`. Nobody is refused a drill any more, on
+    // either side. The device builds its own practice sessions offline, so the rule exists twice
+    // and, like the rung itself, it drifts silently: the phone would simply deal a card the server
+    // would not have dealt.
     test('a word nobody took into study IS drilled — free practice is over the collection', () {
       for (final acquisition in Acquisition.values) {
         final position = LadderPosition(acquisition: acquisition, successfulReviews: 12);
-        expect(position.admitsPractice, isTrue, reason: '$acquisition, out of the pool');
+        expect(position.drillsAtOwnRung, isFalse, reason: '$acquisition, out of the pool');
         // …and always at the same fixed rung: it has no rung of its own to be dealt at.
         expect(position.practiceCardStep, LearningLadder.stepUnenrolledPractice);
       }
       // …including a «знаю» pair, which is out of the pool BY the verdict. The drill claims nothing
       // about that verdict: practice never resolves the verification, on either side.
       expect(
-        const LadderPosition(acquisition: Acquisition.graduated, isKnown: true).admitsPractice,
-        isTrue,
+        const LadderPosition(
+          acquisition: Acquisition.graduated,
+          isKnown: true,
+        ).practiceCardStep,
+        LearningLadder.stepUnenrolledPractice,
       );
     });
 
-    test('the easy half of the matrix is what a word outside the pool may be asked', () {
-      // «без диктанта/печати/аудирования» — the owner's rule for a word nobody has studied. The
-      // matrix is the single place that is decided, and this is the row it resolves to.
+    test('the easy half of the matrix is what a word with no rung of its own may be asked', () {
+      // «без диктанта/печати/аудирования» — the owner's rule for a word nothing has been earned on.
+      // The matrix is the single place that is decided, and this is the row it resolves to.
       const graded = [
         ExerciseMode.multipleChoice,
         ExerciseMode.wordBank,
@@ -223,18 +226,27 @@ void main() {
       expect(opened, isNot(contains(ExerciseMode.dictation)));
     });
 
-    test('in the pool, the rung decides — and rung 0 still has nothing to drill', () {
+    test('in the pool, the rung decides the CARD — rung 0 is dealt the easy corner', () {
+      // Not refused: refusing it was the client-only rule the owner overturned (BUG-2), and the
+      // server had always drilled such a pair.
       expect(
-        const LadderPosition(acquisition: Acquisition.isNew, enrolled: true).admitsPractice,
+        const LadderPosition(acquisition: Acquisition.isNew, enrolled: true).drillsAtOwnRung,
         isFalse,
-        reason: 'practice introduces nothing, so a first meeting is not its job',
+        reason: 'a first meeting has not happened, so no rung has been earned',
+      );
+      expect(
+        const LadderPosition(
+          acquisition: Acquisition.isNew,
+          enrolled: true,
+        ).practiceCardStep,
+        LearningLadder.stepUnenrolledPractice,
       );
       expect(
         const LadderPosition(
           acquisition: Acquisition.learning,
           learningStep: 1,
           enrolled: true,
-        ).admitsPractice,
+        ).drillsAtOwnRung,
         isTrue,
       );
       expect(
@@ -242,7 +254,7 @@ void main() {
           acquisition: Acquisition.graduated,
           successfulReviews: 12,
           enrolled: true,
-        ).admitsPractice,
+        ).drillsAtOwnRung,
         isTrue,
       );
     });
@@ -251,7 +263,8 @@ void main() {
       expect(LadderPosition.untouched.enrolled, isFalse);
       // Drillable by «Тренировка по теме» — and still not in the queue: nothing about a practice
       // answer enrols it, and the STUDY selection on both sides is read strictly from the pool.
-      expect(LadderPosition.untouched.admitsPractice, isTrue);
+      expect(LadderPosition.untouched.drillsAtOwnRung, isFalse);
+      expect(LadderPosition.untouched.practiceCardStep, LearningLadder.stepUnenrolledPractice);
     });
   });
 

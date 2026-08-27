@@ -1223,10 +1223,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ladderTrainWord => 'Train this word';
 
   @override
-  String get ladderTrainLockedIntro =>
-      'This word opens for practice once you have met it in a study session.';
-
-  @override
   String get sessionNext => 'Next';
 
   @override

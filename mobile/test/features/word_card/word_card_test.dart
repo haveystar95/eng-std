@@ -512,18 +512,20 @@ void main() {
       expect(find.textContaining('каталоге'), findsNothing);
     });
 
-    testWidgets('a word at rung 0 cannot be drilled, and the button says why', (tester) async {
+    testWidgets('a word at rung 0 is trainable too — the button is never grey (BUG-2)', (
+      tester,
+    ) async {
+      // The live complaint: a word the learner had JUST decided to learn met a dead button and a
+      // sentence explaining that it was not learnable yet. A drill moves nothing, so there was
+      // nothing to protect — only the planned session moves the ladder.
       await _pump(tester, subject: fromFolder(step: 0), mode: WordCardMode.folder, onTrain: () {});
 
       final button = tester.widget<PrimaryButton>(find.byType(PrimaryButton));
-      expect(button.enabled, isFalse);
-      expect(
-        find.text('Слово откроется для практики после знакомства с ним в учебной тренировке.'),
-        findsOneWidget,
-      );
+      expect(button.enabled, isTrue);
+      expect(find.textContaining('учебной тренировке'), findsNothing);
     });
 
-    testWidgets('tapping the disabled action starts nothing', (tester) async {
+    testWidgets('and tapping it starts the drill', (tester) async {
       var trained = 0;
       await _pump(
         tester,
@@ -532,10 +534,12 @@ void main() {
         onTrain: () => trained++,
       );
 
-      await tester.tap(find.text('Тренировать слово'), warnIfMissed: false);
+      await tester.ensureVisible(find.text('Тренировать слово'));
+      await tester.pump();
+      await tester.tap(find.text('Тренировать слово'));
       await tester.pumpAndSettle();
 
-      expect(trained, 0);
+      expect(trained, 1);
     });
 
     testWidgets('a «знаю» word is OUTSIDE the ladder, not at the bottom of it — and it trains', (

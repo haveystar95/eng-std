@@ -1247,10 +1247,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get ladderTrainWord => 'Тренировать слово';
 
   @override
-  String get ladderTrainLockedIntro =>
-      'Слово откроется для практики после знакомства с ним в учебной тренировке.';
-
-  @override
   String get sessionNext => 'Дальше';
 
   @override

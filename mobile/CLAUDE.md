@@ -32,13 +32,19 @@ Membership is one nullable column on the mirrored progress row (`enrolled_at`), 
   word on a shelf and it then waits in the swipe pass (`POST /search/add` carries `enroll`; the
   two buttons are two acts, and the toast names which one happened).
 - every **study** session is built from the pool — «Учить N», due repeats, the main-screen session.
-- **free practice over a collection is the one exception**: «Тренировка по теме» drills the whole
-  collection, untriaged words included, so a topic is usable the moment it exists. It still moves
-  nothing (no enrolment, no exposure, no schedule), and a word outside the pool is dealt only what
-  the matrix opens at `LearningLadder.stepUnenrolledPractice` — choice and assembly, never typing,
-  listening or dictation. Pool words come first in the session and keep their own rung.
-  `LadderPosition.admitsPractice` holds both halves; the server's
-  `GetPracticeTermsHandler` does the same for `/study/sessions?practice=true&collection_id=…`.
+- **free practice is open to EVERY word, always** — «Тренировать это слово» is never a grey button,
+  and «Тренировка по теме» drills the whole collection, untriaged words included, so a topic is
+  usable the moment it exists. It is allowed to be open because it moves nothing: no enrolment, no
+  exposure, no quota, no rung, no schedule. **Only the planned session moves the ladder.** What the
+  rung still decides is the CARD: a pair with no rung of its own — outside the pool, or in it and
+  still at rung 0 — is dealt only what the matrix opens at `LearningLadder.stepUnenrolledPractice`
+  (choice and assembly), never typing, listening or dictation, and never an intro. A pair on a rung
+  of its own fans across every switched-on trainer. Pool words come first in the session.
+  `LadderPosition.drillsAtOwnRung` asks that one question; the server mirrors it as
+  `StudyCardAssembler::drillsAtOwnRung()`.
+- **a word is a SCOPE of its own**: «Тренировать это слово» needs no collection («Мои слова» has none
+  to give — the pool outlives folders), and the term list the session is built from stays wide, so a
+  choice card still has neighbours to draw its wrong options from.
 - «Убрать из изучения» is a PAUSE: `enrolled_at → null` and nothing else, so the word resumes at the
   rung and due date it left with. The wording says so, or the button reads as a delete.
 - both taps ride a durable queue (`data/pool_sync.dart`) keyed by term and holding the DESIRED

@@ -200,14 +200,16 @@ void main() {
     // A one-term pool fans across the modes (see «Тренировать слово» below), so this reads the
     // first card rather than the only one — the content assertions are the same either way.
     //
-    // The second term is a DECOY: at rung 0 it is not drillable, so the pool is still one word and
-    // the fan still happens, but it can be a wrong option. Without it multiple_choice has nothing
-    // to offer beside the answer and the card is refused (QA-15).
+    // The second term is a DECOY, and `onlyTermId` is what makes it only that: every word is
+    // drillable now, so the way to ask about ONE while another lends its text is to name the one.
+    // Without a decoy multiple_choice has nothing to offer beside the answer and the card is
+    // refused (QA-15).
     final card = LocalPracticeSessionBuilder.build(
       terms: [terms.first, terms[3]],
       limit: 20,
       random: Random(7),
       sessionId: 'SESSION',
+      onlyTermId: terms.first.id,
       ladder: {
         terms.first.id: const LadderPosition(
           acquisition: Acquisition.graduated,

@@ -75,13 +75,14 @@ abstract final class LearningLadder {
   /// The first `learningStep` a pair holds once it has been introduced.
   static const int firstLadderStep = stepRecognitionForward;
 
-  /// The rung a word OUTSIDE the pool is dealt at in a collection's free practice.
+  /// The rung a word with NO RUNG OF ITS OWN is dealt at in free practice.
   ///
-  /// Such a word has no rung of its own — nobody has decided to study it, so nothing about it has
-  /// been earned — and it must not be dealt the trainers a rung is for. It is dealt as a first
-  /// meeting is: the easy half of the matrix, choice and assembly, and never typed production
-  /// («написание», «аудирование») or dictation, which ask the learner to reproduce a word they may
-  /// be seeing for the first time.
+  /// Two populations have none: a word outside the pool (nobody has decided to study it) and a pool
+  /// word still standing at rung 0 (the decision was made, the first meeting has not happened yet).
+  /// Neither has earned anything, and neither must be dealt the trainers a rung is for. Both are
+  /// dealt as a first meeting is: the easy half of the matrix, choice and assembly, and never typed
+  /// production («написание», «аудирование») or dictation, which ask the learner to reproduce a word
+  /// they may be seeing for the first time.
   ///
   /// The assembly rung and not a recognition one, because recognition admits multiple_choice and
   /// nothing else, and «зашёл в кафе, открыл тему» deserves the assembly trainers too. Mirrored on
@@ -120,23 +121,17 @@ abstract final class LearningLadder {
   static bool isRecognitionStep(int? step) =>
       step == stepRecognitionForward || step == stepRecognitionReverse;
 
-  /// May a pair standing on this rung be dealt a FREE PRACTICE card at all?
+  /// Does a pair standing on this rung have a rung OF ITS OWN to be drilled at?
   ///
-  /// Rung 0 may not, and this is the owner's call rather than a technical limit. Practice
-  /// introduces nothing — it writes no exposure and spends no daily quota — so a word that has
-  /// never been introduced has nothing for practice to drill. Practice used to substitute the
-  /// rung-1 card for it, which meant the one rung the admission matrix places at 0 was the one
-  /// rung practice ignored: an exception dressed as a fallback. A first meeting happens in a study
-  /// session, or it does not happen.
+  /// Rung 0 does not: the pair is enrolled and waiting for its first meeting, so nothing about it
+  /// has been earned yet. It is still DRILLABLE — free practice is open to every word, always,
+  /// because it moves nothing (см. [LadderPosition.practiceCardStep]) — it is simply drilled at
+  /// [stepUnenrolledPractice], the same easy corner a word outside the pool gets, instead of at a
+  /// rung it has not reached.
   ///
-  /// `null` — a `known` pair — is admitted BY THIS RULE: it is outside the ladder, not at the
-  /// bottom of it. Whether it is drilled at all is then decided by the pool, which a `known` pair
-  /// is not in — see [LadderPosition.admitsPractice], where the two filters meet.
-  ///
-  /// This does not strand a word when the intro trainer is switched off globally: a study session
-  /// then deals rung 0 its recognition card directly and passing it moves the pair up, so the word
-  /// still leaves rung 0 by studying it.
-  static bool admitsPractice(int? step) => step != stepIntro;
+  /// `null` — a `known` pair — HAS a rung in this sense: it is outside the ladder, not at the
+  /// bottom of it, and reading it as rung 0 would gate a self-assessed word down to recognition.
+  static bool hasOwnRung(int? step) => step != stepIntro;
 
   /// HOW MANY CARDS one session owes a term whose chain starts at [step]. Mirrors the server's
   /// `LearningLadder::chainLength()`.
@@ -199,37 +194,41 @@ class LadderPosition {
   /// verification is decided elsewhere — so it reads as the top rung rather than as rung 0.
   int get admissionStep => step ?? LearningLadder.stepDictation;
 
-  /// May this pair be dealt a free-practice card?
+  /// Is this pair drilled at a rung IT HAS EARNED — or at the fixed easy one?
   ///
-  /// The two halves of the pair are asked DIFFERENT questions, because they are in different
-  /// situations:
+  /// Not «may it be drilled»: that question is gone. **Free practice is open to every word,
+  /// always.** It is the owner's rule and it follows from what practice is: a drill moves nothing —
+  /// it enrols nobody, writes no exposure, spends no daily quota, advances no rung and schedules
+  /// nothing — so there is nothing it could spend and nothing to have earned first. Only the
+  /// planned session moves the ladder.
   ///
-  ///  * IN the pool — the rung decides, as it always has. A pair standing at rung 0 is enrolled and
-  ///    waiting for its first meeting, and that meeting belongs to a study session: practice
-  ///    introduces nothing (no exposure, no quota), so it has nothing to do with such a pair and
-  ///    would only spend it. See [LearningLadder.admitsPractice].
-  ///  * OUTSIDE the pool — admitted. «Тренировка по теме» is a drill over the COLLECTION, and a
-  ///    collection that nobody has triaged is exactly the case the owner asked for: «зашёл в кафе,
-  ///    открыл тему, прошёл маленькую тренировку без разбора коллекции». There is no study session
-  ///    coming for these words, so practice is not spending a first meeting that was owed
-  ///    elsewhere — it is the only meeting on offer.
+  /// What is left to decide is the CARD, and two populations get the easy one because neither has a
+  /// rung of its own to be dealt at:
   ///
-  /// Admitting them changes NOTHING about progress: practice enrols nothing, writes no exposure,
-  /// moves no rung and spends no quota, so a word outside the pool is still outside it when the
-  /// session ends and «Мои слова» does not grow. What it does change is the CARD such a word gets
-  /// — see [LearningLadder.stepUnenrolledPractice].
+  ///  * OUTSIDE the pool — nobody has taken the word into study. «Тренировка по теме» drills the
+  ///    collection, untriaged words included: «зашёл в кафе, открыл тему, прошёл маленькую
+  ///    тренировку без разбора коллекции».
+  ///  * IN the pool at RUNG 0 — the learner HAS taken it into study, and its first meeting has not
+  ///    happened yet. It used to be refused outright here, which is what made «Тренировать это
+  ///    слово» a grey button on a word the learner had just decided to learn (BUG-2). The refusal
+  ///    was also client-only: the server has always drilled such a pair.
+  ///
+  /// Neither is dealt an intro — practice introduces nothing, so the exposure and the quota stay
+  /// where they belong, in the study session.
   ///
   /// Study sessions, «Учить N» and due repeats are untouched by any of this: they are still read
   /// strictly from the pool, on both sides.
-  bool get admitsPractice => enrolled ? LearningLadder.admitsPractice(step) : true;
+  bool get drillsAtOwnRung => enrolled && LearningLadder.hasOwnRung(step);
 
   /// The rung a free-practice card for this pair is DEALT at — what the card reports back with the
-  /// answer, and what narrows the trainers for a word outside the pool.
+  /// answer, and what narrows the trainers for a pair with no rung of its own.
   ///
-  /// For a pool pair it is the pair's own rung, folded the way a practice card has always folded it:
-  /// never rung 1, because practice does not deal the identity-graded direction. For a pair outside
-  /// the pool it is the fixed [LearningLadder.stepUnenrolledPractice].
-  int? get practiceCardStep => enrolled
+  /// For a pair drilled at its own rung it is that rung, folded the way a practice card has always
+  /// folded it: never rung 1, because practice does not deal the identity-graded direction. For
+  /// everyone else it is the fixed [LearningLadder.stepUnenrolledPractice] — including a pool pair
+  /// at rung 0, which is dealt the easy corner and reports it, rather than reporting the intro rung
+  /// it was not dealt.
+  int? get practiceCardStep => drillsAtOwnRung
       ? (LearningLadder.isRecognitionStep(step) ? LearningLadder.stepRecognitionReverse : step)
       : LearningLadder.stepUnenrolledPractice;
 }

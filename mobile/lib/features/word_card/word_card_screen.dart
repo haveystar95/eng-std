@@ -13,7 +13,6 @@ import 'package:eng_std/ui/ui.dart';
 import '../../data/app_settings.dart';
 import '../../data/local/cached_image_provider.dart';
 import '../../data/models.dart';
-import '../../data/practice/learning_ladder.dart';
 import '../../data/providers.dart';
 import '../search/search_pair.dart' show LearningPair;
 import 'collection_saver.dart';
@@ -290,9 +289,13 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
     ),
   ];
 
-  /// Кадр 09. The rung decides the verb, exactly as the compact sheet decided it: a word outside
-  /// the pool is offered the DECISION («Учить это слово»), a word inside it the run — inert with a
-  /// reason while it still has no introduction behind it.
+  /// Кадр 09. The POOL decides the verb, exactly as the compact sheet decided it: a word outside it
+  /// is offered the DECISION («Учить это слово»), a word inside it the run.
+  ///
+  /// The rung decides NOTHING here any more. «Тренировать это слово» is available always, because a
+  /// drill moves nothing — only the planned session moves the ladder — and a grey button on a word
+  /// the learner had just decided to learn was the whole of BUG-2. What the rung still decides is
+  /// which CARDS the drill deals, which is the session's business, not the button's.
   List<Widget> _folderActions(AppLocalizations l) {
     if (!_subject.enrolled) {
       return [
@@ -312,22 +315,16 @@ class _WordCardScreenState extends ConsumerState<WordCardScreen> {
       ];
     }
 
-    final trainable = LearningLadder.admitsPractice(_subject.ladderStep);
-
     return [
       PrimaryButton(
         label: l.ladderTrainWord,
         minHeight: AppWordCard.actionHeight,
-        enabled: trainable && widget.onTrain != null,
+        enabled: widget.onTrain != null,
         onPressed: () {
           Navigator.of(context).maybePop();
           widget.onTrain?.call();
         },
       ),
-      if (!trainable) ...[
-        const SizedBox(height: AppSpacing.s8),
-        Text(l.ladderTrainLockedIntro, textAlign: TextAlign.center, style: AppText.searchFootnote),
-      ],
       const SizedBox(height: AppSpacing.s12),
       QuietLinkAction(
         icon: LucideIcons.folderPlus,

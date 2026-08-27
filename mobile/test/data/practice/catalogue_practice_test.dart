@@ -222,25 +222,23 @@ void main() {
     );
   });
 
-  test(
-    'an ENROLLED rung-0 word is still refused — its first meeting belongs to a study session',
-    () {
-      // The distinction the whole change rests on: enrolled-and-unmet is a word the trainer OWES an
-      // intro, and practice cannot pay it (no exposure, no quota). Un-enrolled is a word nothing is
-      // owed to, so the drill is the only meeting on offer.
-      const enrolledUnmet = LadderPosition(acquisition: Acquisition.isNew, enrolled: true);
-      expect(enrolledUnmet.admitsPractice, isFalse);
-      expect(LadderPosition.untouched.admitsPractice, isTrue);
+  test('an ENROLLED rung-0 word is drilled too, at the same easy corner (BUG-2)', () {
+    // The refusal this used to pin is gone: the two populations turned out to be ONE case, «no rung
+    // of its own», and the enrolled half was refused while the un-enrolled half was drilled — so
+    // deciding to learn a word made it LESS practisable than leaving it in the catalogue.
+    const enrolledUnmet = LadderPosition(acquisition: Acquisition.isNew, enrolled: true);
+    expect(enrolledUnmet.drillsAtOwnRung, isFalse);
+    expect(LadderPosition.untouched.drillsAtOwnRung, isFalse);
+    expect(enrolledUnmet.practiceCardStep, LearningLadder.stepUnenrolledPractice);
 
-      final cards = sessionOver(terms, {
-        terms.first.id: enrolledUnmet,
-        for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
-      }).cards;
+    final cards = sessionOver(terms, {
+      terms.first.id: enrolledUnmet,
+      for (final t in terms.skip(1)) t.id: LadderPosition.untouched,
+    }).cards;
 
-      expect(cards.map((c) => c.termId), isNot(contains(terms.first.id)));
-      expect(cards, isNotEmpty, reason: 'the rest of the collection still plays');
-    },
-  );
+    expect(cards.map((c) => c.termId), contains(terms.first.id));
+    expect(cards, isNotEmpty, reason: 'the rest of the collection still plays');
+  });
 
   test('a choice card for a catalogue word is never a one-option card', () {
     for (var seed = 0; seed < 8; seed++) {

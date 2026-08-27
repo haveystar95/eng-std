@@ -117,9 +117,11 @@ void main() {
     expect(await db.watchLearnableCount().first, 1);
     expect((await db.watchLearnableByCollection().first)['c1'], 1);
 
-    // Still not drilled: practice introduces nothing, so rung 0 has nothing for it to do. The word
-    // reaches the trainer through a STUDY session, which is the daily-quota path.
-    expect(await practiceTermIds(), isEmpty);
+    // …and free practice will drill it right away (BUG-2): a drill moves nothing, so there is
+    // nothing for rung 0 to have earned first. What it does NOT get is an introduction — the
+    // exposure and the daily quota still belong to the STUDY session, and the drill deals the easy
+    // corner of the matrix instead.
+    expect(await practiceTermIds(), ['t1']);
   });
 
   test('a «не уверен» swipe skips the intro — it lands on the first recognition rung', () async {
