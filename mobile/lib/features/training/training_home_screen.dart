@@ -854,7 +854,8 @@ class _DoneCard extends StatelessWidget {
                         hardest.map((t) => t.text).join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppText.stepTitle.copyWith(fontSize: 17),
+                        // Antiqua: these are words of the target language (rule 04).
+                        style: AppText.displayTerm.copyWith(fontSize: 17, height: 1.2),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.s12),
