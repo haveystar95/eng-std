@@ -55,7 +55,7 @@ final class InMemoryDueTermsReader implements DueTermsReader
         return array_slice($rows, 0, $limit);
     }
 
-    public function introductionsInPool(UserId $userId, ?array $termIds, int $limit): array
+    public function introductionsInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array
     {
         $this->introLimits[] = $limit;
         if ($limit <= 0) {

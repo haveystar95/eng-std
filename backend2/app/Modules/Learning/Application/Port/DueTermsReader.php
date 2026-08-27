@@ -55,13 +55,22 @@ interface DueTermsReader
      * Pool pairs standing at RUNG 0 — enrolled, never shown. Each one is a first meeting and is
      * charged to the day's new-term quota, which is why the caller passes that quota as `$limit`.
      *
-     * Oldest enrolment first: the words the learner asked for earliest are taught earliest, which is
-     * the only ordering a queue can defend.
+     * JUST-ENROLLED FIRST, then oldest enrolment first.
+     *
+     * The queue's own defensible ordering is FIFO — the words asked for earliest are taught
+     * earliest — and it stays the rule for everything but the last day. What broke it: taking a word
+     * with «Учить сразу» from the translator, on a day already closed, put it at the BACK of a queue
+     * of forty, so the act the learner had just performed produced no visible word anywhere. A word
+     * taken a minute ago is the word they came to study.
+     *
+     * The window is the last 24 HOURS and not «today» on purpose: this reader has a clock and no
+     * timezone, and a calendar rule would drop a word added at 23:50 to the back of the queue at
+     * 00:10 — which is the same complaint, ten minutes later.
      *
      * @param  list<string>|null  $termIds  null = the whole pool
      * @return list<DueTermView>
      */
-    public function introductionsInPool(UserId $userId, ?array $termIds, int $limit): array;
+    public function introductionsInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array;
 
     /**
      * Every pool pair in scope — ANY state, ANY rung, ignoring `due_at`. Backs free practice, which

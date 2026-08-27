@@ -63,7 +63,7 @@ final readonly class GetDueTermsHandler
 
         return array_merge(
             $quotaFree,
-            $this->reader->introductionsInPool($query->userId, $scope, $newLimit),
+            $this->reader->introductionsInPool($query->userId, $query->now, $scope, $newLimit),
         );
     }
 }

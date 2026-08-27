@@ -641,6 +641,58 @@ it('has no shop window when the store is empty — not a window of nothing', fun
         ->and($store['topics'])->toBe([]);
 });
 
+it('makes room for a word enrolled after the day was already closed', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC', 'daily_goal' => 20]);
+
+    // A day answered and closed: one repeat, done.
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $apple)
+        ->update(['state' => 'review', 'acquisition' => 'graduated', 'interval_days' => 1, 'due_at' => now()->subDay()]);
+    answerAtRung($this, $token, $apple, 'apple', rung: 3);
+
+    expect(homePlan($this, $token)['state'])->toBe('done');
+
+    // …and now «Учить сразу» from the translator, on the closed evening.
+    $late = addWordTo($col, $user->id, 'boarding', 'посадка');
+
+    $plan = homePlan($this, $token);
+
+    // The day is still closed — nothing is DUE — but the word the learner just took is offered.
+    // Before this, the evening had no sentence in which such a word could appear at all.
+    expect($plan['state'])->toBe('done')
+        ->and($plan['session']['new'])->toBe(1)
+        ->and($plan['in_work']['waiting'])->toBe(1);
+
+    // …and it is the word the session actually deals, ahead of anything enrolled earlier.
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')->assertOk()->json('data.cards');
+
+    expect(array_column($cards, 'term_id'))->toContain($late);
+});
+
+it('deals a JUST-ENROLLED word before the queue it was added behind', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC', 'daily_goal' => 1]);
+    [$col, $first] = seedCollectionWith($user, 'alpha', 'первый');
+
+    // Two words enrolled long ago, waiting their turn in a FIFO queue…
+    $second = addWordTo($col, $user->id, 'beta', 'второй');
+    DB::table('user_term_progress')->where('user_id', $user->id)
+        ->whereIn('term_id', [$first, $second])
+        ->update(['enrolled_at' => now()->subDays(30)]);
+
+    // …and one taken a minute ago. The quota is 1, so exactly one of the three is dealt.
+    $late = addWordTo($col, $user->id, 'omega', 'последний');
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')->assertOk()->json('data.cards');
+
+    // The word taken a minute ago is the word the learner came to study. FIFO is still the rule for
+    // everything older — it just no longer buries the act the learner just performed.
+    expect(array_unique(array_column($cards, 'term_id')))->toBe([$late]);
+});
+
 it('refuses an anonymous caller', function () {
     $this->getJson('/api/v1/home-plan')->assertUnauthorized();
 });

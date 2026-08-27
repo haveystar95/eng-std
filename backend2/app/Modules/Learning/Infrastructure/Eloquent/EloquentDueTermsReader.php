@@ -77,7 +77,13 @@ final class EloquentDueTermsReader implements DueTermsReader
             ->where('due_at', '<=', $now);
     }
 
-    public function introductionsInPool(UserId $userId, ?array $termIds, int $limit): array
+    /**
+     * How recent «just enrolled» is. Hours rather than a calendar day because this reader has a
+     * clock and no timezone — see the port.
+     */
+    private const JUST_ENROLLED_HOURS = 24;
+
+    public function introductionsInPool(UserId $userId, DateTimeImmutable $now, ?array $termIds, int $limit): array
     {
         $query = $this->pool($userId, $termIds);
         if ($query === null || $limit <= 0) {
@@ -86,9 +92,16 @@ final class EloquentDueTermsReader implements DueTermsReader
 
         $rows = $query
             ->where('acquisition', Acquisition::New->value)
-            // First enrolled, first taught. `term_id` breaks ties so a repeated call deals the same
-            // words rather than a fresh sample of them.
+            // JUST-ENROLLED FIRST, and then first enrolled, first taught. The second half is the
+            // queue's own rule; the first is what makes «Учить сразу» visible on a day that is
+            // already closed — otherwise the word goes to the back of forty and the act produces
+            // nothing the learner can see.
+            ->orderByRaw('CASE WHEN enrolled_at >= ? THEN 0 ELSE 1 END', [
+                UtcInstant::bind($now->modify('-' . self::JUST_ENROLLED_HOURS . ' hours')),
+            ])
             ->orderBy('enrolled_at')
+            // `term_id` breaks ties so a repeated call deals the same words rather than a fresh
+            // sample of them.
             ->orderBy('term_id')
             ->limit($limit)
             ->get(self::COLUMNS);
