@@ -151,6 +151,21 @@ void main() {
 
       expect(find.text(banner), findsNothing);
     });
+
+    testWidgets('the strip is exactly as tall as the tabs below reserve for it', (tester) async {
+      // Caught live, on the first sync that timed out: the indicator FLOATS over the tabs, so a
+      // banner taller than the reservation lands across «Четверг, 27 августа · Стрик 4» and both
+      // become unreadable. One number, two sides.
+      sync.state.value = SyncState.offline;
+      await tester.pumpWidget(strip());
+      await tester.pump();
+
+      final strips = find.ancestor(
+        of: find.text(banner),
+        matching: find.byType(Container),
+      );
+      expect(tester.getSize(strips.first).height, SyncIndicator.bannerHeight);
+    });
   });
 }
 

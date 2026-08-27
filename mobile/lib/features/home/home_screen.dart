@@ -134,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       backgroundColor: AppColors.paper,
       body: Stack(
         children: [
-          IndexedStack(index: _index, children: pages),
+          _ShellBody(child: IndexedStack(index: _index, children: pages)),
           const Positioned(top: 0, left: 0, right: 0, child: SyncIndicator()),
           Positioned(
             left: 0,
@@ -149,6 +149,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One line of 12.5px text with its padding. Fixed rather than measured, because the tabs below
+/// RESERVE exactly this much when a banner is up ([_ShellBody]) — the indicator floats over them, so
+/// a height the two sides guess separately is a banner sitting on top of the day's header.
+///
+/// Re-exported as [SyncIndicator.bannerHeight] so a test can hold the two sides to one number.
+const double _kBannerHeight = 32;
+
+/// The tabs, pushed down by whatever the indicator is showing.
+///
+/// The strip is an overlay: for a 2px progress bar that is invisible and right. A full banner is
+/// not — it landed across «Четверг, 27 августа · Стрик 4» and made both unreadable, live, the first
+/// time a sync timed out. So the body reserves the banner's height while one is up, and gives it
+/// back with the same animation the banner appears with.
+class _ShellBody extends ConsumerWidget {
+  const _ShellBody({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final syncState = ref.watch(syncServiceProvider).state;
+    final stuck = ref.watch(reviewSyncProvider).stuck;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: stuck,
+      builder: (context, isStuck, _) => ValueListenableBuilder<SyncState>(
+        valueListenable: syncState,
+        builder: (context, s, _) => AnimatedPadding(
+          duration: const Duration(milliseconds: 250),
+          padding: EdgeInsets.only(
+            top: isStuck || s == SyncState.offline ? _kBannerHeight : 0,
+          ),
+          child: child,
+        ),
       ),
     );
   }
@@ -173,6 +212,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
 /// of that.
 class SyncIndicator extends ConsumerWidget {
   const SyncIndicator({super.key});
+
+  /// How tall a banner is — and therefore how much the tabs below reserve for it.
+  static const double bannerHeight = _kBannerHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -216,13 +258,32 @@ class _UnreachableBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _BannerStrip(text: AppLocalizations.of(context).syncUnreachableBanner);
+  }
+}
+
+/// The shared shape of both strips: full width, opaque, and exactly [_kBannerHeight] tall — the
+/// height the body below reserves. Opaque matters as much as the height: this paper palette is
+/// close-valued, and a translucent strip over the day's header reads as two texts printed on
+/// each other.
+class _BannerStrip extends StatelessWidget {
+  const _BannerStrip({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      height: _kBannerHeight,
+      alignment: Alignment.center,
       color: AppColors.faintInk,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
       child: Text(
-        AppLocalizations.of(context).syncUnreachableBanner,
+        text,
         textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
       ),
     );
@@ -234,15 +295,6 @@ class _UnreachableBanner extends StatelessWidget {
 class _StuckBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: AppColors.faintInk,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH, vertical: 8),
-      child: Text(
-        AppLocalizations.of(context).syncStuckBanner,
-        textAlign: TextAlign.center,
-        style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
-      ),
-    );
+    return _BannerStrip(text: AppLocalizations.of(context).syncStuckBanner);
   }
 }
