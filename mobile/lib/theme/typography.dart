@@ -186,6 +186,24 @@ abstract final class AppText {
     color: AppColors.secondary,
   );
 
+  /// ДИСПЛЕЙНОЕ ЧИСЛО — антиква, табличные цифры (кадры 19-1, 19-2).
+  ///
+  /// Не [counterLarge]: тот — гротеск 700 для счётчиков внутри строк, а это цифра, НА КОТОРУЮ
+  /// смотрят: «32» над сессией, «146» на плите статистики. Кадры набирают их Literata светлым
+  /// начертанием, и разница читается сразу — гротеск 700 в 56 кеглей кричит, антиква 400 говорит.
+  ///
+  /// Размер задаётся на месте: 56 над сессией, 26 на плите. Кегль тут не токен, потому что это
+  /// одна роль в двух масштабах, а не два разных элемента.
+  static const displayNumber = TextStyle(
+    fontFamily: AppFonts.literata,
+    fontWeight: FontWeight.w400,
+    fontSize: 26,
+    height: 1,
+    letterSpacing: -0.5,
+    color: AppColors.ink,
+    fontFeatures: _tabular,
+  );
+
   /// Крупный счётчик. 26 / 700 tabular.
   static const counterLarge = TextStyle(
     fontFamily: AppFonts.inter,

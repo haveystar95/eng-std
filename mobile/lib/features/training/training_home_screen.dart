@@ -576,7 +576,7 @@ class _SessionCard extends StatelessWidget {
                   children: [
                     Text(
                       '${session.total}',
-                      style: AppText.counterLarge.copyWith(
+                      style: AppText.displayNumber.copyWith(
                         color: paper,
                         fontSize: 56,
                         height: 0.86,
@@ -591,7 +591,7 @@ class _SessionCard extends StatelessWidget {
                         children: [
                           Text(
                             l.homeSessionUnitWords(session.total),
-                            style: AppText.stepTitle.copyWith(
+                            style: AppText.displayTerm.copyWith(
                               color: paper,
                               fontSize: 18,
                               height: 1.1,
@@ -775,25 +775,34 @@ class _DoneCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l.homeDoneTitle.toUpperCase(), style: AppText.sectionLabel),
-          const SizedBox(height: 9),
+          // A check in an ink circle and the title in antiqua — кадр 19-2. The praise is the heading
+          // here; the numbers are a line under it, because the day is closed and its size has
+          // stopped being a decision.
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(l.homeDoneOf(answered, planned), style: AppText.counterLarge),
-              const SizedBox(width: 10),
-              if (today != null && today!.seconds > 0)
-                Text(
-                  formatSessionDuration(l, today!.seconds),
-                  style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary),
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
+                child: const Icon(LucideIcons.check, size: 16, color: AppColors.paper),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Text(
+                  l.homeDoneTitle,
+                  style: AppText.displayTerm.copyWith(fontSize: 23, height: 1.1),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(
-            height: 4,
-            decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(2)),
+          const SizedBox(height: 11),
+          Text(
+            [
+              l.homeDoneOf(answered, planned),
+              if (today != null && today!.seconds > 0) formatSessionDuration(l, today!.seconds),
+            ].join(' · '),
+            style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
           ),
           if (award != null) ...[
             const SizedBox(height: AppSpacing.s12),
@@ -1023,7 +1032,7 @@ class _StatsTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('${cells[i].value}', style: AppText.counterLarge.copyWith(fontSize: 26)),
+                    Text('${cells[i].value}', style: AppText.displayNumber),
                     const SizedBox(height: 6),
                     Text(
                       cells[i].label.toUpperCase(),

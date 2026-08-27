@@ -270,8 +270,9 @@ void main() {
       expect(find.byKey(HomeBlockKeys.storeLink), findsNothing);
       expect(find.byKey(HomeBlockKeys.session), findsNothing);
 
-      // The day's progress is answered cards, and the denominator is what the day held.
-      expect(find.text('32 из 32'), findsOneWidget);
+      // The day's progress is answered cards, and the denominator is what the day held. One line
+      // with the duration now — кадр 19-2 gives the heading to the praise, not to the number.
+      expect(find.textContaining('32 из 32'), findsOneWidget);
       // The reward names the rung in the interface's own words — the server sent the number 4.
       expect(find.textContaining('reluctant'), findsOneWidget);
       expect(find.textContaining('написание'), findsOneWidget);
@@ -449,7 +450,8 @@ void main() {
       );
 
       expect(find.text('16 слов'), findsOneWidget);
-      expect(find.textContaining('·'), findsNothing);
+      // …and no «16 слов · » — the level is the only thing that would follow it.
+      expect(find.textContaining('16 слов ·'), findsNothing);
     });
   });
 

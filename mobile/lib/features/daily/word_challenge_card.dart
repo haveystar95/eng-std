@@ -134,7 +134,8 @@ class WordChallengeCard extends StatelessWidget {
       const SizedBox(height: 11),
       Text(
         challenge.text,
-        style: AppText.stepTitle.copyWith(fontSize: 24, height: 1.1),
+        // Antiqua: it is the target language, which is the one thing Literata is for (rule 04).
+        style: AppText.displayTerm.copyWith(fontSize: 28, height: 1.05),
       ),
       const SizedBox(height: 13),
       if (stacked)
@@ -181,19 +182,19 @@ class WordChallengeCard extends StatelessWidget {
               child: const Icon(LucideIcons.check, size: 13, color: AppColors.paper),
             ),
             const SizedBox(width: 9),
-            Text(l.challengePraise, style: AppText.stepTitle.copyWith(fontSize: 22)),
+            Text(l.challengePraise, style: AppText.displayTerm.copyWith(fontSize: 24)),
           ],
         ),
         const SizedBox(height: 14),
         Text(
           l.challengeAnswer(challenge.text, challenge.translation),
-          style: AppText.stepTitle.copyWith(fontSize: 18),
+          style: AppText.displayTerm.copyWith(fontSize: 19, height: 1.15),
         ),
       ] else ...[
         const SizedBox(height: 11),
         Text(
           l.challengeAnswer(challenge.text, challenge.translation),
-          style: AppText.stepTitle.copyWith(fontSize: 22, height: 1.15),
+          style: AppText.displayTerm.copyWith(fontSize: 24, height: 1.15),
         ),
       ],
       // WHERE «73% ответили верно» GOES. The stub has no such number — nobody is counting — and a
