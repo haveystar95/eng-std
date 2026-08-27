@@ -2177,6 +2177,19 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String homeExtraNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Можно взять $count слова, которые уже ждут очереди.',
+      many: 'Можно взять $count слов, которые уже ждут очереди.',
+      few: 'Можно взять $count слова, которые уже ждут очереди.',
+      one: 'Можно взять $count слово, которое уже ждёт очереди.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String homeExtraButton(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

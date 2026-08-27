@@ -25,7 +25,7 @@ import 'local/app_database.dart';
 /// class only carries the same decision to the server; `/sync` then brings back the server's own
 /// answer, which is the authority.
 class PoolSync {
-  PoolSync(this._api, this._db);
+  PoolSync(this._api, this._db, {this.onPoolChanged});
 
   /// Transient-failure backoff, matching the sibling queues: 5 s, 10 s, 20 s … capped at 5 min.
   static const Duration _backoffBase = Duration(seconds: 5);
@@ -33,6 +33,13 @@ class PoolSync {
 
   final ApiClient _api;
   final AppDatabase _db;
+
+  /// Called after the local half of an enrolment lands, BEFORE the server has heard about it.
+  ///
+  /// The day is a server aggregate the client caches, and taking a word into the queue changes it —
+  /// so the cache has to be told. Optional, because the queue must keep working in the tests and in
+  /// the background paths that have no screen behind them.
+  final Future<void> Function()? onPoolChanged;
 
   bool _flushing = false;
   int _failures = 0;
@@ -46,7 +53,7 @@ class PoolSync {
     final now = DateTime.now();
     await _db.enrollLocally(termId, now);
     await _db.enqueuePoolChange(termId, enrolled: true, at: now);
-    unawaited(flush());
+    unawaited(flush().then((_) => onPoolChanged?.call()));
   }
 
   /// «Убрать из изучения»: a PAUSE. One column to null locally, the same intent queued, and nothing
@@ -55,7 +62,7 @@ class PoolSync {
     final now = DateTime.now();
     await _db.unenrollLocally(termId, now);
     await _db.enqueuePoolChange(termId, enrolled: false, at: now);
-    unawaited(flush());
+    unawaited(flush().then((_) => onPoolChanged?.call()));
   }
 
   Future<int> pendingCount() async => (await _db.poolQueue()).length;

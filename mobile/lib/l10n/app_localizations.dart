@@ -3291,6 +3291,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{Можно добить {count} слово из «{title}» сверх плана.} few{Можно добить {count} слова из «{title}» сверх плана.} many{Можно добить {count} слов из «{title}» сверх плана.} other{Можно добить {count} слова из «{title}» сверх плана.}}'**
   String homeExtraFromCollection(int count, String title);
 
+  /// Предложение на закрытом дне (кадр 19-2): слова, УЖЕ взятые в очередь, которые сегодняшняя квота ещё позволяет раздать. Идут прежде свайп-прохода — эти уже выбраны, а разбор это предложение выбрать ещё.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Можно взять {count} слово, которое уже ждёт очереди.} few{Можно взять {count} слова, которые уже ждут очереди.} many{Можно взять {count} слов, которые уже ждут очереди.} other{Можно взять {count} слова, которые уже ждут очереди.}}'**
+  String homeExtraNew(int count);
+
   /// Кнопка «Ещё N слов» на вечерней карточке (кадр 17b).
   ///
   /// In ru, this message translates to:

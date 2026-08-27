@@ -277,6 +277,38 @@ void main() {
       expect(find.textContaining('написание'), findsOneWidget);
     });
 
+    testWidgets('a word taken after the day closed is offered right there', (tester) async {
+      // The bug from the owner's phone: «Учить сразу» on a closed evening put the word in the queue
+      // and in «Мои слова», and this screen — the one they were looking at — had no sentence in
+      // which such a word could appear.
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(newTerms: 1, triage: 12),
+          today: const HomeToday(answered: 14, seconds: 45),
+        ),
+      );
+
+      expect(find.byKey(HomeBlockKeys.done), findsOneWidget);
+      expect(find.textContaining('уже ждёт очереди'), findsOneWidget);
+      expect(find.text('Ещё 1 слово'), findsOneWidget);
+    });
+
+    testWidgets('with nothing queued the evening still offers the swipe pass', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(triage: 12),
+          today: const HomeToday(answered: 14, seconds: 45),
+        ),
+      );
+
+      expect(find.textContaining('Ветклиника'), findsOneWidget);
+      expect(find.text('Ещё 12 слов'), findsOneWidget);
+    });
+
     testWidgets('a day that promoted nothing has no reward line', (tester) async {
       await pumpHome(tester, evening());
 

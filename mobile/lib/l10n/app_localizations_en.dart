@@ -2089,6 +2089,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String homeExtraNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You can take $count words already waiting in the queue.',
+      one: 'You can take $count word already waiting in the queue.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String homeExtraButton(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -168,7 +170,7 @@ class CollectionSaver {
   }) async {
     final l = AppLocalizations.of(context);
     try {
-      return await ref
+      final saved = await ref
           .read(apiClientProvider)
           .addSearchResult(
             lookupId: subject.lookupId,
@@ -176,6 +178,15 @@ class CollectionSaver {
             collectionId: collectionId,
             enroll: enroll,
           );
+
+      // THE DAY IS NOW STALE, whichever of the two acts this was. «Учить сразу» put a word in the
+      // queue, so the plan owes it a place; «Сохранить» put one on a shelf, so «Разобрать N» grew.
+      // This path does not go through `PoolSync`, so nothing else would have told the cache —
+      // which is how a word landed in «Мои слова» and in no plan at all (the evening screen went on
+      // offering the day it had cached before the tap).
+      unawaited(ref.read(syncServiceProvider).refreshDay());
+
+      return saved;
     } catch (error) {
       if (!context.mounted) return null;
       final mismatch = termLanguageMismatch(error);

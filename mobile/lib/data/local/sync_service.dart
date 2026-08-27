@@ -432,14 +432,20 @@ class SyncService {
       // leave the last-known values in place
     }
 
-    await _refreshHomePlan();
+    await refreshDay();
   }
 
   /// The home screen's day. Its own try/catch, not folded into the stats one: the two are separate
   /// endpoints, and a home plan that fails must not cost the streak its refresh (nor the other way
   /// round). Stored as the JSON it arrived as — re-encoding it here would put a second copy of the
   /// contract in this file.
-  Future<void> _refreshHomePlan() async {
+  ///
+  /// PUBLIC because the day goes stale on acts that are not syncs. Taking a word into the queue —
+  /// «Учить сразу» from the translator, «Учить это слово» on the card, a swipe in the pass — changes
+  /// what the day holds, and the cached plan does not know it until something else happens to sync.
+  /// The owner met that as a word that was in «Мои слова» and in no plan: enrolled on a closed
+  /// evening, and the evening screen went on offering the day it had cached before the tap.
+  Future<void> refreshDay() async {
     try {
       final home = await _api.homePlan();
       await _db.setMeta(_kHomePlan, jsonEncode(home.raw));

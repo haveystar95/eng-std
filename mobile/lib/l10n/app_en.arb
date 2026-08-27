@@ -698,6 +698,7 @@
     "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } }
   },
 
+  "homeExtraNew": "{count, plural, one{You can take {count} word already waiting in the queue.} other{You can take {count} words already waiting in the queue.}}",
   "homeExtraButton": "{count, plural, one{{count} more word} other{{count} more words}}",
   "@homeExtraButton": {
     "description": "«N more words» button on the evening card (frame 17b).",

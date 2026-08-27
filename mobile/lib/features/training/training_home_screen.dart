@@ -298,6 +298,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           today: plan.today,
           session: session,
           award: plan.dayAward,
+          onTakeNew: () => _openSession(learn: true),
           onExtra: () =>
               _openTriage(session.triageCollectionId!, session.triageCollectionTitle ?? ''),
         )
@@ -761,6 +762,7 @@ class _DoneCard extends StatelessWidget {
     required this.session,
     required this.award,
     required this.onExtra,
+    required this.onTakeNew,
   });
 
   final HomeToday? today;
@@ -769,7 +771,12 @@ class _DoneCard extends StatelessWidget {
   /// «+5 слов продвинулись · reluctant дошло до „написание"» — null on a day that moved nothing,
   /// and then the line is not drawn at all.
   final HomeDayAward? award;
+
+  /// Open the swipe pass over the fullest unsorted collection.
   final VoidCallback onExtra;
+
+  /// Deal the words already in the queue that today's quota still allows — «Ещё N слов».
+  final VoidCallback onTakeNew;
 
   @override
   Widget build(BuildContext context) {
@@ -783,12 +790,22 @@ class _DoneCard extends StatelessWidget {
     // The swipe offer comes from the day's own count, not from the «продолжить» candidate: that one
     // requires a collection the learner has already started, and a set added an hour ago and never
     // opened is exactly the case this offer is for.
+    // TWO WAYS to go past a closed day, and the FIRST is words the learner has already taken.
+    //
+    // The card used to offer only the swipe pass, and that is how «Учить сразу» on a closed evening
+    // came to produce nothing visible: the word went into the queue, «Мои слова» listed it, and this
+    // screen — the one the learner was looking at — had no sentence in which such a word could
+    // appear. New words come first because they are the ones already chosen; the swipe pass is an
+    // offer to choose more.
+    final canTakeNew = session.newTerms > 0;
     final canSort = session.triage > 0 && session.triageCollectionId != null;
     // «Следующий повтор — завтра, 14 слов» is gone from here: «Завтра выпадет N слов →» says the
     // same thing further down and is a DOOR rather than a sentence. Two of them on one screen is
     // the screen telling the learner the same fact twice in two voices.
     final lines = <String>[
-      if (canSort) l.homeExtraFromCollection(session.triage, session.triageCollectionTitle ?? ''),
+      if (canTakeNew) l.homeExtraNew(session.newTerms),
+      if (!canTakeNew && canSort)
+        l.homeExtraFromCollection(session.triage, session.triageCollectionTitle ?? ''),
     ];
 
     return PaperCard(
@@ -843,7 +860,10 @@ class _DoneCard extends StatelessWidget {
               ),
             ),
           ],
-          if (canSort) ...[
+          if (canTakeNew) ...[
+            const SizedBox(height: AppSpacing.s16),
+            QuietButton(label: l.homeExtraButton(session.newTerms), onPressed: onTakeNew),
+          ] else if (canSort) ...[
             const SizedBox(height: AppSpacing.s16),
             QuietButton(label: l.homeExtraButton(session.triage), onPressed: onExtra),
           ],

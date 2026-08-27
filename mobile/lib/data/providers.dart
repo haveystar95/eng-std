@@ -113,7 +113,13 @@ final sessionCompletionSyncProvider = Provider<SessionCompletionSync>((ref) {
 /// Its own durable queue, keyed by the TERM and holding the desired membership rather than a log:
 /// the verbs are idempotent and there is no order to protect.
 final poolSyncProvider = Provider<PoolSync>((ref) {
-  return PoolSync(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
+  return PoolSync(
+    ref.watch(apiClientProvider),
+    ref.watch(appDatabaseProvider),
+    // `read` inside the callback and not `watch` at construction: the day is refetched AFTER the
+    // enrolment, and reading the service then keeps this provider from depending on it.
+    onPoolChanged: () => ref.read(syncServiceProvider).refreshDay(),
+  );
 });
 
 /// The word-challenge's data source (кадр 19-4) — and the seam DAILY-1 replaces.
