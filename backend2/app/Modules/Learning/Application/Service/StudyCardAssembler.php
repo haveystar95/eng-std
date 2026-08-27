@@ -344,9 +344,10 @@ final readonly class StudyCardAssembler
      * what keeps dictation reachable on a real pool (QA-26).
      *
      * For a pair with NO RUNG OF ITS OWN — a word of the collection nobody has taken into study, or
-     * a pool word still at rung 0 — the matrix DOES narrow it, to what it opens at
-     * {@see LearningLadder::STEP_UNENROLLED_PRACTICE}: choice and assembly, never typed production
-     * or dictation. Such a word has no rung to have earned them with.
+     * a pool word still at rung 0 — it is narrowed to the RECEPTIVE CORNER
+     * ({@see ModeAdmission::onlyPracticeCorner()}): choice, assembly, произнеси, аудио
+     * «услышал→напиши» and description_match, never «напиши по памяти» or dictation. Such a word has
+     * no rung to have earned the two productive trainers with, and needs none for the rest.
      *
      * The narrowing is applied to the ENABLED SET rather than inside the selector on purpose: the
      * round-robin, its rotation seed and its floor stay exactly as they are, and this stays one
@@ -362,7 +363,7 @@ final readonly class StudyCardAssembler
             return $enabled;
         }
 
-        $opened = $admission->only($enabled->modes, LearningLadder::STEP_UNENROLLED_PRACTICE);
+        $opened = $admission->onlyPracticeCorner($enabled->modes);
 
         return new EnabledModes($opened !== [] ? $opened : [ExerciseMode::MultipleChoice]);
     }
@@ -434,19 +435,23 @@ final readonly class StudyCardAssembler
             count($this->spanDistinct($content->exampleDistractors)),
             $content->description,
         );
+        $graded = array_values(array_filter($enabled->modes, static fn (ExerciseMode $m): bool => $m->isGraded()));
+
+        // A pair with no rung of its own — outside the POOL, or in it at rung 0 — is dealt the
+        // RECEPTIVE CORNER, which is not a rung and so is not read off one ({@see practiceModes()}).
+        if (! $this->drillsAtOwnRung($view)) {
+            return $playable->only($admission->onlyPracticeCorner($graded));
+        }
+
         // A `known` pair is OUTSIDE the ladder, not at the bottom of it — its verification is decided
         // elsewhere — so it reads as the top rung rather than as rung 0. Same rule, same words, as
-        // the client's `LadderPosition.admissionStep`. A pair with no rung of its own — outside the
-        // POOL, or in it at rung 0 — reads as the fixed rung such a word is drilled at.
-        $step = $this->drillsAtOwnRung($view)
-            ? (LearningLadder::stepFor(
-                $view->acquisition,
-                $view->reps,
-                $view->learningStep,
-                isKnown: $view->state === LearningState::Known,
-            ) ?? LearningLadder::STEP_DICTATION)
-            : LearningLadder::STEP_UNENROLLED_PRACTICE;
-        $graded = array_values(array_filter($enabled->modes, static fn (ExerciseMode $m): bool => $m->isGraded()));
+        // the client's `LadderPosition.admissionStep`.
+        $step = LearningLadder::stepFor(
+            $view->acquisition,
+            $view->reps,
+            $view->learningStep,
+            isKnown: $view->state === LearningState::Known,
+        ) ?? LearningLadder::STEP_DICTATION;
 
         return $playable->only($admission->only($graded, $step));
     }

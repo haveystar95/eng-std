@@ -48,7 +48,9 @@ it('deals only the modes the toggles leave on', function () {
 
 it('falls back to multiple_choice — loudly — when no enabled mode fits the term', function () {
     [$user, $token] = learner();
-    // A single word with no example: word_bank needs two words, cloze and scramble need an example.
+    // A single word with no example: cloze and scramble both need one. (word_bank is deliberately
+    // NOT in the switched-on set below any more — since BUGFIX-2 Ч.2б D2 it assembles a single word
+    // from its letters, so it fits this term and there would be nothing to fall back from.)
     seedWordFor($user, 'towel', 'полотенце');
     // A second word so the fallback card can actually be BUILT — a lone term has nothing to offer
     // beside its answer and the option floor refuses the card (QA-15). What is under test is the
@@ -57,7 +59,7 @@ it('falls back to multiple_choice — loudly — when no enabled mode fits the t
 
     app(EnabledModesWriter::class)->setOverrideFor(
         UserId::fromString($user->id),
-        new EnabledModes([ExerciseMode::WordBank, ExerciseMode::Cloze, ExerciseMode::Scramble]),
+        new EnabledModes([ExerciseMode::Cloze, ExerciseMode::Scramble]),
     );
 
     Log::spy();

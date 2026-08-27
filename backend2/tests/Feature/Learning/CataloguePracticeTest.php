@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Identity\Infrastructure\Eloquent\Profile;
+use App\Modules\Learning\Application\Port\EnabledModesWriter;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -25,15 +29,24 @@ uses(RefreshDatabase::class);
  * What is pinned here:
  *
  *   * a collection-scoped practice session drills the whole topic, untriaged words included;
- *   * a word outside the pool is dealt only what the matrix opens at
- *     `LearningLadder::STEP_UNENROLLED_PRACTICE` — never typing, listening or dictation;
+ *   * a word outside the pool is dealt only the RECEPTIVE CORNER
+ *     ({@see \App\Modules\Learning\Domain\ValueObject\ModeAdmission::onlyPracticeCorner()}) — never
+ *     «напиши по памяти» and never dictation;
  *   * a word IN the pool keeps its own trainers in the very same session;
  *   * the pool leads the session and the catalogue fills the tail;
  *   * and none of it moves progress: no enrolment, no exposure, no schedule.
  */
 
-/** The trainers a word nobody has studied must never be asked in. */
-const WITHHELD_FROM_CATALOGUE = ['typing', 'listening', 'dictation'];
+/**
+ * The trainers a word nobody has studied must never be asked in — the two that ask it to be written
+ * out of memory. «Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по памяти,
+ * диктант) открываются лестницей» (BUGFIX-2 Ч.2б).
+ *
+ * `listening` used to be on this list and is not any more: writing down a word the phone has just
+ * said, as many times as asked, is RECEPTION — the sound is the question and it is on screen for as
+ * long as the learner wants it.
+ */
+const WITHHELD_FROM_CATALOGUE = ['typing', 'dictation'];
 
 it('drills an untriaged collection — the topic, not the queue', function () {
     [$user, $token] = learner();
@@ -82,31 +95,28 @@ it('keeps a POOL word its own trainers in the very same session', function () {
     // Walk `apple` off the recognition rungs, so its rung is real and its fan is the full one.
     answerTimes($this, $token, $apple, 'apple', times: 3);
 
-    $dealtToPool = [];
-    for ($i = 0; $i < 6; $i++) {
-        $cards = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/study/sessions', ['collection_id' => $col, 'practice' => true])
-            ->assertOk()
-            ->json('data.cards');
+    // ONE trainer switched on, and it is a withheld one. That makes the claim deterministic instead
+    // of leaving it to the round-robin's seed: whatever card index each word lands on, the pool word
+    // can only be dealt `typing` and the catalogue word can only be dealt the floor.
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::Typing]),
+    );
 
-        foreach ($cards as $card) {
-            if ($card['term_id'] === $ledger) {
-                expect(WITHHELD_FROM_CATALOGUE)->not->toContain($card['exercise_mode']);
-
-                continue;
-            }
-            $dealtToPool[$card['exercise_mode']] = true;
-        }
+    $byTerm = [];
+    foreach ($this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col, 'practice' => true])
+        ->assertOk()
+        ->json('data.cards') as $card) {
+        $byTerm[$card['term_id']] = $card['exercise_mode'];
     }
 
-    // These terms have no example, so the trainers their data can furnish are multiple_choice,
-    // typing and listening — the last two are exactly what the catalogue cap withholds, and at
-    // least one of them must still reach a word being studied. That is the cap not leaking.
-    //
-    // «At least one» and not «both»: the round-robin walks the applicable set by card index, and a
-    // two-word pool only ever occupies two of the three positions in it. What is being asserted is
-    // that the pool half of the session is not capped, and one withheld trainer proves that.
-    expect(array_intersect(array_keys($dealtToPool), WITHHELD_FROM_CATALOGUE))->not->toBeEmpty();
+    // The word being studied gets the trainer it has earned…
+    expect($byTerm[$apple])->toBe('typing')
+        // …and the catalogue word, in the very same session, does not: `typing` is outside the
+        // receptive corner, the corner comes out empty, and the floor deals the one trainer that
+        // fits every term. That is the cap holding without capping the pool.
+        ->and($byTerm[$ledger])->toBe('multiple_choice');
 });
 
 it('leads with the words being studied and fills the tail with the catalogue', function () {
@@ -147,7 +157,10 @@ it('spends a session too small for the topic on the pool first', function () {
         ->assertOk()
         ->json('data.cards');
 
-    expect(array_column($cards, 'term_id'))->toBe([$apple]);
+    // The one slot went to the POOL word — every card in the session is about it. Not «exactly one
+    // card»: a session whose pool comes out at a single term FANS that term across its trainers
+    // («Тренировать слово» is the same rule), so what is pinned here is WHOSE cards these are.
+    expect(array_values(array_unique(array_column($cards, 'term_id'))))->toBe([$apple]);
 });
 
 it('moves nothing: answering a catalogue word leaves it in the catalogue', function () {

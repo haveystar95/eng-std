@@ -186,8 +186,9 @@ final readonly class ModeContentRequirements
     private function gapReason(ContentGap $gap, TermPlayability $playable): string
     {
         return match ($gap) {
-            ContentGap::SingleWord => 'ответ — одно слово: сборка из одной фишки ничего не спрашивает (нужно минимум '
-                . TermPlayability::MIN_WORD_BANK_WORDS . ' слова).',
+            ContentGap::SingleWord => 'из ответа выходит одна фишка: собирать нечего (нужно минимум '
+                . TermPlayability::MIN_WORD_BANK_WORDS . ' слова — или ' . TermPlayability::MIN_WORD_BANK_CHIPS
+                . ' буквы, если слово одно).',
             ContentGap::NoExample => 'у термина нет закреплённого примера — вырезать пропуск, перемешать или продиктовать нечего.',
             ContentGap::ExampleLacksTerm => 'пример не содержит сам термин, поэтому пропуск вырезать не из чего.',
             ContentGap::ExampleIsTerm => 'пример совпадает с самим термином — это была бы та же карточка, что и сборка слова.',
@@ -209,7 +210,9 @@ final readonly class ModeContentRequirements
             ExerciseMode::Speaking => $playable->exampleIsAnswer || $playable->exampleTokenCount === 0
                 ? 'спрашивает сам термин вслух; без примера остаётся словесная форма — это деградация внутри режима, а не отказ.'
                 : 'спрашивает сам термин вслух; на верхней ступени читается пример.',
-            ExerciseMode::WordBank => "ответ из {$playable->answerWordCount} слов — есть что собирать из фишек.",
+            ExerciseMode::WordBank => $playable->answerWordCount >= TermPlayability::MIN_WORD_BANK_WORDS
+                ? "ответ из {$playable->answerWordCount} слов — есть что собирать из словесных фишек."
+                : "ответ — одно слово из {$playable->answerCharCount} букв — собирается буквенными фишками.",
             ExerciseMode::Cloze => 'пример содержит термин — есть откуда вырезать пропуск.',
             ExerciseMode::Scramble => "пример на {$playable->exampleTokenCount} слов с переводом — есть что собирать.",
             ExerciseMode::Dictation => "пример на {$playable->exampleTokenCount} слов — есть что диктовать.",

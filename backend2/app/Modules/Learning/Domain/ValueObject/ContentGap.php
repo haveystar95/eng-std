@@ -15,7 +15,11 @@ namespace App\Modules\Learning\Domain\ValueObject;
  */
 enum ContentGap: string
 {
-    /** word_bank: one word is one chip, and a one-chip card asks nothing. */
+    /**
+     * word_bank: the answer yields ONE chip, and a one-chip card asks nothing. A single word is
+     * assembled from its letters now (BUGFIX-2 Ч.2б D2), so this is reached only by a one-letter
+     * answer — the name is kept because the wire value is stored and read by the admin panel.
+     */
     case SingleWord = 'single_word';
 
     /** No pinned example at all — cured by regenerating the example, never by the станок. */

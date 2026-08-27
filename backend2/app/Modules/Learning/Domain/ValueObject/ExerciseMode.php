@@ -212,6 +212,33 @@ enum ExerciseMode: string
     }
 
     /**
+     * IS THIS TRAINER OPENED BY THE LADDER ALONE — the canon of free practice's rung-0 corner.
+     *
+     * «Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по памяти, диктант)
+     * открываются лестницей» (владелец/архитектор, BUGFIX-2 Ч.2б).
+     *
+     * Two trainers, and only two, ask the learner to write a word out of memory with nothing on
+     * screen to lean on: `typing` and `dictation`. A word with no rung of its own — outside the
+     * pool, or in it and still at rung 0 — has never been met, so being asked to spell it is not a
+     * harder card, it is an unanswerable one. Everything else is RECEPTION: the answer is
+     * recognised, tapped, assembled from tiles we dealt, said aloud, or written down from a sound
+     * that is played as many times as the learner likes. None of those needs a rung to be fair, so
+     * none of them is held back by one in free practice.
+     *
+     * Deliberately NOT {@see isProduction()}, which answers a different question (can this mode
+     * earn `easy`) and puts `listening` on the wrong side of this one: writing what you just heard
+     * is production for the GRADE and reception for the GATE.
+     *
+     * This says nothing about the SRS ladder, where every trainer still opens where the admin matrix
+     * puts it — the rungs are what a planned session climbs. It is read in exactly one place:
+     * {@see ModeAdmission::onlyPracticeCorner()}.
+     */
+    public function openedByLadderOnly(): bool
+    {
+        return $this === self::Typing || $this === self::Dictation;
+    }
+
+    /**
      * Does a single-character difference deserve forgiveness on this mode?
      *
      * Typo leniency exists to forgive TYPING — a slipped key on a long word should not wipe a

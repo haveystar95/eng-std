@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Learning\Application\Port\EnabledModesWriter;
+use App\Modules\Learning\Domain\ValueObject\EnabledModes;
+use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -29,8 +33,13 @@ uses(RefreshDatabase::class);
  * The client's half is `mobile/test/data/practice/ladder_gate_test.dart`.
  */
 
-/** The trainers a word that has never been met must never be asked in. */
-const WITHHELD_FROM_RUNG_ZERO = ['typing', 'listening', 'dictation', 'intro'];
+/**
+ * The trainers a word that has never been met must never be asked in: the two that ask it to be
+ * written out of memory, plus `intro` (practice introduces nothing). Everything else is the
+ * RECEPTIVE CORNER — «свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по
+ * памяти, диктант) открываются лестницей» (BUGFIX-2 Ч.2б).
+ */
+const WITHHELD_FROM_RUNG_ZERO = ['typing', 'dictation', 'intro'];
 
 it('drills a pool word that has never been met', function () {
     [$user, $token] = learner();
@@ -121,23 +130,24 @@ it('leaves a word that HAS a rung its own trainers', function () {
     // Walk `apple` off the recognition rungs, so its rung is real and its fan is the full one.
     answerTimes($this, $token, $apple, 'apple', times: 3);
 
-    $dealt = [];
-    for ($i = 0; $i < 6; $i++) {
-        $cards = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/v1/study/sessions', ['collection_id' => $col, 'practice' => true])
-            ->assertOk()
-            ->json('data.cards');
+    // ONE trainer switched on, and it is a withheld one — so the claim does not depend on where the
+    // round-robin's seed happens to land. `pear` is still at rung 0 and rides along as the control.
+    app(EnabledModesWriter::class)->setOverrideFor(
+        UserId::fromString($user->id),
+        new EnabledModes([ExerciseMode::Typing]),
+    );
 
-        foreach ($cards as $card) {
-            if ($card['term_id'] !== $apple) {
-                continue;
-            }
-            $dealt[$card['exercise_mode']] = true;
-        }
+    $byTerm = [];
+    foreach ($this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions', ['collection_id' => $col, 'practice' => true])
+        ->assertOk()
+        ->json('data.cards') as $card) {
+        $byTerm[$card['term_id']] = $card['exercise_mode'];
     }
 
-    // These terms have no example, so what their data can furnish is multiple_choice, typing and
-    // listening — and the last two are exactly what rung 0 withholds. At least one of them reaching
-    // a word that HAS earned its rung is the cap not leaking (QA-26).
-    expect(array_intersect(array_keys($dealt), WITHHELD_FROM_RUNG_ZERO))->not->toBeEmpty();
+    // The word that HAS a rung is dealt what it has earned — the cap is not leaking onto it (QA-26)…
+    expect($byTerm[$apple])->toBe('typing')
+        // …while the rung-0 word beside it falls to the floor, because `typing` is outside the
+        // receptive corner and nothing else is switched on.
+        ->and(array_values(array_diff_key($byTerm, [$apple => true])))->each->toBe('multiple_choice');
 });

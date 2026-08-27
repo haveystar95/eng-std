@@ -97,6 +97,40 @@ final readonly class ModeAdmission
     }
 
     /**
+     * THE RUNG-0 CORNER OF FREE PRACTICE — what a pair with no rung of its own may be drilled in.
+     *
+     * The canon (владелец/архитектор, BUGFIX-2 Ч.2б): «свободная практика ступени 0 = рецептивные
+     * режимы; продуктивные (письмо по памяти, диктант) открываются лестницей». So the corner is
+     * узнавание/выбор, сборка, произнеси, аудио «услышал→напиши», и description_match при наличии
+     * описания — everything except the two trainers {@see ExerciseMode::openedByLadderOnly()} names.
+     *
+     * Which is why this is not `only($modes, STEP_UNENROLLED_PRACTICE)`, the one line it replaces:
+     * the matrix opens `listening` at the typed-production rung, because in a PLANNED session it
+     * follows typing. Free practice is not a session — it schedules nothing, advances nothing and
+     * spends nothing — so its corner is drawn by what a card ASKS, not by what a rung has earned,
+     * and hearing a word and writing it down asks no more of a first meeting than tapping it does.
+     * Reading the rung straight off the matrix silently cost every rung-0 word its audio trainer.
+     *
+     * The matrix still has the last word in both directions: a mode with no rule is admitted
+     * nowhere (fail-closed, as everywhere else here), and a productive trainer is asked about at
+     * exactly the rung such a word is drilled at, so the admin can still close one. What the panel
+     * cannot do through this is push a receptive trainer out of the corner by raising its rung —
+     * that rung is about the ladder, and this corner is not on it.
+     *
+     * @param  list<ExerciseMode>  $modes
+     * @return list<ExerciseMode>
+     */
+    public function onlyPracticeCorner(array $modes): array
+    {
+        return array_values(array_filter($modes, fn (ExerciseMode $mode): bool => $this->allows(
+            $mode,
+            // A receptive trainer is asked about at the TOP rung: «is it on the ladder at all»,
+            // never «has this word climbed to it».
+            $mode->openedByLadderOnly() ? LearningLadder::STEP_UNENROLLED_PRACTICE : LearningLadder::STEP_DICTATION,
+        )));
+    }
+
+    /**
      * The matrix as the wire sees it — the client mirrors it to build sessions offline, and the
      * admin API reads it. Ordered by rung then mode so the payload is stable between requests.
      *

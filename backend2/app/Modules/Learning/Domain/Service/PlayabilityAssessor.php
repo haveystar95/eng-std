@@ -36,8 +36,10 @@ final readonly class PlayabilityAssessor
     ): TermPlayability {
         $hasExample = $example !== null && $example !== '';
 
+        $answerWordCount = $this->chips->wordCount($answer);
+
         return new TermPlayability(
-            answerWordCount: $this->chips->wordCount($answer),
+            answerWordCount: $answerWordCount,
             // A blank can be cut only from an example that actually holds the answer.
             // Case-insensitive, matching the client's blanking.
             clozeable: $hasExample && mb_stripos((string) $example, $answer) !== false,
@@ -51,6 +53,9 @@ final readonly class PlayabilityAssessor
             // Unlike the distractors, this hangs off nothing: a description is about the WORD, so a
             // term with no example still has one and description_match still plays.
             hasDescription: $description !== null && trim($description) !== '',
+            // Only for a SINGLE word: that is the answer word_bank deals as letters. A phrase is
+            // assembled from its words, so counting its characters would say nothing about its card.
+            answerCharCount: $answerWordCount === 1 ? mb_strlen(trim($answer)) : 0,
         );
     }
 }

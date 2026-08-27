@@ -21,6 +21,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -29,7 +30,7 @@
                 "speaking"
             ],
             "rotation": 2586771104,
-            "expected_mode": "scramble"
+            "expected_mode": "typing"
         },
         {
             "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
@@ -44,6 +45,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -52,7 +54,7 @@
                 "speaking"
             ],
             "rotation": 2586771105,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
@@ -67,6 +69,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -75,7 +78,7 @@
                 "speaking"
             ],
             "rotation": 2586771106,
-            "expected_mode": "typing"
+            "expected_mode": "cloze"
         },
         {
             "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
@@ -90,6 +93,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -98,7 +102,7 @@
                 "speaking"
             ],
             "rotation": 2586771107,
-            "expected_mode": "listening"
+            "expected_mode": "scramble"
         },
         {
             "term_id": "01KZETAAA50EMHCN6SP80T8DHC",
@@ -113,6 +117,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -121,7 +126,7 @@
                 "speaking"
             ],
             "rotation": 2586771111,
-            "expected_mode": "typing"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAB4AW6M9ZFRB3X02CVW",
@@ -361,6 +366,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "scramble",
@@ -368,7 +374,7 @@
                 "speaking"
             ],
             "rotation": 2512098382,
-            "expected_mode": "listening"
+            "expected_mode": "typing"
         },
         {
             "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
@@ -383,6 +389,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "scramble",
@@ -390,7 +397,7 @@
                 "speaking"
             ],
             "rotation": 2512098383,
-            "expected_mode": "scramble"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
@@ -405,6 +412,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "scramble",
@@ -412,7 +420,7 @@
                 "speaking"
             ],
             "rotation": 2512098384,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "scramble"
         },
         {
             "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
@@ -427,6 +435,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "scramble",
@@ -434,7 +443,7 @@
                 "speaking"
             ],
             "rotation": 2512098385,
-            "expected_mode": "typing"
+            "expected_mode": "multiple_choice"
         },
         {
             "term_id": "01KZETAAD2EWE2H5ZV7WD8JWKT",
@@ -449,6 +458,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "scramble",
@@ -456,7 +466,7 @@
                 "speaking"
             ],
             "rotation": 2512098389,
-            "expected_mode": "typing"
+            "expected_mode": "scramble"
         },
         {
             "term_id": "01KZETAAE63W6K93C55NCYXKVA",
@@ -696,13 +706,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 1927533452,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "typing"
         },
         {
             "term_id": "01KZETAAG3WD5P7HJ2VT8NQ4XB",
@@ -717,13 +728,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 1927533453,
-            "expected_mode": "typing"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAG3WD5P7HJ2VT8NQ4XB",
@@ -738,13 +750,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 1927533454,
-            "expected_mode": "listening"
+            "expected_mode": "cloze"
         },
         {
             "term_id": "01KZETAAG3WD5P7HJ2VT8NQ4XB",
@@ -759,13 +772,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 1927533455,
-            "expected_mode": "cloze"
+            "expected_mode": "multiple_choice"
         },
         {
             "term_id": "01KZETAAG3WD5P7HJ2VT8NQ4XB",
@@ -780,6 +794,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -801,13 +816,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 3371275912,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "typing"
         },
         {
             "term_id": "01KZETAAH6ZC2Q9MK4RB7XD3VT",
@@ -822,13 +838,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 3371275913,
-            "expected_mode": "typing"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAH6ZC2Q9MK4RB7XD3VT",
@@ -843,13 +860,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 3371275914,
-            "expected_mode": "listening"
+            "expected_mode": "cloze"
         },
         {
             "term_id": "01KZETAAH6ZC2Q9MK4RB7XD3VT",
@@ -864,13 +882,14 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
                 "speaking"
             ],
             "rotation": 3371275915,
-            "expected_mode": "cloze"
+            "expected_mode": "multiple_choice"
         },
         {
             "term_id": "01KZETAAH6ZC2Q9MK4RB7XD3VT",
@@ -885,6 +904,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -906,6 +926,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -913,7 +934,7 @@
                 "speaking"
             ],
             "rotation": 483864013,
-            "expected_mode": "cloze"
+            "expected_mode": "word_bank"
         },
         {
             "term_id": "01KZETAAJ4XN8V2CQ7MB5RT9WD",
@@ -928,6 +949,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -935,7 +957,7 @@
                 "speaking"
             ],
             "rotation": 483864014,
-            "expected_mode": "scramble"
+            "expected_mode": "typing"
         },
         {
             "term_id": "01KZETAAJ4XN8V2CQ7MB5RT9WD",
@@ -950,6 +972,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -957,7 +980,7 @@
                 "speaking"
             ],
             "rotation": 483864015,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "listening"
         },
         {
             "term_id": "01KZETAAJ4XN8V2CQ7MB5RT9WD",
@@ -972,6 +995,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -979,7 +1003,7 @@
                 "speaking"
             ],
             "rotation": 483864016,
-            "expected_mode": "typing"
+            "expected_mode": "cloze"
         },
         {
             "term_id": "01KZETAAJ4XN8V2CQ7MB5RT9WD",
@@ -994,6 +1018,7 @@
             "example_is_answer": false,
             "supported_modes": [
                 "multiple_choice",
+                "word_bank",
                 "typing",
                 "listening",
                 "cloze",
@@ -1001,7 +1026,7 @@
                 "speaking"
             ],
             "rotation": 483864020,
-            "expected_mode": "multiple_choice"
+            "expected_mode": "typing"
         }
     ]
 }

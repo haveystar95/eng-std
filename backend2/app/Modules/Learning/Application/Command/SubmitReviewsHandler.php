@@ -25,6 +25,7 @@ use App\Modules\Learning\Domain\Repository\TermProgressRepository;
 use App\Modules\Learning\Domain\Service\AnswerGrader;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\Service\Scheduler;
+use App\Modules\Learning\Domain\Service\SpokenCoverage;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
 use App\Modules\Learning\Domain\ValueObject\Answer;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
@@ -235,7 +236,7 @@ final readonly class SubmitReviewsHandler
         if ($input->exerciseMode->gradesAgainstExample($input->ladderStep)
             && $key->example !== null
             && trim($key->example) !== '') {
-            return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyFor($input));
+            return new ExpectedAnswer([$key->example], isPhrase: true, policy: $this->policyForExample($input));
         }
 
         // WORD-LEVEL. The key is the term's own forms, plus its near-synonyms where the card asked
@@ -251,20 +252,47 @@ final readonly class SubmitReviewsHandler
                 ? [...$key->accepted, ...$key->synonyms]
                 : $key->accepted,
             $key->isPhrase,
+            $this->policyForTerm($input, $key),
         );
     }
 
     /**
-     * How the sentence key is compared. Every mode that assembles, types or taps a sentence is
+     * How the SENTENCE key is compared. Every mode that assembles, types or taps a sentence is
      * compared for equality, because the learner produced every character of it. `speaking` is not:
      * its answer came out of a speech recogniser, which drops and swaps words on a perfectly good
      * reading, so it is compared by COVERAGE ({@see \App\Modules\Learning\Domain\Service\SpokenCoverage} for the numbers and the
      * reasoning). Being wrong in the strict direction here is not a cosmetic bug — an exact match
      * on a transcript delivers a LAPSE for a room that was noisy.
      */
-    private function policyFor(ReviewInput $input): MatchPolicy
+    private function policyForExample(ReviewInput $input): MatchPolicy
     {
         return $input->exerciseMode === ExerciseMode::Speaking ? MatchPolicy::Coverage : MatchPolicy::Exact;
+    }
+
+    /**
+     * How the WORD-LEVEL key is compared — the same question one step down, and the answer is the
+     * same wherever a microphone was involved and the thing said was long.
+     *
+     * A term is not always a word. Asked to say «Where do you see yourself in five years?» the
+     * learner reads a whole sentence into the microphone, and the recogniser mangles it exactly as
+     * it mangles a pinned example; holding it to equality graded a good reading `again`
+     * (BUGFIX-2 Ч.3б). So a spoken answer to a LONG term is compared by coverage, which in practice
+     * says «the words of the card are in what was heard» — {@see SpokenCoverage::LONG_UTTERANCE_WORDS}.
+     *
+     * A short term keeps equality, and deliberately: coverage over a one-word key would accept the
+     * word buried in any sentence at all, and the normalising stages ({@see AnswerGrader}) already
+     * forgive the article, the punctuation and — for speaking alone — a dropped trailing sibilant,
+     * which is what a one-word reading actually loses.
+     *
+     * Everything typed, assembled or tapped stays `exact` whatever its length: the learner produced
+     * every character of those.
+     */
+    private function policyForTerm(ReviewInput $input, TermAnswerKeyView $key): MatchPolicy
+    {
+        return $input->exerciseMode === ExerciseMode::Speaking
+            && SpokenCoverage::isLongUtterance($key->accepted[0] ?? '')
+                ? MatchPolicy::Coverage
+                : MatchPolicy::Exact;
     }
 
     /**

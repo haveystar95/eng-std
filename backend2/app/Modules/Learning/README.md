@@ -18,12 +18,28 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
 - **Free practice is open to EVERY word, always — the ladder gates nothing here.** A drill moves
   nothing: it enrols nobody, writes no exposure, spends no quota, advances no rung and schedules
   nothing. Only the planned session moves the ladder. So there is no rung to have earned before
-  being drilled, and what the rung still decides is only the CARD: a pair with **no rung of its
-  own** — outside the pool, or in the pool and still at rung 0 — is dealt what the matrix opens at
-  `LearningLadder::STEP_UNENROLLED_PRACTICE` (choice and assembly), never typed production or
-  dictation, and never an intro (practice introduces nothing). A pair on a rung of its own fans
-  across every switched-on trainer. `StudyCardAssembler::drillsAtOwnRung()` is where that one
-  question is asked; the client mirrors it as `LadderPosition.drillsAtOwnRung`.
+  being drilled, and what the rung still decides is only the CARD. The canon (владелец/архитектор,
+  BUGFIX-2 Ч.2б), verbatim:
+
+  > **«Свободная практика ступени 0 = рецептивные режимы; продуктивные (письмо по памяти, диктант)
+  > открываются лестницей.»**
+  >
+  > Угол ступени 0 = узнавание/выбор, сборка word_bank, произнеси/говорение, аудио «услышал→напиши»
+  > (listening-письмо — рецепция), description_match ПРИ НАЛИЧИИ описания. Ступени выше в свободной
+  > практике получают полный веер, доступный по материалу и языку.
+
+  So a pair with **no rung of its own** — outside the pool, or in the pool and still at rung 0 — is
+  dealt the RECEPTIVE CORNER (`ModeAdmission::onlyPracticeCorner()`), never `typing`, never
+  `dictation`, and never an intro (practice introduces nothing). A pair on a rung of its own fans
+  across every switched-on trainer its material and its language allow.
+  `StudyCardAssembler::drillsAtOwnRung()` is where that one question is asked; the client mirrors it
+  as `LadderPosition.drillsAtOwnRung`, and the corner as `ModeAdmission.onlyPracticeCorner`.
+
+  The corner is **not** read off the admission matrix at a rung, and that is the point: the matrix
+  opens `listening` right after `typing` because that is where it belongs in a PLANNED session, and
+  reading the rung straight off it silently cost every rung-0 word its audio trainer. The matrix
+  still has the last word in both directions — a mode with no row is admitted nowhere, and the two
+  productive trainers are still asked about at `LearningLadder::STEP_UNENROLLED_PRACTICE`.
 - **Free practice scoped to a COLLECTION is the one selection that leaves the pool.** It drills the
   topic the learner pointed at, untriaged words included, so a fresh collection is playable without
   a triage pass. Pool terms lead the session and keep their own rung. UNSCOPED free practice still

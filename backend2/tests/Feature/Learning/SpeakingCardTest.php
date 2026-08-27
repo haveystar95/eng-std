@@ -154,6 +154,32 @@ it('grades the example form by COVERAGE — the reading the recogniser mangled s
         ->and(speakingAnswer($this, $token, $termId, 'could you take photo of us', LearningLadder::STEP_ASSEMBLY))->toBe('again');
 });
 
+it('grades a PHRASE TERM by coverage too — a term is not always a word', function () {
+    [$user, $token] = learner();
+    // The card is the WORD form (rung 3, no example asked for), and the word is a whole question.
+    $termId = seedWordFor($user, 'Where do you see yourself in five years?', 'Кем вы видите себя через пять лет?');
+
+    // What an on-device recogniser actually returns for a correct reading: «yourself» heard as
+    // «yourself» but the article-ish middle mangled, and no question mark. Held to equality this was
+    // `again` — a lapse for a room, on a card the learner answered (BUGFIX-2 Ч.3б, owner's phone).
+    expect(speakingAnswer($this, $token, $termId, 'where do you see yourself in 5 years', LearningLadder::STEP_ASSEMBLY))
+        ->toBe('good')
+        // …and it is coverage, not «anything goes»: half the question is still half the question.
+        ->and(speakingAnswer($this, $token, $termId, 'where do you', LearningLadder::STEP_ASSEMBLY))->toBe('again');
+});
+
+it('keeps a SHORT term on equality — coverage over one word would accept it inside anything', function () {
+    [$user, $token] = learner();
+    $termId = seedWordFor($user, 'reservation', 'бронь');
+
+    // A one-word key compared by coverage would pass for any sentence containing the word, which is
+    // not what «произнеси слово» asks. The normalising stages already forgive what a one-word
+    // reading really loses (case, punctuation, a dropped trailing sibilant).
+    expect(speakingAnswer($this, $token, $termId, 'the reservation is over there', LearningLadder::STEP_ASSEMBLY))
+        ->toBe('again')
+        ->and(speakingAnswer($this, $token, $termId, 'Reservation.', LearningLadder::STEP_ASSEMBLY))->toBe('good');
+});
+
 it('fails the example form when only half the sentence was read', function () {
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'photo', 'фото');

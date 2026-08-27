@@ -43,6 +43,34 @@ final readonly class SpokenCoverage
      */
     public const MIN_COVERAGE = 0.7;
 
+    /**
+     * From how many words an utterance stops being «a word» and starts being a phrase — the point
+     * at which a spoken answer is compared by coverage instead of by equality.
+     *
+     * A term is not always a word. «Where do you see yourself in five years?» is one row in the
+     * catalogue and a whole sentence in the microphone, and every reason equality is the wrong bar
+     * for an EXAMPLE ({@see the class docblock}) applies to it word for word: the recogniser eats
+     * the same function words and guesses the same homophones. Held to equality, a correct reading
+     * of a phrase term graded `again` and handed the scheduler a lapse — which is the one outcome
+     * this trainer must never produce (BUGFIX-2 Ч.3б, owner's device: «фразы распознаются
+     * нестабильно»).
+     *
+     * Mirrored on the client as `SpokenAnswer.longTermWords`, which picks the recording WINDOW off
+     * the same number — «длинность» has one definition, so a term recorded like a sentence is
+     * exactly the term graded like one. Before this the client already graded such a term by
+     * coverage and the server still demanded equality (QA-22 landed on one side only), so the phone
+     * showed «Верно» and the scheduler wrote a lapse behind it.
+     */
+    public const LONG_UTTERANCE_WORDS = 3;
+
+    /** Is this expected answer long enough to be compared by coverage? See {@see LONG_UTTERANCE_WORDS}. */
+    public static function isLongUtterance(string $expected): bool
+    {
+        $trimmed = trim($expected);
+
+        return $trimmed !== '' && count(preg_split('/\s+/', $trimmed) ?: []) >= self::LONG_UTTERANCE_WORDS;
+    }
+
     public function __construct(
         private LexicalNormalizer $normalizer = new LexicalNormalizer(),
         private SpokenSuffixTolerance $suffixTolerance = new SpokenSuffixTolerance(),
@@ -84,7 +112,12 @@ final readonly class SpokenCoverage
      * invents or swaps a whole word). $available is small (one sentence), so a linear scan for the
      * tolerant match costs nothing that matters here.
      *
-     * @param  array<string, int>  $available
+     * `(string) $candidate`, and not decoration: `array_count_values` hands back an INT key for a
+     * word that is all digits, so a transcript containing «5» («in 5 years», which is exactly what a
+     * recogniser writes for «five») made the tolerant scan throw a TypeError and the whole review
+     * batch 500. Found the moment a phrase TERM started being compared this way (BUGFIX-2 Ч.3б).
+     *
+     * @param  array<array-key, int>  $available
      */
     private function consume(array &$available, string $word): bool
     {
@@ -94,7 +127,7 @@ final readonly class SpokenCoverage
             return true;
         }
         foreach ($available as $candidate => $count) {
-            if ($count > 0 && $this->suffixTolerance->equal($word, $candidate)) {
+            if ($count > 0 && $this->suffixTolerance->equal($word, (string) $candidate)) {
                 $available[$candidate]--;
 
                 return true;

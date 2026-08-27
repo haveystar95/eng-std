@@ -149,11 +149,17 @@ it('covers every exercise mode this build knows, with no gaps', function () {
 
 it('names the gap that actually refused the card', function () {
     $bare = contentRequirements()->assess('ledger', null, null, []);
-    expect($bare->for(ExerciseMode::WordBank)->gap)->toBe(ContentGap::SingleWord)
-        ->and($bare->for(ExerciseMode::Cloze)->gap)->toBe(ContentGap::NoExample)
+    expect($bare->for(ExerciseMode::Cloze)->gap)->toBe(ContentGap::NoExample)
         ->and($bare->for(ExerciseMode::Scramble)->gap)->toBe(ContentGap::NoExample)
         ->and($bare->for(ExerciseMode::Dictation)->gap)->toBe(ContentGap::NoExample)
-        ->and($bare->for(ExerciseMode::PickCorrect)->gap)->toBe(ContentGap::NoExample);
+        ->and($bare->for(ExerciseMode::PickCorrect)->gap)->toBe(ContentGap::NoExample)
+        // …and word_bank is NOT among them any more: a single word is assembled from its letters
+        // (BUGFIX-2 Ч.2б D2), so «ledger» is a six-chip card rather than a refusal.
+        ->and($bare->for(ExerciseMode::WordBank)->status)->toBe(ContentStatus::Ok);
+
+    // The refusal that is left: one chip is one chip whatever it holds.
+    $oneLetter = contentRequirements()->assess('a', null, null, []);
+    expect($oneLetter->for(ExerciseMode::WordBank)->gap)->toBe(ContentGap::SingleWord);
 
     $noTranslation = contentRequirements()->assess(
         'account', 'I opened a bank account yesterday.', null, ['a bank', 'opened'],

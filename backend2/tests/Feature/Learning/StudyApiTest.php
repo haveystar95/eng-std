@@ -325,7 +325,7 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
         ->assertJsonPath('data.cards', []);
 
     // …but practice drills all three. Practice fans across every applicable mode (not the reps
-    // ladder): single words with no example → multiple_choice / typing / listening.
+    // ladder): single words with no example → choice, the letter-chip assembly, typing, listening.
     $cards = $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson('/api/v1/study/sessions', ['collection_id' => $colA, 'practice' => true])
         ->assertOk()
@@ -333,14 +333,15 @@ it('offers every scope term as a practice card, ignoring due_at and the daily qu
 
     expect($cards)->toHaveCount(3);
     expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank', 'ledger']);
-    // No word_bank (single word) and no cloze (no example); the rest of the enabled set is fair game.
+    // No cloze (no example); word_bank IS in, because a single word is assembled from its letters
+    // (BUGFIX-2 Ч.2б D2). The rest of the enabled set is fair game.
     expect(array_column($cards, 'exercise_mode'))
-        ->each->toBeIn(['multiple_choice', 'typing', 'listening']);
+        ->each->toBeIn(['multiple_choice', 'word_bank', 'typing', 'listening']);
 
-    // …and the catalogue word is never asked to PRODUCE the word: typing and listening are the
-    // trainers the admission matrix opens above the rung a word nobody has studied is dealt at.
+    // …and the catalogue word is never asked to write the word out of MEMORY: `typing` is the one
+    // trainer here that the receptive corner withholds from a word nobody has studied.
     $ledger = collect($cards)->firstWhere('answer', 'ledger');
-    expect($ledger['exercise_mode'])->toBe('multiple_choice');
+    expect($ledger['exercise_mode'])->toBeIn(['multiple_choice', 'word_bank', 'listening']);
 });
 
 it('drills an untriaged collection — nothing enrolled, and the topic still plays', function () {
@@ -355,7 +356,10 @@ it('drills an untriaged collection — nothing enrolled, and the topic still pla
         ->json('data.cards');
 
     expect(array_column($cards, 'answer'))->toEqualCanonicalizing(['apple', 'bank']);
-    expect(array_column($cards, 'exercise_mode'))->each->toBe('multiple_choice');
+    // The receptive corner: recognition, the letter-chip assembly and «услышал → напиши». Never the
+    // two that ask a word nobody has met to be written out of memory.
+    expect(array_column($cards, 'exercise_mode'))
+        ->each->toBeIn(['multiple_choice', 'word_bank', 'listening']);
 
     // …and the drill enrols nobody: the pool is still empty, so a study session still has nothing.
     expect(DB::table('user_term_progress')->whereNotNull('enrolled_at')->count())->toBe(0);
@@ -392,7 +396,7 @@ it('includes a studied-but-not-due term in practice (which the normal session wi
 
     $own = array_values(array_filter($cards, static fn (array $c): bool => $c['term_id'] === $apple));
     expect($own)->toHaveCount(1)
-        ->and($own[0]['exercise_mode'])->toBeIn(['multiple_choice', 'typing', 'listening']);
+        ->and($own[0]['exercise_mode'])->toBeIn(['multiple_choice', 'word_bank', 'typing', 'listening']);
 });
 
 it('does not spend the daily new-term quota during practice', function () {

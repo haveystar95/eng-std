@@ -21,8 +21,23 @@ namespace App\Modules\Learning\Domain\ValueObject;
  */
 final readonly class TermPlayability
 {
-    /** Nothing to assemble from a single word — word_bank would be a one-chip card. */
+    /** A phrase is assembled from its WORDS, and two of them is the least that is a puzzle. */
     public const MIN_WORD_BANK_WORDS = 2;
+
+    /**
+     * A SINGLE word is assembled from its LETTERS, and the same floor applies to those.
+     *
+     * The letter branch has existed in {@see \App\Modules\Learning\Domain\Service\ChipShuffler}
+     * since word_bank was written and was unreachable for exactly as long: the gate above asked for
+     * two WORDS, so a one-word term never got here and the letters were dead code (BUGFIX-2 Ч.2б
+     * D2). Free practice is where that showed — «Тренировать это слово» on an ordinary one-word
+     * term fanned out without the assembly trainer, and the word the owner picked is one word far
+     * more often than not.
+     *
+     * The floor is «two chips», the same sentence as the constant above says about words: one tile
+     * on screen is not a question whatever the tile holds.
+     */
+    public const MIN_WORD_BANK_CHIPS = 2;
 
     /**
      * Scramble's sentence-length window. Below the floor there is nothing to assemble (3 chips is
@@ -67,6 +82,9 @@ final readonly class TermPlayability
      * @param  bool  $hasDescription         the term has a description in the language being learned
      *                                       — the PROMPT of the description_match card, so without
      *                                       one there is no card rather than a lesser one
+     * @param  int   $answerCharCount        characters in a SINGLE-word answer — the letter chips
+     *                                       word_bank deals for it. 0 for a multi-word answer, which
+     *                                       is assembled from words and never from letters
      */
     public function __construct(
         public int $answerWordCount,
@@ -76,13 +94,18 @@ final readonly class TermPlayability
         public bool $exampleIsAnswer = false,
         public int $distractorCount = 0,
         public bool $hasDescription = false,
+        public int $answerCharCount = 0,
     ) {}
 
     /** Can this term be drilled in this mode at all? The ONE place applicability is decided. */
     public function supports(ExerciseMode $mode): bool
     {
         return match ($mode) {
-            ExerciseMode::WordBank => $this->answerWordCount >= self::MIN_WORD_BANK_WORDS,
+            // Words for a phrase, letters for a single word — the two branches ChipShuffler has
+            // always had, and now both reachable. Either way the question is the same one: does the
+            // card get at least two chips to shuffle?
+            ExerciseMode::WordBank => $this->answerWordCount >= self::MIN_WORD_BANK_WORDS
+                || $this->answerCharCount >= self::MIN_WORD_BANK_CHIPS,
             ExerciseMode::Cloze => $this->clozeable,
             ExerciseMode::Scramble => ! $this->exampleIsAnswer
                 && $this->hasExampleTranslation

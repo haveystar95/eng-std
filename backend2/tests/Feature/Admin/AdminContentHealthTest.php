@@ -220,18 +220,21 @@ it('simulates every trainer against one term’s own content', function () {
     }
 });
 
-it('reports the single-word gap that the word_bank card actually hits', function () {
+it('reports word_bank as buildable from a single word — the letter chips', function () {
     [, $token, $ids] = contentHealthFixture();
 
-    // 'invoice' is one word: nothing to assemble from chips. Same verdict the live gate gives.
+    // 'invoice' is one word, and since BUGFIX-2 Ч.2б D2 that is a SEVEN-CHIP card, not a refusal:
+    // a single word is assembled from its letters. Same verdict the live gate gives, which is the
+    // whole point of this screen.
     $byMode = collect(
         test()->withHeader('Authorization', "Bearer {$token}")
             ->getJson("/admin/api/content-health/terms/{$ids['thin']}")
             ->json('simulation'),
     )->keyBy('mode');
 
-    expect($byMode['word_bank']['status'])->toBe('blocked')
-        ->and($byMode['word_bank']['reason'])->toBe('single_word');
+    expect($byMode['word_bank']['status'])->toBe('ok')
+        ->and($byMode['word_bank']['reason'])->toBeNull()
+        ->and($byMode['word_bank']['explanation'])->toContain('буквенными фишками');
 });
 
 it('marks which distractors a card would deal, and keeps suppressions in their own list', function () {
