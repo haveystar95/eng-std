@@ -1054,7 +1054,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssemble => 'assemble it from the words';
 
   @override
+  String get sessionInstrAssembleLetters => 'assemble it from the letters';
+
+  @override
   String get sessionAssemblyEmptyHint => 'Tap the words below';
+
+  @override
+  String get sessionAssemblyEmptyHintLetters => 'Tap the letters below';
 
   @override
   String get sessionInstrAssembleSentence => 'put the sentence together';

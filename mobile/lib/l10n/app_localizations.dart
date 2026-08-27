@@ -1767,17 +1767,29 @@ abstract class AppLocalizations {
   /// **'выбери английский эквивалент'**
   String get sessionInstrChoose;
 
-  /// Инструкция под промптом, сборка фразы (кадр 12b).
+  /// Инструкция под промптом, сборка фразы из СЛОВЕСНЫХ фишек (кадр 12b).
   ///
   /// In ru, this message translates to:
   /// **'собери из слов'**
   String get sessionInstrAssemble;
 
-  /// Плейсхолдер в пустой строке сборки (word_bank и scramble) — куда кладутся слова.
+  /// То же для одиночного слова: с BUGFIX-2 Ч.2б D2 оно собирается буквенными фишками, и инструкция обязана называть то, что лежит на экране.
+  ///
+  /// In ru, this message translates to:
+  /// **'собери из букв'**
+  String get sessionInstrAssembleLetters;
+
+  /// Плейсхолдер в пустой строке сборки (фраза в word_bank и scramble) — куда кладутся слова.
   ///
   /// In ru, this message translates to:
   /// **'Собери из слов ниже'**
   String get sessionAssemblyEmptyHint;
+
+  /// Тот же плейсхолдер для одиночного слова, которое собирается по буквам.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собери из букв ниже'**
+  String get sessionAssemblyEmptyHintLetters;
 
   /// Инструкция под промптом, сборка предложения-примера из чипов (scramble).
   ///

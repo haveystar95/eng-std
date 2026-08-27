@@ -115,4 +115,38 @@ void main() {
     expect(find.text('Не помню'), findsNothing);
     expect(answers, hasLength(1));
   });
+
+  // ── the trainer's two shapes name themselves (BUGFIX-2 Ч.2б D2) ──────────────────────────────
+  //
+  // A single word is assembled from its LETTERS and a phrase from its WORDS — the branch that was
+  // unreachable until the gate stopped asking for two words. The instruction has to say which, or
+  // «собери из слов» stands over a row of single letters and describes a card the learner is not
+  // looking at (seen on the owner's run, `docs/shots/pract1/04`).
+
+  testWidgets('a single word says «собери из букв», and its empty line too', (tester) async {
+    await tester.pumpWidget(host(wordBank()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('собери из букв'), findsOneWidget);
+    expect(find.text('Собери из букв ниже'), findsOneWidget);
+    expect(find.textContaining('собери из слов'), findsNothing);
+  });
+
+  testWidgets('a PHRASE still says «собери из слов» — nothing moved for it', (tester) async {
+    final phrase = SessionCard(
+      termId: termId,
+      mode: ExerciseMode.wordBank,
+      type: 'phrase',
+      prompt: 'стойка регистрации',
+      answer: 'front desk',
+      chips: const ['desk', 'front'],
+      ladderStep: 3,
+    );
+
+    await tester.pumpWidget(host(phrase));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('собери из слов'), findsOneWidget);
+    expect(find.text('Собери из слов ниже'), findsOneWidget);
+  });
 }

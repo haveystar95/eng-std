@@ -13,6 +13,7 @@ import '../../../data/local/app_database.dart';
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/perf_log.dart';
+import '../../../data/practice/practice_mode_selector.dart' show TermPlayability;
 import '../../../data/providers.dart';
 import '../../../data/speech/speech_recognizer.dart';
 import 'session_grading.dart';
@@ -317,6 +318,15 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
 
     return strings.take(50).toList();
   }
+
+  /// Is this word_bank card dealt LETTER chips rather than word ones?
+  ///
+  /// The trainer has two shapes and always has: a phrase is assembled from its words, a single word
+  /// from its letters — the branch that was unreachable until the gate stopped asking for two WORDS
+  /// (BUGFIX-2 Ч.2б D2). Read off the ANSWER rather than off the chips, because a phrasal verb's
+  /// word chips come with decoy particles and counting chips would call it letters.
+  bool get _assemblesLetters =>
+      _mode == ExerciseMode.wordBank && TermPlayability.wordsIn(_card.answerText) < 2;
 
   /// A listening card with options is recognition (12g); without, production/typing (12h). The
   /// backend currently sends no options for listening, so this is the typed path — but it stays
@@ -737,7 +747,10 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // Russian options told the learner to do the opposite of what the card wanted.
     ExerciseMode.multipleChoice =>
       _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose,
-    ExerciseMode.wordBank => l.sessionInstrAssemble,
+    // Two shapes of the same trainer: a phrase is dealt WORD chips, a single word LETTER chips
+    // (BUGFIX-2 Ч.2б D2). The instruction has to name what is actually lying on the screen —
+    // «собери из слов» over a row of single letters describes a card the learner is not looking at.
+    ExerciseMode.wordBank => _assemblesLetters ? l.sessionInstrAssembleLetters : l.sessionInstrAssemble,
     ExerciseMode.typing => l.sessionInstrType,
     ExerciseMode.cloze => l.sessionInstrType,
     ExerciseMode.scramble => l.sessionInstrAssembleSentence,
@@ -861,6 +874,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
             correct: _verdict?.isAccepted ?? false,
             mistakes: _mistakes(_placed.map((i) => _chips[i]).toList()),
             onTapWord: (idx) => _unplaceChip(_placed[idx]),
+            letters: _assemblesLetters,
           ),
         ],
       ),
@@ -1381,12 +1395,17 @@ class _AssemblyLine extends StatelessWidget {
     required this.correct,
     required this.onTapWord,
     this.mistakes = const {},
+    this.letters = false,
   });
 
   final List<String> words;
   final bool answered;
   final bool correct;
   final ValueChanged<int> onTapWord;
+
+  /// Are the chips LETTERS rather than words? word_bank deals letters for a single word
+  /// (BUGFIX-2 Ч.2б D2), and the empty line's hint has to name what is actually on screen.
+  final bool letters;
 
   /// Indices of [words] that do not belong in the answer — marked once a WRONG verdict is in. The
   /// line already kept the learner's own sentence; what it did not do was say WHERE it went wrong,
@@ -1420,7 +1439,7 @@ class _AssemblyLine extends StatelessWidget {
                   : Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        l.sessionAssemblyEmptyHint,
+                        letters ? l.sessionAssemblyEmptyHintLetters : l.sessionAssemblyEmptyHint,
                         style: AppTextExercise.taskInstruction,
                       ),
                     ),

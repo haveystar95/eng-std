@@ -308,7 +308,9 @@
 
   "sessionInstrChoose": "choose the English equivalent",
   "sessionInstrAssemble": "assemble it from the words",
+  "sessionInstrAssembleLetters": "assemble it from the letters",
   "sessionAssemblyEmptyHint": "Tap the words below",
+  "sessionAssemblyEmptyHintLetters": "Tap the letters below",
   "sessionInstrAssembleSentence": "put the sentence together",
   "sessionInstrType": "write it in English",
   "sessionInstrListenChoose": "listen and choose the translation · replay any time",

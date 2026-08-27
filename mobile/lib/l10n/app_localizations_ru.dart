@@ -1078,7 +1078,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssemble => 'собери из слов';
 
   @override
+  String get sessionInstrAssembleLetters => 'собери из букв';
+
+  @override
   String get sessionAssemblyEmptyHint => 'Собери из слов ниже';
+
+  @override
+  String get sessionAssemblyEmptyHintLetters => 'Собери из букв ниже';
 
   @override
   String get sessionInstrAssembleSentence => 'собери предложение из слов';
