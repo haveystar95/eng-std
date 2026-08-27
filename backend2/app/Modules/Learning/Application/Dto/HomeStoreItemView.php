@@ -14,6 +14,10 @@ namespace App\Modules\Learning\Application\Dto;
  *
  * [imageUrl] and [level] are null when the deck genuinely has neither. The strip draws the paper
  * placeholder for a missing cover and prints nothing where the level would go; it never invents «—».
+ *
+ * The description, the pair and the two flags ride along for the PREVIEW a tapped cover opens: the
+ * client builds the store's own sheet out of this row, and a sheet whose premium flag or pair was
+ * guessed on the device is a sheet that lies until the subscribe button 403s.
  */
 final readonly class HomeStoreItemView
 {
@@ -23,5 +27,10 @@ final readonly class HomeStoreItemView
         public int $itemsCount,
         public ?string $imageUrl,
         public ?string $level,
+        public ?string $description,
+        public string $sourceLang,
+        public string $targetLang,
+        public bool $isPremium,
+        public bool $isReference,
     ) {}
 }

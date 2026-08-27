@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Application\Dto;
 
+use App\Modules\Shared\Domain\Service\LanguageRoles;
+
 /**
  * One deck of the store as a SHOP WINDOW shows it: a photograph, a name, a size and a level.
  *
@@ -11,10 +13,12 @@ namespace App\Modules\Collections\Application\Dto;
  * a table of contents, not an invitation. Кадр 19-2 replaces them with a strip of real covers,
  * because a photograph of an airport sells «Аэропорт» and the word «Аэропорт» does not.
  *
- * Smaller than {@see StoreCollectionView} on purpose. That one is the store SCREEN's row and carries
- * the description, the premium flag, the subscription flag, the photo's author and the reference
- * verdict; a strip of four covers needs none of them, and a home screen that fetched them would be
- * paying for a page it throws away — which is the reason {@see StoreCatalogueSummary} exists at all.
+ * Smaller than {@see StoreCollectionView} on purpose: no subscription flag (this list is BY
+ * DEFINITION the decks the learner does not have) and no photo credit (the strip prints none). What
+ * it does carry beyond the cover is what a tapped cover NEEDS — a tap opens the store's own preview
+ * sheet, and a sheet built from values guessed on the device is worse than no sheet: a guessed
+ * `is_premium: false` hides a paywall until the subscribe button 403s, and a guessed pair draws two
+ * flags on a phrasebook.
  *
  * `level` and `imageUrl` are nullable and mean it: a deck whose terms carry no CEFR has no level to
  * print, and a deck with no cover gets the paper placeholder rather than a broken image. Neither is
@@ -28,5 +32,22 @@ final readonly class StoreCatalogueItem
         public int $itemsCount,
         public ?string $imageUrl,
         public ?string $level,
+        public ?string $description,
+        public string $sourceLang,
+        public string $targetLang,
+        public bool $isPremium,
     ) {}
+
+    /**
+     * A REFERENCE collection: a phrasebook, not a course.
+     *
+     * DERIVED and never stored, the same computation {@see StoreCollectionView::isReference()} runs
+     * — one product, one answer to «есть ли у этого языка тренажёры». A second expression over the
+     * same language code is how the store screen and the home strip would come to disagree about
+     * the same deck.
+     */
+    public function isReference(): bool
+    {
+        return LanguageRoles::isReference($this->targetLang);
+    }
 }

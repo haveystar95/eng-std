@@ -85,6 +85,13 @@ final class HomePlanResource extends JsonResource
                     'terms_count' => $i->itemsCount,
                     'image_url' => $i->imageUrl,
                     'level' => $i->level,
+                    // …and what a TAP on the cover needs: the store's preview sheet is built from
+                    // this row, so the row carries the facts that sheet must not guess.
+                    'description' => $i->description,
+                    'source_lang' => $i->sourceLang,
+                    'target_lang' => $i->targetLang,
+                    'is_premium' => $i->isPremium,
+                    'is_reference' => $i->isReference,
                 ], $plan->store->items),
             ],
             // How many words fall due TOMORROW — «Завтра выпадет 14 слов →». Null, never 0.

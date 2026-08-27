@@ -248,6 +248,11 @@ final readonly class GetHomePlanHandler
                     itemsCount: $i->itemsCount,
                     imageUrl: $i->imageUrl,
                     level: $i->level,
+                    description: $i->description,
+                    sourceLang: $i->sourceLang,
+                    targetLang: $i->targetLang,
+                    isPremium: $i->isPremium,
+                    isReference: $i->isReference(),
                 ), $store->items),
             ),
             // Null, not 0, all three times. The row, the reward line and the middle number of the

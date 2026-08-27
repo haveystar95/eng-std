@@ -618,6 +618,11 @@ it('dresses the ready-made sets as a shop window: cover, size and level', functi
         ->and($byId[$airport]['terms_count'])->toBe(15)
         ->and($byId[$airport]['image_url'])->toBe('https://images.example/airport.jpg')
         ->and($byId[$airport]['level'])->toBe('A2')
+        // …and what a tapped cover needs, so the preview sheet guesses nothing.
+        ->and($byId[$airport]['source_lang'])->toBe('ru')
+        ->and($byId[$airport]['target_lang'])->toBe('en')
+        ->and($byId[$airport]['is_premium'])->toBeFalse()
+        ->and($byId[$airport]['is_reference'])->toBeFalse()
         // No CEFR and no photo is NULL both times — the strip prints nothing rather than «—»,
         // and draws paper rather than a broken image.
         ->and($byId[$plain]['level'])->toBeNull()

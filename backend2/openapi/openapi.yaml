@@ -2701,6 +2701,25 @@ components:
                       CEFR of the deck, derived from its terms — a single level («A2») or a range
                       («A2–B1»). Null when no term carries one, and the card then prints nothing
                       rather than «—».
+                  description:
+                    type: string
+                    nullable: true
+                  source_lang:
+                    type: string
+                  target_lang:
+                    type: string
+                  is_premium:
+                    type: boolean
+                  is_reference:
+                    type: boolean
+                    description: >
+                      A phrasebook, not a course — derived from `target_lang` (DECISIONS пп. 84, 136).
+
+                      These four ride along for the PREVIEW a tapped cover opens: the client builds
+                      the store's own sheet from this row, and a sheet whose premium flag or pair was
+                      guessed on the device lies until the subscribe button 403s. `is_subscribed` is
+                      deliberately absent — this list is by definition the decks the learner has not
+                      taken.
         edge_tomorrow:
           type: integer
           nullable: true

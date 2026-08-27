@@ -42,7 +42,11 @@ final class EloquentStoreCatalogueReader implements StoreCatalogueReader
             ->orderByRaw("COALESCE(collections.topic, '') asc")
             ->orderBy('collections.id', 'asc')
             ->limit(max(0, $sampleSize))
-            ->get(['collections.id', 'collections.title', 'collections.items_count', 'collections.image_url']);
+            ->get([
+                'collections.id', 'collections.title', 'collections.description',
+                'collections.items_count', 'collections.image_url', 'collections.is_premium',
+                'collections.source_lang', 'collections.target_lang',
+            ]);
 
         $ids = array_values(array_map(static fn (CollectionModel $m): string => $m->id, $rows->all()));
         $levels = $this->levels->forCollections($ids);
@@ -53,6 +57,10 @@ final class EloquentStoreCatalogueReader implements StoreCatalogueReader
             itemsCount: $m->items_count,
             imageUrl: $m->image_url,
             level: $levels[$m->id] ?? null,
+            description: $m->description,
+            sourceLang: $m->source_lang,
+            targetLang: $m->target_lang,
+            isPremium: (bool) $m->is_premium,
         ))->all());
 
         return new StoreCatalogueSummary(
