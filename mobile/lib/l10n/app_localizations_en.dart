@@ -807,6 +807,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'No connection. Reviews work as usual — we\'ll sync when you\'re back online.';
 
   @override
+  String get homeUnreachableTitle => 'The server isn\'t answering';
+
+  @override
+  String get homeUnreachableBody =>
+      'Today\'s plan couldn\'t be loaded. Pull down to try again — everything saved is still here.';
+
+  @override
   String get homeGenerateOfflineNote =>
       'Generation needs a connection. Your topic is saved and will run once you\'re back online.';
 
@@ -1704,6 +1711,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncStuckBanner => 'Answers aren\'t reaching the server — check your connection';
+
+  @override
+  String get syncUnreachableBanner => 'Server unreachable · showing what\'s saved';
 
   @override
   String get poolNotStudyingNote => 'This word is on the shelf — you are not studying it yet.';

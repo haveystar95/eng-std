@@ -228,6 +228,8 @@
   "homeLimitReachedTitle": "Daily new-word limit reached",
   "homeLimitReachedHint": "New words resume tomorrow. For now, free-practice any collection.",
   "homeOfflineBanner": "No connection. Reviews work as usual — we'll sync when you're back online.",
+  "homeUnreachableTitle": "The server isn't answering",
+  "homeUnreachableBody": "Today's plan couldn't be loaded. Pull down to try again — everything saved is still here.",
   "homeGenerateOfflineNote": "Generation needs a connection. Your topic is saved and will run once you're back online.",
 
   "appWordmark": "Слова",
@@ -515,6 +517,7 @@
   "sessionOffline": "No connection",
   "sessionLoadFailed": "Couldn't load the session",
   "syncStuckBanner": "Answers aren't reaching the server — check your connection",
+  "syncUnreachableBanner": "Server unreachable · showing what's saved",
   "poolNotStudyingNote": "This word is on the shelf — you are not studying it yet.",
   "poolEnrollAction": "Learn this word",
   "poolEnrollNote": "It joins the queue and starts coming up in your sessions.",

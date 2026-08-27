@@ -1347,6 +1347,18 @@ abstract class AppLocalizations {
   /// **'Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.'**
   String get homeOfflineBanner;
 
+  /// Заголовок карточки на главной, когда дня нет: сохранённого плана не осталось, а последний синк не прошёл (BUG-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сервер не отвечает'**
+  String get homeUnreachableTitle;
+
+  /// Пояснение под homeUnreachableTitle: выход — pull-to-refresh, данные не потеряны (BUG-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.'**
+  String get homeUnreachableBody;
+
   /// Пояснение на пунктирной карточке генерации в офлайне (кадр 9c).
   ///
   /// In ru, this message translates to:
@@ -2864,6 +2876,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ответы не уходят на сервер — проверь соединение'**
   String get syncStuckBanner;
+
+  /// Последний синк не прошёл (SyncState.offline). Показывается и при живом Wi-Fi: канальный офлайн и молчащий сервер — разные вещи, а выглядели одинаково (BUG-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Сервер недоступен · показываю сохранённое'**
+  String get syncUnreachableBanner;
 
   /// Развёрнутая карточка слова (16e) для слова вне пула: вместо лестницы, которой ещё нет. «На полке», а не «в каталоге»: слово ждёт разбора, и словарь статусов зовёт это состояние «Разобрать» (Ч.4).
   ///

@@ -135,7 +135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       body: Stack(
         children: [
           IndexedStack(index: _index, children: pages),
-          const Positioned(top: 0, left: 0, right: 0, child: _SyncIndicator()),
+          const Positioned(top: 0, left: 0, right: 0, child: SyncIndicator()),
           Positioned(
             left: 0,
             right: 0,
@@ -154,14 +154,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   }
 }
 
-/// A hairline progress bar just under the status bar, shown only while a background sync is in
-/// flight. Offline is deliberately silent — being offline is normal, not a fault to flag.
+/// A hairline progress bar just under the status bar while a background sync is in flight — and a
+/// quiet strip when the last one did NOT land.
 ///
-/// The one loud case is [ReviewSync.stuck]: the queue is at its cap and still holds answers that
+/// «Being offline is silent» used to mean the failure was silent too, and that is the shape of
+/// BUG-1: the phone had Wi-Fi, the SERVER was down, so the connectivity check said «онлайн», no
+/// banner appeared, and the app showed a blank day as if that were the news. `SyncState.offline` is
+/// the one signal that knows better — it is set by the sync's own catch, whatever the radio thinks —
+/// and it now says the one honest sentence: the server is not answering, this is what was saved.
+/// A successful sync clears it, because the state goes back to idle.
+///
+/// The louder case is [ReviewSync.stuck]: the queue is at its cap and still holds answers that
 /// carry progress. Those are never dropped to make room, so the honest thing is to say so rather
-/// than lose them quietly (F20-r2).
-class _SyncIndicator extends ConsumerWidget {
-  const _SyncIndicator();
+/// than lose them quietly (F20-r2). It outranks the offline strip — nothing is lost yet in one
+/// case, and something might be in the other.
+/// Public so it can be mounted on its own: the shell around it starts a sync, a queue flush and a
+/// generation reconcile in `initState`, and a test of one strip of paper has no business doing any
+/// of that.
+class SyncIndicator extends ConsumerWidget {
+  const SyncIndicator({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -176,18 +187,43 @@ class _SyncIndicator extends ConsumerWidget {
           valueListenable: syncState,
           builder: (_, s, _) => AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
-            child: s == SyncState.syncing
-                ? const SizedBox(
-                    height: 2,
-                    child: LinearProgressIndicator(
-                      minHeight: 2,
-                      backgroundColor: Colors.transparent,
-                      valueColor: AlwaysStoppedAnimation(AppColors.ink),
-                    ),
-                  )
-                : const SizedBox(height: 2, width: double.infinity),
+            child: switch (s) {
+              SyncState.syncing => const SizedBox(
+                height: 2,
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation(AppColors.ink),
+                ),
+              ),
+              SyncState.offline => const _UnreachableBanner(),
+              SyncState.idle => const SizedBox(height: 2, width: double.infinity),
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// «Сервер недоступен · показываю сохранённое» — the last sync did not land.
+///
+/// Same quiet strip as [_StuckBanner] and deliberately so: neither is an error, both are facts the
+/// learner would otherwise have to guess at. This one says the app is still usable and that what is
+/// on screen is the last thing the server said — which is exactly what a blank page did not say.
+class _UnreachableBanner extends StatelessWidget {
+  const _UnreachableBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.faintInk,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH, vertical: 8),
+      child: Text(
+        AppLocalizations.of(context).syncUnreachableBanner,
+        textAlign: TextAlign.center,
+        style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
       ),
     );
   }

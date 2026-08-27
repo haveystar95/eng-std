@@ -825,6 +825,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нет сети. Повторения идут как обычно — синхронизируем, когда связь вернётся.';
 
   @override
+  String get homeUnreachableTitle => 'Сервер не отвечает';
+
+  @override
+  String get homeUnreachableBody =>
+      'День загрузить не удалось. Потяни вниз, чтобы попробовать снова — всё сохранённое на месте.';
+
+  @override
   String get homeGenerateOfflineNote =>
       'Генерация недоступна без сети. Тема сохранится и уйдёт в работу, когда связь вернётся.';
 
@@ -1749,6 +1756,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get syncStuckBanner => 'Ответы не уходят на сервер — проверь соединение';
+
+  @override
+  String get syncUnreachableBanner => 'Сервер недоступен · показываю сохранённое';
 
   @override
   String get poolNotStudyingNote => 'Слово на полке — ты его пока не учишь.';

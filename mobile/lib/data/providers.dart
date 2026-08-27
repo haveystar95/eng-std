@@ -333,6 +333,27 @@ final collectionsSegmentProvider = Provider<ValueNotifier<int>>((ref) {
 const int kCollectionsSegmentMine = 0;
 const int kCollectionsSegmentStore = 1;
 
+/// WHY the home screen has no day, when it has none. Three situations that used to be one `null`
+/// and therefore one blank screen (BUG-1): the day is here, the day was never cached, or the cached
+/// day cannot be read by this build. They are not the same thing and must not look the same.
+enum HomePlanCache { ready, missing, unreadable }
+
+/// The home screen's day, with the reason attached. See [homePlanProvider].
+class HomePlanView {
+  const HomePlanView.ready(HomePlan this.plan) : cache = HomePlanCache.ready;
+
+  /// Nothing has ever been cached — no sync has ever completed on this install.
+  const HomePlanView.missing() : plan = null, cache = HomePlanCache.missing;
+
+  /// A cached day this build cannot parse. The row is NOT dropped: a newer build (or the next
+  /// successful sync) may well read it, and deleting the only copy to make a screen tidier is how
+  /// a display bug becomes a data loss.
+  const HomePlanView.unreadable() : plan = null, cache = HomePlanCache.unreadable;
+
+  final HomePlan? plan;
+  final HomePlanCache cache;
+}
+
 /// THE HOME SCREEN'S DAY (`GET /home-plan`, кадры 17a–17d) — read from the local DB, like every
 /// other screen, so the home opens on a plane with the last known day instead of a spinner.
 ///
@@ -341,16 +362,21 @@ const int kCollectionsSegmentStore = 1;
 /// promise a session that comes back empty. [SyncService] refreshes it on app start, on resume, on
 /// network return and after a session; this provider just watches the cached row.
 ///
-/// Null while nothing has ever been cached (a fresh install, still offline) — the screen shows its
-/// own quiet placeholder for that rather than inventing zeros.
-final homePlanProvider = StreamProvider<HomePlan?>((ref) {
+/// It answers with a [HomePlanView] rather than a nullable plan, because «нет дня» has reasons and
+/// the screen owes the learner a different sentence for each. The provider's own `loading` is the
+/// fourth: until the first row arrives, nothing at all is known — and the screen used to read
+/// `.value` and render that as «нет дня» too, which is the «прогружает пустоту» half of BUG-1.
+final homePlanProvider = StreamProvider<HomePlanView>((ref) {
   return ref.watch(appDatabaseProvider).watchMeta(SyncKeys.homePlan).map((raw) {
-    if (raw == null || raw.isEmpty) return null;
+    if (raw == null || raw.isEmpty) return const HomePlanView.missing();
     try {
-      return HomePlan.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      // A cached shape this build has never seen is not worth a crash on the first screen.
-      return null;
+      return HomePlanView.ready(HomePlan.fromJson(jsonDecode(raw) as Map<String, dynamic>));
+    } catch (e, st) {
+      // A cached shape this build has never seen is not worth a crash on the first screen — but it
+      // IS worth saying out loud. Swallowed silently, it was indistinguishable from «never synced»,
+      // and the one screen that could have named the cause printed a blank page instead.
+      debugPrint('[home-plan] cached day is unreadable, showing the offline state: $e\n$st');
+      return const HomePlanView.unreadable();
     }
   });
 });

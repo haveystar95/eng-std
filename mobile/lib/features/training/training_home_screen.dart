@@ -9,6 +9,7 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/local/app_database.dart' show PoolWordRow;
+import '../../data/local/sync_service.dart' show SyncState;
 import '../../data/models.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
@@ -55,6 +56,15 @@ abstract final class HomeBlockKeys {
   static const generate = Key('home-generate');
   static const storeLink = Key('home-store-link');
   static const firstDay = Key('home-first-day');
+
+  /// The day is not known YET — the local row has not arrived, or the first sync is still running.
+  static const loading = Key('home-loading');
+
+  /// The day is not known, and it is not coming: nothing was ever cached and the last sync did not
+  /// land. Its twin below is the same card for a different cause, kept apart so a test (and a log
+  /// reader) can tell which one the learner is looking at.
+  static const unreachable = Key('home-unreachable');
+  static const unreadable = Key('home-unreadable');
 }
 
 class TrainingHomeScreen extends ConsumerStatefulWidget {
@@ -82,7 +92,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final plan = ref.watch(homePlanProvider).value;
+    // The WHOLE AsyncValue, not `.value`: «ещё не знаю» and «знаю, что дня нет» are different
+    // answers and this screen owes a different picture to each (BUG-1).
+    final day = ref.watch(homePlanProvider);
     final streak = ref.watch(statsProvider).value?.streakDays ?? 0;
     final online = ref.watch(connectivityProvider).value ?? true;
 
@@ -114,7 +126,17 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
               AppSpacing.screenH,
               bottomInset,
             ),
-            children: _blocks(context, plan, streak: streak, online: online),
+            children: day.when(
+              // Nothing is known yet — and «ещё не знаю» is drawn as waiting, never as an empty
+              // page. The row usually arrives within a frame; on a cold start it may not.
+              loading: () => const [_DayPlaceholder(key: HomeBlockKeys.loading)],
+              // The local read itself failed. Vanishingly rare, and still not a blank page.
+              error: (e, st) {
+                debugPrint('[home] the cached day could not be read: $e\n$st');
+                return [_UnreachableCard(key: HomeBlockKeys.unreadable)];
+              },
+              data: (view) => _blocks(context, view, streak: streak, online: online),
+            ),
           ),
         ),
       ),
@@ -125,7 +147,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
   /// simple question it needs to ask: is this widget in the tree at all.
   List<Widget> _blocks(
     BuildContext context,
-    HomePlan? plan, {
+    HomePlanView view, {
     required int streak,
     required bool online,
   }) {
@@ -136,14 +158,15 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
       return [
         const _OfflineBanner(),
         gap,
-        ..._blocks(context, plan, streak: streak, online: true),
+        ..._blocks(context, view, streak: streak, online: true),
       ];
     }
 
-    // Nothing has ever synced (fresh install, still offline). The day is unknown — say nothing
-    // about it rather than invent a zero, and keep the one door that works without it.
+    final plan = view.plan;
     if (plan == null) {
-      return [_GenerateRow(key: HomeBlockKeys.generate, storeCount: 0, onOpenStore: widget.onOpenStore)];
+      // No day, and now the screen says WHY — instead of the bare «создай коллекцию» row that made
+      // a dead server look like a working app with nothing in it (BUG-1).
+      return [_NoDay(cache: view.cache, onOpenStore: widget.onOpenStore)];
     }
 
     if (plan.state == HomeStateKind.empty) {
@@ -1291,6 +1314,99 @@ class _TopicChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: AppColors.inkBody,
         ),
+      ),
+    );
+  }
+}
+
+/// THE DAY IS NOT KNOWN — and which of the two that is, is decided here rather than at build time.
+///
+/// The sync state is a [ValueNotifier], so «первый синк ещё идёт» has to be LISTENED to: read once
+/// during build, a failed sync (syncing → offline, with no row written) would leave the placeholder
+/// spinning for as long as the screen stayed open.
+class _NoDay extends ConsumerWidget {
+  const _NoDay({required this.cache, this.onOpenStore});
+
+  final HomePlanCache cache;
+  final VoidCallback? onOpenStore;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ValueListenableBuilder<SyncState>(
+      valueListenable: ref.watch(syncServiceProvider).state,
+      builder: (context, state, _) {
+        // A first sync still in flight is not «нет связи» — it is waiting, and it is drawn as
+        // waiting. Only `missing`: an unreadable row will still be unreadable when this sync lands.
+        if (cache == HomePlanCache.missing && state == SyncState.syncing) {
+          return const _DayPlaceholder(key: HomeBlockKeys.loading);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _UnreachableCard(
+              key: cache == HomePlanCache.unreadable
+                  ? HomeBlockKeys.unreadable
+                  : HomeBlockKeys.unreachable,
+            ),
+            const SizedBox(height: AppSpacing.sectionAiry),
+            // The one door that does not need the day. It DOES need the server, and the card above
+            // has just said the server is not answering — so it stays, quietly, instead of being
+            // the whole page and pretending everything is fine.
+            _GenerateRow(key: HomeBlockKeys.generate, storeCount: 0, onOpenStore: onOpenStore),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// «Ещё не знаю». Deliberately not a skeleton of the session card: the day may turn out to be any
+/// of четыре states, and a placeholder shaped like one of them is a promise the screen may break.
+class _DayPlaceholder extends StatelessWidget {
+  const _DayPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 64),
+      child: Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink),
+        ),
+      ),
+    );
+  }
+}
+
+/// «Сервер не отвечает» — the day could not be fetched and nothing usable is cached.
+///
+/// Not an error dump and not a dead end: pull-to-refresh is the way out and the card says so, which
+/// is the whole difference from the blank page this replaced.
+class _UnreachableCard extends StatelessWidget {
+  const _UnreachableCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.homeUnreachableTitle, style: AppText.stepTitle.copyWith(fontSize: 19)),
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            l.homeUnreachableBody,
+            style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.inkBody),
+          ),
+        ],
       ),
     );
   }

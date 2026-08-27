@@ -70,7 +70,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          homePlanProvider.overrideWith((ref) => Stream.value(day)),
+          homePlanProvider.overrideWith(
+            (ref) => Stream.value(
+              day == null ? const HomePlanView.missing() : HomePlanView.ready(day),
+            ),
+          ),
           statsProvider.overrideWith(
             (ref) => Stream.value(
               Stats(
@@ -245,11 +249,15 @@ void main() {
     });
   });
 
-  testWidgets('nothing synced yet: no invented day, just the door that still works', (
+  testWidgets('nothing synced yet: no invented day — and the screen says why (BUG-1)', (
     tester,
   ) async {
     await pumpHome(tester, null);
 
+    // The blank page this replaced was ONLY the generate row, which read as «всё в порядке, просто
+    // пусто» while the server was down. The door still works and stays; what is new is the sentence
+    // above it. The states themselves are pinned in home_no_day_test.dart.
+    expect(find.byKey(HomeBlockKeys.unreachable), findsOneWidget);
     expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
     expect(find.byKey(HomeBlockKeys.session), findsNothing);
     expect(find.byKey(HomeBlockKeys.inWork), findsNothing);
