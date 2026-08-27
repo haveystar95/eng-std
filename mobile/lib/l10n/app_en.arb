@@ -700,12 +700,28 @@
   "homeGenerateRow": "Build a collection on a topic",
   "@homeGenerateRow": { "description": "Entry row into generation on the home screen (frame 17a)." },
 
-  "homeStoreLink": "{count, plural, one{or pick from {count} ready-made} other{or pick from {count} ready-made}}",
+  "homeStoreLink": "{count, plural, one{or take one of {count} ready-made} other{or take one of {count} ready-made}}",
   "@homeStoreLink": {
     "description": "Quiet store entry line under generation (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
 
+  "homeStatLearned": "Learned",
+  "homeStatWeek": "This week",
+  "homeStatInWork": "In progress",
+  "homeStatLearnedInline": "Learned {count}",
+  "homeStatWeekInline": "this week {count}",
+  "homeStatInWorkInline": "in progress {count}",
+  "homeTomorrowRow": "{count, plural, one{{count} word comes back tomorrow} other{{count} words come back tomorrow}}",
+  "homeAwardPromoted": "{count, plural, one{+{count} word moved up} other{+{count} words moved up}}",
+  "homeAwardExample": "{term} reached “{rung}”",
+  "homeGenerateCardTitle": "Generate a set",
+  "homeGenerateCardHint": "Describe the situation — we\u2019ll build a set for it",
+  "homeStoreShowcaseTitle": "Ready-made sets",
+  "homeStoreShowcaseAll": "all {count}",
+  "homeFirstDayPromise": "5 minutes a day — 20 words a week",
+  "homeGenerateChipVet": "At the vet",
+  "homeGenerateChipMoving": "Moving abroad",
   "homeFirstDayTitle": "Let's start with a first set",
   "@homeFirstDayTitle": { "description": "First-day greeting (frame 17c)." },
 

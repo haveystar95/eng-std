@@ -2056,11 +2056,85 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'or pick from $count ready-made',
-      one: 'or pick from $count ready-made',
+      other: 'or take one of $count ready-made',
+      one: 'or take one of $count ready-made',
     );
     return '$_temp0';
   }
+
+  @override
+  String get homeStatLearned => 'Learned';
+
+  @override
+  String get homeStatWeek => 'This week';
+
+  @override
+  String get homeStatInWork => 'In progress';
+
+  @override
+  String homeStatLearnedInline(int count) {
+    return 'Learned $count';
+  }
+
+  @override
+  String homeStatWeekInline(int count) {
+    return 'this week $count';
+  }
+
+  @override
+  String homeStatInWorkInline(int count) {
+    return 'in progress $count';
+  }
+
+  @override
+  String homeTomorrowRow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words come back tomorrow',
+      one: '$count word comes back tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAwardPromoted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count words moved up',
+      one: '+$count word moved up',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAwardExample(String term, String rung) {
+    return '$term reached “$rung”';
+  }
+
+  @override
+  String get homeGenerateCardTitle => 'Generate a set';
+
+  @override
+  String get homeGenerateCardHint => 'Describe the situation — we’ll build a set for it';
+
+  @override
+  String get homeStoreShowcaseTitle => 'Ready-made sets';
+
+  @override
+  String homeStoreShowcaseAll(int count) {
+    return 'all $count';
+  }
+
+  @override
+  String get homeFirstDayPromise => '5 minutes a day — 20 words a week';
+
+  @override
+  String get homeGenerateChipVet => 'At the vet';
+
+  @override
+  String get homeGenerateChipMoving => 'Moving abroad';
 
   @override
   String get homeFirstDayTitle => 'Let\'s start with a first set';

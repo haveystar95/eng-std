@@ -9,13 +9,15 @@ import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/local/app_database.dart' show PoolWordRow;
+import '../../data/local/cached_image_provider.dart';
 import '../../data/local/sync_service.dart' show SyncState;
 import '../../data/models.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
-import '../collections/collection_detail_screen.dart';
+import '../../data/word_status.dart' show ladderRungFor, ladderRungLabel;
 import '../collections/generate_screen.dart';
 import '../collections/my_words_screen.dart';
+import '../collections/store_view.dart' show showStorePreview;
 import '../home/streak.dart';
 import '../search/search_pair.dart' show LearningPair;
 import '../word_card/word_card_screen.dart';
@@ -50,13 +52,31 @@ abstract final class HomeBlockKeys {
   static const session = Key('home-session-card');
   static const done = Key('home-done-card');
   static const idle = Key('home-idle-card');
-  static const inWork = Key('home-in-work');
-  static const edge = Key('home-edge');
+  /// «Выучено 146 · за неделю 23 · в работе 41» — three numbers on the morning screen (кадр 19-1),
+  /// one line in the evening (кадр 19-2). One key, because it is one block wearing two shapes:
+  /// morning numbers are a decision, evening numbers are a summary.
+  static const stats = Key('home-stats');
+
+  /// «Завтра выпадет 14 слов →» (кадры 19-1, 19-2).
+  static const tomorrow = Key('home-tomorrow');
+
   static const hardest = Key('home-hardest');
-  static const unfinished = Key('home-continue');
+
+  /// «+5 слов продвинулись · reluctant дошло до „написание"» — inside the evening card (кадр 19-2).
+  static const award = Key('home-day-award');
+
   static const generate = Key('home-generate');
+
+  /// The quiet line under the generation card (кадры 19-1, 19-4). The evening and the first day
+  /// offer the store as [storeShowcase] instead — a strip of covers rather than a sentence.
   static const storeLink = Key('home-store-link');
+  static const storeShowcase = Key('home-store-showcase');
+
   static const firstDay = Key('home-first-day');
+
+  /// «5 минут в день — 20 слов в неделю» (кадр 19-3) — the only number on a screen with no
+  /// statistics yet.
+  static const promise = Key('home-promise');
 
   /// The day is not known YET — the local row has not arrived, or the first sync is still running.
   static const loading = Key('home-loading');
@@ -96,7 +116,11 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     // The WHOLE AsyncValue, not `.value`: «ещё не знаю» and «знаю, что дня нет» are different
     // answers and this screen owes a different picture to each (BUG-1).
     final day = ref.watch(homePlanProvider);
-    final streak = ref.watch(statsProvider).value?.streakDays ?? 0;
+    final stats = ref.watch(statsProvider).value;
+    final streak = stats?.streakDays ?? 0;
+    // «Выучено» is the dashboard's own total and lives on `/stats`; the plan owns the other two
+    // numbers of the tile. Reading it from there rather than adding a third copy to `/home-plan`.
+    final learned = stats?.learned ?? 0;
     final online = ref.watch(connectivityProvider).value ?? true;
 
     final bottomInset =
@@ -136,7 +160,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
                 debugPrint('[home] the cached day could not be read: $e\n$st');
                 return [_UnreachableCard(key: HomeBlockKeys.unreadable)];
               },
-              data: (view) => _blocks(context, view, streak: streak, online: online),
+              data: (view) => _blocks(context, view, streak: streak, learned: learned, online: online),
             ),
           ),
         ),
@@ -150,6 +174,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     BuildContext context,
     HomePlanView view, {
     required int streak,
+    required int learned,
     required bool online,
   }) {
     final l = AppLocalizations.of(context);
@@ -159,7 +184,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
       return [
         const _OfflineBanner(),
         gap,
-        ..._blocks(context, view, streak: streak, online: true),
+        ..._blocks(context, view, streak: streak, learned: learned, online: true),
       ];
     }
 
@@ -167,9 +192,12 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     if (plan == null) {
       // No day, and now the screen says WHY — instead of the bare «создай коллекцию» row that made
       // a dead server look like a working app with nothing in it (BUG-1).
-      return [_NoDay(cache: view.cache, onOpenStore: widget.onOpenStore)];
+      return [_NoDay(cache: view.cache)];
     }
 
+    // КАДР 19-3 — the first day. Two doors, and the shop window is the bigger of them: a photograph
+    // sells a topic and a bulleted list of topics does not. There is no streak, no statistics and no
+    // «завтра» here — not as zeroes, but as blocks that do not exist yet.
     if (plan.state == HomeStateKind.empty) {
       return [
         Text(
@@ -178,24 +206,44 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           style: AppText.stepTitle.copyWith(fontSize: 26),
         ),
         const SizedBox(height: AppSpacing.s16),
-        _FirstDayReadyCard(store: plan.store, onOpen: widget.onOpenStore),
-        const SizedBox(height: AppSpacing.s12),
-        const _FirstDayOwnCard(),
+        if (plan.store.items.isNotEmpty) ...[
+          _StoreShowcase(
+            key: HomeBlockKeys.storeShowcase,
+            store: plan.store,
+            large: true,
+            onOpenStore: widget.onOpenStore,
+            onOpen: _openStoreDeck,
+          ),
+          const SizedBox(height: AppSpacing.s16),
+        ],
+        _GenerateCard(key: HomeBlockKeys.generate, withField: true, withChips: true),
+        // [место слово-вызова — DAILY-1] Nothing is drawn here yet, and the column survives it.
+        gap,
+        Center(
+          child: Text(
+            l.homeFirstDayPromise,
+            key: HomeBlockKeys.promise,
+            style: AppText.translation.copyWith(fontSize: 13, color: AppColors.tertiary),
+          ),
+        ),
       ];
     }
 
     final session = plan.session;
+    final evening = plan.state == HomeStateKind.done;
+    final stats = _statCells(l, plan, learned: learned);
+
     return [
       _DayHeader(key: HomeBlockKeys.header, streak: streak),
       gap,
       if (plan.state == HomeStateKind.plan)
         _SessionCard(key: HomeBlockKeys.session, session: session, onStart: () => _startDay(plan))
-      else if (plan.state == HomeStateKind.done)
+      else if (evening)
         _DoneCard(
           key: HomeBlockKeys.done,
           today: plan.today,
           session: session,
-          nextReview: plan.nextReview,
+          award: plan.dayAward,
           onExtra: () => _openTriage(
             session.triageCollectionId!,
             session.triageCollectionTitle ?? '',
@@ -213,45 +261,82 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
             session.triageCollectionTitle ?? '',
           ),
         ),
-      gap,
-      _InWorkRow(
-        key: HomeBlockKeys.inWork,
-        inWork: plan.inWork,
-        queueStands: plan.state == HomeStateKind.idle,
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const MyWordsScreen())),
-      ),
-      if (plan.edge.isNotEmpty && plan.state != HomeStateKind.done) ...[
-        gap,
-        _EdgeSection(key: HomeBlockKeys.edge, terms: plan.edge, onTap: _openWordCard),
-      ],
-      if (plan.hardest.isNotEmpty && plan.state == HomeStateKind.done) ...[
+      // The evening names what the day got wrong straight under what it closed — «Сегодня закрыто»
+      // and «Далось труднее всего» are one thought, and the summary comes between them nowhere.
+      if (evening && plan.hardest.isNotEmpty) ...[
         gap,
         _HardestSection(key: HomeBlockKeys.hardest, terms: plan.hardest, onTap: _openWordCard),
       ],
-      if (plan.unfinished != null && plan.state == HomeStateKind.plan) ...[
+      if (stats.isNotEmpty) ...[
         gap,
-        _ContinueCard(
-          key: HomeBlockKeys.unfinished,
-          unfinished: plan.unfinished!,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => CollectionDetailScreen(
-                collectionId: plan.unfinished!.collectionId,
-                title: plan.unfinished!.title,
-              ),
-            ),
-          ),
+        // Three plates in the morning, one line in the evening. Same three numbers: in the morning
+        // they are part of the decision to start, and by the evening they are a receipt.
+        evening
+            ? _StatsLine(
+                key: HomeBlockKeys.stats,
+                cells: stats,
+                onTap: _openMyWords,
+              )
+            : _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
+      ],
+      // [место слово-вызова — DAILY-1]
+      if (plan.edgeTomorrow != null) ...[
+        gap,
+        _TomorrowRow(
+          key: HomeBlockKeys.tomorrow,
+          count: plan.edgeTomorrow!,
+          onTap: _openMyWords,
         ),
       ],
       gap,
-      _GenerateRow(
-        key: HomeBlockKeys.generate,
-        storeCount: plan.store.count,
-        onOpenStore: widget.onOpenStore,
-      ),
+      _GenerateCard(key: HomeBlockKeys.generate),
+      // The evening ends on the shop window — it cures the emptiness under a finished day and sells
+      // the next set with photographs. The morning gets the quiet line instead: the day is the point
+      // of that screen, and a strip of covers under a session waiting to be started is a shop in the
+      // doorway.
+      if (evening && plan.store.items.isNotEmpty) ...[
+        gap,
+        _StoreShowcase(
+          key: HomeBlockKeys.storeShowcase,
+          store: plan.store,
+          onOpenStore: widget.onOpenStore,
+          onOpen: _openStoreDeck,
+        ),
+      ] else if (!evening && plan.store.count > 0 && widget.onOpenStore != null) ...[
+        const SizedBox(height: 9),
+        _StoreLink(
+          key: HomeBlockKeys.storeLink,
+          count: plan.store.count,
+          onTap: widget.onOpenStore!,
+        ),
+      ],
     ];
+  }
+
+  /// The statistics block's cells, in the order the frames read them, with the empty rule applied
+  /// per cell: a number nobody has yet is not a «0» on the screen, it is one plate fewer.
+  ///
+  /// «Выучено» comes from `/stats` and «в работе» from the plan's own pool count — the two payloads
+  /// this screen already watches, and deliberately not a third source for a number that exists.
+  List<_StatCell> _statCells(AppLocalizations l, HomePlan plan, {required int learned}) => [
+    if (learned > 0) _StatCell(learned, l.homeStatLearned, l.homeStatLearnedInline(learned)),
+    if (plan.learnedWeek != null)
+      _StatCell(plan.learnedWeek!, l.homeStatWeek, l.homeStatWeekInline(plan.learnedWeek!)),
+    if (plan.inWork.total > 0)
+      _StatCell(plan.inWork.total, l.homeStatInWork, l.homeStatInWorkInline(plan.inWork.total)),
+  ];
+
+  void _openMyWords() {
+    AppHaptics.light();
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyWordsScreen()));
+  }
+
+  /// A tapped cover opens THE STORE'S OWN preview sheet — the same one the store screen opens, built
+  /// from the same row. A second sheet living here would be a second thing to keep in step with the
+  /// subscribe flow, the paywall and the pair badge.
+  void _openStoreDeck(HomeStoreItem item) {
+    AppHaptics.light();
+    showStorePreview(context, ref, item.toStoreCollection());
   }
 
   /// «Начать» — the day's one button, and it opens the day: the study session.
@@ -578,13 +663,16 @@ class _DoneCard extends StatelessWidget {
     super.key,
     required this.today,
     required this.session,
-    required this.nextReview,
+    required this.award,
     required this.onExtra,
   });
 
   final HomeToday? today;
   final HomeSession session;
-  final HomeNextReview? nextReview;
+
+  /// «+5 слов продвинулись · reluctant дошло до „написание"» — null on a day that moved nothing,
+  /// and then the line is not drawn at all.
+  final HomeDayAward? award;
   final VoidCallback onExtra;
 
   @override
@@ -600,8 +688,10 @@ class _DoneCard extends StatelessWidget {
     // requires a collection the learner has already started, and a set added an hour ago and never
     // opened is exactly the case this offer is for.
     final canSort = session.triage > 0 && session.triageCollectionId != null;
+    // «Следующий повтор — завтра, 14 слов» is gone from here: «Завтра выпадет N слов →» says the
+    // same thing further down and is a DOOR rather than a sentence. Two of them on one screen is
+    // the screen telling the learner the same fact twice in two voices.
     final lines = <String>[
-      if (nextReview != null) _nextReviewLine(context, l, nextReview!),
       if (canSort) l.homeExtraFromCollection(session.triage, session.triageCollectionTitle ?? ''),
     ];
 
@@ -634,6 +724,21 @@ class _DoneCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+          if (award != null) ...[
+            const SizedBox(height: AppSpacing.s12),
+            Text(
+              _awardLine(l, award!),
+              key: HomeBlockKeys.award,
+              style: AppText.translation.copyWith(
+                fontSize: 13.5,
+                height: 1.45,
+                // Full ink, where the lines under it are secondary: the palette has no accent to
+                // spend (paper/ink, no brand colour), so the reward is emphasised by WEIGHT of tone
+                // rather than by hue. It is the one thing on this card that is news, not arithmetic.
+                color: AppColors.ink,
+              ),
+            ),
+          ],
           if (lines.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.s12),
             Text(
@@ -758,103 +863,6 @@ String _nextReviewLine(BuildContext context, AppLocalizations l, HomeNextReview 
 String formatSessionDuration(AppLocalizations l, int seconds) {
   if (seconds < 60) return l.homeDoneDurationSeconds(seconds);
   return l.homeDoneDuration(seconds ~/ 60, seconds % 60);
-}
-
-/// «В работе — 41 слово · 20 ждут очереди · при 20 в день новым до очереди ~2 дня».
-///
-/// The размер ящика — the question the product research found unanswered: how much have I taken on,
-/// and when does the app get to it. Present in every state but the first day, and a tap leads to
-/// «Мои слова», which is the list behind the number.
-class _InWorkRow extends StatelessWidget {
-  const _InWorkRow({super.key, required this.inWork, required this.queueStands, required this.onTap});
-
-  final HomeInWork inWork;
-
-  /// State Б (кадр 17d): the day's quota is untouched, so the honest second half of the line is
-  /// «возьмёте N сейчас — очередь двинется сегодня» rather than an arithmetic of days.
-  final bool queueStands;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final parts = <String>[
-      if (inWork.waiting > 0) l.homeInWorkWaiting(inWork.waiting),
-      if (inWork.waiting > 0 && queueStands && inWork.newRemaining > 0)
-        l.homeInWorkQueueStands(
-          inWork.waiting < inWork.newRemaining ? inWork.waiting : inWork.newRemaining,
-        )
-      else if (inWork.daysUntilQueue != null)
-        l.homeInWorkPace(inWork.perDay, inWork.daysUntilQueue!),
-    ];
-
-    return PaperCard(
-      radius: AppRadii.button,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: 13),
-      onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.homeInWorkTitle(inWork.total),
-                  style: AppText.translation.copyWith(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
-                  ),
-                ),
-                if (parts.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    parts.join(' · '),
-                    style: AppText.translation.copyWith(
-                      fontSize: 12.5,
-                      height: 1.35,
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.tertiary),
-        ],
-      ),
-    );
-  }
-}
-
-/// «На грани забывания» (кадр 17a) — 2–3 of the learner's OWN words with the day they fall due.
-/// The old «слово дня» was a random term with no relation to their progress; this is the same slot
-/// answering a question they actually have.
-class _EdgeSection extends StatelessWidget {
-  const _EdgeSection({super.key, required this.terms, required this.onTap});
-
-  final List<HomeEdgeTerm> terms;
-  final void Function(String termId) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return _TermSection(
-      title: l.homeEdgeTitle,
-      count: terms.length,
-      rows: [
-        for (final t in terms)
-          _TermRowData(
-            termId: t.termId,
-            text: t.text,
-            translation: t.translation,
-            trailing: t.inDays == 1 ? l.homeEdgeTomorrow : l.homeEdgeInDays(t.inDays),
-          ),
-      ],
-      onTap: onTap,
-    );
-  }
 }
 
 /// «Далось труднее всего» (кадр 17b) — the evening's occupant of the same slot: what the run that
@@ -999,227 +1007,284 @@ class _TermRow extends StatelessWidget {
   }
 }
 
-/// «Продолжить „Ветклинику“ — 4 из 16 слов · брошено 5 дней назад» (кадр 17a). The one thing on the
-/// screen that would otherwise never be opened again.
-class _ContinueCard extends StatelessWidget {
-  const _ContinueCard({super.key, required this.unfinished, required this.onTap});
+/// One number of the statistics block, with both the shapes it is said in.
+///
+/// [label] is the plate's caption on the morning screen («ВЫУЧЕНО» under 146); [inline] is the whole
+/// segment of the evening's single line («Выучено 151»). Built together so the two cannot come to
+/// name the same number differently.
+class _StatCell {
+  const _StatCell(this.value, this.label, this.inline);
+  final int value;
+  final String label, inline;
+}
 
-  final HomeContinue unfinished;
+/// «146 Выучено · 23 За неделю · 41 В работе» (кадр 19-1) — the morning's three plates.
+///
+/// The block answers «сколько уже сделано», which is the second of the three questions the screen
+/// exists for, and it sits directly under the answer to the first. The week of dots is deliberately
+/// NOT here: it lives once, in the header beside the streak, and two calendars on one screen is one
+/// calendar too many.
+///
+/// A tap leads to «Мои слова» — the list behind «в работе», and the same door the row this replaced
+/// carried. No chevron: the plates are a statement, and the frame draws them without one.
+class _StatsTile extends StatelessWidget {
+  const _StatsTile({super.key, required this.cells, required this.onTap});
+
+  final List<_StatCell> cells;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final subtitle = <String>[
-      l.homeCollectionProgress(unfinished.done, unfinished.total),
-      if (unfinished.abandonedDays != null && unfinished.abandonedDays! > 0)
-        l.homeContinueAbandoned(unfinished.abandonedDays!),
-    ].join(' · ');
-
     return PaperCard(
-      radius: AppRadii.button,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      radius: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: AppSpacing.s16),
       onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.homeContinueLabel.toUpperCase(),
-                  style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+      // IntrinsicHeight so the hairline between the plates spans exactly the tallest of them. The
+      // row is three cells, so measuring them twice costs nothing — and a divider given a literal
+      // height is a divider that stops matching the type the day the type changes.
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < cells.length; i++) ...[
+              if (i > 0)
+                Container(
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+                  color: AppColors.dividerFaint,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  unfinished.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.collectionNameCard,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${cells[i].value}', style: AppText.counterLarge.copyWith(fontSize: 26)),
+                    const SizedBox(height: 6),
+                    Text(
+                      cells[i].label.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: AppText.translation.copyWith(
-                    fontSize: 12.5,
-                    color: AppColors.secondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.tertiary),
-        ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// The generation entrance, folded down to one row, with the store under it as a quiet line
-/// (кадры 17a/17b/17d). The big form is gone: it was the visual centre of a screen whose centre is
-/// now the day.
+/// «Выучено 151 · за неделю 28 · в работе 41» (кадр 19-2) — the same three numbers, in the evening.
 ///
-/// The row never generates anything itself — a tap opens the create screen with the topic carried.
-class _GenerateRow extends StatelessWidget {
-  const _GenerateRow({super.key, required this.storeCount, this.onOpenStore});
+/// One line rather than three plates, and that is the whole design of the evening screen: in the
+/// morning these numbers are part of a decision, and by the time the day is closed they are a
+/// receipt. Giving a receipt the weight of a decision is how a finished day starts asking for more.
+class _StatsLine extends StatelessWidget {
+  const _StatsLine({super.key, required this.cells, required this.onTap});
 
-  final int storeCount;
-  final VoidCallback? onOpenStore;
-
-  void _open(BuildContext context, {bool startVoice = false}) {
-    AppHaptics.light();
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => GenerateScreen(startVoice: startVoice)));
-  }
+  final List<_StatCell> cells;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        GestureDetector(
-          onTap: () => _open(context),
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.only(left: 15, right: 6),
-            decoration: BoxDecoration(
-              color: AppColors.field,
-              borderRadius: BorderRadius.circular(AppRadii.field),
-              border: Border.all(color: AppColors.hairline),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l.homeGenerateRow,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.translation.copyWith(
-                      fontSize: 14.5,
-                      color: AppColors.tertiary,
-                    ),
+    return MinTapHeight(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (var i = 0; i < cells.length; i++)
+              Flexible(
+                child: Text(
+                  cells[i].inline,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.translation.copyWith(
+                    fontSize: 13,
+                    // The first segment leads and the rest follow it — the line is one sentence,
+                    // not three labels of equal weight.
+                    color: i == 0 ? AppColors.inkBody : AppColors.secondary,
                   ),
                 ),
-                InkResponse(
-                  onTap: () => _open(context, startVoice: true),
-                  radius: 22,
-                  child: const SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(LucideIcons.mic, size: 20, color: AppColors.secondary),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => _open(context),
-                  child: Container(
-                    width: 44,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.ink,
-                      borderRadius: BorderRadius.circular(AppRadii.small),
-                    ),
-                    child: const Icon(LucideIcons.arrowRight, size: 18, color: AppColors.paper),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // The store's entrance from the main screen: generation is not the only way to get words,
-        // and before this line the ready-made sets were reachable only from another tab.
-        if (storeCount > 0 && onOpenStore != null) ...[
-          const SizedBox(height: 9),
-          MinTapHeight(
-            key: HomeBlockKeys.storeLink,
-            onTap: () {
-              AppHaptics.light();
-              onOpenStore!();
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(left: 3),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l.homeStoreLink(storeCount),
-                    style: AppText.translation.copyWith(
-                      fontSize: 13,
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(LucideIcons.arrowRight, size: 14, color: AppColors.secondary),
-                ],
               ),
-            ),
-          ),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// «Взять готовый набор (17 тем)» (кадр 17c) — the first of the two equal doors on the first day,
-/// with three real topics under it so «17 тем» is not an abstraction.
-class _FirstDayReadyCard extends StatelessWidget {
-  const _FirstDayReadyCard({required this.store, this.onOpen});
+/// «Завтра выпадет 14 слов →» (кадры 19-1, 19-2) — the shelf for tomorrow, in one row.
+///
+/// It replaces the LIST of words about to slip. Three words with dates answered a question nobody
+/// asks («which ones exactly»); the question they do ask before closing the app is «сколько будет
+/// завтра», and the honest form of that answer is a number and a door. The door is «Мои слова»,
+/// which is the list behind it for anyone who does want the names.
+///
+/// Not drawn at all when nothing falls tomorrow — the server sends null rather than 0 precisely so
+/// this row can be absent instead of saying «Завтра выпадет 0 слов».
+class _TomorrowRow extends StatelessWidget {
+  const _TomorrowRow({super.key, required this.count, required this.onTap});
 
-  final HomeStore store;
-  final VoidCallback? onOpen;
+  final int count;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    return MinTapHeight(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.homeTomorrowRow(count),
+                style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.inkBody),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s8),
+            const Icon(LucideIcons.arrowRight, size: 15, color: AppColors.tertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// «Сгенерировать набор · Опишите ситуацию — соберём набор под неё» (кадры 19-1, 19-2, 19-3).
+///
+/// A CARD that opens the generation screen, not a field that generates in place. The inline field
+/// was the visual centre of a screen whose centre is the day: a text input outranks everything
+/// around it simply by being an input, and it outranked «Начать».
+///
+/// The first day is the exception ([withField]): there is no day to outrank yet, so the invitation
+/// is spelled out and three example topics stand under it. Tapping the field opens the same screen —
+/// it is a written invitation, not a second place to type.
+class _GenerateCard extends StatelessWidget {
+  const _GenerateCard({super.key, this.withField = false, this.withChips = false});
+
+  final bool withField, withChips;
+
+  void _open(BuildContext context, {String? topic}) {
+    AppHaptics.light();
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => GenerateScreen(initialTopic: topic)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final chips = [l.homeGenerateChipInterview, l.homeGenerateChipVet, l.homeGenerateChipMoving];
+
     return PaperCard(
-      radius: AppRadii.card,
-      padding: const EdgeInsets.all(20),
-      onTap: onOpen == null
-          ? null
-          : () {
-              AppHaptics.light();
-              onOpen!();
-            },
+      radius: 24,
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      onTap: withField ? null : () => _open(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  l.homeFirstDayReadyTitle(store.count),
-                  style: AppText.stepTitle.copyWith(fontSize: 21),
+              // The spark, on an ink plate. The frame draws a brass gradient here; the palette has
+              // no brass and no gradients (paper/ink, tokens.html), and where the token list and a
+              // frame disagree the token list wins.
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.ink,
+                  borderRadius: BorderRadius.circular(AppRadii.small),
                 ),
+                child: const Icon(LucideIcons.sparkles, size: 19, color: AppColors.paper),
               ),
               const SizedBox(width: AppSpacing.s12),
-              Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.ink),
-                child: const Icon(LucideIcons.arrowRight, size: 17, color: AppColors.paper),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.homeGenerateCardTitle,
+                      style: AppText.translation.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l.homeGenerateCardHint,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.translation.copyWith(fontSize: 12, color: AppColors.tertiary),
+                    ),
+                  ],
+                ),
               ),
+              if (!withField) ...[
+                const SizedBox(width: AppSpacing.s8),
+                const Icon(LucideIcons.arrowRight, size: 16, color: AppColors.secondary),
+              ],
             ],
           ),
-          const SizedBox(height: AppSpacing.s8),
-          Text(
-            l.homeFirstDayReadyHint,
-            style: AppText.translation.copyWith(
-              fontSize: 13.5,
-              height: 1.45,
-              color: AppColors.secondary,
+          if (withField) ...[
+            const SizedBox(height: 13),
+            GestureDetector(
+              onTap: () => _open(context),
+              child: Container(
+                height: 46,
+                padding: const EdgeInsets.only(left: 14, right: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.field,
+                  borderRadius: BorderRadius.circular(AppRadii.field),
+                  border: Border.all(color: AppColors.hairline),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.homeGeneratePlaceholder,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.translation.copyWith(
+                          fontSize: 14,
+                          color: AppColors.tertiary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 40,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.ink,
+                        borderRadius: BorderRadius.circular(AppRadii.small),
+                      ),
+                      child: const Icon(LucideIcons.arrowRight, size: 17, color: AppColors.paper),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          if (store.topics.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.s16),
+          ],
+          if (withChips) ...[
+            const SizedBox(height: 11),
             Wrap(
-              spacing: AppSpacing.s8,
-              runSpacing: AppSpacing.s8,
-              children: [for (final topic in store.topics) _TopicChip(label: topic)],
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                for (final chip in chips)
+                  // Tappable, unlike the topic chips they replace: an EXAMPLE the learner cannot
+                  // act on is a caption, and these are the fastest way into the screen above.
+                  _ExampleChip(label: chip, onTap: () => _open(context, topic: chip)),
+              ],
             ),
           ],
         ],
@@ -1228,103 +1293,290 @@ class _FirstDayReadyCard extends StatelessWidget {
   }
 }
 
-/// «Собрать свою по описанию» (кадр 17c) — the second door, with the field expanded because on the
-/// first day there is nothing else competing for the screen.
-class _FirstDayOwnCard extends StatelessWidget {
-  const _FirstDayOwnCard();
+/// An outline pill under the first-day generation card — one example situation, and a way in.
+class _ExampleChip extends StatelessWidget {
+  const _ExampleChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    void open() {
-      AppHaptics.light();
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GenerateScreen()));
-    }
-
-    return PaperCard(
-      radius: AppRadii.card,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l.homeFirstDayOwnTitle, style: AppText.stepTitle.copyWith(fontSize: 21)),
-          const SizedBox(height: AppSpacing.s8),
-          Text(
-            l.homeFirstDayOwnHint,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadii.chip),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.chip),
+            border: Border.all(color: AppColors.track),
+          ),
+          child: Text(
+            label,
             style: AppText.translation.copyWith(
-              fontSize: 13.5,
-              height: 1.45,
-              color: AppColors.secondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.inkBody,
             ),
           ),
-          const SizedBox(height: AppSpacing.s16),
-          GestureDetector(
-            onTap: open,
-            child: Container(
-              height: 52,
-              padding: const EdgeInsets.only(left: 15, right: 6),
-              decoration: BoxDecoration(
-                color: AppColors.field,
-                borderRadius: BorderRadius.circular(AppRadii.field),
-                border: Border.all(color: AppColors.hairline),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.homeGeneratePlaceholder,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.translation.copyWith(
-                        fontSize: 14.5,
-                        color: AppColors.tertiary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 44,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.ink,
-                      borderRadius: BorderRadius.circular(AppRadii.small),
-                    ),
-                    child: const Icon(LucideIcons.arrowRight, size: 18, color: AppColors.paper),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// An outline topic chip under the ready-made-sets card. Not tappable on purpose: it is a PREVIEW
-/// of what the store holds, and the card itself is the door.
-class _TopicChip extends StatelessWidget {
-  const _TopicChip({required this.label});
-  final String label;
+/// «Готовые наборы · все 17 →» over a strip of real covers (кадры 19-2, 19-3).
+///
+/// The store used to be offered here as three topic WORDS in outline chips. Three words are a table
+/// of contents, not an invitation: a photograph of an airport sells «Аэропорт» and the word
+/// «Аэропорт» does not. In the evening the strip also cures the emptiness under a finished day —
+/// the screen has said «закрыто» and then had nothing else to show.
+///
+/// [large] is the first day (кадр 19-3), where the window IS the main entrance and so gets the room:
+/// two covers across instead of three and a half.
+class _StoreShowcase extends StatelessWidget {
+  const _StoreShowcase({
+    super.key,
+    required this.store,
+    required this.onOpen,
+    this.onOpenStore,
+    this.large = false,
+  });
+
+  final HomeStore store;
+  final void Function(HomeStoreItem item) onOpen;
+  final VoidCallback? onOpenStore;
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadii.chip),
-        border: Border.all(color: AppColors.hairline),
-      ),
-      child: Text(
-        label,
-        style: AppText.translation.copyWith(
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-          color: AppColors.inkBody,
+    final l = AppLocalizations.of(context);
+    // 3.5 covers across at 390 pt in the strip; two across on the first day. The half at the edge is
+    // what says «здесь есть ещё» — a strip that ends exactly at the fold reads as the whole shop.
+    final width = large ? 171.0 : 96.0;
+    final height = large ? 108.0 : 70.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(l.homeStoreShowcaseTitle.toUpperCase(), style: AppText.sectionLabel),
+            ),
+            if (onOpenStore != null)
+              MinTapHeight(
+                onTap: () {
+                  AppHaptics.light();
+                  onOpenStore!();
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l.homeStoreShowcaseAll(store.count),
+                      style: AppText.translation.copyWith(
+                        fontSize: 12.5,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    const Icon(LucideIcons.arrowRight, size: 13, color: AppColors.secondary),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.s8),
+        SizedBox(
+          height: height,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: store.items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.s8),
+            itemBuilder: (_, i) => _StoreCoverTile(
+              item: store.items[i],
+              width: width,
+              height: height,
+              large: large,
+              onTap: () => onOpen(store.items[i]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One cover: the photograph, with the name and «16 слов · A2» over its lower third.
+///
+/// Over rather than under, and that is the point of the strip — the caption belongs to the picture,
+/// so the eye reads one object per deck instead of a picture and a line about it. The scrim is the
+/// palette's own ([AppColors.scrim] is ink at .42), because white type on an unknown photograph is
+/// legible only if something guarantees the ground under it.
+///
+/// A deck with no cover gets the paper plate and the SAME layout — ink type instead of white — so a
+/// strip of mixed decks does not change shape halfway along.
+class _StoreCoverTile extends StatelessWidget {
+  const _StoreCoverTile({
+    required this.item,
+    required this.width,
+    required this.height,
+    required this.large,
+    required this.onTap,
+  });
+
+  final HomeStoreItem item;
+  final double width, height;
+  final bool large;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final radius = BorderRadius.circular(large ? 18 : 14);
+    final url = item.imageUrl;
+    final hasPhoto = url != null && url.isNotEmpty;
+    final meta = [
+      l.storeWordsCount(item.termsCount),
+      if (item.level != null && item.level!.trim().isNotEmpty) item.level!.trim(),
+    ].join(' · ');
+
+    final plate = DecoratedBox(
+      decoration: BoxDecoration(color: AppColors.photoPlate, borderRadius: radius),
+    );
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (hasPhoto)
+                Image(
+                  image: CachedNetworkImage(url),
+                  fit: BoxFit.cover,
+                  loadingBuilder: (_, child, progress) => progress == null ? child : plate,
+                  errorBuilder: (_, _, _) => plate,
+                )
+              else
+                plate,
+              if (hasPhoto)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: height * 0.62,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, AppColors.scrim, AppColors.ink],
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned(
+                left: large ? 12 : 8,
+                right: large ? 12 : 8,
+                bottom: large ? 10 : 7,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: large ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.collectionNameCard.copyWith(
+                        fontSize: large ? 16.5 : 13,
+                        height: 1.15,
+                        color: hasPhoto ? AppColors.paper : AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.translation.copyWith(
+                        fontSize: large ? 11.5 : 10.5,
+                        color: hasPhoto
+                            ? AppColors.paper.withValues(alpha: 0.82)
+                            : AppColors.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// «или взять из 17 готовых →» — the store's quiet entrance on the morning screen (кадр 19-1).
+///
+/// A sentence and not a strip, deliberately: the morning screen's centre is the day waiting to be
+/// started, and a row of shop covers under it is a shop in the doorway. The evening, which has
+/// nothing left to start, gets the covers.
+class _StoreLink extends StatelessWidget {
+  const _StoreLink({super.key, required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return MinTapHeight(
+      onTap: () {
+        AppHaptics.light();
+        onTap();
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(left: 3),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l.homeStoreLink(count),
+              style: AppText.translation.copyWith(fontSize: 13, color: AppColors.secondary),
+            ),
+            const SizedBox(width: 6),
+            const Icon(LucideIcons.arrowRight, size: 14, color: AppColors.secondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// «+5 слов продвинулись · reluctant дошло до „написание"» — the evening card's reward line.
+///
+/// The rung is named HERE, from the same `ladderStep*` strings the word card uses, because the
+/// server sends a number: a rung spelled «написание» inside a JSON payload is Russian copy shipped
+/// by a server that also answers in English.
+///
+/// Without a nameable rung the line falls back to the count alone — «+5 слов продвинулись» is still
+/// true and still worth saying; «дошло до „“» is not.
+String _awardLine(AppLocalizations l, HomeDayAward award) {
+  final rung = ladderRungFor(award.step);
+  final promoted = l.homeAwardPromoted(award.promoted);
+  if (rung == null || award.text.isEmpty) return promoted;
+
+  return '$promoted · ${l.homeAwardExample(award.text, ladderRungLabel(l, rung))}';
 }
 
 /// THE DAY IS NOT KNOWN — and which of the two that is, is decided here rather than at build time.
@@ -1333,10 +1585,9 @@ class _TopicChip extends StatelessWidget {
 /// during build, a failed sync (syncing → offline, with no row written) would leave the placeholder
 /// spinning for as long as the screen stayed open.
 class _NoDay extends ConsumerWidget {
-  const _NoDay({required this.cache, this.onOpenStore});
+  const _NoDay({required this.cache});
 
   final HomePlanCache cache;
-  final VoidCallback? onOpenStore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1361,7 +1612,7 @@ class _NoDay extends ConsumerWidget {
             // The one door that does not need the day. It DOES need the server, and the card above
             // has just said the server is not answering — so it stays, quietly, instead of being
             // the whole page and pretending everything is fine.
-            _GenerateRow(key: HomeBlockKeys.generate, storeCount: 0, onOpenStore: onOpenStore),
+            _GenerateCard(key: HomeBlockKeys.generate),
           ],
         );
       },

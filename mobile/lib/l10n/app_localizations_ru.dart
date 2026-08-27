@@ -2139,13 +2139,91 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'или выбрать из $count готовых',
-      many: 'или выбрать из $count готовых',
-      few: 'или выбрать из $count готовых',
-      one: 'или выбрать из $count готового',
+      other: 'или взять из $count готовых',
+      many: 'или взять из $count готовых',
+      few: 'или взять из $count готовых',
+      one: 'или взять из $count готового',
     );
     return '$_temp0';
   }
+
+  @override
+  String get homeStatLearned => 'Выучено';
+
+  @override
+  String get homeStatWeek => 'За неделю';
+
+  @override
+  String get homeStatInWork => 'В работе';
+
+  @override
+  String homeStatLearnedInline(int count) {
+    return 'Выучено $count';
+  }
+
+  @override
+  String homeStatWeekInline(int count) {
+    return 'за неделю $count';
+  }
+
+  @override
+  String homeStatInWorkInline(int count) {
+    return 'в работе $count';
+  }
+
+  @override
+  String homeTomorrowRow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Завтра выпадет $count слова',
+      many: 'Завтра выпадет $count слов',
+      few: 'Завтра выпадет $count слова',
+      one: 'Завтра выпадет $count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAwardPromoted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count слова продвинулись',
+      many: '+$count слов продвинулись',
+      few: '+$count слова продвинулись',
+      one: '+$count слово продвинулось',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAwardExample(String term, String rung) {
+    return '$term дошло до «$rung»';
+  }
+
+  @override
+  String get homeGenerateCardTitle => 'Сгенерировать набор';
+
+  @override
+  String get homeGenerateCardHint => 'Опишите ситуацию — соберём набор под неё';
+
+  @override
+  String get homeStoreShowcaseTitle => 'Готовые наборы';
+
+  @override
+  String homeStoreShowcaseAll(int count) {
+    return 'все $count';
+  }
+
+  @override
+  String get homeFirstDayPromise => '5 минут в день — 20 слов в неделю';
+
+  @override
+  String get homeGenerateChipVet => 'Ветклиника';
+
+  @override
+  String get homeGenerateChipMoving => 'Переезд';
 
   @override
   String get homeFirstDayTitle => 'Начнём с первого набора';

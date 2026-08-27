@@ -3222,8 +3222,104 @@ abstract class AppLocalizations {
   /// Тихая строка входа в магазин под генерацией (ICU plural).
   ///
   /// In ru, this message translates to:
-  /// **'{count, plural, one{или выбрать из {count} готового} few{или выбрать из {count} готовых} many{или выбрать из {count} готовых} other{или выбрать из {count} готовых}}'**
+  /// **'{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}'**
   String homeStoreLink(int count);
+
+  /// Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выучено'**
+  String get homeStatLearned;
+
+  /// Подпись второго числа плиты статистики (кадр 19-1) — слов, дошедших до «выучено» за семь дней.
+  ///
+  /// In ru, this message translates to:
+  /// **'За неделю'**
+  String get homeStatWeek;
+
+  /// Подпись третьего числа плиты статистики (кадр 19-1) — размер пула.
+  ///
+  /// In ru, this message translates to:
+  /// **'В работе'**
+  String get homeStatInWork;
+
+  /// Вечерняя строка статистики, первый сегмент (кадр 19-2): вечером цифры уже не решение, а сводка, поэтому одна строка вместо трёх плиток.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выучено {count}'**
+  String homeStatLearnedInline(int count);
+
+  /// Вечерняя строка статистики, второй сегмент (кадр 19-2). Со строчной: продолжение фразы, не заголовок.
+  ///
+  /// In ru, this message translates to:
+  /// **'за неделю {count}'**
+  String homeStatWeekInline(int count);
+
+  /// Вечерняя строка статистики, третий сегмент (кадр 19-2).
+  ///
+  /// In ru, this message translates to:
+  /// **'в работе {count}'**
+  String homeStatInWorkInline(int count);
+
+  /// Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}'**
+  String homeTomorrowRow(int count);
+
+  /// Первая половина строки-награды (кадр 19-2). Со знаком плюс: это прибавление, а не счёт.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}'**
+  String homeAwardPromoted(int count);
+
+  /// Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'{term} дошло до «{rung}»'**
+  String homeAwardExample(String term, String rung);
+
+  /// Заголовок карточки генерации (кадры 19-1, 19-2, 19-3). Тап открывает экран генерации — поля на главной больше нет: форма на главной была зрительным центром экрана, чей центр — день.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сгенерировать набор'**
+  String get homeGenerateCardTitle;
+
+  /// Подзаголовок карточки генерации (кадры 19-1, 19-2, 19-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Опишите ситуацию — соберём набор под неё'**
+  String get homeGenerateCardHint;
+
+  /// Заголовок витрины обложек (кадры 19-2, 19-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовые наборы'**
+  String get homeStoreShowcaseTitle;
+
+  /// Ссылка в конце витрины (кадры 19-2, 19-3) — стрелка рисуется иконкой.
+  ///
+  /// In ru, this message translates to:
+  /// **'все {count}'**
+  String homeStoreShowcaseAll(int count);
+
+  /// Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'5 минут в день — 20 слов в неделю'**
+  String get homeFirstDayPromise;
+
+  /// Чип-пример темы под карточкой генерации первого дня (кадр 19-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Ветклиника'**
+  String get homeGenerateChipVet;
+
+  /// Чип-пример темы под карточкой генерации первого дня (кадр 19-3).
+  ///
+  /// In ru, this message translates to:
+  /// **'Переезд'**
+  String get homeGenerateChipMoving;
 
   /// Приветствие первого дня (кадр 17c).
   ///

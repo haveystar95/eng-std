@@ -87,7 +87,6 @@ void main() {
                     state: HomeStateKind.plan,
                     session: session,
                     inWork: const HomeInWork(total: 9, waiting: 4, perDay: 5, newRemaining: 2),
-                    edge: const [],
                     hardest: const [],
                     store: const HomeStore(count: 0, topics: []),
                   ),

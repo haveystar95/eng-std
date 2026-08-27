@@ -15,7 +15,15 @@ import 'package:eng_std/data/locale_controller.dart';
 /// a card is to give the null a default and print it. «0 слов» is a sentence this screen must never
 /// say, and the only way to be sure is to ask the tree whether the widget exists at all.
 ///
-/// The four states of кадры 17a–17d are asserted the same way — by which keys are present.
+/// The three frames of the rewrite are asserted the same way — by which keys are present:
+///
+///   19-1 УТРО        session · statistics · [word challenge] · tomorrow · generate · store LINE
+///   19-2 ВЕЧЕР       done+award · hardest · statistics · tomorrow · generate · store WINDOW
+///   19-3 ПЕРВЫЙ ДЕНЬ store WINDOW · generate+field+chips · promise, and nothing else at all
+///
+/// The slot the word challenge will take (DAILY-1) is deliberately not asserted: nothing is drawn
+/// there yet, and a test for an absent widget that was never written would pass for the wrong
+/// reason. What IS asserted is that the column reads correctly without it.
 void main() {
   // `total` is the POOL's work — repeats and new words — and never the swipe pass: a collection is
   // a catalogue, so adding one must not add its size to «сегодня».
@@ -42,31 +50,55 @@ void main() {
     triageCollectionTitle: triage > 0 ? 'Ветклиника' : null,
   );
 
+  HomeStoreItem deck(String id, String title, {String? level = 'A2', String? image}) =>
+      HomeStoreItem(
+        id: id,
+        title: title,
+        termsCount: 16,
+        level: level,
+        imageUrl: image,
+        sourceLang: 'ru',
+        targetLang: 'en',
+      );
+
+  HomeStore stockedStore() => HomeStore(
+    count: 17,
+    topics: const ['У врача', 'Аэропорт', 'Аренда'],
+    items: [deck('a', 'Аэропорт'), deck('b', 'У врача'), deck('c', 'Аренда жилья')],
+  );
+
   HomePlan plan({
     HomeStateKind state = HomeStateKind.plan,
     HomeSession? session_,
     HomeInWork? inWork,
-    List<HomeEdgeTerm> edge = const [],
     List<HomeHardTerm> hardest = const [],
     HomeToday? today,
     HomeNextReview? nextReview,
-    HomeContinue? unfinished,
     HomeStore? store,
+    int? edgeTomorrow,
+    HomeDayAward? dayAward,
+    int? learnedWeek = 23,
   }) => HomePlan(
     state: state,
     session: session_ ?? session(repeat: 12, newTerms: 5, triage: 15, minutes: 9),
     inWork:
         inWork ??
         const HomeInWork(total: 41, waiting: 20, perDay: 20, newRemaining: 20, daysUntilQueue: 2),
-    edge: edge,
     hardest: hardest,
     today: today,
     nextReview: nextReview,
-    unfinished: unfinished,
-    store: store ?? const HomeStore(count: 17, topics: ['У врача', 'Аэропорт', 'Аренда']),
+    store: store ?? stockedStore(),
+    edgeTomorrow: edgeTomorrow,
+    dayAward: dayAward,
+    learnedWeek: learnedWeek,
   );
 
-  Future<void> pumpHome(WidgetTester tester, HomePlan? day, {int streak = 5}) async {
+  Future<void> pumpHome(
+    WidgetTester tester,
+    HomePlan? day, {
+    int streak = 5,
+    int learned = 146,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -79,7 +111,7 @@ void main() {
             (ref) => Stream.value(
               Stats(
                 totalWords: 41,
-                learned: 0,
+                learned: learned,
                 mastered: 0,
                 dueToday: 0,
                 reviewsTotal: 0,
@@ -93,8 +125,9 @@ void main() {
           supportedLocales: kSupportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           locale: const Locale('ru'),
-          // The shell always passes this; without a destination the store LINE has no reason to
-          // exist, and its absence would be the guard passing for the wrong reason.
+          // The shell always passes this; without a destination the store link and the window's
+          // «все 17 →» have no reason to exist, and their absence would be the guard passing for the
+          // wrong reason.
           home: Scaffold(body: TrainingHomeScreen(onOpenStore: () {})),
         ),
       ),
@@ -102,39 +135,55 @@ void main() {
     await tester.pump();
   }
 
-  group('17a — план на сегодня', () {
-    testWidgets('draws the day, the box and the words about to slip', (tester) async {
-      await pumpHome(
-        tester,
-        plan(
-          edge: const [HomeEdgeTerm(termId: 'a', text: 'withdraw', inDays: 1)],
-          unfinished: const HomeContinue(
-            collectionId: 'c',
-            title: 'Ветклиника',
-            done: 4,
-            total: 16,
-            remaining: 12,
-            abandonedDays: 5,
-          ),
-        ),
-      );
+  group('19-1 — утро, сессия ждёт', () {
+    testWidgets('the day, the three numbers, tomorrow, and one quiet door to the store', (
+      tester,
+    ) async {
+      await pumpHome(tester, plan(edgeTomorrow: 14));
 
       expect(find.byKey(HomeBlockKeys.session), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.inWork), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.edge), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.unfinished), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.stats), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
-      // …and the evening's occupant of the edge slot is not also on screen.
-      expect(find.byKey(HomeBlockKeys.hardest), findsNothing);
+      // The morning offers the store as a SENTENCE. A strip of shop covers under a session waiting
+      // to be started is a shop in the doorway.
+      expect(find.byKey(HomeBlockKeys.storeLink), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsNothing);
+      // …and the evening's blocks are not also on screen.
       expect(find.byKey(HomeBlockKeys.done), findsNothing);
+      expect(find.byKey(HomeBlockKeys.hardest), findsNothing);
     });
 
-    testWidgets('no words near the edge → no section, not an empty one', (tester) async {
+    testWidgets('a tomorrow with nothing in it is no row, not «завтра выпадет 0»', (tester) async {
+      // The server sends null rather than 0 for exactly this.
       await pumpHome(tester, plan());
 
       expect(find.byKey(HomeBlockKeys.session), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.edge), findsNothing);
-      expect(find.byKey(HomeBlockKeys.unfinished), findsNothing);
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsNothing);
+      expect(find.textContaining('0 слов'), findsNothing);
+    });
+
+    testWidgets('a number nobody has yet is one plate fewer, never a zero', (tester) async {
+      // A learner who has taken words in but graduated none: «в работе» is real, the other two are
+      // not facts about them yet.
+      await pumpHome(tester, plan(learnedWeek: null), learned: 0);
+
+      expect(find.byKey(HomeBlockKeys.stats), findsOneWidget);
+      expect(find.text('41'), findsOneWidget);
+      expect(find.text('0'), findsNothing);
+    });
+
+    testWidgets('on a day with no numbers at all there is no statistics block', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          learnedWeek: null,
+          inWork: const HomeInWork(total: 0, waiting: 0, perDay: 20, newRemaining: 20),
+        ),
+        learned: 0,
+      );
+
+      expect(find.byKey(HomeBlockKeys.stats), findsNothing);
     });
 
     testWidgets('a part whose count is 0 is not a line on the card', (tester) async {
@@ -156,96 +205,184 @@ void main() {
     });
   });
 
-  group('17b — сегодня закрыто', () {
-    testWidgets('shows what today produced and what it got wrong', (tester) async {
+  group('19-2 — вечер, сессия сделана', () {
+    HomePlan evening({HomeDayAward? award, List<HomeHardTerm> hardest = const []}) => plan(
+      state: HomeStateKind.done,
+      session_: session(),
+      today: const HomeToday(answered: 32, seconds: 400),
+      hardest: hardest,
+      edgeTomorrow: 14,
+      dayAward: award,
+      learnedWeek: 28,
+    );
+
+    testWidgets('what the day closed, what it bought, and the shop window under it', (
+      tester,
+    ) async {
       await pumpHome(
         tester,
-        plan(
-          state: HomeStateKind.done,
-          session_: session(),
-          today: const HomeToday(answered: 32, seconds: 400),
-          nextReview: const HomeNextReview(date: '2026-08-28', count: 14),
-          hardest: const [HomeHardTerm(termId: 'a', text: 'withdraw', errors: 2)],
+        evening(
+          award: const HomeDayAward(promoted: 5, termId: 'r', text: 'reluctant', step: 4),
+          hardest: const [HomeHardTerm(termId: 'a', text: 'withdraw', errors: 3)],
         ),
+        learned: 151,
       );
 
       expect(find.byKey(HomeBlockKeys.done), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.award), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.hardest), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.inWork), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.stats), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsOneWidget);
+      // The evening ends on covers, not on a sentence: it cures the emptiness under a finished day.
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.storeLink), findsNothing);
+      expect(find.byKey(HomeBlockKeys.session), findsNothing);
+
       // The day's progress is answered cards, and the denominator is what the day held.
       expect(find.text('32 из 32'), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.session), findsNothing);
+      // The reward names the rung in the interface's own words — the server sent the number 4.
+      expect(find.textContaining('reluctant'), findsOneWidget);
+      expect(find.textContaining('написание'), findsOneWidget);
+    });
+
+    testWidgets('a day that promoted nothing has no reward line', (tester) async {
+      await pumpHome(tester, evening());
+
+      expect(find.byKey(HomeBlockKeys.done), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.award), findsNothing);
     });
 
     testWidgets('a run with no mistakes draws no «труднее всего»', (tester) async {
-      await pumpHome(
-        tester,
-        plan(
-          state: HomeStateKind.done,
-          session_: session(),
-          today: const HomeToday(answered: 8, seconds: 60),
-        ),
-      );
+      await pumpHome(tester, evening());
 
       expect(find.byKey(HomeBlockKeys.done), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.hardest), findsNothing);
     });
+
+    testWidgets('the evening says the numbers once, in one line', (tester) async {
+      await pumpHome(tester, evening(), learned: 151);
+
+      // Three segments of one sentence, not three plates: by the evening the numbers are a receipt.
+      expect(find.text('Выучено 151'), findsOneWidget);
+      expect(find.text('за неделю 28'), findsOneWidget);
+      expect(find.text('в работе 41'), findsOneWidget);
+    });
   });
 
-  group('17c — первый день', () {
-    testWidgets('two doors, and nothing else exists yet', (tester) async {
+  group('19-3 — первый день', () {
+    testWidgets('the window, the invitation, the promise — and nothing that does not exist yet', (
+      tester,
+    ) async {
       await pumpHome(
         tester,
         plan(
           state: HomeStateKind.empty,
           session_: session(),
           inWork: const HomeInWork(total: 0, waiting: 0, perDay: 20, newRemaining: 20),
+          learnedWeek: null,
         ),
         streak: 0,
+        learned: 0,
       );
 
       expect(find.byKey(HomeBlockKeys.firstDay), findsOneWidget);
-      // Стрик, «В работе» и «На грани» здесь не существует — не нулями, а вовсе.
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.promise), findsOneWidget);
+      // Стрик, статистика и «завтра выпадет» здесь не существуют — не нулями, а вовсе.
       expect(find.byKey(HomeBlockKeys.header), findsNothing);
-      expect(find.byKey(HomeBlockKeys.inWork), findsNothing);
-      expect(find.byKey(HomeBlockKeys.edge), findsNothing);
+      expect(find.byKey(HomeBlockKeys.stats), findsNothing);
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsNothing);
       expect(find.byKey(HomeBlockKeys.session), findsNothing);
+    });
+
+    testWidgets('the first day offers example situations, and each is a way in', (tester) async {
+      await pumpHome(
+        tester,
+        plan(state: HomeStateKind.empty, session_: session(), learnedWeek: null),
+        streak: 0,
+        learned: 0,
+      );
+
+      // The chips the frame names. Tappable, unlike the topic captions they replace.
+      expect(find.text('Собеседование'), findsOneWidget);
+      expect(find.text('Ветклиника'), findsOneWidget);
+      expect(find.text('Переезд'), findsOneWidget);
+    });
+
+    testWidgets('an empty store leaves the generation card as the only door', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.empty,
+          session_: session(),
+          store: const HomeStore(count: 0, topics: []),
+          learnedWeek: null,
+        ),
+        streak: 0,
+        learned: 0,
+      );
+
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsNothing);
+      expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
     });
   });
 
   group('17d — слова есть, плана нет', () {
-    testWidgets('«Всё повторено», the next date, and the box still on screen', (tester) async {
+    testWidgets('«Всё повторено», the numbers, and the quiet store line', (tester) async {
       await pumpHome(
         tester,
         plan(
           state: HomeStateKind.idle,
           session_: session(),
           nextReview: const HomeNextReview(date: '2026-08-28', count: 14),
+          edgeTomorrow: 14,
         ),
       );
 
       expect(find.byKey(HomeBlockKeys.idle), findsOneWidget);
-      expect(find.byKey(HomeBlockKeys.inWork), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.stats), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.tomorrow), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.storeLink), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.session), findsNothing);
       expect(find.byKey(HomeBlockKeys.done), findsNothing);
     });
   });
 
-  group('the store line', () {
-    testWidgets('an empty store is no line at all', (tester) async {
-      await pumpHome(
-        tester,
-        plan(store: const HomeStore(count: 0, topics: [])),
-      );
+  group('the store', () {
+    testWidgets('an empty store is no line and no window', (tester) async {
+      await pumpHome(tester, plan(store: const HomeStore(count: 0, topics: [])));
 
       expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
       expect(find.byKey(HomeBlockKeys.storeLink), findsNothing);
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsNothing);
     });
 
-    testWidgets('a stocked store is one quiet line under the generation row', (tester) async {
-      await pumpHome(tester, plan());
+    testWidgets('a stocked store shows its decks by name and size', (tester) async {
+      await pumpHome(
+        tester,
+        plan(state: HomeStateKind.done, session_: session(), today: const HomeToday(answered: 4, seconds: 30)),
+      );
 
-      expect(find.byKey(HomeBlockKeys.storeLink), findsOneWidget);
+      expect(find.byKey(HomeBlockKeys.storeShowcase), findsOneWidget);
+      expect(find.text('Аэропорт'), findsOneWidget);
+      // «16 слов · A2» — the level only where the deck has one.
+      expect(find.textContaining('16 слов · A2'), findsWidgets);
+    });
+
+    testWidgets('a deck with no level prints its size and stops there', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(),
+          today: const HomeToday(answered: 4, seconds: 30),
+          store: HomeStore(count: 1, topics: const ['Быт'], items: [deck('x', 'Быт', level: null)]),
+        ),
+      );
+
+      expect(find.text('16 слов'), findsOneWidget);
+      expect(find.textContaining('·'), findsNothing);
     });
   });
 
@@ -260,7 +397,7 @@ void main() {
     expect(find.byKey(HomeBlockKeys.unreachable), findsOneWidget);
     expect(find.byKey(HomeBlockKeys.generate), findsOneWidget);
     expect(find.byKey(HomeBlockKeys.session), findsNothing);
-    expect(find.byKey(HomeBlockKeys.inWork), findsNothing);
+    expect(find.byKey(HomeBlockKeys.stats), findsNothing);
     expect(find.byKey(HomeBlockKeys.firstDay), findsNothing);
   });
 }

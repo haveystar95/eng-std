@@ -1543,11 +1543,71 @@
   "homeGenerateRow": "Собрать коллекцию по теме",
   "@homeGenerateRow": { "description": "Строка входа в генерацию на главной (кадр 17a)." },
 
-  "homeStoreLink": "{count, plural, one{или выбрать из {count} готового} few{или выбрать из {count} готовых} many{или выбрать из {count} готовых} other{или выбрать из {count} готовых}}",
+  "homeStoreLink": "{count, plural, one{или взять из {count} готового} few{или взять из {count} готовых} many{или взять из {count} готовых} other{или взять из {count} готовых}}",
   "@homeStoreLink": {
     "description": "Тихая строка входа в магазин под генерацией (ICU plural).",
     "placeholders": { "count": { "type": "int" } }
   },
+
+  "homeStatLearned": "Выучено",
+  "@homeStatLearned": { "description": "Подпись первого числа плиты статистики (кадр 19-1). Значение приходит из /stats.learned." },
+
+  "homeStatWeek": "За неделю",
+  "@homeStatWeek": { "description": "Подпись второго числа плиты статистики (кадр 19-1) — слов, дошедших до «выучено» за семь дней." },
+
+  "homeStatInWork": "В работе",
+  "@homeStatInWork": { "description": "Подпись третьего числа плиты статистики (кадр 19-1) — размер пула." },
+
+  "homeStatLearnedInline": "Выучено {count}",
+  "@homeStatLearnedInline": { "description": "Вечерняя строка статистики, первый сегмент (кадр 19-2): вечером цифры уже не решение, а сводка, поэтому одна строка вместо трёх плиток.", "placeholders": { "count": { "type": "int" } } },
+
+  "homeStatWeekInline": "за неделю {count}",
+  "@homeStatWeekInline": { "description": "Вечерняя строка статистики, второй сегмент (кадр 19-2). Со строчной: продолжение фразы, не заголовок.", "placeholders": { "count": { "type": "int" } } },
+
+  "homeStatInWorkInline": "в работе {count}",
+  "@homeStatInWorkInline": { "description": "Вечерняя строка статистики, третий сегмент (кадр 19-2).", "placeholders": { "count": { "type": "int" } } },
+
+  "homeTomorrowRow": "{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}",
+  "@homeTomorrowRow": {
+    "description": "Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeAwardPromoted": "{count, plural, one{+{count} слово продвинулось} few{+{count} слова продвинулись} many{+{count} слов продвинулись} other{+{count} слова продвинулись}}",
+  "@homeAwardPromoted": {
+    "description": "Первая половина строки-награды (кадр 19-2). Со знаком плюс: это прибавление, а не счёт.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeAwardExample": "{term} дошло до «{rung}»",
+  "@homeAwardExample": {
+    "description": "Вторая половина строки-награды (кадр 19-2): слово, дошедшее дальше всех, и имя его новой ступени — из тех же ladderStep*, что и карточка слова.",
+    "placeholders": { "term": { "type": "String" }, "rung": { "type": "String" } }
+  },
+
+  "homeGenerateCardTitle": "Сгенерировать набор",
+  "@homeGenerateCardTitle": { "description": "Заголовок карточки генерации (кадры 19-1, 19-2, 19-3). Тап открывает экран генерации — поля на главной больше нет: форма на главной была зрительным центром экрана, чей центр — день." },
+
+  "homeGenerateCardHint": "Опишите ситуацию — соберём набор под неё",
+  "@homeGenerateCardHint": { "description": "Подзаголовок карточки генерации (кадры 19-1, 19-2, 19-3)." },
+
+  "homeStoreShowcaseTitle": "Готовые наборы",
+  "@homeStoreShowcaseTitle": { "description": "Заголовок витрины обложек (кадры 19-2, 19-3)." },
+
+  "homeStoreShowcaseAll": "все {count}",
+  "@homeStoreShowcaseAll": {
+    "description": "Ссылка в конце витрины (кадры 19-2, 19-3) — стрелка рисуется иконкой.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFirstDayPromise": "5 минут в день — 20 слов в неделю",
+  "@homeFirstDayPromise": { "description": "Строка-обещание в подвале первого дня (кадр 19-3). Единственная цифра на экране, где статистики ещё нет." },
+
+  "homeGenerateChipVet": "Ветклиника",
+  "@homeGenerateChipVet": { "description": "Чип-пример темы под карточкой генерации первого дня (кадр 19-3)." },
+
+  "homeGenerateChipMoving": "Переезд",
+  "@homeGenerateChipMoving": { "description": "Чип-пример темы под карточкой генерации первого дня (кадр 19-3)." },
 
   "homeFirstDayTitle": "Начнём с первого набора",
   "@homeFirstDayTitle": { "description": "Приветствие первого дня (кадр 17c)." },
