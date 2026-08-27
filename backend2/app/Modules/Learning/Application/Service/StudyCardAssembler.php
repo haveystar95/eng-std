@@ -392,7 +392,7 @@ final readonly class StudyCardAssembler
 
         return LearningLadder::stepFor(
             $view->acquisition,
-            $view->reps,
+            $view->successfulReviews,
             $view->learningStep,
             isKnown: $view->state === LearningState::Known,
         ) !== LearningLadder::STEP_INTRO;
@@ -448,7 +448,7 @@ final readonly class StudyCardAssembler
         // the client's `LadderPosition.admissionStep`.
         $step = LearningLadder::stepFor(
             $view->acquisition,
-            $view->reps,
+            $view->successfulReviews,
             $view->learningStep,
             isKnown: $view->state === LearningState::Known,
         ) ?? LearningLadder::STEP_DICTATION;
