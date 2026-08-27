@@ -453,6 +453,9 @@ it('practice_contract: the committed fixture still matches this selector', funct
         $cases[] = [
             ...$case,
             'word_count' => $playable->answerWordCount,
+            // The other half of the word_bank gate since BUGFIX-2 Ч.2б D2: a single word is
+            // assembled from its LETTERS, so the chip count the gate reads is this one.
+            'answer_char_count' => $playable->answerCharCount,
             'clozeable' => $playable->clozeable,
             'example_token_count' => $playable->exampleTokenCount,
             'has_example_translation' => $playable->hasExampleTranslation,
