@@ -8,7 +8,8 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../../data/languages.dart' show keyboardLocaleFor, looksLikeWrongKeyboard;
+import '../../../data/languages.dart'
+    show keyboardLocaleFor, languageAdjectiveFor, languageAdverbFor, looksLikeWrongKeyboard;
 import '../../../data/local/app_database.dart';
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
@@ -747,6 +748,16 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     return _choicePrompt(l); // multiple_choice
   }
 
+  /// The language THIS CARD is studied in, in the form the instruction's sentence wants.
+  ///
+  /// Read off [SessionExerciseCard.answerLang] — the card's own studied side — and not off the
+  /// profile: the pool mixes pairs by design (DECISIONS п. 128), so an Italian card in an
+  /// English-heavy session is an ordinary Tuesday. The instructions used to say «английский»
+  /// outright, which told the learner to do something other than what the card was asking.
+  String _adjective(AppLocalizations l) => languageAdjectiveFor(widget.answerLang, l.localeName);
+
+  String _adverb(AppLocalizations l) => languageAdverbFor(widget.answerLang, l.localeName);
+
   String _instructionFor(AppLocalizations l) => switch (_mode) {
     // Unreachable: an intro is not an exercise and never reaches this widget (the shell renders
     // SessionIntroCard for it). Named rather than defaulted so the next mode added still has to
@@ -757,13 +768,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     // rung 2 is the reverse. «Выбери английский эквивалент» printed under an English prompt with
     // Russian options told the learner to do the opposite of what the card wanted.
     ExerciseMode.multipleChoice =>
-      _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose,
+      _card.isIdentityGraded ? l.sessionInstrRecogniseTranslation : l.sessionInstrChoose(_adjective(l)),
     // Two shapes of the same trainer: a phrase is dealt WORD chips, a single word LETTER chips
     // (BUGFIX-2 Ч.2б D2). The instruction has to name what is actually lying on the screen —
     // «собери из слов» over a row of single letters describes a card the learner is not looking at.
     ExerciseMode.wordBank => _assemblesLetters ? l.sessionInstrAssembleLetters : l.sessionInstrAssemble,
-    ExerciseMode.typing => l.sessionInstrType,
-    ExerciseMode.cloze => l.sessionInstrType,
+    ExerciseMode.typing => l.sessionInstrType(_adverb(l)),
+    ExerciseMode.cloze => l.sessionInstrType(_adverb(l)),
     ExerciseMode.scramble => l.sessionInstrAssembleSentence,
     ExerciseMode.dictation => l.sessionInstrDictation,
     ExerciseMode.pickCorrect => l.sessionInstrPickCorrect,
@@ -775,7 +786,7 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     ExerciseMode.speaking =>
       _card.asksForExample ? l.sessionInstrSpeakExample : l.sessionInstrSpeakWord,
     ExerciseMode.listening =>
-      _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType,
+      _isRecognitionListening ? l.sessionInstrListenChoose : l.sessionInstrListenType(_adverb(l)),
   };
 
   String _typeLabel(AppLocalizations l) => switch (_card.type) {

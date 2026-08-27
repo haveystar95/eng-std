@@ -1761,11 +1761,11 @@ abstract class AppLocalizations {
   /// **'Свободная тренировка'**
   String get sessionPhasePractice;
 
-  /// Инструкция под промптом, выбор из четырёх (кадр 12a).
+  /// Инструкция под промптом, выбор из четырёх (кадр 12a). {lang} — прилагательное изучаемой стороны ЭТОЙ карточки («итальянский»), languageAdjectiveFor: пул смешивает пары, и зашитый «английский» описывал чужую карточку.
   ///
   /// In ru, this message translates to:
-  /// **'выбери английский эквивалент'**
-  String get sessionInstrChoose;
+  /// **'выбери {lang} эквивалент'**
+  String sessionInstrChoose(String lang);
 
   /// Инструкция под промптом, сборка фразы из СЛОВЕСНЫХ фишек (кадр 12b).
   ///
@@ -1797,11 +1797,11 @@ abstract class AppLocalizations {
   /// **'собери предложение из слов'**
   String get sessionInstrAssembleSentence;
 
-  /// Инструкция под промптом, ввод с клавиатуры (кадр 12c).
+  /// Инструкция под промптом, ввод с клавиатуры (кадр 12c). {lang} — наречие изучаемой стороны карточки («по-итальянски»), languageAdverbFor.
   ///
   /// In ru, this message translates to:
-  /// **'напиши по-английски'**
-  String get sessionInstrType;
+  /// **'напиши {lang}'**
+  String sessionInstrType(String lang);
 
   /// Инструкция аудирования-узнавания (кадр 12g).
   ///
@@ -1809,11 +1809,11 @@ abstract class AppLocalizations {
   /// **'прослушай и выбери перевод · можно повторить'**
   String get sessionInstrListenChoose;
 
-  /// Инструкция аудирования-воспроизведения (кадр 12h).
+  /// Инструкция аудирования-воспроизведения (кадр 12h). {lang} — наречие изучаемой стороны карточки («по-итальянски»), languageAdverbFor.
   ///
   /// In ru, this message translates to:
-  /// **'прослушай и напиши по-английски'**
-  String get sessionInstrListenType;
+  /// **'прослушай и напиши {lang}'**
+  String sessionInstrListenType(String lang);
 
   /// Инструкция диктанта: звучит предложение-пример целиком (dictation).
   ///

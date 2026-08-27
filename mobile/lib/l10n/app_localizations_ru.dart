@@ -1072,7 +1072,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionPhasePractice => 'Свободная тренировка';
 
   @override
-  String get sessionInstrChoose => 'выбери английский эквивалент';
+  String sessionInstrChoose(String lang) {
+    return 'выбери $lang эквивалент';
+  }
 
   @override
   String get sessionInstrAssemble => 'собери из слов';
@@ -1090,13 +1092,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionInstrAssembleSentence => 'собери предложение из слов';
 
   @override
-  String get sessionInstrType => 'напиши по-английски';
+  String sessionInstrType(String lang) {
+    return 'напиши $lang';
+  }
 
   @override
   String get sessionInstrListenChoose => 'прослушай и выбери перевод · можно повторить';
 
   @override
-  String get sessionInstrListenType => 'прослушай и напиши по-английски';
+  String sessionInstrListenType(String lang) {
+    return 'прослушай и напиши $lang';
+  }
 
   @override
   String get sessionInstrDictation => 'прослушай и запиши предложение';

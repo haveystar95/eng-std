@@ -55,3 +55,47 @@ const List<Language> kLanguages = [
 
 Language languageByCode(String code) =>
     kLanguages.firstWhere((l) => l.code == code, orElse: () => kLanguages.first);
+
+/// THE NAME OF A LANGUAGE AS A CARD'S INSTRUCTION NEEDS IT — «выбери итальянский эквивалент».
+///
+/// The instructions under a session prompt used to say «английский» outright, in a product whose
+/// pool mixes pairs by design: an Italian card told the learner to choose the English equivalent
+/// while showing them Italian options. The template now carries the language as a parameter, and
+/// these two functions produce the word it wants.
+///
+/// Two of them, because Russian needs two forms of the same fact — an adjective beside a noun
+/// («итальянский эквивалент») and an adverb beside a verb («напиши по-итальянски») — and English
+/// needs one word in both places. An ARB template cannot choose a morphology, so the CALLER supplies
+/// the form each sentence wants and each locale spells it its own way.
+///
+/// These are language DATA, not UI copy, which is why they live here beside the endonyms rather
+/// than in an ARB file: the Russian forms are DERIVED from `nameRu` by a rule, not translated one by
+/// one, and a thirteen-row table of hand-written adjectives is a thirteenth place to forget a
+/// language. Pinned by `test/l10n/instruction_language_test.dart`.
+
+/// «итальянский» / «Italian» — for «выбери … эквивалент».
+///
+/// `nameRu` is already the nominative masculine adjective the phrase wants («Итальянский»), so the
+/// Russian form is its lowercase. Nothing to derive and nothing to decline: the noun it modifies
+/// («эквивалент») is inanimate masculine, whose accusative equals its nominative.
+String languageAdjectiveFor(String code, String uiLanguage) {
+  final language = languageByCode(code);
+
+  return uiLanguage == 'ru' ? language.nameRu.toLowerCase() : language.nameEn;
+}
+
+/// «по-итальянски» / «Italian» — for «напиши …» and «прослушай и напиши …».
+///
+/// Russian builds the adverb off the same adjective: `по-` + the stem + `-и`. Every row of
+/// [kLanguages] ends in `-ский` or `-кий`, so dropping the final `ий` is the whole rule —
+/// русский → по-русски, английский → по-английски, немецкий → по-немецки, японский → по-японски.
+/// A row that ever ends otherwise falls back to the adjective rather than inventing a word.
+///
+/// English has no separate form; the preposition lives in the template («write it in {lang}»), which
+/// is exactly why the two locales cannot share one placeholder value.
+String languageAdverbFor(String code, String uiLanguage) {
+  final adjective = languageAdjectiveFor(code, uiLanguage);
+  if (uiLanguage != 'ru' || !adjective.endsWith('ий')) return adjective;
+
+  return 'по-${adjective.substring(0, adjective.length - 2)}и';
+}

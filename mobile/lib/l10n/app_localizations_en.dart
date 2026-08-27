@@ -1048,7 +1048,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionPhasePractice => 'Free practice';
 
   @override
-  String get sessionInstrChoose => 'choose the English equivalent';
+  String sessionInstrChoose(String lang) {
+    return 'choose the $lang equivalent';
+  }
 
   @override
   String get sessionInstrAssemble => 'assemble it from the words';
@@ -1066,13 +1068,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionInstrAssembleSentence => 'put the sentence together';
 
   @override
-  String get sessionInstrType => 'write it in English';
+  String sessionInstrType(String lang) {
+    return 'write it in $lang';
+  }
 
   @override
   String get sessionInstrListenChoose => 'listen and choose the translation · replay any time';
 
   @override
-  String get sessionInstrListenType => 'listen and write it in English';
+  String sessionInstrListenType(String lang) {
+    return 'listen and write it in $lang';
+  }
 
   @override
   String get sessionInstrDictation => 'listen and write the sentence down';
