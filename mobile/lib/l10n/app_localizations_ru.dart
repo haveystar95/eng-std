@@ -2157,21 +2157,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeStatInWork => 'В работе';
 
   @override
-  String homeStatLearnedInline(int count) {
-    return 'Выучено $count';
-  }
-
-  @override
-  String homeStatWeekInline(int count) {
-    return 'за неделю $count';
-  }
-
-  @override
-  String homeStatInWorkInline(int count) {
-    return 'в работе $count';
-  }
-
-  @override
   String homeTomorrowRow(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

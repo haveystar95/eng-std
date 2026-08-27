@@ -2072,21 +2072,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStatInWork => 'In progress';
 
   @override
-  String homeStatLearnedInline(int count) {
-    return 'Learned $count';
-  }
-
-  @override
-  String homeStatWeekInline(int count) {
-    return 'this week $count';
-  }
-
-  @override
-  String homeStatInWorkInline(int count) {
-    return 'in progress $count';
-  }
-
-  @override
   String homeTomorrowRow(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

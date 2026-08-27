@@ -3243,24 +3243,6 @@ abstract class AppLocalizations {
   /// **'В работе'**
   String get homeStatInWork;
 
-  /// Вечерняя строка статистики, первый сегмент (кадр 19-2): вечером цифры уже не решение, а сводка, поэтому одна строка вместо трёх плиток.
-  ///
-  /// In ru, this message translates to:
-  /// **'Выучено {count}'**
-  String homeStatLearnedInline(int count);
-
-  /// Вечерняя строка статистики, второй сегмент (кадр 19-2). Со строчной: продолжение фразы, не заголовок.
-  ///
-  /// In ru, this message translates to:
-  /// **'за неделю {count}'**
-  String homeStatWeekInline(int count);
-
-  /// Вечерняя строка статистики, третий сегмент (кадр 19-2).
-  ///
-  /// In ru, this message translates to:
-  /// **'в работе {count}'**
-  String homeStatInWorkInline(int count);
-
   /// Строка «завтра» (кадры 19-1, 19-2), тап ведёт в «Мои слова». Заменила список «На грани забывания»: три слова с датами отвечали на вопрос, которого никто не задавал, а «сколько будет завтра» — на тот, который задают. Нуля не бывает: при нуле строки нет.
   ///
   /// In ru, this message translates to:

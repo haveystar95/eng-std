@@ -259,13 +259,16 @@ void main() {
       expect(find.byKey(HomeBlockKeys.hardest), findsNothing);
     });
 
-    testWidgets('the evening says the numbers once, in one line', (tester) async {
+    testWidgets('the evening says the numbers in the SAME plates the morning does', (tester) async {
       await pumpHome(tester, evening(), learned: 151);
 
-      // Three segments of one sentence, not three plates: by the evening the numbers are a receipt.
-      expect(find.text('Выучено 151'), findsOneWidget);
-      expect(find.text('за неделю 28'), findsOneWidget);
-      expect(find.text('в работе 41'), findsOneWidget);
+      // Same block, same shape. It was a single line here at first — and one screen saying three
+      // numbers in two different shapes made them read as two different facts.
+      expect(find.byKey(HomeBlockKeys.stats), findsOneWidget);
+      expect(find.text('151'), findsOneWidget);
+      expect(find.text('28'), findsOneWidget);
+      expect(find.text('41'), findsOneWidget);
+      expect(find.text('ВЫУЧЕНО'), findsOneWidget);
     });
   });
 

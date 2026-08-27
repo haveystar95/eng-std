@@ -1558,14 +1558,8 @@
   "homeStatInWork": "В работе",
   "@homeStatInWork": { "description": "Подпись третьего числа плиты статистики (кадр 19-1) — размер пула." },
 
-  "homeStatLearnedInline": "Выучено {count}",
-  "@homeStatLearnedInline": { "description": "Вечерняя строка статистики, первый сегмент (кадр 19-2): вечером цифры уже не решение, а сводка, поэтому одна строка вместо трёх плиток.", "placeholders": { "count": { "type": "int" } } },
 
-  "homeStatWeekInline": "за неделю {count}",
-  "@homeStatWeekInline": { "description": "Вечерняя строка статистики, второй сегмент (кадр 19-2). Со строчной: продолжение фразы, не заголовок.", "placeholders": { "count": { "type": "int" } } },
 
-  "homeStatInWorkInline": "в работе {count}",
-  "@homeStatInWorkInline": { "description": "Вечерняя строка статистики, третий сегмент (кадр 19-2).", "placeholders": { "count": { "type": "int" } } },
 
   "homeTomorrowRow": "{count, plural, one{Завтра выпадет {count} слово} few{Завтра выпадет {count} слова} many{Завтра выпадет {count} слов} other{Завтра выпадет {count} слова}}",
   "@homeTomorrowRow": {

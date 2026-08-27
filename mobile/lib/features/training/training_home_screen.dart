@@ -53,9 +53,9 @@ abstract final class HomeBlockKeys {
   static const done = Key('home-done-card');
   static const idle = Key('home-idle-card');
 
-  /// «Выучено 146 · за неделю 23 · в работе 41» — three numbers on the morning screen (кадр 19-1),
-  /// one line in the evening (кадр 19-2). One key, because it is one block wearing two shapes:
-  /// morning numbers are a decision, evening numbers are a summary.
+  /// «Выучено 146 · за неделю 23 · в работе 41» — the three plates (кадры 19-1, 19-2). The same
+  /// block and the same shape whatever the day is doing: numbers the learner checks daily must not
+  /// change form by time of day, or they read as two different facts.
   static const stats = Key('home-stats');
 
   /// «Завтра выпадет 14 слов →» (кадры 19-1, 19-2).
@@ -288,11 +288,13 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
       ],
       if (stats.isNotEmpty) ...[
         gap,
-        // Three plates in the morning, one line in the evening. Same three numbers: in the morning
-        // they are part of the decision to start, and by the evening they are a receipt.
-        evening
-            ? _StatsLine(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords)
-            : _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
+        // THE SAME PLATES IN EVERY STATE. They were a single line in the evening at first, on the
+        // theory that a closed day turns the numbers from a decision into a receipt — and on the
+        // phone that reading did not survive contact: one screen said the three numbers in two
+        // different shapes, so they read as two different facts. Three numbers the learner checks
+        // every day are one block, and a block that changes shape by time of day is a block they
+        // have to re-find.
+        _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
       ],
       // [место слово-вызова — DAILY-1]
       if (plan.edgeTomorrow != null) ...[
@@ -347,11 +349,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
   /// «Выучено» comes from `/stats` and «в работе» from the plan's own pool count — the two payloads
   /// this screen already watches, and deliberately not a third source for a number that exists.
   List<_StatCell> _statCells(AppLocalizations l, HomePlan plan, {required int learned}) => [
-    if (learned > 0) _StatCell(learned, l.homeStatLearned, l.homeStatLearnedInline(learned)),
-    if (plan.learnedWeek != null)
-      _StatCell(plan.learnedWeek!, l.homeStatWeek, l.homeStatWeekInline(plan.learnedWeek!)),
-    if (plan.inWork.total > 0)
-      _StatCell(plan.inWork.total, l.homeStatInWork, l.homeStatInWorkInline(plan.inWork.total)),
+    if (learned > 0) _StatCell(learned, l.homeStatLearned),
+    if (plan.learnedWeek != null) _StatCell(plan.learnedWeek!, l.homeStatWeek),
+    if (plan.inWork.total > 0) _StatCell(plan.inWork.total, l.homeStatInWork),
   ];
 
   void _openMyWords() {
@@ -1033,21 +1033,18 @@ class _TermRow extends StatelessWidget {
   }
 }
 
-/// One number of the statistics block, with both the shapes it is said in.
-///
-/// [label] is the plate's caption on the morning screen («ВЫУЧЕНО» under 146); [inline] is the whole
-/// segment of the evening's single line («Выучено 151»). Built together so the two cannot come to
-/// name the same number differently.
+/// One number of the statistics block: the figure and its caption («146» under «ВЫУЧЕНО»).
 class _StatCell {
-  const _StatCell(this.value, this.label, this.inline);
+  const _StatCell(this.value, this.label);
   final int value;
-  final String label, inline;
+  final String label;
 }
 
-/// «146 Выучено · 23 За неделю · 41 В работе» (кадр 19-1) — the morning's three plates.
+/// «146 Выучено · 23 За неделю · 41 В работе» (кадр 19-1) — the three plates, in every state.
 ///
 /// The block answers «сколько уже сделано», which is the second of the three questions the screen
-/// exists for, and it sits directly under the answer to the first. The week of dots is deliberately
+/// exists for, and it sits directly under the answer to the first — in the morning under the session
+/// waiting to be started, in the evening under the day just closed. The week of dots is deliberately
 /// NOT here: it lives once, in the header beside the streak, and two calendars on one screen is one
 /// calendar too many.
 ///
@@ -1100,47 +1097,6 @@ class _StatsTile extends StatelessWidget {
                 ),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// «Выучено 151 · за неделю 28 · в работе 41» (кадр 19-2) — the same three numbers, in the evening.
-///
-/// One line rather than three plates, and that is the whole design of the evening screen: in the
-/// morning these numbers are part of a decision, and by the time the day is closed they are a
-/// receipt. Giving a receipt the weight of a decision is how a finished day starts asking for more.
-class _StatsLine extends StatelessWidget {
-  const _StatsLine({super.key, required this.cells, required this.onTap});
-
-  final List<_StatCell> cells;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return MinTapHeight(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (var i = 0; i < cells.length; i++)
-              Flexible(
-                child: Text(
-                  cells[i].inline,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.translation.copyWith(
-                    fontSize: 13,
-                    // The first segment leads and the rest follow it — the line is one sentence,
-                    // not three labels of equal weight.
-                    color: i == 0 ? AppColors.inkBody : AppColors.secondary,
-                  ),
-                ),
-              ),
           ],
         ),
       ),
