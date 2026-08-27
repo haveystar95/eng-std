@@ -79,6 +79,14 @@ abstract final class AppColors {
   /// owner decides against brass, this constant is the one place to delete.
   static const brass = Color(0xFFB79363);
 
+  /// The same warm mark on PAPER, where #B79363 is too light to read: the generation card's arrow
+  /// and the evening's reward line (кадры 19-1, 19-2). One family, two grounds.
+  static const brassInk = Color(0xFF8C6A3A);
+
+  /// The generation card's own outline and icon plate — brass at the weight paper can carry.
+  static const brassHairline = Color(0x8CB79363); // .55 of brass
+  static const brassPlate = Color(0xFF9C7638);
+
   static const verdictUnknown = Color(0xFFB5533C);
 
   /// «Не уверен». Подпись — [onVerdictUnsure].

@@ -8,7 +8,6 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../data/local/app_database.dart' show PoolWordRow;
 import '../../data/local/cached_image_provider.dart';
 import '../../data/local/sync_service.dart' show SyncState;
 import '../../data/models.dart';
@@ -21,9 +20,6 @@ import '../collections/store_view.dart' show showStorePreview;
 import '../daily/word_challenge.dart';
 import '../daily/word_challenge_card.dart';
 import '../home/streak.dart';
-import '../search/search_pair.dart' show LearningPair;
-import '../word_card/word_card_screen.dart';
-import '../word_card/word_card_subject.dart';
 import 'session_screen.dart';
 import 'triage_screen.dart';
 
@@ -298,6 +294,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           today: plan.today,
           session: session,
           award: plan.dayAward,
+          hardest: plan.hardest,
           onTakeNew: () => _openSession(learn: true),
           onExtra: () =>
               _openTriage(session.triageCollectionId!, session.triageCollectionTitle ?? ''),
@@ -312,12 +309,6 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           onSort: () =>
               _openTriage(session.triageCollectionId!, session.triageCollectionTitle ?? ''),
         ),
-      // The evening names what the day got wrong straight under what it closed — «Сегодня закрыто»
-      // and «Далось труднее всего» are one thought, and the summary comes between them nowhere.
-      if (evening && plan.hardest.isNotEmpty) ...[
-        gap,
-        _HardestSection(key: HomeBlockKeys.hardest, terms: plan.hardest, onTap: _openWordCard),
-      ],
       if (stats.isNotEmpty) ...[
         gap,
         // THE SAME PLATES IN EVERY STATE. They were a single line in the evening at first, on the
@@ -464,41 +455,6 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     if (mounted) ref.read(syncServiceProvider).sync();
   }
 
-  /// A word from «На грани забывания» / «Далось труднее всего» opens THE word card — the same one
-  /// «Мои слова» opens, because a word has one card wherever it is met.
-  ///
-  /// The row is looked up in the local pool mirror: the plan carries the term's text so the section
-  /// can render offline, but the card wants the whole word (photo, examples, rung), and that lives
-  /// in the mirror already.
-  Future<void> _openWordCard(String termId) async {
-    AppHaptics.light();
-    final pool = ref.read(poolProvider).value ?? const <PoolWordRow>[];
-    final row = pool.where((r) => r.term.id == termId).firstOrNull;
-    if (row == null) return; // the mirror has not caught up — better nothing than a half card
-    final word = poolWordToWord(row);
-    final pairs = await ref.read(appDatabaseProvider).pairByTerms([termId]);
-    final pair = pairs[termId];
-    final speakLang =
-        pair?.learned ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => WordCardScreen(
-          subject: WordCardSubject.fromWord(word),
-          mode: WordCardMode.folder,
-          // Which shelves «Добавить в коллекцию» may offer — one collection is one pair forever
-          // (DECISIONS п. 81), so a folder of another pair is one the server refuses, not a worse
-          // home. Same resolver the voice above reads.
-          pair: pair == null ? null : LearningPair(learned: pair.learned, support: pair.support),
-          onSpeak: () {
-            AppHaptics.light();
-            (_pronouncer ??= Pronouncer()).speak(word, targetLang: speakLang);
-          },
-          onUnenroll: () => ref.read(poolSyncProvider).unenroll(termId),
-        ),
-      ),
-    );
-  }
 }
 
 /// The date and the streak — «Вторник, 26 августа · Стрик 5» plus the week of dots (кадр 17a).
@@ -761,6 +717,7 @@ class _DoneCard extends StatelessWidget {
     required this.today,
     required this.session,
     required this.award,
+    required this.hardest,
     required this.onExtra,
     required this.onTakeNew,
   });
@@ -771,6 +728,10 @@ class _DoneCard extends StatelessWidget {
   /// «+5 слов продвинулись · reluctant дошло до „написание"» — null on a day that moved nothing,
   /// and then the line is not drawn at all.
   final HomeDayAward? award;
+
+  /// What the day got wrong, worst first. Empty on a clean run — and then neither the rule above it
+  /// nor its label is drawn either.
+  final List<HomeHardTerm> hardest;
 
   /// Open the swipe pass over the fullest unsorted collection.
   final VoidCallback onExtra;
@@ -842,10 +803,9 @@ class _DoneCard extends StatelessWidget {
               style: AppText.translation.copyWith(
                 fontSize: 13.5,
                 height: 1.45,
-                // Full ink, where the lines under it are secondary: the palette has no accent to
-                // spend (paper/ink, no brand colour), so the reward is emphasised by WEIGHT of tone
-                // rather than by hue. It is the one thing on this card that is news, not arithmetic.
-                color: AppColors.ink,
+                // Brass on paper — кадр 19-2 gives the reward the screen's one warm mark, and it
+                // is the one thing on this card that is news rather than arithmetic.
+                color: AppColors.brassInk,
               ),
             ),
           ],
@@ -860,6 +820,43 @@ class _DoneCard extends StatelessWidget {
               ),
             ),
           ],
+          // «ДАЛОСЬ ТРУДНЕЕ ВСЕГО», inside the card and under a rule — кадр 19-2 draws it as part of
+          // «Сегодня закрыто» rather than as a section of its own, and it is one thought: what the
+          // day closed, and what it closed badly. Compressed to a line of names and the worst count,
+          // because a list of rows under a summary is a report.
+          if (hardest.isNotEmpty)
+            // Keyed even though it is nested now: the rule it answers to is «блок без данных не
+            // рисуется», and a guard can only ask for a block it can name.
+            Column(
+              key: HomeBlockKeys.hardest,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 17),
+                const Divider(height: 1, thickness: 1, color: AppColors.dividerFaint),
+                const SizedBox(height: 13),
+                Text(l.homeHardestTitle.toUpperCase(), style: AppText.sectionLabel),
+                const SizedBox(height: AppSpacing.s8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        hardest.map((t) => t.text).join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.stepTitle.copyWith(fontSize: 17),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s12),
+                    Text(
+                      l.homeHardestErrors(hardest.first.errors),
+                      style: AppText.translation.copyWith(fontSize: 12, color: AppColors.tertiary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           if (canTakeNew) ...[
             const SizedBox(height: AppSpacing.s16),
             QuietButton(label: l.homeExtraButton(session.newTerms), onPressed: onTakeNew),
@@ -976,153 +973,6 @@ String _nextReviewLine(BuildContext context, AppLocalizations l, HomeNextReview 
 String formatSessionDuration(AppLocalizations l, int seconds) {
   if (seconds < 60) return l.homeDoneDurationSeconds(seconds);
   return l.homeDoneDuration(seconds ~/ 60, seconds % 60);
-}
-
-/// «Далось труднее всего» (кадр 17b) — the evening's occupant of the same slot: what the run that
-/// just finished actually got wrong.
-class _HardestSection extends StatelessWidget {
-  const _HardestSection({super.key, required this.terms, required this.onTap});
-
-  final List<HomeHardTerm> terms;
-  final void Function(String termId) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return _TermSection(
-      title: l.homeHardestTitle,
-      count: terms.length,
-      rows: [
-        for (final t in terms)
-          _TermRowData(
-            termId: t.termId,
-            text: t.text,
-            translation: t.translation,
-            trailing: l.homeHardestErrors(t.errors),
-          ),
-      ],
-      onTap: onTap,
-    );
-  }
-}
-
-class _TermRowData {
-  const _TermRowData({
-    required this.termId,
-    required this.text,
-    required this.trailing,
-    this.translation,
-  });
-
-  final String termId, text, trailing;
-  final String? translation;
-}
-
-/// A labelled list of words on one raised sheet — the shape both «На грани» and «Труднее всего»
-/// take, so the two sections cannot drift apart typographically.
-class _TermSection extends StatelessWidget {
-  const _TermSection({
-    required this.title,
-    required this.count,
-    required this.rows,
-    required this.onTap,
-  });
-
-  final String title;
-  final int count;
-  final List<_TermRowData> rows;
-  final void Function(String termId) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(child: Text(title.toUpperCase(), style: AppText.sectionLabel)),
-            Text(
-              l.homeSectionCount(count),
-              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.s8),
-        PaperCard(
-          radius: 22,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
-          child: Column(
-            children: [
-              for (var i = 0; i < rows.length; i++)
-                _TermRow(
-                  data: rows[i],
-                  divided: i < rows.length - 1,
-                  onTap: () => onTap(rows[i].termId),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TermRow extends StatelessWidget {
-  const _TermRow({required this.data, required this.divided, required this.onTap});
-
-  final _TermRowData data;
-  final bool divided;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.wordRowPadV),
-        decoration: divided
-            ? const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.dividerFaint)),
-              )
-            : null,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data.text,
-                    style: AppText.termInList,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (data.translation != null && data.translation!.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      data.translation!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.translation.copyWith(
-                        fontSize: 12.5,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.s12),
-            Text(
-              data.trailing,
-              style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.secondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 /// One number of the statistics block: the figure and its caption («146» under «ВЫУЧЕНО»).
@@ -1261,24 +1111,28 @@ class _GenerateCard extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final chips = [l.homeGenerateChipInterview, l.homeGenerateChipVet, l.homeGenerateChipMoving];
 
-    return PaperCard(
-      radius: 24,
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      onTap: withField ? null : () => _open(context),
+    final card = Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(withField ? 24 : 22),
+        // BRASS, and the only outline on the paper ground. Кадры 19-1 / 19-2 / 19-3 mark this card
+        // and nothing else: it is the screen's second door, and the border is how they say so.
+        border: Border.all(color: AppColors.brassHairline),
+      ),
+      padding: EdgeInsets.all(withField ? AppSpacing.s16 : 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              // The spark, on an ink plate. The frame draws a brass gradient here; the palette has
-              // no brass and no gradients (paper/ink, tokens.html), and where the token list and a
-              // frame disagree the token list wins.
+              // The spark on a brass plate. The frame fills it with a gradient; the palette has no
+              // gradients, so it is the flat token — same colour, one technique fewer.
               Container(
                 width: 36,
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.ink,
+                  color: AppColors.brassPlate,
                   borderRadius: BorderRadius.circular(AppRadii.small),
                 ),
                 child: const Icon(LucideIcons.sparkles, size: 19, color: AppColors.paper),
@@ -1308,7 +1162,7 @@ class _GenerateCard extends StatelessWidget {
               ),
               if (!withField) ...[
                 const SizedBox(width: AppSpacing.s8),
-                const Icon(LucideIcons.arrowRight, size: 16, color: AppColors.secondary),
+                const Icon(LucideIcons.arrowRight, size: 16, color: AppColors.brassInk),
               ],
             ],
           ),
@@ -1371,6 +1225,16 @@ class _GenerateCard extends StatelessWidget {
         ],
       ),
     );
+
+    // With a field the card has its own tap targets — the field and the three chips — and a wrapper
+    // over them would swallow the chip taps. Without one, the whole card is the button.
+    return withField
+        ? card
+        : GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _open(context),
+            child: card,
+          );
   }
 }
 
@@ -1439,6 +1303,10 @@ class _StoreShowcase extends StatelessWidget {
     // what says «здесь есть ещё» — a strip that ends exactly at the fold reads as the whole shop.
     final width = large ? 171.0 : 96.0;
     final height = large ? 108.0 : 70.0;
+    // Photo plus the caption under it: the gap, a title of up to two lines, and the meta. Fixed,
+    // because a horizontal list needs a height and every tile must get the same one — a two-line
+    // title is not a reason for a taller neighbour.
+    final tile = height + (large ? 68.0 : 56.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1473,7 +1341,7 @@ class _StoreShowcase extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.s8),
         SizedBox(
-          height: height,
+          height: tile,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
@@ -1493,15 +1361,16 @@ class _StoreShowcase extends StatelessWidget {
   }
 }
 
-/// One cover: the photograph, with the name and «16 слов · A2» over its lower third.
+/// One deck of the window: the photograph, and UNDER it the name and «16 слов · A2».
 ///
-/// Over rather than under, and that is the point of the strip — the caption belongs to the picture,
-/// so the eye reads one object per deck instead of a picture and a line about it. The scrim is the
-/// palette's own ([AppColors.scrim] is ink at .42), because white type on an unknown photograph is
-/// legible only if something guarantees the ground under it.
+/// Under and not over. The caption was set over the lower third of the photo on a scrim first — a
+/// reasonable way to build a cover, and not the one the frames draw: кадры 19-2 / 19-3 put ink type
+/// on paper below the picture, which is what the rest of this product looks like. White type on an
+/// unknown photograph is a second design language, and the screen has room for one.
 ///
-/// A deck with no cover gets the paper plate and the SAME layout — ink type instead of white — so a
-/// strip of mixed decks does not change shape halfway along.
+/// A deck with NO photograph gets a paper plate carrying the initial of its name — not a grey box
+/// with a picture icon. The «Drop an image» placeholders in the frame are a mock-up artefact; in the
+/// app a deck without a cover must still look like a deck rather than like a failure to load.
 class _StoreCoverTile extends StatelessWidget {
   const _StoreCoverTile({
     required this.item,
@@ -1529,88 +1398,71 @@ class _StoreCoverTile extends StatelessWidget {
 
     final plate = DecoratedBox(
       decoration: BoxDecoration(color: AppColors.photoPlate, borderRadius: radius),
+      child: Center(
+        child: Text(
+          _initial,
+          style: AppText.stepTitle.copyWith(
+            fontSize: large ? 34 : 24,
+            color: AppColors.plateLabel,
+          ),
+        ),
+      ),
     );
 
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         width: width,
-        height: height,
-        child: ClipRRect(
-          borderRadius: radius,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (hasPhoto)
-                Image(
-                  image: CachedNetworkImage(url),
-                  fit: BoxFit.cover,
-                  loadingBuilder: (_, child, progress) => progress == null ? child : plate,
-                  errorBuilder: (_, _, _) => plate,
-                )
-              else
-                plate,
-              if (hasPhoto)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: height * 0.72,
-                  child: const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, AppColors.scrim, AppColors.ink],
-                      ),
-                    ),
-                  ),
-                ),
-              Positioned(
-                left: large ? 12 : 6,
-                right: large ? 12 : 6,
-                bottom: large ? 10 : 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.title,
-                      // TWO LINES even in the narrow strip. The frame's mock decks are called
-                      // «Аэропорт»; the catalogue's are called «Знакомство и small talk», and on one
-                      // line at 96 pt that came out as «Знакомст…» — a cover whose caption names no
-                      // deck. Two lines and the meta below still sit inside the gradient.
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.collectionNameCard.copyWith(
-                        fontSize: large ? 16.5 : 12.5,
-                        height: 1.1,
-                        color: hasPhoto ? AppColors.paper : AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      meta,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.translation.copyWith(
-                        // The level is the whole point of this line, so it must not be what gets
-                        // cut: «20 слов · A2–B1» has to fit the cover's width, and at 10.5 it did
-                        // not — the strip printed «20 слов · A2…».
-                        fontSize: large ? 11.5 : 9.5,
-                        color: hasPhoto
-                            ? AppColors.paper.withValues(alpha: 0.82)
-                            : AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: width,
+              height: height,
+              child: ClipRRect(
+                borderRadius: radius,
+                child: hasPhoto
+                    ? Image(
+                        image: CachedNetworkImage(url),
+                        fit: BoxFit.cover,
+                        loadingBuilder: (_, child, progress) => progress == null ? child : plate,
+                        errorBuilder: (_, _, _) => plate,
+                      )
+                    : plate,
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: large ? 9 : 7),
+            Text(
+              item.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.collectionNameCard.copyWith(
+                fontSize: large ? 16.5 : 13,
+                height: 1.15,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              meta,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.translation.copyWith(
+                fontSize: large ? 11.5 : 10.5,
+                color: AppColors.tertiary,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  /// The first letter of the deck's name, for a cover with no photograph.
+  String get _initial {
+    final trimmed = item.title.trim();
+
+    return trimmed.isEmpty ? '·' : trimmed.substring(0, 1).toUpperCase();
   }
 }
 
