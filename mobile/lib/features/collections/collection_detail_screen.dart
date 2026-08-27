@@ -18,6 +18,7 @@ import '../../data/word_status.dart';
 import '../home/home_cta.dart';
 import '../home/limit_reached_card.dart';
 import '../practice_dialog/dialog_entry_button.dart';
+import '../search/search_pair.dart' show LearningPair;
 import '../training/session_screen.dart';
 import '../training/triage_screen.dart';
 import '../word_card/word_card_screen.dart';
@@ -477,6 +478,17 @@ class _CollectionDetailScreenState extends ConsumerState<CollectionDetailScreen>
                       word: items[i],
                       showDivider: i < items.length - 1,
                       onSpeak: () => _speak(items[i]),
+                      // A collection IS a pair (DECISIONS п. 81), so this screen never has to
+                      // resolve one — it is holding it. It rides down to the word card so
+                      // «Добавить в коллекцию» offers only the shelves that can legally take this
+                      // word, instead of every folder the learner owns and a refusal from the
+                      // server.
+                      pair: collection == null
+                          ? null
+                          : LearningPair(
+                              learned: collection.targetLang,
+                              support: collection.sourceLang,
+                            ),
                       // Own folder → the full card; a store deck stays on the compact sheet.
                       folder: readOnly
                           ? null
@@ -983,6 +995,7 @@ class _WordRow extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.folder,
+    this.pair,
     this.onMove,
     this.onTrain,
     this.onEnroll,
@@ -997,6 +1010,10 @@ class _WordRow extends StatefulWidget {
   /// one of the learner's shelves and the card must not name it as one. It says WHERE the word is,
   /// never whether it gets a card.
   final SavedFolder? folder;
+
+  /// The pair this collection is in — «изучаемый ← язык поддержки». The word card's
+  /// «Добавить в коллекцию» filters its list by it, because one collection is one pair forever.
+  final LearningPair? pair;
 
   /// «Тренировать слово» from the expanded card: a practice session filtered to this term.
   final VoidCallback? onTrain;
@@ -1049,6 +1066,7 @@ class _WordRowState extends State<_WordRow> {
             folders: folder == null ? const [] : [folder],
           ),
           mode: WordCardMode.folder,
+          pair: widget.pair,
           onSpeak: widget.onSpeak,
           onTrain: () => widget.onTrain?.call(),
           onEnroll: widget.onEnroll,

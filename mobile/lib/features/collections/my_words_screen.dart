@@ -12,6 +12,7 @@ import '../../data/models.dart';
 import '../../data/practice/learning_ladder.dart';
 import '../../data/pronouncer.dart';
 import '../../data/providers.dart';
+import '../search/search_pair.dart' show LearningPair;
 import '../training/session_screen.dart';
 import 'ladder_legend.dart';
 import '../word_card/word_card_screen.dart';
@@ -203,13 +204,22 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
   Future<void> _openCard(PoolWordRow row) async {
     final word = poolWordToWord(row);
     final pairs = await ref.read(appDatabaseProvider).pairByTerms([word.termId]);
-    final speakLang = pairs[word.termId]?.learned ?? _fallbackLang;
+    final pair = pairs[word.termId];
+    final speakLang = pair?.learned ?? _fallbackLang;
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => WordCardScreen(
           subject: WordCardSubject.fromWord(word),
           mode: WordCardMode.folder,
+          // WHICH SHELVES «Добавить в коллекцию» may offer. One collection is one pair forever
+          // (DECISIONS п. 81), so a collection of another pair is not a worse home for this word —
+          // it is one the server refuses. The sheet has filtered by pair since the search screen
+          // got it; this entry point simply never handed the pair over, so «Мои слова» offered
+          // every folder the learner owns and let the server say no.
+          pair: pair == null
+              ? null
+              : LearningPair(learned: pair.learned, support: pair.support),
           onSpeak: () {
             AppHaptics.light();
             _pronouncer.speak(word, targetLang: speakLang);

@@ -17,6 +17,7 @@ import '../collections/collection_detail_screen.dart';
 import '../collections/generate_screen.dart';
 import '../collections/my_words_screen.dart';
 import '../home/streak.dart';
+import '../search/search_pair.dart' show LearningPair;
 import '../word_card/word_card_screen.dart';
 import '../word_card/word_card_subject.dart';
 import 'session_screen.dart';
@@ -304,8 +305,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     if (row == null) return; // the mirror has not caught up — better nothing than a half card
     final word = poolWordToWord(row);
     final pairs = await ref.read(appDatabaseProvider).pairByTerms([termId]);
+    final pair = pairs[termId];
     final speakLang =
-        pairs[termId]?.learned ??
+        pair?.learned ??
         ref.read(authControllerProvider).value?.profile?.targetLanguage ??
         'en';
     if (!mounted) return;
@@ -314,6 +316,12 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         builder: (_) => WordCardScreen(
           subject: WordCardSubject.fromWord(word),
           mode: WordCardMode.folder,
+          // Which shelves «Добавить в коллекцию» may offer — one collection is one pair forever
+          // (DECISIONS п. 81), so a folder of another pair is one the server refuses, not a worse
+          // home. Same resolver the voice above reads.
+          pair: pair == null
+              ? null
+              : LearningPair(learned: pair.learned, support: pair.support),
           onSpeak: () {
             AppHaptics.light();
             (_pronouncer ??= Pronouncer()).speak(word, targetLang: speakLang);

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,7 @@ import 'package:eng_std/features/word_card/word_card_screen.dart';
 import 'package:eng_std/features/word_card/word_card_subject.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/theme/theme.dart';
+import 'package:eng_std/ui/ui.dart' show PairBadge;
 
 /// «Одна коллекция — одна пара» as the SAVE path sees it (A-3, ч.2; DECISIONS пп. 81, 141, 142).
 ///
@@ -94,12 +97,13 @@ WordCollection _collection(
   required String source,
   required String target,
   bool isDefault = false,
+  int words = 0,
 }) => WordCollection(
   id: id,
   title: title,
   source: 'user',
   type: 'custom',
-  wordsCount: 0,
+  wordsCount: words,
   sourceLang: source,
   targetLang: target,
   isDefault: isDefault,
@@ -172,6 +176,30 @@ void main() {
       // the support language, and neither could show this word's translation.
       expect(find.text('Praca'), findsNothing);
       expect(find.text('Munca'), findsNothing);
+    });
+
+    testWidgets('says WHICH shelf it is showing, and how big each one is', (tester) async {
+      // A filtered list that does not say it is filtered reads as a list with collections missing
+      // from it. The badge is the app's own `PairBadge` — the same one over a card in a mixed
+      // session — so «which language is this» is answered the same way everywhere.
+      //
+      // The counter beside each row is what tells «Работа» with four words apart from «Работа» with
+      // two hundred, which is the actual choice when two shelves share a topic.
+      final api = _Api();
+      await _pump(
+        tester,
+        api: api,
+        collections: [
+          _collection('A', 'Работа', source: 'ru', target: 'en', words: 4),
+          _collection('B', 'Аэропорт', source: 'ru', target: 'en', words: 128),
+        ],
+      );
+
+      await _openSheet(tester);
+
+      expect(find.byType(PairBadge), findsOneWidget);
+      expect(find.text('4'), findsOneWidget);
+      expect(find.text('128'), findsOneWidget);
     });
 
     testWidgets('a collection that already holds the word is shown, inert, and says so', (
@@ -368,4 +396,61 @@ void main() {
       expect(find.text('+ Сохранённые'), findsOneWidget);
     });
   });
+
+  _everyEntryPointStatesThePair();
+}
+
+/// THE WATCHDOG — every door into the word card hands over the pair.
+///
+/// The filter above is only as good as its input, and `pair` is optional by design: a caller with
+/// nothing to state passes null and the sheet honestly offers everything. That optionality is
+/// exactly how the bug came back — «Мои слова», «Главная» and the collection screen each opened the
+/// card without it, so the owner's «Добавить в коллекцию» listed every folder they own and let the
+/// server refuse the save (BUGFIX-2). Each of the three ALREADY KNEW the pair: two had just
+/// resolved it for the voice, and the third IS a pair.
+///
+/// So this is a rule about call sites, and it is checked the way the trainer's locale rule is
+/// (`tts_locale_follows_pair_test.dart`): by reading the source. A new screen that opens a word card
+/// has to say which pair the word is in, or say out loud here that it genuinely cannot.
+void _everyEntryPointStatesThePair() {
+  test('no screen opens the word card without naming its pair', () {
+    final offenders = <String>[];
+
+    for (final file in Directory('lib/features').listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith('.dart')) continue;
+      // The screen's own file declares the constructor; `pair` is a field there, not an argument.
+      if (file.path.endsWith('word_card_screen.dart')) continue;
+      final source = file.readAsStringSync();
+      // The constructor's own argument list, found by matching parentheses — a regex stopping at
+      // the first `),` would stop inside `WordCardSubject.fromWord(…)` and read the wrong list.
+      for (final call in RegExp(r'WordCardScreen\(').allMatches(source)) {
+        final args = _argumentList(source, call.end - 1);
+        if (args != null && !args.contains('pair:')) offenders.add(file.path);
+      }
+    }
+
+    expect(
+      offenders,
+      isEmpty,
+      reason:
+          'A word card opened without a pair offers every collection the learner owns, including '
+          'the ones the server will refuse. Pass `pair:` — from `AppDatabase.pairByTerms` for a '
+          'pool word, or from the collection itself:\n${offenders.join("\n")}',
+    );
+  });
+}
+
+/// The text between the parenthesis at [open] and its match, or null if it never closes.
+String? _argumentList(String source, int open) {
+  var depth = 0;
+  for (var i = open; i < source.length; i++) {
+    final c = source[i];
+    if (c == '(') depth++;
+    if (c == ')') {
+      depth--;
+      if (depth == 0) return source.substring(open + 1, i);
+    }
+  }
+
+  return null;
 }

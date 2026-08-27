@@ -81,16 +81,31 @@ class CollectionSaver {
     final offered = collectionsForPair;
     final holding = {for (final f in subject.folders) f.id};
 
+    final p = pair;
+
     final choice = await showAppBottomSheet<String>(
       context: context,
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // The heading says WHAT this is; the badge under it says WHICH SHELF the list belongs to.
+          // Both, because the list is filtered and a filtered list that does not say so reads as a
+          // list with collections missing from it.
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-            child: Text(l.searchAddToCollection, style: AppText.sectionLabel),
+            padding: const EdgeInsets.only(top: AppSpacing.s8, bottom: AppSpacing.s4),
+            child: Text(
+              l.searchAddToCollection,
+              textAlign: TextAlign.center,
+              style: AppText.sectionLabel,
+            ),
           ),
+          if (p != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+              child: Center(child: PairBadge(learned: p.learned, support: p.support)),
+            ),
+          const Divider(height: 1, thickness: 1, color: AppColors.hairline),
           for (final collection in offered)
             if (holding.contains(collection.id))
               // Inert, and it says why: tapping it would spend a round trip to be told the word is
@@ -102,19 +117,24 @@ class CollectionSaver {
                   l.searchAlreadyIn(collection.title),
                   style: AppText.translation.copyWith(color: AppColors.tertiary),
                 ),
+                trailing: _WordCount(collection.wordsCount, muted: true),
               )
             else
               AppSheetRow(
                 title: Text(collection.title, style: AppText.translation),
+                // How big the shelf is — the one fact that tells «Аэропорт» with four words apart
+                // from «Аэропорт» with two hundred, which is what the learner is actually choosing
+                // between when two collections share a topic.
+                trailing: _WordCount(collection.wordsCount),
                 onTap: () => Navigator.of(context).pop(collection.id),
               ),
           // ALWAYS present, and it names the pair. When the list above is empty — the learner's
           // first word in this pair — it is the only way forward, and it must not read as an
-          // afterthought.
+          // afterthought, so it keeps the ink weight of a real row rather than fading out.
           AppSheetRow(
             leading: const Icon(LucideIcons.plus, size: 18, color: AppColors.ink),
             title: Text(
-              pair == null ? l.searchNewCollection : l.searchNewCollectionInPair(_pairLabel(pair!)),
+              p == null ? l.searchNewCollection : l.searchNewCollectionInPair(_pairLabel(p)),
               style: AppText.translation,
             ),
             onTap: () => Navigator.of(context).pop(_newCollectionSentinel),
@@ -226,23 +246,19 @@ class CollectionSaver {
     String? learned,
     String? support,
   }) async {
-    final controller = TextEditingController(
-      text: learned == null ? '' : _pairText(learned, support),
-    );
-    final title = await showDialog<String>(
+    // The app's own alert frame, not Material's `AlertDialog` — that one arrived with its own
+    // surface, radius and type, and was the last place in the app still contradicting the tokens.
+    // The pair is pre-filled as the name, exactly as before: it is the honest default for a folder
+    // whose whole identity is «these two languages», and it is the first thing the field selects
+    // away from if the learner wants something else.
+    final title = await showCenterPrompt(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceRaised,
-        title: Text(l.searchNewCollection, style: AppText.collectionNameCard),
-        content: TextField(controller: controller, autofocus: true, style: AppText.translation),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l.commonCancel)),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: Text(l.commonSave),
-          ),
-        ],
-      ),
+      title: l.searchNewCollection,
+      // The pair is the pre-filled NAME and is not repeated as a message above it: it is already on
+      // screen, and saying it twice in a 274-point box reads as two different facts.
+      initialValue: learned == null ? '' : _pairText(learned, support),
+      confirmLabel: l.commonSave,
+      cancelLabel: l.commonCancel,
     );
     if (title == null || title.isEmpty || !context.mounted) return null;
 
@@ -293,4 +309,26 @@ class CollectionSaver {
   static String _pairText(String learned, String? support) => support == null
       ? languageByCode(learned).endonym
       : '${languageByCode(learned).endonym} → ${languageByCode(support).endonym}';
+}
+
+/// How many words are on this shelf. A quiet trailing numeral, not a badge: it is a fact about the
+/// row, and the row's name is what the learner is reading.
+class _WordCount extends StatelessWidget {
+  const _WordCount(this.count, {this.muted = false});
+
+  final int count;
+
+  /// The row is inert (the word is already there), so its counter must not be the brightest thing
+  /// on a line the learner cannot tap.
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    '$count',
+    // Tabular figures, like every other counter here: a column of numbers on a list of rows must not
+    // jitter as the digits change.
+    style: AppText.counterSmall.copyWith(
+      color: muted ? AppColors.tertiary : AppColors.secondary,
+    ),
+  );
 }
