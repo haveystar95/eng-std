@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../features/daily/word_challenge.dart' show ChallengeTerm;
 import '../practice/learning_ladder.dart';
 
 part 'app_database.g.dart';
@@ -1212,6 +1213,54 @@ class AppDatabase extends _$AppDatabase {
       customSelect('SELECT 1', readsFrom: {termProgress, syncMeta}).watch();
 
   Future<List<TermProgressData>> allProgress() => select(termProgress).get();
+
+  /// The mirror as the WORD-CHALLENGE sees it: every term that has a translation and a pair, with
+  /// its example and whether it is already in the queue.
+  ///
+  /// One query for both halves of the card, because they are two views of the same rows: the SUBJECT
+  /// is a word not in the pool, and the wrong OPTIONS are other translations of the same pair, pool
+  /// words included. Reading them separately would mean two scans and a second chance to disagree
+  /// about what a pair is.
+  ///
+  /// The pair comes from the term's collection, resolved the same way {@link pairByTerms} resolves
+  /// it — first by collection id — so a word in two folders of the same pair counts once and the
+  /// answer does not depend on join order. A term with no collection is absent: without a pair there
+  /// is no honest set of options to put under it.
+  Future<List<ChallengeTerm>> challengeMirror() async {
+    final query =
+        select(terms).join([
+            innerJoin(collectionItems, collectionItems.termId.equalsExp(terms.id)),
+            innerJoin(collections, collections.id.equalsExp(collectionItems.collectionId)),
+            leftOuterJoin(termProgress, termProgress.termId.equalsExp(terms.id)),
+          ])
+          ..where(terms.translation.isNotNull() & collections.targetLang.isNotNull())
+          ..orderBy([OrderingTerm(expression: collections.id)]);
+
+    final out = <String, ChallengeTerm>{};
+    for (final row in await query.get()) {
+      final term = row.readTable(terms);
+      if (out.containsKey(term.id)) continue; // first collection by id wins, as everywhere else
+      final collection = row.readTable(collections);
+      final learned = collection.targetLang, support = collection.sourceLang;
+      final text = term.termText, translation = term.translation;
+      if (learned == null || support == null || text == null || translation == null) continue;
+
+      out[term.id] = ChallengeTerm(
+        termId: term.id,
+        text: text,
+        translation: translation,
+        learned: learned,
+        support: support,
+        // NOT «has a progress row»: a row with a null `enrolled_at` is a word that was seen, or
+        // paused, and neither of those is being studied. The pool is the column, not the row.
+        inPool: row.readTableOrNull(termProgress)?.enrolledAt != null,
+        example: term.example,
+        exampleTranslation: term.exampleTranslation,
+      );
+    }
+
+    return out.values.toList();
+  }
 
   /// One `sync_meta` value, reactive — the read side of the aggregates the delta feed doesn't
   /// carry (the home screen's day). Same shape as [watchStatsSources]: the screen reads the local

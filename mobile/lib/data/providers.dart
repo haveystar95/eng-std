@@ -12,6 +12,8 @@ import 'config.dart';
 import 'device_timezone.dart';
 import 'exposure_sync.dart';
 import 'generation_controller.dart';
+import '../features/daily/word_challenge.dart';
+import '../features/daily/word_challenge_store.dart';
 import 'local/app_database.dart';
 import 'local/cached_image_provider.dart';
 import 'local/image_disk_cache.dart';
@@ -112,6 +114,40 @@ final sessionCompletionSyncProvider = Provider<SessionCompletionSync>((ref) {
 /// the verbs are idempotent and there is no order to protect.
 final poolSyncProvider = Provider<PoolSync>((ref) {
   return PoolSync(ref.watch(apiClientProvider), ref.watch(appDatabaseProvider));
+});
+
+/// The word-challenge's data source (кадр 19-4) — and the seam DAILY-1 replaces.
+final wordChallengeStoreProvider = Provider<WordChallengeStore>((ref) {
+  return WordChallengeStore(ref.watch(appDatabaseProvider));
+});
+
+/// TODAY'S CHALLENGE, or null when the mirror cannot honestly produce one.
+///
+/// Watches the two things that can change it: the stored state (an answer, a collapse, a new day)
+/// and the mirror itself (a sync that brought new words, an enrolment that took one out of the
+/// candidate pool). Both are local reads, like every other screen here — the card works on a plane.
+///
+/// Null flows through to the screen as «draw nothing». An empty mirror, a pair with fewer than three
+/// translations, a learner studying everything they own: all of them are days without a challenge,
+/// and none of them is a card apologising for itself.
+final wordChallengeProvider = StreamProvider<WordChallenge?>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final store = ref.watch(wordChallengeStoreProvider);
+  final userId = ref.watch(authControllerProvider).value?.id;
+  if (userId == null) return Stream.value(null);
+
+  // Both triggers, folded into one stream. `watchStatsSources` fires on progress and meta writes —
+  // which is exactly «the learner answered», «the learner pressed Учить» and «a sync landed».
+  return db.watchStatsSources().asyncMap((_) async {
+    try {
+      return await store.today(now: DateTime.now(), userId: userId);
+    } catch (e, st) {
+      // A card is not worth a broken home screen.
+      debugPrint('[challenge] could not build today: $e\n$st');
+
+      return null;
+    }
+  });
 });
 
 /// «Мои слова» — every word the learner has taken into study, newest first, straight from the local
@@ -399,7 +435,9 @@ final collectionsProgressProvider = StreamProvider<Map<String, CollectionProgres
 /// so the words and the cards can never describe different sets. The intro trainer's own switch is
 /// read out of the local mirror exactly as the offline session builder reads it — with it off, a
 /// first meeting starts at recognition and costs one card less.
-final collectionCardCostProvider = StreamProvider<Map<String, ({int due, int learn})>>((ref) async* {
+final collectionCardCostProvider = StreamProvider<Map<String, ({int due, int learn})>>((
+  ref,
+) async* {
   final db = ref.watch(appDatabaseProvider);
   final enabled = PracticeModes.fromWire(await db.getMeta(SyncKeys.exerciseModes));
   final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
@@ -482,11 +520,7 @@ DensityBucket classifyDensity({
 /// The three counts behind a collection's density bar, in the status vocabulary.
 /// `mastered + inWork + toSort == collection total`.
 class CollectionDensity {
-  const CollectionDensity({
-    required this.mastered,
-    required this.inWork,
-    required this.toSort,
-  });
+  const CollectionDensity({required this.mastered, required this.inWork, required this.toSort});
   final int mastered, inWork, toSort;
   int get total => mastered + inWork + toSort;
 }
