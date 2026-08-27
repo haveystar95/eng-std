@@ -411,6 +411,11 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
   /// where there was no mistake, and `typo` is accepted.
   Set<int> _mistakes(List<String> words) {
     if (!_answered || (_verdict?.isAccepted ?? true)) return const {};
+    // Nothing to mark on the LETTER form: the chips are one word being spelled, so «which of these
+    // is not in the answer» has no honest answer — every letter IS in it, and what went wrong is the
+    // order. Marking all seven of them said the opposite. The wrong-verdict underline plus the
+    // correct form below already say everything this card can say.
+    if (_assemblesLetters) return const {};
 
     return SessionGrader.misplacedWords(words, _card.answer);
   }
@@ -508,7 +513,13 @@ class _SessionExerciseCardState extends ConsumerState<SessionExerciseCard> {
     setState(() => _placed.remove(i));
   }
 
-  String get _assembled => _placed.map((i) => _chips[i]).join(' ');
+  /// What the assembly line COMMITS — and the separator is not cosmetic.
+  ///
+  /// Word chips are a phrase and join with spaces; LETTER chips are one word and join with nothing.
+  /// The letter branch became reachable in BUGFIX-2 Ч.2б D2 and inherited the space, so a perfectly
+  /// assembled `dolphin` was uploaded as «d o l p h i n» and graded wrong — on the owner's phone,
+  /// first run. The answer key is the term, and the term has no spaces in it.
+  String get _assembled => _placed.map((i) => _chips[i]).join(_assemblesLetters ? '' : ' ');
 
   void _submitAssembled() {
     if (_placed.isEmpty) return;
@@ -1445,7 +1456,10 @@ class _AssemblyLine extends StatelessWidget {
                     ),
             )
           : Wrap(
-              spacing: 9,
+              // Letters are ONE WORD being built, so they stand shoulder to shoulder; words are a
+              // phrase and keep the gap that separates them. At the word spacing a letter line read
+              // as «d o l p h i n» — seven tokens rather than the word it is.
+              spacing: letters ? 1 : 9,
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.end,
               children: [

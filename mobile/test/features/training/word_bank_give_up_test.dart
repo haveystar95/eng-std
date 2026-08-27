@@ -17,6 +17,13 @@ import 'package:eng_std/l10n/app_localizations.dart';
 /// something wrong on purpose — and a wrong answer and a blank one are not the same statement:
 /// one says «I thought it was this», the other says «I have nothing». The server grades the empty
 /// response as the lapse it is, which is why this is one code path and not a second verdict.
+/// The chips in the TRAY, in the order the card dealt them.
+///
+/// `_WordChip` is private to the screen's own library, so it cannot be named by type here. Found by
+/// its runtime type instead of by its text on purpose: a placed chip's letter also appears in the
+/// assembly line, and `invoice` has two `i`s — finding by text would be ambiguous twice over.
+final _trayChip = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_WordChip');
+
 void main() {
   const termId = '01M00WHZFYJSYW76Z4B4BBASXC';
 
@@ -130,6 +137,57 @@ void main() {
     expect(find.textContaining('собери из букв'), findsOneWidget);
     expect(find.text('Собери из букв ниже'), findsOneWidget);
     expect(find.textContaining('собери из слов'), findsNothing);
+  });
+
+  testWidgets('the assembled letters commit as ONE WORD, not as spaced tokens', (tester) async {
+    // The bug the owner met on the very first phone run: the assembly line joined its chips with a
+    // space — right for word chips, and for letter chips it uploaded «d o l p h i n» for a correctly
+    // spelled `dolphin`, which the grader then marked wrong. The key is the TERM, and the term has
+    // no spaces in it.
+    await tester.pumpWidget(host(wordBank()));
+    await tester.pumpAndSettle();
+
+    // Tapped by POSITION in the tray, not by letter: `invoice` has two `i`s, and once a chip is
+    // placed its letter also stands in the assembly line, so finding by text would be ambiguous
+    // twice over. The fixture's chips are already in the answer's order.
+    for (var i = 0; i < 'invoice'.length; i++) {
+      await tester.tap(_trayChip.at(i));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.text('Проверить'));
+    await tester.pumpAndSettle();
+
+    expect(answers, hasLength(1));
+    expect(answers.single.response, 'invoice');
+    expect(answers.single.verdict, LocalCheck.correct);
+  });
+
+  testWidgets('a PHRASE still commits with the spaces that separate its words', (tester) async {
+    final phrase = SessionCard(
+      termId: termId,
+      mode: ExerciseMode.wordBank,
+      type: 'phrase',
+      prompt: 'стойка регистрации',
+      answer: 'front desk',
+      chips: const ['desk', 'front'],
+      ladderStep: 3,
+    );
+
+    await tester.pumpWidget(host(phrase));
+    await tester.pumpAndSettle();
+
+    // The tray is shuffled ('desk' first here), so the words are tapped in the order the ANSWER
+    // wants them, found by their position in the tray.
+    await tester.tap(_trayChip.at(1)); // front
+    await tester.pumpAndSettle();
+    await tester.tap(_trayChip.at(0)); // desk
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Проверить'));
+    await tester.pumpAndSettle();
+
+    expect(answers.single.response, 'front desk');
+    expect(answers.single.verdict, LocalCheck.correct);
   });
 
   testWidgets('a PHRASE still says «собери из слов» — nothing moved for it', (tester) async {
