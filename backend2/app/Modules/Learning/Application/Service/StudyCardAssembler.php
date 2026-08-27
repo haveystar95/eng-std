@@ -339,12 +339,12 @@ final readonly class StudyCardAssembler
     /**
      * The trainers free practice may pick from for this pair.
      *
-     * For a POOL pair: the switched-on set, unfiltered — the ladder does not narrow free practice,
-     * which is what {@see ExerciseSelector::selectForPractice()} has always done and what keeps
-     * dictation reachable on a real pool (QA-26).
+     * For a pair ON A RUNG OF ITS OWN: the switched-on set, unfiltered — the ladder does not narrow
+     * free practice, which is what {@see ExerciseSelector::selectForPractice()} has always done and
+     * what keeps dictation reachable on a real pool (QA-26).
      *
-     * For a pair OUTSIDE the pool — a word of the collection nobody has taken into study, which a
-     * collection's practice now reaches — the matrix DOES narrow it, to what it opens at
+     * For a pair with NO RUNG OF ITS OWN — a word of the collection nobody has taken into study, or
+     * a pool word still at rung 0 — the matrix DOES narrow it, to what it opens at
      * {@see LearningLadder::STEP_UNENROLLED_PRACTICE}: choice and assembly, never typed production
      * or dictation. Such a word has no rung to have earned them with.
      *
@@ -358,13 +358,43 @@ final readonly class StudyCardAssembler
      */
     private function practiceModes(DueTermView $view, EnabledModes $enabled, ModeAdmission $admission): EnabledModes
     {
-        if ($view->inPool) {
+        if ($this->drillsAtOwnRung($view)) {
             return $enabled;
         }
 
         $opened = $admission->only($enabled->modes, LearningLadder::STEP_UNENROLLED_PRACTICE);
 
         return new EnabledModes($opened !== [] ? $opened : [ExerciseMode::MultipleChoice]);
+    }
+
+    /**
+     * Is this pair drilled at a rung IT HAS EARNED — or at the fixed easy one?
+     *
+     * Never «may it be drilled»: free practice is open to every word, always. A drill moves nothing
+     * — no enrolment, no exposure, no quota, no rung, no schedule — so there is nothing to have
+     * earned before entering it, and only the planned session moves the ladder. What is left to
+     * decide is the CARD.
+     *
+     * Two populations get the easy one, for the same reason: they have no rung of their own.
+     * OUTSIDE the pool, nobody has taken the word into study. IN the pool at RUNG 0, the learner
+     * has — and the first meeting has not happened yet, so «напиши по памяти» would be asking a word
+     * to be reproduced before it has ever been shown. `known` is not rung 0: it is outside the
+     * ladder, and reading it as the bottom would gate a self-assessed word down to recognition.
+     *
+     * Mirrored on the client as `LadderPosition.drillsAtOwnRung`.
+     */
+    private function drillsAtOwnRung(DueTermView $view): bool
+    {
+        if (! $view->inPool) {
+            return false;
+        }
+
+        return LearningLadder::stepFor(
+            $view->acquisition,
+            $view->reps,
+            $view->learningStep,
+            isKnown: $view->state === LearningState::Known,
+        ) !== LearningLadder::STEP_INTRO;
     }
 
     /**
@@ -406,9 +436,9 @@ final readonly class StudyCardAssembler
         );
         // A `known` pair is OUTSIDE the ladder, not at the bottom of it — its verification is decided
         // elsewhere — so it reads as the top rung rather than as rung 0. Same rule, same words, as
-        // the client's `LadderPosition.admissionStep`. A pair outside the POOL reads as the fixed
-        // rung a catalogue word is drilled at — it has no rung of its own to read.
-        $step = $view->inPool
+        // the client's `LadderPosition.admissionStep`. A pair with no rung of its own — outside the
+        // POOL, or in it at rung 0 — reads as the fixed rung such a word is drilled at.
+        $step = $this->drillsAtOwnRung($view)
             ? (LearningLadder::stepFor(
                 $view->acquisition,
                 $view->reps,

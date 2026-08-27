@@ -27,9 +27,16 @@ function dealtModes(object $ctx, string $token, bool $practice = false): array
 
 it('deals only the modes the toggles leave on', function () {
     [$user, $token] = learner();
-    seedWordFor($user, 'reservation', 'бронь');
-    seedWordFor($user, 'towel', 'полотенце');
-    seedWordFor($user, 'front desk', 'стойка');
+    $reservation = seedWordFor($user, 'reservation', 'бронь');
+    $towel = seedWordFor($user, 'towel', 'полотенце');
+    $desk = seedWordFor($user, 'front desk', 'стойка');
+
+    // Walked off the recognition rungs, so the TOGGLE is the only filter left. A pair with no rung
+    // of its own is narrowed to the easy corner of the matrix, which withholds typing — a real rule
+    // (a never-met word must not be asked to be typed from memory) and not this test's subject.
+    foreach ([[$reservation, 'reservation'], [$towel, 'towel'], [$desk, 'front desk']] as [$id, $text]) {
+        answerTimes($this, $token, $id, $text, times: 3);
+    }
 
     app(EnabledModesWriter::class)->setOverrideFor(
         UserId::fromString($user->id),

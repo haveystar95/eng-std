@@ -15,12 +15,19 @@ Layers: `Domain` (pure PHP, no Laravel) · `Application` (Commands/Queries/Ports
   pool and nothing else, so a collection is a catalogue of a topic and the pool is the queue. There
   is deliberately no «Мои слова» collection entity: one would duplicate terms, need a tombstone per
   removal, and give one word two progress stories.
+- **Free practice is open to EVERY word, always — the ladder gates nothing here.** A drill moves
+  nothing: it enrols nobody, writes no exposure, spends no quota, advances no rung and schedules
+  nothing. Only the planned session moves the ladder. So there is no rung to have earned before
+  being drilled, and what the rung still decides is only the CARD: a pair with **no rung of its
+  own** — outside the pool, or in the pool and still at rung 0 — is dealt what the matrix opens at
+  `LearningLadder::STEP_UNENROLLED_PRACTICE` (choice and assembly), never typed production or
+  dictation, and never an intro (practice introduces nothing). A pair on a rung of its own fans
+  across every switched-on trainer. `StudyCardAssembler::drillsAtOwnRung()` is where that one
+  question is asked; the client mirrors it as `LadderPosition.drillsAtOwnRung`.
 - **Free practice scoped to a COLLECTION is the one selection that leaves the pool.** It drills the
   topic the learner pointed at, untriaged words included, so a fresh collection is playable without
-  a triage pass. It costs those words nothing — practice enrols nothing, writes no exposure and
-  never schedules — and they are dealt only what the matrix opens at
-  `LearningLadder::STEP_UNENROLLED_PRACTICE`, never typed production or dictation. Pool terms lead
-  the session and keep their own rung. UNSCOPED free practice still reads the pool alone.
+  a triage pass. Pool terms lead the session and keep their own rung. UNSCOPED free practice still
+  reads the pool alone.
 - **The pool is part of the SYNC SCOPE**, whatever became of the folders its words came from. The
   feed's term scope was the learner's live collections alone, and the pool is not a collection: a
   word survives its folder's deletion, and it can enter the pool with no folder at all. So the feed

@@ -82,6 +82,10 @@ it('builds a card with no written prompt — the audio IS the task', function ()
     [$user, $token] = learner();
     $termId = seedWordFor($user, 'reservation', 'бронь');
     dictationExample($termId, 'I have a reservation for tonight.');
+    // Off the recognition rungs first: dictation is withheld from a pair with no rung of its own —
+    // a word may be on screen for the first time, and «напиши, что услышал» is not a first meeting.
+    // What is under test is the CARD, so the pair has to be one the trainer is opened to at all.
+    answerTimes($this, $token, $termId, 'reservation', times: 3);
     enableDictationFor($user->id);
 
     $card = $this->withHeader('Authorization', "Bearer {$token}")
