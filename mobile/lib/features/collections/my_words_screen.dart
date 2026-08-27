@@ -214,10 +214,18 @@ class _MyWordsScreenState extends ConsumerState<MyWordsScreen> {
             AppHaptics.light();
             _pronouncer.speak(word, targetLang: speakLang);
           },
+          // No collection is named here for the same reason the card names none: the word is the
+          // scope. The session builder takes a term as a scope in its own right, and the pair
+          // resolved above rides along so the cards are spoken in the language the word is being
+          // learned in — the pool mixes pairs, so the profile's default would be a guess.
           onTrain: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) =>
-                  SessionScreen(title: word.term, practice: true, onlyTermId: word.termId),
+              builder: (_) => SessionScreen(
+                title: word.term,
+                practice: true,
+                onlyTermId: word.termId,
+                targetLang: speakLang,
+              ),
             ),
           ),
           onUnenroll: () => ref.read(poolSyncProvider).unenroll(word.termId),

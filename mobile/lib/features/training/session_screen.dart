@@ -62,6 +62,25 @@ class SessionScreen extends ConsumerStatefulWidget {
   /// cross-collection session, which falls back to the profile's target language.
   final String? targetLang;
 
+  /// THE SAME SESSION, ONCE MORE — «Ещё раз» on a practice summary.
+  ///
+  /// Every field rides along, and [onlyTermId] is the one that has to: «ещё раз» after drilling ONE
+  /// word means that word again. Dropping it turned the repeat into a session over the whole
+  /// collection — a different session under the same button, and from «Мои слова» (no collection at
+  /// all) it would have been a build with no scope left.
+  ///
+  /// A method rather than a copy at the call site, so «which fields does a repeat carry» is one
+  /// answer in one place, and a field added later cannot be forgotten here silently.
+  SessionScreen repeat() => SessionScreen(
+    title: title,
+    collectionId: collectionId,
+    practice: practice,
+    learn: learn,
+    limit: limit,
+    targetLang: targetLang,
+    onlyTermId: onlyTermId,
+  );
+
   @override
   ConsumerState<SessionScreen> createState() => _SessionScreenState();
 }
@@ -95,21 +114,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   }
 
   /// «Ещё раз» on a practice summary: start a brand-new practice session immediately (a fresh
-  /// SessionScreen mints a new id → the server reshuffles the whole-collection pool). Replaces the
-  /// route so the back stack doesn't fill up with finished sessions.
+  /// SessionScreen mints a new id → the pool is reshuffled). Replaces the route so the back stack
+  /// doesn't fill up with finished sessions. What «the same session» means is [SessionScreen.repeat].
   void _again() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => SessionScreen(
-          title: widget.title,
-          collectionId: widget.collectionId,
-          practice: widget.practice,
-          learn: widget.learn,
-          limit: widget.limit,
-          targetLang: widget.targetLang,
-        ),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => widget.repeat()));
   }
 
   @override

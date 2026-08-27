@@ -62,6 +62,11 @@ import 'practice_mode_selector.dart';
 ///    [LearningLadder.stepUnenrolledPractice] (choice and assembly), never typed production or
 ///    dictation. A pool word keeps fanning across every switched-on trainer, exactly as before.
 ///
+/// ONE WORD IS ALSO A SCOPE. «Тренировать это слово» drills a single term ([build]'s `onlyTermId`),
+/// and it does not need a collection to do it: from «Мои слова» there is no one folder to name — the
+/// pool outlives the folders its words came from. The word is then the only thing QUESTIONED, while
+/// `terms` stays wide and lends the card its wrong options.
+///
 /// This is the practice path ONLY. Study sessions, «Учить N» and due repeats are still built
 /// strictly from the pool, here and on the server.
 abstract final class LocalPracticeSessionBuilder {
@@ -96,11 +101,18 @@ abstract final class LocalPracticeSessionBuilder {
   /// [ladder] is where each term stands on the acquisition ladder, keyed by term id, as mirrored by
   /// `/sync`. A term missing from it has no progress row — never scheduled, never shown.
   /// [admission] is the matrix the same feed carried.
+  ///
+  /// [onlyTermId] is «Тренировать это слово»: the session QUESTIONS that one term, while [terms]
+  /// stays the wide list it always was. The two are separate for the reason the card floor exists —
+  /// a choice card's wrong options come from this list, and narrowing it to the one word under
+  /// drill left multiple_choice with the answer alone on screen, where the option floor then
+  /// refused it (QA-15). The word being drilled needs its neighbours precisely because it is alone.
   static StudySession build({
     required List<Term> terms,
     required int limit,
     required Random random,
     String? sessionId,
+    String? onlyTermId,
     PracticeModes enabled = PracticeModes.serverDefault,
     Map<String, LadderPosition> ladder = const {},
     ModeAdmission admission = ModeAdmission.shipped,
@@ -128,7 +140,16 @@ abstract final class LocalPracticeSessionBuilder {
     }
     enrolled.shuffle(random);
     catalogue.shuffle(random);
-    final chosen = [...enrolled, ...catalogue].take(limit).toList();
+    final questioned = [...enrolled, ...catalogue];
+    // One word under drill is the same session with one word in it — same admission, same halves,
+    // same fan below. Not `limit`: the button named a word, and a fan of its trainers is what it
+    // promised (QA-14).
+    final chosen = onlyTermId == null
+        ? questioned.take(limit).toList()
+        : [
+            for (final term in questioned)
+              if (term.id == onlyTermId) term,
+          ];
 
     // «Тренировать слово» — one word in the pool — FANS: a card per applicable mode instead of the
     // single card the round-robin would deal. The button promises the word is run through the

@@ -709,8 +709,10 @@ typedef SessionArgs = ({
   bool practice,
   int limit,
 
-  /// «Тренировать слово» (кадр 16e): narrow the practice pool to this one term. Practice only —
-  /// a scheduling session's composition is the server's to fix.
+  /// «Тренировать слово» (кадр 16e): the session asks about this ONE term. Practice only — a
+  /// scheduling session's composition is the server's to fix. A word is a scope in its own right,
+  /// so this may arrive WITHOUT a [collectionId]: it does from «Мои слова», where a pool word has
+  /// no one folder to name.
   String? onlyTermId,
 });
 
@@ -731,21 +733,25 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
   // composition is what stops an abandoned session spending it on unseen terms.
   if (args.practice) {
     final collectionId = args.collectionId;
-    if (collectionId == null) {
-      // Practice is always entered from a collection; a global practice pool has no rule yet.
-      throw StateError('practice needs a collection');
+    final onlyTermId = args.onlyTermId;
+    if (collectionId == null && onlyTermId == null) {
+      // A drill needs a scope: a collection («Тренировка по теме») or a word («Тренировать это
+      // слово»). A global practice pool has no rule yet.
+      throw StateError('practice needs a collection or a term');
     }
     final db = ref.watch(appDatabaseProvider);
-    final all = await db.collectionTerms(collectionId);
-    // «Тренировать слово» narrows the pool to one term; everything else about the session — the
-    // ladder gate, the toggles, the shuffle — is unchanged, because nothing about drilling one word
-    // should make it a different kind of session.
-    final terms = args.onlyTermId == null
-        ? all
-        : [
-            for (final t in all)
-              if (t.id == args.onlyTermId) t,
-          ];
+    // WHERE THE CARDS' MATERIAL COMES FROM — the collection when there is one, the whole mirror
+    // when there is not. «Тренировать это слово» from «Мои слова» has no collection by design: the
+    // pool outlives the folder a word came from, so a word may sit in several folders or in none
+    // (see `_openCard` there). Requiring one is what made that button open a session and
+    // immediately fail with «Не удалось загрузить сессию», permanently — the retry re-ran the same
+    // impossible build.
+    //
+    // The term under drill is named separately, below: this list is also the DISTRACTOR pool, and a
+    // lone word cannot furnish its own wrong options.
+    final terms = collectionId != null
+        ? await db.collectionTerms(collectionId)
+        : await db.allTerms();
     // The trainer toggles the server last told us about (stored by the sync service). Read from the
     // local DB like everything else on this path, so practice keeps working offline — and so a
     // toggle flipped in the admin panel changes the offline session on the next sync.
@@ -757,12 +763,18 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
     // is drilled here too, from the easy half of the matrix: «Тренировка по теме» is over the
     // collection, not over the pool, and it still moves no progress.
     final admission = ModeAdmission.fromWire(_decodeList(await db.getMeta(SyncKeys.modeAdmission)));
-    final ladder = await db.ladderPositions([for (final t in terms) t.id]);
+    // Only the terms whose rung can matter: the ones this session may QUESTION. A decoy's rung is
+    // never read — it lends its text and nothing else — and with no collection the list above is
+    // the whole mirror, which is not a set of ids to hand a query.
+    final ladder = await db.ladderPositions(
+      onlyTermId != null ? [onlyTermId] : [for (final t in terms) t.id],
+    );
     return LocalPracticeSessionBuilder.build(
       terms: terms,
       limit: args.limit,
       random: Random(),
       sessionId: args.sessionId,
+      onlyTermId: onlyTermId,
       enabled: enabled,
       ladder: ladder,
       admission: admission,

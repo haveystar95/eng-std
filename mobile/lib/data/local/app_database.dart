@@ -670,6 +670,16 @@ class AppDatabase extends _$AppDatabase {
     return query.map((row) => row.readTable(terms)).get();
   }
 
+  /// Every synced term, one-shot — the distractor pool for a session that has no collection to
+  /// draw one from.
+  ///
+  /// «Тренировать это слово» from «Мои слова» is exactly that session: the pool outlives the folder
+  /// a word came from (п. 102), so the word may belong to several collections or to none, and there
+  /// is no collection whose terms could furnish the wrong options. The mirror is the honest superset
+  /// — the same words the learner has synced — and the card's own filters (pair, shape, meaning)
+  /// narrow it down from there, exactly as they narrow a collection.
+  Future<List<Term>> allTerms() => select(terms).get();
+
   /// WHICH PAIR each of these terms is being studied through — the device's half of the server's
   /// `CardLanguageResolver`.
   ///
