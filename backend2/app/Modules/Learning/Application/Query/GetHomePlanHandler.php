@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Query;
 
+use App\Modules\Collections\Application\Dto\StoreCatalogueItem;
 use App\Modules\Collections\Application\Port\StoreCatalogueReader;
 use App\Modules\Collections\Application\Port\UserCollectionsReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Collections\Application\Service\DefaultCollectionPair;
 use App\Modules\Learning\Application\Dto\HomeContinueView;
+use App\Modules\Learning\Application\Dto\HomeDayAwardView;
 use App\Modules\Learning\Application\Dto\HomeEdgeTermView;
 use App\Modules\Learning\Application\Dto\HomeHardTermView;
 use App\Modules\Learning\Application\Dto\HomeInWorkView;
 use App\Modules\Learning\Application\Dto\HomePlanView;
 use App\Modules\Learning\Application\Dto\HomeSessionView;
 use App\Modules\Learning\Application\Dto\HomeState;
+use App\Modules\Learning\Application\Dto\HomeStoreItemView;
 use App\Modules\Learning\Application\Dto\HomeStoreView;
 use App\Modules\Learning\Application\Dto\ScheduledTermFact;
 use App\Modules\Learning\Application\Dto\TermErrorFact;
+use App\Modules\Learning\Application\Dto\TermPromotionFact;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Application\Port\IntroducedTermsReader;
@@ -99,8 +103,17 @@ final readonly class GetHomePlanHandler
      */
     private const DEFAULT_SWIPE_SECONDS = 3;
 
-    /** Example topics on the first-day card — enough to make «17 тем» concrete, few enough to read. */
-    private const STORE_SAMPLE = 3;
+    /**
+     * How many ready-made decks the home screen's shop window holds (кадры 19-2, 19-3).
+     *
+     * Six for a strip that shows three and a half at a time: the half-deck at the edge is what says
+     * «здесь есть ещё», and a strip that ends exactly at the fold reads as the whole catalogue. The
+     * older `topics` preview still publishes three of them — {@see \App\Modules\Collections\Infrastructure\Eloquent\EloquentStoreCatalogueReader}.
+     */
+    private const STORE_SAMPLE = 6;
+
+    /** How far back «за неделю» looks. Seven days, which is what the word means. */
+    private const LEARNED_WINDOW_DAYS = 7;
 
     public function __construct(
         private HomePlanReader $home,
@@ -178,9 +191,20 @@ final readonly class GetHomePlanHandler
         $today = $this->home->todayAnswers($user, $now, $tz);
         $nextReview = $this->home->nextReview($user, $dayEnd, $tz);
 
+        // «Завтра выпадет N слов» — tomorrow SPECIFICALLY, which is a narrower question than
+        // `nextReview` and gets its own count rather than a comparison of dates on the client.
+        $dueTomorrow = $this->home->dueTomorrowCount($user, $dayEnd, $tz);
+        $promoted = $this->home->promotionsToday($user, $now, $tz);
+        $best = $this->bestPromotion($promoted);
+        $learnedWeek = $this->home->graduatedSince(
+            $user,
+            $todayStart->modify('-' . (self::LEARNED_WINDOW_DAYS - 1) . ' days'),
+        );
+
         $content = $this->contentFor($user, [
             ...array_map(static fn (ScheduledTermFact $f): string => $f->termId, $edge),
             ...array_map(static fn (TermErrorFact $f): string => $f->termId, $hardest),
+            ...($best === null ? [] : [$best->termId]),
         ]);
 
         $poolSize = $this->home->poolSize($user);
@@ -215,8 +239,72 @@ final readonly class GetHomePlanHandler
             nextReview: $nextReview,
             hardest: $this->hardestViews($hardest, $content),
             unfinished: $this->unfinished($user, $shelf, $tz, $todayStart),
-            store: new HomeStoreView($store->count, $store->topics),
+            store: new HomeStoreView(
+                $store->count,
+                $store->topics,
+                array_map(static fn (StoreCatalogueItem $i): HomeStoreItemView => new HomeStoreItemView(
+                    id: $i->id,
+                    title: $i->title,
+                    itemsCount: $i->itemsCount,
+                    imageUrl: $i->imageUrl,
+                    level: $i->level,
+                ), $store->items),
+            ),
+            // Null, not 0, all three times. The row, the reward line and the middle number of the
+            // statistics tile are each a block the design does not draw on a day that has nothing to
+            // put in it, and only a null can say that.
+            edgeTomorrow: $dueTomorrow > 0 ? $dueTomorrow : null,
+            dayAward: $this->dayAward($promoted, $best, $content),
+            learnedWeek: $learnedWeek > 0 ? $learnedWeek : null,
         );
+    }
+
+    /**
+     * The day's best promotion — the word that got FURTHEST, ties broken by term id.
+     *
+     * Furthest rather than first, because the line is the day's one piece of good news and a word
+     * reaching «написание» is a better sentence than a word reaching «узнавание». The tiebreak is
+     * there so two runs of the same query name the same word: an example that changes on every
+     * refresh reads as a bug even when both answers are true.
+     *
+     * @param  list<TermPromotionFact>  $promoted
+     */
+    private function bestPromotion(array $promoted): ?TermPromotionFact
+    {
+        $best = null;
+        foreach ($promoted as $fact) {
+            if ($best === null
+                || $fact->toStep > $best->toStep
+                || ($fact->toStep === $best->toStep && $fact->termId < $best->termId)) {
+                $best = $fact;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * «+5 слов продвинулись · reluctant дошло до „написание"», or nothing at all.
+     *
+     * Nothing at all in two cases, and they are the same case: the day promoted no word, or it
+     * promoted words whose content will not render. A count with no example would be «+5 слов
+     * продвинулись ·» trailing into nothing, which is worse than the silence.
+     *
+     * @param  list<TermPromotionFact>  $promoted
+     * @param  array<string, TermContentView>  $content
+     */
+    private function dayAward(array $promoted, ?TermPromotionFact $best, array $content): ?HomeDayAwardView
+    {
+        if ($best === null) {
+            return null;
+        }
+
+        $view = $content[$best->termId] ?? null;
+        if ($view === null) {
+            return null;
+        }
+
+        return new HomeDayAwardView(count($promoted), $best->termId, $view->text, $best->toStep);
     }
 
     /**

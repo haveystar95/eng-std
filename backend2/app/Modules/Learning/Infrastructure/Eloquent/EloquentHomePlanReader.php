@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Dto\HomeNextReviewView;
 use App\Modules\Learning\Application\Dto\HomeTodayView;
 use App\Modules\Learning\Application\Dto\ScheduledTermFact;
 use App\Modules\Learning\Application\Dto\TermErrorFact;
+use App\Modules\Learning\Application\Dto\TermPromotionFact;
 use App\Modules\Learning\Application\Port\HomePlanReader;
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
@@ -17,6 +18,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentHomePlanReader implements HomePlanReader
@@ -148,6 +150,87 @@ final class EloquentHomePlanReader implements HomePlanReader
             (string) $r->term_id,
             new DateTimeImmutable((string) $r->due_at),
         ))->all());
+    }
+
+    public function dueTomorrowCount(UserId $userId, DateTimeImmutable $tomorrowStart, DateTimeZone $tz): int
+    {
+        // Half-open on the day after, so «завтра» is the whole calendar day whatever time of day the
+        // due dates in it happen to carry.
+        return $this->pool($userId)
+            ->whereNotNull('due_at')
+            ->where('due_at', '>=', UtcInstant::bind($tomorrowStart))
+            ->where('due_at', '<', UtcInstant::bind($tomorrowStart->setTimezone($tz)->modify('+1 day')))
+            ->count();
+    }
+
+    public function promotionsToday(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): array
+    {
+        // WHERE THE DAY BEGAN, per pair: the rung the first card dealt today was dealt at. DISTINCT ON
+        // over the day's own answers, ordered by the moment and then by the review id — two cards
+        // answered inside the same millisecond still have to resolve to one row, and the ULID is the
+        // only tiebreak that is stable across two runs of this query.
+        $firstToday = $this->studyAnswersToday($userId, $now, $tz)
+            ->whereNotNull('ladder_step')
+            ->orderBy('term_id')
+            ->orderBy('answered_at')
+            ->orderBy('id')
+            ->selectRaw('DISTINCT ON (term_id) term_id, ladder_step');
+
+        $rows = DB::query()
+            ->fromSub($firstToday, 'started')
+            ->join(self::PROGRESS . ' as p', static function (JoinClause $join) use ($userId): void {
+                $join->on('p.term_id', '=', 'started.term_id')->where('p.user_id', '=', $userId->value);
+            })
+            ->get(['started.term_id', 'started.ladder_step', 'p.acquisition', 'p.learning_step', 'p.successful_reviews', 'p.state']);
+
+        $promotions = [];
+        foreach ($rows as $row) {
+            $from = (int) $row->ladder_step;
+            // The ladder's ONE derivation, not a second expression over the same columns. `known` is
+            // outside the ladder and returns null — a pair whose rung cannot be named cannot be said
+            // to have risen, so it is simply not a promotion.
+            $to = LearningLadder::stepFor(
+                Acquisition::tryFrom((string) $row->acquisition) ?? Acquisition::Graduated,
+                (int) $row->successful_reviews,
+                (int) $row->learning_step,
+                isKnown: (string) $row->state === LearningState::Known->value,
+            );
+
+            if ($to !== null && $to > $from) {
+                $promotions[] = new TermPromotionFact((string) $row->term_id, $from, $to);
+            }
+        }
+
+        return $promotions;
+    }
+
+    public function graduatedSince(UserId $userId, DateTimeImmutable $since): int
+    {
+        $bound = UtcInstant::bind($since);
+
+        // A pair's graduation day is the day of its FIRST card above the recognition rungs. So: pairs
+        // that have one inside the window and none before it. Counted over the log rather than over
+        // the progress row, which carries no graduation date and cannot be made to carry one without
+        // a migration this number does not deserve.
+        return DB::table('reviews')
+            ->where('user_id', $userId->value)
+            ->where('is_practice', false)
+            ->where('answered_at', '>=', $bound)
+            ->where(static fn (BuilderContract $q) => $q
+                ->whereNull('reviews.ladder_step')
+                ->orWhere('reviews.ladder_step', '>=', LearningLadder::STEP_ASSEMBLY))
+            ->whereNotExists(static function (Builder $q) use ($userId, $bound): void {
+                $q->from('reviews as earlier')
+                    ->whereColumn('earlier.term_id', 'reviews.term_id')
+                    ->where('earlier.user_id', $userId->value)
+                    ->where('earlier.is_practice', false)
+                    ->where('earlier.answered_at', '<', $bound)
+                    ->where(static fn (BuilderContract $q) => $q
+                        ->whereNull('earlier.ladder_step')
+                        ->orWhere('earlier.ladder_step', '>=', LearningLadder::STEP_ASSEMBLY));
+            })
+            ->distinct()
+            ->count('reviews.term_id');
     }
 
     public function nextReview(UserId $userId, DateTimeImmutable $from, DateTimeZone $tz): ?HomeNextReviewView

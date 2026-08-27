@@ -20,6 +20,12 @@ final readonly class HomePlanView
     /**
      * @param  list<HomeEdgeTermView>  $edge     soonest-to-fall words; empty when none are near
      * @param  list<HomeHardTermView>  $hardest  what the last run missed; empty when it missed nothing
+     * @param  int|null  $edgeTomorrow  how many words fall due TOMORROW — «Завтра выпадет N слов →»
+     *                                  (кадры 19-1/19-2). Null, never 0: the row is not drawn on a
+     *                                  day with nothing behind it. Narrower than [$nextReview], which
+     *                                  answers «the next day that has anything» and may be a week out.
+     * @param  int|null  $learnedWeek   words that reached «выучено» in the last seven days — the
+     *                                  middle number of the statistics tile. Null when none did.
      */
     public function __construct(
         public HomeState $state,
@@ -31,5 +37,8 @@ final readonly class HomePlanView
         public array $hardest,
         public ?HomeContinueView $unfinished,
         public HomeStoreView $store,
+        public ?int $edgeTomorrow = null,
+        public ?HomeDayAwardView $dayAward = null,
+        public ?int $learnedWeek = null,
     ) {}
 }

@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Port;
 use App\Modules\Learning\Application\Dto\HomeNextReviewView;
 use App\Modules\Learning\Application\Dto\HomeTodayView;
 use App\Modules\Learning\Application\Dto\ScheduledTermFact;
+use App\Modules\Learning\Application\Dto\TermPromotionFact;
 use App\Modules\Learning\Application\Dto\TermErrorFact;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use DateTimeImmutable;
@@ -111,6 +112,51 @@ interface HomePlanReader
      * @return list<TermErrorFact>
      */
     public function hardestToday(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz, int $limit): array;
+
+    /**
+     * How many of the learner's OWN words fall due TOMORROW — «Завтра выпадет 14 слов →».
+     *
+     * The whole of tomorrow, in their calendar: `$tomorrowStart` is tomorrow's local midnight and the
+     * window closes at the midnight after it. A narrower question than {@see nextReview()}, which
+     * finds the next day that has ANYTHING and may answer with a date a week out — the row on the
+     * screen promises tomorrow specifically, so it is counted specifically.
+     *
+     * The pool only, exactly as {@see edgeTerms()} counts it: a `known` verification riding beside
+     * the pool is the system auditing a claim, not a word of the learner's coming back.
+     */
+    public function dueTomorrowCount(UserId $userId, DateTimeImmutable $tomorrowStart, DateTimeZone $tz): int;
+
+    /**
+     * The pairs that ROSE A RUNG today — «+5 слов продвинулись · reluctant дошло до „написание"».
+     *
+     * Derived, with no new column and no new log. The rung a pair stands on NOW is
+     * {@see \App\Modules\Learning\Domain\Service\LearningLadder::stepFor()} over its progress row;
+     * the rung it started the day on is the `ladder_step` the append-only review log recorded for the
+     * FIRST card dealt today — the log already says what was shown, and what was shown is where the
+     * day began. A pair whose two rungs differ moved.
+     *
+     * Study answers only, like every other number the day is made of: free practice moves no rung, so
+     * it can produce no promotion.
+     *
+     * Rows with no `ladder_step` are skipped rather than guessed. That column is null only for the
+     * pre-ladder history, all of it older than any «today» this is asked about.
+     *
+     * @return list<TermPromotionFact>  worst-to-best is not implied; the caller picks its example
+     */
+    public function promotionsToday(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): array;
+
+    /**
+     * How many pairs reached «выучено» — graduated off the recognition rungs — since `$since`.
+     *
+     * The statistics tile's middle number («за неделю 28»). Counted from the review log rather than
+     * from a `graduated_at` column, which does not exist: a pair is graduated from the moment it is
+     * first dealt a card ABOVE the recognition rungs, so its graduation day is the day of its first
+     * such card, and «since» is a filter on that day.
+     *
+     * The same rung predicate the `successful_reviews` backfill uses, null included: a null
+     * `ladder_step` is pre-ladder history, and all of that was graduated.
+     */
+    public function graduatedSince(UserId $userId, DateTimeImmutable $since): int;
 
     /**
      * The learner's own seconds-per-card, from their last `$sampleSize` study answers — the honest

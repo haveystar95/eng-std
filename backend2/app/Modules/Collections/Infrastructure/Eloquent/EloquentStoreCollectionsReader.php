@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 final class EloquentStoreCollectionsReader implements StoreCollectionsReader
 {
+    public function __construct(private readonly CollectionLevels $levels) {}
+
     public function forLanguagePair(
         UserId $viewer,
         LanguageCode $sourceLang,
@@ -46,7 +48,7 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
             $page->all(),
         ));
         $subscribed = $this->subscribedIds($viewer, $ids);
-        $levels = $this->levelsFor($ids);
+        $levels = $this->levels->forCollections($ids);
 
         $items = array_values($page->map(
             fn (CollectionModel $m): StoreCollectionView => $this->toView(
@@ -81,40 +83,6 @@ final class EloquentStoreCollectionsReader implements StoreCollectionsReader
             imageAuthorUrl: $model->image_author_url,
             level: $level,
         );
-    }
-
-    /**
-     * CEFR range per collection, derived from its terms' `cefr` (read projection over the
-     * Vocabulary tables — the generator never linked the requested levels back to the collection).
-     * 'A1'..'C2' order lexicographically, so string MIN/MAX give the true CEFR bounds. Collapses to
-     * a single level when min == max; skips terms with no level; absent when none carry one.
-     *
-     * @param  list<string>  $collectionIds
-     * @return array<string, string>
-     */
-    private function levelsFor(array $collectionIds): array
-    {
-        if ($collectionIds === []) {
-            return [];
-        }
-
-        $rows = DB::table('collection_items as ci')
-            ->join('terms as t', 't.id', '=', 'ci.term_id')
-            ->whereIn('ci.collection_id', $collectionIds)
-            ->whereNull('ci.deleted_at')
-            ->whereNotNull('t.cefr')
-            ->groupBy('ci.collection_id')
-            ->selectRaw('ci.collection_id as cid, min(t.cefr) as lo, max(t.cefr) as hi')
-            ->get();
-
-        $map = [];
-        foreach ($rows as $row) {
-            $lo = (string) $row->lo;
-            $hi = (string) $row->hi;
-            $map[(string) $row->cid] = $lo === $hi ? $lo : $lo . '–' . $hi;
-        }
-
-        return $map;
     }
 
     /**

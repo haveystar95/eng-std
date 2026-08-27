@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Collections\Infrastructure\Eloquent;
 
+use App\Modules\Collections\Application\Dto\StoreCatalogueItem;
 use App\Modules\Collections\Application\Dto\StoreCatalogueSummary;
 use App\Modules\Collections\Application\Port\StoreCatalogueReader;
 use App\Modules\Shared\Domain\ValueObject\LanguageCode;
@@ -13,6 +14,17 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 
 final class EloquentStoreCatalogueReader implements StoreCatalogueReader
 {
+    /**
+     * How many of the previewed decks are ALSO published as bare titles.
+     *
+     * Three, which is what `topics` held before the covers existed. A build that predates
+     * {@see StoreCatalogueItem} reads that field and lays three chips out; widening it to the whole
+     * window would silently redesign a screen on a phone nobody rebuilt.
+     */
+    private const TOPICS_PREVIEW = 3;
+
+    public function __construct(private readonly CollectionLevels $levels) {}
+
     public function summaryFor(
         UserId $viewer,
         LanguageCode $sourceLang,
@@ -21,20 +33,35 @@ final class EloquentStoreCatalogueReader implements StoreCatalogueReader
     ): StoreCatalogueSummary {
         $count = $this->takeable($viewer, $sourceLang, $targetLang)->count();
         if ($count === 0) {
-            return new StoreCatalogueSummary(0, []);
+            return new StoreCatalogueSummary(0, [], []);
         }
 
-        // Same ordering the store screen pages in, so the three example topics on the empty-state
-        // card are the three the learner meets first when they follow the link.
-        $titles = $this->takeable($viewer, $sourceLang, $targetLang)
+        // Same ordering the store screen pages in, so the covers on the home screen are the decks
+        // the learner meets first when they follow the link.
+        $rows = $this->takeable($viewer, $sourceLang, $targetLang)
             ->orderByRaw("COALESCE(collections.topic, '') asc")
             ->orderBy('collections.id', 'asc')
             ->limit(max(0, $sampleSize))
-            ->pluck('collections.title');
+            ->get(['collections.id', 'collections.title', 'collections.items_count', 'collections.image_url']);
+
+        $ids = array_values(array_map(static fn (CollectionModel $m): string => $m->id, $rows->all()));
+        $levels = $this->levels->forCollections($ids);
+
+        $items = array_values($rows->map(static fn (CollectionModel $m): StoreCatalogueItem => new StoreCatalogueItem(
+            id: $m->id,
+            title: $m->title,
+            itemsCount: $m->items_count,
+            imageUrl: $m->image_url,
+            level: $levels[$m->id] ?? null,
+        ))->all());
 
         return new StoreCatalogueSummary(
             $count,
-            array_values(array_map(static fn ($t): string => (string) $t, $titles->all())),
+            array_map(
+                static fn (StoreCatalogueItem $i): string => $i->title,
+                array_slice($items, 0, self::TOPICS_PREVIEW),
+            ),
+            $items,
         );
     }
 

@@ -2660,16 +2660,93 @@ components:
               description: Whole days since the last swipe or answer in it.
         store:
           type: object
-          required: [count, topics]
+          required: [count, topics, items]
           properties:
             count:
               type: integer
-              description: Ready-made sets of the learner's pair they are NOT subscribed to — «выбрать из 17 готовых».
+              description: Ready-made sets of the learner's pair they are NOT subscribed to — «взять из 17 готовых».
             topics:
               type: array
               items:
                 type: string
-              description: Up to 3 of their titles, in the store's own order — the first-day card's chips.
+              description: >
+                Up to 3 of the same titles, in the store's own order. The older, titles-only shape of
+                the preview, kept for builds that predate `items` — derived from `items` server-side,
+                so the two cannot come to name different decks.
+            items:
+              type: array
+              description: >
+                THE SHOP WINDOW (кадры 19-2, 19-3): up to 6 takeable decks with their covers, in the
+                store's own order, so the strip on the home screen shows what the learner would meet
+                first if they followed the link. Empty when the store is empty.
+              items:
+                type: object
+                required: [id, title, terms_count]
+                properties:
+                  id:
+                    type: string
+                    description: Where a tap on the cover leads — the deck's preview.
+                  title:
+                    type: string
+                  terms_count:
+                    type: integer
+                  image_url:
+                    type: string
+                    nullable: true
+                    description: The deck's cover. Null when it has none — the strip draws paper, not a broken image.
+                  level:
+                    type: string
+                    nullable: true
+                    description: >
+                      CEFR of the deck, derived from its terms — a single level («A2») or a range
+                      («A2–B1»). Null when no term carries one, and the card then prints nothing
+                      rather than «—».
+        edge_tomorrow:
+          type: integer
+          nullable: true
+          description: >
+            How many of the learner's own words fall due TOMORROW — «Завтра выпадет 14 слов →»
+            (кадры 19-1, 19-2). Null, never 0: the row is a block the design does not draw on a day
+            with nothing behind it. Narrower than `next_review`, which answers «the next day that has
+            anything» and may be a week out; the pool only, exactly as `edge` counts it.
+        day_award:
+          type: object
+          nullable: true
+          description: >
+            THE DAY'S REWARD (кадр 19-2) — «+5 слов продвинулись · reluctant дошло до „написание"».
+            The evening's one piece of news that is not a counter: what the work BOUGHT.
+
+            Derived from the append-only review log with no new column: the rung a pair stands on now
+            against the `ladder_step` its FIRST card today was dealt at. Study answers only — free
+            practice moves no rung, so it can produce no promotion. Null when the day promoted
+            nothing; `promoted: 0` is not a state this block has.
+          required: [promoted, term_id, text, step]
+          properties:
+            promoted:
+              type: integer
+              minimum: 1
+              description: How many words rose at least one rung today.
+            term_id:
+              type: string
+            text:
+              type: string
+              description: The example — the word that got FURTHEST today, ties broken by id so a refresh names the same one.
+            step:
+              type: integer
+              minimum: 0
+              maximum: 5
+              description: >
+                The rung that example now stands on. A NUMBER: the client names it from the same
+                `ladderStep*` strings the word card uses, in the client's own language.
+        learned_week:
+          type: integer
+          nullable: true
+          description: >
+            Words that reached «выучено» — graduated off the recognition rungs — in the last seven
+            calendar days. The middle number of the statistics tile («Выучено 151 · за неделю 28 · в
+            работе 41»); the other two are `/stats.learned` and `in_work.total`. Counted from the
+            review log rather than a `graduated_at` column, which does not exist: a pair's graduation
+            day is the day of its first card above the recognition rungs. Null when none graduated.
 
     Stats:
       type: object

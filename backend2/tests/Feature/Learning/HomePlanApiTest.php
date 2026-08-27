@@ -471,6 +471,171 @@ it('counts the ready-made sets the learner does not have yet, with a taste of th
         ->and($store['topics'])->not->toContain('Аренда');
 });
 
+/**
+ * Post one review the way the phone does, with the rung the card was dealt at.
+ *
+ * `ladder_step` is the whole point here: it is what the append-only log records about WHERE a pair
+ * stood when it was asked, and every «продвинулось» and «выучено за неделю» number below is read
+ * back out of it rather than out of a column nobody keeps.
+ */
+function answerAtRung(object $ctx, string $token, string $termId, string $response, int $rung, string $mode = 'typing', int $seq = 1): void
+{
+    $ctx->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/reviews/batch', ['reviews' => [[
+            'id' => Ulid::generate(), 'term_id' => $termId, 'exercise_mode' => $mode,
+            'ladder_step' => $rung, 'response' => $response,
+            'answered_at' => now()->toIso8601String(), 'client_seq' => $seq,
+        ]]])->assertOk();
+}
+
+it('counts what falls due TOMORROW, which is a narrower question than the next repeat', function () {
+    [$user, $token] = learner();
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    $bank = addWordTo($col, $user->id, 'bank', 'банк');
+    $far = addWordTo($col, $user->id, 'chair', 'стул');
+
+    scheduleAhead($user->id, $apple, 1);
+    scheduleAhead($user->id, $bank, 1);
+    scheduleAhead($user->id, $far, 5);
+
+    $plan = homePlan($this, $token);
+
+    expect($plan['edge_tomorrow'])->toBe(2)
+        // …and the older block is still on the wire beside it. A phone built before the row existed
+        // draws the LIST, and it must not lose it because the server learned to count.
+        ->and($plan['edge'])->toHaveCount(2);
+});
+
+it('says nothing rather than «0 слов» about a tomorrow with no repeats in it', function () {
+    [$user, $token] = learner();
+    [, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    scheduleAhead($user->id, $apple, 5); // scheduled, and not for tomorrow
+
+    expect(homePlan($this, $token)['edge_tomorrow'])->toBeNull();
+});
+
+it('names the day\'s promotions and leads with the word that got furthest', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC']);
+
+    // One pair climbing the recognition rungs: dealt at rung 1, answered by tapping its own id.
+    [$col, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $apple)
+        ->update(['state' => 'learning', 'acquisition' => 'learning', 'learning_step' => 1]);
+
+    // …and one already graduated, one successful review short of «написание».
+    $boarding = addWordTo($col, $user->id, 'boarding', 'посадка');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $boarding)
+        ->update([
+            'state' => 'review', 'acquisition' => 'graduated',
+            'successful_reviews' => \App\Modules\Learning\Domain\Service\LearningLadder::TYPING_MIN_SUCCESSES - 1,
+            'interval_days' => 1, 'due_at' => now()->subDay(),
+        ]);
+
+    answerAtRung($this, $token, $apple, $apple, rung: 1, mode: 'multiple_choice', seq: 1);
+    answerAtRung($this, $token, $boarding, 'boarding', rung: 3, seq: 2);
+
+    $award = homePlan($this, $token)['day_award'];
+
+    expect($award['promoted'])->toBe(2)
+        // The example is the FURTHEST, not the first: «дошло до „написание"» is the day's best
+        // sentence, and the strongest one is the one worth printing.
+        ->and($award['term_id'])->toBe($boarding)
+        ->and($award['text'])->toBe('boarding')
+        ->and($award['step'])->toBe(\App\Modules\Learning\Domain\Service\LearningLadder::STEP_TYPING);
+});
+
+it('has no reward at all on a day that moved nothing — not a reward of zero', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC']);
+    [, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    DB::table('user_term_progress')->where('user_id', $user->id)->where('term_id', $apple)
+        ->update([
+            'state' => 'review', 'acquisition' => 'graduated', 'successful_reviews' => 0,
+            'interval_days' => 1, 'due_at' => now()->subDay(),
+        ]);
+
+    // Answered, correctly, and still on the rung it started on: one success is not four.
+    answerAtRung($this, $token, $apple, 'apple', rung: 3);
+
+    $plan = homePlan($this, $token);
+
+    expect($plan['day_award'])->toBeNull()
+        ->and($plan['today']['answered'])->toBe(1); // the day happened — it just promoted nothing
+});
+
+it('counts the words that reached «выучено» this week, and only this week', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC']);
+    [$col, $fresh] = seedCollectionWith($user, 'fresh', 'свежий');
+    $old = addWordTo($col, $user->id, 'old', 'старый');
+
+    answerTimes($this, $token, $fresh, 'fresh', times: 1);                  // today
+    answerTimes($this, $token, $old, 'old', times: 3, lastDaysAgo: 10);     // a fortnight ago
+
+    // Only the one that crossed into «выучено» inside the window. The other one graduated long
+    // before it and is «выучено», not «выучено за неделю».
+    expect(homePlan($this, $token)['learned_week'])->toBe(1);
+});
+
+it('says nothing about a week that graduated nobody', function () {
+    [$user, $token] = learner();
+    [, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    answerTimes($this, $token, $apple, 'apple', times: 3, lastDaysAgo: 30);
+
+    expect(homePlan($this, $token)['learned_week'])->toBeNull();
+});
+
+it('dresses the ready-made sets as a shop window: cover, size and level', function () {
+    [$user, $token] = learner();
+    $airport = homeStoreDeck('Аэропорт');
+    DB::table('collections')->where('id', $airport)
+        ->update(['image_url' => 'https://images.example/airport.jpg', 'items_count' => 15]);
+
+    // A2 and A2 → one level, not a range.
+    $position = 0;
+    foreach (['gate' => 'A2', 'boarding pass' => 'A2'] as $text => $cefr) {
+        $termId = Ulid::generate();
+        DB::table('terms')->insert([
+            'id' => $termId, 'lang' => 'en', 'text' => $text, 'normalized_text' => $text,
+            'type' => 'word', 'source' => 'curated', 'cefr' => $cefr,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('collection_items')->insert([
+            'id' => Ulid::generate(), 'collection_id' => $airport, 'term_id' => $termId,
+            'position' => $position++, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    // …and one deck whose words carry no level at all.
+    $plain = homeStoreDeck('Быт', 'Дом');
+
+    $store = homePlan($this, $token)['store'];
+    $byId = array_column($store['items'], null, 'id');
+
+    expect($store['count'])->toBe(2)
+        ->and($byId[$airport]['title'])->toBe('Аэропорт')
+        ->and($byId[$airport]['terms_count'])->toBe(15)
+        ->and($byId[$airport]['image_url'])->toBe('https://images.example/airport.jpg')
+        ->and($byId[$airport]['level'])->toBe('A2')
+        // No CEFR and no photo is NULL both times — the strip prints nothing rather than «—»,
+        // and draws paper rather than a broken image.
+        ->and($byId[$plain]['level'])->toBeNull()
+        ->and($byId[$plain]['image_url'])->toBeNull()
+        // The titles-only preview older builds read is still there, and still says the same decks.
+        ->and($store['topics'])->toContain('Аэропорт');
+});
+
+it('has no shop window when the store is empty — not a window of nothing', function () {
+    [, $token] = learner();
+
+    $store = homePlan($this, $token)['store'];
+
+    expect($store['count'])->toBe(0)
+        ->and($store['items'])->toBe([])
+        ->and($store['topics'])->toBe([]);
+});
+
 it('refuses an anonymous caller', function () {
     $this->getJson('/api/v1/home-plan')->assertUnauthorized();
 });
