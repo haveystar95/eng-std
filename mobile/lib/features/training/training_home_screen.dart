@@ -52,6 +52,7 @@ abstract final class HomeBlockKeys {
   static const session = Key('home-session-card');
   static const done = Key('home-done-card');
   static const idle = Key('home-idle-card');
+
   /// «Выучено 146 · за неделю 23 · в работе 41» — three numbers on the morning screen (кадр 19-1),
   /// one line in the evening (кадр 19-2). One key, because it is one block wearing two shapes:
   /// morning numbers are a decision, evening numbers are a summary.
@@ -160,7 +161,8 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
                 debugPrint('[home] the cached day could not be read: $e\n$st');
                 return [_UnreachableCard(key: HomeBlockKeys.unreadable)];
               },
-              data: (view) => _blocks(context, view, streak: streak, learned: learned, online: online),
+              data: (view) =>
+                  _blocks(context, view, streak: streak, learned: learned, online: online),
             ),
           ),
         ),
@@ -200,30 +202,51 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     // «завтра» here — not as zeroes, but as blocks that do not exist yet.
     if (plan.state == HomeStateKind.empty) {
       return [
-        Text(
-          l.homeFirstDayTitle,
-          key: HomeBlockKeys.firstDay,
-          style: AppText.stepTitle.copyWith(fontSize: 26),
-        ),
-        const SizedBox(height: AppSpacing.s16),
-        if (plan.store.items.isNotEmpty) ...[
-          _StoreShowcase(
-            key: HomeBlockKeys.storeShowcase,
-            store: plan.store,
-            large: true,
-            onOpenStore: widget.onOpenStore,
-            onOpen: _openStoreDeck,
-          ),
-          const SizedBox(height: AppSpacing.s16),
-        ],
-        _GenerateCard(key: HomeBlockKeys.generate, withField: true, withChips: true),
-        // [место слово-вызова — DAILY-1] Nothing is drawn here yet, and the column survives it.
-        gap,
-        Center(
-          child: Text(
-            l.homeFirstDayPromise,
-            key: HomeBlockKeys.promise,
-            style: AppText.translation.copyWith(fontSize: 13, color: AppColors.tertiary),
+        // ONE child, and it is as tall as the page: the promise is a FOOTER (кадр 19-3 pins it with
+        // `margin-top:auto`), and a first day is short enough that a plain column leaves it stranded
+        // in the middle of the paper with a screenful of nothing under it. A minimum height plus a
+        // Spacer puts it where the frame puts it and still lets the column scroll if it outgrows the
+        // screen — which it will the day the word challenge lands in the slot below.
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: _pageHeight(context)),
+          // IntrinsicHeight, because a MINIMUM is not a height: inside a list the column still
+          // receives an unbounded maximum, and a Spacer cannot divide infinity. This measures the
+          // column, the minimum above raises the answer to a full page, and the Spacer then has
+          // something finite to take the slack out of.
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l.homeFirstDayTitle,
+                  key: HomeBlockKeys.firstDay,
+                  style: AppText.stepTitle.copyWith(fontSize: 26),
+                ),
+                const SizedBox(height: AppSpacing.s16),
+                if (plan.store.items.isNotEmpty) ...[
+                  _StoreShowcase(
+                    key: HomeBlockKeys.storeShowcase,
+                    store: plan.store,
+                    large: true,
+                    onOpenStore: widget.onOpenStore,
+                    onOpen: _openStoreDeck,
+                  ),
+                  const SizedBox(height: AppSpacing.s16),
+                ],
+                _GenerateCard(key: HomeBlockKeys.generate, withField: true, withChips: true),
+                // [место слово-вызова — DAILY-1] Nothing is drawn here yet, and the column
+                // survives it — the Spacer below simply gives back less room.
+                const Spacer(),
+                const SizedBox(height: AppSpacing.sectionAiry),
+                Center(
+                  child: Text(
+                    l.homeFirstDayPromise,
+                    key: HomeBlockKeys.promise,
+                    style: AppText.translation.copyWith(fontSize: 13, color: AppColors.tertiary),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ];
@@ -244,10 +267,8 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           today: plan.today,
           session: session,
           award: plan.dayAward,
-          onExtra: () => _openTriage(
-            session.triageCollectionId!,
-            session.triageCollectionTitle ?? '',
-          ),
+          onExtra: () =>
+              _openTriage(session.triageCollectionId!, session.triageCollectionTitle ?? ''),
         )
       else
         _IdleCard(
@@ -256,10 +277,8 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           session: session,
           nextReview: plan.nextReview,
           onTakeNew: () => _openSession(learn: true),
-          onSort: () => _openTriage(
-            session.triageCollectionId!,
-            session.triageCollectionTitle ?? '',
-          ),
+          onSort: () =>
+              _openTriage(session.triageCollectionId!, session.triageCollectionTitle ?? ''),
         ),
       // The evening names what the day got wrong straight under what it closed — «Сегодня закрыто»
       // and «Далось труднее всего» are one thought, and the summary comes between them nowhere.
@@ -272,21 +291,13 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         // Three plates in the morning, one line in the evening. Same three numbers: in the morning
         // they are part of the decision to start, and by the evening they are a receipt.
         evening
-            ? _StatsLine(
-                key: HomeBlockKeys.stats,
-                cells: stats,
-                onTap: _openMyWords,
-              )
+            ? _StatsLine(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords)
             : _StatsTile(key: HomeBlockKeys.stats, cells: stats, onTap: _openMyWords),
       ],
       // [место слово-вызова — DAILY-1]
       if (plan.edgeTomorrow != null) ...[
         gap,
-        _TomorrowRow(
-          key: HomeBlockKeys.tomorrow,
-          count: plan.edgeTomorrow!,
-          onTap: _openMyWords,
-        ),
+        _TomorrowRow(key: HomeBlockKeys.tomorrow, count: plan.edgeTomorrow!, onTap: _openMyWords),
       ],
       gap,
       _GenerateCard(key: HomeBlockKeys.generate),
@@ -311,6 +322,23 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
         ),
       ],
     ];
+  }
+
+  /// How much room a full page of this screen has, inside the list's own padding.
+  ///
+  /// The same three subtractions [build] makes for the list's bottom inset, so «as tall as the page»
+  /// means the same thing in both places: the floating tab bar, the device's own bottom inset, and
+  /// the list's top padding are not page.
+  double _pageHeight(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final chrome =
+        AppTabBarMetrics.height +
+        AppTabBarMetrics.bottomInset +
+        media.viewPadding.bottom +
+        media.viewPadding.top +
+        AppSpacing.s8 * 2;
+
+    return (media.size.height - chrome).clamp(0.0, double.infinity);
   }
 
   /// The statistics block's cells, in the order the frames read them, with the empty rule applied
@@ -349,10 +377,8 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     AppHaptics.light();
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SessionScreen(
-          title: AppLocalizations.of(context).homeSessionTitle,
-          learn: learn,
-        ),
+        builder: (_) =>
+            SessionScreen(title: AppLocalizations.of(context).homeSessionTitle, learn: learn),
       ),
     );
     _refreshDay();
@@ -361,7 +387,9 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
   Future<void> _openTriage(String collectionId, String title) async {
     AppHaptics.light();
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => TriageScreen(collectionId: collectionId, title: title)),
+      MaterialPageRoute(
+        builder: (_) => TriageScreen(collectionId: collectionId, title: title),
+      ),
     );
     _refreshDay();
   }
@@ -392,9 +420,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     final pairs = await ref.read(appDatabaseProvider).pairByTerms([termId]);
     final pair = pairs[termId];
     final speakLang =
-        pair?.learned ??
-        ref.read(authControllerProvider).value?.profile?.targetLanguage ??
-        'en';
+        pair?.learned ?? ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -404,9 +430,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
           // Which shelves «Добавить в коллекцию» may offer — one collection is one pair forever
           // (DECISIONS п. 81), so a folder of another pair is one the server refuses, not a worse
           // home. Same resolver the voice above reads.
-          pair: pair == null
-              ? null
-              : LearningPair(learned: pair.learned, support: pair.support),
+          pair: pair == null ? null : LearningPair(learned: pair.learned, support: pair.support),
           onSpeak: () {
             AppHaptics.light();
             (_pronouncer ??= Pronouncer()).speak(word, targetLang: speakLang);
@@ -719,10 +743,7 @@ class _DoneCard extends StatelessWidget {
           const SizedBox(height: 14),
           Container(
             height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.ink,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(2)),
           ),
           if (award != null) ...[
             const SizedBox(height: AppSpacing.s12),
@@ -979,7 +1000,12 @@ class _TermRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(data.text, style: AppText.termInList, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(
+                    data.text,
+                    style: AppText.termInList,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (data.translation != null && data.translation!.isNotEmpty) ...[
                     const SizedBox(height: 3),
                     Text(
@@ -1062,7 +1088,11 @@ class _StatsTile extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       cells[i].label.toUpperCase(),
-                      maxLines: 1,
+                      // Two lines, because a caption is not a number: «IN PROGRESS» does not fit a
+                      // third of 390 pt at this tracking and came out as «IN PROGRE…» on the live
+                      // run. All three plates grow together (IntrinsicHeight), so the row stays
+                      // even, and Russian still needs one line.
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
                     ),
@@ -1283,7 +1313,10 @@ class _GenerateCard extends StatelessWidget {
                 for (final chip in chips)
                   // Tappable, unlike the topic chips they replace: an EXAMPLE the learner cannot
                   // act on is a caption, and these are the fastest way into the screen above.
-                  _ExampleChip(label: chip, onTap: () => _open(context, topic: chip)),
+                  _ExampleChip(
+                    label: chip,
+                    onTap: () => _open(context, topic: chip),
+                  ),
               ],
             ),
           ],
@@ -1474,7 +1507,7 @@ class _StoreCoverTile extends StatelessWidget {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  height: height * 0.62,
+                  height: height * 0.72,
                   child: const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -1486,20 +1519,24 @@ class _StoreCoverTile extends StatelessWidget {
                   ),
                 ),
               Positioned(
-                left: large ? 12 : 8,
-                right: large ? 12 : 8,
-                bottom: large ? 10 : 7,
+                left: large ? 12 : 6,
+                right: large ? 12 : 6,
+                bottom: large ? 10 : 6,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       item.title,
-                      maxLines: large ? 2 : 1,
+                      // TWO LINES even in the narrow strip. The frame's mock decks are called
+                      // «Аэропорт»; the catalogue's are called «Знакомство и small talk», and on one
+                      // line at 96 pt that came out as «Знакомст…» — a cover whose caption names no
+                      // deck. Two lines and the meta below still sit inside the gradient.
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.collectionNameCard.copyWith(
-                        fontSize: large ? 16.5 : 13,
-                        height: 1.15,
+                        fontSize: large ? 16.5 : 12.5,
+                        height: 1.1,
                         color: hasPhoto ? AppColors.paper : AppColors.ink,
                       ),
                     ),
@@ -1509,7 +1546,10 @@ class _StoreCoverTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.translation.copyWith(
-                        fontSize: large ? 11.5 : 10.5,
+                        // The level is the whole point of this line, so it must not be what gets
+                        // cut: «20 слов · A2–B1» has to fit the cover's width, and at 10.5 it did
+                        // not — the strip printed «20 слов · A2…».
+                        fontSize: large ? 11.5 : 9.5,
                         color: hasPhoto
                             ? AppColors.paper.withValues(alpha: 0.82)
                             : AppColors.secondary,
