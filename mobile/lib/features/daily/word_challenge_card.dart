@@ -109,7 +109,9 @@ class WordChallengeCard extends StatelessWidget {
                   l.challengeLabel.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppText.sectionLabel,
+                  // .14em here, .1em on the statistics plate — the two rows ask for different
+                  // tracking, and the difference is what makes this one read as a badge.
+                  style: AppText.blockLabel.copyWith(letterSpacing: 1.47),
                 ),
               ),
             ],

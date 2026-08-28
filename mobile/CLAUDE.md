@@ -101,9 +101,21 @@ part of that answer. It reads ONE payload — `GET /home-plan`, cached into `syn
 
 **«Слова» — paper/ink.** A light, typographic look: paper ground, ink type, hairline rules; no
 gradients, no emoji decoration, **no dark theme** (the old dark UI died with `lib/core/`). Tokens
-live in `lib/theme/`, components in `lib/ui/`. The source of truth for the theme is
-`../backend2/docs/design/tokens.html`; where the token list and a screen frame disagree, the token
-list wins.
+live in `lib/theme/`, components in `lib/ui/`.
+
+**The source of truth for the theme is
+`../backend2/docs/design/design/Слова - Токен-лист.dc.html`** — the LIVE list, in the design canvas
+folder. `../backend2/docs/design/tokens.html` is the older export of the same thing and lags behind;
+at the HOME-2 close it was four days stale and knew neither the brass token nor the rows for the home
+screen's blocks, and a whole pass of type sizes was set from it wrongly before anyone noticed. Read
+the live one, and when they disagree the live one wins.
+
+Where the token list and a screen FRAME disagree, the token list wins — but read the frame first
+anyway: it is the only place the composition and the order of blocks are stated, and a prose
+retelling of it (mine included) is not a substitute.
+
+The design canvas folder is **untracked**, so the live list does not travel with a clone. If it is
+missing, ask the owner for it rather than falling back to `tokens.html`.
 
 The palette is deliberately close-valued, which has a QA consequence worth knowing: a fill can be
 present in the code and invisible in a screenshot. «Выглядит пустым» is not a finding until it has

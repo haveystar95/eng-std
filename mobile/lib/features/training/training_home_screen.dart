@@ -644,7 +644,11 @@ class _SessionCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 7, left: AppSpacing.s8),
                 child: Text(
                   l.homeSessionBadge.toUpperCase(),
-                  style: AppText.sectionLabel.copyWith(color: AppColors.brass),
+                  style: AppText.blockLabel.copyWith(
+                    color: AppColors.brass,
+                    fontSize: 11,
+                    letterSpacing: 1.54, // .14em
+                  ),
                 ),
               ),
             ],
@@ -886,7 +890,10 @@ class _DoneCard extends StatelessWidget {
                 const SizedBox(height: 17),
                 const Divider(height: 1, thickness: 1, color: AppColors.dividerFaint),
                 const SizedBox(height: 13),
-                Text(l.homeHardestTitle.toUpperCase(), style: AppText.sectionLabel),
+                Text(
+                  l.homeHardestTitle.toUpperCase(),
+                  style: AppText.blockLabel.copyWith(letterSpacing: 1.47),
+                ),
                 const SizedBox(height: AppSpacing.s8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -1101,7 +1108,7 @@ class _StatsTile extends StatelessWidget {
                       // even, and Russian still needs one line.
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.sectionLabel.copyWith(color: AppColors.tertiary),
+                      style: AppText.blockLabel,
                     ),
                   ],
                 ),
@@ -1382,7 +1389,10 @@ class _StoreShowcase extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(l.homeStoreShowcaseTitle.toUpperCase(), style: AppText.sectionLabel),
+              child: Text(
+                l.homeStoreShowcaseTitle.toUpperCase(),
+                style: AppText.blockLabel.copyWith(letterSpacing: 1.47),
+              ),
             ),
             if (onOpenStore != null)
               MinTapHeight(
