@@ -78,6 +78,12 @@ abstract final class AppColors {
   /// this row. The frames introduced brass and the token list has since caught up.
   static const brass = Color(0xFFB79363);
 
+  /// The dark session plate is a GRADIENT in the token list, not a flat fill: #332A23 → #292219.
+  /// Two stops eight units apart — it reads as one dark surface with a light source, not as a
+  /// gradient, which is why it is the one place the palette allows one.
+  static const plateTop = Color(0xFF332A23);
+  static const plateBottom = Color(0xFF292219);
+
   /// The same warm mark on PAPER, where #B79363 is too light to read: the generation card's arrow
   /// and the evening's reward line (кадры 19-1, 19-2). One family, two grounds.
   static const brassInk = Color(0xFF8C6A3A);

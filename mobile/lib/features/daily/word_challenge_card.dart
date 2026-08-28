@@ -62,10 +62,13 @@ class WordChallengeCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.circular(24),
+        // Paper at .55, not the opaque raised surface: the card must not compete with «Начать», and
+        // the token list makes that literal — a ground you can see the page through, a hairline, and
+        // no shadow at all.
+        color: AppColors.surfaceRaised.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.hairline),
       ),
       child: Column(
@@ -99,7 +102,7 @@ class WordChallengeCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(LucideIcons.target, size: 14, color: AppColors.brass),
+              const Icon(LucideIcons.target, size: 13, color: AppColors.brass),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -116,7 +119,11 @@ class WordChallengeCard extends StatelessWidget {
           const SizedBox(width: AppSpacing.s8),
           Text(
             right,
-            style: AppText.translation.copyWith(fontSize: 12, color: AppColors.tertiary),
+            style: AppText.translation.copyWith(
+              fontSize: 11.5,
+              color: AppColors.tertiary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ],
       ],
@@ -135,7 +142,7 @@ class WordChallengeCard extends StatelessWidget {
       Text(
         challenge.text,
         // Antiqua: it is the target language, which is the one thing Literata is for (rule 04).
-        style: AppText.displayTerm.copyWith(fontSize: 28, height: 1.05),
+        style: AppText.displayTerm.copyWith(fontSize: 22, height: 1.1),
       ),
       const SizedBox(height: 13),
       if (stacked)
@@ -182,7 +189,7 @@ class WordChallengeCard extends StatelessWidget {
               child: const Icon(LucideIcons.check, size: 13, color: AppColors.paper),
             ),
             const SizedBox(width: 9),
-            Text(l.challengePraise, style: AppText.displayTerm.copyWith(fontSize: 24)),
+            Text(l.challengePraise, style: AppText.displayTerm.copyWith(fontSize: 26)),
           ],
         ),
         const SizedBox(height: 14),
@@ -194,7 +201,7 @@ class WordChallengeCard extends StatelessWidget {
         const SizedBox(height: 11),
         Text(
           l.challengeAnswer(challenge.text, challenge.translation),
-          style: AppText.displayTerm.copyWith(fontSize: 24, height: 1.15),
+          style: AppText.displayTerm.copyWith(fontSize: 26, height: 1.1),
         ),
       ],
       // WHERE «73% ответили верно» GOES. The stub has no such number — nobody is counting — and a
@@ -292,7 +299,7 @@ class _Option extends StatelessWidget {
         onTap: onTap,
         child: Container(
           // 44 pt — the minimum tap target, and the frame's own height for these.
-          height: 44,
+          height: 42,
           alignment: stacked ? Alignment.centerLeft : Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: stacked ? 16 : 8),
           decoration: BoxDecoration(
@@ -304,8 +311,10 @@ class _Option extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: stacked ? TextAlign.left : TextAlign.center,
+            // 13 / 600 whichever way they are laid out: the column is a fallback for a long
+            // option, not a different element.
             style: AppText.translation.copyWith(
-              fontSize: stacked ? 14.5 : 13,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.inkBody,
             ),

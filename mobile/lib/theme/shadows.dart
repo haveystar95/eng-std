@@ -33,6 +33,18 @@ abstract final class AppShadows {
     BoxShadow(color: Color.fromARGB(77, _inkR, _inkG, _inkB), blurRadius: 30, offset: Offset(0, 9)),
   ];
 
+  /// Тёмная плита сессии (кадр 19-1, токен-лист).
+  /// `0 3 10 rgba(46,38,32,.10)` + `0 20 40 rgba(46,38,32,.20)` — глубже, чем у бумаги: плита
+  /// единственная тёмная поверхность экрана и лежит на нём, а не в нём.
+  static const plate = <BoxShadow>[
+    BoxShadow(color: Color.fromARGB(26, _inkR, _inkG, _inkB), blurRadius: 10, offset: Offset(0, 3)),
+    BoxShadow(
+      color: Color.fromARGB(51, _inkR, _inkG, _inkB),
+      blurRadius: 40,
+      offset: Offset(0, 20),
+    ),
+  ];
+
   /// Плавающая таб-пилюля (§3, «Стекло пилюли»).
   /// `0 12 32 rgba(60,50,40,.16)`.
   static const pill = <BoxShadow>[

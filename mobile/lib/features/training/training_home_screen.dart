@@ -247,7 +247,7 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
                 Text(
                   l.homeFirstDayTitle,
                   key: HomeBlockKeys.firstDay,
-                  style: AppText.stepTitle.copyWith(fontSize: 26),
+                  style: AppText.displayTerm.copyWith(fontSize: 26, height: 1.15),
                 ),
                 const SizedBox(height: AppSpacing.s16),
                 if (plan.store.items.isNotEmpty) ...[
@@ -521,7 +521,7 @@ class _StreakDots extends StatelessWidget {
         StreakDot.today => null,
         StreakDot.empty => AppColors.track,
       },
-      border: kind == StreakDot.today ? Border.all(color: AppColors.ink, width: 1.5) : null,
+      border: kind == StreakDot.today ? Border.all(color: AppColors.brass, width: 1.5) : null,
     ),
   );
 }
@@ -560,8 +560,15 @@ class _SessionCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.ink,
-        borderRadius: BorderRadius.circular(AppRadii.card),
+        // The one gradient the palette allows, and the token list spells it out: two stops eight
+        // units apart read as one dark surface with a light source rather than as a gradient.
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.plateTop, AppColors.plateBottom],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: AppShadows.plate,
       ),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       child: Column(
@@ -581,8 +588,9 @@ class _SessionCard extends StatelessWidget {
                       '${session.total}',
                       style: AppText.displayNumber.copyWith(
                         color: paper,
-                        fontSize: 56,
-                        height: 0.86,
+                        fontSize: 60,
+                        height: 0.8,
+                        letterSpacing: -2.4, // −.04em at 60
                       ),
                     ),
                     const SizedBox(width: 11),
@@ -675,6 +683,7 @@ class _SessionCard extends StatelessWidget {
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
                         color: paper,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -700,16 +709,21 @@ class _InvertedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.paper,
-      borderRadius: BorderRadius.circular(AppRadii.field),
+      // 52 / radius 16 / 17 / 700 — the token list gives this button its own three numbers, because
+      // it is the only light-on-dark primary in the app and the ordinary button token is 19 / 20.
+      borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPressed,
         child: SizedBox(
-          height: 50,
+          height: 52,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: AppText.primaryButton.copyWith(color: AppColors.ink)),
+              Text(
+                label,
+                style: AppText.primaryButton.copyWith(color: AppColors.ink, fontSize: 17),
+              ),
               const SizedBox(width: AppSpacing.s8),
               const Icon(LucideIcons.arrowRight, size: 17, color: AppColors.ink),
             ],
@@ -827,7 +841,11 @@ class _DoneCard extends StatelessWidget {
               if (today != null && today!.seconds > 0)
                 l.homeDoneMinutes(max(1, (today!.seconds / 60).round())),
             ].join(' · '),
-            style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
+            style: AppText.translation.copyWith(
+              fontSize: 13.5,
+              color: AppColors.secondary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
           if (award != null) ...[
             const SizedBox(height: AppSpacing.s12),
@@ -1378,12 +1396,12 @@ class _StoreShowcase extends StatelessWidget {
                     Text(
                       l.homeStoreShowcaseAll(store.count),
                       style: AppText.translation.copyWith(
-                        fontSize: 12.5,
-                        color: AppColors.secondary,
+                        fontSize: 12,
+                        color: AppColors.tertiary,
                       ),
                     ),
                     const SizedBox(width: 5),
-                    const Icon(LucideIcons.arrowRight, size: 13, color: AppColors.secondary),
+                    const Icon(LucideIcons.arrowRight, size: 13, color: AppColors.tertiary),
                   ],
                 ),
               ),
@@ -1500,6 +1518,7 @@ class _StoreCoverTile extends StatelessWidget {
               style: AppText.translation.copyWith(
                 fontSize: large ? 11.5 : 10.5,
                 color: AppColors.tertiary,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
@@ -1535,19 +1554,16 @@ class _StoreLink extends StatelessWidget {
         AppHaptics.light();
         onTap();
       },
-      child: Padding(
-        padding: const EdgeInsets.only(left: 3),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l.homeStoreLink(count),
-              style: AppText.translation.copyWith(fontSize: 13, color: AppColors.secondary),
-            ),
-            const SizedBox(width: 6),
-            const Icon(LucideIcons.arrowRight, size: 14, color: AppColors.secondary),
-          ],
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            l.homeStoreLink(count),
+            style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.tertiary),
+          ),
+          const SizedBox(width: 6),
+          const Icon(LucideIcons.arrowRight, size: 13, color: AppColors.tertiary),
+        ],
       ),
     );
   }

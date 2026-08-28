@@ -199,7 +199,6 @@ abstract final class AppText {
     fontWeight: FontWeight.w400,
     fontSize: 26,
     height: 1,
-    letterSpacing: -0.5,
     color: AppColors.ink,
     fontFeatures: _tabular,
   );
