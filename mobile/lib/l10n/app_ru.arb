@@ -1546,6 +1546,30 @@
   "homeDoneTitle": "Сегодня закрыто",
   "@homeDoneTitle": { "description": "Заголовок вечерней карточки (кадр 17b)." },
 
+  "homeDoneOfWords": "{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}",
+  "@homeDoneOfWords": {
+    "description": "Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.",
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "homeDoneCards": "{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}",
+  "@homeDoneCards": {
+    "description": "Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeDoneMinutes": "{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}",
+  "@homeDoneMinutes": {
+    "description": "Третья единица итога дня (кадр 19-2). Сокращённо: это хвост строки, а не самостоятельное утверждение.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeChainProgress": "{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}",
+  "@homeChainProgress": {
+    "description": "Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.",
+    "placeholders": { "position": { "type": "int" }, "total": { "type": "int" } }
+  },
+
   "homeDoneOf": "{done} из {total}",
   "@homeDoneOf": {
     "description": "Прогресс дня: отвеченные карточки из запланированных, «32 из 32».",

@@ -3237,6 +3237,30 @@ abstract class AppLocalizations {
   /// **'Сегодня закрыто'**
   String get homeDoneTitle;
 
+  /// Итог дня в СЛОВАХ (кадр 19-2). Единица обязательна: «52 из 52» без неё — счёт карточек в форме счёта слов, и 52 не было числом слов ни у кого. Карточки и минуты идут подписью следом.
+  ///
+  /// In ru, this message translates to:
+  /// **'{total, plural, one{{done} из {total} слова} few{{done} из {total} слов} many{{done} из {total} слов} other{{done} из {total} слов}}'**
+  String homeDoneOfWords(int done, int total);
+
+  /// Вторая единица итога дня (кадр 19-2) — сколько карточек стоили эти слова.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} карточка} few{{count} карточки} many{{count} карточек} other{{count} карточки}}'**
+  String homeDoneCards(int count);
+
+  /// Третья единица итога дня (кадр 19-2). Сокращённо: это хвост строки, а не самостоятельное утверждение.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} мин} few{{count} мин} many{{count} мин} other{{count} мин}}'**
+  String homeDoneMinutes(int count);
+
+  /// Внутренний прогресс одного слова, когда день дошёл до него одного: «1 слово · карточка 2 из 3». Пока слово в цепочке — строка живёт; цепочка кончилась — слово ушло из плана, и строки нет.
+  ///
+  /// In ru, this message translates to:
+  /// **'{total, plural, one{карточка {position} из {total}} few{карточка {position} из {total}} many{карточка {position} из {total}} other{карточка {position} из {total}}}'**
+  String homeChainProgress(int position, int total);
+
   /// Прогресс дня: отвеченные карточки из запланированных, «32 из 32».
   ///
   /// In ru, this message translates to:

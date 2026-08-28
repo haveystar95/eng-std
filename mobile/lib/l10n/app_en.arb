@@ -656,6 +656,10 @@
   "homeDoneTitle": "Done for today",
   "@homeDoneTitle": { "description": "Title of the evening card (frame 17b)." },
 
+  "homeDoneOfWords": "{total, plural, one{{done} of {total} word} other{{done} of {total} words}}",
+  "homeDoneCards": "{count, plural, one{{count} card} other{{count} cards}}",
+  "homeDoneMinutes": "{count, plural, one{{count} min} other{{count} min}}",
+  "homeChainProgress": "{total, plural, one{card {position} of {total}} other{card {position} of {total}}}",
   "homeDoneOf": "{done} of {total}",
   "@homeDoneOf": {
     "description": "The day's progress: answered cards out of planned.",

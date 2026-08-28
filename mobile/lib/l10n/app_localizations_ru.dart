@@ -2116,6 +2116,58 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeDoneTitle => 'Сегодня закрыто';
 
   @override
+  String homeDoneOfWords(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$done из $total слов',
+      many: '$done из $total слов',
+      few: '$done из $total слов',
+      one: '$done из $total слова',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeDoneCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count карточки',
+      many: '$count карточек',
+      few: '$count карточки',
+      one: '$count карточка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeDoneMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count мин',
+      many: '$count мин',
+      few: '$count мин',
+      one: '$count мин',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeChainProgress(int position, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'карточка $position из $total',
+      many: 'карточка $position из $total',
+      few: 'карточка $position из $total',
+      one: 'карточка $position из $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String homeDoneOf(int done, int total) {
     return '$done из $total';
   }

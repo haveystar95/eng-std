@@ -74,9 +74,8 @@ abstract final class AppColors {
   /// challenge. It is NOT a general accent — nothing on the paper ground wears it, and the rule
   /// «один акцент на экран» is what keeps it meaning «начни отсюда».
   ///
-  /// NOT YET IN `../backend2/docs/design/tokens.html`, which is the source of truth for this palette
-  /// — the frames introduced it and the token list has not caught up. Add the row there; if the
-  /// owner decides against brass, this constant is the one place to delete.
+  /// In `../backend2/docs/design/tokens.html` — the source of truth for this palette, and it carries
+  /// this row. The frames introduced brass and the token list has since caught up.
   static const brass = Color(0xFFB79363);
 
   /// The same warm mark on PAPER, where #B79363 is too light to read: the generation card's arrow

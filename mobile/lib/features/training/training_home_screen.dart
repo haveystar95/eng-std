@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -549,6 +551,7 @@ class _SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final paper = AppColors.paper;
+    final chain = chainProgress(l, session);
     final rows = <({String label, int count})>[
       if (session.repeat > 0) (label: l.homeSessionRowRepeat, count: session.repeat),
       if (session.newTerms > 0) (label: l.homeSessionRowNew, count: session.newTerms),
@@ -601,7 +604,19 @@ class _SessionCard extends StatelessWidget {
                           // learner reads this to decide whether they have time, and «~158 карточек»
                           // is a second unit for the same decision. It still has a home — the
                           // collection button's own caption (INPUT-1).
-                          if (session.estimatedMinutes != null) ...[
+                          // The day down to ONE word says WHERE IN IT the learner is, not just how
+                          // long it takes: «1 слово» reads the same at the start of a chain and at
+                          // its end, and the chain is the only thing left to finish.
+                          if (chain != null) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              chain,
+                              style: AppText.translation.copyWith(
+                                fontSize: 12.5,
+                                color: paper.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ] else if (session.estimatedMinutes != null) ...[
                             const SizedBox(height: 3),
                             Text(
                               l.homeSessionCardMinutes(session.estimatedMinutes!),
@@ -742,7 +757,10 @@ class _DoneCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final answered = today?.answered ?? 0;
+    final cards = today?.answered ?? 0;
+    // WORDS lead. The line said «52 из 52» off the card count — a number of cards wearing the shape
+    // of a number of words, and 52 was not a number of words anybody had.
+    final answered = today?.words ?? 0;
     // What the day HELD: what was answered plus what is still owed. `repeat` alone, and not
     // `total`: in this state it is 0 by construction (the day is closed precisely because nothing
     // is due), while leftover new words and unswiped cards are «сверх плана» — counting them into
@@ -763,8 +781,10 @@ class _DoneCard extends StatelessWidget {
     // «Следующий повтор — завтра, 14 слов» is gone from here: «Завтра выпадет N слов →» says the
     // same thing further down and is a DOOR rather than a sentence. Two of them on one screen is
     // the screen telling the learner the same fact twice in two voices.
+    final chain = chainProgress(l, session);
     final lines = <String>[
-      if (canTakeNew) l.homeExtraNew(session.newTerms),
+      if (canTakeNew)
+        [l.homeExtraNew(session.newTerms), ?chain].join(' · '),
       if (!canTakeNew && canSort)
         l.homeExtraFromCollection(session.triage, session.triageCollectionTitle ?? ''),
     ];
@@ -798,9 +818,14 @@ class _DoneCard extends StatelessWidget {
           ),
           const SizedBox(height: 11),
           Text(
+            // «14 из 14 слов · 52 карточки · 2 мин» — every number wears its unit, and the units go
+            // in the order of what the learner did: words are the work, cards are how many times
+            // they were asked, minutes are what it cost.
             [
-              l.homeDoneOf(answered, planned),
-              if (today != null && today!.seconds > 0) formatSessionDuration(l, today!.seconds),
+              l.homeDoneOfWords(planned, answered),
+              if (cards > 0) l.homeDoneCards(cards),
+              if (today != null && today!.seconds > 0)
+                l.homeDoneMinutes(max(1, (today!.seconds / 60).round())),
             ].join(' · '),
             style: AppText.translation.copyWith(fontSize: 13.5, color: AppColors.secondary),
           ),
@@ -976,6 +1001,21 @@ String _nextReviewLine(BuildContext context, AppLocalizations l, HomeNextReview 
       : DateFormat('d MMMM', locale).format(parsed);
 
   return l.homeNextReviewLine(when, next.count);
+}
+
+/// «карточка 2 из 3» — where the learner is inside the ONE word the day has left, or null.
+///
+/// Null unless the server said the day is down to a single word still climbing a chain: a lone
+/// graduated repeat owes one card, and «карточка 1 из 1» is a progress bar for a thing with no
+/// progress. `cards` is what is LEFT, so the position counts down from the total.
+///
+/// Public so the widget test can state the rule rather than re-derive it.
+String? chainProgress(AppLocalizations l, HomeSession session) {
+  final total = session.chainTotal;
+  if (total == null || total <= 1) return null;
+  final position = (total - session.cards + 1).clamp(1, total);
+
+  return l.homeChainProgress(position, total);
 }
 
 /// «6 мин 40 с», or plain seconds under a minute. Public so the widget test can state the rule

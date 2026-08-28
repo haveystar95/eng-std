@@ -34,6 +34,7 @@ void main() {
     int triage = 0,
     int? minutes,
     int? cards,
+    int? chainTotal,
     String? triageCollectionId,
   }) => HomeSession(
     repeat: repeat,
@@ -49,6 +50,7 @@ void main() {
     triageMinutes: triage > 0 ? 1 : null,
     triageCollectionId: triage > 0 ? (triageCollectionId ?? 'col') : null,
     triageCollectionTitle: triage > 0 ? 'Ветклиника' : null,
+    chainTotal: chainTotal,
   );
 
   HomeStoreItem deck(String id, String title, {String? level = 'A2', String? image}) =>
@@ -241,7 +243,7 @@ void main() {
     HomePlan evening({HomeDayAward? award, List<HomeHardTerm> hardest = const []}) => plan(
       state: HomeStateKind.done,
       session_: session(),
-      today: const HomeToday(answered: 32, seconds: 400),
+      today: const HomeToday(answered: 32, seconds: 400, words: 32),
       hardest: hardest,
       edgeTomorrow: 14,
       dayAward: award,
@@ -270,9 +272,9 @@ void main() {
       expect(find.byKey(HomeBlockKeys.storeLink), findsNothing);
       expect(find.byKey(HomeBlockKeys.session), findsNothing);
 
-      // The day's progress is answered cards, and the denominator is what the day held. One line
-      // with the duration now — кадр 19-2 gives the heading to the praise, not to the number.
-      expect(find.textContaining('32 из 32'), findsOneWidget);
+      // WORDS lead and carry their unit; cards and minutes follow. «32 из 32» bare is the bug.
+      expect(find.textContaining('32 из 32 слов'), findsOneWidget);
+      expect(find.text('32 из 32'), findsNothing);
       // The reward names the rung in the interface's own words — the server sent the number 4.
       expect(find.textContaining('reluctant'), findsOneWidget);
       expect(find.textContaining('написание'), findsOneWidget);
@@ -482,6 +484,99 @@ void main() {
       expect(find.byKey(HomeBlockKeys.challenge), findsNothing);
       // …and the row below it is still there: the column survives the gap.
       expect(find.byKey(HomeBlockKeys.tomorrow), findsOneWidget);
+    });
+  });
+
+  group('канон единиц: число без единицы на главной не рисуется', () {
+    /// Every Text the screen renders, flattened.
+    List<String> texts(WidgetTester tester) => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '')
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    /// A line that STATES A COUNT and names no unit — «52 из 52», «14 · 2». The plates are the one
+    /// place a bare number is right, and there the unit is the caption under it.
+    final bareCount = RegExp(r'^\s*\d+\s+(из|of)\s+\d+\s*\$');
+
+    testWidgets('the evening states words, cards and minutes — not «52 из 52»', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(),
+          today: const HomeToday(answered: 52, seconds: 128, words: 14),
+        ),
+      );
+
+      // The bug from the phone, in one line: the number was cards and the shape was words.
+      expect(find.text('52 из 52'), findsNothing);
+      expect(find.text('14 из 14 слов · 52 карточки · 2 мин'), findsOneWidget);
+    });
+
+    for (final state in [HomeStateKind.plan, HomeStateKind.done, HomeStateKind.idle]) {
+      testWidgets('no «N из M» without a unit anywhere on $state', (tester) async {
+        await pumpHome(
+          tester,
+          plan(
+            state: state,
+            session_: session(repeat: 3, triage: 2, minutes: 1),
+            today: state == HomeStateKind.done
+                ? const HomeToday(answered: 52, seconds: 128, words: 14)
+                : null,
+            edgeTomorrow: 14,
+          ),
+        );
+
+        final offenders = texts(tester).where(bareCount.hasMatch).toList();
+        expect(offenders, isEmpty, reason: 'these state a count and name no unit: $offenders');
+      });
+    }
+  });
+
+  group('добивка одного слова показывает, где он внутри цепочки', () {
+    testWidgets('«1 слово · карточка 2 из 3» while the chain is running', (tester) async {
+      // One word left, two of its three cards still owed: it is on card two.
+      await pumpHome(
+        tester,
+        plan(session_: session(repeat: 1, cards: 2, chainTotal: 3, minutes: 1)),
+      );
+
+      expect(find.textContaining('карточка 2 из 3'), findsOneWidget);
+    });
+
+    testWidgets('the offer on a closed day carries it too', (tester) async {
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(newTerms: 1, cards: 3, chainTotal: 3),
+          today: const HomeToday(answered: 4, seconds: 30, words: 2),
+        ),
+      );
+
+      expect(find.textContaining('карточка 1 из 3'), findsOneWidget);
+    });
+
+    testWidgets('a lone graduated repeat has no chain to report', (tester) async {
+      // One word, one card: «карточка 1 из 1» is a progress bar for a thing with no progress.
+      await pumpHome(tester, plan(session_: session(repeat: 1, cards: 1, minutes: 1)));
+
+      expect(find.textContaining('карточка'), findsNothing);
+    });
+
+    testWidgets('the line is gone the moment the chain is finished', (tester) async {
+      // The word left the plan — nothing owed, nothing to say about it.
+      await pumpHome(
+        tester,
+        plan(
+          state: HomeStateKind.done,
+          session_: session(),
+          today: const HomeToday(answered: 3, seconds: 30, words: 1),
+        ),
+      );
+
+      expect(find.textContaining('карточка'), findsNothing);
     });
   });
 

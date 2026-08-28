@@ -2034,6 +2034,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDoneTitle => 'Done for today';
 
   @override
+  String homeDoneOfWords(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$done of $total words',
+      one: '$done of $total word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeDoneCards(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cards',
+      one: '$count card',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeDoneMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '$count min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeChainProgress(int position, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'card $position of $total',
+      one: 'card $position of $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String homeDoneOf(int done, int total) {
     return '$done of $total';
   }

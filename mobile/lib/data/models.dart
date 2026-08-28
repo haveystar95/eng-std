@@ -1253,6 +1253,7 @@ class HomeSession {
     this.triageMinutes,
     this.triageCollectionId,
     this.triageCollectionTitle,
+    this.chainTotal,
   });
 
   /// [total] is `repeat + newTerms` — the POOL, which is the queue. [triage] is counted beside it
@@ -1281,6 +1282,12 @@ class HomeSession {
   final String? triageCollectionId;
   final String? triageCollectionTitle;
 
+  /// When the day is down to ONE word still climbing its chain: how many cards that chain holds.
+  /// Null otherwise — a lone graduated repeat is one card, and «карточка 1 из 1» is not progress.
+  ///
+  /// [cards] is what is LEFT, so the position is `chainTotal - cards + 1`.
+  final int? chainTotal;
+
   factory HomeSession.fromJson(Map<String, dynamic> j) => HomeSession(
     repeat: (j['repeat'] as int?) ?? 0,
     newTerms: (j['new'] as int?) ?? 0,
@@ -1294,6 +1301,7 @@ class HomeSession {
     triageMinutes: j['triage_minutes'] as int?,
     triageCollectionId: j['triage_collection_id'] as String?,
     triageCollectionTitle: j['triage_collection_title'] as String?,
+    chainTotal: j['chain_total'] as int?,
   );
 }
 
@@ -1339,12 +1347,23 @@ class HomeHardTerm {
 
 /// What today produced — STUDY answers only, so a free practice run never closes the day.
 class HomeToday {
-  const HomeToday({required this.answered, required this.seconds});
+  const HomeToday({required this.answered, required this.seconds, this.words = 0});
 
-  final int answered, seconds;
+  /// Answers, which is CARDS: a word answered at three rungs today counts three times.
+  final int answered;
+  final int seconds;
 
-  factory HomeToday.fromJson(Map<String, dynamic> j) =>
-      HomeToday(answered: (j['answered'] as int?) ?? 0, seconds: (j['seconds'] as int?) ?? 0);
+  /// DISTINCT words behind those answers — the day's headline unit. The evening said «52 из 52» off
+  /// [answered] alone, which is a count of cards wearing the shape of a count of words.
+  final int words;
+
+  factory HomeToday.fromJson(Map<String, dynamic> j) => HomeToday(
+    answered: (j['answered'] as int?) ?? 0,
+    seconds: (j['seconds'] as int?) ?? 0,
+    // Absent on a server that predates the field, and then the card falls back to cards — the same
+    // number it printed before, rather than a zero.
+    words: (j['words'] as int?) ?? (j['answered'] as int?) ?? 0,
+  );
 }
 
 /// «Следующий повтор — 28 августа, 14 слов».
