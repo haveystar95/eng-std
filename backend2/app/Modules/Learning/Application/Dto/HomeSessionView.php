@@ -51,5 +51,16 @@ final readonly class HomeSessionView
         /** Where the swipe pass leads; null when `triage` is 0. */
         public ?string $triageCollectionId = null,
         public ?string $triageCollectionTitle = null,
+        /**
+         * When the day's whole outstanding work is ONE word still climbing its chain: how many cards
+         * that chain holds in total. Null otherwise — including for a lone graduated repeat, whose
+         * «chain» is one card and whose progress is therefore nothing to report.
+         *
+         * With [cards] beside it the screen can say «карточка 2 из 3»: the position is
+         * `chainTotal - cards + 1`, because [cards] is what is LEFT. A learner finishing one word
+         * wants to know how much of it is left, and «1 слово» alone says the same thing at the start
+         * of the chain as at its end.
+         */
+        public ?int $chainTotal = null,
     ) {}
 }

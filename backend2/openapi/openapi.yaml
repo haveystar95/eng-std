@@ -2541,6 +2541,15 @@ components:
             triage_collection_title:
               type: string
               nullable: true
+            chain_total:
+              type: integer
+              nullable: true
+              description: >
+                When the day's whole outstanding work is ONE word still climbing its chain, how many
+                cards that chain holds in total — so the screen can say «1 слово · карточка 2 из 3»
+                (position = `chain_total - cards + 1`, since `cards` is what is LEFT). Null
+                otherwise, including for a lone graduated repeat, whose chain is one card and whose
+                progress is nothing to report.
         in_work:
           type: object
           required: [total, waiting, per_day, new_remaining]
@@ -2600,6 +2609,14 @@ components:
           properties:
             answered:
               type: integer
+              description: >
+                Answers, which is CARDS: a word answered at three rungs today counts three times.
+            words:
+              type: integer
+              description: >
+                DISTINCT words behind those answers — the day's headline unit. The evening said
+                «52 из 52» off `answered` alone, which is a count of cards wearing the shape of a
+                count of words. Words lead and cards follow: «14 из 14 слов · 52 карточки · 2 мин».
             seconds:
               type: integer
               description: Sum of the answers' own latencies.

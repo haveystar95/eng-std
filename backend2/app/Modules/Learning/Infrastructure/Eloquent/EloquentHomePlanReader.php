@@ -270,12 +270,13 @@ final class EloquentHomePlanReader implements HomePlanReader
     public function todayAnswers(UserId $userId, DateTimeImmutable $now, DateTimeZone $tz): HomeTodayView
     {
         $row = $this->studyAnswersToday($userId, $now, $tz)
-            ->selectRaw('count(*) AS n, coalesce(sum(latency_ms), 0) AS ms')
+            ->selectRaw('count(*) AS n, count(DISTINCT term_id) AS w, coalesce(sum(latency_ms), 0) AS ms')
             ->first();
 
         return new HomeTodayView(
             (int) ($row->n ?? 0),
             intdiv((int) ($row->ms ?? 0), 1000),
+            (int) ($row->w ?? 0),
         );
     }
 

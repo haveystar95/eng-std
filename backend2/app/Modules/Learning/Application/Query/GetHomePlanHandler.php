@@ -226,6 +226,10 @@ final readonly class GetHomePlanHandler
                 triageMinutes: $triage > 0 ? max(1, (int) round($triage * $swipeSeconds / 60)) : null,
                 triageCollectionId: $triageTarget === null ? null : $triageTarget['id'],
                 triageCollectionTitle: $triageTarget === null ? null : $triageTarget['title'],
+                // One word left, and it owes more than one card — so it is mid-chain and the screen
+                // can say WHERE. Derived from numbers already in hand: a chain that is running has
+                // the length a first meeting has, and `cards` is what remains of it.
+                chainTotal: $total === 1 && $cards > 1 ? $this->firstMeetingCards($user) : null,
             ),
             inWork: new HomeInWorkView(
                 total: $poolSize,

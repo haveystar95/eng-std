@@ -693,6 +693,78 @@ it('deals a JUST-ENROLLED word before the queue it was added behind', function (
     expect(array_unique(array_column($cards, 'term_id')))->toBe([$late]);
 });
 
+it('says how many CARDS are left of the one word still climbing, and in what chain', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC', 'daily_goal' => 20]);
+    seedCollectionWith($user, 'reluctant', 'неохотный');
+
+    $plan = homePlan($this, $token)['session'];
+    $chain = firstMeetingCards();
+
+    // One word, its whole chain ahead of it: «1 слово · карточка 1 из N».
+    expect($plan['total'])->toBe(1)
+        ->and($plan['chain_total'])->toBe($chain)
+        ->and($plan['cards'])->toBe($chain);
+});
+
+it('reports no chain for a lone graduated repeat — one card is not a progress bar', function () {
+    [$user, $token] = learner();
+    [, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    scheduleAhead($user->id, $apple, -1);
+
+    $plan = homePlan($this, $token)['session'];
+
+    expect($plan['total'])->toBe(1)
+        ->and($plan['cards'])->toBe(1)
+        ->and($plan['chain_total'])->toBeNull();
+});
+
+it('counts the day in WORDS as well as in cards', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['timezone' => 'UTC']);
+    [, $apple] = seedCollectionWith($user, 'apple', 'яблоко');
+    scheduleAhead($user->id, $apple, -1);
+
+    // Three answers, one word — which is exactly the shape that made the evening say «52 из 52».
+    answerAtRung($this, $token, $apple, 'apple', rung: 3, seq: 1);
+    answerAtRung($this, $token, $apple, 'apple', rung: 3, seq: 2);
+    answerAtRung($this, $token, $apple, 'apple', rung: 3, seq: 3);
+
+    $today = homePlan($this, $token)['today'];
+
+    expect($today['answered'])->toBe(3)
+        ->and($today['words'])->toBe(1);
+});
+
+it('deals a one-word session as one unbroken chain', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['daily_goal' => 20]);
+    // One word IN THE POOL, and neighbours on the shelf beside it: a choice card draws its wrong
+    // options from the material around the word, so a pool of exactly one is a pool with no card to
+    // deal. The session is one word; the collection is not.
+    [$col, $termId] = seedCollectionWith($user, 'reluctant', 'неохотный');
+    foreach (['reliable' => 'надёжный', 'noticeable' => 'заметный', 'withdraw' => 'снимать'] as $t => $r) {
+        addWordTo($col, $user->id, $t, $r, enroll: false);
+    }
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')->assertOk()->json('data.cards');
+
+    // Nothing else is in the pool, so nothing else may appear between the rungs — a mop-up of one
+    // word is that word, start to finish. The layout SPACES a chain when there is something to put
+    // between its cards; with one word there is nothing, and the holes are compacted away.
+    expect($cards)->not->toBeEmpty();
+    // Nothing else is in the pool, so nothing else may appear between the rungs — a mop-up of one
+    // word is that word, start to finish. The layout SPACES a chain when there is something to put
+    // between its cards; with one word there is nothing, and the holes are compacted away.
+    expect(array_unique(array_column($cards, 'term_id')))->toBe([$termId]);
+    // …and the rungs climb without a gap — each card is the next rung of the same word. Where the
+    // chain STARTS depends on whether the intro trainer is switched on, which is the product's call
+    // and not this test's; what must hold is that nothing interrupts it.
+    $steps = array_column($cards, 'ladder_step');
+    expect($steps)->toBe(range($steps[0], $steps[0] + count($steps) - 1));
+});
+
 it('refuses an anonymous caller', function () {
     $this->getJson('/api/v1/home-plan')->assertUnauthorized();
 });

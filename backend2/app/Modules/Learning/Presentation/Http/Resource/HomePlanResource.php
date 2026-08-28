@@ -47,6 +47,9 @@ final class HomePlanResource extends JsonResource
                 'triage_minutes' => $session->triageMinutes,
                 'triage_collection_id' => $session->triageCollectionId,
                 'triage_collection_title' => $session->triageCollectionTitle,
+                // «карточка 2 из 3» — how long the one remaining word's chain is. Null unless the
+                // day is down to a single word that is still climbing one.
+                'chain_total' => $session->chainTotal,
             ],
             'in_work' => [
                 'total' => $inWork->total,
@@ -125,10 +128,17 @@ final class HomePlanResource extends JsonResource
         ];
     }
 
-    /** @return array{answered: int, seconds: int}|null */
+    /** @return array{answered: int, words: int, seconds: int}|null */
     private function today(?HomeTodayView $today): ?array
     {
-        return $today === null ? null : ['answered' => $today->answered, 'seconds' => $today->seconds];
+        return $today === null ? null : [
+            // CARDS, and the field keeps its name: a build that predates `words` reads it and draws
+            // what it always drew.
+            'answered' => $today->answered,
+            // …and the WORDS behind them, which is the unit the screen leads with.
+            'words' => $today->words,
+            'seconds' => $today->seconds,
+        ];
     }
 
     /** @return array{date: string, count: int}|null */
