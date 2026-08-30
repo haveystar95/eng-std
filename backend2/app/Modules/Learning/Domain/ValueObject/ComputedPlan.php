@@ -28,9 +28,35 @@ final readonly class ComputedPlan
         public int $restDays,
         public bool $fits,
         public array $dropped,
-        public DaySpacing $spacing,
+        /**
+         * Calendar days between one introduction day and the next: 1, 2 or 3.
+         *
+         * A NUMBER and no longer a two-valued «daily / every other day». The old enum could say
+         * «через день» and nothing wider, so a plan with a month of room stacked its teaching into
+         * the first week and then said nothing for three weeks. The step is
+         * `clamp(floor(teaching_days / intro_days), 1, 3)` — spread the days over the room there
+         * actually is, and stop at three, because a word met once and then left alone for four days
+         * is a word met once.
+         */
+        public int $step,
+        /**
+         * WHY something was dropped, or null when nothing was.
+         *
+         * Two different facts wearing the same word. `deadline` — the event is too near, there are
+         * not enough days. `cap` — there are plenty of days and the plan asked for more than
+         * {@see \App\Modules\Learning\Domain\Service\PlanScheduler::MAX_INTRO_DAYS} of them,
+         * which is a different sentence to put on the «срок мал» card and a different decision for
+         * the learner (move the date vs. want less).
+         */
+        public ?string $dropReason,
         public bool $finalSameDay,
     ) {}
+
+    /** Dropped because the plan wanted more introduction days than a plan is allowed to have. */
+    public const DROP_CAP = 'cap';
+
+    /** Dropped because the event is too near for what the plan asks. */
+    public const DROP_DEADLINE = 'deadline';
 
     /** @return array<string, mixed> */
     public function toArray(): array
@@ -42,7 +68,8 @@ final readonly class ComputedPlan
             'intro_days' => $this->introDays,
             'rest_days' => $this->restDays,
             'fits' => $this->fits,
-            'spacing' => $this->spacing->value,
+            'step' => $this->step,
+            'drop_reason' => $this->dropReason,
             'final_same_day' => $this->finalSameDay,
             'dropped_skills' => array_map(
                 static fn (PlanSkill $s): array => [

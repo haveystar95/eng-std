@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Modules\Learning\Domain\Exception\EventDateInPast;
 use App\Modules\Learning\Domain\Service\PlanScheduler;
-use App\Modules\Learning\Domain\ValueObject\DaySpacing;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
 
@@ -182,7 +181,7 @@ it('S1 «врач», 3 дня / 20 мин: need 18 = room 18, two teaching days 
         ->and($plan->introDays)->toBe(2)
         ->and($plan->restDays)->toBe(0)
         ->and($plan->fits)->toBeTrue()
-        ->and($plan->spacing)->toBe(DaySpacing::Daily)
+        ->and($plan->step)->toBe(1)
         ->and($plan->days)->toHaveCount(3)
         ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
         ->toBe(['2026-08-31', '2026-09-01', '2026-09-02'])
@@ -230,7 +229,7 @@ it('7 дней / 20 мин, need 27: three teaching days, three free — every o
         ->and($plan->introDays)->toBe(3)
         ->and($plan->restDays)->toBe(3)          // 6 teaching slots − 3 used
         ->and($plan->fits)->toBeTrue()
-        ->and($plan->spacing)->toBe(DaySpacing::EveryOtherDay)
+        ->and($plan->step)->toBe(2)
         ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
         ->toBe(['2026-08-31', '2026-09-02', '2026-09-04', '2026-09-06']);
 });
@@ -246,7 +245,7 @@ it('runs teaching days back to back when the slack is smaller than the teaching'
 
     expect($plan->introDays)->toBe(3)
         ->and($plan->restDays)->toBe(1)
-        ->and($plan->spacing)->toBe(DaySpacing::Daily)
+        ->and($plan->step)->toBe(1)
         ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
         ->toBe(['2026-08-31', '2026-09-01', '2026-09-02', '2026-09-04']);
 });
@@ -271,12 +270,14 @@ it('30 дней / 40 мин, need 48: three teaching days spread out, 26 days of
         ->and($plan->introDays)->toBe(3)
         ->and($plan->restDays)->toBe(26)
         ->and($plan->fits)->toBeTrue()
-        ->and($plan->spacing)->toBe(DaySpacing::EveryOtherDay)
-        // A long plan does NOT stretch to fill the calendar: the teaching happens now and the
-        // event is where it is. Inventing 26 days of «повторение» is a product decision nobody
-        // has made, and this class does not make it silently.
+        // 29 teaching days over 3 introduction days is 9 — clamped to the ceiling of 3, because a
+        // word left alone for nine days was not taught, it was mentioned.
+        ->and($plan->step)->toBe(3)
+        // A long plan does NOT stretch to fill the calendar: the teaching is spread as wide as the
+        // step allows and the event is where it is. Inventing 26 days of «повторение» is a product
+        // decision nobody has made, and this class does not make it silently.
         ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
-        ->toBe(['2026-08-31', '2026-09-02', '2026-09-04', '2026-09-29']);
+        ->toBe(['2026-08-31', '2026-09-03', '2026-09-06', '2026-09-29']);
 });
 
 // ── the calendar ──────────────────────────────────────────────────────────────────────────────
@@ -429,4 +430,129 @@ it('asks every teaching day for exactly capacity, whatever landed on it', functi
         // …and the phrase/word split follows the budget, so the model is handed 5 + 4 both days.
         ->and($plan->days[0]->phraseCount())->toBe(5)
         ->and($plan->days[1]->phraseCount())->toBe(5);
+});
+
+// ── the step and the cap (PLAN-1b Ч.1) ────────────────────────────────────────────────────────
+
+/** `$n` introduction days' worth of demand: one ability per day, priced at a full day each. */
+function collections(int $n, int $budget = 9): PlanOutline
+{
+    $days = [];
+    for ($i = 1; $i <= $n; $i++) {
+        $days[] = ['Коллекция ' . $i, $budget, ['умение ' . $i]];
+    }
+
+    return outline($days);
+}
+
+it('30 дней / 10 коллекций: step 3 — the teaching is spread, not stacked into the first week', function () {
+    // 30 teaching days over 10 introduction days is 3, which is also the ceiling. The old
+    // two-valued spacing would have said «через день» and finished the plan on day 20.
+    $plan = $this->scheduler->compute(
+        collections(10),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-30'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->maxDays)->toBe(31)
+        ->and($plan->introDays)->toBe(10)
+        ->and($plan->step)->toBe(3)
+        ->and($plan->fits)->toBeTrue()
+        ->and($plan->dropReason)->toBeNull()
+        ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
+        ->toBe([
+            '2026-08-31', '2026-09-03', '2026-09-06', '2026-09-09', '2026-09-12',
+            '2026-09-15', '2026-09-18', '2026-09-21', '2026-09-24', '2026-09-27',
+            '2026-09-30',   // the final day, on the event
+        ]);
+});
+
+it('5 дней / 4 коллекции: step 1 — no room to spread, so the days run back to back', function () {
+    $plan = $this->scheduler->compute(
+        collections(4),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-05'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->maxDays)->toBe(6)
+        ->and($plan->introDays)->toBe(4)
+        ->and($plan->step)->toBe(1)          // floor(5 / 4)
+        ->and($plan->fits)->toBeTrue()
+        ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
+        ->toBe(['2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-05']);
+});
+
+it('7 дней / 2 коллекции: step 3 — the ceiling holds even though the room would allow more', function () {
+    // 7 teaching days over 2 introduction days is 3 exactly; had it been 8 the clamp would say 3
+    // as well, and the two spare days go to review rather than to a longer wait.
+    $plan = $this->scheduler->compute(
+        collections(2),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-07'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->maxDays)->toBe(8)
+        ->and($plan->introDays)->toBe(2)
+        ->and($plan->step)->toBe(3)
+        ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
+        ->toBe(['2026-08-31', '2026-09-03', '2026-09-07']);
+});
+
+it('caps a 40-collection plan at 14 introduction days and drops the rest as `cap`', function () {
+    // A year of calendar and demand for forty days of teaching. The calendar is not the binding
+    // constraint here, so «перенеси дату» is the wrong advice and `drop_reason` says so.
+    $plan = $this->scheduler->compute(
+        collections(40),
+        minutesPerDay: 20,
+        eventDate: day('2027-08-31'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->need)->toBe(360)
+        ->and($plan->introDays)->toBe(PlanScheduler::MAX_INTRO_DAYS)
+        ->and($plan->introDays)->toBe(14)
+        ->and($plan->fits)->toBeFalse()
+        ->and($plan->dropReason)->toBe('cap')
+        ->and($plan->dropped)->toHaveCount(26)
+        ->and($plan->dropped[0]->outcome)->toBe('умение 15')
+        // 14 teaching days + the final one.
+        ->and($plan->days)->toHaveCount(15)
+        ->and($plan->step)->toBe(3);
+});
+
+it('blames the DEADLINE, not the cap, when the calendar is what ran out', function () {
+    $plan = $this->scheduler->compute(
+        collections(5),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-03'),   // 3 teaching days for 5 days of demand
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->fits)->toBeFalse()
+        ->and($plan->dropReason)->toBe('deadline')
+        ->and($plan->dropped)->toHaveCount(2);
+});
+
+it('A7 re-checks against the cap as well as against the calendar', function () {
+    $plan = $this->scheduler->compute(
+        collections(40),
+        minutesPerDay: 20,
+        eventDate: day('2027-08-31'),
+        today: day('2026-08-31'),
+    );
+
+    // A year still to go, and the fourteen days that survived the cap are all still ahead.
+    $check = $this->scheduler->recheck(
+        remainingIntroDays: array_slice($plan->days, 0, 14),
+        minutesPerDay: 20,
+        eventDate: day('2027-08-31'),
+        today: day('2026-08-31'),
+    );
+
+    expect($check->introDaysRemaining)->toBe(14)
+        ->and($check->needRemaining)->toBe(126)
+        ->and($check->deadlineTight)->toBeFalse();
 });

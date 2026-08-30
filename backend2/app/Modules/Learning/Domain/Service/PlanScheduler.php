@@ -7,7 +7,6 @@ namespace App\Modules\Learning\Domain\Service;
 use App\Modules\Learning\Domain\Exception\EventDateInPast;
 use App\Modules\Learning\Domain\ValueObject\ComputedDay;
 use App\Modules\Learning\Domain\ValueObject\ComputedPlan;
-use App\Modules\Learning\Domain\ValueObject\DaySpacing;
 use App\Modules\Learning\Domain\ValueObject\DeadlineCheck;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
@@ -55,6 +54,30 @@ use DateTimeImmutable;
  * there are `max_days − 1` days available for teaching, and the room the plan actually has is
  * `capacity × (max_days − 1)`. Everything else follows from comparing `need` with that number.
  *
+ * ## The plan is not allowed to be longer than {@see MAX_INTRO_DAYS} days of teaching
+ *
+ * Fourteen introduction days, whatever the calendar says. A goal that asks for twenty of them is
+ * not a plan, it is a course, and this feature promises a dated mechanism that ends: a learner who
+ * is still meeting new material on day nineteen has no room left to REVIEW any of it, and the
+ * abilities of day one arrive at the event untouched since. So the abilities past the cap are
+ * dropped exactly the way abilities past the deadline are — in P1's order, named in `dropped`,
+ * `fits` false — and the reason is recorded separately (`drop_reason = 'cap'`), because «перенеси
+ * дату» is the answer to one of them and not to the other.
+ *
+ * ## The step: teaching spread over the room there actually is
+ *
+ * `step = clamp(floor(teaching_days / intro_days), 1, 3)` calendar days between introduction days.
+ * The old rule had two answers — back to back, or every other day — and a plan with a month of
+ * slack used the second one, which put every teaching day inside the first week and then left
+ * three weeks of silence before the event. Three is the ceiling because a word met once and then
+ * left alone for four days is a word met once; the repetition planner («когда») owns everything
+ * after that, and it is not this class's business.
+ *
+ * The step is CALENDAR days and it moves introduction days only. Stages B and C of a word land in
+ * the sessions after its nights ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}),
+ * not on dates this class computes — a collection lives three stages, always, and how long that
+ * takes is the learner's, not the plan's.
+ *
  * ## Two cases the general rule gets wrong, and both are real
  *
  * **The event is TODAY.** `max_days = 1`, so the general rule would offer zero teaching days and
@@ -85,6 +108,18 @@ final class PlanScheduler
      * the band would promise room that only exists if the model is generous.
      */
     private const CAPACITY_ANCHORS = [10 => 5, 20 => 9, 40 => 16];
+
+    /**
+     * The most introduction days a plan may have, whatever the calendar offers.
+     *
+     * See the class docblock: past this the plan stops being a plan. It is a HARD cap and not a
+     * default — the learner cannot raise it by choosing a later date, because a later date is
+     * exactly the input that would push it past fourteen.
+     */
+    public const MAX_INTRO_DAYS = 14;
+
+    /** The widest gap allowed between two introduction days. */
+    public const MAX_STEP = 3;
 
     /**
      * @param  DateTimeImmutable  $eventDate  the day it happens. Time of day is ignored throughout —
@@ -139,24 +174,28 @@ final class PlanScheduler
                 restDays: 0,
                 fits: $need <= $capacity,
                 dropped: [],
-                spacing: DaySpacing::Daily,
+                step: 1,
+                dropReason: null,
                 finalSameDay: true,
             );
         }
 
         // ── The general case ──────────────────────────────────────────────────────────────────
         $teachingDays = $maxDays - 1;
-        $room = $capacity * $teachingDays;
+        // The room is bounded TWICE and the tighter bound wins: by the calendar, and by the cap on
+        // how long a plan may be. Which one bit is remembered, because they are different sentences
+        // on the learner's card.
+        $daysAllowed = min($teachingDays, self::MAX_INTRO_DAYS);
+        $room = $capacity * $daysAllowed;
 
         [$kept, $dropped] = $this->fitInOrder($skills, $room);
         $keptNeed = $this->sum($kept);
-        $introDays = min($teachingDays, max(1, (int) ceil($keptNeed / $capacity)));
+        $introDays = min($daysAllowed, max(1, (int) ceil($keptNeed / $capacity)));
         $restDays = $teachingDays - $introDays;
 
-        // Room to breathe: a free day between teaching days is what turns two days into two
-        // memories instead of one blur. Only when the slack is at least as large as the teaching.
-        $spacing = $restDays >= $introDays ? DaySpacing::EveryOtherDay : DaySpacing::Daily;
-        $step = $spacing === DaySpacing::EveryOtherDay ? 2 : 1;
+        // Spread the teaching over the room there is, up to three days apart. `floor` and not
+        // `round`, so the last introduction day never lands after the event.
+        $step = max(1, min(self::MAX_STEP, intdiv($teachingDays, $introDays)));
 
         $buckets = $this->packIntoDays($kept, $capacity, $introDays);
 
@@ -198,7 +237,12 @@ final class PlanScheduler
             restDays: $restDays,
             fits: $dropped === [],
             dropped: $dropped,
-            spacing: $spacing,
+            step: $step,
+            // The cap only gets the blame when it was the binding constraint — i.e. the calendar
+            // had more days to offer and this class refused them.
+            dropReason: $dropped === []
+                ? null
+                : ($teachingDays > self::MAX_INTRO_DAYS ? ComputedPlan::DROP_CAP : ComputedPlan::DROP_DEADLINE),
             finalSameDay: false,
         );
     }
@@ -230,8 +274,10 @@ final class PlanScheduler
 
         $capacity = $this->capacityFor($minutesPerDay);
         // The final day teaches nothing, so it is not room — unless the event is today, in which
-        // case the one day left is both and the learner is going to have to compress.
-        $introDaysRemaining = max(1, $daysRemaining - 1);
+        // case the one day left is both and the learner is going to have to compress. The cap
+        // bounds this too: a plan that fell behind cannot buy itself twenty introduction days by
+        // having a distant event, for the same reason it could not buy them at the start.
+        $introDaysRemaining = min(self::MAX_INTRO_DAYS, max(1, $daysRemaining - 1));
 
         $skills = [];
         foreach ($remainingIntroDays as $day) {
