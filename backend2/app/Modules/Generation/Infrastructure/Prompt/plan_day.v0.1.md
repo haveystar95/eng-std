@@ -1,19 +1,25 @@
-# day-brief.v0.1 — один день Learning Plan
+# plan_day.v0.1 — один день Learning Plan (P2)
 
-> **Статус: v0.1, ресёрч.** Ни к чему не подключён. Поля ядра (`translation`, `description`,
-> `transliteration`, `example`, `example_translation`) заимствованы из `generate_collection` v15.x
-> дословно по смыслу — там, где канон плана их не переопределяет. Где переопределяет — это отмечено
-> в тексте и вынесено в findings.
+> **Боевой промпт.** Реестр: `docs/prompts/REGISTRY.md`, id **P2**. Рендерится
+> `PlanPromptLibrary`, вызывается `PlanDayGenerator`, ответ судит `PlanDayValidator`.
+> Переехал сюда из `docs/prompts/plan/day-brief.v0.md` наряда PLAN-1a **без единой правки текста**:
+> всё, что выше первого `---`, до модели не доезжает (см. `PlanPromptLibrary::body()`), поэтому
+> смена этой шапки не меняет промпт — sha рендера тот же.
+>
+> Поля ядра (`translation`, `description`, `transliteration`, `example`, `example_translation`)
+> заимствованы из `generate_collection` v15.x дословно по смыслу — там, где канон плана их не
+> переопределяет.
 >
 > v0.1 против v0: реплики вынесены в отдельный массив `phrases[]` с жёстким числом
 > `ceil(0.45 × бюджет)`; лексический `type` вернулся к ядру (`word|phrase|idiom|phrasal_verb`), а
 > «реплика или подстановка» стала отдельным флагом `is_line`; пример не может совпадать с `text`
 > любого термина дня и не может повторяться между карточками; транслитерация без пунктуации;
 > на вход приходят `entities` / `constraints` / `goal_terms` из каркаса.
+> Прогон и оценка: `docs/research/plan-sandbox-2026-08-29.md`.
 
 Плейсхолдеры: `{{support_lang}}`, `{{target_lang}}`, `{{level}}`, `{{term_budget}}`, `{{day_json}}`,
 `{{known_terms}}`, `{{plan_title}}`, `{{goal_text}}`, `{{entities}}`, `{{constraints}}`,
-`{{goal_terms}}`, `{{phrase_count}}`, `{{word_count}}`.
+`{{goal_terms}}`, `{{phrase_count}}`, `{{word_count}}`
 
 ---
 

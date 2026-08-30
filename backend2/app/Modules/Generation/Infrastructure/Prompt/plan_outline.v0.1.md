@@ -1,10 +1,14 @@
-# outline-brief.v0.1 — каркас Learning Plan
+# plan_outline.v0.1 — каркас Learning Plan (P1)
 
-> **Статус: v0.1, ресёрч.** Ни к чему не подключён. Живёт в `docs/prompts/`, а не в
-> `app/Modules/Generation/Infrastructure/Prompt/`, именно поэтому: это ещё не промпт конвейера.
+> **Боевой промпт.** Реестр: `docs/prompts/REGISTRY.md`, id **P1**. Рендерится
+> `PlanPromptLibrary`, вызывается `PlanOutlineService`, ответ судит `PlanOutlineValidator`.
+> Переехал сюда из `docs/prompts/plan/outline-brief.v0.md` наряда PLAN-1a **без единой правки
+> текста**: всё, что выше первого `---`, до модели не доезжает (см. `PlanPromptLibrary::body()`),
+> поэтому смена этой шапки не меняет промпт — sha рендера тот же.
 >
 > v0.1 против v0: добавлены `entities[]`, `constraints[]`, `goal_terms[]` и `recommended_days`;
 > `final_day.checkpoints` убран — финальный список собирает сервер, а не модель (в v0 он дрейфовал).
+> Прогон и оценка: `docs/research/plan-sandbox-2026-08-29.md`.
 
 Плейсхолдеры: `{{goal_text}}`, `{{support_lang}}`, `{{target_lang}}`, `{{level}}`, `{{days}}`,
 `{{minutes_per_day}}`.
