@@ -168,10 +168,17 @@ class _FinishedPlanTab extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.s8),
               Text(
-                l.planFinishedSummary(
-                  latest.dayCount,
-                  planDateLabel(context, latest.eventDate),
-                ),
+                [
+                  // «На событии сказал 5 из 6» — the learner's own report, and the only sentence
+                  // here that is about what happened rather than about what was prepared. Absent
+                  // until they answer, because an unanswered question is not «0 из 6».
+                  if (full != null && full.hasEventFeedback)
+                    l.planFinishedAtEvent(full.eventFeedbackHits, full.canAlready.length),
+                  l.planFinishedSummary(
+                    latest.dayCount,
+                    planDateLabel(context, latest.eventDate),
+                  ),
+                ].join(' '),
                 style: AppText.translation.copyWith(
                   fontSize: 14,
                   height: 1.55,
@@ -180,8 +187,15 @@ class _FinishedPlanTab extends ConsumerWidget {
               ),
               if (full != null && full.canAlready.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s12),
-                for (final checkpoint in full.canAlready)
-                  PlanAbilityRow(text: checkpoint.text, hit: checkpoint.hit, divider: false),
+                for (final (i, checkpoint) in full.canAlready.indexed)
+                  PlanAbilityRow(
+                    text: checkpoint.text,
+                    // On a FINISHED plan the tick means «пригодилось на событии» — the learner's
+                    // own answer, which is the only thing that could be true about a day the app
+                    // was not there for. `hit` (conversation-confirmed) is the live plan's question.
+                    hit: full.usedAtEvent(i),
+                    divider: false,
+                  ),
               ],
             ],
           ),

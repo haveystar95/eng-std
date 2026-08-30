@@ -2148,5 +2148,75 @@
   "homePlanInviteBody": "Соберём дни подготовки — от приёма у врача до собеседования.",
   "@homePlanInviteBody": { "description": "Пояснение приглашения составить план." },
   "homePlanInviteCta": "Составить",
-  "@homePlanInviteCta": { "description": "Кнопка приглашения составить план." }
+  "@homePlanInviteCta": { "description": "Кнопка приглашения составить план." },
+
+  "planNotifyChannelName": "План подготовки",
+  "@planNotifyChannelName": { "description": "Имя канала уведомлений (видно в системных настройках Android)." },
+  "planNotifyChannelBody": "Напоминания перед событием, к которому идёт подготовка",
+  "@planNotifyChannelBody": { "description": "Описание канала уведомлений." },
+
+  "planNotifyBeforeTitle": "{days, plural, one{До события {days} день. День {index} ждёт} few{До события {days} дня. День {index} ждёт} many{До события {days} дней. День {index} ждёт} other{До события {days} дня. День {index} ждёт}}",
+  "@planNotifyBeforeTitle": {
+    "description": "Уведомление накануне события (кадр 12). Причина — дата события, не серия дней.",
+    "placeholders": { "days": { "type": "int" }, "index": { "type": "int" } }
+  },
+  "planNotifyBeforeBody": "Готовность {percent}%. Сегодня — {title}.",
+  "@planNotifyBeforeBody": {
+    "description": "Тело уведомления накануне: готовность и чему учит сегодняшний день.",
+    "placeholders": { "percent": { "type": "int" }, "title": { "type": "String" } }
+  },
+
+  "planNotifyMorningTitle": "{count, plural, one{Сегодня событие. {count} фраза за 3 минуты} few{Сегодня событие. {count} фразы за 3 минуты} many{Сегодня событие. {count} фраз за 3 минуты} other{Сегодня событие. {count} фразы за 3 минуты}}",
+  "@planNotifyMorningTitle": {
+    "description": "Уведомление утром дня события (кадр 13) — ведёт в быструю репетицию.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planNotifyMorningBody": "Быстрая репетиция перед выходом — только то, что скажешь.",
+  "@planNotifyMorningBody": { "description": "Тело утреннего уведомления." },
+
+  "planNotifyEveningTitle": "Как прошло? Отметь, что сказал",
+  "@planNotifyEveningTitle": { "description": "Уведомление после события (кадр 14)." },
+  "planNotifyEveningBody": "Отметь умения, которые пригодились — план закроется этим.",
+  "@planNotifyEveningBody": { "description": "Тело вечернего уведомления." },
+
+  "planRehearsalBadge": "Репетиция · событие сегодня",
+  "@planRehearsalBadge": { "description": "Латунная метка экрана репетиции (кадр 15)." },
+  "planRehearsalSayIt": "Скажи вслух",
+  "@planRehearsalSayIt": { "description": "Лейбл над фразой репетиции." },
+  "planRehearsalHint": "Скажи фразу — или пролистай дальше, если она уже звучит сама.",
+  "@planRehearsalHint": { "description": "Подпись рядом с микрофоном: пропустить так же законно." },
+  "planRehearsalListening": "Слушаю…",
+  "@planRehearsalListening": { "description": "Подпись, пока микрофон слушает. Ничего не оценивается." },
+  "planRehearsalPlay": "Прочитать пример",
+  "@planRehearsalPlay": { "description": "Тихая кнопка: озвучить фразу." },
+  "planRehearsalCue": "{role} скажет: «{cue}»",
+  "@planRehearsalCue": {
+    "description": "Реплика собеседника, на которую отвечает фраза.",
+    "placeholders": { "role": { "type": "String" }, "cue": { "type": "String" } }
+  },
+  "planRehearsalOpen": "Быстрая репетиция",
+  "@planRehearsalOpen": { "description": "Кнопка на экране плана в день события — открыть репетицию." },
+
+  "planRehearsalDone": "Готово",
+  "@planRehearsalDone": { "description": "Последняя кнопка репетиции." },
+  "planRehearsalEmpty": "В этом плане пока нет фраз для репетиции.",
+  "@planRehearsalEmpty": { "description": "Пустая репетиция — дни ещё не собраны." },
+
+  "planFeedbackTitle": "Как прошло?",
+  "@planFeedbackTitle": { "description": "Заголовок экрана отметки чек-пойнтов." },
+  "planFeedbackBody": "{count, plural, one{Отметь умение, которое пригодилось на событии.} few{Отметь умения, которые пригодились на событии — из {count}.} many{Отметь умения, которые пригодились на событии — из {count}.} other{Отметь умения, которые пригодились на событии — из {count}.}}",
+  "@planFeedbackBody": {
+    "description": "Пояснение экрана отметки.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planFeedbackSubmit": "Сохранить и завершить",
+  "@planFeedbackSubmit": { "description": "Кнопка отправки отметок — она же закрывает план." },
+  "planFeedbackClosesPlan": "План завершится, а его слова уйдут в общее повторение.",
+  "@planFeedbackClosesPlan": { "description": "Что произойдёт после отправки." },
+
+  "planFinishedAtEvent": "На событии сказал {used} из {total}.",
+  "@planFinishedAtEvent": {
+    "description": "Итог завершённого плана по отметкам после события (кадр 11).",
+    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
+  }
 }

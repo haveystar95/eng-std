@@ -88,6 +88,7 @@ final readonly class GetPlanHandler
             daysToEvent: (int) $today->diff($plan->eventDate()->setTime(0, 0))->format('%r%a'),
             deadlineTight: $this->deadlineTight($plan, $planDays, $progress, $today),
             canAlready: $this->canAlready($days),
+            eventFeedback: $plan->eventFeedback(),
         );
     }
 

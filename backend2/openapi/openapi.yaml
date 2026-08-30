@@ -1849,6 +1849,79 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: No such day }
 
+  /plans/{planId}/rehearsal:
+    post:
+      tags: [Plans]
+      summary: The three minutes before the event
+      description: >-
+        Every PHRASE the plan taught, in day order, each with the line the interlocutor says before
+        it (`role.opening_lines[0]` of that day — the only place in the outline that holds real
+        utterances by the other side).
+
+        Words are deliberately absent. The screen this feeds is three minutes long, and what three
+        minutes buy is hearing yourself say the sentences, not being tested on the vocabulary inside
+        them.
+
+        A POST because it is an ACT the learner performs and because it costs a content read per
+        day — not a resource anybody should be free to poll. It WRITES NOTHING: a rehearsal
+        schedules nothing and closes no stage.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanRehearsal' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+
+  /plans/{planId}/feedback:
+    post:
+      tags: [Plans]
+      summary: «Как прошло?» — and the plan closes
+      description: >-
+        Which of the plan's checkpoints the learner actually used at the event, by POSITION in
+        `can_already`. It is the one fact about a plan that cannot be derived from anything else:
+        it happened in a room the app was not in.
+
+        It also COMPLETES the plan, and the two are one call on purpose — a plan whose event is
+        over and which is still running goes on holding its words out of the ordinary day, for an
+        appointment that has already happened. Completing releases them, which is «18 слов ушли в
+        общее повторение».
+
+        Idempotent: a second tap on the notification, or an offline retry, replaces the report and
+        leaves the already-completed plan alone.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [checkpoints]
+              properties:
+                checkpoints:
+                  type: array
+                  items: { type: integer, minimum: 0, maximum: 99 }
+                  description: >-
+                    Positions in `can_already`. An EMPTY array is a legitimate answer («ничего не
+                    пригодилось») and is stored as such — the column is nullable so that «asked and
+                    used nothing» stays tellable from «never asked».
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '422':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
   /plans/{planId}/outline:
     post:
       tags: [Plans]
@@ -2551,6 +2624,33 @@ components:
           description: >-
             The day that INTRODUCED it. Equal to the day being read for its own words, smaller for
             one carried in — which is what «B · со дня 1» is drawn from.
+
+    PlanRehearsal:
+      type: object
+      description: The plan's phrases, for the morning of the event (кадр 1c · 15).
+      required: [plan_id, title, lines]
+      properties:
+        plan_id: { type: string, minLength: 26, maxLength: 26 }
+        title: { type: string }
+        lines:
+          type: array
+          items:
+            type: object
+            required: [id, text, day_index]
+            properties:
+              id: { type: string, minLength: 26, maxLength: 26 }
+              text:
+                type: string
+                description: The sentence itself, in the language being studied.
+              translation: { type: [string, 'null'] }
+              cue:
+                type: [string, 'null']
+                description: >-
+                  What the interlocutor says — «How long has it been like this?». Null when the day
+                  had no role: a day of filling in forms has nobody to answer, and inventing a
+                  prompt for it would be putting words in a mouth that is not there.
+              role: { type: [string, 'null'], description: Who says the cue }
+              day_index: { type: integer, minimum: 1 }
 
     PlanSummary:
       type: object

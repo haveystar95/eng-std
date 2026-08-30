@@ -2940,4 +2940,106 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homePlanInviteCta => 'Составить';
+
+  @override
+  String get planNotifyChannelName => 'План подготовки';
+
+  @override
+  String get planNotifyChannelBody => 'Напоминания перед событием, к которому идёт подготовка';
+
+  @override
+  String planNotifyBeforeTitle(int days, int index) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'До события $days дня. День $index ждёт',
+      many: 'До события $days дней. День $index ждёт',
+      few: 'До события $days дня. День $index ждёт',
+      one: 'До события $days день. День $index ждёт',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planNotifyBeforeBody(int percent, String title) {
+    return 'Готовность $percent%. Сегодня — $title.';
+  }
+
+  @override
+  String planNotifyMorningTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Сегодня событие. $count фразы за 3 минуты',
+      many: 'Сегодня событие. $count фраз за 3 минуты',
+      few: 'Сегодня событие. $count фразы за 3 минуты',
+      one: 'Сегодня событие. $count фраза за 3 минуты',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planNotifyMorningBody => 'Быстрая репетиция перед выходом — только то, что скажешь.';
+
+  @override
+  String get planNotifyEveningTitle => 'Как прошло? Отметь, что сказал';
+
+  @override
+  String get planNotifyEveningBody => 'Отметь умения, которые пригодились — план закроется этим.';
+
+  @override
+  String get planRehearsalBadge => 'Репетиция · событие сегодня';
+
+  @override
+  String get planRehearsalSayIt => 'Скажи вслух';
+
+  @override
+  String get planRehearsalHint => 'Скажи фразу — или пролистай дальше, если она уже звучит сама.';
+
+  @override
+  String get planRehearsalListening => 'Слушаю…';
+
+  @override
+  String get planRehearsalPlay => 'Прочитать пример';
+
+  @override
+  String planRehearsalCue(String role, String cue) {
+    return '$role скажет: «$cue»';
+  }
+
+  @override
+  String get planRehearsalOpen => 'Быстрая репетиция';
+
+  @override
+  String get planRehearsalDone => 'Готово';
+
+  @override
+  String get planRehearsalEmpty => 'В этом плане пока нет фраз для репетиции.';
+
+  @override
+  String get planFeedbackTitle => 'Как прошло?';
+
+  @override
+  String planFeedbackBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Отметь умения, которые пригодились на событии — из $count.',
+      many: 'Отметь умения, которые пригодились на событии — из $count.',
+      few: 'Отметь умения, которые пригодились на событии — из $count.',
+      one: 'Отметь умение, которое пригодилось на событии.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planFeedbackSubmit => 'Сохранить и завершить';
+
+  @override
+  String get planFeedbackClosesPlan => 'План завершится, а его слова уйдут в общее повторение.';
+
+  @override
+  String planFinishedAtEvent(int used, int total) {
+    return 'На событии сказал $used из $total.';
+  }
 }

@@ -12,6 +12,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/local/sync_service.dart';
 import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
+import '../plan/plan_notification_host.dart';
 import '../plan/plan_tab_screen.dart';
 import '../profile/profile_screen.dart';
 import '../progress/progress_screen.dart';
@@ -139,23 +140,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.paper,
-      body: Stack(
-        children: [
-          _ShellBody(child: IndexedStack(index: _index, children: pages)),
-          const Positioned(top: 0, left: 0, right: 0, child: SyncIndicator()),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              minimum: const EdgeInsets.only(bottom: AppTabBarMetrics.bottomInset),
-              child: Center(
-                child: FloatingTabBar(items: items, currentIndex: _index, onTap: _select),
+      // The plan's reminders are written HERE, inside the shell — they need the localisations for
+      // their text and a Navigator for the screens a tap opens. It draws nothing.
+      body: PlanNotificationHost(
+        child: Stack(
+          children: [
+            _ShellBody(child: IndexedStack(index: _index, children: pages)),
+            const Positioned(top: 0, left: 0, right: 0, child: SyncIndicator()),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: AppTabBarMetrics.bottomInset),
+                child: Center(
+                  child: FloatingTabBar(items: items, currentIndex: _index, onTap: _select),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

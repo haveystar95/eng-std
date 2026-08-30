@@ -277,6 +277,7 @@ class LearningPlan {
     required this.daysToEvent,
     required this.deadlineTight,
     required this.canAlready,
+    required this.eventFeedback,
     required this.goalTerms,
     required this.computed,
     required this.days,
@@ -310,6 +311,14 @@ class LearningPlan {
   final bool deadlineTight;
 
   final List<PlanCheckpoint> canAlready;
+
+  /// «На приёме сказал 5 из 6» — the positions in [canAlready] the learner ticked after the event.
+  ///
+  /// NULL means they were never asked; an EMPTY list means they were asked and used none of it.
+  /// The finished-plan screen says a different sentence for each, which is the whole reason the
+  /// column is nullable on the server.
+  final List<int>? eventFeedback;
+
   final List<String> goalTerms;
   final PlanComputed? computed;
   final List<PlanDay> days;
@@ -318,6 +327,16 @@ class LearningPlan {
 
   /// «Ты уже можешь · 3 из 6».
   int get checkpointsHit => canAlready.where((c) => c.hit).length;
+
+  /// Was «как прошло?» answered at all? The plan's own last question.
+  bool get hasEventFeedback => eventFeedback != null;
+
+  /// How many abilities the learner said they used at the event.
+  int get eventFeedbackHits => eventFeedback?.length ?? 0;
+
+  /// Did this ability come up at the event? False for every checkpoint until the question is
+  /// answered, which is right: an unanswered question is not a «no».
+  bool usedAtEvent(int index) => eventFeedback?.contains(index) ?? false;
 
   /// The teaching days, in order. The final run-through is not one of them.
   List<PlanDay> get introDays => days.where((d) => d.kind == PlanDayKind.intro).toList();
@@ -361,6 +380,12 @@ class LearningPlan {
     canAlready: ((j['can_already'] as List?) ?? const [])
         .map((e) => PlanCheckpoint.fromJson(e as Map<String, dynamic>))
         .toList(growable: false),
+    eventFeedback: j['event_feedback'] is List
+        ? (j['event_feedback'] as List)
+              .whereType<num>()
+              .map((n) => n.toInt())
+              .toList(growable: false)
+        : null,
     goalTerms: _strings(j['goal_terms']),
     computed: j['computed'] is Map<String, dynamic>
         ? PlanComputed.fromJson(j['computed'] as Map<String, dynamic>)
@@ -597,15 +622,20 @@ class RehearsalLine {
     required this.text,
     required this.translation,
     required this.cue,
+    required this.role,
     required this.dayIndex,
   });
 
   final String termId, text;
   final String? translation;
 
-  /// «Врач спросит: „How long has it been like this?"» — the question this sentence answers, when
-  /// the day's role brief named one.
+  /// «How long has it been like this?» — what the person on the other side says, taken from the
+  /// day's role brief. Null when the day had nobody to talk to, and then no cue is drawn: inventing
+  /// one would be putting words in a mouth that is not there.
   final String? cue;
+
+  /// «Врач-терапевт» — who says [cue].
+  final String? role;
 
   final int dayIndex;
 
@@ -614,6 +644,7 @@ class RehearsalLine {
     text: (j['text'] as String?) ?? '',
     translation: j['translation'] as String?,
     cue: j['cue'] as String?,
+    role: j['role'] as String?,
     dayIndex: (j['day_index'] as num?)?.toInt() ?? 0,
   );
 }
@@ -630,22 +661,6 @@ class PlanRehearsal {
     title: (j['title'] as String?) ?? '',
     lines: ((j['lines'] as List?) ?? const [])
         .map((e) => RehearsalLine.fromJson(e as Map<String, dynamic>))
-        .toList(growable: false),
-  );
-}
-
-/// «На приёме сказал 5 из 6» — what the learner ticked after the event.
-class PlanEventFeedback {
-  const PlanEventFeedback({required this.used, required this.total, required this.checkpoints});
-
-  final int used, total;
-  final List<PlanCheckpoint> checkpoints;
-
-  factory PlanEventFeedback.fromJson(Map<String, dynamic> j) => PlanEventFeedback(
-    used: (j['used'] as num?)?.toInt() ?? 0,
-    total: (j['total'] as num?)?.toInt() ?? 0,
-    checkpoints: ((j['checkpoints'] as List?) ?? const [])
-        .map((e) => PlanCheckpoint.fromJson(e as Map<String, dynamic>))
         .toList(growable: false),
   );
 }

@@ -38,7 +38,26 @@ final class PlanMapper
             computed: $row->computed,
             startedAt: $row->started_at?->toDateTimeImmutable(),
             completedAt: $row->completed_at?->toDateTimeImmutable(),
+            eventFeedback: self::indexes($row->event_feedback),
         );
+    }
+
+    /**
+     * The stored `event_feedback` as the entity wants it — a list of ints, or null.
+     *
+     * Filtered rather than trusted: it is a jsonb column, and a column is not a type. Null stays
+     * null, because «never asked» and «asked, nothing used» are two different facts.
+     *
+     * @param  array<mixed>|null  $raw
+     * @return list<int>|null
+     */
+    private static function indexes(?array $raw): ?array
+    {
+        if ($raw === null) {
+            return null;
+        }
+
+        return array_values(array_map(intval(...), array_filter($raw, is_numeric(...))));
     }
 
     /** @return array<string, mixed> */
@@ -59,6 +78,7 @@ final class PlanMapper
             'computed' => $plan->computed(),
             'started_at' => $plan->startedAt(),
             'completed_at' => $plan->completedAt(),
+            'event_feedback' => $plan->eventFeedback(),
         ];
     }
 

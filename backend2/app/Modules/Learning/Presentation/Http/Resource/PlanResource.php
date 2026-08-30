@@ -43,6 +43,9 @@ final class PlanResource
             // «Ты уже можешь: … ✓ / — ещё нет». Every `hit` is false until CONV-1 writes the first
             // conversation; the SHAPE ships now because the screen is built against it.
             'can_already' => $plan->canAlready,
+            // Which of those the learner ticked after the event (кадр 1c · 14). Null = never asked,
+            // `[]` = asked and none used — the finished plan says a different sentence for each.
+            'event_feedback' => $plan->eventFeedback,
             'entities' => $plan->entities,
             'constraints' => $plan->constraints,
             'goal_terms' => $plan->goalTerms,

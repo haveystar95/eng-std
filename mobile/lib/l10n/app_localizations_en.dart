@@ -2810,4 +2810,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homePlanInviteCta => 'Make one';
+
+  @override
+  String get planNotifyChannelName => 'Preparation plan';
+
+  @override
+  String get planNotifyChannelBody => 'Reminders before the event you are preparing for';
+
+  @override
+  String planNotifyBeforeTitle(int days, int index) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days to the event. Day $index is waiting',
+      one: '$days day to the event. Day $index is waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planNotifyBeforeBody(int percent, String title) {
+    return 'Readiness $percent%. Today — $title.';
+  }
+
+  @override
+  String planNotifyMorningTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The event is today. $count phrases in 3 minutes',
+      one: 'The event is today. $count phrase in 3 minutes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planNotifyMorningBody =>
+      'A quick rehearsal before you leave — only what you will say.';
+
+  @override
+  String get planNotifyEveningTitle => 'How did it go? Mark what you said';
+
+  @override
+  String get planNotifyEveningBody => 'Tick the abilities that came up — that closes the plan.';
+
+  @override
+  String get planRehearsalBadge => 'Rehearsal · event today';
+
+  @override
+  String get planRehearsalSayIt => 'Say it out loud';
+
+  @override
+  String get planRehearsalHint => 'Say the phrase — or move on if it already comes by itself.';
+
+  @override
+  String get planRehearsalListening => 'Listening…';
+
+  @override
+  String get planRehearsalPlay => 'Play the example';
+
+  @override
+  String planRehearsalCue(String role, String cue) {
+    return '$role will say: «$cue»';
+  }
+
+  @override
+  String get planRehearsalOpen => 'Quick rehearsal';
+
+  @override
+  String get planRehearsalDone => 'Done';
+
+  @override
+  String get planRehearsalEmpty => 'This plan has no phrases to rehearse yet.';
+
+  @override
+  String get planFeedbackTitle => 'How did it go?';
+
+  @override
+  String planFeedbackBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tick the abilities that came up at the event — out of $count.',
+      one: 'Tick the ability that came up at the event.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planFeedbackSubmit => 'Save and finish';
+
+  @override
+  String get planFeedbackClosesPlan =>
+      'The plan will close, and its words move into general review.';
+
+  @override
+  String planFinishedAtEvent(int used, int total) {
+    return 'At the event you said $used of $total.';
+  }
 }

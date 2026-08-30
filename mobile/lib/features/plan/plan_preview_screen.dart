@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -119,6 +121,11 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
       // The tab now has a plan to show. Invalidated before navigating so the screen behind the
       // «собираю» animation is already the right one.
       ref.invalidate(activePlanProvider);
+      // …and THIS is the moment to ask about notifications: the learner has just told the app there
+      // is a date they care about. Asking at launch would be a permission dialog answered «нет» by
+      // somebody who has not yet been told what it is for. Fire-and-forget — a refusal costs the
+      // plan nothing.
+      unawaited(ref.read(planNotificationsProvider).requestPermission());
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => PlanBuildingScreen(plan: started)),
       );

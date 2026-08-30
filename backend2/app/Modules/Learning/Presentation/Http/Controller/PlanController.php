@@ -14,6 +14,8 @@ use App\Modules\Learning\Application\Command\EndPlan;
 use App\Modules\Learning\Application\Command\EndPlanHandler;
 use App\Modules\Learning\Application\Command\RequestPlanDay;
 use App\Modules\Learning\Application\Command\RequestPlanDayHandler;
+use App\Modules\Learning\Application\Command\RecordPlanFeedback;
+use App\Modules\Learning\Application\Command\RecordPlanFeedbackHandler;
 use App\Modules\Learning\Application\Command\ReschedulePlan;
 use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
@@ -26,11 +28,14 @@ use App\Modules\Learning\Application\Query\GetPlan;
 use App\Modules\Learning\Application\Query\GetPlanDayTerms;
 use App\Modules\Learning\Application\Query\GetPlanDayTermsHandler;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
+use App\Modules\Learning\Application\Query\GetPlanRehearsal;
+use App\Modules\Learning\Application\Query\GetPlanRehearsalHandler;
 use App\Modules\Learning\Application\Query\ListPlans;
 use App\Modules\Learning\Application\Query\ListPlansHandler;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
+use App\Modules\Learning\Presentation\Http\Request\PlanFeedbackRequest;
 use App\Modules\Learning\Presentation\Http\Request\ReschedulePlanRequest;
 use App\Modules\Learning\Presentation\Http\Resource\PlanResource;
 use App\Modules\Learning\Presentation\Http\Resource\PlanSessionResource;
@@ -72,6 +77,8 @@ final class PlanController
         private readonly GetPlanDayTermsHandler $dayTerms,
         private readonly BuildPlanSessionHandler $buildSession,
         private readonly RequestPlanDayHandler $requestDay,
+        private readonly GetPlanRehearsalHandler $rehearse,
+        private readonly RecordPlanFeedbackHandler $recordFeedback,
     ) {}
 
     public function store(CreatePlanRequest $request): JsonResponse
@@ -192,6 +199,44 @@ final class PlanController
         ));
 
         return new JsonResponse(['data' => ['day_index' => (int) $dayIndex, 'status' => $status]]);
+    }
+
+    /**
+     * The three minutes before the event: every phrase the plan taught, and the line it answers.
+     *
+     * A POST because it is an ACT the learner performs («повторить перед выходом») and because it
+     * may cost a content read per day — not a resource anybody should be free to poll. It writes
+     * nothing: a rehearsal schedules nothing and closes no stage.
+     */
+    public function rehearsal(Request $request, string $planId): JsonResponse
+    {
+        $view = ($this->rehearse)(new GetPlanRehearsal(
+            actorId: $this->actorId($request),
+            planId: $this->planId($planId)->value,
+        ));
+
+        return new JsonResponse(['data' => ($view ?? throw new NotFoundHttpException())->toArray()]);
+    }
+
+    /**
+     * «Как прошло? Отметь, что сказал» — and with it, the plan closes.
+     *
+     * Answering is the last thing the plan asks, so the answer and the closing are one call: a plan
+     * whose event has happened and which is still running goes on holding its words out of the
+     * ordinary day, for an appointment that is over.
+     */
+    public function feedback(PlanFeedbackRequest $request, string $planId): JsonResponse
+    {
+        /** @var list<int> $checkpoints */
+        $checkpoints = array_values(array_map(intval(...), (array) $request->input('checkpoints', [])));
+
+        ($this->recordFeedback)(new RecordPlanFeedback(
+            planId: $this->planId($planId),
+            actorId: $this->actorId($request),
+            checkpointIndexes: $checkpoints,
+        ));
+
+        return $this->show($request, $planId);
     }
 
     public function day(Request $request, string $planId, string $dayIndex): JsonResponse

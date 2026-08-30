@@ -960,5 +960,46 @@
   "homePlanCardContinue": "Continue",
   "homePlanInviteTitle": "Got a date and a goal?",
   "homePlanInviteBody": "We will build the preparation days — from a doctor's appointment to a job interview.",
-  "homePlanInviteCta": "Make one"
+  "homePlanInviteCta": "Make one",
+
+  "planNotifyChannelName": "Preparation plan",
+  "planNotifyChannelBody": "Reminders before the event you are preparing for",
+
+  "planNotifyBeforeTitle": "{days, plural, one{{days} day to the event. Day {index} is waiting} other{{days} days to the event. Day {index} is waiting}}",
+  "@planNotifyBeforeTitle": {
+    "placeholders": { "days": { "type": "int" }, "index": { "type": "int" } }
+  },
+  "planNotifyBeforeBody": "Readiness {percent}%. Today — {title}.",
+  "@planNotifyBeforeBody": {
+    "placeholders": { "percent": { "type": "int" }, "title": { "type": "String" } }
+  },
+  "planNotifyMorningTitle": "{count, plural, one{The event is today. {count} phrase in 3 minutes} other{The event is today. {count} phrases in 3 minutes}}",
+  "@planNotifyMorningTitle": { "placeholders": { "count": { "type": "int" } } },
+  "planNotifyMorningBody": "A quick rehearsal before you leave — only what you will say.",
+  "planNotifyEveningTitle": "How did it go? Mark what you said",
+  "planNotifyEveningBody": "Tick the abilities that came up — that closes the plan.",
+
+  "planRehearsalBadge": "Rehearsal · event today",
+  "planRehearsalSayIt": "Say it out loud",
+  "planRehearsalHint": "Say the phrase — or move on if it already comes by itself.",
+  "planRehearsalListening": "Listening…",
+  "planRehearsalPlay": "Play the example",
+  "planRehearsalCue": "{role} will say: «{cue}»",
+  "@planRehearsalCue": {
+    "placeholders": { "role": { "type": "String" }, "cue": { "type": "String" } }
+  },
+  "planRehearsalOpen": "Quick rehearsal",
+  "planRehearsalDone": "Done",
+  "planRehearsalEmpty": "This plan has no phrases to rehearse yet.",
+
+  "planFeedbackTitle": "How did it go?",
+  "planFeedbackBody": "{count, plural, one{Tick the ability that came up at the event.} other{Tick the abilities that came up at the event — out of {count}.}}",
+  "@planFeedbackBody": { "placeholders": { "count": { "type": "int" } } },
+  "planFeedbackSubmit": "Save and finish",
+  "planFeedbackClosesPlan": "The plan will close, and its words move into general review.",
+
+  "planFinishedAtEvent": "At the event you said {used} of {total}.",
+  "@planFinishedAtEvent": {
+    "placeholders": { "used": { "type": "int" }, "total": { "type": "int" } }
+  }
 }

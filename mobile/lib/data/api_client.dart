@@ -629,10 +629,14 @@ class ApiClient {
     return PlanRehearsal.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// «Как прошло?» — the checkpoints the learner ticked by hand after the event. Closes the plan.
-  Future<PlanEventFeedback> submitPlanFeedback(String planId, List<int> hitIndexes) async {
+  /// «Как прошло?» — the checkpoints the learner ticked by hand after the event.
+  ///
+  /// It CLOSES the plan, which is why it answers with the whole plan rather than with a receipt:
+  /// the screen that called it is about to become the finished-plan screen, and the completed plan
+  /// is what that screen is drawn from.
+  Future<LearningPlan> submitPlanFeedback(String planId, List<int> hitIndexes) async {
     final r = await _dio.post('/plans/$planId/feedback', data: {'checkpoints': hitIndexes});
-    return PlanEventFeedback.fromJson(_data(r) as Map<String, dynamic>);
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   /// Upload a batch of graded answers (idempotent by each review's client ULID).

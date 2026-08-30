@@ -49,6 +49,11 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::post('/plans/{planId}/start', [PlanController::class, 'start']);
     Route::post('/plans/{planId}/pause', [PlanController::class, 'pause']);
     Route::post('/plans/{planId}/abandon', [PlanController::class, 'abandon']);
+    // The morning of the event, and the evening after it. The second one CLOSES the plan: answering
+    // «как прошло» is the last thing it asks, and a plan whose event is over must stop holding
+    // words out of the ordinary day.
+    Route::post('/plans/{planId}/rehearsal', [PlanController::class, 'rehearsal']);
+    Route::post('/plans/{planId}/feedback', [PlanController::class, 'feedback']);
 
     Route::get('/sync/cursor', [SyncController::class, 'cursor']);
     Route::get('/sync', [SyncController::class, 'sync']);

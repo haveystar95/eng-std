@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
@@ -23,6 +24,7 @@ import 'practice/local_session_builder.dart';
 import 'practice/practice_mode_selector.dart';
 import 'models.dart';
 import 'plan_models.dart';
+import 'plan_notifications.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'pool_sync.dart';
@@ -884,6 +886,11 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
 // standing — which is exactly the disagreement PLAN-1b went out of its way to make impossible
 // between the session and the screen. So the plan screens read live and say «нет сети» when there
 // is none, and no plan row is ever written into the local database.
+
+/// The plan's three reminders, hung off its event date. See [PlanNotifications].
+final planNotificationsProvider = Provider<PlanNotifications>((ref) {
+  return PlanNotifications(FlutterLocalNotificationsPlugin());
+});
 
 /// The plan the learner is on, or null when there is none. Read on every entry to the tab.
 final activePlanProvider = FutureProvider<LearningPlan?>((ref) async {

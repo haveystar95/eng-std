@@ -55,6 +55,25 @@ final class LearningPlan
         private ?array $computed,
         private ?DateTimeImmutable $startedAt,
         private ?DateTimeImmutable $completedAt,
+        /**
+         * WHICH ABILITIES THE LEARNER ACTUALLY USED AT THE EVENT — their own report, ticked by hand
+         * (кадр 1c · 14), and the one fact about a plan that cannot be derived from anything.
+         *
+         * Everything else the plan knows comes from the review log or from the conversations. This
+         * happened in a room the app was not in, so the only honest source is the person who was
+         * there. It is what turns «готовность 50%» into «на приёме сказал 5 из 6».
+         *
+         * A list of INDEXES into the plan's checkpoint list, not a list of texts: the checkpoints
+         * live in the outline and cannot move (re-outlining a running plan is refused), so an index
+         * cannot come to mean a different sentence — while a stored copy of the sentence could
+         * drift from the one on screen.
+         *
+         * NULL means «never asked»; an empty list means «asked, and none were used». Two different
+         * facts, and collapsing them would make «0 из 6» unprintable.
+         *
+         * @var list<int>|null
+         */
+        private ?array $eventFeedback = null,
     ) {}
 
     public static function draft(
@@ -77,6 +96,7 @@ final class LearningPlan
     /**
      * @param  array<string, mixed>  $outline   P1's answer
      * @param  array<string, mixed>  $computed  A1's arithmetic
+     * @param  list<int>|null  $eventFeedback   what the learner said they used at the event
      */
     public static function reconstitute(
         PlanId $id,
@@ -94,10 +114,12 @@ final class LearningPlan
         ?array $computed,
         ?DateTimeImmutable $startedAt,
         ?DateTimeImmutable $completedAt,
+        ?array $eventFeedback = null,
     ): self {
         return new self(
             $id, $userId, $status, $title, $goalText, $goalRestated, $targetLang, $supportLang,
             $level, $eventDate, $minutesPerDay, $outline, $computed, $startedAt, $completedAt,
+            $eventFeedback,
         );
     }
 
@@ -214,6 +236,36 @@ final class LearningPlan
 
         $this->status = PlanStatus::Completed;
         $this->completedAt = $now;
+    }
+
+    /**
+     * «Как прошло?» — the learner's own report, and the act that CLOSES the plan.
+     *
+     * The two happen together on purpose: answering the question is the last thing the plan asks,
+     * and a plan that recorded the answer and stayed active would keep holding words for an event
+     * that has already happened. A plan already completed (a second tap on the notification, an
+     * offline retry) simply has its report replaced — the answer is a fact about the event, not a
+     * log of attempts to state it.
+     *
+     * @param  list<int>  $checkpointIndexes  positions in the plan's checkpoint list
+     */
+    public function recordEventFeedback(array $checkpointIndexes, DateTimeImmutable $now): void
+    {
+        // Deduplicated and ordered here rather than at the edge: two different indexes are two
+        // different abilities, and the same one twice is one ability said twice.
+        $unique = array_values(array_unique(array_map(intval(...), $checkpointIndexes)));
+        sort($unique);
+        $this->eventFeedback = $unique;
+
+        if ($this->status === PlanStatus::Active) {
+            $this->complete($now);
+        }
+    }
+
+    /** @return list<int>|null */
+    public function eventFeedback(): ?array
+    {
+        return $this->eventFeedback;
     }
 
     /**

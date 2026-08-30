@@ -10,6 +10,8 @@ import '../../data/api_client.dart';
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import 'plan_day_screen.dart';
+import 'plan_feedback_screen.dart';
+import 'plan_rehearsal_screen.dart';
 import 'plan_ui.dart';
 
 /// THE ACTIVE PLAN — кадр 1c · 01, plus the readiness block the наряд asks for.
@@ -126,6 +128,25 @@ class _PlanBody extends ConsumerWidget {
                     onTap: () => _openDay(context, plan, day.index),
                   ),
                 const SizedBox(height: AppSpacing.s22),
+                // THE EVENT HAS HAPPENED and the plan is still running: the one thing left to do is
+                // say how it went. It is the same screen the evening notification opens, offered
+                // here for the learner who never tapped it — otherwise a plan whose appointment is
+                // over goes on holding its words out of the ordinary day, indefinitely.
+                if (plan.daysToEvent <= 0) ...[
+                  PrimaryButton(
+                    label: l.planFeedbackTitle,
+                    minHeight: 52,
+                    onPressed: () => _openFeedback(context, ref, plan),
+                  ),
+                  const SizedBox(height: AppSpacing.s12),
+                ],
+                if (plan.daysToEvent == 0) ...[
+                  QuietButton(
+                    label: l.planRehearsalOpen,
+                    onPressed: () => _openRehearsal(context, plan),
+                  ),
+                  const SizedBox(height: AppSpacing.s12),
+                ],
                 if (focus != null)
                   PrimaryButton(
                     label: l.planContinueDay(focus.index),
@@ -145,6 +166,26 @@ class _PlanBody extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => PlanDayScreen(plan: plan, dayIndex: dayIndex)),
     );
+  }
+
+  void _openRehearsal(BuildContext context, LearningPlan plan) {
+    AppHaptics.light();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanRehearsalScreen(planId: plan.id, targetLang: plan.targetLang),
+      ),
+    );
+  }
+
+  Future<void> _openFeedback(BuildContext context, WidgetRef ref, LearningPlan plan) async {
+    AppHaptics.light();
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => PlanFeedbackScreen(plan: plan)),
+    );
+    // The plan may be finished now, in which case this screen is about to be replaced by the
+    // finished-plan tab — so both reads it hangs off are dropped rather than one.
+    ref.invalidate(activePlanProvider);
+    ref.invalidate(planProvider(plan.id));
   }
 }
 

@@ -77,5 +77,15 @@ final readonly class PlanView
          * @var list<array{text: string, day_index: int, hit: bool}>
          */
         public array $canAlready,
+        /**
+         * «На приёме сказал 5 из 6» — which checkpoints the learner ticked after the event.
+         *
+         * Indexes into {@see $canAlready}. NULL means they were never asked (the plan is still
+         * running, or the question went unanswered); an empty list means they were asked and used
+         * none of it. The finished-plan screen needs to tell those two apart.
+         *
+         * @var list<int>|null
+         */
+        public ?array $eventFeedback = null,
     ) {}
 }

@@ -4244,6 +4244,138 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Составить'**
   String get homePlanInviteCta;
+
+  /// Имя канала уведомлений (видно в системных настройках Android).
+  ///
+  /// In ru, this message translates to:
+  /// **'План подготовки'**
+  String get planNotifyChannelName;
+
+  /// Описание канала уведомлений.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминания перед событием, к которому идёт подготовка'**
+  String get planNotifyChannelBody;
+
+  /// Уведомление накануне события (кадр 12). Причина — дата события, не серия дней.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{До события {days} день. День {index} ждёт} few{До события {days} дня. День {index} ждёт} many{До события {days} дней. День {index} ждёт} other{До события {days} дня. День {index} ждёт}}'**
+  String planNotifyBeforeTitle(int days, int index);
+
+  /// Тело уведомления накануне: готовность и чему учит сегодняшний день.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готовность {percent}%. Сегодня — {title}.'**
+  String planNotifyBeforeBody(int percent, String title);
+
+  /// Уведомление утром дня события (кадр 13) — ведёт в быструю репетицию.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Сегодня событие. {count} фраза за 3 минуты} few{Сегодня событие. {count} фразы за 3 минуты} many{Сегодня событие. {count} фраз за 3 минуты} other{Сегодня событие. {count} фразы за 3 минуты}}'**
+  String planNotifyMorningTitle(int count);
+
+  /// Тело утреннего уведомления.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быстрая репетиция перед выходом — только то, что скажешь.'**
+  String get planNotifyMorningBody;
+
+  /// Уведомление после события (кадр 14).
+  ///
+  /// In ru, this message translates to:
+  /// **'Как прошло? Отметь, что сказал'**
+  String get planNotifyEveningTitle;
+
+  /// Тело вечернего уведомления.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отметь умения, которые пригодились — план закроется этим.'**
+  String get planNotifyEveningBody;
+
+  /// Латунная метка экрана репетиции (кадр 15).
+  ///
+  /// In ru, this message translates to:
+  /// **'Репетиция · событие сегодня'**
+  String get planRehearsalBadge;
+
+  /// Лейбл над фразой репетиции.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи вслух'**
+  String get planRehearsalSayIt;
+
+  /// Подпись рядом с микрофоном: пропустить так же законно.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скажи фразу — или пролистай дальше, если она уже звучит сама.'**
+  String get planRehearsalHint;
+
+  /// Подпись, пока микрофон слушает. Ничего не оценивается.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слушаю…'**
+  String get planRehearsalListening;
+
+  /// Тихая кнопка: озвучить фразу.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прочитать пример'**
+  String get planRehearsalPlay;
+
+  /// Реплика собеседника, на которую отвечает фраза.
+  ///
+  /// In ru, this message translates to:
+  /// **'{role} скажет: «{cue}»'**
+  String planRehearsalCue(String role, String cue);
+
+  /// Кнопка на экране плана в день события — открыть репетицию.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быстрая репетиция'**
+  String get planRehearsalOpen;
+
+  /// Последняя кнопка репетиции.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get planRehearsalDone;
+
+  /// Пустая репетиция — дни ещё не собраны.
+  ///
+  /// In ru, this message translates to:
+  /// **'В этом плане пока нет фраз для репетиции.'**
+  String get planRehearsalEmpty;
+
+  /// Заголовок экрана отметки чек-пойнтов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как прошло?'**
+  String get planFeedbackTitle;
+
+  /// Пояснение экрана отметки.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Отметь умение, которое пригодилось на событии.} few{Отметь умения, которые пригодились на событии — из {count}.} many{Отметь умения, которые пригодились на событии — из {count}.} other{Отметь умения, которые пригодились на событии — из {count}.}}'**
+  String planFeedbackBody(int count);
+
+  /// Кнопка отправки отметок — она же закрывает план.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить и завершить'**
+  String get planFeedbackSubmit;
+
+  /// Что произойдёт после отправки.
+  ///
+  /// In ru, this message translates to:
+  /// **'План завершится, а его слова уйдут в общее повторение.'**
+  String get planFeedbackClosesPlan;
+
+  /// Итог завершённого плана по отметкам после события (кадр 11).
+  ///
+  /// In ru, this message translates to:
+  /// **'На событии сказал {used} из {total}.'**
+  String planFinishedAtEvent(int used, int total);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
