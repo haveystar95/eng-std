@@ -105,7 +105,12 @@ final class PlanScheduler
             return new ComputedPlan(
                 days: [$this->introDay(
                     index: 1,
-                    kind: PlanDayKind::Final,   // it IS the final day; it just also teaches
+                    // INTRO, even though it is also the last day, and the kind is what decides
+                    // whether the day owns a collection and gets generated. A same-day plan's one
+                    // day TEACHES; calling it `final` would describe the conversation correctly
+                    // and stop the material from ever being written. That the final conversation
+                    // happens on the same day is said by `finalSameDay`, which is where it belongs.
+                    kind: PlanDayKind::Intro,
                     scheduledOn: $event,
                     skills: $skills,
                     outline: $outline,

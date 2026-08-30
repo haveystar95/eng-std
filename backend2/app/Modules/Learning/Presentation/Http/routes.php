@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Learning\Presentation\Http\Controller\HomeController;
+use App\Modules\Learning\Presentation\Http\Controller\PlanController;
 use App\Modules\Learning\Presentation\Http\Controller\PoolController;
 use App\Modules\Learning\Presentation\Http\Controller\ReviewController;
 use App\Modules\Learning\Presentation\Http\Controller\StudyController;
@@ -27,6 +28,18 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
 
     Route::get('/triage/queue', [TriageController::class, 'queue']);
     Route::post('/triage/batch', [TriageController::class, 'batch']);
+
+    // Learning plans. `/plans/active` sits BEFORE `/plans/{planId}` — otherwise «active» is
+    // matched as a plan id and answers 404 forever.
+    Route::post('/plans', [PlanController::class, 'store']);
+    Route::get('/plans/active', [PlanController::class, 'active']);
+    Route::get('/plans/{planId}', [PlanController::class, 'show']);
+    Route::get('/plans/{planId}/days/{dayIndex}', [PlanController::class, 'day']);
+    Route::post('/plans/{planId}/outline', [PlanController::class, 'buildOutline']);
+    Route::patch('/plans/{planId}/outline', [PlanController::class, 'reschedule']);
+    Route::post('/plans/{planId}/start', [PlanController::class, 'start']);
+    Route::post('/plans/{planId}/pause', [PlanController::class, 'pause']);
+    Route::post('/plans/{planId}/abandon', [PlanController::class, 'abandon']);
 
     Route::get('/sync/cursor', [SyncController::class, 'cursor']);
     Route::get('/sync', [SyncController::class, 'sync']);

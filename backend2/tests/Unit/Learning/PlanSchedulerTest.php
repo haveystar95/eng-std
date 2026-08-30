@@ -89,7 +89,10 @@ it('S3 «сегодня везу кота» — event today: one day does both j
         ->and($plan->finalSameDay)->toBeTrue()
         ->and($plan->dropped)->toBe([])
         ->and($plan->days)->toHaveCount(1)
-        ->and($plan->days[0]->kind)->toBe(PlanDayKind::Final)
+        // INTRO: the day teaches, and `kind` is what decides whether it gets material at all.
+        // That it is also the last day is said by `finalSameDay`.
+        ->and($plan->days[0]->kind)->toBe(PlanDayKind::Intro)
+        ->and($plan->days[0]->checkpoints)->toHaveCount(2)
         ->and($plan->days[0]->termBudget)->toBe(9)
         ->and($plan->days[0]->scheduledOn->format('Y-m-d'))->toBe('2026-08-30');
 });

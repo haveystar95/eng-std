@@ -24,6 +24,7 @@ tags:
   - name: Study
   - name: Generation
   - name: Search
+  - name: Plans
 
 paths:
   /auth/google:
@@ -1698,6 +1699,251 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Not a term id }
 
+  /plans:
+    post:
+      tags: [Plans]
+      summary: Create a plan as a DRAFT
+      description: >-
+        A LEARNING PLAN is not a collection. It is a dated mechanism: one goal, one event date, and
+        a number of days the SERVER computes from the two. A collection is a bag of useful words
+        with no opinion about time; every field here is about the deadline.
+
+        A draft costs NOTHING — no model call, no day, no word held. That is what makes the
+        three-step flow honest: create → outline (P1 + the scheduler) → adjust (the scheduler
+        again, free) → start. The learner reads the skeleton before they commit to it, and
+        adjusting it does not spend money.
+
+        The SUPPORT language is not a field. It is read from the account at every point of use;
+        one learner has one native language and a frozen copy on a plan would be a second answer
+        to a question that already has one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [goal_text, target_lang, level, event_date]
+              properties:
+                goal_text:
+                  type: string
+                  minLength: 5
+                  maxLength: 500
+                  description: >-
+                    What the learner has to be able to do, in their own words, in their own
+                    language. «Иду к врачу, болит спина, надо объяснить и понять назначение.»
+                target_lang: { type: string, minLength: 2, maxLength: 5 }
+                level:
+                  type: string
+                  enum: [zero, basic, conversational, fluent]
+                  description: >-
+                    Deliberately not CEFR. A plan asks «what can you say out loud in this
+                    situation», which is a different question from B1. The level moves the
+                    DIFFICULTY, never the topic: a zero learner going to the doctor still goes to
+                    the doctor.
+                event_date:
+                  type: string
+                  format: date
+                  description: The day it happens. Today is legal (a one-day plan); the past is not.
+                minutes_per_day:
+                  type: integer
+                  minimum: 5
+                  maximum: 120
+                  default: 20
+                  description: >-
+                    Decides the day's term budget through the capacity table (10 → 5, 20 → 9,
+                    40 → 16, interpolated between). The same table the prompt is told about.
+      responses:
+        '201': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: >-
+            Invalid input, or `event_date_in_past` — the event has already happened. A refusal
+            rather than a clamp to today: the whole plan is arithmetic over this date, so getting
+            it wrong has to stop the arithmetic instead of being absorbed by it.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /plans/active:
+    get:
+      tags: [Plans]
+      summary: The plan the learner is currently on
+      description: >-
+        The one plan in a HOLDING state — `active`, or `paused` if there is no active one. 204 when
+        there is none. One active plan per learner: a plan takes over the day and holds words in
+        the pool, and two of them fight over both.
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '204': { description: No plan is running }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /plans/{planId}:
+    get:
+      tags: [Plans]
+      summary: One plan, whole
+      description: >-
+        Structure, days, the server's arithmetic and readiness, in one read. A plan belonging to
+        another learner answers 404 and not 403 — whether a given ULID exists is not something a
+        stranger gets to find out.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+
+  /plans/{planId}/days/{dayIndex}:
+    get:
+      tags: [Plans]
+      summary: One day of a plan
+      description: >-
+        The day, plus the plan's binding lists beside it (`entities`, `constraints`, `goal_terms`)
+        — a client rendering one day needs them, and a second request for the plan to get them
+        would be a round trip for data the server already had in hand.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: dayIndex
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanDay' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such day }
+
+  /plans/{planId}/outline:
+    post:
+      tags: [Plans]
+      summary: Build the skeleton (P1 + the scheduler)
+      description: >-
+        Asks the model what the goal is MADE OF — its parts, the person on the other side of each
+        conversation, what has to be heard for each promise to count — and then lays those days on
+        the calendar itself. The model is TOLD how many days there are; it is never asked to work
+        them out, because a model asked «how many days until the 12th» answers plausibly, and
+        plausible is the one thing a deadline cannot use.
+
+        Synchronous, unlike collection generation: this is the screen the learner is waiting on
+        before they commit, and «мы вам сообщим» on the first screen of a feature is how the
+        feature does not get used. About ten seconds.
+
+        Re-running REBUILDS the skeleton — which is why it is a POST. Allowed on a draft only.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409':
+          description: >-
+            `invalid_plan_transition` — the plan is not a draft. Re-outlining a running plan would
+            swap the material under a learner who is halfway through it.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '502':
+          description: >-
+            `plan_outline_refused` — the vendor failed, or its answer did not survive the
+            validator. `meta.violations` names what was wrong. Nothing is broken here; the right
+            button is «попробовать ещё раз».
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+    patch:
+      tags: [Plans]
+      summary: Adjust the plan — fewer minutes, another date, one day fewer
+      description: >-
+        The scheduler runs again over the SAME model answer. NO model call, so adjusting is free
+        and can be done as often as the learner likes. That is the whole reason the model's answer
+        and the server's arithmetic are stored apart.
+
+        At least one field must be present. `drop_day_index` removes one day's abilities and
+        re-packs the rest around the hole; the stored skeleton moves with it, so the next
+        adjustment does not bring the day back.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                minutes_per_day: { type: integer, minimum: 5, maximum: 120 }
+                event_date: { type: string, format: date }
+                drop_day_index: { type: integer, minimum: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '422': { description: 'Nothing to change, or the last teaching day was dropped' }
+
+  /plans/{planId}/start:
+    post:
+      tags: [Plans]
+      summary: Commit to the plan
+      description: >-
+        The moment it stops being a document. Day 1 goes into the queue; its words are enrolled
+        strictly when it is ready, and cannot be removed while the plan runs.
+
+        ONE day is queued, never a fan-out: day 2 is written with day 1's terms in its KNOWN block
+        and cannot exist before them, a fan-out would spend the whole plan's money before the
+        learner has looked at one day, and a plan whose day 1 came back broken should stop rather
+        than produce four more broken days.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409':
+          description: >-
+            `plan_already_active` (another plan is running — `meta.active_plan_id` names it) or
+            `invalid_plan_transition` (this one cannot be started from where it is).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /plans/{planId}/pause:
+    post:
+      tags: [Plans]
+      summary: Put the plan down
+      description: >-
+        Generates nothing and KEEPS holding its words. Pause means «я вернусь», and coming back to
+        a plan whose words were let go one at a time is coming back to a different plan.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409': { description: The plan is not running }
+
+  /plans/{planId}/abandon:
+    post:
+      tags: [Plans]
+      summary: Give up on the plan
+      description: >-
+        Terminal, and it RELEASES the hold: the plan's reason comes off every pair it claimed and
+        the words stay in the pool as ordinary words, with their rung, their schedule and their
+        history intact. Releasing is not unenrolling — the learner spent days on these words, and
+        what changes is that they may now remove them.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200': { $ref: '#/components/responses/Plan' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: No such plan for this learner }
+        '409': { description: The plan has already ended }
+
   /sync/cursor:
     get:
       tags: [Study]
@@ -2058,6 +2304,11 @@ components:
       in: path
       required: true
       schema: { type: string, minLength: 26, maxLength: 26 }
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: { type: string, minLength: 26, maxLength: 26 }
 
   responses:
     Unauthorized:
@@ -2087,6 +2338,14 @@ components:
                     description: >-
                       Whether THIS call moved anything. False for a replayed request from an
                       offline queue, which is an ordinary outcome rather than an error.
+    Plan:
+      description: The plan, whole
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '#/components/schemas/Plan' }
     ValidationError:
       description: Input validation failed (Laravel shape)
       content:
@@ -2102,6 +2361,137 @@ components:
                   items: { type: string }
 
   schemas:
+    Plan:
+      type: object
+      description: >-
+        A learning plan: one goal, one event date, and the days the SERVER computed between them.
+      required: [id, status, title, goal_text, support_lang, target_lang, level, event_date, minutes_per_day, days]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        status:
+          type: string
+          enum: [draft, active, paused, completed, abandoned]
+          description: >-
+            `active` and `paused` both HOLD the plan's words in the pool. `completed` and
+            `abandoned` release them; the words stay, only the plan's claim on them goes.
+        title: { type: string }
+        goal_text:
+          type: string
+          description: What the learner typed, verbatim.
+        goal_restated:
+          type: [string, 'null']
+          description: >-
+            The same goal as the model read it back, in one sentence. Stored beside the original
+            rather than instead of it, because «я такого не просил» is only answerable with both.
+        support_lang:
+          type: string
+          description: The learner's own language, read from the account — never stored on the plan.
+        target_lang: { type: string }
+        level: { type: string, enum: [zero, basic, conversational, fluent] }
+        event_date: { type: string, format: date }
+        minutes_per_day: { type: integer }
+        started_at: { type: [string, 'null'], format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+        readiness:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: >-
+            How ready the learner is, 0…1. v1a formula and deliberately a number that cannot
+            flatter: the checkpoint half needs the conversation (CONV-1) and contributes a literal
+            zero, and the term half is capped at 0.4 — its weight in the full formula. A learner
+            who has acquired every word of every day reads 0.4, not «готов». The number only ever
+            grows when the ladder ships; it never has to be taken back.
+        recommended_days:
+          type: [integer, 'null']
+          description: >-
+            The model's honest opinion that the goal needs more days than the learner has, or null.
+            A note, never a licence to build a different plan — the plan is still exactly the
+            length that was asked for.
+        entities:
+          type: array
+          description: >-
+            The beings and objects the goal is about, with their gender and number. Binding on
+            every day: «везу кота» is masculine singular, and a day full of «кошка» is a plan about
+            somebody else's animal.
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              gender: { type: string }
+              number: { type: string }
+              note: { type: string }
+        constraints:
+          type: array
+          items: { type: string }
+          description: >-
+            The qualifiers that change the job — «удалённо», «английская команда», «сегодня». Each
+            one is the subject of at least one day's promise.
+        goal_terms:
+          type: array
+          items: { type: string }
+          description: >-
+            Latin-alphabet names the learner typed themselves (`PHP`, `API`, `Laravel`). Verbatim
+            in BOTH languages everywhere; never translated, never transliterated, never a card of
+            their own.
+        computed:
+          type: [object, 'null']
+          additionalProperties: true
+          description: >-
+            The server's arithmetic, verbatim — `need`, `capacity`, `max_days`, `intro_days`,
+            `rest_days`, `fits`, `spacing`, `final_same_day`, `dropped_skills`, `days`. Nothing is
+            cut silently, so `fits: false` with a populated `dropped_skills` is what the «срок мал»
+            card is built from.
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/PlanDay' }
+    PlanDay:
+      type: object
+      description: >-
+        One day. An `intro` day teaches and OWNS an ordinary collection — which is why every
+        trainer and every exercise mode work on it without knowing plans exist. The `final` day
+        introduces nothing and owns no collection.
+      required: [id, index, kind, title, status]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        index: { type: integer, minimum: 1 }
+        kind: { type: string, enum: [intro, final] }
+        title: { type: string }
+        scheduled_on: { type: [string, 'null'], format: date }
+        collection_id:
+          type: [string, 'null']
+          description: Null on the final day, and until an intro day is `ready`.
+        status:
+          type: string
+          enum: [pending, generating, ready, failed, done]
+        generation_attempts:
+          type: integer
+          description: >-
+            Claims, not failures, and the cap is two. A day that failed the validator twice is a
+            thing a person looks at — retrying it silently is how a broken prompt spends a plan's
+            whole budget on one day.
+        fail_reason: { type: [string, 'null'] }
+        term_budget: { type: integer }
+        outcome:
+          type: array
+          items: { type: string }
+          description: >-
+            «Ты сможешь: …» — what the learner will be able to DO out loud.
+        checkpoints:
+          type: array
+          items: { type: string }
+          description: >-
+            What has to be HEARD for the day's promises to count. On the final day, every
+            checkpoint of the whole plan in day order, assembled by the server.
+        topics:
+          type: array
+          items: { type: string }
+        role:
+          type: [object, 'null']
+          additionalProperties: true
+          description: >-
+            The one person on the other side of the day's conversation, with the lines they open
+            with. Null for a day that genuinely has nobody to talk to.
     Problem:
       type: object
       description: RFC 7807 with a stable machine `code`.

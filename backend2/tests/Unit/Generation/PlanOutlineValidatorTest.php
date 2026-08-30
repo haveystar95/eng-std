@@ -116,3 +116,41 @@ it('accepts binding lists that are simply empty', function () {
 
     expect($this->validator->validate($raw))->toBe([]);
 });
+
+it('lets a ONE-DAY plan carry more than three checkpoints — it is the whole goal', function () {
+    // The S3 scenario, live: «сегодня везу кота в ветклинику, прививка и странный кашель» has four
+    // parts, the prompt says a short plan compresses rather than drops, and the model honestly
+    // wrote four abilities with four checkpoints. The 2–3 band is a shape rule for an ordinary
+    // day; on a single-day plan it was measuring the length of the GOAL.
+    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
+        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
+        'outcome' => ['объяснить визит', 'описать кашель', 'понять назначение и повторить своими словами', 'спросить, когда вернуться'],
+        'role' => ['name' => 'ветеринар', 'opening_lines' => [],
+            'checkpoints' => ['слышно причину визита', 'слышно описание кашля', 'повторяет назначение', 'спрашивает про повтор'],
+            'if_silent' => 'предложит выбор'],
+    ]]];
+
+    expect($this->validator->validate($raw))->toBe([]);
+});
+
+it('still holds the floor of two, however short the plan', function () {
+    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
+        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
+        'outcome' => ['объяснить визит'],
+        'role' => ['name' => 'ветеринар', 'opening_lines' => [], 'checkpoints' => ['слышно причину'], 'if_silent' => 'предложит выбор'],
+    ]]];
+
+    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT);
+});
+
+it('still refuses four checkpoints on a multi-day plan, where the band means what it says', function () {
+    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => false, 'days' => [
+        ['index' => 1, 'title' => 'День 1', 'term_budget' => 9,
+            'outcome' => ['A', 'B', 'C', 'D'],
+            'role' => ['name' => 'врач', 'opening_lines' => [], 'checkpoints' => ['a', 'b', 'c', 'd'], 'if_silent' => 'переспросит']],
+        ['index' => 2, 'title' => 'День 2', 'term_budget' => 9, 'outcome' => ['E', 'F'],
+            'role' => ['name' => 'врач', 'opening_lines' => [], 'checkpoints' => ['e', 'f'], 'if_silent' => 'переспросит']],
+    ]];
+
+    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT);
+});
