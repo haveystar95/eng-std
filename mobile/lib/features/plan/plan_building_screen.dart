@@ -11,6 +11,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 
 import '../../data/plan_models.dart';
 import '../../data/providers.dart';
+import 'plan_day_screen.dart';
 import 'plan_screen.dart';
 import 'plan_ui.dart';
 
@@ -127,8 +128,18 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
     }
   }
 
-  /// Leave for the plan screen after a beat, so the third step is actually SEEN ticking rather than
-  /// flashing on the way out.
+  /// Leave after a beat, so the third step is actually SEEN ticking rather than flashing on the way
+  /// out — and leave for WHERE THE LEARNER CAME FROM.
+  ///
+  /// Two entrances, two destinations, and conflating them is a screen that throws you out of the
+  /// day you were reading:
+  ///
+  ///  * «Начать» on the preview ([widget.dayIndex] is null — the server owns the focus) lands on the
+  ///    plan, exactly as кадр Б-06 says: the learner has just bought the whole thing and the plan is
+  ///    what they bought.
+  ///  * «Собрать день N» from a DAY names its day, and that day is what the learner asked to see.
+  ///    Sending them to the plan instead is the app answering a different question — reported from
+  ///    the owner's phone as «оно выкидывает меня со 2 дня».
   void _leaveFor(Duration delay) {
     if (_left) return;
     _left = true;
@@ -136,8 +147,20 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
     Future.delayed(delay, () {
       if (!mounted) return;
       ref.invalidate(activePlanProvider);
+      ref.invalidate(planProvider(widget.plan.id));
+      final asked = widget.dayIndex;
+      if (asked != null) {
+        // The day's own detail was cached while it had no material. Dropped here rather than on the
+        // day screen, because the screen about to be built reads it in its first frame.
+        ref.invalidate(planDayProvider((planId: widget.plan.id, dayIndex: asked)));
+      }
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => PlanScreen(planId: widget.plan.id)),
+        MaterialPageRoute(
+          builder: (_) => asked == null
+              ? PlanScreen(planId: widget.plan.id)
+              : PlanDayScreen(plan: widget.plan, dayIndex: asked),
+        ),
       );
     });
   }

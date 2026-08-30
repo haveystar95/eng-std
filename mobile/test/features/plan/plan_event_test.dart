@@ -9,6 +9,8 @@ import 'package:eng_std/data/plan_models.dart';
 import 'package:eng_std/data/plan_notifications.dart';
 import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/data/token_store.dart';
+import 'package:eng_std/features/plan/plan_building_screen.dart';
+import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_feedback_screen.dart';
 import 'package:eng_std/features/plan/plan_rehearsal_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
@@ -49,7 +51,30 @@ class _FakeApi extends ApiClient {
     sent = hitIndexes;
     return _plan(feedback: hitIndexes);
   }
+
+  /// The day the «собираю» screen is polling for is already written.
+  @override
+  Future<PlanDayStatus> generatePlanDay(String planId, int dayIndex) async => PlanDayStatus.ready;
 }
+
+PlanDayDetail _builtDay() => PlanDayDetail.fromJson({
+  'id': 'd2',
+  'index': 2,
+  'kind': 'intro',
+  'title': 'В самолёте',
+  'status': 'ready',
+  'plan_id': '01PLAN',
+  'terms': [
+    {
+      'id': 't1',
+      'text': 'Excuse me, where is seat 14A?',
+      'translation': 'Извините, где место 14A?',
+      'type': 'phrase',
+      'stage': 'a',
+      'from_day_index': 2,
+    },
+  ],
+});
 
 LearningPlan _plan({List<int>? feedback}) => LearningPlan.fromJson({
   'id': '01PLAN',
@@ -160,6 +185,32 @@ void main() {
     // «Ничего из этого не пригодилось» has to be sendable, or a plan whose event went badly can
     // never be closed and goes on holding its words out of the ordinary day forever.
     expect(api.sent, isEmpty);
+  });
+
+  testWidgets('«собираю день N» comes back to THAT day, not to the plan', (tester) async {
+    // Reported from the owner's phone as «оно выкидывает меня со 2 дня»: the screen always left for
+    // the plan, so asking to build day 2 from day 2 landed somewhere else. «Начать» still goes to
+    // the plan — it names no day, and the plan is what was just bought.
+    final api = _FakeApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          planProvider('01PLAN').overrideWith((ref) async => _plan()),
+          planDayProvider(
+            (planId: '01PLAN', dayIndex: 2),
+          ).overrideWith((ref) async => _builtDay()),
+        ],
+        child: _app(PlanBuildingScreen(plan: _plan(), dayIndex: 2)),
+      ),
+    );
+    await tester.pump();
+    // Past the deliberate beat that lets the third step be seen ticking.
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PlanDayScreen), findsOneWidget);
+    expect(find.text('В самолёте'), findsOneWidget);
   });
 
   test('a notification payload names both the screen and the plan', () {

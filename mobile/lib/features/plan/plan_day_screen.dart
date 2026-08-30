@@ -59,7 +59,18 @@ class PlanDayScreen extends ConsumerWidget {
                     actionLabel: l.generationRetry,
                     onAction: () => ref.invalidate(planDayProvider(args)),
                   ),
-                  data: (detail) => _DayBody(plan: plan, detail: detail),
+                  data: (detail) => RefreshIndicator(
+                    color: AppColors.ink,
+                    backgroundColor: AppColors.surfaceRaised,
+                    // A day is read live and can change under the learner: one that failed to build
+                    // may have been rebuilt since, and one being written turns into material. The
+                    // plan screen has had a pull-to-refresh from the start; the day needed it more.
+                    onRefresh: () async {
+                      ref.invalidate(planDayProvider(args));
+                      await ref.read(planDayProvider(args).future);
+                    },
+                    child: _DayBody(plan: plan, detail: detail),
+                  ),
                 ),
               ),
             ],
@@ -90,6 +101,9 @@ class _DayBody extends ConsumerWidget {
     final carried = detail.carried;
 
     return ListView(
+      // Always scrollable, so the pull works on a day whose content does not fill the screen —
+      // which is exactly the day that failed to build and has three lines on it.
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenH,
         18,
@@ -194,6 +208,9 @@ class _NotWrittenYet extends ConsumerWidget {
     final exhausted = day.outOfAttempts;
 
     return ListView(
+      // Always scrollable, so the pull works on a day whose content does not fill the screen —
+      // which is exactly the day that failed to build and has three lines on it.
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenH,
         18,
