@@ -73,7 +73,16 @@ class _PlanBuilderScreenState extends ConsumerState<PlanBuilderScreen> {
   static DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   String get _goalText => _goal.text.trim();
-  bool get _ready => _goalText.length >= 3;
+
+  /// THE SERVER'S OWN FLOOR, not a looser one of our own.
+  ///
+  /// `CreatePlanRequest` refuses a `goal_text` shorter than this, so a button offered below it is a
+  /// button that spends a tap on a 422. It was `>= 3` and the live run found it the fastest way
+  /// possible: the screen's own «Врач» chip is four characters, so tapping an EXAMPLE this screen
+  /// suggests produced «Не получилось собрать план» every time.
+  static const _goalFloor = 5;
+
+  bool get _ready => _goalText.length >= _goalFloor;
 
   /// «Сегодня» hides the minutes block entirely (кадр Б-03's note): there is no «в день» when there
   /// is one day, and a per-day budget shown on such a plan is a promise about tomorrow.
@@ -803,10 +812,13 @@ class _OutlineChip extends StatelessWidget {
         AppHaptics.light();
         onTap();
       },
+      // NO `alignment` on this Container, and that is load-bearing: inside a Wrap the maximum width
+      // is the whole line, and a Container that is given an alignment expands to its maximum. The
+      // six example chips came out one per row on the simulator because of it. Padding centres the
+      // text just as well and lets the box size to its content.
       child: Container(
         constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadii.chip),
           border: Border.all(color: AppColors.track),
@@ -836,10 +848,10 @@ class _FilledChip extends StatelessWidget {
         AppHaptics.light();
         onTap();
       },
+      // See [_OutlineChip]: no `alignment` inside a Wrap.
       child: Container(
         constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
           label,
           style: AppText.translation.copyWith(

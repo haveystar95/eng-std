@@ -554,8 +554,17 @@ class ApiClient {
 
   /// P1 + the scheduler: the SKELETON the learner reads before committing. One model call, and
   /// re-running it rebuilds the skeleton — which is why it is a POST.
+  ///
+  /// THE ONE CALL IN THIS CLIENT THAT WAITS ON A MODEL IN-BAND. Everything else that costs a model
+  /// call is queued and polled; this one answers with the outline itself, because the learner is
+  /// looking at a spinner and the next screen IS the answer. The default 40-second receive timeout
+  /// is a limit for ordinary endpoints and far too short for a live `gpt-5.4` completion, so this
+  /// one states its own.
   Future<LearningPlan> buildPlanOutline(String planId) async {
-    final r = await _dio.post('/plans/$planId/outline');
+    final r = await _dio.post(
+      '/plans/$planId/outline',
+      options: Options(receiveTimeout: const Duration(minutes: 3)),
+    );
     return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
   }
 

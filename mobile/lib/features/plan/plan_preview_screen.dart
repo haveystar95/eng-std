@@ -252,15 +252,20 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
         const SizedBox(height: 14),
         Divider(height: 1, thickness: 1, color: paper.withValues(alpha: 0.18)),
         const SizedBox(height: 14),
+        // Two labels at opposite ends of one line, and a gap that cannot close. Without it the
+        // structure and the budget ran together on the simulator — «ПОДГОТОВКА 3 ДНЯ + ПРОГОН 20
+        // МИН/ДЕНЬ» reads as one sentence, and it is two facts.
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            Flexible(
               child: PlanLabel(
                 l.planPrepDays(intro),
                 color: paper.withValues(alpha: 0.72),
                 fontSize: 11.5,
               ),
             ),
+            const SizedBox(width: AppSpacing.s16),
             PlanLabel(
               l.planMinutesPerDay(_plan.minutesPerDay),
               color: paper.withValues(alpha: 0.72),
@@ -413,10 +418,10 @@ class _BrassButton extends StatelessWidget {
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onTap,
+      // No `alignment`: these two sit in a Wrap, where an aligned Container takes the whole line.
       child: Container(
         constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         child: Text(
           label,
           style: AppText.translation.copyWith(
@@ -447,8 +452,7 @@ class _OutlineButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: AppSpacing.minTap),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(label, style: AppText.translation.copyWith(fontSize: 15)),
       ),
     ),

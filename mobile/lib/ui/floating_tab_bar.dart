@@ -134,20 +134,25 @@ class _TabButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // The ring is 20pt and its gap is 2 — measured, not chosen. The pill is 54pt tall with
+            // 9pt of padding, so a tab has 36pt to fill, and a 9.5pt label takes ~14 of them. The
+            // frames' 30pt ring came from a taller bar; drawn at that size here it overflowed by
+            // seven pixels, live on the simulator. The bar's height is what every screen's bottom
+            // inset is built on, so the ring is what gives way.
             if (item.accent)
               Container(
-                width: 26,
-                height: 26,
+                width: 20,
+                height: 20,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.brassFrame, width: active ? 2 : 1.5),
+                  border: Border.all(color: AppColors.brassFrame, width: active ? 1.8 : 1.2),
                 ),
-                child: Icon(item.icon, size: 14, color: color),
+                child: Icon(item.icon, size: 11, color: color),
               )
             else
               Icon(item.icon, size: 17, color: color),
-            const SizedBox(height: 3),
+            SizedBox(height: item.accent ? 2 : 3),
             // The label shrinks with the pill rather than wrapping: a two-line tab would change the
             // bar's height, and the bar's height is what every screen's bottom padding is built on.
             Text(

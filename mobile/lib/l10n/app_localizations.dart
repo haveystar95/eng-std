@@ -3600,13 +3600,13 @@ abstract class AppLocalizations {
   /// Чип-пример цели.
   ///
   /// In ru, this message translates to:
-  /// **'Врач'**
+  /// **'Приём у врача'**
   String get planGoalChipDoctor;
 
   /// Чип-пример цели.
   ///
   /// In ru, this message translates to:
-  /// **'Аренда'**
+  /// **'Аренда квартиры'**
   String get planGoalChipRent;
 
   /// Чип-пример цели.

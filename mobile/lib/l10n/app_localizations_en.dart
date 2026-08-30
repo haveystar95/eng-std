@@ -2356,10 +2356,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planGoalChipInterview => 'Interview';
 
   @override
-  String get planGoalChipDoctor => 'Doctor';
+  String get planGoalChipDoctor => 'A doctor\'s appointment';
 
   @override
-  String get planGoalChipRent => 'Renting';
+  String get planGoalChipRent => 'Renting a flat';
 
   @override
   String get planGoalChipTrip => 'Trip';

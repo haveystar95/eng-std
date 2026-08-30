@@ -5,10 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/data/plan_models.dart';
 import 'package:eng_std/data/providers.dart';
+import 'package:eng_std/features/plan/plan_builder_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
+import 'package:eng_std/ui/ui.dart';
 
 /// The plan screens, on data rather than on a live server.
 ///
@@ -110,6 +112,44 @@ class _Envelope implements PlanSessionEnvelope {
 }
 
 void main() {
+  testWidgets('every example goal is one the SERVER would accept', (tester) async {
+    // The live run found this the fastest way there is: «Врач» is four characters, the server's
+    // `CreatePlanRequest` refuses a goal under five, and tapping an example the screen itself
+    // suggests produced «Не получилось собрать план». An example that cannot be used is worse than
+    // no example — so the chips are held to the server's own floor here.
+    await tester.pumpWidget(
+      ProviderScope(child: _app(const PlanBuilderScreen())),
+    );
+    await tester.pumpAndSettle();
+
+    final chips = tester
+        .widgetList<Text>(find.descendant(of: find.byType(Wrap), matching: find.byType(Text)))
+        .map((t) => t.data ?? '')
+        .where((s) => s.isNotEmpty);
+
+    expect(chips, isNotEmpty);
+    for (final chip in chips) {
+      expect(
+        chip.trim().length,
+        greaterThanOrEqualTo(5),
+        reason: '«$chip» is shorter than the server\'s goal_text floor of 5',
+      );
+    }
+  });
+
+  testWidgets('«Собрать план» stays shut until the goal clears that same floor', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(child: _app(const PlanBuilderScreen(initialGoal: 'Врач'))),
+    );
+    await tester.pumpAndSettle();
+
+    // Four characters: the button must not offer to spend a request on a 422.
+    final short = tester.widget<PrimaryButton>(
+      find.widgetWithText(PrimaryButton, 'Собрать план'),
+    );
+    expect(short.enabled && short.onPressed != null, isFalse);
+  });
+
   testWidgets('the empty План tab explains the difference from a collection', (tester) async {
     await tester.pumpWidget(
       ProviderScope(

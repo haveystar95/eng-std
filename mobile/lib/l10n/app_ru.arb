@@ -1791,9 +1791,9 @@
 
   "planGoalChipInterview": "Собеседование",
   "@planGoalChipInterview": { "description": "Чип-пример цели." },
-  "planGoalChipDoctor": "Врач",
+  "planGoalChipDoctor": "Приём у врача",
   "@planGoalChipDoctor": { "description": "Чип-пример цели." },
-  "planGoalChipRent": "Аренда",
+  "planGoalChipRent": "Аренда квартиры",
   "@planGoalChipRent": { "description": "Чип-пример цели." },
   "planGoalChipTrip": "Поездка",
   "@planGoalChipTrip": { "description": "Чип-пример цели." },

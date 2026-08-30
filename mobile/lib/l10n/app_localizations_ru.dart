@@ -2469,10 +2469,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planGoalChipInterview => 'Собеседование';
 
   @override
-  String get planGoalChipDoctor => 'Врач';
+  String get planGoalChipDoctor => 'Приём у врача';
 
   @override
-  String get planGoalChipRent => 'Аренда';
+  String get planGoalChipRent => 'Аренда квартиры';
 
   @override
   String get planGoalChipTrip => 'Поездка';
