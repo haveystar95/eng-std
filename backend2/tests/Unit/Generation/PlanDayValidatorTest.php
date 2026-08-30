@@ -343,6 +343,41 @@ it('accepts two-to-five letters and nothing longer', function () {
         ->and($key('Строка ABCDEFG внутри'))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
 });
 
+// ── codes are allowed by SHAPE too, and for the reason the abbreviation rule could not cover ────
+
+it('lets a seat number stand in a Russian key — a digit-carrying token is not a language', function () {
+    // Bought on the owner's phone: a travel plan died twice on `14A`. «Извините, где место 14A?» is
+    // the only way to say it, the seat letter is not English, and the abbreviation rule starts at
+    // TWO capitals — a seat carries one.
+    $items = [planItem([
+        'text' => 'Excuse me, where is seat 14A?',
+        'translation' => 'Извините, где место 14A?',
+        'example' => 'Excuse me, where is seat 14A?',
+        'example_translation' => 'Извините, где место 14A?',
+        'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('reads a code by its digit, whichever side the letters are on', function () {
+    $key = function (string $russian): array {
+        return codes($this->validator->validate(planDay([planItem([
+            'text' => 'a line', 'translation' => $russian, 'example' => 'A line happens.',
+            'example_translation' => 'Реплика случается.', 'transliteration' => '',
+        ])])));
+    };
+
+    expect($key('Место 14A у окна'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and($key('Летим на A320 утром'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and($key('Принимаю витамин B12'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and($key('Выход B2, посадка в семь'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        // A digit somewhere in the sentence does NOT excuse a Latin word elsewhere in it: the rule
+        // is about one token, not about the line it sits in.
+        ->and($key('Место 14A и слово hello'))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
 it('does not let a capitalised Latin word through as an abbreviation', function () {
     // One capital letter is a word, not an abbreviation. This is the case the shape rule must not
     // swallow, or the whole purity check stops meaning anything.

@@ -105,6 +105,23 @@ final class PlanDayValidator
      */
     private const ABBREVIATION = '/(?<![A-Za-z])[A-Z]{2,5}(?![A-Za-z])/u';
 
+    /**
+     * A CODE: a token that mixes digits and Latin letters — `14A`, `A320`, `B2`, `H1N1`, `PCR-2`.
+     *
+     * Decided by shape, exactly like {@see ABBREVIATION} above and for the same reason: a run
+     * containing a digit is not a word in any alphabet, so it cannot be evidence that a Russian
+     * sentence was written in English. «Извините, где место 14A?» is the only correct way to say it,
+     * and the `A` is a seat letter, not a language.
+     *
+     * The single-letter case is precisely why the abbreviation rule could not cover this: it starts
+     * at two letters, because one capital on its own is just a capitalised word. Bolted onto a
+     * number it stops being a word at all.
+     *
+     * Bought on the owner's phone, twice in one night: a travel plan died on `14A`. The check is
+     * meant to catch a key written in the wrong language, and a seat number is not that.
+     */
+    private const CODE = '/(?<![A-Za-z])(?=[0-9A-Za-z-]*[0-9])(?=[0-9A-Za-z-]*[A-Za-z])[0-9A-Za-z]+(?:-[0-9A-Za-z]+)*(?![A-Za-z])/u';
+
     public function __construct(private readonly LanguagePurity $purity = new LanguagePurity()) {}
 
     /**
@@ -428,15 +445,20 @@ final class PlanDayValidator
      * 3. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд»
      *    is fine, but a key that must quote the term to be unambiguous is not a key in the wrong
      *    language.
+     * 4. **A CODE — a token mixing digits and Latin letters.** `14A`, `A320`, `B2`. Shape again, and
+     *    the reason it needs its own rule: the abbreviation shape starts at two letters, and a seat
+     *    number carries exactly one. «Извините, где место 14A?» is the only way to say it in
+     *    Russian, and the day it was on died twice for being right.
      *
      * So both are removed from the value before the alphabet is looked at. What is left has to be
      * the learner's own language, which is the rule the exemptions exist to keep enforceable.
      */
     private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value): bool
     {
-        // The shape rule first, because it needs nothing told to it: a run of 2–5 capital Latin
-        // letters is an abbreviation wherever it appears, in any language, in any day.
-        $stripped = (string) preg_replace(self::ABBREVIATION, ' ', $value);
+        // The two SHAPE rules first, because they need nothing told to them and hold in any
+        // language: a run of 2–5 capital Latin letters is an abbreviation, and a token carrying a
+        // digit is a code. Neither is evidence that a key was written in the wrong language.
+        $stripped = (string) preg_replace([self::ABBREVIATION, self::CODE], ' ', $value);
 
         foreach ([...$day->goalTerms, $item->text] as $token) {
             $token = trim($token);
