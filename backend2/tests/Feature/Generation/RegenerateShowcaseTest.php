@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Http;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // This file is ABOUT the real adapter, so it opens the gate for itself — see allowLiveAdapters().
+    allowLiveAdapters();
     config(['services.generation.driver' => 'openai', 'services.openai.api_key' => 'key']);
     app()->forgetInstance(GenerationStackConfig::class);
     // This file WATCHES the станок's own call — `fakeCoreAndMechanics()` queues two responses and

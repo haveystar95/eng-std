@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Generation\Application\Service\PlanDayComposer;
-use App\Modules\Generation\Application\Service\PlanOutlineService;
-use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
-use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
-// The port lives in LEARNING, not in Generation — Generation IMPLEMENTS it. Importing the
-// Generation-shaped name binds a container key nothing resolves, the fake is never installed, and
-// the test quietly buys a live model call. That is exactly what happened while this file was being
-// written; see the session report.
-use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -26,11 +17,8 @@ uses(RefreshDatabase::class);
  * what a day opened out of turn gets instead.
  */
 beforeEach(function (): void {
-    $model = new FakePlanContentModel();
-    $prompts = new PlanPromptLibrary();
-    $ledger = app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class);
-    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger));
-    app()->instance(PlanDayComposer::class, new PlanDayComposer($model, $prompts, $ledger));
+    // Offline, and resolved back to prove it — see fakePlanModel() in tests/Pest.php.
+    fakePlanModel();
 
     // The plan ladder deals `intro` and `speaking`, and both ship DARK — a new trainer is switched
     // on себе → бете → всем, never by a migration. That release rule is not what these tests are

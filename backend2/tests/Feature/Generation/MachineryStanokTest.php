@@ -26,6 +26,8 @@ uses(RefreshDatabase::class);
  */
 function livePacker(array $config = []): EnrichmentPackerPort
 {
+    // This file is ABOUT the real adapter, so it opens the gate for itself — see allowLiveAdapters().
+    allowLiveAdapters();
     config(['services.generation.driver' => 'openai', 'services.openai.api_key' => 'key', ...$config]);
     app()->forgetInstance(GenerationStackConfig::class);
     // The Feature suite binds FakeEnrichmentPacker over this port for every test (tests/Pest.php), so

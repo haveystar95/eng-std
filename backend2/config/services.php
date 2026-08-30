@@ -120,7 +120,20 @@ return [
 
     'generation' => [
         // 'openai' (default) or 'fake' (deterministic, no network — for local/dev/tests).
+        // `phpunit.xml` pins this to 'fake' for the whole suite.
         'driver' => env('GENERATION_DRIVER', 'openai'),
+        /*
+         * MAY A TEST BUILD A LIVE VENDOR ADAPTER? No, unless it says so.
+         *
+         * Read by {@see \App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard}, which
+         * refuses to construct any live adapter under `APP_ENV=testing`. Three test files are ABOUT
+         * the real adapter — with `Http::fake()` underneath, so nothing reaches the wire — and turn
+         * this on for themselves through `allowLiveAdapters()` in tests/Pest.php.
+         *
+         * There is no env var on purpose: this is not a deployment knob, it is a per-test decision,
+         * and an env var would be a way to switch the gate off for a whole run.
+         */
+        'allow_live_in_tests' => false,
         // WHICH STACK production generation runs on, and the rollback switch for the cut-over:
         //   'v1' — the frozen single-vendor generator (prompt v9, `generate_model`, OpenAI inline);
         //   'v2' — the multi-vendor stack: prompt catalogue + shared schema + ContentModelPort.

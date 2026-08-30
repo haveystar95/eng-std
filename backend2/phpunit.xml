@@ -31,6 +31,21 @@
         <!-- The QA dev sign-in is ON under test so its happy path is exercised; the tests that
              prove it SHUT flip the gate at runtime (production env / flag off) and assert 404. -->
         <env name="DEV_LOGIN_ENABLED" value="true"/>
+        <!--
+            NO VENDOR CALLS FROM THE SUITE. Every port in Generation has a `driver === 'fake'`
+            branch, and this is what turns them all on at once. It is the FIRST of two measures and
+            the weaker one: it can be stepped around by a test that sets the driver back, which is
+            legitimate and three files do it on purpose. The second measure is the gate in the
+            factories themselves (LiveModelGuard), which refuses under APP_ENV=testing whatever the
+            driver says, unless the test opts in out loud.
+
+            Both exist because ONE of them was missing and the suite bought ≈39 gpt-5.4 calls
+            (docs/session-handoff.md). The symptom was a slow test.
+        -->
+        <env name="GENERATION_DRIVER" value="fake"/>
+        <env name="TRANSLATION_DRIVER" value="fake"/>
+        <env name="PRACTICE_DRIVER" value="fake"/>
+        <env name="IMAGE_DRIVER" value="fake"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

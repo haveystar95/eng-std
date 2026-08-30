@@ -63,6 +63,11 @@ final readonly class ConfiguredPlaygroundCatalog implements PlaygroundModelCatal
             return null;
         }
 
+        // The same gate as the content catalogue's, on the SECOND factory. The admin sandbox hands
+        // out adapters that send no system prompt and demand no schema, which makes it exactly the
+        // door a test would not think to close ({@see LiveModelGuard}).
+        LiveModelGuard::refuse("playground model {$provider->value}");
+
         $timeout = max(1, (int) config('playground.timeout', 60));
         $base = (string) ($row['base_url'] ?? '');
 

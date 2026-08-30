@@ -177,6 +177,55 @@ function adminSeedTerm(User $user, string $title, string $text, string $translat
 }
 
 /**
+ * Put the OFFLINE plan model behind both of a plan's paid calls — and PROVE it landed.
+ *
+ * The proof is the point of this helper existing at all. Every plan test file used to write these
+ * two `instance()` calls by hand, and one of them wrote the port's name with the wrong namespace
+ * (`Generation\…\PlanOutlinePort`; the port lives in `Learning`). The container takes any string as
+ * a key, so the binding «succeeded», resolved nothing, and the real adapter served the suite —
+ * ≈39 `gpt-5.4` calls, symptom: a slow test.
+ *
+ * A binding under a name nobody resolves cannot be told from a working one by looking at the
+ * binding. It can be told by RESOLVING THE PORT BACK, which is what the assertions below do, once,
+ * for everybody. {@see \App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard} is the other
+ * half: it stops the real adapter being built at all.
+ */
+function fakePlanModel(): void
+{
+    $model = new \App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel();
+    $prompts = new \App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary();
+    $ledger = app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class);
+
+    $outlines = new \App\Modules\Generation\Application\Service\PlanOutlineService($model, $prompts, $ledger);
+    $days = new \App\Modules\Generation\Application\Service\PlanDayComposer($model, $prompts, $ledger);
+
+    app()->instance(\App\Modules\Learning\Application\Port\PlanOutlinePort::class, $outlines);
+    app()->instance(\App\Modules\Generation\Application\Service\PlanDayComposer::class, $days);
+
+    // Resolve them back. Without this the helper would be exactly as trustworthy as the two lines
+    // it replaced, which is to say not at all.
+    expect(app(\App\Modules\Learning\Application\Port\PlanOutlinePort::class))->toBe($outlines)
+        ->and(app(\App\Modules\Generation\Application\Service\PlanDayComposer::class))->toBe($days);
+}
+
+/**
+ * «THIS TEST IS ABOUT THE REAL ADAPTER» — the one way past
+ * {@see \App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard}.
+ *
+ * The gate refuses to construct any live vendor adapter under `APP_ENV=testing`, whatever the
+ * driver says. A handful of files legitimately want the real thing, because the adapter itself is
+ * the subject: what it puts in the request body, which model name it sends, how it reads the
+ * response. They call this, and they put `Http::fake()` underneath, so nothing reaches the wire.
+ *
+ * Call it BEFORE resolving the port, and grep for it before adding a fourth caller: every one of
+ * them is a place where a mistake becomes an invoice.
+ */
+function allowLiveAdapters(): void
+{
+    config([\App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard::OPT_IN => true]);
+}
+
+/**
  * A fresh user with a bearer token, for HTTP-driven Learning/Vocabulary tests.
  *
  * @return array{0: User, 1: string}

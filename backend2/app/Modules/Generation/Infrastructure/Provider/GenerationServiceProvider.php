@@ -64,6 +64,7 @@ use App\Modules\Generation\Domain\Repository\PracticeDialogRepository;
 use App\Modules\Generation\Domain\Service\PracticeDailyLimit;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredContentModelCatalog;
+use App\Modules\Generation\Infrastructure\Adapter\LiveModelGuard;
 use App\Modules\Generation\Infrastructure\Adapter\ConfiguredPlaygroundCatalog;
 use App\Modules\Generation\Infrastructure\Adapter\ContentModelCollectionGenerator;
 use App\Modules\Generation\Infrastructure\Adapter\MachineryEnrichmentPacker;
@@ -192,6 +193,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeEnrichmentPacker();
             }
+            LiveModelGuard::refuse('enrichment packer');
 
             $stack = $this->app->make(GenerationStackConfig::class);
 
@@ -229,6 +231,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeTermEnricher();
             }
+            LiveModelGuard::refuse('term enricher');
 
             return new OpenAiTermEnricher(
                 context: $this->app->make(OutboundCallContext::class),
@@ -245,6 +248,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeTermTransliterator();
             }
+            LiveModelGuard::refuse('term transliterator');
 
             // The CORE's model and the CORE's prompt version, read from the one place that resolves
             // them — so the hint a saved word gets and the hint a generated collection gets cannot
@@ -288,6 +292,8 @@ final class GenerationServiceProvider extends ServiceProvider
                 return new UnavailableTranslator();
             }
 
+            LiveModelGuard::refuse('DeepL translator');
+
             return new DeepLTranslator(
                 context: $this->app->make(OutboundCallContext::class),
                 apiKey: $key,
@@ -306,6 +312,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeWordLookup();
             }
+            LiveModelGuard::refuse('word lookup');
 
             return new OpenAiWordLookup(
                 context: $this->app->make(OutboundCallContext::class),
@@ -372,6 +379,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeExampleRegenerator();
             }
+            LiveModelGuard::refuse('example regenerator');
 
             return new OpenAiExampleRegenerator(
                 context: $this->app->make(OutboundCallContext::class),
@@ -423,6 +431,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeCollectionGenerator();
             }
+            LiveModelGuard::refuse('collection generator');
 
             $stack = $this->app->make(GenerationStackConfig::class);
 
@@ -464,6 +473,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.driver') === 'fake') {
                 return new FakeTranslationRepairer();
             }
+            LiveModelGuard::refuse('translation repairer');
 
             return new OpenAiTranslationRepairer(
                 context: $this->app->make(OutboundCallContext::class),
@@ -479,6 +489,10 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.generation.image_driver') === 'fake') {
                 return new FakePexelsImageSearch((string) config('services.pexels.fake_mode', 'found'));
             }
+            // Not a model and not billed by the token, but the same shape of accident: the photo job
+            // follows the enricher, so a stray run puts real requests on api.pexels.com. One run
+            // measured 20 of them (tests/Pest.php).
+            LiveModelGuard::refuse('image search');
 
             return new PexelsImageSearch(
                 context: $this->app->make(OutboundCallContext::class),
@@ -524,6 +538,9 @@ final class GenerationServiceProvider extends ServiceProvider
             if ($driver === 'fake') {
                 return new FakeRealtimeTokenMinter($this->app->make(Clock::class));
             }
+            // A realtime token is bought from the vendor before a single word is spoken, so this
+            // door bills exactly like the others.
+            LiveModelGuard::refuse('realtime token minter');
 
             if ($driver === 'gemini') {
                 return new GeminiLiveTokenMinter(
@@ -548,6 +565,7 @@ final class GenerationServiceProvider extends ServiceProvider
             if (config('services.practice.driver') === 'fake') {
                 return new FakeDialogSummarizer();
             }
+            LiveModelGuard::refuse('dialog summarizer');
 
             return new OpenAiDialogSummarizer(
                 context: $this->app->make(OutboundCallContext::class),

@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
+// The sandbox's whole subject is the REAL playground adapter — what it sends and how it reads the
+// answer back — with `Http::fake()` underneath. See allowLiveAdapters().
+beforeEach(fn () => allowLiveAdapters());
+
 /**
  * A term with a pinned example, one distractor already stored against it, and one sentence that a
  * proofreader suppressed — the three facts a dry run has to tell apart.

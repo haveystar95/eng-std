@@ -2,13 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Generation\Application\Port\ContentModelPort;
+use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
-use App\Modules\Learning\Application\Port\PlanOutlinePort;
-use App\Modules\Learning\Application\Service\PlanDaysFromComputed;
-use App\Modules\Generation\Application\Service\PlanDayComposer;
-use App\Modules\Generation\Application\Service\PlanOutlineService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -26,15 +22,10 @@ uses(RefreshDatabase::class);
  * what matters is the RULE («one day at a time, the next when the previous is ready»), not the
  * mechanism that carries it.
  */
-beforeEach(function (): void {
-    // Both plan calls, offline. Bound over the container instance rather than through config so
-    // the binding is visible in the test that depends on it.
-    $model = new FakePlanContentModel();
-    $prompts = new PlanPromptLibrary();
-    $ledger = app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class);
-    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger));
-    app()->instance(PlanDayComposer::class, new PlanDayComposer($model, $prompts, $ledger));
-});
+// Both plan calls, offline — and RESOLVED BACK to prove the binding landed. The two lines this
+// replaces were written by hand in every plan test file, and one file wrote the port's namespace
+// wrong; see fakePlanModel() in tests/Pest.php.
+beforeEach(fn () => fakePlanModel());
 
 function createPlan(object $ctx, string $token, array $overrides = []): array
 {

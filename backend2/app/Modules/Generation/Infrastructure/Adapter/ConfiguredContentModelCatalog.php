@@ -102,6 +102,12 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
             return null;
         }
 
+        // THE gate, at the one place a content model is constructed. Everything that reaches a
+        // vendor through `ContentModelPort` — the core generator, the станок, the bake-off, both
+        // halves of a learning plan — comes through this method, so this is where a test run stops
+        // being able to buy a call by accident ({@see LiveModelGuard}).
+        LiveModelGuard::refuse("content model {$provider->value}");
+
         $model = $model !== null && trim($model) !== ''
             ? trim($model)
             : ($row['model'] !== '' ? $row['model'] : $row['default_model']);

@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Http;
 // The Observability listener logs each outbound call to api_request_logs — wrap so those roll back.
 uses(RefreshDatabase::class);
 
+// This whole file is ABOUT the real adapters — what each vendor's request body looks like, which
+// headers go on it, how the response is read — with `Http::fake()` underneath every case, so nothing
+// reaches the wire. That is the one legitimate reason to open the gate; see allowLiveAdapters().
+beforeEach(fn () => allowLiveAdapters());
+
 function renderedPrompt(PromptShape $shape = PromptShape::Terms): App\Modules\Generation\Application\Dto\RenderedPrompt
 {
     return (new PromptLibrary())->render('v10', $shape, [
