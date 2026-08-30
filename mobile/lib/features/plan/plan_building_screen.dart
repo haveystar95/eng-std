@@ -190,11 +190,14 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.s22),
-                      _Step(label: l.planBuildingStep1, done: done >= 1),
+                      // Exactly ONE row is «current» — the first one not yet done — and only while
+                      // the work is still running. A pulse on a screen that has given up would be
+                      // the screen saying it is still trying.
+                      _Step(label: l.planBuildingStep1, done: done >= 1, current: !_failed && done < 1),
                       const SizedBox(height: 10),
-                      _Step(label: l.planBuildingStep2, done: done >= 2),
+                      _Step(label: l.planBuildingStep2, done: done >= 2, current: !_failed && done == 1),
                       const SizedBox(height: 10),
-                      _Step(label: l.planBuildingStep3, done: done >= 3),
+                      _Step(label: l.planBuildingStep3, done: done >= 3, current: !_failed && done == 2),
                     ],
                   ),
                 ),
@@ -230,24 +233,32 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
 }
 
 class _Step extends StatelessWidget {
-  const _Step({required this.label, required this.done});
+  const _Step({required this.label, required this.done, this.current = false});
   final String label;
   final bool done;
+
+  /// This is the step being worked on right now. It pulses; the ones behind it are solid brass and
+  /// the ones ahead are quiet outlines.
+  final bool current;
 
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      AnimatedContainer(
-        duration: AppMotion.segmentFill,
+      SizedBox(
         width: 15,
         height: 15,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: done ? AppColors.brass : null,
-          border: done
-              ? null
-              : Border.all(color: AppColors.paper.withValues(alpha: 0.4), width: 1.5),
-        ),
+        child: current
+            ? const PlanPulsingDot(color: AppColors.brass)
+            : AnimatedContainer(
+                duration: AppMotion.segmentFill,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: done ? AppColors.brass : null,
+                  border: done
+                      ? null
+                      : Border.all(color: AppColors.paper.withValues(alpha: 0.4), width: 1.5),
+                ),
+              ),
       ),
       const SizedBox(width: 10),
       Expanded(
@@ -255,7 +266,9 @@ class _Step extends StatelessWidget {
           label,
           style: AppText.translation.copyWith(
             fontSize: 14,
-            color: AppColors.paper.withValues(alpha: done ? 1 : 0.55),
+            // The current row reads as brightly as a finished one: it is where the learner should
+            // be looking, and a dimmed «happening now» is a contradiction.
+            color: AppColors.paper.withValues(alpha: done || current ? 1 : 0.55),
           ),
         ),
       ),

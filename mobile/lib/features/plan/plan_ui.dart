@@ -212,6 +212,85 @@ class PlanReadinessBar extends StatelessWidget {
   );
 }
 
+/// THE DOT THAT SAYS «ЭТО СЕЙЧАС» — a slow pulse on the step being worked on.
+///
+/// A list of statuses where the finished ones are filled and the rest are outlines cannot say WHICH
+/// one is in flight, so a generation that takes forty seconds reads as a screen that has stopped.
+/// The pulse is the whole answer: it is on exactly one row at a time, it needs no percentage it
+/// cannot honestly give, and it stops the moment that row is done.
+///
+/// Slow on purpose — 1.1s each way, opacity only. A fast blink is an alarm, and nothing here is
+/// wrong; the plan is being written. Under reduce-motion it holds at full strength: the learner
+/// still needs to see which row is current, and that is a fact, not an animation.
+class PlanPulsingDot extends StatefulWidget {
+  const PlanPulsingDot({super.key, required this.color, this.size = 15});
+
+  final Color color;
+  final double size;
+
+  @override
+  State<PlanPulsingDot> createState() => _PlanPulsingDotState();
+}
+
+class _PlanPulsingDotState extends State<PlanPulsingDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = DecoratedBox(
+      decoration: BoxDecoration(shape: BoxShape.circle, color: widget.color),
+      child: SizedBox(width: widget.size, height: widget.size),
+    );
+
+    if (MediaQuery.of(context).disableAnimations) return dot;
+
+    return FadeTransition(
+      // Never to zero: a dot that disappears reads as a row that was removed. It breathes between
+      // «here» and «here, quietly».
+      opacity: Tween<double>(begin: 0.28, end: 1).animate(
+        CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+      ),
+      child: dot,
+    );
+  }
+}
+
+/// «● Собираю…» — a pulsing dot beside a line of text, for a wait with no steps to show.
+///
+/// The two paid calls the learner watches from a button — building the skeleton and rebuilding it —
+/// take fifteen to thirty seconds behind a greyed-out label. A label alone cannot tell «working»
+/// from «stuck»; the dot can, and it is the same dot the day's steps use, so the whole feature has
+/// one way of saying «сейчас».
+class PlanBusyLine extends StatelessWidget {
+  const PlanBusyLine({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const PlanPulsingDot(color: AppColors.brassInk, size: 7),
+      const SizedBox(width: AppSpacing.s8),
+      Flexible(
+        child: Text(
+          text,
+          style: AppText.translation.copyWith(fontSize: 12.5, color: AppColors.brassInk),
+        ),
+      ),
+    ],
+  );
+}
+
 /// A quiet screen-level message with an optional action — «нет сети», «план не найден».
 class PlanNotice extends StatelessWidget {
   const PlanNotice({super.key, required this.text, this.actionLabel, this.onAction});

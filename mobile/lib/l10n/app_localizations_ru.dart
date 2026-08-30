@@ -2522,6 +2522,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planBuilderWorking => 'Собираю…';
 
   @override
+  String get planBuilderBusyLine => 'Разбираю цель — обычно 15–30 секунд';
+
+  @override
   String get planBuilderHintToday => 'Событие сегодня — соберём короткую подготовку на один заход.';
 
   @override

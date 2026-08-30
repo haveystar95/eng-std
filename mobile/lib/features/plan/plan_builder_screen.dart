@@ -283,22 +283,30 @@ class _PlanBuilderScreenState extends ConsumerState<PlanBuilderScreen> {
                       onPressed: _build,
                     ),
                     const SizedBox(height: 10),
-                    // The ORIENTATION under the button, and only the half the device can honestly
+                    // While the model is writing, the line under the button STOPS being an
+                    // orientation and becomes a heartbeat: the skeleton takes fifteen to thirty
+                    // seconds behind a greyed-out label, and a label alone cannot tell «работаю»
+                    // from «завис».
+                    //
+                    // Otherwise it is the orientation, and only the half the device can honestly
                     // compute: how many days there are. How much MATERIAL fits in them is the
                     // server's arithmetic (`ComputedPlan`), and a second estimate of it here would
                     // be a number that disagrees with the preview one screen later.
-                    Center(
-                      child: Text(
-                        _isToday
-                            ? l.planBuilderHintToday
-                            : l.planBuilderHintDays(_daysToEvent, _minutes),
-                        textAlign: TextAlign.center,
-                        style: AppText.translation.copyWith(
-                          fontSize: 12.5,
-                          color: AppColors.tertiary,
+                    if (_busy)
+                      PlanBusyLine(text: l.planBuilderBusyLine)
+                    else
+                      Center(
+                        child: Text(
+                          _isToday
+                              ? l.planBuilderHintToday
+                              : l.planBuilderHintDays(_daysToEvent, _minutes),
+                          textAlign: TextAlign.center,
+                          style: AppText.translation.copyWith(
+                            fontSize: 12.5,
+                            color: AppColors.tertiary,
+                          ),
                         ),
                       ),
-                    ),
                     const SizedBox(height: AppSpacing.s26),
                   ],
                 ),

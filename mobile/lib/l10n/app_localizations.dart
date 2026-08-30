@@ -3699,6 +3699,12 @@ abstract class AppLocalizations {
   /// **'Собираю…'**
   String get planBuilderWorking;
 
+  /// Пульсирующая строка под кнопкой, пока модель пишет каркас или день. Заменяет ориентир/плейсхолдер цены на время ожидания.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разбираю цель — обычно 15–30 секунд'**
+  String get planBuilderBusyLine;
+
   /// Ориентир под кнопкой, когда событие сегодня.
   ///
   /// In ru, this message translates to:

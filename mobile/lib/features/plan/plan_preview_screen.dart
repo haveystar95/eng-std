@@ -212,18 +212,25 @@ class _PlanPreviewScreenState extends ConsumerState<PlanPreviewScreen> {
                             onPressed: _start,
                           ),
                           const SizedBox(height: 10),
-                          // The paywall is not built (PLAN-1c leaves it alone on purpose). The line
-                          // is a PLACEHOLDER and says so — a price invented here would be a price
-                          // somebody eventually ships.
-                          Center(
-                            child: Text(
-                              l.planPricePlaceholder,
-                              style: AppText.translation.copyWith(
-                                fontSize: 12.5,
-                                color: AppColors.tertiary,
+                          // Busy: the same heartbeat the entrance uses. «Перестроить» is a paid
+                          // model call and «Начать» writes the first day, and both leave the screen
+                          // looking identical to a screen that is doing nothing.
+                          //
+                          // Otherwise: the paywall is not built (PLAN-1c leaves it alone on
+                          // purpose), so the line is a PLACEHOLDER and says so — a price invented
+                          // here would be a price somebody eventually ships.
+                          if (_busy)
+                            PlanBusyLine(text: l.planBuilderBusyLine)
+                          else
+                            Center(
+                              child: Text(
+                                l.planPricePlaceholder,
+                                style: AppText.translation.copyWith(
+                                  fontSize: 12.5,
+                                  color: AppColors.tertiary,
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),

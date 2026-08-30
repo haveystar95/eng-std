@@ -2409,6 +2409,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planBuilderWorking => 'Building…';
 
   @override
+  String get planBuilderBusyLine => 'Working through the goal — usually 15–30 seconds';
+
+  @override
   String get planBuilderHintToday =>
       'The event is today — we will build a short one-sitting preparation.';
 

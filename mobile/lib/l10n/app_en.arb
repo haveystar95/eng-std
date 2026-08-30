@@ -817,6 +817,7 @@
   "@planMinutesPerDay": { "placeholders": { "minutes": { "type": "int" } } },
   "planBuilderSubmit": "Build the plan",
   "planBuilderWorking": "Building…",
+  "planBuilderBusyLine": "Working through the goal — usually 15–30 seconds",
   "planBuilderHintToday": "The event is today — we will build a short one-sitting preparation.",
   "planBuilderHintDays": "{days, plural, one{Roughly: {days} day until the event} other{Roughly: {days} days until the event}} · {minutes} min a day",
   "@planBuilderHintDays": {
