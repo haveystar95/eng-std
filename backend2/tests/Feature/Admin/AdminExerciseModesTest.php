@@ -106,7 +106,7 @@ it('refuses to leave the product default empty — there is nothing to inherit f
         ->assertStatus(422);
 
     // One row per (scope, mode) since the admission matrix moved into this table.
-    expect(DB::table('learning_mode_settings')->whereNull('user_id')->count())
+    expect(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())
         ->toBe(count(\App\Modules\Learning\Domain\ValueObject\ExerciseMode::cases()));
 });
 

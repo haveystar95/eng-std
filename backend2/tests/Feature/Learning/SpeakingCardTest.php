@@ -72,7 +72,7 @@ function speakingAnswer(object $ctx, string $token, string $termId, string $resp
 it('ships switched off, with a row on the assembly rung', function () {
     expect(config('learning.enabled_modes'))->not->toContain('speaking');
 
-    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'speaking')->first();
+    $row = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'speaking')->first();
 
     expect($row)->not->toBeNull()
         ->and((bool) $row->enabled)->toBeFalse()
@@ -84,7 +84,7 @@ it('ships switched off, with a row on the assembly rung', function () {
 });
 
 it('sits AFTER every trainer that shipped before it, so switching it on renumbers nothing', function () {
-    $rows = DB::table('learning_mode_settings')->whereNull('user_id')->orderBy('position')->pluck('mode')->all();
+    $rows = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->orderBy('position')->pluck('mode')->all();
     $at = array_search('speaking', $rows, true);
 
     // Not «last», which is what this asserted while speaking WAS the newest trainer. Every trainer

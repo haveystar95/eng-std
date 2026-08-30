@@ -21,7 +21,7 @@ function describeTerm(string $termId, string $text): void
 /** Switch a trainer on for everybody (what the owner does from the admin panel). */
 function enableModeGlobally(string $mode): void
 {
-    DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', $mode)->update(['enabled' => true]);
+    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', $mode)->update(['enabled' => true]);
 }
 
 // ── the release rule ─────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ function enableModeGlobally(string $mode): void
 it('ships switched off, with a row on the assembly rung', function () {
     expect(config('learning.enabled_modes'))->not->toContain('description_match');
 
-    $row = DB::table('learning_mode_settings')->whereNull('user_id')->where('mode', 'description_match')->first();
+    $row = DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->where('mode', 'description_match')->first();
 
     expect($row)->not->toBeNull()
         ->and((bool) $row->enabled)->toBeFalse()

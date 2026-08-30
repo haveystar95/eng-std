@@ -39,7 +39,9 @@ use App\Modules\Learning\Application\Port\PlanTermReleaser;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
+use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanDayRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanModeSettingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanReadinessReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermReleaser;
@@ -121,6 +123,12 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->bind(PlanDayRepository::class, EloquentPlanDayRepository::class);
         $this->app->bind(PlanTermReleaser::class, EloquentPlanTermReleaser::class);
         $this->app->bind(PlanReadinessReader::class, EloquentPlanReadinessReader::class);
+        // Singleton for the same reason the global reader is one: a per-request memo over one query.
+        // A DIFFERENT instance from that reader even though it is the same table — the two read
+        // disjoint scopes, and sharing a memo would mean one of them filtering the other's rows out
+        // of a cache it did not build.
+        $this->app->singleton(EloquentPlanModeSettingsReader::class);
+        $this->app->alias(EloquentPlanModeSettingsReader::class, PlanModeSettingsReader::class);
     }
 
     public function boot(): void

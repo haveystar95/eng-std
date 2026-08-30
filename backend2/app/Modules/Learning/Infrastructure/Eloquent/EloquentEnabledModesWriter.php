@@ -35,7 +35,7 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
         if ($modes === null) {
             // Inherit = no rows. Storing the global set as a copy would silently pin the user to
             // today's default and quietly exclude them from tomorrow's.
-            DB::table(self::TABLE)->where('user_id', $userId->value)->delete();
+            DB::table(self::TABLE)->where('scope', 'global')->where('user_id', $userId->value)->delete();
             $this->reader->forget();
 
             return;
@@ -154,7 +154,7 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
 
     public function clearOverride(UserId $userId, ExerciseMode $mode): void
     {
-        DB::table(self::TABLE)->where('user_id', $userId->value)->where('mode', $mode->value)->delete();
+        DB::table(self::TABLE)->where('scope', 'global')->where('user_id', $userId->value)->where('mode', $mode->value)->delete();
         $this->reader->forget();
     }
 
@@ -172,6 +172,10 @@ final class EloquentEnabledModesWriter implements EnabledModesWriter
     private function row(?string $userId, ExerciseMode $mode): ?stdClass
     {
         return DB::table(self::TABLE)
+            // GLOBAL scope only — the same table holds the plan's per-level settings, and without
+            // this the product default for `speaking` would be found as whichever plan level's row
+            // sorted first, and then overwritten by an admin toggle meant for the ordinary session.
+            ->where('scope', 'global')
             ->when($userId === null,
                 static fn ($q) => $q->whereNull('user_id'),
                 static fn ($q) => $q->where('user_id', $userId),

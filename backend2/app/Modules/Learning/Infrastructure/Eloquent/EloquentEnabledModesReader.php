@@ -168,7 +168,11 @@ final class EloquentEnabledModesReader implements EnabledModesReader, ModeAdmiss
     private function load(): array
     {
         $byScope = [];
-        $rows = DB::table(self::TABLE)->orderBy('position')->orderBy('mode')->get();
+        // GLOBAL rows only. The same table also holds the plan's own settings (`scope='plan'`, one
+        // row per level × mode), and without this filter every plan level would appear here as
+        // another copy of the same ten trainers — an eleventh `speaking` in the rotation and a
+        // matrix built from whichever row `load()` happened to see last.
+        $rows = DB::table(self::TABLE)->where('scope', 'global')->orderBy('position')->orderBy('mode')->get();
         foreach ($rows as $row) {
             $byScope[(string) ($row->user_id ?? '')][] = $row;
         }

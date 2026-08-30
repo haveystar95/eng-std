@@ -97,7 +97,9 @@ it('rewrites the same rows instead of accumulating them', function () {
     setGlobal([ExerciseMode::Typing]);
     setGlobal([ExerciseMode::Cloze]);
 
-    expect(DB::table('learning_mode_settings')->count())->toBe($perScope * 2) // one scope global, one override
+    // Global scope only: the same table also holds the plan's own per-level rows, which are not a
+    // scope in this sense — no learner overrides them and no rotation reads them.
+    expect(DB::table('learning_mode_settings')->where('scope', 'global')->count())->toBe($perScope * 2) // one scope global, one override
         ->and(wireModes(modes()->forUser($id)))->toBe(['listening']);
 });
 
@@ -128,7 +130,7 @@ it('erases a user override with the account', function () {
     DB::table('users')->where('id', $user->id)->delete();
 
     expect(DB::table('learning_mode_settings')->where('user_id', $user->id)->count())->toBe(0)
-        ->and(DB::table('learning_mode_settings')->whereNull('user_id')->count())->toBe(count(ExerciseMode::cases()));
+        ->and(DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->count())->toBe(count(ExerciseMode::cases()));
 });
 
 // ── the admission matrix, now stored beside the toggles ──────────────────────

@@ -105,6 +105,7 @@ it('deals the fan in the matrix own order, not in rotation order', function () {
     // `learning_mode_settings.position` is the product's own order; the enabled set is read in it
     // and the fan walks it unchanged.
     $enabled = DB::table('learning_mode_settings')
+        ->where('scope', 'global')
         ->whereNull('user_id')
         ->where('enabled', true)
         ->orderBy('position')->orderBy('mode')
