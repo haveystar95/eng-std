@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Command;
 use App\Modules\Learning\Application\Port\DispatchesPlanDay;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\ValueObject\EnrollmentSources;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
@@ -21,12 +22,13 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  * 2. **Its terms are enrolled, strictly** — `enrollment_sources += plan:<id>`. This is the moment
  *    the plan starts holding words, and it happens per DAY rather than at the start of the plan,
  *    because a word cannot be held before it exists.
- * The next day is NOT queued here, and that is the change PLAN-1b made. «Ready» means the material
- * exists; it says nothing about whether the learner will come back, and queueing on it meant a
- * fourteen-day plan wrote all fourteen days the afternoon it started. The next day is queued when
- * this one is DONE — walked, its every word through stage A — which happens in the session path
- * ({@see BuildPlanSessionHandler}) and is governed by {@see PlanGenerationPolicy}. A SHORT plan is
- * the exception and needs nothing here either: its days were all queued at the start.
+ * Step 3 is the one PLAN-1b changed, and it now depends on how long the plan is
+ * ({@see PlanGenerationPolicy}). On a SHORT plan the chain continues here, on `ready`: nobody is
+ * waiting on a decision, and the plan is meant to arrive written. On a LONG one nothing is queued
+ * here at all — «ready» means the material exists and says nothing about whether the learner will
+ * come back, and queueing on it meant a fourteen-day plan wrote all fourteen days the afternoon it
+ * started. There the next day waits for this one to be DONE, which happens in the session path
+ * ({@see BuildPlanSessionHandler}).
  *
  * On FAILURE nothing is enrolled and nothing is queued. A day that failed its first attempt goes
  * back to `pending` and the dispatcher is asked again immediately: that is the one re-run the
@@ -74,7 +76,21 @@ final readonly class FinishPlanDayHandler
                 ($this->enroll)(new EnrollTerm($plan->userId(), TermId::fromString($termId), $source));
             }
 
-            return ['retry' => false, 'next' => null];
+            // A SHORT plan continues here, on `ready`: there is no learner in the loop yet and the
+            // whole point is that it arrives written. A long one is chained from the session path,
+            // when a day is actually walked. Either way ONE day at a time — day n+1 is written from
+            // day n's terms, so it cannot be written beside it.
+            $computed = $plan->computed();
+            $introDays = is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1;
+
+            return [
+                'retry' => false,
+                'next' => PlanGenerationPolicy::nextAfterReady(
+                    $this->days->listForPlan($planId),
+                    $command->dayIndex,
+                    $introDays,
+                ),
+            ];
         });
 
         // Outside the transaction: a worker can pick a job up before the commit lands.

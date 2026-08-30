@@ -38,6 +38,7 @@ use App\Modules\Learning\Domain\ValueObject\PlanDayCard;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
@@ -136,7 +137,8 @@ final readonly class BuildPlanSessionHandler
         // The focus has moved past every day the learner has finished. Written here — in the command
         // path, never on a read — so the generation policy (which queues day n+1 when day n is DONE)
         // and the screen agree about what is finished.
-        $this->markPassedDays($days, $progress);
+        $computed = $plan->computed();
+        $this->markPassedDays($days, $progress, is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1);
 
         $strict = $dayIndex === $progress->focusDayIndex && $day->kind() === PlanDayKind::Intro;
         $knobs = $this->planSettings->knobsFor($plan->level());
@@ -209,7 +211,7 @@ final readonly class BuildPlanSessionHandler
                     continue;
                 }
                 $taken[$termId] = true;
-                $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review')];
+                $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs)];
             }
         }
 
@@ -220,7 +222,7 @@ final readonly class BuildPlanSessionHandler
                 continue;
             }
             $taken[$termId] = true;
-            $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayIndex, 'new')];
+            $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayIndex, 'new', $knobs)];
         }
 
         // 3. Whatever else is due, if the minutes have room.
@@ -253,11 +255,19 @@ final readonly class BuildPlanSessionHandler
      *
      * @return list<array<string, mixed>>
      */
-    private function specsFor(string $termId, PlanTermStanding $standing, ?int $dayIndex, string $source): array
-    {
+    private function specsFor(
+        string $termId,
+        PlanTermStanding $standing,
+        ?int $dayIndex,
+        string $source,
+        PlanKnobs $knobs,
+    ): array {
         $specs = [];
         $seen = [];
         $total = count($standing->checklist);
+        // Whether the assembler will deal the identity-graded recognition card decides the RUNG as
+        // well as the card, and both read the same knob. See PlanStageLadder::ladderStepFor().
+        $recognitionOptions = $knobs->optionsPolicy() === OptionsPolicy::Distant;
 
         foreach ($standing->checklist as $step) {
             $mode = ExerciseMode::tryFrom($step['mode']);
@@ -278,7 +288,7 @@ final readonly class BuildPlanSessionHandler
                 'day' => $dayIndex,
                 'softened' => $standing->softened,
                 'source' => $source,
-                'step' => PlanStageLadder::ladderStepFor($standing->stage, $mode, $seen[$step['mode']]),
+                'step' => PlanStageLadder::ladderStepFor($standing->stage, $mode, $seen[$step['mode']], $recognitionOptions),
             ];
         }
 
@@ -539,7 +549,7 @@ final readonly class BuildPlanSessionHandler
      *
      * @param  list<PlanDay>  $days
      */
-    private function markPassedDays(array $days, PlanProgressView $progress): void
+    private function markPassedDays(array $days, PlanProgressView $progress, int $introDays): void
     {
         $toMark = [];
         foreach ($days as $day) {
@@ -565,7 +575,12 @@ final readonly class BuildPlanSessionHandler
         // this loop just changed.
         $fresh = $this->days->listForPlan($toMark[0]->planId());
         foreach ($toMark as $day) {
-            $next = PlanGenerationPolicy::nextAfterDone($fresh, $day->dayIndex(), $progress->focusDayIndex);
+            $next = PlanGenerationPolicy::nextAfterDone(
+                $fresh,
+                $day->dayIndex(),
+                $progress->focusDayIndex,
+                $introDays,
+            );
             if ($next !== null) {
                 $this->dispatcher->dispatchDay($day->planId()->value, $next);
 

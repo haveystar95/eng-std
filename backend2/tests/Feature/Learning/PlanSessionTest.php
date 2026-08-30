@@ -312,6 +312,38 @@ it('moves the reported focus as days are passed', function () {
 
 // ── when a plan spends money ──────────────────────────────────────────────────────────────────
 
+/**
+ * A short plan arrives whole — one day at a time, never side by side.
+ *
+ * The sequence is the assertion. Day n is written FROM days 1…n−1: its terms go into the prompt's
+ * KNOWN block so the model gives them fresh examples in the new situation instead of teaching them
+ * again. The first version of the eager branch dispatched every day at once, and the live S1 run
+ * showed the cost — day 2's call finished before day 1's collection existed, its KNOWN block went
+ * out empty, and not one of day 1's nine terms got its day-2 example. Nothing failed; the material
+ * was simply written as if the previous day had not happened.
+ */
+it('writes a short plan whole, but strictly one day at a time', function () {
+    [, $token, $planId] = startedPlan($this);
+
+    $collections = DB::table('learning_plan_days')->where('plan_id', $planId)
+        ->whereNotNull('collection_id')->orderBy('day_index')->pluck('collection_id', 'day_index')->all();
+
+    expect($collections)->toHaveCount(2);
+
+    // Day 2's material was written while day 1 already existed — so day 1's terms were in the
+    // KNOWN block, and day 2 introduces none of them.
+    $terms = fn (int $day): array => DB::table('collection_items')
+        ->where('collection_id', $collections[$day])->pluck('term_id')->all();
+
+    expect(array_intersect($terms(1), $terms(2)))->toBe([]);
+
+    // The proof that the ORDER held: the day-2 collection is younger than every term of day 1.
+    $day2CreatedAt = DB::table('collections')->where('id', $collections[2])->value('created_at');
+    $lastDay1Term = DB::table('terms')->whereIn('id', $terms(1))->max('created_at');
+
+    expect($day2CreatedAt)->toBeGreaterThanOrEqual($lastDay1Term);
+});
+
 it('writes only day 1 of a LONG plan at the start, and the next when a day is walked', function () {
     // Ten introduction days: past the eager threshold, so the plan pays for one day and stops.
     [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);

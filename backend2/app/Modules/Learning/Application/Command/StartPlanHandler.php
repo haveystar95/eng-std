@@ -15,14 +15,14 @@ use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
  * The moment the plan stops being a document and becomes a mechanism: it starts holding words, and
- * its first day — or, on a short plan, all of them — goes into the queue.
+ * its FIRST day goes into the queue.
  *
- * WHICH of those is {@see PlanGenerationPolicy}'s decision and not this handler's. Three days or
- * fewer are written whole, because there is no meaningful abandonment window in a three-day plan
- * and the alternative is a spinner on day 2; anything longer is written one day at a time, with the
- * next queued when the previous is DONE. Both halves of that split exist for the same reason: a day
- * is a paid model call, and the plan's whole budget must not be spent before the learner has looked
- * at any of it.
+ * One day, on every plan, however short. What differs is what carries the chain on
+ * ({@see PlanGenerationPolicy}): a short plan continues on `ready`, so it arrives whole without a
+ * learner in the loop; a long one waits for `done`, so it never pays for days nobody reached.
+ * Neither branch fans out, because day n is written FROM days 1…n−1 — a fan-out is not a faster way
+ * to walk that sequence, it is a way to not walk it, and the live S1 run proved it by writing day 2
+ * one second after day 1 and giving it an empty KNOWN block.
  */
 final readonly class StartPlanHandler
 {
@@ -36,8 +36,7 @@ final readonly class StartPlanHandler
 
     public function __invoke(StartPlan $command): void
     {
-        /** @var list<int> $toQueue */
-        $toQueue = $this->tx->run(function () use ($command): array {
+        $firstDay = $this->tx->run(function () use ($command): ?int {
             $plan = $this->plans->findForUpdate($command->planId);
             if ($plan === null || ! $plan->userId()->equals($command->actorId)) {
                 throw PlanNotFound::withId($command->planId->value);
@@ -53,19 +52,13 @@ final readonly class StartPlanHandler
             $plan->start($this->clock->now());
             $this->plans->save($plan);
 
-            $computed = $plan->computed();
-            $introDays = is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1;
-
-            return PlanGenerationPolicy::daysToQueueAtStart(
-                $this->days->listForPlan($plan->id()),
-                $introDays,
-            );
+            return PlanGenerationPolicy::firstDayToQueue($this->days->listForPlan($plan->id()));
         });
 
         // AFTER the transaction: a job dispatched inside one can be picked up by a worker before
         // the commit lands, and then it reads a plan that is still a draft.
-        foreach ($toQueue as $dayIndex) {
-            $this->dispatcher->dispatchDay($command->planId->value, $dayIndex);
+        if ($firstDay !== null) {
+            $this->dispatcher->dispatchDay($command->planId->value, $firstDay);
         }
     }
 }

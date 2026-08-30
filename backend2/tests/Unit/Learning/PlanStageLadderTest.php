@@ -44,6 +44,33 @@ it('deals stage A in its fixed order: intro → mc → mc → word_bank → spea
     ]);
 });
 
+/**
+ * The rung a plan card is dealt at follows the SAME knob as the card itself.
+ *
+ * Rung 1 is the identity-graded recognition card: the learner taps, the client uploads a term id,
+ * the server compares ids. It is dealt only when the options policy is `distant`. Claiming rung 1
+ * while the assembler builds an ordinary choice card — whose answer is the term's TEXT — makes the
+ * server grade text against an id and answer `again` to a correct answer. The live S1 run did that
+ * to one word of nine: its checklist never closed, and once the pair graduated the re-deal was
+ * refused as a stale ladder answer, so the day could not be finished at all.
+ */
+it('claims the recognition rungs only when the recognition card is actually dealt', function () {
+    // `far` → distant options → the identity card exists, so forward then reverse.
+    expect(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::MultipleChoice, 1, true))->toBe(1)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::MultipleChoice, 2, true))->toBe(2);
+
+    // `near`/`close` → standard options → ordinary choice cards, graded as text, at the assembly rung.
+    expect(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::MultipleChoice, 1, false))->toBe(3)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::MultipleChoice, 2, false))->toBe(3);
+
+    // Everything else is unmoved by the knob.
+    expect(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::Intro, 1, false))->toBe(0)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::A, ExerciseMode::Speaking, 1, true))->toBe(3)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::B, ExerciseMode::Speaking, 1, true))->toBe(5)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::B, ExerciseMode::Cloze, 1, true))->toBe(3)
+        ->and(PlanStageLadder::ladderStepFor(PlanStage::C, ExerciseMode::Typing, 1, false))->toBe(5);
+});
+
 it('puts speaking in every stage — «читать вслух рано, говорить без текста поздно»', function () {
     foreach (PlanStage::cases() as $stage) {
         expect(PlanStageLadder::modesOf($stage))->toContain(ExerciseMode::Speaking);

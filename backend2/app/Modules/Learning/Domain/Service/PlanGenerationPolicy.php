@@ -28,6 +28,21 @@ use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
  * walked it, and it is the second one that is evidence they will come back. This is also what makes
  * a broken day stop the plan instead of producing five more broken days.
  *
+ * ## «Whole» never means «at once», and that distinction cost a live run
+ *
+ * Both branches queue exactly ONE day at a time. The eager branch differs only in WHAT it waits
+ * for — `ready` instead of `done` — so a short plan is written end to end in one sitting without a
+ * learner in the loop.
+ *
+ * The first version of this class fanned the whole short plan out in a single dispatch, and the
+ * live S1 run showed what that costs: day 2's model call started one second after day 1's and
+ * finished before day 1's collection existed, so `KnownTermsReader::metInPlan` returned nothing,
+ * the prompt's KNOWN block went out empty, and day 2 was written as if day 1 had never happened.
+ * Nothing failed — the day was valid, the coherence gate had nothing to compare against, and the
+ * only visible trace was that not one of day 1's nine terms got the fresh example day 2 was
+ * supposed to give it. Day n is written FROM days 1…n−1; that is the sequence, and a fan-out is
+ * not a faster way to walk a sequence, it is a way to not walk it.
+ *
  * **On demand, anything, one at a time.** A learner may look ahead — the day exists in the skeleton,
  * and refusing to build it would be pretending it does not. What that path may NOT do is run away:
  * at most {@see MAX_READY_AHEAD} days may stand written-or-writing ahead of the day the learner is
@@ -55,46 +70,82 @@ final class PlanGenerationPolicy
     }
 
     /**
-     * The introduction days to queue the moment the plan starts.
+     * The FIRST day to queue when the plan starts — one, on every plan.
+     *
+     * Both branches start the same way and differ only in what carries the chain forward
+     * ({@see nextAfterReady()} on a short plan, {@see nextAfterDone()} on a long one). See the class
+     * docblock for why «written whole» must not mean «written at once».
      *
      * @param  list<PlanDay>  $days
-     * @return list<int>  day indexes, in order
      */
-    public static function daysToQueueAtStart(array $days, int $introDays): array
+    public static function firstDayToQueue(array $days): ?int
     {
-        $pending = [];
         foreach ($days as $day) {
             if ($day->kind() === PlanDayKind::Intro && ! $day->isReady()) {
-                $pending[] = $day->dayIndex();
+                return $day->dayIndex();
             }
         }
 
-        if ($pending === []) {
-            return [];
-        }
-
-        return self::generatesEagerly($introDays) ? $pending : [$pending[0]];
+        return null;
     }
 
     /**
-     * The next day to queue now that `$doneDayIndex` has been walked, or null when nothing is owed.
+     * SHORT PLAN ONLY: the next day to queue now that `$readyDayIndex` has been written.
      *
-     * Null on a short plan is the correct answer and not an omission: everything was queued at the
-     * start, so there is nothing left to chain.
+     * This is what makes a three-day plan arrive whole without a learner in the loop — and it fires
+     * on `ready` rather than on `done` precisely because there is no learner in the loop yet.
+     *
+     * Null on a long plan, where the chain is carried by {@see nextAfterDone()} instead: writing
+     * day 5 because day 4 came back would spend the whole plan's budget on the afternoon it
+     * started, which is the thing the split exists to prevent.
      *
      * @param  list<PlanDay>  $days
      */
-    public static function nextAfterDone(array $days, int $doneDayIndex, int $focusDayIndex): ?int
+    public static function nextAfterReady(array $days, int $readyDayIndex, int $introDays): ?int
+    {
+        if (! self::generatesEagerly($introDays)) {
+            return null;
+        }
+
+        return self::nextPendingAfter($days, $readyDayIndex);
+    }
+
+    /**
+     * LONG PLAN ONLY: the next day to queue now that `$doneDayIndex` has been WALKED.
+     *
+     * Null on a short plan is the correct answer and not an omission: its chain already ran on
+     * `ready` and the whole plan is written.
+     *
+     * @param  list<PlanDay>  $days
+     */
+    public static function nextAfterDone(array $days, int $doneDayIndex, int $focusDayIndex, int $introDays): ?int
+    {
+        if (self::generatesEagerly($introDays)) {
+            return null;
+        }
+
+        $next = self::nextPendingAfter($days, $doneDayIndex);
+
+        return $next !== null && self::hasRoomAhead($days, $focusDayIndex) ? $next : null;
+    }
+
+    /**
+     * The first introduction day after `$after` that still needs writing.
+     *
+     * `pending` only: a day that is `generating` is already somebody's, and one that is `failed`
+     * has spent both its attempts and must not be picked up by a chain — the learner asking for it
+     * by hand is a different decision.
+     *
+     * @param  list<PlanDay>  $days
+     */
+    private static function nextPendingAfter(array $days, int $after): ?int
     {
         foreach ($days as $day) {
-            if ($day->kind() !== PlanDayKind::Intro || $day->dayIndex() <= $doneDayIndex) {
-                continue;
-            }
-            if ($day->status() !== PlanDayStatus::Pending) {
+            if ($day->kind() !== PlanDayKind::Intro || $day->dayIndex() <= $after) {
                 continue;
             }
 
-            return self::hasRoomAhead($days, $focusDayIndex) ? $day->dayIndex() : null;
+            return $day->status() === PlanDayStatus::Pending ? $day->dayIndex() : null;
         }
 
         return null;

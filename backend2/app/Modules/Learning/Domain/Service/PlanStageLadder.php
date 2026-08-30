@@ -126,9 +126,8 @@ final class PlanStageLadder
      *
      * The three interesting rows:
      *
-     *   the two stage-A recognitions   the first is FORWARD, the second REVERSE. That is what «×2»
-     *                                  means — the same trainer asked in both directions, exactly as
-     *                                  rungs 1 and 2 of the ordinary ladder are.
+     *   the two stage-A recognitions   the first is FORWARD, the second REVERSE — but ONLY when the
+     *                                  level actually deals recognition cards. See below.
      *   speaking in stage A            the assembly rung, so the card asks for the WORD: translation
      *                                  on screen, say the term.
      *   speaking in stages B and C     the dictation rung, so the card asks for the EXAMPLE. Whether
@@ -136,19 +135,45 @@ final class PlanStageLadder
      *                                  ({@see PlanStage::speakingForm()}) and not a rung — the
      *                                  trainer is not asked to know about plans.
      *
+     * ## Why the recognition rungs depend on the options policy
+     *
+     * Rung 1 is not merely «an early multiple_choice»: it is the card whose options are the
+     * session's own neighbours and whose answer is graded by IDENTITY — the learner taps, the client
+     * uploads the tapped TERM ID, and the server compares ids. That card is dealt only when the
+     * options policy is `distant`, which for a plan means the level's `distractor_closeness` is
+     * `far` ({@see \App\Modules\Learning\Domain\ValueObject\PlanKnobs::optionsPolicy()}).
+     *
+     * Claim rung 1 when the policy is `standard` and the two halves come apart: the assembler builds
+     * an ordinary choice card whose answer is the term's TEXT, the card still carries rung 1, and
+     * the server grades that text against a term id and returns `again`. The live S1 run did exactly
+     * this — one word of nine was marked wrong for a correct answer, its stage-A checklist never
+     * closed, and once the pair graduated the re-deal was rejected as a stale ladder answer, so the
+     * day could not be finished at all.
+     *
+     * So the rung follows the SAME input as the card: no recognition options, no recognition rung.
+     * Both stage-A choice cards are then ordinary ones at the assembly rung, which is two real
+     * retrievals with real distractors — «×2» still means twice.
+     *
      * @param  int  $occurrence  which appearance of this mode inside the stage, 1-based
+     * @param  bool  $recognitionOptions  will the assembler deal the identity-graded recognition
+     *                                    card for this learner — i.e. is the options policy
+     *                                    `distant`?
      */
-    public static function ladderStepFor(PlanStage $stage, ExerciseMode $mode, int $occurrence): int
-    {
+    public static function ladderStepFor(
+        PlanStage $stage,
+        ExerciseMode $mode,
+        int $occurrence,
+        bool $recognitionOptions,
+    ): int {
         if ($mode === ExerciseMode::Intro) {
             return LearningLadder::STEP_INTRO;
         }
 
         if ($stage === PlanStage::A) {
             return match (true) {
-                $mode === ExerciseMode::MultipleChoice && $occurrence <= 1 => LearningLadder::STEP_RECOGNITION_FORWARD,
-                $mode === ExerciseMode::MultipleChoice => LearningLadder::STEP_RECOGNITION_REVERSE,
-                default => LearningLadder::STEP_ASSEMBLY,
+                $mode !== ExerciseMode::MultipleChoice, ! $recognitionOptions => LearningLadder::STEP_ASSEMBLY,
+                $occurrence <= 1 => LearningLadder::STEP_RECOGNITION_FORWARD,
+                default => LearningLadder::STEP_RECOGNITION_REVERSE,
             };
         }
 
