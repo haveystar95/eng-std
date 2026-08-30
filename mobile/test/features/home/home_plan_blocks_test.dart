@@ -111,6 +111,15 @@ void main() {
     int learned = 146,
     WordChallenge? challenge,
   }) async {
+    // A TALLER surface than the 800×600 default. The home screen is a ListView, so a block below
+    // the fold is not merely off-screen — it is not built at all, and `findsNothing` would then pass
+    // for the wrong reason. The plan slot (кадр 08/09) added a card at the top and pushed the store
+    // line past 600 px; the guard here is about which blocks EXIST, so the viewport has to be tall
+    // enough to hold the whole screen.
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -133,6 +142,11 @@ void main() {
           ),
           connectivityProvider.overrideWith((ref) => Stream.value(true)),
           wordChallengeProvider.overrideWith((ref) => Stream.value(challenge)),
+          // The plan slot (кадр 08/09) reads the NETWORK, unlike everything else on this screen —
+          // готовность and the focus day are derived server-side on every read. Overridden to «no
+          // plan» here so these tests keep asking about the day's own blocks; the slot's own two
+          // faces are covered in `test/features/plan/`.
+          activePlanProvider.overrideWith((ref) async => null),
         ],
         child: MaterialApp(
           supportedLocales: kSupportedLocales,

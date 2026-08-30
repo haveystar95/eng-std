@@ -2319,7 +2319,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchOpen => 'Search';
 
   @override
-  String get planBuilderBack => 'Back';
+  String get commonBack => 'Back';
 
   @override
   String get planBuilderTitle => 'Make a plan';

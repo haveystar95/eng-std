@@ -3525,11 +3525,11 @@ abstract class AppLocalizations {
   /// **'Поиск'**
   String get searchOpen;
 
-  /// Ярлык кнопки «назад» для скринридера на экранах плана.
+  /// Ярлык кнопки «назад» для скринридера — план и поиск.
   ///
   /// In ru, this message translates to:
   /// **'Назад'**
-  String get planBuilderBack;
+  String get commonBack;
 
   /// Заголовок экрана входа в план (кадр Б-01).
   ///

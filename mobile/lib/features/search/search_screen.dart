@@ -42,7 +42,11 @@ import 'search_states.dart';
 /// A cap that has been spent is not an error here: the free half keeps working and the screen says
 /// when the model comes back (кадр 08).
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.pushed = false});
+
+  /// Opened from the magnifier in a header rather than mounted as a tab (PLAN-1c, Ч.2). The only
+  /// difference is a back chevron — the screen itself is the same one it always was.
+  final bool pushed;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -648,10 +652,34 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.s22, 18, AppSpacing.s22, 0),
+                padding: EdgeInsets.fromLTRB(AppSpacing.s22, widget.pushed ? 4 : 18, AppSpacing.s22, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Search left the tab bar in PLAN-1c: it is opened from a magnifier in the
+                    // header of Главная and Коллекции, which means it is now a PUSHED screen and
+                    // needs its own way back. Nothing else about it changed.
+                    if (widget.pushed)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Semantics(
+                          button: true,
+                          label: l.commonBack,
+                          child: InkResponse(
+                            onTap: () => Navigator.of(context).maybePop(),
+                            radius: 22,
+                            child: const SizedBox(
+                              width: AppSpacing.minTap,
+                              height: AppSpacing.minTap,
+                              child: Icon(
+                                LucideIcons.chevronLeft,
+                                size: 20,
+                                color: AppColors.secondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     // OVER the field, not beside it: the right-hand end of the field is already
                     // spoken for by the echo and the clear button, and a third thing there would
                     // make the busiest corner of the screen the one nobody looks at. Above it, the

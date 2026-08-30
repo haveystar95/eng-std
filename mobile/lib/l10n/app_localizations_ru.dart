@@ -2432,7 +2432,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchOpen => 'Поиск';
 
   @override
-  String get planBuilderBack => 'Назад';
+  String get commonBack => 'Назад';
 
   @override
   String get planBuilderTitle => 'Составить план';

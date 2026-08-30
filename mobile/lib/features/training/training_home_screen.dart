@@ -22,6 +22,8 @@ import '../collections/store_view.dart' show showStorePreview;
 import '../daily/word_challenge.dart';
 import '../daily/word_challenge_card.dart';
 import '../home/streak.dart';
+import '../plan/home_plan_card.dart';
+import '../search/search_button.dart';
 import 'session_screen.dart';
 import 'triage_screen.dart';
 
@@ -49,6 +51,12 @@ import 'triage_screen.dart';
 /// Pinned by `test/features/home/home_plan_blocks_test.dart`.
 abstract final class HomeBlockKeys {
   static const header = Key('home-header');
+
+  /// The active plan, or the invitation to make one (кадры 08 / 09). ONE key for both, because the
+  /// rule the guard has to protect is about the SLOT: something plan-shaped is always in it once the
+  /// day is known, and it is always above the session tile.
+  static const plan = Key('home-plan-slot');
+
   static const session = Key('home-session-card');
   static const done = Key('home-done-card');
   static const idle = Key('home-idle-card');
@@ -288,6 +296,12 @@ class _TrainingHomeScreenState extends ConsumerState<TrainingHomeScreen> {
     return [
       _DayHeader(key: HomeBlockKeys.header, streak: streak),
       gap,
+      // THE PLAN COMES FIRST — кадр 08. Above the day's tile and made of different material, because
+      // they are two different piles of work: the plan is dated and finite, the day below it is the
+      // ordinary queue. The server keeps them apart too — a plan's words are not in the tile's
+      // counts while the plan runs — so the two blocks never describe the same word twice.
+      const HomePlanSlot(key: HomeBlockKeys.plan),
+      gap,
       if (plan.state == HomeStateKind.plan)
         _SessionCard(key: HomeBlockKeys.session, session: session, onStart: () => _startDay(plan))
       else if (evening)
@@ -486,6 +500,10 @@ class _DayHeader extends StatelessWidget {
           const SizedBox(width: 9),
           _StreakDots(streak: streak),
         ],
+        // The magnifier, at the right end of the day's own line (кадр 08). Search left the tab bar
+        // when the plan took the centre slot; it did not leave the product.
+        const SizedBox(width: 4),
+        const SearchIconButton(size: 18),
       ],
     );
   }

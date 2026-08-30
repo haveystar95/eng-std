@@ -1756,8 +1756,8 @@
   "searchOpen": "Поиск",
   "@searchOpen": { "description": "Лупа в шапке главной и коллекций — открывает экран поиска." },
 
-  "planBuilderBack": "Назад",
-  "@planBuilderBack": { "description": "Ярлык кнопки «назад» для скринридера на экранах плана." },
+  "commonBack": "Назад",
+  "@commonBack": { "description": "Ярлык кнопки «назад» для скринридера — план и поиск." },
 
   "planBuilderTitle": "Составить план",
   "@planBuilderTitle": { "description": "Заголовок экрана входа в план (кадр Б-01)." },

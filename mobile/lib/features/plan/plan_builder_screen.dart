@@ -182,7 +182,7 @@ class _PlanBuilderScreenState extends ConsumerState<PlanBuilderScreen> {
           bottom: false,
           child: Column(
             children: [
-              _TopBar(title: l.planBuilderBack),
+              _TopBar(title: l.commonBack),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(
@@ -668,8 +668,8 @@ class _DateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: selected ? AppColors.ink : Colors.transparent,
-    borderRadius: BorderRadius.circular(AppRadii.small),
     clipBehavior: Clip.antiAlias,
+    // `shape` alone — Material asserts when it is given both a shape and a borderRadius.
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.small),
       side: selected ? BorderSide.none : const BorderSide(color: AppColors.track),
@@ -826,7 +826,6 @@ class _FilledChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: selected ? AppColors.ink : Colors.transparent,
-    borderRadius: BorderRadius.circular(AppRadii.chip),
     clipBehavior: Clip.antiAlias,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.chip),

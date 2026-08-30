@@ -14,6 +14,7 @@ import '../../data/pending_content_refresher.dart';
 import '../../data/providers.dart';
 import '../../data/store_providers.dart';
 import '../home/home_cta.dart';
+import '../search/search_button.dart';
 import 'collection_cover.dart';
 import 'collection_cta.dart';
 import 'collection_detail_screen.dart';
@@ -320,6 +321,11 @@ class _Header extends ConsumerWidget {
     return Row(
       children: [
         Expanded(child: Text(l.collectionsTitle, style: AppText.screenTitle)),
+        // Search moved out of the tab bar and into the two headers that hold words (PLAN-1c, Ч.2).
+        // Left of the «+» because it is the quieter of the two: one looks something up, the other
+        // makes a new thing.
+        const SearchIconButton(),
+        const SizedBox(width: 2),
         Semantics(
           button: true,
           label: l.collectionsNewCollection,

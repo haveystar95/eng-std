@@ -12,9 +12,9 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import '../../data/local/sync_service.dart';
 import '../../data/providers.dart';
 import '../collections/collections_screen.dart';
+import '../plan/plan_tab_screen.dart';
 import '../profile/profile_screen.dart';
 import '../progress/progress_screen.dart';
-import '../search/search_screen.dart';
 import '../training/training_home_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -111,20 +111,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    // Search sits between Collections and Progress: the two library tabs together, then the two
-    // «about me» ones. Adding it in the MIDDLE moves Progress and Profile one place right, which is
-    // the reason _select's indices are read from this list rather than written as literals anywhere.
+    // ПЛАН IS THE CENTRE, and search has left the bar entirely (PLAN-1c, Ч.2).
+    //
+    // A tab bar is a list of PLACES, and search was never one: it is an act you perform on the
+    // screen you are already on, which is why it now lives as a magnifier in the headers of Главная
+    // and Коллекции and opens the same screen it always did. What took its place is the one thing
+    // in the product that IS a place and had none — the plan.
+    //
+    // It sits in the middle rather than at the end because that is the position the eye and the
+    // thumb both find without counting, and because кадры 08–11 draw it there. Indices are read
+    // from this list rather than written as literals anywhere, so moving a tab is one edit.
     final pages = [
       TrainingHomeScreen(onOpenStore: _openStore),
       const CollectionsScreen(),
-      const SearchScreen(),
+      const PlanTabScreen(),
       const ProgressScreen(),
       const ProfileScreen(),
     ];
     final items = [
       FloatingTabItem(icon: LucideIcons.house, label: l.tabHome),
       FloatingTabItem(icon: LucideIcons.layoutGrid, label: l.tabCollections),
-      FloatingTabItem(icon: LucideIcons.search, label: l.tabSearch),
+      FloatingTabItem(icon: LucideIcons.calendarCheck, label: l.tabPlan, accent: true),
       FloatingTabItem(icon: LucideIcons.barChart3, label: l.tabProgress),
       FloatingTabItem(icon: LucideIcons.user, label: l.tabProfile),
     ];
