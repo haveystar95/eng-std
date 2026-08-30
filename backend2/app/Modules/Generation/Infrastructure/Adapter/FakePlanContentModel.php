@@ -94,18 +94,27 @@ final class FakePlanContentModel implements ContentModelPort
         $phrases = max(1, $this->intAfter($prompt, 'TERM BUDGET:', '('));
         $words = max(0, $this->intAfter($prompt, 'phrases +'));
         $checkpoints = max(1, substr_count($prompt, 'слышно, как'));
+        // WHICH DAY this is, read out of the day JSON the server put in the prompt.
+        //
+        // Every term the fake produced used to be «This is reply number 1» whatever day asked for
+        // it — and terms are GLOBALLY DEDUPLICATED, so day 2 imported day 1's words and came out as
+        // the same nine terms. Every stage a learner closed on day 1 was therefore also closed on
+        // day 2, and the plan's focus jumped two days on one sitting. The real model does not do
+        // that (and from PLAN-1b the coherence validator refuses a day that does), so the fake must
+        // not either: a double whose output breaks an invariant tests the invariant, not the code.
+        $day = max(1, $this->intAfter($prompt, '"index":'));
 
         $lines = [];
         for ($i = 1; $i <= $phrases; $i++) {
             $lines[] = [
-                'text' => "This is reply number {$i}.",
+                'text' => "Day {$day} reply number {$i}.",
                 'type' => 'phrase',
                 'is_line' => true,
-                'translation' => "Это реплика номер {$i}.",
-                'transliteration' => 'зис из риплай намбер',
-                'description' => "Somebody says it at moment {$i} of the conversation.",
-                'example' => "This is reply number {$i}, said out loud.",
-                'example_translation' => "Это реплика номер {$i}, сказанная вслух.",
+                'translation' => "День {$day}, реплика номер {$i}.",
+                'transliteration' => 'дэй риплай намбер',
+                'description' => "Somebody says it at moment {$i} of conversation {$day}.",
+                'example' => "Day {$day} reply number {$i}, said out loud.",
+                'example_translation' => "День {$day}, реплика номер {$i}, сказанная вслух.",
                 // Spread over the checkpoints so every one of them is closed.
                 'covers_checkpoint' => (($i - 1) % $checkpoints) + 1,
             ];
@@ -114,21 +123,21 @@ final class FakePlanContentModel implements ContentModelPort
         $substitutions = [];
         for ($i = 1; $i <= $words; $i++) {
             $substitutions[] = [
-                'text' => "wordnumber{$i}",
+                'text' => "day{$day}word{$i}",
                 'type' => 'word',
                 'is_line' => false,
-                'translation' => "словономер{$i}",
-                'transliteration' => 'уорднамбер',
-                'description' => "A thing you drop into a sentence, number {$i}.",
-                'example' => "I used wordnumber{$i} in a sentence.",
-                'example_translation' => "Я употребил словономер{$i} в предложении.",
+                'translation' => "день{$day}слово{$i}",
+                'transliteration' => 'дэй уорд',
+                'description' => "A thing you drop into a sentence on day {$day}, number {$i}.",
+                'example' => "I used day{$day}word{$i} in a sentence.",
+                'example_translation' => "Я употребил день{$day}слово{$i} в предложении.",
                 'covers_checkpoint' => null,
             ];
         }
 
         return [
-            'day_index' => 1,
-            'day_title' => 'Тестовый день',
+            'day_index' => $day,
+            'day_title' => "Тестовый день {$day}",
             'phrases' => $lines,
             'words' => $substitutions,
             'known' => [],

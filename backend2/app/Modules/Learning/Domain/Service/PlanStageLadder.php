@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Domain\Service;
 
+use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\PlanStageFact;
@@ -112,6 +113,53 @@ final class PlanStageLadder
         }
 
         return $out;
+    }
+
+    /**
+     * WHICH RUNG OF THE ORDINARY LADDER a plan card is dealt at.
+     *
+     * The plan owns its own stages, but the CARD is the app's ordinary card and the assembler builds
+     * it from a rung: the rung is what makes a `multiple_choice` forward or reverse, and what makes
+     * `speaking` ask for the word or for the sentence ({@see ExerciseMode::gradesAgainstExample()}).
+     * So the plan has to name one, and this is the translation table — in Domain, next to the stages
+     * it translates, rather than as a `match` inside the session builder where nobody would find it.
+     *
+     * The three interesting rows:
+     *
+     *   the two stage-A recognitions   the first is FORWARD, the second REVERSE. That is what «×2»
+     *                                  means — the same trainer asked in both directions, exactly as
+     *                                  rungs 1 and 2 of the ordinary ladder are.
+     *   speaking in stage A            the assembly rung, so the card asks for the WORD: translation
+     *                                  on screen, say the term.
+     *   speaking in stages B and C     the dictation rung, so the card asks for the EXAMPLE. Whether
+     *                                  the sentence is on the screen is the stage's own answer
+     *                                  ({@see PlanStage::speakingForm()}) and not a rung — the
+     *                                  trainer is not asked to know about plans.
+     *
+     * @param  int  $occurrence  which appearance of this mode inside the stage, 1-based
+     */
+    public static function ladderStepFor(PlanStage $stage, ExerciseMode $mode, int $occurrence): int
+    {
+        if ($mode === ExerciseMode::Intro) {
+            return LearningLadder::STEP_INTRO;
+        }
+
+        if ($stage === PlanStage::A) {
+            return match (true) {
+                $mode === ExerciseMode::MultipleChoice && $occurrence <= 1 => LearningLadder::STEP_RECOGNITION_FORWARD,
+                $mode === ExerciseMode::MultipleChoice => LearningLadder::STEP_RECOGNITION_REVERSE,
+                default => LearningLadder::STEP_ASSEMBLY,
+            };
+        }
+
+        if ($stage === PlanStage::B) {
+            // Everything in B works off a sentence that is on the screen; only speaking needs the
+            // rung to say «ask for the example» rather than «ask for the word».
+            return $mode === ExerciseMode::Speaking ? LearningLadder::STEP_DICTATION : LearningLadder::STEP_ASSEMBLY;
+        }
+
+        // Stage C takes the screen away: typed production and above.
+        return LearningLadder::STEP_DICTATION;
     }
 
     /**

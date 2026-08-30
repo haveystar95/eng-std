@@ -19,6 +19,7 @@ use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Learning\Domain\ValueObject\ModeAdmission;
 use App\Modules\Learning\Domain\ValueObject\OptionsPolicy;
+use App\Modules\Learning\Domain\ValueObject\TermPlayability;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Vocabulary\Application\Dto\TermContentView;
 use App\Modules\Vocabulary\Application\Query\DistractorReader;
@@ -99,7 +100,15 @@ final readonly class StudyCardAssembler
         array $neighbours = [],
         ?ExerciseMode $modeOverride = null,
         ?string $supportLang = null,
+        ?int $optionCount = null,
     ): ?SessionCardView {
+        // How many options a choice card is dealt, the right one included. A NUMBER rather than the
+        // constant, because a plan deals its level's number ({@see PlanKnobs}: three for a learner
+        // with no target language at all, four from `conversational` up). Nothing about the card's
+        // shape moves — the wire has always carried a list, and `pick_correct` has always dealt
+        // three of them — so this is a knob the trainer already understood, not a contract change.
+        // Null is «the product default», which is every caller but the plan.
+        $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
         $progress = TermProgress::reconstitute(
             $user, $view->termId, $view->state, TermProgress::DEFAULT_EASE,
             $view->intervalDays, $view->dueAt, $view->reps, 0, null,
@@ -130,13 +139,7 @@ final readonly class StudyCardAssembler
         // Span-distinct, because that is what a card can actually use — see spanDistinct().
         $usableDistractors = $this->spanDistinct($content->exampleDistractors);
         // What the term's data allows at all — one derivation, shared with the day-plan simulator.
-        $playable = $this->playability->assess(
-            $answer,
-            $content->example,
-            $content->exampleTranslation,
-            count($usableDistractors),
-            $content->description,
-        );
+        $playable = $this->playabilityOf($content);
         // Toggles are per-user data, so "nothing fits this term" is now reachable by configuration.
         // The selector still returns a playable card; this is what stops that being silent.
         if (! $this->selector->hasApplicableMode($enabled, $playable)) {
@@ -171,7 +174,7 @@ final readonly class StudyCardAssembler
         if (LearningLadder::isRecognitionStep($step)
             && $mode === ExerciseMode::MultipleChoice
             && $admission->optionsPolicyFor($mode, $view->acquisition) === OptionsPolicy::Distant) {
-            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang);
+            $card = $this->recognitionCard($view, $content, (int) $step, $neighbours, $cardIndex, $supportLang, $optionCount);
             if ($card !== null) {
                 return $card;
             }
@@ -200,7 +203,7 @@ final readonly class StudyCardAssembler
             && trim($content->example) !== '';
 
         if ($mode === ExerciseMode::MultipleChoice) {
-            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, self::OPTION_COUNT - 1);
+            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, $optionCount - 1);
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::WordBank) {
@@ -257,7 +260,7 @@ final readonly class StudyCardAssembler
             // excludes candidates whose translations overlap the target's. That exclusion matters
             // more here than there: a description separates two words a single Russian gloss has
             // collapsed, and offering both of them would put two correct answers on the card.
-            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, self::OPTION_COUNT - 1);
+            $distractors = $this->distractors->forTarget($view->termId, $poolTermIds, $optionCount - 1);
             /** @var list<string> $options */
             $options = $this->rng->shuffleArray([$answer, ...$distractors]);
         } elseif ($mode === ExerciseMode::Speaking) {
@@ -333,6 +336,28 @@ final readonly class StudyCardAssembler
             // learner heard as `purpose`, which the server then grades `again`.
             synonyms: ! $asksExample && $mode->acceptsSynonyms() ? $content->synonyms : [],
             ladderStep: $step,
+        );
+    }
+
+    /**
+     * WHAT THIS TERM'S DATA ALLOWS, from the content alone — the same derivation
+     * {@see assemble()} makes for every card, exposed because a second caller now needs it BEFORE a
+     * card exists.
+     *
+     * That caller is the plan's stage checklist: a stage is closed when everything APPLICABLE in it
+     * is closed, so it has to know what is applicable before it deals anything. Asking a second
+     * question there — «probably no pick_correct, this term looks thin» — is how a word ends up
+     * owing a card the assembler then refuses, with the step never closing and the word stuck on
+     * stage C for good.
+     */
+    public function playabilityOf(TermContentView $content): TermPlayability
+    {
+        return $this->playability->assess(
+            $content->text,
+            $content->example,
+            $content->exampleTranslation,
+            count($this->spanDistinct($content->exampleDistractors)),
+            $content->description,
         );
     }
 
@@ -526,6 +551,8 @@ final readonly class StudyCardAssembler
      * @param  list<array{term_id: string, text: string, translation: string|null, type: string, lang: string, support: string, collections?: list<string>}>  $neighbours
      * @param  string|null  $supportLang  the asking half of this card's pair; null = unknown, and an
      *                                    unverifiable pair is treated as a failed one
+     * @param  int|null  $optionCount  how many options this card is dealt, the right one included —
+     *                                 the plan's level knob, null for the product default
      */
     private function recognitionCard(
         DueTermView $view,
@@ -534,10 +561,12 @@ final readonly class StudyCardAssembler
         array $neighbours,
         int $cardIndex,
         ?string $supportLang = null,
+        ?int $optionCount = null,
     ): ?SessionCardView {
         if ($supportLang === null) {
             return null;
         }
+        $optionCount = max(2, $optionCount ?? self::OPTION_COUNT);
         $forward = $step === LearningLadder::STEP_RECOGNITION_FORWARD;
 
         $own = $forward ? $content->translation : $content->text;
@@ -568,7 +597,7 @@ final readonly class StudyCardAssembler
                 continue;
             }
             $pool[] = ['term_id' => $neighbour['term_id'], 'text' => $text];
-            if (count($pool) >= self::OPTION_COUNT - 1) {
+            if (count($pool) >= $optionCount - 1) {
                 break;
             }
         }

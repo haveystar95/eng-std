@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Learning\Presentation\Http\Resource;
+
+use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
+use App\Modules\Learning\Application\Dto\PlanSessionView;
+use App\Modules\Learning\Application\Dto\SessionView;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * A plan session on the wire.
+ *
+ * `tasks` and not `cards`, and the difference is the point: each entry carries the app's ordinary
+ * card VERBATIM under `card`, with the plan's own envelope around it. A client that already knows
+ * how to play a card plays these; the envelope is what lets it also say «слово из дня 1, ступень B,
+ * 3 из 4» and «эта карточка стала мягче».
+ *
+ * The card body is rendered by {@see SessionResource}, so the two payloads cannot drift: a field
+ * added to the study card appears here the same day.
+ */
+final class PlanSessionResource extends JsonResource
+{
+    /** @param PlanSessionView $resource */
+    public function __construct(PlanSessionView $resource)
+    {
+        parent::__construct($resource);
+    }
+
+    /** @return array<string, mixed> */
+    public function toArray(Request $request): array
+    {
+        /** @var PlanSessionView $view */
+        $view = $this->resource;
+
+        return [
+            'session_id' => $view->sessionId,
+            'plan_id' => $view->planId,
+            'day_index' => $view->dayIndex,
+            // FALSE means this day was opened out of turn: an ordinary soft run over its material,
+            // which schedules nothing and closes no stage.
+            'strict' => $view->strict,
+            'focus_day_index' => $view->focusDayIndex,
+            // The level's six, as this session ran on them — including the ones no trainer reads
+            // yet, which every task names for itself under `knobs_ignored`.
+            'knobs' => $view->knobs,
+            'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
+                'stage' => $task->stage,
+                'ordinal' => $task->ordinal,
+                'of_steps' => $task->ofSteps,
+                'from_day_index' => $task->fromDayIndex,
+                'softened' => $task->softened,
+                'source' => $task->source,
+                'speaking_form' => $task->speakingForm,
+                'knobs_applied' => $task->knobsApplied,
+                'knobs_ignored' => $task->knobsIgnored,
+                'card' => self::card($task),
+            ], $view->tasks),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private static function card(PlanSessionTaskView $task): array
+    {
+        $rendered = (new SessionResource(new SessionView('', [$task->card])))->toArray(request());
+
+        /** @var list<array<string, mixed>> $cards */
+        $cards = $rendered['cards'];
+
+        return $cards[0];
+    }
+}

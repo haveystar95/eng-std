@@ -6,6 +6,8 @@ namespace App\Modules\Learning\Presentation\Http\Controller;
 
 use App\Modules\Learning\Application\Command\BuildPlanOutline;
 use App\Modules\Learning\Application\Command\BuildPlanOutlineHandler;
+use App\Modules\Learning\Application\Command\BuildPlanSession;
+use App\Modules\Learning\Application\Command\BuildPlanSessionHandler;
 use App\Modules\Learning\Application\Command\CreatePlan;
 use App\Modules\Learning\Application\Command\CreatePlanHandler;
 use App\Modules\Learning\Application\Command\EndPlan;
@@ -19,9 +21,11 @@ use App\Modules\Learning\Application\Dto\PlanView;
 use App\Modules\Learning\Application\Query\GetPlan;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
 use App\Modules\Learning\Presentation\Http\Request\ReschedulePlanRequest;
 use App\Modules\Learning\Presentation\Http\Resource\PlanResource;
+use App\Modules\Learning\Presentation\Http\Resource\PlanSessionResource;
 use App\Modules\Shared\Domain\ValueObject\UserId;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,6 +60,7 @@ final class PlanController
         private readonly StartPlanHandler $start,
         private readonly EndPlanHandler $end,
         private readonly GetPlanHandler $get,
+        private readonly BuildPlanSessionHandler $buildSession,
     ) {}
 
     public function store(CreatePlanRequest $request): JsonResponse
@@ -123,6 +128,27 @@ final class PlanController
     public function show(Request $request, string $planId, int $status = Response::HTTP_OK): JsonResponse
     {
         return new JsonResponse(['data' => PlanResource::toArray($this->plan($request, $planId))], $status);
+    }
+
+    /**
+     * The session of ONE day — the plan actually being studied.
+     *
+     * `dayIndex` is optional: without one the server deals the day the learner is on, which is the
+     * only day the client can be sure about without recomputing the focus itself. With one, the
+     * named day — strict if it IS the focus, an ordinary soft run over its material if it is not.
+     */
+    public function session(Request $request, string $planId, ?string $dayIndex = null): JsonResponse
+    {
+        $session = ($this->buildSession)(new BuildPlanSession(
+            actorId: $this->actorId($request),
+            planId: $this->planId($planId)->value,
+            dayIndex: $dayIndex !== null ? (int) $dayIndex : null,
+            sessionId: $request->string('session_id')->toString() !== ''
+                ? StudySessionId::fromString($request->string('session_id')->toString())
+                : null,
+        ));
+
+        return new JsonResponse(['data' => (new PlanSessionResource($session))->toArray($request)]);
     }
 
     public function day(Request $request, string $planId, string $dayIndex): JsonResponse

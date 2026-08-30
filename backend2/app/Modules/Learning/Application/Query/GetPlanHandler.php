@@ -5,13 +5,21 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Query;
 
 use App\Modules\Learning\Application\Dto\PlanDayView;
+use App\Modules\Learning\Application\Dto\PlanProgressView;
 use App\Modules\Learning\Application\Dto\PlanView;
-use App\Modules\Learning\Application\Port\PlanReadinessReader;
+use App\Modules\Learning\Application\Service\PlanProgress;
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\Exception\EventDateInPast;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\Service\PlanScheduler;
+use App\Modules\Learning\Domain\ValueObject\ComputedDay;
+use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\PlanSkill;
+use App\Modules\Learning\Domain\ValueObject\PlanStage;
+use DateTimeImmutable;
 
 /**
  * The whole plan in one read — structure, days, arithmetic and readiness.
@@ -24,7 +32,8 @@ final readonly class GetPlanHandler
     public function __construct(
         private PlanRepository $plans,
         private PlanDayRepository $days,
-        private PlanReadinessReader $readiness,
+        private PlanProgress $progress,
+        private PlanScheduler $scheduler = new PlanScheduler(),
     ) {}
 
     public function __invoke(GetPlan $query): ?PlanView
@@ -46,10 +55,14 @@ final readonly class GetPlanHandler
         // The PLAN's language, not the account's — see LearningPlan::$supportLang.
         $support = $plan->supportLang();
 
-        $days = array_map(
-            fn (PlanDay $day): PlanDayView => $this->dayView($day),
-            $this->days->listForPlan($plan->id()),
-        );
+        $planDays = $this->days->listForPlan($plan->id());
+        $days = array_map(fn (PlanDay $day): PlanDayView => $this->dayView($day), $planDays);
+
+        // The same computation the plan SESSION runs on — one answer to «where is this learner»,
+        // shared, because a screen drawn against one focus and a session built against another is
+        // the kind of disagreement that reads as a client bug for a week.
+        $progress = $this->progress->forPlan($plan, $planDays);
+        $today = new DateTimeImmutable($progress->today . ' 00:00:00');
 
         return new PlanView(
             id: $plan->id()->value,
@@ -69,7 +82,130 @@ final readonly class GetPlanHandler
             entities: $outline === null ? [] : $outline->entities,
             constraints: $outline === null ? [] : $outline->constraints,
             goalTerms: $outline === null ? [] : $outline->goalTerms,
-            readiness: $this->readinessOf($plan, $days),
+            readiness: $this->readinessOf($progress),
+            focusDayIndex: $progress->focusDayIndex,
+            nextDayIndex: $this->nextDayIndex($planDays, $progress->focusDayIndex),
+            daysToEvent: (int) $today->diff($plan->eventDate()->setTime(0, 0))->format('%r%a'),
+            deadlineTight: $this->deadlineTight($plan, $planDays, $progress, $today),
+            canAlready: $this->canAlready($days),
+        );
+    }
+
+    /**
+     * «Ты уже можешь» — every checkpoint of every INTRODUCTION day, in day order, each with its
+     * status.
+     *
+     * The final day is skipped: its checkpoints are the plan's own, assembled by the server from
+     * the teaching days ({@see PlanScheduler}), so including it would list every line twice.
+     *
+     * `hit` is false for all of them and will stay false until CONV-1: a checkpoint is confirmed by
+     * being SAID in the conversation without a prompt, and there is no conversation yet. It is here
+     * as `false` rather than absent because the screen is built against this shape.
+     *
+     * @param  list<PlanDayView>  $days
+     * @return list<array{text: string, day_index: int, hit: bool}>
+     */
+    private function canAlready(array $days): array
+    {
+        $out = [];
+        foreach ($days as $day) {
+            if ($day->kind !== PlanDayKind::Intro->value) {
+                continue;
+            }
+            foreach ($day->checkpoints as $checkpoint) {
+                $out[] = ['text' => $checkpoint, 'day_index' => $day->index, 'hit' => false];
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param list<PlanDay> $days */
+    private function nextDayIndex(array $days, int $focus): ?int
+    {
+        foreach ($days as $day) {
+            if ($day->kind() === PlanDayKind::Intro && $day->dayIndex() > $focus) {
+                return $day->dayIndex();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * A7, asked on every read of the plan.
+     *
+     * The abilities of the days NOT yet passed, re-checked against the days that are left. Nothing
+     * is cut — this is the input to the «срок мал» card, and the decision is the learner's.
+     *
+     * @param  list<PlanDay>  $days
+     */
+    private function deadlineTight(LearningPlan $plan, array $days, PlanProgressView $progress, DateTimeImmutable $today): bool
+    {
+        $computed = $plan->computed();
+        if ($computed === null || $plan->eventDate()->setTime(0, 0) < $today) {
+            // A draft has nothing to be behind on, and a plan whose event has passed cannot be made
+            // tighter by saying so.
+            return false;
+        }
+
+        $remaining = [];
+        foreach ($days as $day) {
+            if ($day->kind() !== PlanDayKind::Intro) {
+                continue;
+            }
+            if ($progress->days[$day->dayIndex()]->passed ?? false) {
+                continue;
+            }
+            $remaining[] = $day;
+        }
+        if ($remaining === []) {
+            return false;
+        }
+
+        try {
+            return $this->scheduler->recheck(
+                remainingIntroDays: array_map($this->computedDayOf(...), $remaining),
+                minutesPerDay: $plan->minutesPerDay(),
+                eventDate: $plan->eventDate(),
+                today: $today,
+            )->deadlineTight;
+        } catch (EventDateInPast) {
+            return false;
+        }
+    }
+
+    /**
+     * A stored day row, read back as the {@see ComputedDay} A7 needs.
+     *
+     * Only the fields `recheck()` touches are rebuilt — the abilities and their prices. The rest is
+     * given honest filler rather than re-derived: A7 sums `est_terms` and looks at nothing else, and
+     * inventing a plausible title here would be inventing data.
+     */
+    private function computedDayOf(PlanDay $day): ComputedDay
+    {
+        $skills = [];
+        foreach ($day->skills() as $skill) {
+            $outcome = is_string($skill['outcome'] ?? null) ? $skill['outcome'] : '';
+            $skills[] = new PlanSkill(
+                outcome: $outcome,
+                estTerms: is_int($skill['est_terms'] ?? null) ? $skill['est_terms'] : 1,
+                checkpoint: is_string($skill['checkpoint'] ?? null) ? $skill['checkpoint'] : null,
+                sourceDayIndex: is_int($skill['source_day_index'] ?? null) ? $skill['source_day_index'] : $day->dayIndex(),
+            );
+        }
+
+        return new ComputedDay(
+            index: $day->dayIndex(),
+            kind: $day->kind(),
+            title: $day->title(),
+            scheduledOn: $day->scheduledOn() ?? new DateTimeImmutable(),
+            termBudget: 0,
+            skills: $skills,
+            checkpoints: [],
+            role: null,
+            topics: [],
+            sourceDayIndex: null,
         );
     }
 
@@ -113,37 +249,36 @@ final readonly class GetPlanHandler
     }
 
     /**
-     * READINESS, v1a — and it is deliberately a small number that cannot lie upwards.
+     * READINESS — the whole formula, with the conversation half still worth a literal zero.
      *
-     * The full formula has two halves: how much of the material the learner has actually acquired,
-     * and how many of the plan's checkpoints they have hit in conversation. The second half needs
-     * the conversation, which is CONV-1, so today it contributes a literal ZERO — not an estimate,
-     * not a proxy. The first half is capped at 0.4, which is the weight it carries in the full
-     * formula, so a learner who has genuinely learned every word of every day reads as 0.4 and not
-     * as «готов».
+     *     0.6 × (чек-пойнты, подтверждённые в разговоре без подсказки / все)
+     *   + 0.4 × (термины на ступени C / все)
      *
-     * «Ступень C» is the acquisition ladder's top rung and it lands in 1b; until then the reader
-     * answers with the terms this learner has enrolled from the plan and graduated. The number
-     * therefore only ever grows when the ladder ships — it never has to be revised downwards, which
-     * is the property that makes shipping half a formula safe.
+     * The first term is ZERO and not an estimate: `plan_conversations` has no writer until CONV-1,
+     * so nothing has been confirmed out loud and pretending otherwise would put «70% готов» on a
+     * plan whose conversations have never run. The second term is real from PLAN-1b — it counts the
+     * words that have reached the last stage of the plan's own ladder, which is the honest reading
+     * of «термин на ступени C».
      *
-     * @param  list<PlanDayView>  $days
+     * The number can therefore only GROW as the feature lands. That is the property that makes
+     * shipping half a formula safe, and it is the reason the weights are the FINAL ones rather than
+     * renormalised over the half that exists: renormalising would make today's 0.4 read as 1.0 and
+     * every later release would have to take it back.
      */
-    private function readinessOf(LearningPlan $plan, array $days): float
+    private function readinessOf(PlanProgressView $progress): float
     {
-        $collectionIds = [];
-        foreach ($days as $day) {
-            if ($day->collectionId !== null) {
-                $collectionIds[] = $day->collectionId;
-            }
-        }
-
-        if ($collectionIds === []) {
+        $standings = $progress->allStandings();
+        if ($standings === []) {
             return 0.0;
         }
 
-        $share = $this->readiness->acquiredShare($plan->userId(), $collectionIds);
+        $atC = 0;
+        foreach ($standings as $standing) {
+            if ($standing->stage === PlanStage::C) {
+                $atC++;
+            }
+        }
 
-        return round(0.4 * $share, 4);
+        return round(0.4 * ($atC / count($standings)), 4);
     }
 }

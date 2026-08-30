@@ -39,14 +39,43 @@ final readonly class PlanView
         public array $constraints,
         public array $goalTerms,
         /**
-         * How ready the learner is, 0…1.
+         * How ready the learner is, 0…1 — THE WHOLE FORMULA, with one half still worth zero.
          *
-         * v1a formula, and it is written here because it is going to change: `0.4 × доля терминов
-         * на ступени C`. The ladder rungs land in 1b and the checkpoint half of the number needs
-         * the conversation, which is CONV-1 — so today the checkpoint contribution is a literal
-         * zero and the term contribution is capped at 0.4. A number that pretended to be complete
-         * would read as «40% готов» on a plan whose conversations have never run.
+         * `0.6 × (чек-пойнты, подтверждённые в разговоре без подсказки / все) + 0.4 × (термины на
+         * ступени C / все)`. The conversation is CONV-1 and does not exist, so the first half is a
+         * literal ZERO — not an estimate and not a proxy. The second half is real from PLAN-1b: it
+         * counts the words that have reached the last stage of the plan's own ladder.
+         *
+         * The number can therefore only ever GROW as the feature lands, never be revised downwards,
+         * which is the property that makes shipping half a formula safe. A learner who has taken
+         * every word to stage C and never had a conversation reads 0.4, and that is honest: they
+         * know the material and have not yet said any of it to anybody.
          */
         public float $readiness,
+        /**
+         * The day the learner is ON — the first introduction day not yet passed, or the final day's
+         * index when they all are. Derived from the review log, never stored.
+         */
+        public int $focusDayIndex,
+        /** The next introduction day after the focus, or null when there is none left. */
+        public ?int $nextDayIndex,
+        /** Whole days from today to the event. 0 = today, negative = the event has passed. */
+        public int $daysToEvent,
+        /**
+         * A7: what is LEFT no longer fits in the days that are left ({@see PlanScheduler::recheck()}).
+         * Nothing is cut on the strength of this — it is the «срок мал» card's input, and the
+         * decision is the learner's.
+         */
+        public bool $deadlineTight,
+        /**
+         * «ТЫ УЖЕ МОЖЕШЬ» — every checkpoint of the plan with its status, ready for the screen.
+         *
+         * Shipped now, with every `hit` false, because the STRUCTURE is what the screen is built
+         * against and the conversation that flips them is a later наряд. A screen that had to wait
+         * for CONV-1 to know its own shape is a screen that gets rewritten twice.
+         *
+         * @var list<array{text: string, day_index: int, hit: bool}>
+         */
+        public array $canAlready,
     ) {}
 }

@@ -17,7 +17,7 @@ final class EloquentTermContentReader implements TermContentReader
         private readonly ExampleTranslationPick $examplePick = new ExampleTranslationPick(),
     ) {}
 
-    public function byIds(array $termIds, SupportLanguages $langs): array
+    public function byIds(array $termIds, SupportLanguages $langs, ?string $scopeCollectionId = null): array
     {
         if ($termIds === []) {
             return [];
@@ -53,9 +53,27 @@ final class EloquentTermContentReader implements TermContentReader
         // server built. `id` is a ULID, so ordering by it pins the term's FIRST example and keeps
         // the same one for good. Same order as EloquentExampleRegenContextReader, so "New example"
         // replaces the example the user is actually looking at.
+        //
+        // …with ONE thing ranked above «first»: an example written for the collection this batch is
+        // being read through. A plan day writes its terms a sentence in that day's own situation
+        // (`term_examples.scope_collection_id`), and a word re-met in yesterday's context teaches
+        // nothing — so inside the day's collection that sentence wins. The ranking also protects the
+        // ordinary session in the other direction: an example belonging to SOME OTHER collection
+        // sorts last, so a plan day's sentence cannot leak into a session that is not that day's.
         $examples = [];
+        $rank = [];
         foreach (DB::table('term_examples')->whereIn('term_id', $ids)->orderBy('id')->get() as $row) {
-            $examples[(string) $row->term_id] ??= $row;
+            $scope = $row->scope_collection_id === null ? null : (string) $row->scope_collection_id;
+            $termId = (string) $row->term_id;
+            $candidate = match (true) {
+                $scopeCollectionId !== null && $scope === $scopeCollectionId => 0,   // this day's own
+                $scope === null => 1,                                               // the general one
+                default => 2,                                                       // somebody else's
+            };
+            if (! isset($examples[$termId]) || $candidate < $rank[$termId]) {
+                $examples[$termId] = $row;
+                $rank[$termId] = $candidate;
+            }
         }
 
         // The device grades typed answers offline against {text ∪ variants}, so the variants travel

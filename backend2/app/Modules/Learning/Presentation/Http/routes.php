@@ -35,6 +35,11 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     Route::get('/plans/active', [PlanController::class, 'active']);
     Route::get('/plans/{planId}', [PlanController::class, 'show']);
     Route::get('/plans/{planId}/days/{dayIndex}', [PlanController::class, 'day']);
+    // The day actually being studied. Both shapes on purpose: with a day index for a client that
+    // knows which day it is showing, without one for «дай мне сегодняшнюю» — the server owns the
+    // focus, so it must be possible to ask for it without recomputing it on the device.
+    Route::post('/plans/{planId}/days/{dayIndex}/session', [PlanController::class, 'session']);
+    Route::post('/plans/{planId}/session', [PlanController::class, 'session']);
     Route::post('/plans/{planId}/outline', [PlanController::class, 'buildOutline']);
     Route::patch('/plans/{planId}/outline', [PlanController::class, 'reschedule']);
     Route::post('/plans/{planId}/start', [PlanController::class, 'start']);
