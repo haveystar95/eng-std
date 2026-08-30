@@ -34,7 +34,7 @@ MaterialApp _app(Widget home) => MaterialApp(
 );
 
 void main() {
-  testWidgets('Onboarding renders step 1 (language) with a default', (tester) async {
+  testWidgets('Onboarding asks the NATIVE language first (ONB-1)', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -50,8 +50,38 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('Какой язык учим?'), findsOneWidget);
+    expect(find.text('На каком языке показывать переводы?'), findsOneWidget);
     expect(find.text('Далее'), findsOneWidget);
+    // The eight native languages of ONB-1 — and English is deliberately not one of them.
+    expect(find.text('Українська'), findsOneWidget);
+    expect(find.text('Polski'), findsOneWidget);
+    expect(find.text('English'), findsNothing);
+  });
+
+  testWidgets('the studied language offers English and German, and nothing else', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            final db = AppDatabase.forTesting(NativeDatabase.memory());
+            ref.onDispose(db.close);
+            return db;
+          }),
+          authControllerProvider.overrideWith(() => _FakeAuth(_user())),
+        ],
+        child: _app(const OnboardingScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Далее'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Какой язык учим?'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
+    expect(find.text('Deutsch'), findsOneWidget);
+    // The catalogue still knows thirteen languages; the product offers two.
+    expect(find.text('Español'), findsNothing);
+    expect(find.text('日本語'), findsNothing);
   });
 
   testWidgets('Profile renders sections and account actions', (tester) async {

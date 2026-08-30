@@ -12,6 +12,7 @@ import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/l10n/language_endonyms.dart';
 
 import '../../data/feature_flags.dart';
+import '../../data/languages.dart' show studyLanguagesFor;
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../paywall/paywall_screen.dart';
@@ -1008,7 +1009,10 @@ class _LanguagePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final langs = kLanguages.where((lang) => lang.code != exclude).toList();
+    // English and German (ONB-1), plus the current value if the account is on something else. The
+    // support side is NOT offered here at all — it is the account's native language and the pair is
+    // «родной аккаунта × изучаемый», decided once at onboarding.
+    final langs = studyLanguagesFor(current).where((lang) => lang.code != exclude).toList();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -52,6 +52,38 @@ it('leaves onboarded_at null for a plain profile edit (new account still onboard
     expect(DB::table('profiles')->where('user_id', $user->id)->value('onboarded_at'))->toBeNull();
 });
 
+// ── the native language (ONB-1) ──────────────────────────────────────────────
+//
+// The learner's own language is asked ONCE, at first run, and every other surface reads it off the
+// account: a collection's pair, a generated set's support side and a plan's `support_lang` all come
+// from this one column. So it has to be EDITABLE through the profile endpoint and not baked in
+// anywhere — which is exactly what these two assert.
+
+it('stores the native language chosen at onboarding and returns it', function () {
+    $user = User::factory()->create();
+
+    $this->withHeaders(bearer($user))
+        ->putJson('/api/v1/profile', ['native_language' => 'uk', 'target_language' => 'de', 'onboarded' => true])
+        ->assertOk()
+        ->assertJsonPath('data.profile.native_language', 'uk')
+        ->assertJsonPath('data.profile.target_language', 'de');
+
+    expect(DB::table('profiles')->where('user_id', $user->id)->value('native_language'))->toBe('uk');
+});
+
+it('lets the native language be changed later — it is a setting, not a hardcoded default', function () {
+    $user = User::factory()->create();
+    $headers = bearer($user);
+
+    $this->withHeaders($headers)->putJson('/api/v1/profile', ['native_language' => 'ru'])->assertOk();
+    $this->withHeaders($headers)
+        ->putJson('/api/v1/profile', ['native_language' => 'pl'])
+        ->assertOk()
+        ->assertJsonPath('data.profile.native_language', 'pl');
+
+    expect(DB::table('profiles')->where('user_id', $user->id)->value('native_language'))->toBe('pl');
+});
+
 // ── timezone (device-batch F19) ──────────────────────────────────────────────
 
 it('stores the client-sent IANA timezone and returns it in the profile', function () {

@@ -771,5 +771,16 @@
   },
 
   "homeSortFirstTitle": "Time to sort your words",
-  "@homeSortFirstTitle": { "description": "Headline instead of «All reviewed» when nothing is in progress yet." }
+  "@homeSortFirstTitle": { "description": "Headline instead of «All reviewed» when nothing is in progress yet." },
+
+  "onbNativeTitle": "Which language should translations be in?",
+  "onbNativeSubtitle": "Translations, explanations and preparation plans use it. You can change it in your profile.",
+
+  "profileRowNativeLang": "Native language",
+  "profileNativeLangHint": "Existing collections stay as they are",
+  "profileNativeLangConfirmTitle": "Translations in {language}?",
+  "@profileNativeLangConfirmTitle": {
+    "placeholders": { "language": { "type": "String" } }
+  },
+  "profileNativeLangConfirmBody": "New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten."
 }

@@ -3476,6 +3476,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Пора разобрать слова'**
   String get homeSortFirstTitle;
+
+  /// Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время.
+  ///
+  /// In ru, this message translates to:
+  /// **'На каком языке показывать переводы?'**
+  String get onbNativeTitle;
+
+  /// Онбординг, шаг 1 — что покупает ответ.
+  ///
+  /// In ru, this message translates to:
+  /// **'На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.'**
+  String get onbNativeSubtitle;
+
+  /// Строка профиля: родной язык (язык переводов).
+  ///
+  /// In ru, this message translates to:
+  /// **'Родной язык'**
+  String get profileRowNativeLang;
+
+  /// Подпись под строкой родного языка: смена языка не переписывает уже собранный материал.
+  ///
+  /// In ru, this message translates to:
+  /// **'Существующие коллекции останутся как есть'**
+  String get profileNativeLangHint;
+
+  /// Заголовок подтверждения смены родного языка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переводы на «{language}»?'**
+  String profileNativeLangConfirmTitle(String language);
+
+  /// Тело подтверждения смены родного языка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.'**
+  String get profileNativeLangConfirmBody;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

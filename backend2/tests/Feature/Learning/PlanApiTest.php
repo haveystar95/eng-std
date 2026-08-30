@@ -68,6 +68,19 @@ it('creates a draft that costs nothing — no day, no model call, no word held',
         ->and($plan['support_lang'])->toBe('ru');
 });
 
+it('follows the account when the learner changes their native language (ONB-1)', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+
+    // The learner edits the one setting the whole product reads…
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->putJson('/api/v1/profile', ['native_language' => 'uk'])
+        ->assertOk();
+
+    // …and the NEXT plan is explained in it. Nothing on the request says so — the plan never asks.
+    expect(createPlan($this, $token)['support_lang'])->toBe('uk');
+});
+
 it('refuses an event date that has already passed', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);

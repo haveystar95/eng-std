@@ -2289,4 +2289,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Time to sort your words';
+
+  @override
+  String get onbNativeTitle => 'Which language should translations be in?';
+
+  @override
+  String get onbNativeSubtitle =>
+      'Translations, explanations and preparation plans use it. You can change it in your profile.';
+
+  @override
+  String get profileRowNativeLang => 'Native language';
+
+  @override
+  String get profileNativeLangHint => 'Existing collections stay as they are';
+
+  @override
+  String profileNativeLangConfirmTitle(String language) {
+    return 'Translations in $language?';
+  }
+
+  @override
+  String get profileNativeLangConfirmBody =>
+      'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
 }

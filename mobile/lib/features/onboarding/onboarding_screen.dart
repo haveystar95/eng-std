@@ -6,12 +6,19 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../data/languages.dart' show kLanguages, kCefrLevels;
+import '../../data/languages.dart'
+    show kCefrLevels, kNativeLanguages, defaultNativeLanguageFor, studyLanguagesFor;
 import '../../data/providers.dart';
 
-/// First-run setup (кадры 10b–10d): three steps, each already carrying a default so «Далее» is
-/// always active. Step 1 target language · step 2 level · step 3 daily goal. On finish it persists
-/// the profile (`PUT /profile`) and marks onboarding complete locally. Paper/ink.
+/// First-run setup (кадры 10b–10d + ONB-1): four steps, each already carrying a default so «Далее»
+/// is always active. Step 1 НАТИВНЫЙ язык · step 2 target language · step 3 level · step 4 daily
+/// goal. On finish it persists the profile (`PUT /profile`) and marks onboarding complete locally.
+///
+/// The native language is asked FIRST and asked ONCE. It is the language every translation in the
+/// app is written in and the language a plan explains itself in (`support_lang` comes off the same
+/// column), so it is a property of the ACCOUNT rather than of a collection: nothing downstream —
+/// not «Составить план», not «Сгенерировать набор» — asks for it again, and the pair is always
+/// «родной аккаунта × изучаемый». Paper/ink.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -20,13 +27,19 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  static const _steps = 3;
+  static const _steps = 4;
   int _step = 0;
   bool _saving = false;
 
-  // Native stays the UI/source language (ru); onboarding only asks the target (per the design).
-  late final String _native =
-      ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
+  /// The account's answer if it has one, otherwise the DEVICE's own language — a guess offered as a
+  /// preselected radio, never a decision made silently. `WidgetsBinding…platformDispatcher.locale`
+  /// rather than `Localizations.localeOf`: the app's UI locale is its own setting (ru/en) and would
+  /// answer «ru» to a Polish phone.
+  late String _native =
+      ref.read(authControllerProvider).value?.profile?.nativeLanguage ??
+      defaultNativeLanguageFor(
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+      );
   late String _target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
   late String _level = ref.read(authControllerProvider).value?.profile?.cefrLevel ?? 'B1';
   late int _goal = ref.read(authControllerProvider).value?.profile?.dailyGoal ?? 20;
@@ -88,12 +101,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: KeyedSubtree(
                     key: ValueKey(_step),
                     child: switch (_step) {
-                      0 => _LangStep(
+                      0 => _NativeStep(
+                        native: _native,
+                        onPick: (c) => setState(() {
+                          _native = c;
+                          // The pair may not be a language against itself. Nudging the target rather
+                          // than filtering it out of the next step: the learner has not seen that
+                          // step yet, and a value silently missing from a list is worse than a
+                          // default that moved before they looked.
+                          if (_target == c) _target = c == 'en' ? 'de' : 'en';
+                        }),
+                      ),
+                      1 => _LangStep(
                         target: _target,
                         native: _native,
                         onPick: (c) => setState(() => _target = c),
                       ),
-                      1 => _LevelStep(level: _level, onPick: (v) => setState(() => _level = v)),
+                      2 => _LevelStep(level: _level, onPick: (v) => setState(() => _level = v)),
                       _ => _GoalStep(goal: _goal, onPick: (g) => setState(() => _goal = g)),
                     },
                   ),
@@ -179,6 +203,35 @@ class _StepShell extends StatelessWidget {
   }
 }
 
+/// «На каком языке показывать переводы?» — ONB-1, and the first thing the app ever asks.
+///
+/// One choice, no skip, and the default comes from the phone. The subtitle says what the answer
+/// BUYS, because «родной язык» on its own reads as a setting rather than as the thing every
+/// translation, every plan and every generated set will be written in.
+class _NativeStep extends StatelessWidget {
+  const _NativeStep({required this.native, required this.onPick});
+  final String native;
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _StepShell(
+      title: l.onbNativeTitle,
+      subtitle: l.onbNativeSubtitle,
+      children: [
+        for (final lang in kNativeLanguages)
+          _SelectRow(
+            selected: lang.code == native,
+            onTap: () => onPick(lang.code),
+            leading: MiniFlag(languageCode: lang.code),
+            title: lang.endonym,
+          ),
+      ],
+    );
+  }
+}
+
 class _LangStep extends StatelessWidget {
   const _LangStep({required this.target, required this.native, required this.onPick});
   final String target, native;
@@ -187,7 +240,9 @@ class _LangStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final langs = kLanguages.where((lang) => lang.code != native).toList();
+    // Two rows, not thirteen: the product offers English and German (ONB-1). The native language is
+    // excluded on top of that — a pair of a language with itself is not a pair.
+    final langs = studyLanguagesFor(target).where((lang) => lang.code != native).toList();
     return _StepShell(
       title: l.onbLangTitle,
       subtitle: l.onbLangSubtitle,

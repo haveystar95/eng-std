@@ -8,7 +8,8 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
-import '../../data/languages.dart' show kLanguages, kCefrLevels, languageByCode;
+import '../../data/languages.dart'
+    show Language, kCefrLevels, kNativeLanguages, languageByCode, studyLanguagesFor;
 import '../../data/app_settings.dart';
 import '../../data/config.dart';
 import '../../data/feature_flags.dart';
@@ -72,6 +73,17 @@ class ProfileScreen extends ConsumerWidget {
                 label: l.profileRowTargetLang,
                 value: languageByCode(profile.targetLanguage).endonym,
                 onTap: () => _editTargetLang(context, ref, profile.targetLanguage),
+              ),
+              // РОДНОЙ ЯЗЫК (ONB-1). Editable, and the row says what editing it does: the language
+              // is asked once at first run and everything downstream reads it off the account, so
+              // changing it changes what the NEXT collection and the next plan are written in.
+              // Material that already exists keeps the language it was generated in — a re-write
+              // would be a paid re-generation of the whole library, silently.
+              _NavRow(
+                label: l.profileRowNativeLang,
+                value: languageByCode(profile.nativeLanguage).endonym,
+                hint: l.profileNativeLangHint,
+                onTap: () => _editNativeLang(context, ref, profile.nativeLanguage),
                 last: true,
               ),
             ],
@@ -187,11 +199,46 @@ class ProfileScreen extends ConsumerWidget {
     final native = ref.read(authControllerProvider).value?.profile?.nativeLanguage ?? 'ru';
     final chosen = await showAppBottomSheet<String>(
       context: context,
-      builder: (_) =>
-          _LanguageSheet(title: l.profileRowTargetLang, current: current, exclude: native),
+      builder: (_) => _LanguageSheet(
+        title: l.profileRowTargetLang,
+        current: current,
+        // English and German (ONB-1), plus whatever the account is actually on — a sheet that
+        // cannot show its own current value would read as «ничего не выбрано».
+        options: studyLanguagesFor(current).where((lang) => lang.code != native).toList(),
+      ),
     );
     if (chosen != null && chosen != current && context.mounted) {
       await _saveProfile(context, ref, {'target_language': chosen});
+    }
+  }
+
+  /// «Родной язык» — the account-wide answer to «на каком языке показывать переводы».
+  ///
+  /// Confirmed before it is saved, because the honest description of what happens is a sentence and
+  /// not a label: new material follows the new language, existing collections keep theirs. That is
+  /// deliberate — re-writing a library would be a paid regeneration of every card in it.
+  Future<void> _editNativeLang(BuildContext context, WidgetRef ref, String current) async {
+    final l = AppLocalizations.of(context);
+    final target = ref.read(authControllerProvider).value?.profile?.targetLanguage ?? 'en';
+    final chosen = await showAppBottomSheet<String>(
+      context: context,
+      builder: (_) => _LanguageSheet(
+        title: l.profileRowNativeLang,
+        current: current,
+        options: kNativeLanguages.where((lang) => lang.code != target).toList(),
+      ),
+    );
+    if (chosen == null || chosen == current || !context.mounted) return;
+
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.profileNativeLangConfirmTitle(languageByCode(chosen).endonym),
+      message: l.profileNativeLangConfirmBody,
+      confirmLabel: l.commonSave,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok == true && context.mounted) {
+      await _saveProfile(context, ref, {'native_language': chosen});
     }
   }
 
@@ -322,10 +369,19 @@ class _SectionLabel extends StatelessWidget {
   );
 }
 
-/// A row with a value + chevron that opens an editor.
+/// A row with a value + chevron that opens an editor, and an optional line of consequence under the
+/// label — for a setting whose effect is not obvious from its name (the native language: it changes
+/// what NEW material is written in and leaves what already exists alone).
 class _NavRow extends StatelessWidget {
-  const _NavRow({required this.label, required this.value, required this.onTap, this.last = false});
+  const _NavRow({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.hint,
+    this.last = false,
+  });
   final String label, value;
+  final String? hint;
   final VoidCallback onTap;
   final bool last;
 
@@ -336,7 +392,22 @@ class _NavRow extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Expanded(child: Text(label, style: _labelStyle)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: _labelStyle),
+                if (hint != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    hint!,
+                    style: AppText.transcription.copyWith(fontSize: 12, color: AppColors.tertiary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s12),
           Text(
             value,
             style: AppText.translation.copyWith(fontSize: 15, color: AppColors.secondary),
@@ -756,12 +827,17 @@ class _GoalSheet extends StatelessWidget {
 }
 
 class _LanguageSheet extends StatelessWidget {
-  const _LanguageSheet({required this.title, required this.current, required this.exclude});
-  final String title, current, exclude;
+  const _LanguageSheet({required this.title, required this.current, required this.options});
+  final String title, current;
+
+  /// The rows to offer, already filtered by the caller. The sheet used to take the catalogue and one
+  /// exclusion; the two pickers on this screen now offer two different, shorter lists (ONB-1), and
+  /// «the whole table minus one» is no longer a rule either of them follows.
+  final List<Language> options;
 
   @override
   Widget build(BuildContext context) {
-    final langs = kLanguages.where((lang) => lang.code != exclude).toList();
+    final langs = options;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

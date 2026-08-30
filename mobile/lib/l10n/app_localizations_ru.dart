@@ -2402,4 +2402,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeSortFirstTitle => 'Пора разобрать слова';
+
+  @override
+  String get onbNativeTitle => 'На каком языке показывать переводы?';
+
+  @override
+  String get onbNativeSubtitle =>
+      'На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.';
+
+  @override
+  String get profileRowNativeLang => 'Родной язык';
+
+  @override
+  String get profileNativeLangHint => 'Существующие коллекции останутся как есть';
+
+  @override
+  String profileNativeLangConfirmTitle(String language) {
+    return 'Переводы на «$language»?';
+  }
+
+  @override
+  String get profileNativeLangConfirmBody =>
+      'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.';
 }

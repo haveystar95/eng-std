@@ -1727,5 +1727,26 @@
   },
 
   "homeSortFirstTitle": "Пора разобрать слова",
-  "@homeSortFirstTitle": { "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет." }
+  "@homeSortFirstTitle": { "description": "Заголовок вместо «Всё повторено», когда в работе ещё ничего нет." },
+
+  "onbNativeTitle": "На каком языке показывать переводы?",
+  "@onbNativeTitle": { "description": "Онбординг, шаг 1 (ONB-1) — родной язык. Спрашивается один раз за всё время." },
+
+  "onbNativeSubtitle": "На нём будут переводы, объяснения и планы подготовки. Можно поменять в профиле.",
+  "@onbNativeSubtitle": { "description": "Онбординг, шаг 1 — что покупает ответ." },
+
+  "profileRowNativeLang": "Родной язык",
+  "@profileRowNativeLang": { "description": "Строка профиля: родной язык (язык переводов)." },
+
+  "profileNativeLangHint": "Существующие коллекции останутся как есть",
+  "@profileNativeLangHint": { "description": "Подпись под строкой родного языка: смена языка не переписывает уже собранный материал." },
+
+  "profileNativeLangConfirmTitle": "Переводы на «{language}»?",
+  "@profileNativeLangConfirmTitle": {
+    "description": "Заголовок подтверждения смены родного языка.",
+    "placeholders": { "language": { "type": "String" } }
+  },
+
+  "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
+  "@profileNativeLangConfirmBody": { "description": "Тело подтверждения смены родного языка." }
 }

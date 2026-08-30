@@ -11,9 +11,60 @@ library;
 
 import 'package:flutter/widgets.dart' show Locale;
 
+import 'package:eng_std/l10n/language_endonyms.dart';
+
 export 'package:eng_std/l10n/language_endonyms.dart';
 
 const List<String> kCefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+/// РОДНОЙ ЯЗЫК — the one the learner reads translations in (ONB-1).
+///
+/// It is asked ONCE, at first run, and lives on the account (`profiles.native_language`). Everything
+/// else in the product derives from it: a collection's pair is «родной аккаунта × изучаемый», the
+/// plan takes its `support_lang` from the same column, and no screen asks for it a second time.
+/// A per-collection source language was the old shape and it is gone — two places to answer one
+/// question is how a learner ends up with folders in two «родных» and no way to tell which.
+///
+/// The list is deliberately SHORTER than [kLanguages]: these are the languages the generator has
+/// been evaluated in as a support language. English is not among them on purpose — it is a language
+/// this product teaches, not one it explains in.
+const List<String> kNativeLanguageCodes = ['uk', 'ru', 'de', 'pl', 'fr', 'it', 'es', 'ro'];
+
+/// ИЗУЧАЕМЫЙ ЯЗЫК, as the UI offers it: English and German, and nothing else.
+///
+/// The catalogue below still knows thirteen languages and the server still accepts them — this is a
+/// PRODUCT decision about what is offered, not a capability claim. A profile that already studies
+/// something else keeps studying it; see [studyLanguagesFor], which adds whatever the account is
+/// actually on so a picker can never fail to show the current value.
+const List<String> kStudyLanguageCodes = ['en', 'de'];
+
+/// The native-language rows, in the order the picker lists them.
+List<Language> get kNativeLanguages =>
+    kNativeLanguageCodes.map(languageByCode).toList(growable: false);
+
+/// The study-language rows for a learner whose account is on [current].
+///
+/// [kStudyLanguageCodes] plus [current] when the account is on something the list no longer offers.
+/// A picker that cannot show the value it is editing is a picker that silently changes it.
+List<Language> studyLanguagesFor(String? current) {
+  final codes = [
+    ...kStudyLanguageCodes,
+    if (current != null && current.isNotEmpty && !kStudyLanguageCodes.contains(current)) current,
+  ];
+
+  return codes.map(languageByCode).toList(growable: false);
+}
+
+/// The native language to OFFER on a first run, from the device's own locale.
+///
+/// A guess, and only a guess: the step is a question with a preselected answer, not a decision made
+/// for the learner. Anything the list does not carry falls back to `ru` — the interface's own
+/// default language, which is the honest fallback for a product whose UI ships in ru and en.
+String defaultNativeLanguageFor(String localeLanguageCode) {
+  final code = localeLanguageCode.trim().toLowerCase();
+
+  return kNativeLanguageCodes.contains(code) ? code : 'ru';
+}
 
 /// BCP-47 locales for `flutter_tts`, keyed by our 2-letter language code, so a
 /// word is pronounced in the language actually being learned.
