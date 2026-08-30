@@ -1748,5 +1748,405 @@
   },
 
   "profileNativeLangConfirmBody": "Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.",
-  "@profileNativeLangConfirmBody": { "description": "Тело подтверждения смены родного языка." }
+  "@profileNativeLangConfirmBody": { "description": "Тело подтверждения смены родного языка." },
+
+  "tabPlan": "План",
+  "@tabPlan": { "description": "Таб-бар: план подготовки (центральная, акцентная вкладка)." },
+
+  "searchOpen": "Поиск",
+  "@searchOpen": { "description": "Лупа в шапке главной и коллекций — открывает экран поиска." },
+
+  "planBuilderBack": "Назад",
+  "@planBuilderBack": { "description": "Ярлык кнопки «назад» для скринридера на экранах плана." },
+
+  "planBuilderTitle": "Составить план",
+  "@planBuilderTitle": { "description": "Заголовок экрана входа в план (кадр Б-01)." },
+
+  "planBuilderSubtitle": "Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь.",
+  "@planBuilderSubtitle": { "description": "Подзаголовок входа в план. «ИИ» произносится здесь один раз за весь поток." },
+
+  "planStepGoalQuestion": "К чему готовишься?",
+  "@planStepGoalQuestion": { "description": "Шаг 1 плана, раскрытый." },
+
+  "planStepGoalClosed": "Цель",
+  "@planStepGoalClosed": { "description": "Шаг 1 плана, ещё не отвеченный (закрытая строка)." },
+
+  "planStepLanguageQuestion": "Язык и уровень",
+  "@planStepLanguageQuestion": { "description": "Шаг 2 плана, раскрытый." },
+
+  "planStepLanguageClosed": "Язык и уровень",
+  "@planStepLanguageClosed": { "description": "Шаг 2 плана, закрытая строка." },
+
+  "planStepWhenQuestion": "Когда это случится?",
+  "@planStepWhenQuestion": { "description": "Шаг 3 плана, раскрытый." },
+
+  "planStepWhenClosed": "Когда и сколько",
+  "@planStepWhenClosed": { "description": "Шаг 3 плана, закрытая строка." },
+
+  "planStepEdit": "Изм.",
+  "@planStepEdit": { "description": "Ссылка «изменить» в свёрнутой строке шага (кадр Б-02)." },
+
+  "planGoalPlaceholder": "Например, приём у врача",
+  "@planGoalPlaceholder": { "description": "Плейсхолдер поля цели." },
+
+  "planGoalChipInterview": "Собеседование",
+  "@planGoalChipInterview": { "description": "Чип-пример цели." },
+  "planGoalChipDoctor": "Врач",
+  "@planGoalChipDoctor": { "description": "Чип-пример цели." },
+  "planGoalChipRent": "Аренда",
+  "@planGoalChipRent": { "description": "Чип-пример цели." },
+  "planGoalChipTrip": "Поездка",
+  "@planGoalChipTrip": { "description": "Чип-пример цели." },
+  "planGoalChipVet": "Ветклиника",
+  "@planGoalChipVet": { "description": "Чип-пример цели." },
+  "planGoalChipSchool": "Школа ребёнка",
+  "@planGoalChipSchool": { "description": "Чип-пример цели." },
+
+  "planLevelLabel": "Как сейчас говоришь",
+  "@planLevelLabel": { "description": "Лейбл блока уровня — четыре человеческие формулировки вместо A1/B2." },
+
+  "planLevelZero": "С нуля",
+  "@planLevelZero": { "description": "Уровень плана `zero`." },
+  "planLevelBasic": "Понимаю простое",
+  "@planLevelBasic": { "description": "Уровень плана `basic`." },
+  "planLevelConversational": "Объясняюсь",
+  "@planLevelConversational": { "description": "Уровень плана `conversational`." },
+  "planLevelFluent": "Свободно",
+  "@planLevelFluent": { "description": "Уровень плана `fluent`." },
+
+  "planWhenToday": "Сегодня",
+  "@planWhenToday": { "description": "Кнопка даты события." },
+  "planWhenTomorrow": "Завтра",
+  "@planWhenTomorrow": { "description": "Кнопка даты события." },
+  "planWhenSheetTitle": "Когда это случится?",
+  "@planWhenSheetTitle": { "description": "Заголовок шита выбора даты." },
+
+  "planMinutesLabel": "Минут в день",
+  "@planMinutesLabel": { "description": "Лейбл блока минут (для «сегодня» блок не показывается)." },
+
+  "planMinutesPerDay": "{minutes} мин/день",
+  "@planMinutesPerDay": {
+    "description": "Служебная строка бюджета времени.",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+
+  "planBuilderSubmit": "Собрать план",
+  "@planBuilderSubmit": { "description": "Главная кнопка входа в план." },
+  "planBuilderWorking": "Собираю…",
+  "@planBuilderWorking": { "description": "Кнопка входа в план в состоянии ожидания." },
+
+  "planBuilderHintToday": "Событие сегодня — соберём короткую подготовку на один заход.",
+  "@planBuilderHintToday": { "description": "Ориентир под кнопкой, когда событие сегодня." },
+
+  "planBuilderHintDays": "{days, plural, one{Ориентир: {days} день до события} few{Ориентир: {days} дня до события} many{Ориентир: {days} дней до события} other{Ориентир: {days} дня до события}} · {minutes} мин в день",
+  "@planBuilderHintDays": {
+    "description": "Ориентир под кнопкой «Собрать план». Объём материала считает сервер — здесь только календарь.",
+    "placeholders": { "days": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+
+  "planErrorOffline": "Нет соединения. План собирается на сервере — попробуй, когда появится сеть.",
+  "@planErrorOffline": { "description": "Ошибка сети на экранах плана." },
+  "planErrorBuildFailed": "Не получилось собрать план. Попробуй ещё раз.",
+  "@planErrorBuildFailed": { "description": "Ошибка сборки каркаса плана." },
+  "planErrorStartFailed": "Не получилось начать план. Попробуй ещё раз.",
+  "@planErrorStartFailed": { "description": "Ошибка старта плана." },
+  "planErrorLoadFailed": "Не удалось загрузить план.",
+  "@planErrorLoadFailed": { "description": "Ошибка чтения плана." },
+
+  "planPreviewBadge": "Превью плана",
+  "@planPreviewBadge": { "description": "Латунная метка в шапке превью (кадр Б-04)." },
+
+  "planPrepDays": "{days, plural, one{Подготовка {days} день + прогон} few{Подготовка {days} дня + прогон} many{Подготовка {days} дней + прогон} other{Подготовка {days} дня + прогон}}",
+  "@planPrepDays": {
+    "description": "Строка структуры плана на тёмной плите.",
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "planEventOn": "Событие {date}.",
+  "@planEventOn": {
+    "description": "Дата события на плите превью.",
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "planApproxTerms": "~{count} фраз и слов.",
+  "@planApproxTerms": {
+    "description": "Ориентир объёма материала на плите превью.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "planDayNumber": "День {index}",
+  "@planDayNumber": {
+    "description": "Латунная метка дня.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+
+  "planDayNoNewWords": "без новых слов",
+  "@planDayNoNewWords": { "description": "Подпись дня-прогона." },
+
+  "planWordsCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@planWordsCount": {
+    "description": "Счётчик слов дня.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "planPhrasesCount": "{count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}}",
+  "@planPhrasesCount": {
+    "description": "Счётчик фраз дня.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "planDaysCount": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}",
+  "@planDaysCount": {
+    "description": "Длительность плана в архиве.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "planPreviewDropDay": "Убрать день",
+  "@planPreviewDropDay": { "description": "Тихая ссылка на превью." },
+  "planPreviewRebuild": "Перестроить",
+  "@planPreviewRebuild": { "description": "Тихая ссылка на превью — пересобрать каркас." },
+  "planPreviewStart": "Начать",
+  "@planPreviewStart": { "description": "Главная кнопка превью — обязательство." },
+
+  "planPricePlaceholder": "[цена / условия — placeholder]",
+  "@planPricePlaceholder": { "description": "Заглушка под кнопкой «Начать». Paywall в этом наряде не трогается." },
+
+  "planDropDaySheet": "Какой день убрать?",
+  "@planDropDaySheet": { "description": "Заголовок шита выбора дня." },
+  "planDropLastDay": "Последний день подготовки убрать нельзя.",
+  "@planDropLastDay": { "description": "Отказ, когда в плане остался один день знакомства." },
+
+  "planTightTitle": "{days, plural, one{За {days} день по {minutes} минут закроем половину: вот эти умения.} few{За {days} дня по {minutes} минут закроем половину: вот эти умения.} many{За {days} дней по {minutes} минут закроем половину: вот эти умения.} other{За {days} дня по {minutes} минут закроем половину: вот эти умения.}}",
+  "@planTightTitle": {
+    "description": "Заголовок карточки «срок мал под цель» (кадр Б-05).",
+    "placeholders": { "days": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+
+  "planTightAddMinutes": "Добавить {minutes} минут в день",
+  "@planTightAddMinutes": {
+    "description": "Рекомендованное действие на карточке «срок мал».",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "planTightKeep": "Оставить",
+  "@planTightKeep": { "description": "Отклонить рекомендацию «срок мал»." },
+
+  "planBuildingTitle": "Собираю день {index}",
+  "@planBuildingTitle": {
+    "description": "Заголовок экрана сборки дня (кадр Б-06).",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planBuildingBody": "Подбираю реплики события и слова, которые в них подставляются.",
+  "@planBuildingBody": { "description": "Пояснение на экране сборки." },
+  "planBuildingStep1": "Цель разобрана",
+  "@planBuildingStep1": { "description": "Шаг статуса сборки." },
+  "planBuildingStep2": "Реплики подобраны",
+  "@planBuildingStep2": { "description": "Шаг статуса сборки." },
+  "planBuildingStep3": "Слова и примеры",
+  "@planBuildingStep3": { "description": "Шаг статуса сборки." },
+  "planBuildingFailed": "День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже.",
+  "@planBuildingFailed": { "description": "Сборка не дошла до конца." },
+  "planBuildingOpenAnyway": "Открыть план",
+  "@planBuildingOpenAnyway": { "description": "Выход из зависшей сборки." },
+
+  "planActiveBadge": "Активный план",
+  "@planActiveBadge": { "description": "Латунная метка на тёмной плите плана (кадр 1c-01)." },
+
+  "planReadinessCaption": "готовность к событию",
+  "@planReadinessCaption": { "description": "Подпись к главному числу плана." },
+
+  "planEventInDays": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
+  "@planEventInDays": {
+    "description": "Служебная строка под шкалой готовности.",
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "planEventToday": "Событие сегодня",
+  "@planEventToday": { "description": "Служебная строка под шкалой готовности." },
+  "planEventPassed": "Событие прошло",
+  "@planEventPassed": { "description": "Служебная строка под шкалой готовности." },
+
+  "planDayOfTotal": "День {index} из {total}",
+  "@planDayOfTotal": {
+    "description": "Служебная строка под шкалой готовности — на каком дне юзер.",
+    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "planCanAlready": "Ты уже можешь · {hit} из {total}",
+  "@planCanAlready": {
+    "description": "Лейбл блока умений плана.",
+    "placeholders": { "hit": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "planTrainThis": "Потренировать",
+  "@planTrainThis": { "description": "Ссылка на незакрытом умении — ведёт в день, который ему учит." },
+
+  "planDaysHeader": "Дни · {index} из {total}",
+  "@planDaysHeader": {
+    "description": "Лейбл блока дней плана.",
+    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "planContinueDay": "Продолжить день {index}",
+  "@planContinueDay": {
+    "description": "Главная кнопка экрана плана.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+
+  "planDayPassed": "День {index} пройден",
+  "@planDayPassed": {
+    "description": "Подпись пройденного дня в списке.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDayFinalHint": "Без новых слов · можно открыть раньше",
+  "@planDayFinalHint": { "description": "Подпись дня-прогона в списке." },
+  "planDayBuilding": "Собирается",
+  "@planDayBuilding": { "description": "Подпись дня, который сервер ещё пишет." },
+  "planDayOpenEarly": "можно открыть раньше",
+  "@planDayOpenEarly": { "description": "Подпись будущего дня — он открыт, но мягко." },
+
+  "planDayOfPlan": "День {index} из {total}",
+  "@planDayOfPlan": {
+    "description": "Латунная метка в шапке экрана дня.",
+    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
+  },
+
+  "planDayCanDo": "Ты сможешь",
+  "@planDayCanDo": { "description": "Лейбл блока умений дня." },
+  "planDayPhrases": "Фразы дня",
+  "@planDayPhrases": { "description": "Лейбл блока фраз." },
+  "planDayWords": "Слова в этих фразах",
+  "@planDayWords": { "description": "Лейбл реестра слов." },
+
+  "planDaySoftNote": "Это не текущий день: тренировка пройдёт мягко — ступени не закроются и повторы не назначатся.",
+  "@planDaySoftNote": { "description": "Предупреждение над кнопкой для дня впереди фокуса." },
+
+  "planDayTrain": "Тренировать",
+  "@planDayTrain": { "description": "Главная кнопка экрана дня." },
+
+  "planFromDay": "· со дня {index}",
+  "@planFromDay": {
+    "description": "Откуда пришло слово, рядом с буквой ступени.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+
+  "planConversationLabel": "Разговор",
+  "@planConversationLabel": { "description": "Лейбл блока разговора." },
+  "planConversationDefaultRole": "Собеседник",
+  "@planConversationDefaultRole": { "description": "Имя роли, когда сервер её не назвал." },
+  "planConversationLocked": "Откроется в следующем обновлении: разговор в роли и зачёт чек-пойнтов.",
+  "@planConversationLocked": { "description": "Честная подпись под запертым разговором (CONV-1)." },
+  "planConversationSoon": "Разговор в роли",
+  "@planConversationSoon": { "description": "Заголовок запертой плиты разговора в итоге дня." },
+
+  "planDayNotWritten": "Этот день ещё не собран. План пишет по одному дню — можно попросить собрать его сейчас.",
+  "@planDayNotWritten": { "description": "Состояние дня без материала." },
+  "planDayFailed": "День не собрался с первого раза. Можно попробовать ещё раз.",
+  "@planDayFailed": { "description": "Состояние дня после неудачной генерации." },
+  "planDayBuildNow": "Собрать день",
+  "@planDayBuildNow": { "description": "Кнопка ручной сборки дня." },
+
+  "planDayDone": "День {index} пройден",
+  "@planDayDone": {
+    "description": "Заголовок итога дня (кадр 1c-04).",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDaySoftDone": "День {index} повторён",
+  "@planDaySoftDone": {
+    "description": "Заголовок итога мягкого прохода — ступени не закрывались.",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planDayInWork": "{count, plural, one{{count} фраза и слово в работе} few{{count} фразы и слова в работе} many{{count} фраз и слов в работе} other{{count} фраз и слов в работе}}",
+  "@planDayInWork": {
+    "description": "Итог дня: «в работе», а не «выучено».",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planStageAClosed": "Ступень A пройдена",
+  "@planStageAClosed": { "description": "Строка итога дня." },
+  "planStageBReturns": "Вернутся на ступени B",
+  "@planStageBReturns": { "description": "Строка итога дня." },
+  "planStageBWhen": "в следующий день",
+  "@planStageBWhen": { "description": "Значение строки «вернутся на ступени B»." },
+  "planNext": "Дальше",
+  "@planNext": { "description": "Подпись строки перехода в итоге дня." },
+  "planNextDay": "День {index} — {title}",
+  "@planNextDay": {
+    "description": "Следующий день в итоге дня.",
+    "placeholders": { "index": { "type": "int" }, "title": { "type": "String" } }
+  },
+  "planDayBackToPlan": "К плану",
+  "@planDayBackToPlan": { "description": "Кнопка выхода из итога дня." },
+
+  "planSessionBadge": "План · день {index}",
+  "@planSessionBadge": {
+    "description": "Латунная метка в шапке плановой сессии (кадр 1c-03).",
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "planSessionStage": "Ступень {stage} · {trainer}",
+  "@planSessionStage": {
+    "description": "Подпись ступени над заданием плановой сессии.",
+    "placeholders": { "stage": { "type": "String" }, "trainer": { "type": "String" } }
+  },
+  "planSessionCarried": "Слово «{term}» идёт со дня {index} — сегодня оно на ступени {stage}.",
+  "@planSessionCarried": {
+    "description": "Строка внизу карточки: откуда слово.",
+    "placeholders": {
+      "term": { "type": "String" },
+      "index": { "type": "int" },
+      "stage": { "type": "String" }
+    }
+  },
+
+  "planEmptyTitle": "Подготовиться к чему-то конкретному",
+  "@planEmptyTitle": { "description": "Пустой таб «План» (кадр 1c-10)." },
+  "planEmptyBody": "Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора.",
+  "@planEmptyBody": { "description": "Разница коллекции и плана — тремя строками, без обещаний." },
+  "planEmptyStep1": "Говоришь цель и дату",
+  "@planEmptyStep1": { "description": "Пустой таб «План», строка 01." },
+  "planEmptyStep2": "Каждый день — фразы, которые реально скажешь, и слова из них",
+  "@planEmptyStep2": { "description": "Пустой таб «План», строка 02." },
+  "planEmptyStep3": "В конце — разговор в роли и прогон всей ситуации",
+  "@planEmptyStep3": { "description": "Пустой таб «План», строка 03." },
+  "planEmptyCta": "Составить план",
+  "@planEmptyCta": { "description": "Кнопка пустого таба." },
+
+  "planFinishedBadge": "Подготовка завершена",
+  "@planFinishedBadge": { "description": "Латунная метка завершённого плана (кадр 1c-11)." },
+  "planFinishedSummary": "{days, plural, one{За {days} день подготовки. Событие было {date}.} few{За {days} дня подготовки. Событие было {date}.} many{За {days} дней подготовки. Событие было {date}.} other{За {days} дня подготовки. Событие было {date}.}}",
+  "@planFinishedSummary": {
+    "description": "Итог завершённого плана.",
+    "placeholders": { "days": { "type": "int" }, "date": { "type": "String" } }
+  },
+  "planWordsReleasedTitle": "Слова плана ушли в общее повторение",
+  "@planWordsReleasedTitle": { "description": "Карточка о судьбе слов после плана." },
+  "planWordsReleasedBody": "Они будут появляться в ежедневных занятиях, чтобы не пропасть.",
+  "@planWordsReleasedBody": { "description": "Пояснение к судьбе слов." },
+  "planArchive": "Архив",
+  "@planArchive": { "description": "Лейбл списка прошлых планов." },
+  "planFinishedNewPlan": "Составить новый",
+  "@planFinishedNewPlan": { "description": "Кнопка внизу завершённого плана — под результатом, а не поверх него." },
+
+  "homePlanCardBadge": "План · день {index} из {total}",
+  "@homePlanCardBadge": {
+    "description": "Латунная метка карточки плана на главной (кадр 08).",
+    "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "homePlanCardEventIn": "{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}",
+  "@homePlanCardEventIn": {
+    "description": "Правая метка карточки плана на главной.",
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "homePlanCardEventToday": "Событие сегодня",
+  "@homePlanCardEventToday": { "description": "Правая метка карточки плана на главной." },
+  "homePlanCardReadiness": "готовности к событию · {hit} из {total}",
+  "@homePlanCardReadiness": {
+    "description": "Подпись рядом с процентом на карточке плана.",
+    "placeholders": { "hit": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "homePlanCardContinue": "Продолжить",
+  "@homePlanCardContinue": { "description": "Кнопка карточки плана на главной." },
+  "homePlanInviteTitle": "Есть дата и цель?",
+  "@homePlanInviteTitle": { "description": "Приглашение на месте карточки плана (кадр 09)." },
+  "homePlanInviteBody": "Соберём дни подготовки — от приёма у врача до собеседования.",
+  "@homePlanInviteBody": { "description": "Пояснение приглашения составить план." },
+  "homePlanInviteCta": "Составить",
+  "@homePlanInviteCta": { "description": "Кнопка приглашения составить план." }
 }

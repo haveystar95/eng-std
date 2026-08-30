@@ -7,6 +7,7 @@ import '../features/search/search_pair.dart' show SearchLanguages;
 import 'config.dart';
 import 'exposure_sync.dart';
 import 'models.dart';
+import 'plan_models.dart';
 import 'review_queue.dart';
 import 'token_store.dart';
 import 'triage_queue.dart';
@@ -499,6 +500,139 @@ class ApiClient {
     final r = await _dio.get('/home-plan');
     final raw = _data(r) as Map<String, dynamic>;
     return (plan: HomePlan.fromJson(raw), raw: raw);
+  }
+
+  // ---- Learning plans (PLAN-1c) --------------------------------------------
+  //
+  // The plan is the ONE surface here that is not read out of the local mirror. Its two headline
+  // numbers — готовность and the focus day — are derived server-side from the review log on every
+  // read, so a cached copy would be a second, slower opinion about where the learner is. The screens
+  // therefore call these directly and say «нет сети» when there is none.
+
+  /// The plan the learner is on, or null when there is none (the server answers 204).
+  Future<LearningPlan?> activePlan() async {
+    final r = await _dio.get('/plans/active');
+    if (r.statusCode == 204 || r.data == null) return null;
+
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// Every plan the learner has run, newest first — the finished one and the archive.
+  Future<List<PlanSummary>> plans() async {
+    final r = await _dio.get('/plans');
+    return (_data(r) as List)
+        .map((e) => PlanSummary.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  Future<LearningPlan> plan(String planId) async {
+    final r = await _dio.get('/plans/$planId');
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// A DRAFT. Free — no model call, no day, no word held. The support language is not sent: it is
+  /// the account's own (ONB-1) and the server reads it off the profile.
+  Future<LearningPlan> createPlan({
+    required String goalText,
+    required String targetLang,
+    required String level,
+    required String eventDate,
+    required int minutesPerDay,
+  }) async {
+    final r = await _dio.post(
+      '/plans',
+      data: {
+        'goal_text': goalText,
+        'target_lang': targetLang,
+        'level': level,
+        'event_date': eventDate,
+        'minutes_per_day': minutesPerDay,
+      },
+    );
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// P1 + the scheduler: the SKELETON the learner reads before committing. One model call, and
+  /// re-running it rebuilds the skeleton — which is why it is a POST.
+  Future<LearningPlan> buildPlanOutline(String planId) async {
+    final r = await _dio.post('/plans/$planId/outline');
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// «Добавить 20 минут в день» / «Убрать день» / a new date — the adjustment step, which costs
+  /// nothing because the scheduler is a pure function of the outline the model already produced.
+  Future<LearningPlan> reschedulePlan(
+    String planId, {
+    int? minutesPerDay,
+    String? eventDate,
+    int? dropDayIndex,
+  }) async {
+    final r = await _dio.patch(
+      '/plans/$planId/outline',
+      data: {
+        'minutes_per_day': ?minutesPerDay,
+        'event_date': ?eventDate,
+        'drop_day_index': ?dropDayIndex,
+      },
+    );
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// THE COMMITMENT: days start generating and words start being held.
+  Future<LearningPlan> startPlan(String planId) async {
+    final r = await _dio.post('/plans/$planId/start');
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  Future<LearningPlan> pausePlan(String planId) async {
+    final r = await _dio.post('/plans/$planId/pause');
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  Future<LearningPlan> abandonPlan(String planId) async {
+    final r = await _dio.post('/plans/$planId/abandon');
+    return LearningPlan.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// One day with its terms and their stages.
+  Future<PlanDayDetail> planDay(String planId, int dayIndex) async {
+    final r = await _dio.get('/plans/$planId/days/$dayIndex');
+    return PlanDayDetail.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// «Собери мне день n» — idempotent and safe to poll: it answers with the day's own status, so
+  /// the «собираю день n» screen calls it to start the work and calls it again to learn whether it
+  /// finished. A 409 `plan_day_capped` means the plan's own spending ceiling says «не сейчас».
+  Future<PlanDayStatus> generatePlanDay(String planId, int dayIndex) async {
+    final r = await _dio.post('/plans/$planId/days/$dayIndex/generate');
+    return PlanDayStatus.fromWire((_data(r) as Map<String, dynamic>)['status'] as String?);
+  }
+
+  /// The session of ONE day. [dayIndex] null asks for the day the learner is ON — the server owns
+  /// the focus, so it must be possible to ask for it without recomputing it on the device.
+  Future<PlanSession> buildPlanSession({
+    required String planId,
+    required String sessionId,
+    int? dayIndex,
+  }) async {
+    final path = dayIndex == null
+        ? '/plans/$planId/session'
+        : '/plans/$planId/days/$dayIndex/session';
+    final r = await _dio.post(path, data: {'session_id': sessionId});
+
+    return PlanSession.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// The morning of the event: the plan's phrases and nothing else (кадр 15).
+  Future<PlanRehearsal> planRehearsal(String planId) async {
+    final r = await _dio.post('/plans/$planId/rehearsal');
+    return PlanRehearsal.fromJson(_data(r) as Map<String, dynamic>);
+  }
+
+  /// «Как прошло?» — the checkpoints the learner ticked by hand after the event. Closes the plan.
+  Future<PlanEventFeedback> submitPlanFeedback(String planId, List<int> hitIndexes) async {
+    final r = await _dio.post('/plans/$planId/feedback', data: {'checkpoints': hitIndexes});
+    return PlanEventFeedback.fromJson(_data(r) as Map<String, dynamic>);
   }
 
   /// Upload a batch of graded answers (idempotent by each review's client ULID).

@@ -22,6 +22,7 @@ import 'practice/learning_ladder.dart';
 import 'practice/local_session_builder.dart';
 import 'practice/practice_mode_selector.dart';
 import 'models.dart';
+import 'plan_models.dart';
 import 'review_queue.dart';
 import 'review_sync.dart';
 import 'pool_sync.dart';
@@ -871,4 +872,57 @@ final studySessionProvider = FutureProvider.family<StudySession, SessionArgs>((r
         practice: args.practice,
         limit: args.limit,
       );
+});
+
+// ── Learning plans (PLAN-1c) ────────────────────────────────────────────────────────────────────
+//
+// THE ONE FAMILY OF SCREENS THAT READS THE NETWORK DIRECTLY, and it is worth saying why: everything
+// else in this app draws from the drift mirror, because everything else is CONTENT and content is
+// the same whether it arrived a second or a day ago. A plan's two headline numbers are not content.
+// «Готовность» and «на каком ты дне» are derived by the server from the review log on every read
+// (`PlanProgress`), and a cached copy of them is a second, older opinion about where the learner is
+// standing — which is exactly the disagreement PLAN-1b went out of its way to make impossible
+// between the session and the screen. So the plan screens read live and say «нет сети» when there
+// is none, and no plan row is ever written into the local database.
+
+/// The plan the learner is on, or null when there is none. Read on every entry to the tab.
+final activePlanProvider = FutureProvider<LearningPlan?>((ref) async {
+  return ref.watch(apiClientProvider).activePlan();
+});
+
+/// Every plan the learner has run — the finished one at the top of the tab and the archive under
+/// it. Read alongside [activePlanProvider] rather than instead of it: «на чём я сейчас» and «что у
+/// меня было» are two questions, and the tab shows a different screen for each answer.
+final planArchiveProvider = FutureProvider<List<PlanSummary>>((ref) async {
+  return ref.watch(apiClientProvider).plans();
+});
+
+/// One plan by id — the archive, and any screen that already knows which plan it is showing.
+final planProvider = FutureProvider.family<LearningPlan, String>((ref, planId) async {
+  return ref.watch(apiClientProvider).plan(planId);
+});
+
+/// Identifies one day of one plan.
+typedef PlanDayArgs = ({String planId, int dayIndex});
+
+/// One day with its phrases, its words and the stage each of them stands on.
+final planDayProvider = FutureProvider.family<PlanDayDetail, PlanDayArgs>((ref, args) async {
+  return ref.watch(apiClientProvider).planDay(args.planId, args.dayIndex);
+});
+
+/// Identifies one plan session. [sessionId] is minted once by the screen, so the build is
+/// idempotent exactly as an ordinary session's is.
+typedef PlanSessionArgs = ({String planId, int? dayIndex, String sessionId});
+
+/// The cards of one plan day, wrapped so the ordinary session screen can play them unchanged.
+final planSessionProvider = FutureProvider.family<StudySession, PlanSessionArgs>((ref, args) async {
+  final session = await ref
+      .watch(apiClientProvider)
+      .buildPlanSession(
+        planId: args.planId,
+        sessionId: args.sessionId,
+        dayIndex: args.dayIndex,
+      );
+
+  return session.asStudySession();
 });

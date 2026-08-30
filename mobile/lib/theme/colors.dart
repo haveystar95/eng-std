@@ -92,6 +92,19 @@ abstract final class AppColors {
   static const brassHairline = Color(0x8CB79363); // .55 of brass
   static const brassPlate = Color(0xFF9C7638);
 
+  /// THE PLAN'S OWN FRAME — a full-strength brass outline, used by nothing else.
+  ///
+  /// «Латунь — служебная метка плана» (макет «Фаза 4»). The plan card on the home screen and the
+  /// «срок мал» recommendation are drawn as brass-outlined paper, against the dark plate the day's
+  /// session wears: two different materials, so the eye reads them as two different piles of work
+  /// rather than as one list with a heading. This is the outline at the weight the frames draw it —
+  /// [brassHairline] is the same colour softened for the generation card, which is a quieter thing.
+  static const brassFrame = brass;
+
+  /// The wash inside that frame — `rgba(183,147,99,.07)`. Barely there on purpose: it separates the
+  /// plan card from the paper without becoming a second surface colour.
+  static const brassWash = Color.fromARGB(18, 183, 147, 99);
+
   static const verdictUnknown = Color(0xFFB5533C);
 
   /// «Не уверен». Подпись — [onVerdictUnsure].

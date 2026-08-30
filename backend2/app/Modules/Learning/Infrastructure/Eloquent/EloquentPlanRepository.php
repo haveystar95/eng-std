@@ -28,6 +28,18 @@ final readonly class EloquentPlanRepository implements PlanRepository
         return $row instanceof PlanModel ? $this->mapper->toPlan($row) : null;
     }
 
+    public function listFor(UserId $userId, int $limit): array
+    {
+        $rows = PlanModel::query()
+            ->where('user_id', $userId->value)
+            ->where('status', '!=', PlanStatus::Draft->value)
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+
+        return array_values($rows->map($this->mapper->toPlan(...))->all());
+    }
+
     public function findActiveFor(UserId $userId): ?LearningPlan
     {
         $row = PlanModel::query()

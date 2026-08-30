@@ -3512,6 +3512,738 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Новые коллекции и планы будут на нём. Существующие коллекции останутся как есть — переводы в них не переписываются.'**
   String get profileNativeLangConfirmBody;
+
+  /// Таб-бар: план подготовки (центральная, акцентная вкладка).
+  ///
+  /// In ru, this message translates to:
+  /// **'План'**
+  String get tabPlan;
+
+  /// Лупа в шапке главной и коллекций — открывает экран поиска.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск'**
+  String get searchOpen;
+
+  /// Ярлык кнопки «назад» для скринридера на экранах плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Назад'**
+  String get planBuilderBack;
+
+  /// Заголовок экрана входа в план (кадр Б-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Составить план'**
+  String get planBuilderTitle;
+
+  /// Подзаголовок входа в план. «ИИ» произносится здесь один раз за весь поток.
+  ///
+  /// In ru, this message translates to:
+  /// **'Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь.'**
+  String get planBuilderSubtitle;
+
+  /// Шаг 1 плана, раскрытый.
+  ///
+  /// In ru, this message translates to:
+  /// **'К чему готовишься?'**
+  String get planStepGoalQuestion;
+
+  /// Шаг 1 плана, ещё не отвеченный (закрытая строка).
+  ///
+  /// In ru, this message translates to:
+  /// **'Цель'**
+  String get planStepGoalClosed;
+
+  /// Шаг 2 плана, раскрытый.
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык и уровень'**
+  String get planStepLanguageQuestion;
+
+  /// Шаг 2 плана, закрытая строка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык и уровень'**
+  String get planStepLanguageClosed;
+
+  /// Шаг 3 плана, раскрытый.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда это случится?'**
+  String get planStepWhenQuestion;
+
+  /// Шаг 3 плана, закрытая строка.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда и сколько'**
+  String get planStepWhenClosed;
+
+  /// Ссылка «изменить» в свёрнутой строке шага (кадр Б-02).
+  ///
+  /// In ru, this message translates to:
+  /// **'Изм.'**
+  String get planStepEdit;
+
+  /// Плейсхолдер поля цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например, приём у врача'**
+  String get planGoalPlaceholder;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседование'**
+  String get planGoalChipInterview;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Врач'**
+  String get planGoalChipDoctor;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аренда'**
+  String get planGoalChipRent;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поездка'**
+  String get planGoalChipTrip;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ветклиника'**
+  String get planGoalChipVet;
+
+  /// Чип-пример цели.
+  ///
+  /// In ru, this message translates to:
+  /// **'Школа ребёнка'**
+  String get planGoalChipSchool;
+
+  /// Лейбл блока уровня — четыре человеческие формулировки вместо A1/B2.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как сейчас говоришь'**
+  String get planLevelLabel;
+
+  /// Уровень плана `zero`.
+  ///
+  /// In ru, this message translates to:
+  /// **'С нуля'**
+  String get planLevelZero;
+
+  /// Уровень плана `basic`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понимаю простое'**
+  String get planLevelBasic;
+
+  /// Уровень плана `conversational`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Объясняюсь'**
+  String get planLevelConversational;
+
+  /// Уровень плана `fluent`.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободно'**
+  String get planLevelFluent;
+
+  /// Кнопка даты события.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get planWhenToday;
+
+  /// Кнопка даты события.
+  ///
+  /// In ru, this message translates to:
+  /// **'Завтра'**
+  String get planWhenTomorrow;
+
+  /// Заголовок шита выбора даты.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда это случится?'**
+  String get planWhenSheetTitle;
+
+  /// Лейбл блока минут (для «сегодня» блок не показывается).
+  ///
+  /// In ru, this message translates to:
+  /// **'Минут в день'**
+  String get planMinutesLabel;
+
+  /// Служебная строка бюджета времени.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes} мин/день'**
+  String planMinutesPerDay(int minutes);
+
+  /// Главная кнопка входа в план.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать план'**
+  String get planBuilderSubmit;
+
+  /// Кнопка входа в план в состоянии ожидания.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираю…'**
+  String get planBuilderWorking;
+
+  /// Ориентир под кнопкой, когда событие сегодня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие сегодня — соберём короткую подготовку на один заход.'**
+  String get planBuilderHintToday;
+
+  /// Ориентир под кнопкой «Собрать план». Объём материала считает сервер — здесь только календарь.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{Ориентир: {days} день до события} few{Ориентир: {days} дня до события} many{Ориентир: {days} дней до события} other{Ориентир: {days} дня до события}} · {minutes} мин в день'**
+  String planBuilderHintDays(int days, int minutes);
+
+  /// Ошибка сети на экранах плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет соединения. План собирается на сервере — попробуй, когда появится сеть.'**
+  String get planErrorOffline;
+
+  /// Ошибка сборки каркаса плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось собрать план. Попробуй ещё раз.'**
+  String get planErrorBuildFailed;
+
+  /// Ошибка старта плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось начать план. Попробуй ещё раз.'**
+  String get planErrorStartFailed;
+
+  /// Ошибка чтения плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить план.'**
+  String get planErrorLoadFailed;
+
+  /// Латунная метка в шапке превью (кадр Б-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'Превью плана'**
+  String get planPreviewBadge;
+
+  /// Строка структуры плана на тёмной плите.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{Подготовка {days} день + прогон} few{Подготовка {days} дня + прогон} many{Подготовка {days} дней + прогон} other{Подготовка {days} дня + прогон}}'**
+  String planPrepDays(int days);
+
+  /// Дата события на плите превью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие {date}.'**
+  String planEventOn(String date);
+
+  /// Ориентир объёма материала на плите превью.
+  ///
+  /// In ru, this message translates to:
+  /// **'~{count} фраз и слов.'**
+  String planApproxTerms(int count);
+
+  /// Латунная метка дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index}'**
+  String planDayNumber(int index);
+
+  /// Подпись дня-прогона.
+  ///
+  /// In ru, this message translates to:
+  /// **'без новых слов'**
+  String get planDayNoNewWords;
+
+  /// Счётчик слов дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String planWordsCount(int count);
+
+  /// Счётчик фраз дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} фраза} few{{count} фразы} many{{count} фраз} other{{count} фразы}}'**
+  String planPhrasesCount(int count);
+
+  /// Длительность плана в архиве.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}'**
+  String planDaysCount(int count);
+
+  /// Тихая ссылка на превью.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать день'**
+  String get planPreviewDropDay;
+
+  /// Тихая ссылка на превью — пересобрать каркас.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перестроить'**
+  String get planPreviewRebuild;
+
+  /// Главная кнопка превью — обязательство.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get planPreviewStart;
+
+  /// Заглушка под кнопкой «Начать». Paywall в этом наряде не трогается.
+  ///
+  /// In ru, this message translates to:
+  /// **'[цена / условия — placeholder]'**
+  String get planPricePlaceholder;
+
+  /// Заголовок шита выбора дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Какой день убрать?'**
+  String get planDropDaySheet;
+
+  /// Отказ, когда в плане остался один день знакомства.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последний день подготовки убрать нельзя.'**
+  String get planDropLastDay;
+
+  /// Заголовок карточки «срок мал под цель» (кадр Б-05).
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{За {days} день по {minutes} минут закроем половину: вот эти умения.} few{За {days} дня по {minutes} минут закроем половину: вот эти умения.} many{За {days} дней по {minutes} минут закроем половину: вот эти умения.} other{За {days} дня по {minutes} минут закроем половину: вот эти умения.}}'**
+  String planTightTitle(int days, int minutes);
+
+  /// Рекомендованное действие на карточке «срок мал».
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить {minutes} минут в день'**
+  String planTightAddMinutes(int minutes);
+
+  /// Отклонить рекомендацию «срок мал».
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить'**
+  String get planTightKeep;
+
+  /// Заголовок экрана сборки дня (кадр Б-06).
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираю день {index}'**
+  String planBuildingTitle(int index);
+
+  /// Пояснение на экране сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подбираю реплики события и слова, которые в них подставляются.'**
+  String get planBuildingBody;
+
+  /// Шаг статуса сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цель разобрана'**
+  String get planBuildingStep1;
+
+  /// Шаг статуса сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Реплики подобраны'**
+  String get planBuildingStep2;
+
+  /// Шаг статуса сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова и примеры'**
+  String get planBuildingStep3;
+
+  /// Сборка не дошла до конца.
+  ///
+  /// In ru, this message translates to:
+  /// **'День собирается дольше обычного. План уже создан — его можно открыть и вернуться к дню позже.'**
+  String get planBuildingFailed;
+
+  /// Выход из зависшей сборки.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть план'**
+  String get planBuildingOpenAnyway;
+
+  /// Латунная метка на тёмной плите плана (кадр 1c-01).
+  ///
+  /// In ru, this message translates to:
+  /// **'Активный план'**
+  String get planActiveBadge;
+
+  /// Подпись к главному числу плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'готовность к событию'**
+  String get planReadinessCaption;
+
+  /// Служебная строка под шкалой готовности.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
+  String planEventInDays(int days);
+
+  /// Служебная строка под шкалой готовности.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие сегодня'**
+  String get planEventToday;
+
+  /// Служебная строка под шкалой готовности.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие прошло'**
+  String get planEventPassed;
+
+  /// Служебная строка под шкалой готовности — на каком дне юзер.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} из {total}'**
+  String planDayOfTotal(int index, int total);
+
+  /// Лейбл блока умений плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты уже можешь · {hit} из {total}'**
+  String planCanAlready(int hit, int total);
+
+  /// Ссылка на незакрытом умении — ведёт в день, который ему учит.
+  ///
+  /// In ru, this message translates to:
+  /// **'Потренировать'**
+  String get planTrainThis;
+
+  /// Лейбл блока дней плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дни · {index} из {total}'**
+  String planDaysHeader(int index, int total);
+
+  /// Главная кнопка экрана плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить день {index}'**
+  String planContinueDay(int index);
+
+  /// Подпись пройденного дня в списке.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} пройден'**
+  String planDayPassed(int index);
+
+  /// Подпись дня-прогона в списке.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без новых слов · можно открыть раньше'**
+  String get planDayFinalHint;
+
+  /// Подпись дня, который сервер ещё пишет.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собирается'**
+  String get planDayBuilding;
+
+  /// Подпись будущего дня — он открыт, но мягко.
+  ///
+  /// In ru, this message translates to:
+  /// **'можно открыть раньше'**
+  String get planDayOpenEarly;
+
+  /// Латунная метка в шапке экрана дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} из {total}'**
+  String planDayOfPlan(int index, int total);
+
+  /// Лейбл блока умений дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты сможешь'**
+  String get planDayCanDo;
+
+  /// Лейбл блока фраз.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фразы дня'**
+  String get planDayPhrases;
+
+  /// Лейбл реестра слов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова в этих фразах'**
+  String get planDayWords;
+
+  /// Предупреждение над кнопкой для дня впереди фокуса.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это не текущий день: тренировка пройдёт мягко — ступени не закроются и повторы не назначатся.'**
+  String get planDaySoftNote;
+
+  /// Главная кнопка экрана дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тренировать'**
+  String get planDayTrain;
+
+  /// Откуда пришло слово, рядом с буквой ступени.
+  ///
+  /// In ru, this message translates to:
+  /// **'· со дня {index}'**
+  String planFromDay(int index);
+
+  /// Лейбл блока разговора.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор'**
+  String get planConversationLabel;
+
+  /// Имя роли, когда сервер её не назвал.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собеседник'**
+  String get planConversationDefaultRole;
+
+  /// Честная подпись под запертым разговором (CONV-1).
+  ///
+  /// In ru, this message translates to:
+  /// **'Откроется в следующем обновлении: разговор в роли и зачёт чек-пойнтов.'**
+  String get planConversationLocked;
+
+  /// Заголовок запертой плиты разговора в итоге дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговор в роли'**
+  String get planConversationSoon;
+
+  /// Состояние дня без материала.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот день ещё не собран. План пишет по одному дню — можно попросить собрать его сейчас.'**
+  String get planDayNotWritten;
+
+  /// Состояние дня после неудачной генерации.
+  ///
+  /// In ru, this message translates to:
+  /// **'День не собрался с первого раза. Можно попробовать ещё раз.'**
+  String get planDayFailed;
+
+  /// Кнопка ручной сборки дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать день'**
+  String get planDayBuildNow;
+
+  /// Заголовок итога дня (кадр 1c-04).
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} пройден'**
+  String planDayDone(int index);
+
+  /// Заголовок итога мягкого прохода — ступени не закрывались.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} повторён'**
+  String planDaySoftDone(int index);
+
+  /// Итог дня: «в работе», а не «выучено».
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} фраза и слово в работе} few{{count} фразы и слова в работе} many{{count} фраз и слов в работе} other{{count} фраз и слов в работе}}'**
+  String planDayInWork(int count);
+
+  /// Строка итога дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ступень A пройдена'**
+  String get planStageAClosed;
+
+  /// Строка итога дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернутся на ступени B'**
+  String get planStageBReturns;
+
+  /// Значение строки «вернутся на ступени B».
+  ///
+  /// In ru, this message translates to:
+  /// **'в следующий день'**
+  String get planStageBWhen;
+
+  /// Подпись строки перехода в итоге дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дальше'**
+  String get planNext;
+
+  /// Следующий день в итоге дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'День {index} — {title}'**
+  String planNextDay(int index, String title);
+
+  /// Кнопка выхода из итога дня.
+  ///
+  /// In ru, this message translates to:
+  /// **'К плану'**
+  String get planDayBackToPlan;
+
+  /// Латунная метка в шапке плановой сессии (кадр 1c-03).
+  ///
+  /// In ru, this message translates to:
+  /// **'План · день {index}'**
+  String planSessionBadge(int index);
+
+  /// Подпись ступени над заданием плановой сессии.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ступень {stage} · {trainer}'**
+  String planSessionStage(String stage, String trainer);
+
+  /// Строка внизу карточки: откуда слово.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слово «{term}» идёт со дня {index} — сегодня оно на ступени {stage}.'**
+  String planSessionCarried(String term, int index, String stage);
+
+  /// Пустой таб «План» (кадр 1c-10).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подготовиться к чему-то конкретному'**
+  String get planEmptyTitle;
+
+  /// Разница коллекции и плана — тремя строками, без обещаний.
+  ///
+  /// In ru, this message translates to:
+  /// **'Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора.'**
+  String get planEmptyBody;
+
+  /// Пустой таб «План», строка 01.
+  ///
+  /// In ru, this message translates to:
+  /// **'Говоришь цель и дату'**
+  String get planEmptyStep1;
+
+  /// Пустой таб «План», строка 02.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каждый день — фразы, которые реально скажешь, и слова из них'**
+  String get planEmptyStep2;
+
+  /// Пустой таб «План», строка 03.
+  ///
+  /// In ru, this message translates to:
+  /// **'В конце — разговор в роли и прогон всей ситуации'**
+  String get planEmptyStep3;
+
+  /// Кнопка пустого таба.
+  ///
+  /// In ru, this message translates to:
+  /// **'Составить план'**
+  String get planEmptyCta;
+
+  /// Латунная метка завершённого плана (кадр 1c-11).
+  ///
+  /// In ru, this message translates to:
+  /// **'Подготовка завершена'**
+  String get planFinishedBadge;
+
+  /// Итог завершённого плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{За {days} день подготовки. Событие было {date}.} few{За {days} дня подготовки. Событие было {date}.} many{За {days} дней подготовки. Событие было {date}.} other{За {days} дня подготовки. Событие было {date}.}}'**
+  String planFinishedSummary(int days, String date);
+
+  /// Карточка о судьбе слов после плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слова плана ушли в общее повторение'**
+  String get planWordsReleasedTitle;
+
+  /// Пояснение к судьбе слов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Они будут появляться в ежедневных занятиях, чтобы не пропасть.'**
+  String get planWordsReleasedBody;
+
+  /// Лейбл списка прошлых планов.
+  ///
+  /// In ru, this message translates to:
+  /// **'Архив'**
+  String get planArchive;
+
+  /// Кнопка внизу завершённого плана — под результатом, а не поверх него.
+  ///
+  /// In ru, this message translates to:
+  /// **'Составить новый'**
+  String get planFinishedNewPlan;
+
+  /// Латунная метка карточки плана на главной (кадр 08).
+  ///
+  /// In ru, this message translates to:
+  /// **'План · день {index} из {total}'**
+  String homePlanCardBadge(int index, int total);
+
+  /// Правая метка карточки плана на главной.
+  ///
+  /// In ru, this message translates to:
+  /// **'{days, plural, one{Событие через {days} день} few{Событие через {days} дня} many{Событие через {days} дней} other{Событие через {days} дня}}'**
+  String homePlanCardEventIn(int days);
+
+  /// Правая метка карточки плана на главной.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие сегодня'**
+  String get homePlanCardEventToday;
+
+  /// Подпись рядом с процентом на карточке плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'готовности к событию · {hit} из {total}'**
+  String homePlanCardReadiness(int hit, int total);
+
+  /// Кнопка карточки плана на главной.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продолжить'**
+  String get homePlanCardContinue;
+
+  /// Приглашение на месте карточки плана (кадр 09).
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть дата и цель?'**
+  String get homePlanInviteTitle;
+
+  /// Пояснение приглашения составить план.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соберём дни подготовки — от приёма у врача до собеседования.'**
+  String get homePlanInviteBody;
+
+  /// Кнопка приглашения составить план.
+  ///
+  /// In ru, this message translates to:
+  /// **'Составить'**
+  String get homePlanInviteCta;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

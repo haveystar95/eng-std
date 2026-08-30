@@ -558,7 +558,49 @@ class StudySession {
   /// arrive; nothing else about the session behaves differently.
   final bool builtLocally;
 
-  const StudySession({required this.sessionId, required this.cards, this.builtLocally = false});
+  /// THE PLAN'S ENVELOPE, one entry per card and in the same order — or null for every ordinary
+  /// session, which is most of them.
+  ///
+  /// A plan session is the SAME session: the same cards, the same exercise widgets, the same
+  /// grading. «Механика тренажёров не меняется» is the rule, so the plan is not a second session
+  /// screen — it is three extra sentences this list supplies (which stage, where in it, which day
+  /// the word came from) and a brass badge in the header. Keeping it beside the cards rather than
+  /// inside them is what stops those three sentences leaking into every ordinary card.
+  ///
+  /// The type is deliberately `List<Object>`-free: it holds `PlanSessionTask` from
+  /// `plan_models.dart`, which imports THIS file for [SessionCard]. Naming it here would be a
+  /// cycle, and a cycle for a field one screen reads is not worth the import graph.
+  final PlanSessionEnvelope? plan;
+
+  const StudySession({
+    required this.sessionId,
+    required this.cards,
+    this.builtLocally = false,
+    this.plan,
+  });
+}
+
+/// What a study session is when it belongs to a plan — see [StudySession.plan].
+///
+/// An interface rather than the concrete `PlanSession`: the plan models import this file for
+/// [SessionCard], so naming them here would close an import cycle. The session screen upcasts.
+abstract interface class PlanSessionEnvelope {
+  String get planId;
+  int get dayIndex;
+
+  /// FALSE means the day was opened out of turn — a soft run that schedules nothing and closes no
+  /// stage. The screen says so; the SERVER is what enforces it.
+  bool get strict;
+
+  /// The stage letter for the card at [i] («A» / «B» / «C»), or null when there is none.
+  String? stageLetterAt(int i);
+
+  /// «3 из 4» inside the stage — the position and the length, or null.
+  ({int ordinal, int of})? stepAt(int i);
+
+  /// The day the card's word was introduced on, when that is EARLIER than the day being studied.
+  /// Null for the day's own words, so the «слово со дня K» line is drawn only when it says something.
+  int? carriedFromAt(int i);
 }
 
 class Profile {

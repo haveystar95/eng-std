@@ -28,5 +28,16 @@ interface PlanRepository
      */
     public function holdingPlanIdsFor(UserId $userId): array;
 
+    /**
+     * This learner's plans, newest first — the План tab's archive (кадр 11).
+     *
+     * Drafts are excluded: a draft is a plan the learner started describing and walked away from,
+     * and an archive that listed them would be a list of abandoned sentences rather than of
+     * preparations that happened.
+     *
+     * @return list<LearningPlan>
+     */
+    public function listFor(UserId $userId, int $limit): array;
+
     public function save(LearningPlan $plan): void;
 }

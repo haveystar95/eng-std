@@ -19,6 +19,8 @@ import '../../data/perf_log.dart';
 import '../../data/practice/recognition_replay.dart';
 import '../../data/providers.dart';
 import '../home/home_providers.dart';
+import '../plan/plan_day_summary.dart';
+import '../plan/plan_ui.dart';
 import 'session/intro_card.dart';
 import 'session/session_exercise.dart';
 import 'session/session_grading.dart';
@@ -39,11 +41,27 @@ class SessionScreen extends ConsumerStatefulWidget {
     this.limit = 20,
     this.targetLang,
     this.onlyTermId,
+    this.planId,
+    this.planDayIndex,
   });
 
   final String title;
   final String? collectionId;
   final bool practice;
+
+  /// A PLAN DAY'S SESSION (кадр 1c · 03), built by `POST /plans/{id}/days/{n}/session`.
+  ///
+  /// The same screen and deliberately so: «механика тренажёров не меняется». Every card is the
+  /// app's own card, played by the same exercise widget and graded the same way — what the plan adds
+  /// is three sentences (the brass badge in the header, the stage over the task, and where a
+  /// carried word came from) and its own summary. A second session screen for the plan would be a
+  /// second place for every future trainer fix to land.
+  final String? planId;
+
+  /// Which day. Null with a [planId] set asks the server for the day the learner is ON — the focus
+  /// is the server's to know, and recomputing it here is how a screen and a session come to
+  /// disagree about which day is being studied.
+  final int? planDayIndex;
 
   /// «Тренировать слово» from a word's expanded card (кадр 16e): a practice session whose pool is
   /// this ONE term. Practice-only by construction — a scheduling session's composition is the
@@ -79,6 +97,8 @@ class SessionScreen extends ConsumerStatefulWidget {
     limit: limit,
     targetLang: targetLang,
     onlyTermId: onlyTermId,
+    planId: planId,
+    planDayIndex: planDayIndex,
   );
 
   @override
@@ -132,7 +152,20 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       limit: widget.limit,
       onlyTermId: widget.onlyTermId,
     );
-    final session = ref.watch(studySessionProvider(args));
+    final planArgs = (
+      planId: widget.planId ?? '',
+      dayIndex: widget.planDayIndex,
+      sessionId: _sessionId,
+    );
+    // ONE screen, two builders. The plan's cards arrive wrapped in an envelope the ordinary session
+    // has no use for, so the two providers are separate; everything from here down reads the same
+    // [StudySession] and cannot tell which one produced it.
+    final session = widget.planId != null
+        ? ref.watch(planSessionProvider(planArgs))
+        : ref.watch(studySessionProvider(args));
+    void retry() => widget.planId != null
+        ? ref.invalidate(planSessionProvider(planArgs))
+        : ref.invalidate(studySessionProvider(args));
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -157,7 +190,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                     // triangle was drawn in the success colour (QA-OBS-30).
                     iconColor: AppColors.destructiveText,
                     actionLabel: l.generationRetry,
-                    onAction: () => ref.invalidate(studySessionProvider(args)),
+                    onAction: retry,
                   );
                 },
                 data: (s) => s.cards.isEmpty
@@ -470,7 +503,21 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
+    final plan = widget.session.plan;
+
     if (_finished) {
+      // A plan day ends on its OWN summary (кадр 1c · 04): «День 1 пройден · 9 фраз и слов в
+      // работе», the two lines that explain the stages, and what comes next. The ordinary summary
+      // answers a different question — how the run went — and printing «повторено 14» over a day
+      // the learner just finished would be a receipt where a milestone belongs.
+      if (plan != null) {
+        return PlanDaySummary(
+          envelope: plan,
+          cards: widget.session.cards,
+          onDone: () => Navigator.of(context).pop(),
+        );
+      }
+
       return _SessionSummary(
         results: _results,
         practice: widget.practice,
@@ -568,6 +615,13 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenH, 14, AppSpacing.screenH, 0),
               child: _SessionHeader(
                 phaseLabel: phaseLabel,
+                // The plan's brass mark REPLACES the phase word in the header (кадр 1c · 03): the
+                // rung's own name moves down to the caption over the task, where it can be said in
+                // full beside the stage. Two labels competing for the one centred slot is how a
+                // header ends up saying «Узнавание» over a session the learner opened from a plan.
+                planBadge: plan == null
+                    ? null
+                    : l.planSessionBadge(plan.dayIndex),
                 // One pair for the whole session: say it once, here, beside the phase. Mixed:
                 // null, and the badge rides each card instead — see [_pairs].
                 pair: _mixedPairs ? null : _pairs.values.firstOrNull,
@@ -589,7 +643,48 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                 ),
                 child: _SlideSwitcher(
                   index: _pos,
-                  child: (_mixedPairs && _cardPair != null)
+                  child: (plan != null)
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // «Ступень B · пропуск в фразе» — the stage, then the trainer, over the
+                            // task. The trainer half is the same word the ordinary header shows;
+                            // saying both here is what makes the stage legible without a legend.
+                            if (plan.stageLetterAt(_playing) case final stage?) ...[
+                              Text(
+                                l.planSessionStage(stage, phaseLabel.toLowerCase()).toUpperCase(),
+                                style: AppText.blockLabel.copyWith(letterSpacing: 1.32),
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                            card,
+                            // «Слово worse идёт со дня 1 — сегодня оно на ступени B.» Drawn only
+                            // for a word carried in from an EARLIER day, because for today's own
+                            // words the sentence would say nothing.
+                            if (plan.carriedFromAt(_playing) case final from?) ...[
+                              const SizedBox(height: AppSpacing.s26),
+                              Container(
+                                padding: const EdgeInsets.only(top: 14),
+                                decoration: const BoxDecoration(
+                                  border: Border(top: BorderSide(color: AppColors.dividerFaint)),
+                                ),
+                                child: Text(
+                                  l.planSessionCarried(
+                                    _card.answer,
+                                    from,
+                                    plan.stageLetterAt(_playing) ?? '',
+                                  ),
+                                  style: AppText.translation.copyWith(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                    color: AppColors.tertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        )
+                      : (_mixedPairs && _cardPair != null)
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -671,7 +766,11 @@ class _SessionHeader extends StatelessWidget {
     required this.total,
     required this.onClose,
     this.pair,
+    this.planBadge,
   });
+
+  /// «План · День 2» — the brass pill a plan session wears instead of the phase word.
+  final String? planBadge;
 
   /// The session's pair when it has just one. Null when the session mixes pairs — the badge then
   /// belongs on the card, which is the only place it can change with the card.
@@ -703,11 +802,13 @@ class _SessionHeader extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text(
-                phaseLabel,
-                textAlign: TextAlign.center,
-                style: AppTextExercise.sessionHeader,
-              ),
+              child: planBadge != null
+                  ? Center(child: PlanPill(planBadge!))
+                  : Text(
+                      phaseLabel,
+                      textAlign: TextAlign.center,
+                      style: AppTextExercise.sessionHeader,
+                    ),
             ),
             // A MINIMUM width, not a fixed one: «1 из 14» / «1 of 12» does not fit 44pt and was
             // wrapped to two lines the moment the denominator went double-digit (QA-OBS-28). The

@@ -2311,4 +2311,503 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profileNativeLangConfirmBody =>
       'New collections and plans will use it. Existing collections stay as they are — their translations are not rewritten.';
+
+  @override
+  String get tabPlan => 'Plan';
+
+  @override
+  String get searchOpen => 'Search';
+
+  @override
+  String get planBuilderBack => 'Back';
+
+  @override
+  String get planBuilderTitle => 'Make a plan';
+
+  @override
+  String get planBuilderSubtitle =>
+      'Three answers — and AI will build preparation days out of phrases you will actually say.';
+
+  @override
+  String get planStepGoalQuestion => 'What are you preparing for?';
+
+  @override
+  String get planStepGoalClosed => 'Goal';
+
+  @override
+  String get planStepLanguageQuestion => 'Language and level';
+
+  @override
+  String get planStepLanguageClosed => 'Language and level';
+
+  @override
+  String get planStepWhenQuestion => 'When will it happen?';
+
+  @override
+  String get planStepWhenClosed => 'When and how much';
+
+  @override
+  String get planStepEdit => 'Edit';
+
+  @override
+  String get planGoalPlaceholder => 'For example, a doctor\'s appointment';
+
+  @override
+  String get planGoalChipInterview => 'Interview';
+
+  @override
+  String get planGoalChipDoctor => 'Doctor';
+
+  @override
+  String get planGoalChipRent => 'Renting';
+
+  @override
+  String get planGoalChipTrip => 'Trip';
+
+  @override
+  String get planGoalChipVet => 'Vet';
+
+  @override
+  String get planGoalChipSchool => 'School';
+
+  @override
+  String get planLevelLabel => 'How you speak now';
+
+  @override
+  String get planLevelZero => 'From scratch';
+
+  @override
+  String get planLevelBasic => 'I understand simple things';
+
+  @override
+  String get planLevelConversational => 'I can explain myself';
+
+  @override
+  String get planLevelFluent => 'Fluently';
+
+  @override
+  String get planWhenToday => 'Today';
+
+  @override
+  String get planWhenTomorrow => 'Tomorrow';
+
+  @override
+  String get planWhenSheetTitle => 'When will it happen?';
+
+  @override
+  String get planMinutesLabel => 'Minutes a day';
+
+  @override
+  String planMinutesPerDay(int minutes) {
+    return '$minutes min/day';
+  }
+
+  @override
+  String get planBuilderSubmit => 'Build the plan';
+
+  @override
+  String get planBuilderWorking => 'Building…';
+
+  @override
+  String get planBuilderHintToday =>
+      'The event is today — we will build a short one-sitting preparation.';
+
+  @override
+  String planBuilderHintDays(int days, int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Roughly: $days days until the event',
+      one: 'Roughly: $days day until the event',
+    );
+    return '$_temp0 · $minutes min a day';
+  }
+
+  @override
+  String get planErrorOffline =>
+      'No connection. The plan is built on the server — try again when you are online.';
+
+  @override
+  String get planErrorBuildFailed => 'The plan could not be built. Try again.';
+
+  @override
+  String get planErrorStartFailed => 'The plan could not be started. Try again.';
+
+  @override
+  String get planErrorLoadFailed => 'The plan could not be loaded.';
+
+  @override
+  String get planPreviewBadge => 'Plan preview';
+
+  @override
+  String planPrepDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days of preparation + run-through',
+      one: '$days day of preparation + run-through',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planEventOn(String date) {
+    return 'Event on $date.';
+  }
+
+  @override
+  String planApproxTerms(int count) {
+    return '~$count phrases and words.';
+  }
+
+  @override
+  String planDayNumber(int index) {
+    return 'Day $index';
+  }
+
+  @override
+  String get planDayNoNewWords => 'no new words';
+
+  @override
+  String planWordsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planPhrasesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phrases',
+      one: '$count phrase',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planPreviewDropDay => 'Drop a day';
+
+  @override
+  String get planPreviewRebuild => 'Rebuild';
+
+  @override
+  String get planPreviewStart => 'Start';
+
+  @override
+  String get planPricePlaceholder => '[price / terms — placeholder]';
+
+  @override
+  String get planDropDaySheet => 'Which day to drop?';
+
+  @override
+  String get planDropLastDay => 'The last preparation day cannot be dropped.';
+
+  @override
+  String planTightTitle(int days, int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days days at $minutes minutes we will cover half: these abilities.',
+      one: 'In $days day at $minutes minutes we will cover half: these abilities.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planTightAddMinutes(int minutes) {
+    return 'Add $minutes minutes a day';
+  }
+
+  @override
+  String get planTightKeep => 'Keep it';
+
+  @override
+  String planBuildingTitle(int index) {
+    return 'Building day $index';
+  }
+
+  @override
+  String get planBuildingBody => 'Choosing the lines you will say and the words that go into them.';
+
+  @override
+  String get planBuildingStep1 => 'Goal parsed';
+
+  @override
+  String get planBuildingStep2 => 'Lines chosen';
+
+  @override
+  String get planBuildingStep3 => 'Words and examples';
+
+  @override
+  String get planBuildingFailed =>
+      'This day is taking longer than usual. The plan already exists — you can open it and come back to the day later.';
+
+  @override
+  String get planBuildingOpenAnyway => 'Open the plan';
+
+  @override
+  String get planActiveBadge => 'Active plan';
+
+  @override
+  String get planReadinessCaption => 'ready for the event';
+
+  @override
+  String planEventInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Event in $days days',
+      one: 'Event in $days day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planEventToday => 'Event today';
+
+  @override
+  String get planEventPassed => 'The event has passed';
+
+  @override
+  String planDayOfTotal(int index, int total) {
+    return 'Day $index of $total';
+  }
+
+  @override
+  String planCanAlready(int hit, int total) {
+    return 'You can already · $hit of $total';
+  }
+
+  @override
+  String get planTrainThis => 'Practise';
+
+  @override
+  String planDaysHeader(int index, int total) {
+    return 'Days · $index of $total';
+  }
+
+  @override
+  String planContinueDay(int index) {
+    return 'Continue day $index';
+  }
+
+  @override
+  String planDayPassed(int index) {
+    return 'Day $index done';
+  }
+
+  @override
+  String get planDayFinalHint => 'No new words · can be opened early';
+
+  @override
+  String get planDayBuilding => 'Building';
+
+  @override
+  String get planDayOpenEarly => 'can be opened early';
+
+  @override
+  String planDayOfPlan(int index, int total) {
+    return 'Day $index of $total';
+  }
+
+  @override
+  String get planDayCanDo => 'You will be able to';
+
+  @override
+  String get planDayPhrases => 'Phrases of the day';
+
+  @override
+  String get planDayWords => 'Words in these phrases';
+
+  @override
+  String get planDaySoftNote =>
+      'This is not the current day: the session will run softly — no stage closes and nothing gets scheduled.';
+
+  @override
+  String get planDayTrain => 'Train';
+
+  @override
+  String planFromDay(int index) {
+    return '· from day $index';
+  }
+
+  @override
+  String get planConversationLabel => 'Conversation';
+
+  @override
+  String get planConversationDefaultRole => 'Your counterpart';
+
+  @override
+  String get planConversationLocked =>
+      'Coming in the next update: the role conversation and its checkpoints.';
+
+  @override
+  String get planConversationSoon => 'The role conversation';
+
+  @override
+  String get planDayNotWritten =>
+      'This day has not been built yet. The plan writes one day at a time — you can ask for it now.';
+
+  @override
+  String get planDayFailed => 'This day did not build the first time. You can try again.';
+
+  @override
+  String get planDayBuildNow => 'Build the day';
+
+  @override
+  String planDayDone(int index) {
+    return 'Day $index done';
+  }
+
+  @override
+  String planDaySoftDone(int index) {
+    return 'Day $index revisited';
+  }
+
+  @override
+  String planDayInWork(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phrases and words in progress',
+      one: '$count phrase or word in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planStageAClosed => 'Stage A closed';
+
+  @override
+  String get planStageBReturns => 'They come back at stage B';
+
+  @override
+  String get planStageBWhen => 'on the next day';
+
+  @override
+  String get planNext => 'Next';
+
+  @override
+  String planNextDay(int index, String title) {
+    return 'Day $index — $title';
+  }
+
+  @override
+  String get planDayBackToPlan => 'Back to the plan';
+
+  @override
+  String planSessionBadge(int index) {
+    return 'Plan · day $index';
+  }
+
+  @override
+  String planSessionStage(String stage, String trainer) {
+    return 'Stage $stage · $trainer';
+  }
+
+  @override
+  String planSessionCarried(String term, int index, String stage) {
+    return '«$term» comes from day $index — today it is at stage $stage.';
+  }
+
+  @override
+  String get planEmptyTitle => 'Prepare for something specific';
+
+  @override
+  String get planEmptyBody =>
+      'Collections are about topics you want to know. A plan is about the day you will have to speak: an appointment, an interview, signing a contract.';
+
+  @override
+  String get planEmptyStep1 => 'You name the goal and the date';
+
+  @override
+  String get planEmptyStep2 => 'Every day — phrases you will actually say, and the words in them';
+
+  @override
+  String get planEmptyStep3 =>
+      'At the end — a role conversation and a run-through of the whole situation';
+
+  @override
+  String get planEmptyCta => 'Make a plan';
+
+  @override
+  String get planFinishedBadge => 'Preparation complete';
+
+  @override
+  String planFinishedSummary(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days of preparation. The event was on $date.',
+      one: '$days day of preparation. The event was on $date.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planWordsReleasedTitle => 'The plan\'s words moved into general review';
+
+  @override
+  String get planWordsReleasedBody =>
+      'They will keep coming back in your daily sessions so they are not lost.';
+
+  @override
+  String get planArchive => 'Archive';
+
+  @override
+  String get planFinishedNewPlan => 'Make a new one';
+
+  @override
+  String homePlanCardBadge(int index, int total) {
+    return 'Plan · day $index of $total';
+  }
+
+  @override
+  String homePlanCardEventIn(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Event in $days days',
+      one: 'Event in $days day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homePlanCardEventToday => 'Event today';
+
+  @override
+  String homePlanCardReadiness(int hit, int total) {
+    return 'ready for the event · $hit of $total';
+  }
+
+  @override
+  String get homePlanCardContinue => 'Continue';
+
+  @override
+  String get homePlanInviteTitle => 'Got a date and a goal?';
+
+  @override
+  String get homePlanInviteBody =>
+      'We will build the preparation days — from a doctor\'s appointment to a job interview.';
+
+  @override
+  String get homePlanInviteCta => 'Make one';
 }

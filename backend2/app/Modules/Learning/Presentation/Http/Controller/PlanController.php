@@ -18,10 +18,16 @@ use App\Modules\Learning\Application\Command\ReschedulePlan;
 use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
 use App\Modules\Learning\Application\Command\StartPlanHandler;
+use App\Modules\Learning\Application\Dto\PlanDayTermView;
 use App\Modules\Learning\Application\Dto\PlanDayView;
+use App\Modules\Learning\Application\Dto\PlanSummaryView;
 use App\Modules\Learning\Application\Dto\PlanView;
 use App\Modules\Learning\Application\Query\GetPlan;
+use App\Modules\Learning\Application\Query\GetPlanDayTerms;
+use App\Modules\Learning\Application\Query\GetPlanDayTermsHandler;
 use App\Modules\Learning\Application\Query\GetPlanHandler;
+use App\Modules\Learning\Application\Query\ListPlans;
+use App\Modules\Learning\Application\Query\ListPlansHandler;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
@@ -62,6 +68,8 @@ final class PlanController
         private readonly StartPlanHandler $start,
         private readonly EndPlanHandler $end,
         private readonly GetPlanHandler $get,
+        private readonly ListPlansHandler $list,
+        private readonly GetPlanDayTermsHandler $dayTerms,
         private readonly BuildPlanSessionHandler $buildSession,
         private readonly RequestPlanDayHandler $requestDay,
     ) {}
@@ -116,6 +124,21 @@ final class PlanController
     public function abandon(Request $request, string $planId): JsonResponse
     {
         return $this->finish($request, $planId, EndPlan::ABANDON);
+    }
+
+    /**
+     * Every plan this learner has run, newest first — the finished one and the archive under it.
+     *
+     * Summaries, not whole plans: a full read runs the progress computation per day, and this is a
+     * list of rows that say «Аренда квартиры · июль · 4 дня».
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $plans = ($this->list)(new ListPlans($this->actorId($request)));
+
+        return new JsonResponse([
+            'data' => array_map(static fn (PlanSummaryView $p): array => $p->toArray(), $plans),
+        ]);
     }
 
     /** The plan the learner is currently on, or 204 when there is none. */
@@ -177,7 +200,13 @@ final class PlanController
 
         foreach ($plan->days as $day) {
             if ($day->index === (int) $dayIndex) {
-                return new JsonResponse(['data' => $this->dayBody($plan, $day)]);
+                $terms = ($this->dayTerms)(new GetPlanDayTerms(
+                    actorId: $this->actorId($request),
+                    planId: $plan->id,
+                    dayIndex: $day->index,
+                )) ?? [];
+
+                return new JsonResponse(['data' => $this->dayBody($plan, $day, $terms)]);
             }
         }
 
@@ -191,14 +220,20 @@ final class PlanController
         return $this->show($request, $planId);
     }
 
-    /** @return array<string, mixed> */
-    private function dayBody(PlanView $plan, PlanDayView $day): array
+    /**
+     * @param  list<PlanDayTermView>  $terms
+     * @return array<string, mixed>
+     */
+    private function dayBody(PlanView $plan, PlanDayView $day, array $terms): array
     {
         // The day carries its plan's binding lists with it: the client reading one day needs the
         // entities and the goal terms to render it, and a second request for the plan to get them
         // would be a round trip for data the server already had in hand.
         return [
             ...PlanResource::day($day),
+            // The register, with a stage on every row. Nothing on the device could compute this —
+            // a stage is a function of the review log, and the mirror holds answers, not stages.
+            'terms' => array_map(static fn (PlanDayTermView $t): array => $t->toArray(), $terms),
             'plan_id' => $plan->id,
             'plan_title' => $plan->title,
             'support_lang' => $plan->supportLang,

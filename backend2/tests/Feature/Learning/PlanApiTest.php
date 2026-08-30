@@ -363,6 +363,72 @@ it('abandoning releases the hold and leaves the words in the pool', function () 
         ->assertJsonPath('data.changed', true);
 });
 
+it('serves a day with its register — every word, with the stage it stands on', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+    $headers = ['Authorization' => "Bearer {$token}"];
+
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+    $this->withHeaders($headers)->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    $day = $this->withHeaders($headers)
+        ->getJson("/api/v1/plans/{$plan['id']}/days/1")
+        ->assertOk()
+        ->json('data');
+
+    expect($day['terms'])->not->toBeEmpty();
+    foreach ($day['terms'] as $term) {
+        // A word nobody has answered yet stands on stage A, and every row names where it came from
+        // — which is what «B · со дня 1» is drawn from on a later day.
+        expect($term['stage'])->toBeIn(['a', 'b', 'c'])
+            ->and($term['from_day_index'])->toBe(1)
+            ->and($term['type'])->toBeString()
+            ->and($term['text'])->toBeString();
+    }
+});
+
+/**
+ * PLAN-1c, кадр 08: the plan card sits ABOVE the «сегодня» plate because they are two different
+ * piles of work. A word counted in both is the screen asking the learner to do it twice, and the
+ * two counters would then disagree about how big the day is.
+ */
+it('keeps the plan words out of the ordinary day while the plan is running', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+    $headers = ['Authorization' => "Bearer {$token}"];
+
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+    $this->withHeaders($headers)->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    // The plan HAS enrolled its words — they are in the pool, held by it…
+    $held = DB::table('user_term_progress')
+        ->where('user_id', $user->id)
+        ->whereRaw("enrollment_sources @> ?::jsonb", [json_encode(['plan:' . $plan['id']])])
+        ->count();
+    expect($held)->toBeGreaterThan(0);
+
+    // …and the ordinary day does not know about a single one of them.
+    $home = $this->withHeaders($headers)->getJson('/api/v1/home-plan')->assertOk()->json('data');
+    expect($home['in_work']['total'])->toBe(0)
+        ->and($home['session']['repeat'] + $home['session']['new'])->toBe(0);
+
+    // Nor does the session the ordinary day would open.
+    $session = $this->withHeaders($headers)
+        ->postJson('/api/v1/study/sessions', ['session_id' => (string) \Illuminate\Support\Str::ulid(), 'limit' => 20])
+        ->assertOk()
+        ->json('data');
+    expect($session['cards'])->toBe([]);
+
+    // The plan lets go → the same words rejoin the ordinary rotation. «18 слов ушли в общее
+    // повторение» (кадр 11) is this predicate ceasing to match, and nothing else.
+    $this->withHeaders($headers)->postJson("/api/v1/plans/{$plan['id']}/abandon")->assertOk();
+
+    $after = $this->withHeaders($headers)->getJson('/api/v1/home-plan')->assertOk()->json('data');
+    expect($after['in_work']['total'])->toBe($held);
+});
+
 it('leaves a word the learner saved by hand studiable after the plan lets go', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);

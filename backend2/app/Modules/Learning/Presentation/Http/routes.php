@@ -32,6 +32,8 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     // Learning plans. `/plans/active` sits BEFORE `/plans/{planId}` — otherwise «active» is
     // matched as a plan id and answers 404 forever.
     Route::post('/plans', [PlanController::class, 'store']);
+    // The finished plan and the archive under it — everything that is not a draft, newest first.
+    Route::get('/plans', [PlanController::class, 'index']);
     Route::get('/plans/active', [PlanController::class, 'active']);
     Route::get('/plans/{planId}', [PlanController::class, 'show']);
     Route::get('/plans/{planId}/days/{dayIndex}', [PlanController::class, 'day']);

@@ -31,6 +31,9 @@ final class EloquentDueTermsReader implements DueTermsReader
         }
 
         $rows = $query
+            // A word a running plan is standing on is dealt BY THE PLAN and by nothing else. See
+            // {@see PlanHeldTerms} for the whole rule and for what happens when the plan ends.
+            ->whereRaw(PlanHeldTerms::NOT_HELD)
             ->where(static function (BuilderContract $q) use ($now): void {
                 $q->where(static fn (BuilderContract $q) => self::owedInPool($q, $now))
                     // A «знаю» VERIFICATION rides beside the pool, and it is the one card in the app
@@ -91,6 +94,9 @@ final class EloquentDueTermsReader implements DueTermsReader
         }
 
         $rows = $query
+            // …and a plan's first meetings are the plan's own too: they must not be spent out of the
+            // ordinary day's new-word quota before the plan's day has dealt them.
+            ->whereRaw(PlanHeldTerms::NOT_HELD)
             ->where('acquisition', Acquisition::New->value)
             // JUST-ENROLLED FIRST, and then first enrolled, first taught. The second half is the
             // queue's own rule; the first is what makes «Учить сразу» visible on a day that is

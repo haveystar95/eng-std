@@ -1764,6 +1764,31 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+    get:
+      tags: [Plans]
+      summary: Every plan this learner has run, newest first
+      description: >-
+        SUMMARIES, not whole plans: the План tab shows the finished preparation at the top and an
+        archive of the ones before it, and each row says three words. A full read runs the per-day
+        progress computation, which is a collection read, a content read and a review-log read per
+        day — for a list, that is the wrong price.
+
+        Drafts are excluded. A draft is a plan somebody started describing and walked away from,
+        and an archive of those is a list of abandoned sentences rather than of preparations that
+        happened.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PlanSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /plans/active:
     get:
       tags: [Plans]
@@ -1795,11 +1820,17 @@ paths:
   /plans/{planId}/days/{dayIndex}:
     get:
       tags: [Plans]
-      summary: One day of a plan
+      summary: One day of a plan, with its register
       description: >-
         The day, plus the plan's binding lists beside it (`entities`, `constraints`, `goal_terms`)
         — a client rendering one day needs them, and a second request for the plan to get them
         would be a round trip for data the server already had in hand.
+
+        `terms` is the day's REGISTER: its own phrases and words first, then everything still in
+        flight from earlier days (`from_day_index` smaller than this day's), each with the STAGE it
+        stands on. The stage is why this cannot be a collection id the client resolves against its
+        own mirror: a stage is stored nowhere. It is a pure function of the review log, computed on
+        every read, and the device's mirror holds answers rather than stages.
       parameters:
         - $ref: '#/components/parameters/PlanId'
         - name: dayIndex
@@ -2491,6 +2522,50 @@ components:
           description: >-
             The one person on the other side of the day's conversation, with the lines they open
             with. Null for a day that genuinely has nobody to talk to.
+        terms:
+          type: array
+          description: >-
+            The day's REGISTER, present on `GET /plans/{planId}/days/{dayIndex}` and absent from
+            the day rows inside a whole plan (the plan payload would then carry the ladder for
+            every day of every read).
+          items: { $ref: '#/components/schemas/PlanDayTerm' }
+
+    PlanDayTerm:
+      type: object
+      description: >-
+        One word or phrase of a day, with the stage it stands on. Stored nowhere: the stage is a
+        pure function of the review log ({@see PlanStageLadder}) and is computed on every read.
+      required: [id, text, type, stage, from_day_index]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        text: { type: string }
+        translation: { type: [string, 'null'] }
+        type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
+        stage: { type: string, enum: [a, b, c] }
+        stage_complete: { type: boolean }
+        finished:
+          type: boolean
+          description: All three stages are behind it. A carried term that is finished is not listed.
+        from_day_index:
+          type: integer
+          description: >-
+            The day that INTRODUCED it. Equal to the day being read for its own words, smaller for
+            one carried in — which is what «B · со дня 1» is drawn from.
+
+    PlanSummary:
+      type: object
+      description: A plan as an archive row — «Аренда квартиры · июль · 4 дня».
+      required: [id, status, title, event_date, day_count]
+      properties:
+        id: { type: string, minLength: 26, maxLength: 26 }
+        status: { type: string, enum: [active, paused, completed, abandoned] }
+        title: { type: string }
+        target_lang: { type: string }
+        event_date: { type: string, format: date }
+        day_count: { type: integer }
+        started_at: { type: [string, 'null'], format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+
     Problem:
       type: object
       description: RFC 7807 with a stable machine `code`.
