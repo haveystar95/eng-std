@@ -8,6 +8,7 @@ import 'package:eng_std/data/providers.dart';
 import 'package:eng_std/features/plan/plan_builder_screen.dart';
 import 'package:eng_std/features/plan/plan_day_screen.dart';
 import 'package:eng_std/features/plan/plan_day_summary.dart';
+import 'package:eng_std/features/plan/plan_screen.dart';
 import 'package:eng_std/features/plan/plan_tab_screen.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 import 'package:eng_std/ui/ui.dart';
@@ -190,6 +191,22 @@ void main() {
     expect(find.text('B · со дня 1'), findsOneWidget);
     // The conversation is present and honestly locked, not hidden.
     expect(find.text('РАЗГОВОР'), findsOneWidget);
+  });
+
+  testWidgets('a running plan can always be given up — there is no other way out', (tester) async {
+    // The server allows ONE running plan per learner. Without this link the only exit from a plan is
+    // its own event, which makes a plan that went wrong a trap. No frame of «Фаза 4» draws it; the
+    // product needs it, so the guard names it rather than leaving it to be «tidied away» later.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [planProvider('01PLAN').overrideWith((ref) async => _plan())],
+        child: _app(const PlanScreen(planId: '01PLAN')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Отказаться от плана'), 300);
+    expect(find.text('Отказаться от плана'), findsOneWidget);
   });
 
   testWidgets('a day out of attempts does not offer a button that cannot work', (tester) async {

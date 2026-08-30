@@ -2799,17 +2799,20 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.';
 
   @override
+  String get planAbandonLink => 'Отказаться от плана';
+
+  @override
   String get planDayRebuildPlan => 'Собрать план заново';
 
   @override
-  String get planDayRebuildTitle => 'Отказаться от этого плана?';
+  String get planAbandonTitle => 'Отказаться от этого плана?';
 
   @override
-  String get planDayRebuildBody =>
+  String get planAbandonBody =>
       'План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.';
 
   @override
-  String get planDayRebuildConfirm => 'Отказаться';
+  String get planAbandonConfirm => 'Отказаться';
 
   @override
   String get planBuildingRefused =>

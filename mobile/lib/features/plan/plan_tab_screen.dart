@@ -338,6 +338,48 @@ double _bottomInset(BuildContext context) =>
     MediaQuery.viewPaddingOf(context).bottom +
     AppSpacing.s8;
 
+/// «Отказаться от плана» — THE ONE WAY OUT, and the only one there is.
+///
+/// The server allows a learner ONE running plan, so without this the only exit from a plan is its
+/// own event: answer «Как прошло?» on the day, or wait. That is a trap, and it is why this control
+/// exists even though no frame of «Фаза 4» draws it. It is drawn in the app's established shape for
+/// a destructive act rather than an invented one — terracotta text, no fill, a centre alert that
+/// says what happens (rule 20, the same as «Удалить аккаунт» and a collection's delete).
+///
+/// ABANDON and not pause: a pause keeps the hold on the pool («я вернусь»), and a learner asking to
+/// get out of a plan is not asking to keep it. Pause has its own meaning and would need its own
+/// frame to earn a second control here.
+///
+/// One function for both entrances — the plan screen and a day that has run out of build attempts —
+/// so they cannot come to differ in what they confirm, what they call, or what they re-read after.
+/// Returns true when the plan was actually given up.
+Future<bool> abandonPlan(BuildContext context, WidgetRef ref, String planId) async {
+  final l = AppLocalizations.of(context);
+  AppHaptics.light();
+
+  final ok = await showCenterAlert(
+    context: context,
+    title: l.planAbandonTitle,
+    message: l.planAbandonBody,
+    confirmLabel: l.planAbandonConfirm,
+    cancelLabel: l.commonCancel,
+  );
+  if (ok != true || !context.mounted) return false;
+
+  try {
+    await ref.read(apiClientProvider).abandonPlan(planId);
+  } catch (_) {
+    // Offline, or a plan that is already gone. Either way the screens re-read below and say what is
+    // actually true; an error here would be a second sentence about the same fact.
+  }
+  ref.invalidate(activePlanProvider);
+  ref.invalidate(planArchiveProvider);
+  // The plan's words are back in the ordinary day — the home screen's tile has just changed.
+  ref.read(syncServiceProvider).sync();
+
+  return true;
+}
+
 /// «Составить план» — THE ONE DOOR, opened from three places (the empty tab, the finished tab, and
 /// the home invitation), so the three cannot come to differ in what they open or in what they
 /// invalidate when the learner comes back.

@@ -2673,17 +2673,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This day failed to build twice in a row, and the server will not try again. It happens when the model returns material in the wrong language. The plan has to be built again.';
 
   @override
+  String get planAbandonLink => 'Give up on this plan';
+
+  @override
   String get planDayRebuildPlan => 'Build the plan again';
 
   @override
-  String get planDayRebuildTitle => 'Give up on this plan?';
+  String get planAbandonTitle => 'Give up on this plan?';
 
   @override
-  String get planDayRebuildBody =>
+  String get planAbandonBody =>
       'The plan goes to the archive and its words into general review. The days that did build stay as ordinary collections.';
 
   @override
-  String get planDayRebuildConfirm => 'Give up';
+  String get planAbandonConfirm => 'Give up';
 
   @override
   String get planBuildingRefused =>

@@ -12,6 +12,7 @@ import '../../data/providers.dart';
 import 'plan_day_screen.dart';
 import 'plan_feedback_screen.dart';
 import 'plan_rehearsal_screen.dart';
+import 'plan_tab_screen.dart' show abandonPlan;
 import 'plan_ui.dart';
 
 /// THE ACTIVE PLAN — кадр 1c · 01, plus the readiness block the наряд asks for.
@@ -153,6 +154,24 @@ class _PlanBody extends ConsumerWidget {
                     minHeight: 52,
                     onPressed: () => _openDay(context, plan, focus.index),
                   ),
+                // THE WAY OUT, and the only one there is. The server allows one running plan per
+                // learner, so without this the only exit is the plan's own event. Quiet terracotta
+                // text under the action, the app's established shape for a destructive act (rule
+                // 20: no fill) — «Фаза 4» draws no such control, and a product that can be entered
+                // and not left is worse than a frame with one more link on it.
+                const SizedBox(height: AppSpacing.s22),
+                Center(
+                  child: MinTapHeight(
+                    onTap: () => abandonPlan(context, ref, plan.id),
+                    child: Text(
+                      l.planAbandonLink,
+                      style: AppText.translation.copyWith(
+                        fontSize: 14,
+                        color: AppColors.destructiveText,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

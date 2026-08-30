@@ -12,6 +12,7 @@ import '../../data/plan_models.dart';
 import '../../data/providers.dart';
 import '../training/session_screen.dart';
 import 'plan_building_screen.dart';
+import 'plan_tab_screen.dart' show abandonPlan;
 import 'plan_ui.dart';
 
 /// ONE DAY OF A PLAN — кадр 1c · 02.
@@ -219,7 +220,7 @@ class _NotWrittenYet extends ConsumerWidget {
           PrimaryButton(
             label: l.planDayRebuildPlan,
             minHeight: 52,
-            onPressed: () => _rebuild(context, ref, l),
+            onPressed: () => _rebuild(context, ref),
           )
         else
           PrimaryButton(
@@ -238,26 +239,10 @@ class _NotWrittenYet extends ConsumerWidget {
     );
   }
 
-  Future<void> _rebuild(BuildContext context, WidgetRef ref, AppLocalizations l) async {
-    AppHaptics.light();
-    final ok = await showCenterAlert(
-      context: context,
-      title: l.planDayRebuildTitle,
-      message: l.planDayRebuildBody,
-      confirmLabel: l.planDayRebuildConfirm,
-      cancelLabel: l.commonCancel,
-    );
-    if (ok != true || !context.mounted) return;
-
-    try {
-      await ref.read(apiClientProvider).abandonPlan(plan.id);
-    } catch (_) {
-      // Offline, or a plan that is already gone. Either way the screens below re-read and say what
-      // is actually true; a thrown error here would be a second sentence about the same fact.
-    }
-    if (!context.mounted) return;
-    ref.invalidate(activePlanProvider);
-    ref.invalidate(planArchiveProvider);
+  /// The same act as the plan screen's own «Отказаться от плана», through the same function — two
+  /// entrances to one decision must not come to differ in what they confirm or what they leave.
+  Future<void> _rebuild(BuildContext context, WidgetRef ref) async {
+    if (!await abandonPlan(context, ref, plan.id) || !context.mounted) return;
     // Back to the tab, which is now the empty state with «Составить план» on it.
     Navigator.of(context).popUntil((route) => route.isFirst);
   }

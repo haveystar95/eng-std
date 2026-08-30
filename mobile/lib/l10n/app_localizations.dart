@@ -4053,29 +4053,35 @@ abstract class AppLocalizations {
   /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.'**
   String get planDayExhausted;
 
+  /// Тихая деструктивная ссылка внизу экрана плана. В кадрах макета её нет: сервер держит один активный план на человека, и без неё юзер заперт в плане до конца события.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отказаться от плана'**
+  String get planAbandonLink;
+
   /// Единственное, что может помочь на исчерпанном дне.
   ///
   /// In ru, this message translates to:
   /// **'Собрать план заново'**
   String get planDayRebuildPlan;
 
-  /// Подтверждение перед отказом от плана с несобираемым днём.
+  /// Подтверждение перед отказом от плана — с экрана плана и с несобираемого дня. Одна формулировка на оба входа: последствие одно.
   ///
   /// In ru, this message translates to:
   /// **'Отказаться от этого плана?'**
-  String get planDayRebuildTitle;
+  String get planAbandonTitle;
 
   /// Что произойдёт при отказе от плана.
   ///
   /// In ru, this message translates to:
   /// **'План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.'**
-  String get planDayRebuildBody;
+  String get planAbandonBody;
 
   /// Кнопка подтверждения отказа.
   ///
   /// In ru, this message translates to:
   /// **'Отказаться'**
-  String get planDayRebuildConfirm;
+  String get planAbandonConfirm;
 
   /// Сервер ОТКАЗАЛ, а не задержался: ждать нечего.
   ///
