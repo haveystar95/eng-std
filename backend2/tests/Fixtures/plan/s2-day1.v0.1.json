@@ -1,0 +1,185 @@
+{
+  "day_index": 1,
+  "day_title": "Пройти основные этапы интервью",
+  "phrases": [
+    {
+      "text": "I'm a PHP developer with about five years of experience.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Я PHP-разработчик с опытом около пяти лет.",
+      "transliteration": "айм э пиэйчпи дивелопер уиз эбаут файв йирз ов икспириэнс",
+      "description": "You say this when you introduce your job and how long you have worked in it.",
+      "example": "In my last role, I was a PHP developer working mainly on backend services.",
+      "example_translation": "На моей последней должности я был PHP-разработчиком и работал в основном над серверными сервисами.",
+      "covers_checkpoint": 1
+    },
+    {
+      "text": "Most of my work has been backend development and API integration.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Большая часть моей работы была связана с бэкенд-разработкой и интеграцией API.",
+      "transliteration": "моуст ов май уорк хэз бин бэкэнд дивелопмент энд эйпиай интегрэйшн",
+      "description": "You say this when you explain your main technical area and typical tasks.",
+      "example": "On my last project, most of my work was backend development for a payment system.",
+      "example_translation": "На моём последнем проекте большая часть моей работы была бэкенд-разработкой для платёжной системы.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "In my current role, I'm responsible for building and maintaining web applications.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "На моей текущей должности я отвечаю за разработку и поддержку веб-приложений.",
+      "transliteration": "ин май карэнт роул айм риспонсибл фор билдинг энд мэйнтэйнинг вэб эпликейшнз",
+      "description": "You say this when the interviewer asks what you do in your job now.",
+      "example": "I'm also responsible for code reviews and production support.",
+      "example_translation": "Я также отвечаю за ревью кода и поддержку продакшена.",
+      "covers_checkpoint": 1
+    },
+    {
+      "text": "One project involved improving performance in a high-load system.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Один проект включал улучшение производительности в высоконагруженной системе.",
+      "transliteration": "уан проджект инволвд импрувинг перформэнс ин э хай-лоуд систем",
+      "description": "You say this when giving a concrete example of a technical challenge.",
+      "example": "That high-load system needed better caching and faster database queries.",
+      "example_translation": "Этой высоконагруженной системе требовались лучшее кэширование и более быстрые запросы к базе данных.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "I usually work closely with product managers and QA engineers.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Обычно я тесно работаю с продакт-менеджерами и QA-инженерами.",
+      "transliteration": "ай южуэли уорк клоусли уиз продакт мэниджерз энд кьюэй инджинирз",
+      "description": "You say this when describing who you coordinate with in your team.",
+      "example": "In a remote team, I work closely with QA to clarify issues quickly.",
+      "example_translation": "В удалённой команде я тесно работаю с QA, чтобы быстро уточнять проблемы.",
+      "covers_checkpoint": 3
+    },
+    {
+      "text": "Could you repeat the last part? The connection cut out for a moment.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Не могли бы вы повторить последнюю часть? Связь на минуту прервалась.",
+      "transliteration": "куд ю рипит зе ласт парт зе конэкшн кат аут фор э моумэнт",
+      "description": "You say this during an online call when you did not hear something clearly.",
+      "example": "Sorry, the connection cut out again, so I missed your question.",
+      "example_translation": "Извините, связь снова прервалась, поэтому я пропустил ваш вопрос.",
+      "covers_checkpoint": 3
+    },
+    {
+      "text": "If I understood correctly, you're asking about my last project, right?",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Если я правильно понял, вы спрашиваете о моём последнем проекте, верно?",
+      "transliteration": "иф ай андэрстуд корэктли йор эскинг эбаут май ласт проджект райт",
+      "description": "You say this to check the topic before you answer.",
+      "example": "If I understood correctly, you want a brief answer about my recent experience.",
+      "example_translation": "Если я правильно понял, вам нужен краткий ответ о моём недавнем опыте.",
+      "covers_checkpoint": 3
+    },
+    {
+      "text": "Yes, let me answer that in two or three sentences.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Да, позвольте мне ответить на это в двух-трёх предложениях.",
+      "transliteration": "йес лет ми ансэр зэт ин ту ор сри сэнтэнсиз",
+      "description": "You say this when the interviewer asks for a short and focused answer.",
+      "example": "Let me answer briefly and focus on the main challenge.",
+      "example_translation": "Позвольте мне ответить кратко и сосредоточиться на основной задаче.",
+      "covers_checkpoint": 1
+    }
+  ],
+  "words": [
+    {
+      "text": "backend",
+      "type": "word",
+      "is_line": false,
+      "translation": "бэкенд",
+      "transliteration": "бэкэнд",
+      "description": "This means the server part of a software system, not the user-facing screen.",
+      "example": "I moved from frontend tasks to backend work two years ago.",
+      "example_translation": "Два года назад я перешёл от задач на фронтенде к работе на бэкенде.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "maintain",
+      "type": "word",
+      "is_line": false,
+      "translation": "поддерживать",
+      "transliteration": "мэйнтейн",
+      "description": "This means to keep software working well over time by updating and fixing it.",
+      "example": "We maintain several internal tools used by the whole team.",
+      "example_translation": "Мы поддерживаем несколько внутренних инструментов, которыми пользуется вся команда.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "high-load",
+      "type": "phrase",
+      "is_line": false,
+      "translation": "высоконагруженный",
+      "transliteration": "хай-лоуд",
+      "description": "This describes a system that gets a lot of traffic or many requests.",
+      "example": "It was a high-load service, so performance was a big concern.",
+      "example_translation": "Это был высоконагруженный сервис, поэтому производительность была важной задачей.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "performance",
+      "type": "word",
+      "is_line": false,
+      "translation": "производительность",
+      "transliteration": "перформэнс",
+      "description": "This means how fast and efficiently a system works.",
+      "example": "We improved performance by reducing unnecessary database calls.",
+      "example_translation": "Мы улучшили производительность, сократив лишние обращения к базе данных.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "code review",
+      "type": "phrase",
+      "is_line": false,
+      "translation": "ревью кода",
+      "transliteration": "коуд ривью",
+      "description": "This is the process of checking another developer's changes before they are accepted.",
+      "example": "Every change goes through code review before deployment.",
+      "example_translation": "Каждое изменение проходит ревью кода перед деплоем.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "deployment",
+      "type": "word",
+      "is_line": false,
+      "translation": "развёртывание",
+      "transliteration": "диплоймэнт",
+      "description": "This means putting new software changes into a live or test environment.",
+      "example": "I usually help with deployment when a release is scheduled.",
+      "example_translation": "Обычно я помогаю с развёртыванием, когда запланирован релиз.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "clarify",
+      "type": "word",
+      "is_line": false,
+      "translation": "уточнить",
+      "transliteration": "клэрифай",
+      "description": "This means to make something clearer so there is no confusion.",
+      "example": "I asked the interviewer to clarify the question before I answered.",
+      "example_translation": "Я попросил интервьюера уточнить вопрос перед тем, как ответить.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "remote",
+      "type": "word",
+      "is_line": false,
+      "translation": "удалённый",
+      "transliteration": "римоут",
+      "description": "This describes work done from different places, not in one office together.",
+      "example": "In my previous remote team, we had daily calls in English.",
+      "example_translation": "В моей предыдущей удалённой команде у нас были ежедневные созвоны на английском.",
+      "covers_checkpoint": null
+    }
+  ],
+  "known": []
+}

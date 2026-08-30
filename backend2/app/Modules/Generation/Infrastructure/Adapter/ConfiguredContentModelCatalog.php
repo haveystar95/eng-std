@@ -94,7 +94,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
         return $out;
     }
 
-    public function get(ProviderId $provider, ?string $model = null): ?ContentModelPort
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null): ?ContentModelPort
     {
         $row = $this->config[$provider->value];
         $key = trim($row['key']);
@@ -106,6 +106,10 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
             ? trim($model)
             : ($row['model'] !== '' ? $row['model'] : $row['default_model']);
 
+        // Null means «whatever this adapter calls itself», which is `generation` — the label
+        // every caller but the learning plan wants.
+        $purpose = $purpose !== null && trim($purpose) !== '' ? trim($purpose) : 'generation';
+
         return match ($provider) {
             ProviderId::Gemini => new GeminiContentModel(
                 context: $this->context,
@@ -113,6 +117,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 model: $model,
                 baseUrl: $row['base'],
                 timeoutSeconds: $this->timeoutSeconds,
+                purpose: $purpose,
             ),
             ProviderId::Anthropic => new AnthropicContentModel(
                 context: $this->context,
@@ -120,6 +125,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 model: $model,
                 baseUrl: $row['base'],
                 timeoutSeconds: $this->timeoutSeconds,
+                purpose: $purpose,
             ),
             // OpenAI and xAI speak the same wire format — see OpenAiCompatibleContentModel.
             ProviderId::OpenAi, ProviderId::Xai => new OpenAiCompatibleContentModel(
@@ -129,6 +135,7 @@ final readonly class ConfiguredContentModelCatalog implements ContentModelCatalo
                 model: $model,
                 baseUrl: $row['base'],
                 timeoutSeconds: $this->timeoutSeconds,
+                purpose: $purpose,
             ),
         };
     }

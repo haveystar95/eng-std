@@ -34,7 +34,15 @@ use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\EnabledModesWriter;
 use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
+use App\Modules\Learning\Application\Port\PlanReadinessReader;
+use App\Modules\Learning\Application\Port\PlanTermReleaser;
+use App\Modules\Learning\Domain\Repository\PlanDayRepository;
+use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanDayRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanReadinessReader;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanTermReleaser;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesWriter;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDailyStatsProjector;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentDueTermsReader;
@@ -104,6 +112,15 @@ final class LearningServiceProvider extends ServiceProvider
         $this->app->alias(EloquentEnabledModesReader::class, ModeAdmissionReader::class);
         $this->app->bind(EnabledModesWriter::class, EloquentEnabledModesWriter::class);
         $this->app->bind(ModeFallbackReporter::class, LoggingModeFallbackReporter::class);
+
+        // ---- learning plans ----------------------------------------------------------------
+        // The two ports a plan needs that only Generation can fulfil — PlanOutlinePort and
+        // DispatchesPlanDay — are bound in GenerationServiceProvider, beside the prompt files and
+        // the model catalogue they are made of. Everything below is Learning's own.
+        $this->app->bind(PlanRepository::class, EloquentPlanRepository::class);
+        $this->app->bind(PlanDayRepository::class, EloquentPlanDayRepository::class);
+        $this->app->bind(PlanTermReleaser::class, EloquentPlanTermReleaser::class);
+        $this->app->bind(PlanReadinessReader::class, EloquentPlanReadinessReader::class);
     }
 
     public function boot(): void

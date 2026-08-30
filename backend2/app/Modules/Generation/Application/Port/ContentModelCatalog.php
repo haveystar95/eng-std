@@ -37,6 +37,11 @@ interface ContentModelCatalog
      *        Needed because the interesting comparison is often within one vendor — the same core
      *        enriched by a cheap model and an expensive one — and re-pointing the shared config to
      *        do that would move every other caller with it.
+     * @param  string|null  $purpose  what the request log should say this spend was FOR. Null keeps
+     *        the adapter's default (`generation`), which is what every caller but the learning plan
+     *        means. It is a parameter and not a constant because one adapter now serves two
+     *        products with two budgets, and a cost screen that could not tell them apart would be
+     *        the same hole the `term_reading` whitelist migration was written to close.
      */
-    public function get(ProviderId $provider, ?string $model = null): ?ContentModelPort;
+    public function get(ProviderId $provider, ?string $model = null, ?string $purpose = null): ?ContentModelPort;
 }

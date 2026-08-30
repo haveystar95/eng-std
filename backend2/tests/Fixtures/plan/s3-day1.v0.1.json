@@ -1,0 +1,108 @@
+{
+  "day_index": 1,
+  "day_title": "Открыть визит и понять назначение",
+  "phrases": [
+    {
+      "text": "Am venit astăzi cu motanul pentru vaccin.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Я сегодня пришёл с котом на прививку.",
+      "transliteration": "ам венит астызь ку мотанул пентру вакчин",
+      "description": "Spui asta la începutul consultației, ca să explici clar scopul vizitei de azi.",
+      "example": "La început, i-am spus că am venit astăzi cu motanul pentru vaccin, dar are și o tuse ciudată.",
+      "example_translation": "В начале я сказал, что сегодня пришёл с котом на прививку, но у него ещё и странный кашель.",
+      "covers_checkpoint": 1
+    },
+    {
+      "text": "Are o tuse ciudată, ca și cum s-ar îneca.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "У него странный кашель, как будто он давится.",
+      "transliteration": "аре о тусе чудатэ ка ши кым сар ынека",
+      "description": "Spui asta când vrei să descrii repede cum sună problema.",
+      "example": "De două ori azi, a avut o tuse ciudată, ca și cum s-ar îneca.",
+      "example_translation": "Два раза сегодня у него был странный кашель, как будто он давится.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "A tușit de două ori astăzi.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Он кашлял два раза сегодня.",
+      "transliteration": "а тушит де доуэ орь астызь",
+      "description": "Spui asta când vrei să dai numărul de episoade din ziua de azi.",
+      "example": "În mașină a tușit de două ori astăzi, înainte să ajungem la clinică.",
+      "example_translation": "В машине он кашлял два раза сегодня, до того как мы приехали в клинику.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "Deci facem vaccinul azi și îl urmărim acasă?",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "То есть сегодня делаем прививку и наблюдаем за ним дома?",
+      "transliteration": "деч факем вакчинул азь ши ыл урмэрим акасэ",
+      "description": "Spui asta după explicația medicului, ca să verifici dacă ai înțeles planul.",
+      "example": "Dacă am înțeles bine, deci facem vaccinul azi și îl urmărim acasă.",
+      "example_translation": "Если я правильно понял, то есть сегодня делаем прививку и наблюдаем за ним дома.",
+      "covers_checkpoint": 3
+    },
+    {
+      "text": "Să revin dacă mai tușește?",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Мне снова прийти, если он ещё будет кашлять?",
+      "transliteration": "сэ ревин дакэ май тушеште",
+      "description": "Spui asta ca să confirmi ce faci mai departe dacă problema continuă.",
+      "example": "Dacă se întâmplă din nou mâine, să revin dacă mai tușește?",
+      "example_translation": "Если это снова случится завтра, мне снова прийти, если он ещё будет кашлять?",
+      "covers_checkpoint": 3
+    }
+  ],
+  "words": [
+    {
+      "text": "motanul",
+      "type": "word",
+      "is_line": false,
+      "translation": "кот",
+      "transliteration": "мотанул",
+      "description": "Animalul de companie masculin despre care vorbești la consultație.",
+      "example": "Veterinarul l-a ascultat pe motanul meu înainte de vaccin.",
+      "example_translation": "Ветеринар послушал моего кота перед прививкой.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "vaccin",
+      "type": "word",
+      "is_line": false,
+      "translation": "прививка",
+      "transliteration": "вакчин",
+      "description": "Injecția făcută pentru protecție medicală la această vizită.",
+      "example": "Am venit astăzi pentru vaccin, nu doar pentru control.",
+      "example_translation": "Я сегодня пришёл на прививку, а не только на осмотр.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "tuse",
+      "type": "word",
+      "is_line": false,
+      "translation": "кашель",
+      "transliteration": "тусе",
+      "description": "Sunetul sau problema de respirație pe care o observi la animal.",
+      "example": "Tusea lui sună ciudat mai ales seara.",
+      "example_translation": "Его кашель звучит странно, особенно вечером.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "a urmări",
+      "type": "phrase",
+      "is_line": false,
+      "translation": "наблюдать",
+      "transliteration": "а урмэри",
+      "description": "A te uita cu atenție la evoluția unei probleme după vizită.",
+      "example": "Veterinarul a spus să îl urmărim acasă până mâine.",
+      "example_translation": "Ветеринар сказал наблюдать за ним дома до завтра.",
+      "covers_checkpoint": null
+    }
+  ],
+  "known": []
+}

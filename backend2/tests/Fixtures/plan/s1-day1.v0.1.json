@@ -1,0 +1,108 @@
+{
+  "day_index": 1,
+  "day_title": "Начать приём и описать боль",
+  "phrases": [
+    {
+      "text": "I'm here because my back hurts.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Я здесь, потому что у меня болит спина.",
+      "transliteration": "айм хиэ бикоз май бэк хёртс",
+      "description": "You say this at the start of the visit to explain the reason for coming.",
+      "example": "I'm here because my back hurts, and it's getting worse.",
+      "example_translation": "Я здесь, потому что у меня болит спина, и становится хуже.",
+      "covers_checkpoint": 1
+    },
+    {
+      "text": "It hurts in my lower back.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "У меня болит в пояснице.",
+      "transliteration": "ит хёртс ин май лоуэр бэк",
+      "description": "You say this to show the exact place of the pain in the back.",
+      "example": "It hurts in my lower back, on the left side.",
+      "example_translation": "У меня болит в пояснице, с левой стороны.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "It's been like this for a week.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Это продолжается уже неделю.",
+      "transliteration": "итс бин лайк зис фор э уик",
+      "description": "You say this when the doctor asks how long the problem has lasted.",
+      "example": "It's been like this for a week, and my lower back still hurts.",
+      "example_translation": "Это продолжается уже неделю, и поясница всё ещё болит.",
+      "covers_checkpoint": 3
+    },
+    {
+      "text": "It feels worse when I stand up.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Становится хуже, когда я встаю.",
+      "transliteration": "ит филз вёрс уэн ай стэнд ап",
+      "description": "You say this to give one simple detail about when the problem is stronger.",
+      "example": "It feels worse when I stand up after a long time.",
+      "example_translation": "Становится хуже, когда я встаю после долгого времени.",
+      "covers_checkpoint": null
+    }
+  ],
+  "words": [
+    {
+      "text": "back",
+      "type": "word",
+      "is_line": false,
+      "translation": "спина",
+      "transliteration": "бэк",
+      "description": "The part of your body from your neck down to your waist behind you.",
+      "example": "My back hurts when I stand up.",
+      "example_translation": "У меня болит спина, когда я встаю.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "lower back",
+      "type": "phrase",
+      "is_line": false,
+      "translation": "поясница",
+      "transliteration": "лоуэр бэк",
+      "description": "The area at the bottom of the back, above the hips.",
+      "example": "The pain is in my lower back.",
+      "example_translation": "Боль у меня в пояснице.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "pain",
+      "type": "word",
+      "is_line": false,
+      "translation": "боль",
+      "transliteration": "пэйн",
+      "description": "An unpleasant feeling in your body when something hurts.",
+      "example": "The pain started about a week ago.",
+      "example_translation": "Боль началась примерно неделю назад.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "week",
+      "type": "word",
+      "is_line": false,
+      "translation": "неделя",
+      "transliteration": "уик",
+      "description": "A period of seven days.",
+      "example": "My back has been hurting for a week now.",
+      "example_translation": "Спина болит у меня уже неделю.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "worse",
+      "type": "word",
+      "is_line": false,
+      "translation": "хуже",
+      "transliteration": "вёрс",
+      "description": "More difficult, more serious, or more painful than before.",
+      "example": "The pain gets worse in the evening.",
+      "example_translation": "Боль усиливается вечером.",
+      "covers_checkpoint": null
+    }
+  ],
+  "known": []
+}

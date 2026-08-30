@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Domain\Entity;
 
 use App\Modules\Learning\Domain\Service\LearningLadder;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
+use App\Modules\Learning\Domain\ValueObject\EnrollmentSources;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -56,6 +57,12 @@ final class TermProgress
         private readonly int $learningStep = 0,
         private readonly int $successfulReviews = 0,
         private readonly ?DateTimeImmutable $enrolledAt = null,
+        /**
+         * WHY the pair is in the pool — every reason, not the latest one. Empty whenever
+         * `enrolledAt` is null, and never the other way round: a reason without an enrolment is a
+         * claim about something that did not happen.
+         */
+        private readonly ?EnrollmentSources $enrollmentSources = null,
     ) {}
 
     /**
@@ -105,6 +112,7 @@ final class TermProgress
             // word, that they want it worked on. That is what puts a pair in the pool — never the
             // mere existence of a row.
             Acquisition::Learning, LearningLadder::FIRST_LADDER_STEP, 0, $now,
+            EnrollmentSources::triage(),
         );
     }
 
@@ -175,6 +183,7 @@ final class TermProgress
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
             $this->acquisition, $this->learningStep, $this->successfulReviews + 1, $this->enrolledAt,
+            $this->enrollmentSources,
         );
     }
 
@@ -184,7 +193,7 @@ final class TermProgress
         return new self(
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
-            $acquisition, $learningStep, $this->successfulReviews, $this->enrolledAt,
+            $acquisition, $learningStep, $this->successfulReviews, $this->enrolledAt, $this->enrollmentSources,
         );
     }
 
@@ -209,6 +218,7 @@ final class TermProgress
             // well the word is known, not about whether it is being studied; the triage handler
             // enrols it separately, by the same rule every other «не знаю» goes through.
             Acquisition::New, LearningLadder::STEP_INTRO, $this->successfulReviews, $this->enrolledAt,
+            $this->enrollmentSources,
         );
     }
 
@@ -227,6 +237,7 @@ final class TermProgress
             $this->userId, $this->termId, LearningState::Learning, self::DEFAULT_EASE, 0, $now,
             $this->reps, $this->lapses, $now,
             $this->acquisition, $this->learningStep, $this->successfulReviews, $this->enrolledAt,
+            $this->enrollmentSources,
         );
     }
 
@@ -238,6 +249,7 @@ final class TermProgress
             $now->add(new DateInterval('P' . $days . 'D')),
             $this->reps, $this->lapses, $now,
             $this->acquisition, $this->learningStep, $this->successfulReviews, $this->enrolledAt,
+            $this->enrollmentSources,
         );
     }
 
@@ -256,11 +268,12 @@ final class TermProgress
         int $learningStep = 0,
         int $successfulReviews = 0,
         ?DateTimeImmutable $enrolledAt = null,
+        ?EnrollmentSources $enrollmentSources = null,
     ): self {
         return new self(
             $userId, $termId, $state, $easeFactor, $intervalDays,
             $dueAt, $reps, $lapses, $lastReviewedAt,
-            $acquisition, $learningStep, $successfulReviews, $enrolledAt,
+            $acquisition, $learningStep, $successfulReviews, $enrolledAt, $enrollmentSources,
         );
     }
 
@@ -272,13 +285,37 @@ final class TermProgress
      * a second tap, a replayed offline batch, or a swipe that arrives twice. Nothing else on the row
      * moves — a pair returning after a pause resumes at the rung and the due date it left with.
      */
-    public function enroll(DateTimeImmutable $now): self
+    public function enroll(DateTimeImmutable $now, string $source = EnrollmentSources::MANUAL): self
     {
+        $sources = $this->enrollmentSources();
+
+        // ALREADY in the pool: the moment stands, and so does every reason already on the row —
+        // but a NEW reason is added. That combination is the whole point of the list. A word the
+        // learner saved by hand in June and that a plan needs in August is held by both, and when
+        // the plan ends the learner's own reason has to still be there.
         if ($this->enrolledAt !== null) {
-            return $this;
+            $withSource = $sources->with($source);
+
+            return $withSource === $sources ? $this : $this->withEnrolment($this->enrolledAt, $withSource);
         }
 
-        return $this->withEnrolment($now);
+        return $this->withEnrolment($now, $sources->with($source));
+    }
+
+    /**
+     * A plan let go of this pair — it finished, or the learner abandoned it.
+     *
+     * The reason comes off; the ENROLMENT does not. The learner spent days on this word and it
+     * carries a rung, a schedule and a history, so a plan ending is not a reason to stop studying
+     * it — it is a reason to stop refusing to let them. A pair left with no reason at all is a
+     * normal, ordinary pool word.
+     */
+    public function releasePlan(string $planId): self
+    {
+        $sources = $this->enrollmentSources();
+        $after = $sources->without(EnrollmentSources::forPlan($planId));
+
+        return $after->sources === $sources->sources ? $this : $this->withEnrolment($this->enrolledAt, $after);
     }
 
     /**
@@ -291,7 +328,9 @@ final class TermProgress
      */
     public function unenroll(): self
     {
-        return $this->withEnrolment(null);
+        // The reasons go with the enrolment. A reason on a pair that is not in the pool is a claim
+        // about something that is not happening, and the next enrolment says why for itself.
+        return $this->withEnrolment(null, EnrollmentSources::empty());
     }
 
     /**
@@ -324,12 +363,19 @@ final class TermProgress
         return $this->enrolledAt;
     }
 
-    private function withEnrolment(?DateTimeImmutable $enrolledAt): self
+    /** Never null to a caller: an unenrolled pair simply has no reasons. */
+    public function enrollmentSources(): EnrollmentSources
+    {
+        return $this->enrollmentSources ?? EnrollmentSources::empty();
+    }
+
+    private function withEnrolment(?DateTimeImmutable $enrolledAt, EnrollmentSources $sources): self
     {
         return new self(
             $this->userId, $this->termId, $this->state, $this->easeFactor, $this->intervalDays,
             $this->dueAt, $this->reps, $this->lapses, $this->lastReviewedAt,
             $this->acquisition, $this->learningStep, $this->successfulReviews, $enrolledAt,
+            $sources,
         );
     }
 

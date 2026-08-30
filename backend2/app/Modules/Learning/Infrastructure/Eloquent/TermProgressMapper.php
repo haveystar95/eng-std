@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Infrastructure\Eloquent;
 
 use App\Modules\Learning\Domain\Entity\TermProgress;
 use App\Modules\Learning\Domain\ValueObject\Acquisition;
+use App\Modules\Learning\Domain\ValueObject\EnrollmentSources;
 use App\Modules\Learning\Domain\ValueObject\LearningState;
 use App\Modules\Shared\Domain\ValueObject\TermId;
 use App\Modules\Shared\Domain\ValueObject\UserId;
@@ -35,6 +36,7 @@ final class TermProgressMapper
             learningStep: (int) $row['learning_step'],
             successfulReviews: (int) $row['successful_reviews'],
             enrolledAt: $this->toDate($row['enrolled_at'] ?? null),
+            enrollmentSources: $this->toSources($row['enrollment_sources'] ?? null),
         );
     }
 
@@ -56,6 +58,12 @@ final class TermProgressMapper
             // Pool membership: the third, independent fact on the row. Written only by enroll() /
             // unenroll(), and by nothing else — see TermProgress.
             'enrolled_at' => UtcInstant::bind($progress->enrolledAt()),
+            // WHY it is in the pool. A list, and encoded here rather than by a cast because this
+            // table has a composite key and is read through the query builder, which has none.
+            'enrollment_sources' => json_encode(
+                $progress->enrollmentSources()->sources,
+                JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR,
+            ),
             'ease_factor' => $progress->easeFactor(),
             'interval_days' => $progress->intervalDays(),
             'due_at' => UtcInstant::bind($progress->dueAt()),
@@ -63,6 +71,18 @@ final class TermProgressMapper
             'lapses' => $progress->lapses(),
             'last_reviewed_at' => UtcInstant::bind($progress->lastReviewedAt()),
         ];
+    }
+
+    /** jsonb comes back as a string from the query builder; a legacy null reads as «no reasons». */
+    private function toSources(mixed $value): EnrollmentSources
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            return is_array($decoded) ? EnrollmentSources::fromArray($decoded) : EnrollmentSources::empty();
+        }
+
+        return is_array($value) ? EnrollmentSources::fromArray($value) : EnrollmentSources::empty();
     }
 
     private function toDate(mixed $value): ?DateTimeImmutable

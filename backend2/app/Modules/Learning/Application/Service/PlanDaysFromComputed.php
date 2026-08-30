@@ -1,0 +1,94 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Learning\Application\Service;
+
+use App\Modules\Learning\Domain\Entity\PlanDay;
+use App\Modules\Learning\Domain\ValueObject\ComputedDay;
+use App\Modules\Learning\Domain\ValueObject\ComputedPlan;
+use App\Modules\Learning\Domain\ValueObject\PlanDayId;
+use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Learning\Domain\ValueObject\PlanSkill;
+
+/**
+ * A1's answer, turned into rows.
+ *
+ * One place, because both doors that produce days — the first outline and every reschedule — must
+ * produce the same shape, and the second one is the one that runs when a learner is mid-decision.
+ */
+final class PlanDaysFromComputed
+{
+    /** @return list<PlanDay> */
+    public function build(PlanId $planId, ComputedPlan $computed): array
+    {
+        $days = [];
+        foreach ($computed->days as $day) {
+            $days[] = PlanDay::plan(
+                id: PlanDayId::generate(),
+                planId: $planId,
+                dayIndex: $day->index,
+                kind: $day->kind,
+                title: $day->title,
+                outcomeText: $this->outcomeText($day),
+                skills: $this->skills($day),
+                roleBrief: $this->roleBrief($day),
+                scheduledOn: $day->scheduledOn,
+            );
+        }
+
+        return $days;
+    }
+
+    /** «Ты сможешь: …» as one readable block — the promise, in the learner's own language. */
+    private function outcomeText(ComputedDay $day): ?string
+    {
+        $outcomes = $day->outcomes();
+
+        return $outcomes === [] ? null : implode("\n", $outcomes);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function skills(ComputedDay $day): array
+    {
+        return array_map(
+            static fn (PlanSkill $s): array => [
+                'outcome' => $s->outcome,
+                'est_terms' => $s->estTerms,
+                'checkpoint' => $s->checkpoint,
+                'source_day_index' => $s->sourceDayIndex,
+            ],
+            $day->skills,
+        );
+    }
+
+    /**
+     * The interlocutor, the checkpoints and the day's topics in one blob.
+     *
+     * The checkpoints live HERE and not only on the role, because the final day has checkpoints
+     * and no role at all — every checkpoint of the plan, assembled by the server. One field the
+     * conversation can read on either kind of day.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function roleBrief(ComputedDay $day): ?array
+    {
+        if ($day->role === null && $day->checkpoints === [] && $day->topics === []) {
+            return null;
+        }
+
+        return [
+            'checkpoints' => $day->checkpoints,
+            'topics' => $day->topics,
+            'term_budget' => $day->termBudget,
+            'phrase_count' => $day->phraseCount(),
+            'word_count' => $day->wordCount(),
+            'role' => $day->role === null ? null : [
+                'name' => $day->role->name,
+                'opening_lines' => $day->role->openingLines,
+                'checkpoints' => $day->role->checkpoints,
+                'if_silent' => $day->role->ifSilent,
+            ],
+        ];
+    }
+}

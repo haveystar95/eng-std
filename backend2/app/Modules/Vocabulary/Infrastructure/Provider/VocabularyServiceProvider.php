@@ -55,6 +55,12 @@ use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermLanguageAuditRead
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTranslationKeyReader;
 use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermRepository;
 use App\Modules\Vocabulary\Application\Port\TermDescriptionWriter;
+use App\Modules\Vocabulary\Application\Port\TermExampleScopeWriter;
+use App\Modules\Vocabulary\Application\Port\TermPlanFactsWriter;
+use App\Modules\Vocabulary\Application\Query\KnownTermsReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentKnownTermsReader;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermExampleScopeWriter;
+use App\Modules\Vocabulary\Infrastructure\Eloquent\EloquentTermPlanFactsWriter;
 use App\Modules\Vocabulary\Application\Port\TermTransliterationWriter;
 use App\Modules\Vocabulary\Application\Query\ExactTermTranslationReader;
 use App\Modules\Vocabulary\Application\Query\TermSearchReader;
@@ -111,6 +117,13 @@ final class VocabularyServiceProvider extends ServiceProvider
         $this->app->bind(TermEnrichmentExportReader::class, EloquentTermEnrichmentExportReader::class);
         // The other direction: a human removing a bad row or correcting a wording.
         $this->app->bind(TermReviewWriter::class, EloquentTermReviewWriter::class);
+
+        // The learning plan's three: the two facts a day learns about a term (`is_line`,
+        // `difficulty_score`), the day-scoped example, and the read that tells a later day what
+        // an earlier one already taught.
+        $this->app->bind(TermPlanFactsWriter::class, EloquentTermPlanFactsWriter::class);
+        $this->app->bind(TermExampleScopeWriter::class, EloquentTermExampleScopeWriter::class);
+        $this->app->bind(KnownTermsReader::class, EloquentKnownTermsReader::class);
     }
 
     public function boot(): void

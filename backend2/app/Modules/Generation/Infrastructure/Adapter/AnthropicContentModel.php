@@ -46,6 +46,16 @@ final readonly class AnthropicContentModel implements ContentModelPort
         private string $baseUrl = 'https://api.anthropic.com/v1',
         private ModelCost $cost = new ModelCost(),
         private int $timeoutSeconds = 180,
+        /**
+         * WHAT this spend is FOR, as the request log records it.
+         *
+         * A parameter rather than a constant because the same adapter now serves two
+         * products with different budgets: a collection and a learning plan. The label
+         * is applied where the vendor call is made — the log row is written by an Http
+         * event listener far from the code that decided to spend — so it has to travel
+         * with the adapter, and the default keeps every existing caller unchanged.
+         */
+        private string $purpose = 'generation',
         private int $retries = 4,
         private int $maxTokens = 16000,
     ) {}
@@ -64,7 +74,7 @@ final readonly class AnthropicContentModel implements ContentModelPort
     {
         $startedAt = hrtime(true);
 
-        $response = $this->context->run('generation', null, fn () => Http::withHeaders([
+        $response = $this->context->run($this->purpose, null, fn () => Http::withHeaders([
             'x-api-key' => $this->apiKey,
             'anthropic-version' => self::API_VERSION,
         ])

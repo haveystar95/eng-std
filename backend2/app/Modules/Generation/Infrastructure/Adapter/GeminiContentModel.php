@@ -41,6 +41,16 @@ final readonly class GeminiContentModel implements ContentModelPort
         private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta',
         private ModelCost $cost = new ModelCost(),
         private int $timeoutSeconds = 180,
+        /**
+         * WHAT this spend is FOR, as the request log records it.
+         *
+         * A parameter rather than a constant because the same adapter now serves two
+         * products with different budgets: a collection and a learning plan. The label
+         * is applied where the vendor call is made — the log row is written by an Http
+         * event listener far from the code that decided to spend — so it has to travel
+         * with the adapter, and the default keeps every existing caller unchanged.
+         */
+        private string $purpose = 'generation',
         private int $retries = 4,
     ) {}
 
@@ -58,7 +68,7 @@ final readonly class GeminiContentModel implements ContentModelPort
     {
         $startedAt = hrtime(true);
 
-        $response = $this->context->run('generation', null, fn () => Http::withHeaders(['x-goog-api-key' => $this->apiKey])
+        $response = $this->context->run($this->purpose, null, fn () => Http::withHeaders(['x-goog-api-key' => $this->apiKey])
             ->timeout($this->timeoutSeconds)
             // Same policy as the other adapters: escalating backoff, and only on statuses that can
             // change by themselves. Google adds 503 UNAVAILABLE under load to the usual 429.

@@ -1,0 +1,140 @@
+{
+  "day_index": 2,
+  "day_title": "Уточнить симптомы и помощь",
+  "phrases": [
+    {
+      "text": "It's a sharp pain.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Это острая боль.",
+      "transliteration": "итс э шарп пэйн",
+      "description": "You say this to tell the doctor the pain feels sudden and strong, not dull.",
+      "example": "Sometimes it's a sharp pain when I bend.",
+      "example_translation": "Иногда это острая боль, когда я наклоняюсь.",
+      "covers_checkpoint": 1
+    },
+    {
+      "text": "It gets worse when I bend.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Становится хуже, когда я наклоняюсь.",
+      "transliteration": "ит гетс вёрс уэн ай бэнд",
+      "description": "You say this when a movement increases the problem.",
+      "example": "It gets worse when I bend, but rest helps.",
+      "example_translation": "Становится хуже, когда я наклоняюсь, но отдых помогает.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "It feels better when I rest.",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Становится лучше, когда я отдыхаю.",
+      "transliteration": "ит филз беттер уэн ай рест",
+      "description": "You say this when stopping activity makes the problem less bad.",
+      "example": "It feels better when I rest after work.",
+      "example_translation": "Становится лучше, когда я отдыхаю после работы.",
+      "covers_checkpoint": 2
+    },
+    {
+      "text": "Could you explain it in simpler words?",
+      "type": "phrase",
+      "is_line": true,
+      "translation": "Не могли бы вы объяснить это более простыми словами?",
+      "transliteration": "куд ю иксплейн ит ин симплер уёрдз",
+      "description": "You say this when you did not understand the doctor's explanation and want easier language.",
+      "example": "I'm sorry, could you explain it in simpler words?",
+      "example_translation": "Извините, не могли бы вы объяснить это более простыми словами?",
+      "covers_checkpoint": 3
+    }
+  ],
+  "words": [
+    {
+      "text": "sharp",
+      "type": "word",
+      "is_line": false,
+      "translation": "острый",
+      "transliteration": "шарп",
+      "description": "This describes pain that feels sudden, cutting, or stabbing.",
+      "example": "The pain is sharp in my lower back.",
+      "example_translation": "Боль острая в пояснице.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "dull",
+      "type": "word",
+      "is_line": false,
+      "translation": "тупой",
+      "transliteration": "дал",
+      "description": "This describes pain that is not sharp and feels heavy or constant.",
+      "example": "In the morning, it's more dull than sharp.",
+      "example_translation": "Утром она скорее тупая, чем острая.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "bend",
+      "type": "word",
+      "is_line": false,
+      "translation": "наклоняться",
+      "transliteration": "бэнд",
+      "description": "This means to move your body forward or down at the waist.",
+      "example": "It gets worse when I bend to pick something up.",
+      "example_translation": "Становится хуже, когда я наклоняюсь, чтобы что-то поднять.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "rest",
+      "type": "word",
+      "is_line": false,
+      "translation": "отдых",
+      "transliteration": "рест",
+      "description": "This means time when you stop activity so your body can recover.",
+      "example": "A short rest makes it feel better.",
+      "example_translation": "Короткий отдых помогает, и становится лучше.",
+      "covers_checkpoint": null
+    },
+    {
+      "text": "simpler",
+      "type": "word",
+      "is_line": false,
+      "translation": "более простой",
+      "transliteration": "симплер",
+      "description": "This means easier to understand, with less difficult language or detail.",
+      "example": "Could you use simpler words, please?",
+      "example_translation": "Не могли бы вы использовать более простые слова, пожалуйста?",
+      "covers_checkpoint": null
+    }
+  ],
+  "known": [
+    {
+      "text": "lower back",
+      "examples": [
+        {
+          "example": "The pain is sharp in my lower back.",
+          "example_translation": "Боль острая в пояснице."
+        },
+        {
+          "example": "It gets worse in my lower back when I bend.",
+          "example_translation": "В пояснице становится хуже, когда я наклоняюсь."
+        }
+      ]
+    },
+    {
+      "text": "for a week",
+      "examples": [
+        {
+          "example": "I've had this sharp pain for a week.",
+          "example_translation": "У меня эта острая боль уже неделю."
+        }
+      ]
+    },
+    {
+      "text": "I don't feel well.",
+      "examples": [
+        {
+          "example": "I don't feel well, and it gets worse when I bend.",
+          "example_translation": "Я плохо себя чувствую, и становится хуже, когда я наклоняюсь."
+        }
+      ]
+    }
+  ]
+}

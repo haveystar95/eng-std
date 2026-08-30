@@ -81,7 +81,15 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiTranslationRepairer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
+use App\Modules\Generation\Application\Port\PlanPromptSource;
+use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Application\Service\PlanOutlineService;
+use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
+use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
+use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
+use App\Modules\Learning\Application\Port\DispatchesPlanDay;
+use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedGenerationDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedExampleRepairDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedImageAttachmentDispatcher;
@@ -119,6 +127,29 @@ final class GenerationServiceProvider extends ServiceProvider
         // The multi-vendor seam. Bound unconditionally: which providers can actually be called is a
         // runtime fact about keys, which the catalogue reports rather than a driver switch decides.
         $this->app->bind(ContentModelCatalog::class, ConfiguredContentModelCatalog::class);
+
+        // ---- learning plans ------------------------------------------------------------------
+        // Both plan calls run on the CORE model and the CORE provider — the same ones the card's
+        // core runs on, and for the same reason the A/B chose it (bakeoff-v11-ab, К2): a plan is
+        // written once and read for the whole life of the plan. There is no separate knob, so
+        // moving the core moves the plan with it, which is the behaviour that keeps the two from
+        // silently diverging in quality.
+        $this->app->bind(PlanPromptSource::class, PlanPromptLibrary::class);
+        $this->app->bind(DispatchesPlanDay::class, QueuedPlanDayDispatcher::class);
+
+        $this->app->bind(PlanOutlinePort::class, function (): PlanOutlinePort {
+            return new PlanOutlineService(
+                model: $this->planModel(),
+                prompts: $this->app->make(PlanPromptSource::class),
+            );
+        });
+
+        $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
+            return new PlanDayComposer(
+                model: $this->planModel(),
+                prompts: $this->app->make(PlanPromptSource::class),
+            );
+        });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening
         // of it: this one hands out adapters that send no system prompt and demand no schema, which
         // is exactly what nothing on the production path may ever get.
@@ -526,5 +557,33 @@ final class GenerationServiceProvider extends ServiceProvider
         if (is_file($routes)) {
             Route::middleware('api')->prefix('api/v1')->group($routes);
         }
+    }
+
+    /**
+     * The model both plan prompts run on.
+     *
+     * `fake` honours the same switch every other adapter honours, so a test suite never reaches a
+     * vendor — and the failure it produces if the key is missing names the env var, because «план
+     * не собрался» with no reason is the least useful error this feature can produce.
+     */
+    private function planModel(): \App\Modules\Generation\Application\Port\ContentModelPort
+    {
+        if (config('services.generation.driver') === 'fake') {
+            return new FakePlanContentModel();
+        }
+
+        $stack = $this->app->make(GenerationStackConfig::class);
+
+        // `plan` — the purpose the request log stamps on both P1 and P2, so «сколько стоил план»
+        // is a question the cost screens can answer without being told which rows to add up.
+        $model = $this->app->make(ContentModelCatalog::class)->get($stack->coreProvider, $stack->coreModel, 'plan');
+        if ($model === null) {
+            throw new RuntimeException(
+                "Планы настроены на провайдера «{$stack->coreProvider->value}», у которого нет ключа. "
+                . 'Поставьте ключ или смените GENERATION_CORE_PROVIDER.'
+            );
+        }
+
+        return $model;
     }
 }

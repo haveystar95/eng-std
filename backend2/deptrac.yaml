@@ -115,7 +115,14 @@ deptrac:
     # It also labels its own outbound calls (OutboundCallContext) so the request log can say WHY
     # money was spent and on which collection — the label has to be applied where the vendor call
     # is made, which is here. Deliberate edge, same shape as IdentityInfrastructure's.
-    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication]
+    #
+    # LearningApplication joins that list for the LEARNING PLAN and for the same reason: Learning
+    # declares two ports it cannot implement — «ask the model for a plan skeleton» (PlanOutlinePort)
+    # and «queue a day» (DispatchesPlanDay) — because both are about talking to a vendor, and none
+    # of prompt files, cost tables or the request log belongs in a module about scheduling.
+    # Generation fulfils them, and the binding is here. Adds no cycle: GenerationApplication already
+    # depends on LearningApplication, and Learning never depends on Generation.
+    GenerationInfrastructure: [GenerationApplication, GenerationDomain, SharedDomain, SharedInfra, Framework, VocabularyApplication, ObservabilityApplication, LearningApplication]
 
     # Observability: a thin, cross-cutting technical module (no Presentation layer).
     ObservabilityDomain: [SharedDomain]

@@ -61,11 +61,21 @@ final readonly class EnrollTermHandler
         return $this->tx->run(function () use ($command): bool {
             $existing = $this->progress->findForUpdate($command->actorId, $command->termId);
             if ($existing !== null && $existing->isEnrolled()) {
-                return false;
+                // Already in the pool — but possibly for one reason fewer than it should be. A word
+                // the learner saved by hand in June and that a plan needs in August is held by both,
+                // and the plan's claim is what makes it strict; returning early because the pair was
+                // «already enrolled» would leave a plan standing on a word it does not hold.
+                $withSource = $existing->enroll($this->clock->now(), $command->source);
+                if ($withSource === $existing) {
+                    return false;
+                }
+                $this->progress->save($withSource);
+
+                return true;
             }
 
             $progress = $existing ?? TermProgress::start($command->actorId, $command->termId);
-            $this->progress->save($progress->enroll($this->clock->now()));
+            $this->progress->save($progress->enroll($this->clock->now(), $command->source));
 
             return true;
         });
