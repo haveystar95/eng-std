@@ -112,6 +112,7 @@ final class AdminJson
     {
         return [
             'generation' => $c->generation,
+            'plan' => $c->plan,
             'practice' => $c->practice,
             'enrichment' => $c->enrichment,
             'example_regen' => $c->exampleRegen,
@@ -171,6 +172,7 @@ final class AdminJson
     {
         return [
             'generation' => self::costCategory($c->generation),
+            'plan' => self::costCategory($c->plan),
             'practice' => self::costCategory($c->practice),
             'example_regen' => self::costCategory($c->exampleRegen),
             'total_usd' => $c->totalUsd,

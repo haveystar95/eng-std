@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Query;
 
-use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Dto\PlanDayView;
 use App\Modules\Learning\Application\Dto\PlanView;
 use App\Modules\Learning\Application\Port\PlanReadinessReader;
@@ -13,7 +12,6 @@ use App\Modules\Learning\Domain\Entity\PlanDay;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
-use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 
 /**
  * The whole plan in one read — structure, days, arithmetic and readiness.
@@ -26,7 +24,6 @@ final readonly class GetPlanHandler
     public function __construct(
         private PlanRepository $plans,
         private PlanDayRepository $days,
-        private LearnerProfileReader $profiles,
         private PlanReadinessReader $readiness,
     ) {}
 
@@ -46,7 +43,8 @@ final readonly class GetPlanHandler
     private function view(LearningPlan $plan): PlanView
     {
         $outline = $plan->parsedOutline();
-        $support = new LanguageCode($this->profiles->nativeLangFor($plan->userId()));
+        // The PLAN's language, not the account's — see LearningPlan::$supportLang.
+        $support = $plan->supportLang();
 
         $days = array_map(
             fn (PlanDay $day): PlanDayView => $this->dayView($day),
@@ -71,7 +69,6 @@ final readonly class GetPlanHandler
             entities: $outline === null ? [] : $outline->entities,
             constraints: $outline === null ? [] : $outline->constraints,
             goalTerms: $outline === null ? [] : $outline->goalTerms,
-            recommendedDays: $outline?->recommendedDays,
             readiness: $this->readinessOf($plan, $days),
         );
     }

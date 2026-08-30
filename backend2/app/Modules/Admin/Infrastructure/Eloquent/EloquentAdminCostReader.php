@@ -25,31 +25,41 @@ final class EloquentAdminCostReader implements AdminCostReader
 
     public function breakdownSince(?DateTimeImmutable $since): CostBreakdown
     {
-        $generation = $this->sumCost('generation_requests', $since);
+        // One table, two products, two lines. Splitting here rather than filtering somewhere
+        // upstream is what keeps the TOTAL whole: every row of the ledger lands in exactly one of
+        // the two, so no spend can fall between them.
+        $generation = $this->sumCost('generation_requests', $since, 'generation');
+        $plan = $this->sumCost('generation_requests', $since, 'plan');
         $practice = $this->sumCost('practice_dialogs', $since);
         $enrichment = $this->sumCost('term_enrichments', $since);
         $exampleRegen = $this->sumCost('example_regenerations', $since);
 
         return new CostBreakdown(
             generation: $generation,
+            plan: $plan,
             practice: $practice,
             enrichment: $enrichment,
             exampleRegen: $exampleRegen,
-            total: round($generation + $practice + $enrichment + $exampleRegen, 6),
+            total: round($generation + $plan + $practice + $enrichment + $exampleRegen, 6),
         );
     }
 
     public function userBreakdownSince(string $userId, ?DateTimeImmutable $since): UserCostBreakdown
     {
-        $generation = $this->category('generation_requests', $userId, $since);
+        $generation = $this->category('generation_requests', $userId, $since, 'generation');
+        $plan = $this->category('generation_requests', $userId, $since, 'plan');
         $practice = $this->category('practice_dialogs', $userId, $since);
         $exampleRegen = $this->category('example_regenerations', $userId, $since);
 
         return new UserCostBreakdown(
             generation: $generation,
+            plan: $plan,
             practice: $practice,
             exampleRegen: $exampleRegen,
-            totalUsd: round($generation->costUsd + $practice->costUsd + $exampleRegen->costUsd, 6),
+            totalUsd: round(
+                $generation->costUsd + $plan->costUsd + $practice->costUsd + $exampleRegen->costUsd,
+                6,
+            ),
         );
     }
 
@@ -200,10 +210,12 @@ final class EloquentAdminCostReader implements AdminCostReader
         return new PurposeCost($purpose, $tokensIn, $tokensOut, round($cost, 6), $rows->count());
     }
 
-    private function sumCost(string $table, ?DateTimeImmutable $since): float
+    /** @param string|null $purpose narrows a shared ledger to one product; null sums the table. */
+    private function sumCost(string $table, ?DateTimeImmutable $since, ?string $purpose = null): float
     {
         return round((float) DB::table($table)
             ->when($since !== null, fn (Builder $q): Builder => $q->where('created_at', '>=', $since))
+            ->when($purpose !== null, fn (Builder $q): Builder => $q->where('purpose', $purpose))
             ->sum('cost_usd'), 6);
     }
 
@@ -215,11 +227,12 @@ final class EloquentAdminCostReader implements AdminCostReader
      * the per-user breakdown reported 0 output tokens for every user forever — silently, because
      * null casts to 0 and the money column next to it was right.
      */
-    private function category(string $table, string $userId, ?DateTimeImmutable $since): CostCategory
+    private function category(string $table, string $userId, ?DateTimeImmutable $since, ?string $purpose = null): CostCategory
     {
         $row = DB::table($table)
             ->where('user_id', $userId)
             ->when($since !== null, fn (Builder $q): Builder => $q->where('created_at', '>=', $since))
+            ->when($purpose !== null, fn (Builder $q): Builder => $q->where('purpose', $purpose))
             ->selectRaw('COALESCE(SUM(tokens_in),0) AS ti, COALESCE(SUM(tokens_out),0) AS tokens_out, COALESCE(SUM(cost_usd),0) AS c, COUNT(*) AS n')
             ->first();
 

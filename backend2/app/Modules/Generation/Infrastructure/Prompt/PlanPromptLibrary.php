@@ -32,10 +32,10 @@ use RuntimeException;
  */
 final class PlanPromptLibrary implements PlanPromptSource
 {
-    public const VERSION = 'plan.v0.1';
+    public const VERSION = 'plan.v0.1.1';
 
-    private const OUTLINE = 'plan_outline.v0.1.md';
-    private const DAY = 'plan_day.v0.1.md';
+    private const OUTLINE = 'plan_outline.v0.1.1.md';
+    private const DAY = 'plan_day.v0.1.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 

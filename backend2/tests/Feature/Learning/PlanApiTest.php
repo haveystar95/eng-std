@@ -31,8 +31,9 @@ beforeEach(function (): void {
     // the binding is visible in the test that depends on it.
     $model = new FakePlanContentModel();
     $prompts = new PlanPromptLibrary();
-    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts));
-    app()->instance(PlanDayComposer::class, new PlanDayComposer($model, $prompts));
+    $ledger = app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class);
+    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger));
+    app()->instance(PlanDayComposer::class, new PlanDayComposer($model, $prompts, $ledger));
 });
 
 function createPlan(object $ctx, string $token, array $overrides = []): array
@@ -431,4 +432,122 @@ it('hides another learner plan behind a 404, not a 403', function () {
     $this->withHeader('Authorization', "Bearer {$strangerToken}")
         ->getJson("/api/v1/plans/{$plan['id']}")
         ->assertNotFound();
+});
+
+// ── the ledger, through the whole flow ────────────────────────────────────────────────────────
+
+it('leaves a ledger row for every paid call the plan made', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token, ['event_date' => now()->addDays(2)->format('Y-m-d')]);
+    outlinePlan($this, $token, $plan['id']);
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    $rows = DB::table('generation_requests')->where('plan_id', $plan['id'])->orderBy('created_at')->get();
+
+    // One outline + two days. Every one of them is a call that cost money on the live model, and
+    // the PLAN-1a run proved what «recorded only in the request log» is worth.
+    expect($rows)->toHaveCount(3)
+        ->and($rows->pluck('purpose')->unique()->all())->toBe(['plan'])
+        ->and($rows->pluck('user_id')->unique()->all())->toBe([$user->id])
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan.v0.1.1'])
+        ->and($rows[0]->prompt)->toStartWith('outline:')
+        ->and($rows[1]->prompt)->toStartWith('day:')
+        ->and($rows[1]->size)->toBe(9);
+});
+
+it('fails the day loudly when the ledger will not take the row', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+
+    // A ledger that refuses. The day handler catches everything else and turns it into a
+    // `fail_reason`; this one must escape, because a day quietly marked «failed» would hide the
+    // fact that a call was already paid for.
+    app()->instance(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class, new class implements \App\Modules\Generation\Application\Port\RecordsPlanSpend {
+        public function record(\App\Modules\Generation\Application\Dto\PlanSpend $spend): void
+        {
+            throw \App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded::forPlan(
+                $spend->planId, $spend->costUsd, new RuntimeException('ledger is down'),
+            );
+        }
+    });
+    $model = new FakePlanContentModel();
+    $prompts = new PlanPromptLibrary();
+    app()->instance(PlanDayComposer::class, new PlanDayComposer(
+        $model, $prompts, app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class),
+    ));
+
+    // The queue is sync under test, so the job runs inside the request; without the HTTP kernel's
+    // handler in the way, the exception the day generator refused to swallow arrives here.
+    $this->withoutExceptionHandling();
+
+    expect(fn () => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$plan['id']}/start"))
+        ->toThrow(\App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded::class);
+
+    // …and the day was NOT quietly closed as a product failure.
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 1)->first();
+    expect($day1->status)->not->toBe('ready')
+        ->and($day1->fail_reason)->toBeNull();
+});
+
+// ── the plan owns its language ────────────────────────────────────────────────────────────────
+
+it('carries the support language on the plan, not on the account', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+
+    expect(DB::table('learning_plans')->where('id', $plan['id'])->value('support_lang'))->toBe('ru')
+        ->and($plan['support_lang'])->toBe('ru');
+});
+
+it('takes the account language up to the last moment before commitment', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+
+    // Still a draft: the skeleton has not been written yet, so the current answer is the right one.
+    profileFor($user, ['native_language' => 'uk']);
+    $outlined = outlinePlan($this, $token, $plan['id']);
+
+    expect($outlined['support_lang'])->toBe('uk');
+});
+
+it('FREEZES the language at start — the account can move and the plan cannot', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    // The learner changes their native language mid-plan. The skeleton is already written in
+    // Russian, day 1's keys are Russian, and the grading is against them: day 2 arriving in
+    // Ukrainian would make one plan claim to be two things.
+    profileFor($user, ['native_language' => 'uk']);
+
+    $active = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/v1/plans/active')->assertOk()->json('data');
+
+    expect($active['support_lang'])->toBe('ru')
+        ->and(DB::table('learning_plans')->where('id', $plan['id'])->value('support_lang'))->toBe('ru');
+});
+
+it('no longer reports recommended_days at all', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+    $outlined = outlinePlan($this, $token, $plan['id']);
+
+    // The field was a promise nobody kept: the validator never checked it, and its criterion was
+    // passed by making one ability bigger.
+    expect($outlined)->not->toHaveKey('recommended_days');
 });

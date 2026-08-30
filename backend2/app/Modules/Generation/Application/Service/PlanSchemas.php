@@ -15,7 +15,7 @@ namespace App\Modules\Generation\Application\Service;
  * OpenAI's `strict` mode has two rules that shape the code below and neither is negotiable: every
  * property must be listed in `required`, and `additionalProperties` must be false everywhere. So a
  * genuinely optional field is expressed as a nullable type, not as an absent key — which is why
- * `role`, `recommended_days` and `covers_checkpoint` are `['object', 'null']` and friends.
+ * `role` and `covers_checkpoint` are `['object', 'null']` and friends.
  */
 final class PlanSchemas
 {
@@ -70,7 +70,6 @@ final class PlanSchemas
             'entities' => self::arrayOf($entity),
             'constraints' => self::arrayOf(self::string()),
             'goal_terms' => self::arrayOf(self::string()),
-            'recommended_days' => ['type' => ['integer', 'null']],
             'single_day' => ['type' => 'boolean'],
             'days' => self::arrayOf($day),
             'final_day' => $finalDay,

@@ -34,7 +34,6 @@ final readonly class PlanOutline
         public array $entities,
         public array $constraints,
         public array $goalTerms,
-        public ?int $recommendedDays,
         public array $days,
         public string $finalDayTitle,
     ) {}
@@ -87,7 +86,6 @@ final readonly class PlanOutline
         }
 
         $finalDay = is_array($raw['final_day'] ?? null) ? $raw['final_day'] : [];
-        $recommended = $raw['recommended_days'] ?? null;
 
         return new self(
             title: self::text($raw['title'] ?? ''),
@@ -95,9 +93,6 @@ final readonly class PlanOutline
             entities: self::entities($raw['entities'] ?? null),
             constraints: self::stringList($raw['constraints'] ?? null),
             goalTerms: self::stringList($raw['goal_terms'] ?? null),
-            recommendedDays: is_int($recommended) || (is_string($recommended) && ctype_digit($recommended))
-                ? (int) $recommended
-                : null,
             days: $days,
             finalDayTitle: self::text($finalDay['title'] ?? ''),
         );

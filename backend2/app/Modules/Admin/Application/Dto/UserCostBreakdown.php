@@ -12,6 +12,7 @@ final readonly class UserCostBreakdown
 {
     public function __construct(
         public CostCategory $generation,
+        public CostCategory $plan,
         public CostCategory $practice,
         public CostCategory $exampleRegen,
         public float $totalUsd,

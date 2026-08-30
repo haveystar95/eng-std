@@ -97,12 +97,14 @@ it('passes S3 — «Открыть визит и понять назначени
     expect($violations)->toBe([]);
 });
 
-it('would have refused the S2 keys without the goal-term exemption', function () {
-    // Same day, `goal_terms` not passed: the Latin `PHP`/`API`/`QA` inside Russian keys is now
-    // indistinguishable from a key written in the wrong language.
+it('passes S2 even with no goal_terms at all — its Latin is abbreviations', function () {
+    // The day's whole Latin vocabulary is `PHP`, `API` and `QA`: two-to-five capitals, exempt by
+    // SHAPE. Which is the point of the shape rule — `QA` was never in `goal_terms` because the
+    // learner never typed it, and under the earlier, narrower rule this day's keys were violations
+    // for being spelled the only correct way.
     $violations = $this->validator->validate(planFixture('s2-day1.v0.1.json', 'ru', 'en', 3));
 
-    expect(codes($violations))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+    expect($violations)->toBe([]);
 });
 
 // ── rule 1: the reply share ───────────────────────────────────────────────────────────────────
@@ -305,4 +307,67 @@ it('says nothing about an empty day beyond the count, rather than throwing', fun
     $day = new PlanDayCandidate('ru', 'en', termBudget: 9, checkpointCount: 3, goalTerms: [], items: []);
 
     expect(codes($this->validator->validate($day)))->toBe([PlanDayValidator::TERM_COUNT]);
+});
+
+// ── abbreviations are allowed by SHAPE, with no list to keep ──────────────────────────────────
+
+it('lets an abbreviation stand in Latin inside a Russian key, without being told about it', function () {
+    // `QA` was never in `goal_terms` — the learner did not type it. The model produced it anyway,
+    // correctly: «работаю с QA-инженерами» is the only way a Russian speaker writes that. Under a
+    // rule that only knew the learner's own words, that key was a violation for being right.
+    $items = [planItem([
+        'text' => 'I usually work closely with QA engineers.',
+        'translation' => 'Обычно я тесно работаю с QA-инженерами.',
+        'example' => 'In a remote team, I work closely with QA to clarify issues quickly.',
+        'example_translation' => 'В удалённой команде я тесно работаю с QA, чтобы быстро уточнять проблемы.',
+        'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('accepts two-to-five letters and nothing longer', function () {
+    $key = function (string $russian): array {
+        return codes($this->validator->validate(planDay([planItem([
+            'text' => 'a line', 'translation' => $russian, 'example' => 'A line happens.',
+            'example_translation' => 'Реплика случается.', 'transliteration' => '',
+        ])])));
+    };
+
+    // Two through five: an abbreviation.
+    expect($key('Работаю с QA каждый день'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and($key('Отвечал за API и PHP'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and($key('Пишу на HTML и REST'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        // Six is not an abbreviation any more — past five the run stops looking like one.
+        ->and($key('Строка ABCDEFG внутри'))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('does not let a capitalised Latin word through as an abbreviation', function () {
+    // One capital letter is a word, not an abbreviation. This is the case the shape rule must not
+    // swallow, or the whole purity check stops meaning anything.
+    $items = [planItem([
+        'text' => 'a line',
+        'translation' => 'Я сказал Hello вместо здравствуйте',
+        'example' => 'A line happens.',
+        'example_translation' => 'Реплика случается.',
+        'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('still needs goal_terms for a mixed-case product name', function () {
+    // `Laravel` is not two-to-five capitals, so the shape rule cannot see it. That is what the
+    // learner's own list is still for.
+    $items = fn (): array => [planItem([
+        'text' => 'a line', 'translation' => 'Я работал с Laravel', 'example' => 'A line happens.',
+        'example_translation' => 'Реплика случается.', 'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items()))))
+        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
+        ->and(codes($this->validator->validate(planDay($items(), goalTerms: ['Laravel']))))
+        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
 });

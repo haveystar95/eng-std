@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Generation\Application\Service;
 
 use App\Modules\Generation\Application\Dto\PlanDayDraft;
+use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
+use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
 use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
@@ -32,11 +34,12 @@ use RuntimeException;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan.v0.1';
+    public const PROMPT_VERSION = 'plan.v0.1.1';
 
     public function __construct(
         private ContentModelPort $model,
         private PlanPromptSource $prompts,
+        private RecordsPlanSpend $ledger,
         private PlanDayValidator $validator = new PlanDayValidator(),
     ) {}
 
@@ -111,6 +114,29 @@ final readonly class PlanDayComposer
         );
 
         $violations = $this->validator->validate($candidate);
+
+        // Written for EVERY attempt, accepted or refused, and before the verdict is acted on. The
+        // re-run is a second paid call and shows up as a second row; a day that cost twice reads
+        // as two rows rather than as one that mysteriously cost double.
+        $this->ledger->record(new PlanSpend(
+            planId: $brief->planId,
+            userId: $brief->userId,
+            call: PlanSpend::CALL_DAY,
+            subject: 'день ' . $brief->dayIndex . ' — ' . $brief->dayTitle,
+            supportLang: $brief->supportLang,
+            targetLang: $brief->targetLang,
+            promptVersion: $this->prompts->version(),
+            model: $answer->model,
+            tokensIn: $answer->tokensIn,
+            tokensOut: $answer->tokensOut,
+            costUsd: $answer->costUsd,
+            size: $brief->termBudget,
+            succeeded: $violations === [],
+            error: $violations === [] ? null : mb_substr(implode('; ', array_map(
+                static fn (PlanViolation $v): string => (string) $v,
+                $violations,
+            )), 0, 500),
+        ));
 
         // The hint is NORMALISED on the way in — the validator's own repair, applied once, so the
         // string that is stored is the string that was judged.

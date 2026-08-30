@@ -53,7 +53,9 @@ final class FakePlanContentModel implements ContentModelPort
     {
         $days = max(1, $this->intAfter($prompt, 'DAYS:'));
         $minutes = max(1, $this->intAfter($prompt, 'MINUTES PER DAY:'));
-        $budget = $minutes >= 40 ? 16 : 9;
+        // The same table the prompt and the scheduler use — a fake that invented its own
+        // budget would let a scheduler/validator disagreement through every test.
+        $budget = $minutes >= 40 ? 16 : ($minutes <= 10 ? 5 : 9);
 
         $introDays = max(1, $days - 1);
         $out = [];
@@ -79,7 +81,6 @@ final class FakePlanContentModel implements ContentModelPort
             'entities' => [],
             'constraints' => [],
             'goal_terms' => [],
-            'recommended_days' => null,
             'single_day' => $days === 1,
             'days' => $out,
             'final_day' => ['index' => $days, 'same_day' => $days === 1, 'title' => 'Прогон перед событием'],

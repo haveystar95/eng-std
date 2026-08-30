@@ -117,7 +117,7 @@ it('accepts binding lists that are simply empty', function () {
     expect($this->validator->validate($raw))->toBe([]);
 });
 
-it('lets a ONE-DAY plan carry more than three checkpoints — it is the whole goal', function () {
+it('lets a ONE-DAY plan carry up to five checkpoints — it is the whole goal', function () {
     // The S3 scenario, live: «сегодня везу кота в ветклинику, прививка и странный кашель» has four
     // parts, the prompt says a short plan compresses rather than drops, and the model honestly
     // wrote four abilities with four checkpoints. The 2–3 band is a shape rule for an ordinary
@@ -153,4 +153,20 @@ it('still refuses four checkpoints on a multi-day plan, where the band means wha
     ]];
 
     expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT);
+});
+
+it('stops a one-day plan at five, because a conversation past that cannot be judged', function () {
+    $outcomes = ['A', 'B', 'C', 'D', 'E', 'F'];
+    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
+        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
+        'outcome' => $outcomes,
+        'role' => ['name' => 'ветеринар', 'opening_lines' => [],
+            'checkpoints' => array_map(static fn (string $o): string => 'слышно ' . $o, $outcomes),
+            'if_silent' => 'предложит выбор'],
+    ]]];
+
+    $violations = $this->validator->validate($raw);
+
+    expect(outlineCodes($violations))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT)
+        ->and($violations[0]->detail)->toContain('2–5');
 });

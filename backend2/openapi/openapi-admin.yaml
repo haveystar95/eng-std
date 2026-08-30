@@ -1422,7 +1422,8 @@ components:
       type: object
       description: USD spent by category over a window.
       properties:
-        generation: { type: number }
+        generation: { type: number, description: 'collection generation (generation_requests, purpose=generation)' }
+        plan: { type: number, description: 'learning plans (generation_requests, purpose=plan) — same ledger, different product' }
         practice: { type: number }
         enrichment: { type: number }
         example_regen: { type: number }
@@ -1505,6 +1506,7 @@ components:
           type: object
           properties:
             generation: { $ref: '#/components/schemas/CostCategory' }
+            plan: { $ref: '#/components/schemas/CostCategory' }
             practice: { $ref: '#/components/schemas/CostCategory' }
             example_regen: { $ref: '#/components/schemas/CostCategory' }
             total_usd: { type: number }
@@ -2197,7 +2199,7 @@ components:
     CallPurpose:
       type: string
       description: Why an outbound call was made. Null on inbound rows and on unlabelled calls.
-      enum: [generation, images, enrichment, realtime, recap, example_regen]
+      enum: [generation, plan, images, enrichment, realtime, recap, example_regen]
 
     RequestLog:
       type: object

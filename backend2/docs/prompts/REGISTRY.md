@@ -34,8 +34,8 @@
 | **REPAIR-TR** | `repair_translation.v1.md` · `OpenAiTranslationRepairer` | `v1` (`services.generation.repair_prompt_version`) | `RepairContentLanguageHandler` (консольный `content:repair-language`) | ремонт полей, где язык уехал (суржик, чужой алфавит) | поле + объявленный язык | починенный перевод | `gpt-4o-mini` | ~$0.0003 | `LanguagePurity` |
 | **DIALOG** | `practice_dialog.v1…v3.md` + `PracticeDialogInstructions` · `OpenAiRealtimeTokenMinter`, `GeminiLiveTokenMinter` | `v3` (`PRACTICE_PROMPT_VERSION`) | `StartPracticeDialogHandler` | «Разговорная практика» (премиум), `POST /practice/dialogs` | урок: коллекция, целевые слова, уровень | не JSON — `instructions` realtime-сессии (голос) | `gpt-realtime-2.1-mini` / `gemini-3.1-flash-live-preview` | ~$0.10–0.30 за диалог (аудио) | нет схемы; покрытие считает `DialogCoverage` постфактум |
 | **RECAP** | инлайн-инструкция в `OpenAiDialogSummarizer` (не файл) | — | `FinishPracticeDialogHandler` | конец разговорной практики | транскрипт диалога | короткий разбор для юзера | `gpt-4o-mini` (`OPENAI_SUMMARY_MODEL`) | ~$0.0005 | нет |
-| **P1** | `Prompt/plan_outline.v0.1.md` · `PlanOutlineService` | `v0.1` | `GeneratePlanOutlineHandler` (`POST /plans/{id}/outline`) | юзер собирает Learning Plan | цель, дата события, пара языков, уровень, минуты/день, число дней (**считает сервер**) | каркас плана: `title`, `goal_restated`, `entities[]`, `constraints[]`, `goal_terms[]`, `days[]` (умения, роль, чек-пойнты, темы, бюджет), `final_day` | `gpt-5.4` | ~$0.021 | **`PlanOutlineValidator`** (`Generation/Domain`) |
-| **P2** | `Prompt/plan_day.v0.1.md` · `PlanDayGenerator` | `v0.1` | `GeneratePlanDayHandler` (`GeneratePlanDayJob`) | день плана переходит `pending → generating` | день каркаса + `entities`/`constraints`/`goal_terms` + известные термины юзера + бюджет (`phrases`/`words` считает сервер) | `phrases[]` (реплики, `is_line: true`) + `words[]` (подстановки) + `known[]` (только примеры) | `gpt-5.4` | ~$0.035 (9 терминов) / ~$0.050 (16) | **`PlanDayValidator`** (`Generation/Domain`) |
+| **P1** | `Prompt/plan_outline.v0.1.1.md` · `PlanOutlineService` | `v0.1.1` | `BuildPlanOutlineHandler` (`POST /plans/{id}/outline`) | юзер собирает Learning Plan | цель, дата события, пара языков, уровень, минуты/день, число дней (**считает сервер**) | каркас плана: `title`, `goal_restated`, `entities[]`, `constraints[]`, `goal_terms[]`, `days[]` (умения, роль, чек-пойнты, темы, бюджет), `final_day` | `gpt-5.4` | ~$0.021 | **`PlanOutlineValidator`** (`Generation/Domain`) |
+| **P2** | `Prompt/plan_day.v0.1.1.md` · `PlanDayComposer` | `v0.1.1` | `GeneratePlanDayHandler` (`GeneratePlanDayJob`) | день плана переходит `pending → generating` | день каркаса + `entities`/`constraints`/`goal_terms` + известные термины юзера + бюджет (`term_budget`/`phrases`/`words` — **точные числа сервера**) | `phrases[]` (реплики, `is_line: true`) + `words[]` (подстановки) + `known[]` (только примеры) | `gpt-5.4` | ~$0.035 (9 терминов) / ~$0.050 (16) | **`PlanDayValidator`** (`Generation/Domain`) |
 
 ### Не промпты, но платные внешние вызовы
 
@@ -46,6 +46,25 @@
 | **PLAYGROUND** | `PlaygroundCall` | `POST /admin/api/playground/generate` | админка, ручной эксперимент | по факту | текст промпта **набирает человек** — версии нет по определению; поэтому и строки с версией нет |
 
 ---
+
+## История версий плановых промптов
+
+| версия | что изменилось | причина |
+|---|---|---|
+| `v0.1.1` (30.08) | из P1 убран `recommended_days`; бюджет дня из полосы (8–10 / 16–18) стал точным числом (5 / 9 / 16), P2 получает его как заданное; потолок чек-пойнтов однодневного плана — 5 | **код, а не вкус.** `recommended_days` не проверял никто, а его критерий проходился укрупнением умения. Бюджет: длину дня выбирает юзер минутами, `PlanScheduler` считает из них ёмкость, а `PlanDayValidator` считает карточки против неё — полоса в промпте означала, что три числа расходятся по построению |
+| `v0.1` (29.08) | `entities` / `constraints` / `goal_terms`; `phrases[]` отдельно от `words[]`; `type` + `is_line` вместо `kind`; `final_day.checkpoints` собирает сервер | ресёрч песочницы, `docs/research/plan-sandbox-2026-08-29.md` |
+
+## Учёт трат
+
+Оба плановых промпта пишут строку в `generation_requests` с `purpose = 'plan'` и `plan_id` —
+в тот же реестр, где живут траты станка коллекций, и на КАЖДУЮ попытку, включая отбитую
+валидатором. Отказ записи не проглатывается: `Log::error` и исключение наверх
+(`PlanSpendNotRecorded`).
+
+Правило появилось не из осторожности: на прогоне PLAN-1a три платных вызова `gpt-5.4` прошли мимо
+всякого учёта, потому что CHECK лога отбил `purpose = 'plan'`, а слушатель поймал отказ и выбросил
+его — правильно для ЛОГА. Лог — это лог; реестр — это строка, без которой работа не идёт дальше.
+Подробности: `docs/plan-1a-run.md`.
 
 ## Как читать колонки
 

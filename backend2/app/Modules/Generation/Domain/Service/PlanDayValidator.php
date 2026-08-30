@@ -94,6 +94,17 @@ final class PlanDayValidator
     /** Marks a hint legitimately carries — a hyphen inside a word, an apostrophe inside one. */
     private const HINT_MARKS = [' ', '-', '\'', '’', '‑'];
 
+    /**
+     * An abbreviation: two to five capital Latin letters in a row, not glued to a longer Latin
+     * word on either side. `API`, `PHP`, `QA`, `HTML`. See {@see keyIsPure()}.
+     *
+     * The boundaries are what keep it from eating a name: `(?<![A-Za-z])` and `(?![A-Za-z])` mean
+     * the run has to stand on its own, so «BBC» is exempt and the «Sha» of a mixed-case word is
+     * not. A trailing hyphenated tail is allowed through with it — «QA-инженерами» is one word in
+     * Russian and its Latin half is the abbreviation.
+     */
+    private const ABBREVIATION = '/(?<![A-Za-z])[A-Z]{2,5}(?![A-Za-z])/u';
+
     public function __construct(private readonly LanguagePurity $purity = new LanguagePurity()) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
@@ -377,13 +388,24 @@ final class PlanDayValidator
      * and WRONG for a plan, in two specific ways that are not exceptions to the product but the
      * product itself:
      *
-     * 1. **`goal_terms`.** The learner typed `PHP`, `API`, `Laravel` themselves, and those are how
-     *    their own field is spelled in Russian. «Я отвечал за разработку API» is correct Russian;
-     *    «эй-пи-ай» is not, and «интерфейс программирования приложений» is a definition no learner
-     *    would ever write back. The gate used to flag five fields of one day for containing the only
-     *    correct spelling (§7.3), and resolving that in the prompt is not possible — the prompt is
-     *    right and the gate was right, so the resolution belongs in code, here.
-     * 2. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд»
+     * 1. **An ABBREVIATION — two to five capital Latin letters in a row.** `API`, `PHP`, `QA`,
+     *    `HTML`, `REST`. Always allowed, in every key, with no list to maintain and no model asked
+     *    for an opinion: the SHAPE is the rule, and it is decidable by looking. That matters
+     *    because the `goal_terms` exemption below only covers what the learner typed, and the S2
+     *    day produced `QA` on its own — correctly, in «работаю с QA-инженерами», a word no Russian
+     *    speaker writes any other way. Under the narrower rule that day's key was a violation for
+     *    being right.
+     *
+     *    Two is the floor because one capital letter is just a capitalised word. Five is the
+     *    ceiling because past it the run stops looking like an abbreviation and starts looking
+     *    like a sentence shouted in the wrong alphabet, which is the thing the check exists to
+     *    catch.
+     * 2. **`goal_terms`.** The learner typed `Laravel`, `Docker`, `Zoom` themselves, and those are
+     *    how their own field is spelled in Russian — mixed-case names the shape rule above cannot
+     *    see. The gate used to flag five fields of one day for containing the only correct
+     *    spelling (§7.3), and resolving that in the prompt is not possible — the prompt is right
+     *    and the gate was right, so the resolution belongs in code, here.
+     * 3. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд»
      *    is fine, but a key that must quote the term to be unambiguous is not a key in the wrong
      *    language.
      *
@@ -392,10 +414,11 @@ final class PlanDayValidator
      */
     private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value): bool
     {
-        $exempt = [...$day->goalTerms, $item->text];
+        // The shape rule first, because it needs nothing told to it: a run of 2–5 capital Latin
+        // letters is an abbreviation wherever it appears, in any language, in any day.
+        $stripped = (string) preg_replace(self::ABBREVIATION, ' ', $value);
 
-        $stripped = $value;
-        foreach ($exempt as $token) {
+        foreach ([...$day->goalTerms, $item->text] as $token) {
             $token = trim($token);
             if ($token !== '') {
                 $stripped = str_ireplace($token, ' ', $stripped);

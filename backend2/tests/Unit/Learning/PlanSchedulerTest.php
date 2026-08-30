@@ -117,9 +117,9 @@ it('compresses a same-day plan instead of dropping half of it, and says it did n
 // ── scenario 2: 2 дня / 40 минут / собеседование — не влезает ─────────────────────────────────
 
 it('S2 «собеседование», 2 дня / 40 мин: need 18 > room 16, does not fit and names what is dropped', function () {
-    // P1's band at 40 minutes is 16–18 terms; the scheduler's capacity is the BOTTOM of that band.
-    // A day written at 18 is inside the prompt's rules and outside the day the server can promise,
-    // and this is the disagreement A1 exists to catch — 2 days means exactly ONE teaching day.
+    // P1 is told the exact figure (40 minutes → 16) and this outline came back at 18 anyway —
+    // which is the whole reason the server does the arithmetic rather than trusting it. 2 days
+    // means exactly ONE teaching day, so the demand does not fit and the plan says so.
     $plan = $this->scheduler->compute(
         outline([['Пройти основные этапы интервью', 18, [
             'представиться и рассказать про опыт',
@@ -140,7 +140,9 @@ it('S2 «собеседование», 2 дня / 40 мин: need 18 > room 16, 
         ->and($plan->dropped[0]->outcome)->toBe('вести разговор в удалённом формате')
         // What is KEPT still fills the one teaching day; the final day is separate.
         ->and($plan->days)->toHaveCount(2)
-        ->and($plan->days[0]->termBudget)->toBe(12)
+        // The day ASKS FOR a full day's cards — capacity — even though the two abilities that
+        // survived only account for 12. Demand decides what fits; the minutes decide the day.
+        ->and($plan->days[0]->termBudget)->toBe(16)
         ->and($plan->days[1]->kind)->toBe(PlanDayKind::Final);
 });
 
@@ -319,9 +321,13 @@ it('packs by cumulative position, so three 5-term abilities make two days and no
     );
 
     expect($plan->introDays)->toBe(2)
-        ->and($plan->days[0]->skills)->toHaveCount(2)   // 5 + 5 = 10, one over capacity, reported
-        ->and($plan->days[0]->termBudget)->toBe(10)
-        ->and($plan->days[1]->skills)->toHaveCount(1);
+        ->and($plan->days[0]->skills)->toHaveCount(2)
+        // Two abilities worth 10 landed here and the day still asks for exactly 9 — the number of
+        // cards that fit in 20 minutes. The overflow is in the DEMAND, which is what `fits` is
+        // about; it is not something the day is allowed to buy its way out of.
+        ->and($plan->days[0]->termBudget)->toBe(9)
+        ->and($plan->days[1]->skills)->toHaveCount(1)
+        ->and($plan->days[1]->termBudget)->toBe(9);
 });
 
 it('names a merged day after its main ability, since no outline day title covers it', function () {
@@ -405,4 +411,22 @@ it('A7 says nothing is tight while the plan is on schedule', function () {
 
     expect($check->deadlineTight)->toBeFalse()
         ->and($check->atRisk)->toBe([]);
+});
+
+it('asks every teaching day for exactly capacity, whatever landed on it', function () {
+    // The day's LENGTH is the learner's choice of minutes, not an arithmetic leftover. A day that
+    // asked for the sum of its abilities would be a different length on Tuesday than on Monday for
+    // no reason the learner chose — and would hand the validator a card count P1 picked.
+    $plan = $this->scheduler->compute(
+        outline([['День 1', 9, ['A', 'B']], ['День 2', 4, ['C']]]),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-02'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->capacity)->toBe(9)
+        ->and(array_map(fn ($d) => $d->termBudget, $plan->days))->toBe([9, 9, 0])
+        // …and the phrase/word split follows the budget, so the model is handed 5 + 4 both days.
+        ->and($plan->days[0]->phraseCount())->toBe(5)
+        ->and($plan->days[1]->phraseCount())->toBe(5);
 });

@@ -26,7 +26,7 @@ final class ListLogsRequest extends FormRequest
             'provider' => ['sometimes', 'string', 'max:40'],
             'status' => ['sometimes', 'integer', 'min:100', 'max:599'],
             'status_class' => ['sometimes', 'in:2xx,4xx,5xx,error'],
-            'purpose' => ['sometimes', 'in:generation,images,enrichment,realtime,recap,example_regen'],
+            'purpose' => ['sometimes', 'in:generation,plan,images,enrichment,realtime,recap,example_regen'],
             'user_id' => ['sometimes', 'string', 'size:26'],
             'collection_id' => ['sometimes', 'string', 'size:26'],
             'from' => ['sometimes', 'date'],

@@ -6,9 +6,15 @@
 > текста**: всё, что выше первого `---`, до модели не доезжает (см. `PlanPromptLibrary::body()`),
 > поэтому смена этой шапки не меняет промпт — sha рендера тот же.
 >
-> v0.1 против v0: добавлены `entities[]`, `constraints[]`, `goal_terms[]` и `recommended_days`;
+> v0.1.1 против v0.1 — обе правки по требованию КОДА, а не вкуса:
+> `recommended_days` убран (валидатор каркаса его не проверял, а критерий «помещаются ли части цели
+> в дни» проходился укрупнением умения — поле читалось как обещание, которого никто не держал);
+> бюджет дня перестал быть полосой и стал ТЕМ ЖЕ числом, которое `PlanScheduler` считает из минут,
+> потому что валидатор дня считает карточки против него, а длину дня выбирает юзер минутами.
+>
+> v0.1 против v0: добавлены `entities[]`, `constraints[]`, `goal_terms[]`;
 > `final_day.checkpoints` убран — финальный список собирает сервер, а не модель (в v0 он дрейфовал).
-> Прогон и оценка: `docs/research/plan-sandbox-2026-08-29.md`.
+> Прогон и оценка: `docs/research/plan-sandbox-2026-08-29.md`, `docs/plan-1a-run.md`.
 
 Плейсхолдеры: `{{goal_text}}`, `{{support_lang}}`, `{{target_lang}}`, `{{level}}`, `{{days}}`,
 `{{minutes_per_day}}`.
@@ -113,19 +119,9 @@ An empty list when the goal has no such words.
 ## When the plan is too short for the goal
 
 `{{days}}` is what the learner asked for, and you produce a plan of exactly that length whatever you
-think of it. But you also say, honestly and once, whether it fits.
-
-`recommended_days` is an integer when the goal genuinely needs more days than {{days}}, and `null`
-when {{days}} is enough. Judge it by **coverage, not by comfort**: with {{days}} − 1 introduction
-days and 2–3 abilities each, can every part of the goal be the subject of an `outcome` without
-stacking unrelated parts onto one day? If yes — `null`. If a day would have to carry parts that have
-nothing to do with each other, name the number of days that would not.
-
-- Count the parts of the goal, allow 2–3 per introduction day, add one for the final day.
-- `recommended_days` never changes what you produce. The `days` array still has {{days}} − 1 entries
-  and the plan still covers everything, compressed. This field is a note to the learner, not a
-  licence to build a different plan.
-- `null` is the normal answer for a goal that fits. Do not inflate it to look thorough.
+think of it. **A short plan compresses; it never drops.** Whether the goal actually fits in the days
+available is decided by the SERVER, from the abilities you write and the minutes the learner has —
+you are not asked for an opinion about it, and there is no field for one.
 
 ## What you produce, and what you do NOT
 
@@ -150,10 +146,15 @@ learner cannot hear is not a role. See below.
    introduces terms AND closes with the final conversation. In that case `days` holds that one day
    and `final_day` describes the closing conversation of the SAME day (`"same_day": true`).
    For every {{days}} > 1, `"same_day": false` and `final_day` is a separate, term-free day.
-3. **Term budget per introduction day**, from {{minutes_per_day}}:
-   - 20 minutes → **8–10** terms
-   - 40 minutes → **16–18** terms
-   - another figure → scale linearly from these two, and round to a whole number.
+3. **Term budget per introduction day** — an EXACT figure, from {{minutes_per_day}}:
+   - 10 minutes → **5** terms
+   - 20 minutes → **9** terms
+   - 40 minutes → **16** terms
+   - another figure → the straight line through those three points, rounded to a whole number.
+
+   Not a range. This is the number of cards that fit in the minutes the learner chose, the server
+   computes the same figure from the same table, and the day's material is counted against it. A
+   budget one above it is not a richer day — it is a day the learner did not ask for.
 4. `estimated_terms` is the **sum of `term_budget` over the days in `days`** — arithmetic, not a
    guess. If {{days}} > 1, the final day contributes 0 and is not in `days` at all.
 
@@ -192,9 +193,13 @@ The day's conversation has exactly one interlocutor, and this object is that per
   say next, in order. These are utterances, not stage directions: «What brings you in today?», not
   «врач спрашивает о симптомах». Keep them inside the learner's level (see below) — the learner has
   to understand them.
-- `checkpoints` — 2–3 items, **one per `outcome` line, in the same order, and never a copy of it.**
-  If `outcome` has two entries, `checkpoints` has two entries. A checkpoint the day never promised
-  is a trap; a promise the conversation never checks is a lie.
+- `checkpoints` — **one per `outcome` line, in the same order, and never a copy of it.** If
+  `outcome` has two entries, `checkpoints` has two entries. A checkpoint the day never promised is a
+  trap; a promise the conversation never checks is a lie.
+
+  **2–3 on an ordinary day.** On a ONE-DAY plan ({{days}} = 1) the single day carries the whole
+  goal, so it may promise up to **5** — and no more: past five, one conversation stops being
+  something a person can be judged on.
 
   An `outcome` line is a PROMISE to the learner. A checkpoint is **what has to actually happen in
   this conversation for that promise to count as kept** — written so that someone listening could
@@ -266,7 +271,6 @@ easier one.
   ],
   "constraints": ["удалённо", "английская команда"],
   "goal_terms": ["PHP", "API"],
-  "recommended_days": null,
   "single_day": true,
   "days": [
     {
@@ -305,7 +309,7 @@ Fix what fails. Do not ship an explanation of why it failed.
 
 1. `days` has exactly {{days}} − 1 entries, or exactly 1 entry when {{days}} = 1.
 2. `estimated_terms` equals the sum of `term_budget`. Add them up again.
-3. Every `term_budget` is inside the band for {{minutes_per_day}}.
+3. Every `term_budget` is EXACTLY the figure for {{minutes_per_day}} — not one above it.
 4. For each day with a role: `checkpoints` and `outcome` have the SAME length and the same order,
    the *n*-th checkpoint checks the *n*-th ability, and **no checkpoint repeats the wording of its
    `outcome`** — each says what must be heard.

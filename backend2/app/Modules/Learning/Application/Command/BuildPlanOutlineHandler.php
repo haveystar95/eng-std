@@ -59,14 +59,20 @@ final readonly class BuildPlanOutlineHandler
         }
 
         $today = $this->clock->now()->setTime(0, 0, 0);
-        $support = new LanguageCode($this->profiles->nativeLangFor($plan->userId()));
+
+        // The plan is still a draft, so the learner's CURRENT language is the right one — the
+        // skeleton about to be written is what it will be written in. This is the last moment the
+        // account has any say; `start` freezes it.
+        $plan->refreshSupportLang(new LanguageCode($this->profiles->nativeLangFor($plan->userId())));
 
         // How many days there ARE, before anyone asks the model to fill them.
         $days = $this->daysUntil($today, $plan->eventDate());
 
         $answer = $this->outlines->outlineFor(new PlanOutlineBrief(
+            planId: $plan->id()->value,
+            userId: $plan->userId()->value,
             goalText: $plan->goalText(),
-            supportLang: $support->value,
+            supportLang: $plan->supportLang()->value,
             targetLang: $plan->targetLang()->value,
             level: $plan->level()->value,
             days: $days,

@@ -10,6 +10,12 @@
 > заимствованы из `generate_collection` v15.x дословно по смыслу — там, где канон плана их не
 > переопределяет.
 >
+> v0.1.1 против v0.1: `{{term_budget}}` теперь — точное число, посчитанное сервером из минут юзера
+> (`PlanScheduler`, таблица 10→5 / 20→9 / 40→16), а не число, выбранное каркасом из полосы. Для
+> этого промпта изменилось одно: раньше бюджет приходил как «сколько решил каркас», теперь — как
+> «сколько карточек помещается в день, который заказал юзер», и валидатор считает карточки против
+> ровно этого числа. Формулировка ниже усилена соответственно.
+>
 > v0.1 против v0: реплики вынесены в отдельный массив `phrases[]` с жёстким числом
 > `ceil(0.45 × бюджет)`; лексический `type` вернулся к ядру (`word|phrase|idiom|phrasal_verb`), а
 > «реплика или подстановка» стала отдельным флагом `is_line`; пример не может совпадать с `text`
@@ -74,7 +80,13 @@ At the end of this day the learner talks to the person named in `role`, and the 
 ticked off against `checkpoints`. Every term you write exists to get them through that conversation.
 A term that is about the topic but never surfaces in that conversation does not belong in this day.
 
-Produce EXACTLY {{term_budget}} terms — no more, no fewer — split across two arrays:
+Produce EXACTLY {{term_budget}} terms — no more, no fewer — split across two arrays.
+
+That figure is not a target and not a range: it is the number of cards that fit in the minutes this
+learner chose for a day, computed by the server from the same table the skeleton was given, and the
+day's material is counted against it after you answer. A day that comes back with one card more is
+not a generous day — it is a day the learner did not ask for, and it is rejected whole.
+
 
 - **`phrases` — EXACTLY {{phrase_count}} entries. The REPLIES:** lines the learner will actually
   say, or actually hear, in this conversation.
@@ -363,8 +375,9 @@ The DATA may carry a KNOWN block: terms the learner already met on an earlier da
 
 Fix what fails. Do not ship an explanation of why it failed.
 
-1. `phrases` has exactly {{phrase_count}} entries and `words` has exactly {{word_count}}. Count
-   both, one by one. These are the given numbers — if either is off, fix the array, not the number.
+1. `phrases` has exactly {{phrase_count}} entries and `words` has exactly {{word_count}}, and
+   together exactly {{term_budget}}. Count all three, one by one. These are GIVEN numbers, computed
+   from the learner's own minutes — if one is off, fix the array, never the number.
 2. Every entry of `phrases` has `is_line: true`; every entry of `words` has `is_line: false` and
    `covers_checkpoint: null`. Every entry of both has a `type` from the four lexical values.
 3. Every checkpoint index 1..N appears as `covers_checkpoint` on at least one entry of `phrases`.

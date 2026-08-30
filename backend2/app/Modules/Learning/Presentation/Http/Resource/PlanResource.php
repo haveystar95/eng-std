@@ -32,7 +32,6 @@ final class PlanResource
             'started_at' => $plan->startedAt,
             'completed_at' => $plan->completedAt,
             'readiness' => $plan->readiness,
-            'recommended_days' => $plan->recommendedDays,
             'entities' => $plan->entities,
             'constraints' => $plan->constraints,
             'goal_terms' => $plan->goalTerms,

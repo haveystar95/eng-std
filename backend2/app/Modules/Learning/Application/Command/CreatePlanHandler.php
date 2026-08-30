@@ -6,6 +6,7 @@ namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Domain\Entity\LearningPlan;
 use App\Modules\Learning\Domain\Exception\EventDateInPast;
+use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
@@ -23,6 +24,7 @@ final readonly class CreatePlanHandler
 {
     public function __construct(
         private PlanRepository $plans,
+        private LearnerProfileReader $profiles,
         private \App\Modules\Shared\Domain\Service\Clock $clock,
     ) {}
 
@@ -43,6 +45,10 @@ final readonly class CreatePlanHandler
             title: mb_substr(trim($command->goalText), 0, 120),
             goalText: trim($command->goalText),
             targetLang: new LanguageCode($command->targetLang),
+            // Read from the account ONCE, here, and carried by the plan from now on. It stays
+            // fluid while the plan is a draft (the outline is written in it) and is frozen the
+            // moment the plan starts.
+            supportLang: new LanguageCode($this->profiles->nativeLangFor($command->actorId)),
             level: PlanLevel::from($command->level),
             eventDate: $eventDate,
             minutesPerDay: $command->minutesPerDay,

@@ -18,7 +18,10 @@ final class EloquentAdminGenerationReader implements AdminGenerationReader
 {
     public function list(?string $userId, ?string $status, ListWindow $window): Page
     {
-        $base = DB::table('generation_requests');
+        // Collection generations. Plan calls share this ledger (money is money and the cost
+        // screen sums both), but this screen shows a request and the collection it produced —
+        // a plan row has no collection and would read as a generation that lost one.
+        $base = DB::table('generation_requests')->where('purpose', 'generation');
         if ($userId !== null && $userId !== '') {
             $base->where('user_id', $userId);
         }

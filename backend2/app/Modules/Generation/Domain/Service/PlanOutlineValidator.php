@@ -19,9 +19,10 @@ use App\Modules\Generation\Domain\ValueObject\PlanViolation;
  * везу кота в ветклинику»: a ONE-DAY plan has the whole goal in its only day, the prompt tells it
  * to compress rather than drop, and it honestly wrote four abilities with four checkpoints. The
  * band is a shape rule; the invariant is that the two lists are the SAME list seen from two sides.
- * So the equality is enforced always, the floor of 2 is enforced always, and the ceiling of 3 is
- * lifted for a single-day plan — where it was measuring the length of the goal, not the quality of
- * the day. Cost of learning this: one refused $0.021 call.
+ * So the equality is enforced always, the floor of 2 is enforced always, and the ceiling rises
+ * from 3 to 5 on a single-day plan — where the band was measuring the length of the goal, not the
+ * quality of the day. It rises rather than disappearing: past five, one conversation stops being
+ * something a person can be judged on. Cost of learning this: one refused $0.021 call.
  *
  * The one thing it deliberately does NOT check is `final_day.checkpoints`, because there is no such
  * field: v0 asked the model for it and the answer drifted from the days it was supposed to copy,
@@ -45,6 +46,17 @@ final class PlanOutlineValidator
     public const NOT_A_LIST = 'outline.not_a_list';
     public const NO_FINAL_DAY = 'outline.no_final_day';
 
+    /** An ordinary day promises two or three things and its conversation checks them. */
+    private const MIN_CHECKPOINTS = 2;
+    private const MAX_CHECKPOINTS = 3;
+
+    /**
+     * A one-day plan carries the whole goal, so it may promise more — up to five, and no further.
+     * The ceiling is not «unlimited»: past five, one conversation stops being something a person
+     * can be judged on, and a day promising eight abilities is a day that will fail its own test.
+     */
+    private const MAX_CHECKPOINTS_SINGLE_DAY = 5;
+
     /**
      * @param  array<mixed>  $answer  the decoded JSON, exactly as the model returned it
      * @return list<PlanViolation>  empty = usable
@@ -62,7 +74,7 @@ final class PlanOutlineValidator
         // word for it; the day count is the fallback, because a field that decides a gate should
         // not be taken on trust from the thing being gated.
         $singleDay = ($answer['single_day'] ?? null) === true || count($days) === 1;
-        $maxCheckpoints = $singleDay ? PHP_INT_MAX : 3;
+        $maxCheckpoints = $singleDay ? self::MAX_CHECKPOINTS_SINGLE_DAY : self::MAX_CHECKPOINTS;
 
         foreach ($days as $position => $day) {
             $label = 'день ' . (is_array($day) && isset($day['index']) && is_scalar($day['index'])
@@ -100,11 +112,11 @@ final class PlanOutlineValidator
             }
 
             $checkpoints = $this->strings($role['checkpoints'] ?? null);
-            if (count($checkpoints) < 2 || count($checkpoints) > $maxCheckpoints) {
+            if (count($checkpoints) < self::MIN_CHECKPOINTS || count($checkpoints) > $maxCheckpoints) {
                 $violations[] = new PlanViolation(
                     self::CHECKPOINT_COUNT,
                     'чек-пойнтов ' . count($checkpoints) . ', а должно быть '
-                    . ($singleDay ? 'не меньше 2' : '2–3'),
+                    . self::MIN_CHECKPOINTS . '–' . $maxCheckpoints,
                     $label,
                 );
             }

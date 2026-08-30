@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Generation\Application\Service;
 
+use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
+use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\Service\PlanOutlineValidator;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 use App\Modules\Learning\Application\Dto\PlanModelAnswer;
@@ -39,6 +41,7 @@ final readonly class PlanOutlineService implements PlanOutlinePort
     public function __construct(
         private ContentModelPort $model,
         private PlanPromptSource $prompts,
+        private RecordsPlanSpend $ledger,
         private PlanOutlineValidator $validator = new PlanOutlineValidator(),
     ) {}
 
@@ -69,6 +72,30 @@ final readonly class PlanOutlineService implements PlanOutlinePort
         }
 
         $violations = $this->validator->validate($answer->payload);
+
+        // THE LEDGER ROW IS WRITTEN BEFORE THE VERDICT, and that ordering is the point: a refused
+        // answer cost exactly as much as an accepted one. PLAN-1a's own run refused an outline for
+        // $0.020155 and, under the old code, that call would have left no trace of having been
+        // paid for. `succeeded` records which of the two happened.
+        $this->ledger->record(new PlanSpend(
+            planId: $brief->planId,
+            userId: $brief->userId,
+            call: PlanSpend::CALL_OUTLINE,
+            subject: $brief->goalText,
+            supportLang: $brief->supportLang,
+            targetLang: $brief->targetLang,
+            promptVersion: $this->prompts->version(),
+            model: $answer->model,
+            tokensIn: $answer->tokensIn,
+            tokensOut: $answer->tokensOut,
+            costUsd: $answer->costUsd,
+            succeeded: $violations === [],
+            error: $violations === [] ? null : mb_substr(implode('; ', array_map(
+                static fn (PlanViolation $v): string => (string) $v,
+                $violations,
+            )), 0, 500),
+        ));
+
         if ($violations !== []) {
             throw PlanOutlineRefused::invalid(
                 array_map(static fn (PlanViolation $v): string => (string) $v, $violations),

@@ -30,6 +30,21 @@ use DateTimeImmutable;
  * is handed in, which is also what makes «а что будет, если я начну в четверг» a test rather than a
  * conversation.
  *
+ * ## The day's budget is CAPACITY, not the sum of what landed on it
+ *
+ * `need` measures DEMAND — what P1 thinks the abilities cost — and it is what decides how many days
+ * there are and what does not fit. What each day then ASKS FOR is `capacity`: the number of cards
+ * that fit in the minutes the learner has, exactly. Those are two different questions and letting
+ * the second be answered by the first is what produced days of 10 and 18 terms — a figure P1 chose
+ * out of a band, handed to a validator that counts cards, on a day whose length the learner had
+ * already fixed by choosing 20 minutes.
+ *
+ * So the model is given a NUMBER and never a band, the validator counts against that same number,
+ * and a day that comes back with 8 or 11 cards is wrong rather than «within tolerance». The last
+ * day of a plan may carry fewer abilities than the others and still asks for a full day's cards:
+ * more material per ability is what a day with room looks like, and asking for less would leave
+ * the learner short for a reason no one chose.
+ *
  * ## The arithmetic, in the order it happens
  *
  *   need      Σ of what every ability costs — {@see PlanOutline::skills()}
@@ -115,6 +130,7 @@ final class PlanScheduler
                     skills: $skills,
                     outline: $outline,
                     finalCheckpoints: $outline->finalCheckpoints(),
+                    budget: $capacity,
                 )],
                 need: $need,
                 capacity: $capacity,
@@ -153,6 +169,7 @@ final class PlanScheduler
                 skills: $bucket,
                 outline: $outline,
                 finalCheckpoints: null,
+                budget: $capacity,
             );
         }
 
@@ -368,6 +385,7 @@ final class PlanScheduler
         array $skills,
         PlanOutline $outline,
         ?array $finalCheckpoints,
+        int $budget,
     ): ComputedDay {
         $sources = [];
         foreach ($skills as $skill) {
@@ -407,7 +425,7 @@ final class PlanScheduler
                 ? $sourceDay->title
                 : ($skills[0]->outcome ?? 'День плана'),
             scheduledOn: $scheduledOn,
-            termBudget: $this->sum($skills),
+            termBudget: $budget,
             skills: $skills,
             checkpoints: $finalCheckpoints ?? $checkpoints,
             role: $role,

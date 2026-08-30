@@ -100,7 +100,6 @@ final readonly class ReschedulePlanHandler
             entities: $outline->entities,
             constraints: $outline->constraints,
             goalTerms: $outline->goalTerms,
-            recommendedDays: $outline->recommendedDays,
             days: $kept,
             finalDayTitle: $outline->finalDayTitle,
         );

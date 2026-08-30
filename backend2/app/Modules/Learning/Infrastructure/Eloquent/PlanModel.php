@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $goal_text
  * @property string|null $goal_restated
  * @property string $target_lang
+ * @property string $support_lang
  * @property string $level
  * @property string $event_date
  * @property int $minutes_per_day

@@ -82,11 +82,13 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
+use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Application\Service\PlanOutlineService;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
+use App\Modules\Generation\Infrastructure\Eloquent\EloquentPlanSpendLedger;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use App\Modules\Learning\Application\Port\DispatchesPlanDay;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
@@ -136,11 +138,16 @@ final class GenerationServiceProvider extends ServiceProvider
         // silently diverging in quality.
         $this->app->bind(PlanPromptSource::class, PlanPromptLibrary::class);
         $this->app->bind(DispatchesPlanDay::class, QueuedPlanDayDispatcher::class);
+        // The plan's LEDGER. Bound unconditionally — there is no `fake` variant and there will not
+        // be one: a test that could quietly skip the accounting is a test that would have passed
+        // through the bug this ledger exists because of.
+        $this->app->bind(RecordsPlanSpend::class, EloquentPlanSpendLedger::class);
 
         $this->app->bind(PlanOutlinePort::class, function (): PlanOutlinePort {
             return new PlanOutlineService(
                 model: $this->planModel(),
                 prompts: $this->app->make(PlanPromptSource::class),
+                ledger: $this->app->make(RecordsPlanSpend::class),
             );
         });
 
@@ -148,6 +155,7 @@ final class GenerationServiceProvider extends ServiceProvider
             return new PlanDayComposer(
                 model: $this->planModel(),
                 prompts: $this->app->make(PlanPromptSource::class),
+                ledger: $this->app->make(RecordsPlanSpend::class),
             );
         });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening

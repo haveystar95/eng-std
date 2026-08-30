@@ -2385,7 +2385,12 @@ components:
             rather than instead of it, because «я такого не просил» is only answerable with both.
         support_lang:
           type: string
-          description: The learner's own language, read from the account — never stored on the plan.
+          description: >-
+            The learner's own language, AS THIS PLAN IS WRITTEN IN IT. Carried by the plan rather
+            than read from the account at use time: a plan runs for days, and its skeleton, its
+            keys and its grading are all in this language. It follows the account while the plan is
+            a draft and is FROZEN when the plan starts, so changing the account language mid-plan
+            cannot make day 4 arrive in a different language from days 1–3.
         target_lang: { type: string }
         level: { type: string, enum: [zero, basic, conversational, fluent] }
         event_date: { type: string, format: date }
@@ -2402,12 +2407,6 @@ components:
             zero, and the term half is capped at 0.4 — its weight in the full formula. A learner
             who has acquired every word of every day reads 0.4, not «готов». The number only ever
             grows when the ladder ships; it never has to be taken back.
-        recommended_days:
-          type: [integer, 'null']
-          description: >-
-            The model's honest opinion that the goal needs more days than the learner has, or null.
-            A note, never a licence to build a different plan — the plan is still exactly the
-            length that was asked for.
         entities:
           type: array
           description: >-

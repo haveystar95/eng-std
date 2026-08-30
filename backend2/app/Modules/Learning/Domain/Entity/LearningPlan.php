@@ -39,6 +39,13 @@ final class LearningPlan
         private readonly string $goalText,
         private ?string $goalRestated,
         private readonly LanguageCode $targetLang,
+        /**
+         * The learner's own language, AS THIS PLAN WAS WRITTEN IN IT. Not read from the account at
+         * use time: a plan runs for days, its skeleton, its keys and its grading are all in this
+         * language, and the account is a setting a person can change on Tuesday. Fluid while the
+         * plan is a draft, frozen by {@see start()}.
+         */
+        private LanguageCode $supportLang,
         private PlanLevel $level,
         private DateTimeImmutable $eventDate,
         private int $minutesPerDay,
@@ -56,13 +63,14 @@ final class LearningPlan
         string $title,
         string $goalText,
         LanguageCode $targetLang,
+        LanguageCode $supportLang,
         PlanLevel $level,
         DateTimeImmutable $eventDate,
         int $minutesPerDay,
     ): self {
         return new self(
-            $id, $userId, PlanStatus::Draft, $title, $goalText, null, $targetLang, $level,
-            $eventDate, $minutesPerDay, null, null, null, null,
+            $id, $userId, PlanStatus::Draft, $title, $goalText, null, $targetLang, $supportLang,
+            $level, $eventDate, $minutesPerDay, null, null, null, null,
         );
     }
 
@@ -78,6 +86,7 @@ final class LearningPlan
         string $goalText,
         ?string $goalRestated,
         LanguageCode $targetLang,
+        LanguageCode $supportLang,
         PlanLevel $level,
         DateTimeImmutable $eventDate,
         int $minutesPerDay,
@@ -87,8 +96,8 @@ final class LearningPlan
         ?DateTimeImmutable $completedAt,
     ): self {
         return new self(
-            $id, $userId, $status, $title, $goalText, $goalRestated, $targetLang, $level,
-            $eventDate, $minutesPerDay, $outline, $computed, $startedAt, $completedAt,
+            $id, $userId, $status, $title, $goalText, $goalRestated, $targetLang, $supportLang,
+            $level, $eventDate, $minutesPerDay, $outline, $computed, $startedAt, $completedAt,
         );
     }
 
@@ -151,6 +160,27 @@ final class LearningPlan
         // is not rewritten by putting the plan down for a week.
         $this->startedAt ??= $now;
         $this->status = PlanStatus::Active;
+
+        // From here the support language is FROZEN. Nothing rewrites it: the skeleton is already
+        // written in it, day 1 is about to be, and the keys the learner will be graded on are its
+        // sentences. There is deliberately no method that can change it afterwards — the freeze is
+        // the absence of a setter, not a flag somebody has to remember to check.
+    }
+
+    /**
+     * Re-read the learner's language onto a DRAFT.
+     *
+     * Only reachable while nothing has been generated. The outline is what gets written in this
+     * language, so the last word before commitment is the right one; after `start` there is no
+     * path here at all.
+     */
+    public function refreshSupportLang(LanguageCode $supportLang): void
+    {
+        if ($this->status !== PlanStatus::Draft) {
+            throw InvalidPlanTransition::make($this->status, 'сменить язык поддержки');
+        }
+
+        $this->supportLang = $supportLang;
     }
 
     public function pause(): void
@@ -229,6 +259,11 @@ final class LearningPlan
     public function targetLang(): LanguageCode
     {
         return $this->targetLang;
+    }
+
+    public function supportLang(): LanguageCode
+    {
+        return $this->supportLang;
     }
 
     public function level(): PlanLevel

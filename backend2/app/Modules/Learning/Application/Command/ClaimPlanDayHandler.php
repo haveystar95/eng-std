@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
-use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Dto\PlanDayGenerationBrief;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Shared\Domain\Service\TransactionManager;
-use App\Modules\Shared\Domain\ValueObject\LanguageCode;
 
 /**
  * The idempotency gate for a paid call.
@@ -29,7 +27,6 @@ final readonly class ClaimPlanDayHandler
     public function __construct(
         private PlanRepository $plans,
         private PlanDayRepository $days,
-        private LearnerProfileReader $profiles,
         private TransactionManager $tx,
     ) {}
 
@@ -53,7 +50,8 @@ final readonly class ClaimPlanDayHandler
             }
 
             $brief = $day->roleBrief() ?? [];
-            $support = new LanguageCode($this->profiles->nativeLangFor($plan->userId()));
+            // The PLAN's language, not the account's — see LearningPlan::$supportLang.
+            $support = $plan->supportLang();
 
             /** @var list<string> $checkpoints */
             $checkpoints = is_array($brief['checkpoints'] ?? null) ? array_values(array_filter(

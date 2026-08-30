@@ -11,6 +11,7 @@ use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler
 use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Learning\Application\Command\ClaimPlanDay;
 use App\Modules\Learning\Application\Command\ClaimPlanDayHandler;
@@ -95,6 +96,13 @@ final readonly class GeneratePlanDayHandler
 
         try {
             $draft = $this->composer->compose($brief, $this->knownFor($brief));
+        } catch (PlanSpendNotRecorded $e) {
+            // THE ONE FAILURE THAT IS NOT TURNED INTO A DAY STATE. Everything else here becomes a
+            // `fail_reason` a person can read on the plan screen, because a day that did not
+            // generate is a product problem. An unrecorded payment is not: the call already
+            // happened, and letting the pipeline carry on would make the money invisible exactly
+            // as it was invisible in the PLAN-1a run. Out through the job, into `failed_jobs`.
+            throw $e;
         } catch (Throwable $e) {
             ($this->finish)(new FinishPlanDay(
                 planId: $brief->planId,

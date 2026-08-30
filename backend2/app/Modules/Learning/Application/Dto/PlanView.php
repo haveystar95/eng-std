@@ -38,7 +38,6 @@ final readonly class PlanView
         public array $entities,
         public array $constraints,
         public array $goalTerms,
-        public ?int $recommendedDays,
         /**
          * How ready the learner is, 0…1.
          *

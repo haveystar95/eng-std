@@ -28,6 +28,10 @@ final class EloquentGenerationRequestRepository implements GenerationRequestRepo
         string $promptVersion,
     ): ?CollectionId {
         $model = GenerationRequestModel::query()
+            // COLLECTION generations only. The ledger now also holds plan calls, whose `prompt` is
+            // a goal rather than a topic and whose row has no collection at all — matching one
+            // would serve a plan day's material to somebody who asked for a subject.
+            ->where('purpose', 'generation')
             ->where('normalized_prompt', $normalizedPrompt)
             ->where('source_lang', $sourceLang->value)
             ->where('target_lang', $targetLang->value)
