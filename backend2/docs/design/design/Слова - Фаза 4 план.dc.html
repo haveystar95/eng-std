@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400;1,7..72,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EFECE6; font-family:Inter,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#9A4430; text-decoration:none; }
+  a:hover { color:#7E3524; }
+</style>
+</helmet>
+
+<section style="padding:56px 56px 160px;color:#2E2620">
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8A857E">Слова · фаза 4 · план подготовки</div>
+  <div style="font-family:Literata,Georgia,serif;font-size:44px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin-top:12px">План: цель, дата, дни</div>
+  <div style="font-size:15px;line-height:1.6;color:#4A443D;margin-top:14px;max-width:760px;text-wrap:pretty">Коллекция — «хочу выучить тему». План — «нужно подготовиться к цели к дате»: строгий механизм, дни знакомства из фраз и слов, разговор с ролью, финальное испытание. Два направления входа (<a href="#1a">1a</a> анкета-разговор, <a href="#1b">1b</a> одна карточка) ведут в одни и те же общие экраны (<a href="#1c">1c</a>). Принято направление <a href="#1b">1b</a> — со сжатыми строками прошлых ответов из <a href="#1a">1a</a>; <a href="#1a">1a</a> остаётся как запись разбора. Вьюпорт 390&nbsp;pt, тап&nbsp;≥&nbsp;44&nbsp;pt. Латунь — служебная метка плана, терракота — по-прежнему единственный акцент действия.</div>
+
+  <div style="display:flex;flex-direction:column;gap:76px;margin-top:52px">
+
+    <!-- ================= A ================= -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#F6F3EC;background:#2E2620;padding:5px 9px;border-radius:6px">1a</div>
+        <div style="font-family:Literata,Georgia,serif;font-size:26px;font-weight:500">Анкета-разговор</div>
+        <div style="font-size:13.5px;color:#6E6862;max-width:520px;line-height:1.5">Вход растёт лентой вниз: вопрос сверху, ответ карточкой, следующий вопрос ниже. Превью — последняя реплика в той же ленте, отдельного экрана нет.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,390px);gap:30px">
+
+        <!-- A1 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 01 · к чему готовишься</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">План подготовки</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E">1/3</div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:31px;line-height:1.2;letter-spacing:-.01em">К чему готовишься?</div>
+              <div style="font-size:14.5px;line-height:1.55;color:#6E6862;margin-top:10px">Опиши ситуацию своими словами. ИИ соберёт из неё дни: фразы, которые ты реально скажешь.</div>
+              <div style="margin-top:22px;background:#FCFAF5;border:1px solid rgba(46,38,32,.16);border-radius:16px;padding:18px;min-height:104px">
+                <div style="font-family:Literata,Georgia,serif;font-size:20px;color:#A8A29A;display:flex;align-items:center;gap:1px">Например, приём у врача<span style="display:inline-block;width:1.5px;height:22px;background:#B5533C"></span></div>
+              </div>
+              <div style="margin-top:20px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Часто выбирают</div>
+              <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Собеседование</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Врач</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Аренда квартиры</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Поездка</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Ветклиника</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 15px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Школа ребёнка</div>
+              </div>
+            </div>
+            <div style="height:34px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Свободный текст — главный элемент; чипы стоят под ним как примеры, а не как выбор из списка. «ИИ» произносится здесь один раз за весь поток.</div>
+        </div>
+
+        <!-- A2 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 02 · язык и уровень</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">План подготовки</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E">2/3</div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="font-size:12.5px;color:#8A857E">К чему готовишься</div>
+              <div style="margin-top:8px;background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:18px;line-height:1.35">Иду к врачу, болит спина</div>
+                <div style="font-size:13.5px;color:#9A4430;flex:0 0 auto;padding-top:2px">Изменить</div>
+              </div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:29px;line-height:1.2">Какой язык учишь?</div>
+              <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:22px;background:#2E2620;color:#F6F3EC;font-size:14.5px;font-weight:500">Английский</div>
+                <div style="min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Немецкий</div>
+                </div>
+              <div style="margin-top:28px;font-family:Literata,Georgia,serif;font-size:22px">Как сейчас говоришь?</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column">
+                <div style="height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:16px">С нуля<span style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+                <div style="height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:16px;font-weight:600">Понимаю простое<span style="width:18px;height:18px;border-radius:50%;border:5px solid #9A4430"></span></div>
+                <div style="height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:16px">Объясняюсь<span style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+                <div style="height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:16px">Свободно<span style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+              </div>
+            </div>
+            <div style="height:34px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Предыдущий ответ остаётся сверху карточкой с «Изменить» — лента не съедает контекст. Уровень — четыре человеческих формулировки без A1/B2.</div>
+        </div>
+
+        <!-- A3 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 03 · когда и сколько</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">План подготовки</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E">3/3</div>
+            </div>
+            <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="font-family:Literata,Georgia,serif;font-size:17px">Иду к врачу, болит спина</div>
+                <div style="font-size:13.5px;color:#9A4430">Изменить</div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="font-family:Literata,Georgia,serif;font-size:17px">Английский · понимаю простое</div>
+                <div style="font-size:13.5px;color:#9A4430">Изменить</div>
+              </div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:29px;line-height:1.2">Когда это случится?</div>
+              <div style="margin-top:16px;display:flex;gap:8px">
+                <div style="min-height:44px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-size:15px">Сегодня</div>
+                <div style="min-height:44px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-size:15px">Завтра</div>
+                <div style="min-height:44px;flex:1.2;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#2E2620;color:#F6F3EC;font-size:15px;font-weight:500">2 сентября</div>
+              </div>
+              <div style="margin-top:10px;font-size:13.5px;color:#6E6862">Через три дня — успеваем собрать подготовку.</div>
+              <div style="margin-top:28px;font-family:Literata,Georgia,serif;font-size:22px">Сколько минут в день?</div>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <div style="min-height:56px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:22px">10</span><span style="font-size:12px;color:#8A857E">мин</span></div>
+                <div style="min-height:56px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;border:1.5px solid #2E2620;background:#FCFAF5"><span style="font-family:Literata,Georgia,serif;font-size:22px;font-weight:600">20</span><span style="font-size:12px;color:#6E6862">мин</span></div>
+                <div style="min-height:56px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18)"><span style="font-family:Literata,Georgia,serif;font-size:22px">40</span><span style="font-size:12px;color:#8A857E">мин</span></div>
+              </div>
+              <div style="margin-top:28px;min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Собрать план</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Прошлые ответы сжались в две строки — лента помнит всё, но не занимает экран. Для «сегодня» блок минут не показывается.</div>
+        </div>
+
+        <!-- A4 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 04 · превью как реплика</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:18px 22px 0">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Вот что получилось</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:29px;line-height:1.18;margin-top:10px">К врачу из-за боли</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6E6862;margin-top:8px;letter-spacing:.02em">ПОДГОТОВКА 2 ДНЯ + ПРОГОН · ПРИЁМ 2 СЕНТЯБРЯ</div>
+              <div style="font-size:13.5px;color:#6E6862;margin-top:6px">~18 фраз и слов · 20 мин в день</div>
+            </div>
+            <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:12px">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;letter-spacing:.06em">ДЕНЬ 1</div><div style="font-size:12.5px;color:#8A857E">5 слов · 4 фразы</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:6px;line-height:1.3">Начать приём и описать боль</div>
+                <div style="margin-top:10px;font-size:13.5px;line-height:1.6;color:#4A443D">Ты сможешь сказать, зачем пришёл; назвать, где именно болит; объяснить, как давно это длится.</div>
+              </div>
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;letter-spacing:.06em">ДЕНЬ 2</div><div style="font-size:12.5px;color:#8A857E">5 слов · 4 фразы</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:6px;line-height:1.3">Уточнить симптомы и помощь</div>
+                <div style="margin-top:10px;font-size:13.5px;line-height:1.6;color:#4A443D">Ты сможешь описать, какая это боль; сказать, что усиливает или облегчает; попросить объяснить проще.</div>
+              </div>
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;letter-spacing:.06em">ДЕНЬ 3</div><div style="font-size:12.5px;color:#8A857E">без новых слов</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:6px;line-height:1.3">Прогон всего приёма</div>
+                <div style="margin-top:10px;font-size:13.5px;line-height:1.6;color:#4A443D">Разговор по всем шести чек-пойнтам — от причины визита до срока.</div>
+              </div>
+            </div>
+            <div style="padding:18px 22px 0;display:flex;gap:18px">
+              <div style="font-size:14px;color:#9A4430">Убрать день</div>
+              <div style="font-size:14px;color:#9A4430">Перестроить</div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать</div>
+              <div style="margin-top:10px;text-align:center;font-size:12.5px;color:#8A857E">[цена / условия — placeholder]</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Итоговая реплика ленты: «вот что получилось» читается как ответ на твои три ответа. Дни — карточки с «ты сможешь», а не список тем.</div>
+        </div>
+
+        <!-- A5 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 05 · срок мал под цель</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:18px 22px 0">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Вот что получилось</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:29px;line-height:1.18;margin-top:10px">К врачу из-за боли</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6E6862;margin-top:8px;letter-spacing:.02em">ПОДГОТОВКА 1 ДЕНЬ + ПРОГОН · ПРИЁМ 1 СЕНТЯБРЯ</div>
+              <div style="font-size:13.5px;color:#6E6862;margin-top:6px">~12 фраз и слов · 20 мин в день</div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="border-top:1px solid #B79363;border-bottom:1px solid #B79363;padding:16px 0;background:rgba(183,147,99,.07)">
+                <div style="padding:0 2px;font-family:Literata,Georgia,serif;font-size:18px;line-height:1.4">За 2 дня по 20 минут закроем половину: вот эти умения.</div>
+                <div style="padding:0 2px;margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px">
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Сказать, зачем пришёл</div>
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Назвать, где именно болит</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#8A857E"><span>—</span>Сказать, как давно это длится</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#8A857E"><span>—</span>Описать, какая это боль</div>
+                </div>
+                <div style="padding:0 2px;margin-top:14px;display:flex;gap:10px">
+                  <div style="min-height:44px;padding:0 18px;border-radius:12px;background:#8C6A3A;color:#FCFAF5;display:flex;align-items:center;font-size:15px;font-weight:600">Добавить 20 минут в день</div>
+                  <div style="min-height:44px;padding:0 16px;border-radius:12px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;font-size:15px">Оставить</div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:18px 22px 0;display:flex;flex-direction:column;gap:12px">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;letter-spacing:.06em">ДЕНЬ 1</div><div style="font-size:12.5px;color:#8A857E">5 слов · 4 фразы</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:6px">Начать приём и описать боль</div>
+              </div>
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;letter-spacing:.06em">ДЕНЬ 2</div><div style="font-size:12.5px;color:#8A857E">без новых слов</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:6px">Прогон приёма</div>
+                <div style="margin-top:8px;font-size:13.5px;line-height:1.55;color:#4A443D">Слова второго дня останутся на ступени B — на приёме их придётся вспоминать.</div>
+              </div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать</div>
+              <div style="margin-top:10px;text-align:center;font-size:12.5px;color:#8A857E">[цена / условия — placeholder]</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Мягкое предупреждение — латунная полоса, а не красный алерт: рекомендация, которую можно принять или отклонить. Причина названа механикой ступеней, не абстрактным «будет сложно».</div>
+        </div>
+
+        <!-- A6 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">A · 06 · собираю день 1</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:130px 30px 0;text-align:center">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">К врачу из-за боли</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.2;margin-top:14px">Собираю день 1</div>
+              <div style="font-size:14.5px;line-height:1.6;color:#6E6862;margin-top:12px">Подбираю фразы, которые ты скажешь на приёме, и слова, которые в них подставляются.</div>
+              <div style="margin-top:26px;display:flex;flex-direction:column;gap:10px;text-align:left">
+                <div style="display:flex;align-items:center;gap:10px;font-size:14.5px"><span style="width:16px;height:16px;border-radius:50%;background:#8C6A3A;flex:0 0 16px"></span>Цель разобрана</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14.5px"><span style="width:16px;height:16px;border-radius:50%;background:#8C6A3A;flex:0 0 16px"></span>Реплики приёма подобраны</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14.5px;color:#8A857E"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(46,38,32,.25);flex:0 0 16px"></span>Слова и примеры</div>
+              </div>
+            </div>
+            <div style="padding:150px 22px 0"></div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Ожидание объясняет, что происходит, тремя шагами вместо спиннера. Дальше — активный план <a href="#1c">1c</a> · 01.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= B ================= -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#F6F3EC;background:#2E2620;padding:5px 9px;border-radius:6px">1b</div>
+        <div style="font-family:Literata,Georgia,serif;font-size:26px;font-weight:500">Одна карточка</div>
+        <div style="font-size:13.5px;color:#6E6862;max-width:520px;line-height:1.5">Три шага живут на одном экране и раскрываются по очереди — вход виден целиком с первого касания. Превью — отдельный экран.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,390px);gap:30px">
+
+        <!-- B1 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 01 · шаг 1 раскрыт</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:22px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.18">Составить план</div>
+              <div style="font-size:14.5px;line-height:1.55;color:#6E6862;margin-top:8px">Три ответа — и ИИ соберёт дни подготовки из фраз, которые ты реально скажешь.</div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.16);border-radius:18px;overflow:hidden">
+                <div style="padding:18px 18px 0">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">01</div><div style="font-family:Literata,Georgia,serif;font-size:21px">К чему готовишься?</div></div>
+                  <div style="margin-top:14px;border-bottom:1.5px solid #2E2620;padding-bottom:10px;font-family:Literata,Georgia,serif;font-size:19px;color:#A8A29A;display:flex;align-items:center;gap:1px">Например, приём у врача<span style="display:inline-block;width:1.5px;height:21px;background:#B5533C"></span></div>
+                  <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;padding-bottom:18px">
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Собеседование</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Врач</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Аренда</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Поездка</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Ветклиника</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14px">Школа ребёнка</div>
+                  </div>
+                </div>
+                <div style="height:60px;border-top:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#8A857E">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">02</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Язык и уровень</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M6 9l6 6 6-6"></path></svg>
+                </div>
+                <div style="height:60px;border-top:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#8A857E">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">03</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Когда и сколько</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M6 9l6 6 6-6"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:rgba(46,38,32,.10);color:#8A857E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Собрать план</div>
+            </div>
+            <div style="height:110px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Видно сразу: вопросов всего три. Кнопка присутствует с начала, но неактивна — обещание короткого входа.</div>
+        </div>
+
+        <!-- B2 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 02 · шаг 2 раскрыт</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:22px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.18">Составить план</div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.16);border-radius:18px;overflow:hidden">
+                <div style="height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">01</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Иду к врачу, болит спина</div></div>
+                  <div style="font-size:13.5px;color:#9A4430">Изм.</div>
+                </div>
+                <div style="border-top:1px solid rgba(46,38,32,.12);padding:18px">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">02</div><div style="font-family:Literata,Georgia,serif;font-size:21px">Язык и уровень</div></div>
+                  <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:22px;background:#2E2620;color:#F6F3EC;font-size:14.5px;font-weight:500">Английский</div>
+                    <div style="min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:22px;border:1px solid rgba(46,38,32,.18);font-size:14.5px">Немецкий</div>
+                    </div>
+                  <div style="margin-top:20px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Как сейчас говоришь</div>
+                  <div style="margin-top:8px;display:flex;flex-direction:column">
+                    <div style="height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:15.5px">С нуля<span style="width:17px;height:17px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+                    <div style="height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:15.5px;font-weight:600">Понимаю простое<span style="width:17px;height:17px;border-radius:50%;border:5px solid #9A4430"></span></div>
+                    <div style="height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12);font-size:15.5px">Объясняюсь<span style="width:17px;height:17px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+                    <div style="height:52px;display:flex;align-items:center;justify-content:space-between;font-size:15.5px">Свободно<span style="width:17px;height:17px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span></div>
+                  </div>
+                </div>
+                <div style="height:60px;border-top:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#8A857E">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">03</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Когда и сколько</div></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M6 9l6 6 6-6"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:rgba(46,38,32,.10);color:#8A857E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Собрать план</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Закрытый шаг сжимается в строку с ответом — карточка не растёт бесконечно. Остальные шаги видны всё время.</div>
+        </div>
+
+        <!-- B3 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 03 · шаг 3 раскрыт</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:22px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.18">Составить план</div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.16);border-radius:18px;overflow:hidden">
+                <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 18px">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">01</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Иду к врачу, болит спина</div></div>
+                  <div style="font-size:13.5px;color:#9A4430">Изм.</div>
+                </div>
+                <div style="height:60px;border-top:1px solid rgba(46,38,32,.12);display:flex;align-items:center;justify-content:space-between;padding:0 18px">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">02</div><div style="font-family:Literata,Georgia,serif;font-size:19px">Английский · понимаю простое</div></div>
+                  <div style="font-size:13.5px;color:#9A4430">Изм.</div>
+                </div>
+                <div style="border-top:1px solid rgba(46,38,32,.12);padding:18px">
+                  <div style="display:flex;align-items:baseline;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">03</div><div style="font-family:Literata,Georgia,serif;font-size:21px">Когда это случится?</div></div>
+                  <div style="margin-top:14px;display:flex;gap:8px">
+                    <div style="min-height:44px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-size:15px">Сегодня</div>
+                    <div style="min-height:44px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-size:15px">Завтра</div>
+                    <div style="min-height:44px;flex:1.2;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#2E2620;color:#F6F3EC;font-size:15px;font-weight:500">2 сентября</div>
+                  </div>
+                  <div style="margin-top:20px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Минут в день</div>
+                  <div style="margin-top:10px;display:flex;gap:8px">
+                    <div style="min-height:52px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-family:Literata,Georgia,serif;font-size:20px">10</div>
+                    <div style="min-height:52px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1.5px solid #2E2620;font-family:Literata,Georgia,serif;font-size:20px;font-weight:600">20</div>
+                    <div style="min-height:52px;flex:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(46,38,32,.18);font-family:Literata,Georgia,serif;font-size:20px">40</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Собрать план</div>
+              <div style="margin-top:10px;text-align:center;font-size:12.5px;color:#8A857E">Ориентир: 3 дня · ~18 фраз и слов</div>
+            </div>
+            <div style="height:60px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Кнопка ожила, под ней — ориентир по объёму до превью: пользователь понимает масштаб раньше, чем увидит дни.</div>
+        </div>
+
+        <!-- B4 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 04 · превью, отдельный экран</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:14px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Превью плана</div>
+              <div style="width:18px"></div>
+            </div>
+            <div style="margin:12px 14px 0;background:#2E2620;border-radius:18px;padding:22px;color:#F6F3EC">
+              <div style="font-family:Literata,Georgia,serif;font-size:28px;line-height:1.18">К врачу из-за боли</div>
+              <div style="margin-top:14px;height:1px;background:rgba(246,243,236,.18)"></div>
+              <div style="margin-top:14px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(246,243,236,.72);letter-spacing:.02em">
+                <span>ПОДГОТОВКА 2 ДНЯ + ПРОГОН</span><span>20 МИН/ДЕНЬ</span>
+              </div>
+              <div style="margin-top:14px;font-size:14px;color:rgba(246,243,236,.82);line-height:1.55">Приём 2 сентября. ~18 фраз и слов. Английский, уровень «понимаю простое».</div>
+            </div>
+            <div style="padding:20px 22px 0;display:flex;flex-direction:column">
+              <div style="padding:16px 0;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">ДЕНЬ 1</div><div style="font-size:12.5px;color:#8A857E">5 слов · 4 фразы</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:5px">Начать приём и описать боль</div>
+                <div style="margin-top:8px;font-size:13.5px;line-height:1.6;color:#4A443D">Сказать, зачем пришёл · назвать, где болит · объяснить, как давно</div>
+              </div>
+              <div style="padding:16px 0;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">ДЕНЬ 2</div><div style="font-size:12.5px;color:#8A857E">5 слов · 4 фразы</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:5px">Уточнить симптомы и помощь</div>
+                <div style="margin-top:8px;font-size:13.5px;line-height:1.6;color:#4A443D">Какая это боль · что усиливает и облегчает · попросить проще</div>
+              </div>
+              <div style="padding:16px 0;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">ДЕНЬ 3</div><div style="font-size:12.5px;color:#8A857E">без новых слов</div></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:5px">Прогон всего приёма</div>
+                <div style="margin-top:8px;font-size:13.5px;line-height:1.6;color:#4A443D">Разговор по всем шести чек-пойнтам</div>
+              </div>
+              <div style="display:flex;gap:18px;padding-top:16px"><div style="font-size:14px;color:#9A4430">Убрать день</div><div style="font-size:14px;color:#9A4430">Перестроить</div></div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать</div>
+              <div style="margin-top:10px;text-align:center;font-size:12.5px;color:#8A857E">[цена / условия — placeholder]</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Отдельный экран позволяет дать плану тёмную плиту — тот же приём, что у сессии на главной. План читается как купленная вещь.</div>
+        </div>
+
+        <!-- B5 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 05 · срок мал под цель</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:14px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Превью плана</div>
+              <div style="width:18px"></div>
+            </div>
+            <div style="margin:12px 14px 0;background:#2E2620;border-radius:18px;padding:22px;color:#F6F3EC">
+              <div style="font-family:Literata,Georgia,serif;font-size:28px;line-height:1.18">К врачу из-за боли</div>
+              <div style="margin-top:14px;height:1px;background:rgba(246,243,236,.18)"></div>
+              <div style="margin-top:14px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(246,243,236,.72)"><span>ПОДГОТОВКА 1 ДЕНЬ + ПРОГОН</span><span>20 МИН/ДЕНЬ</span></div>
+              <div style="margin-top:12px;font-size:14px;color:rgba(246,243,236,.82)">Приём 1 сентября.</div>
+            </div>
+            <div style="padding:18px 14px 0">
+              <div style="border:1px solid #B79363;background:rgba(183,147,99,.08);border-radius:16px;padding:18px">
+                <div style="font-family:Literata,Georgia,serif;font-size:18px;line-height:1.4">За 2 дня по 20 минут закроем половину: вот эти умения.</div>
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;font-size:13.5px">
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Сказать, зачем пришёл</div>
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Назвать, где именно болит</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#8A857E"><span>—</span>Сказать, как давно это длится</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#8A857E"><span>—</span>Описать, какая это боль</div>
+                </div>
+                <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+                  <div style="min-height:44px;padding:0 18px;border-radius:12px;background:#8C6A3A;color:#FCFAF5;display:flex;align-items:center;font-size:15px;font-weight:600">Добавить 20 минут в день</div>
+                  <div style="min-height:44px;padding:0 16px;border-radius:12px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;font-size:15px">Оставить</div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:18px 22px 0;display:flex;flex-direction:column">
+              <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">ДЕНЬ 1</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:5px">Начать приём и описать боль</div>
+              </div>
+              <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12)">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A">ДЕНЬ 2</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;margin-top:5px">Прогон приёма</div>
+                <div style="margin-top:8px;font-size:13.5px;line-height:1.55;color:#4A443D">Слова этого дня останутся на ступени B.</div>
+              </div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать</div>
+              <div style="margin-top:10px;text-align:center;font-size:12.5px;color:#8A857E">[цена / условия — placeholder]</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Здесь рекомендация — карточка между плитой и днями: она относится к структуре плана, поэтому стоит ровно там, где эта структура начинается.</div>
+        </div>
+
+        <!-- B6 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">Б · 06 · собираю день 1</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="margin:24px 14px 0;background:#2E2620;border-radius:18px;padding:26px 22px;color:#F6F3EC">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B79363">К врачу из-за боли</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:28px;line-height:1.2;margin-top:12px">Собираю день 1</div>
+              <div style="margin-top:12px;font-size:14px;line-height:1.6;color:rgba(246,243,236,.78)">Подбираю реплики приёма и слова, которые в них подставляются.</div>
+              <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:15px;height:15px;border-radius:50%;background:#B79363;flex:0 0 15px"></span>Цель разобрана</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:15px;height:15px;border-radius:50%;background:#B79363;flex:0 0 15px"></span>Реплики приёма подобраны</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(246,243,236,.55)"><span style="width:15px;height:15px;border-radius:50%;border:1.5px solid rgba(246,243,236,.4);flex:0 0 15px"></span>Слова и примеры</div>
+              </div>
+            </div>
+            <div style="padding:230px 22px 0"></div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Тёмная плита превью остаётся на месте и превращается в статус сборки — переход без смены сцены. Дальше — <a href="#1c">1c</a> · 01.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= C ================= -->
+    <div id="1c" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#F6F3EC;background:#8C6A3A;padding:5px 9px;border-radius:6px">1c</div>
+        <div style="font-family:Literata,Georgia,serif;font-size:26px;font-weight:500">Общие экраны плана</div>
+        <div style="font-size:13.5px;color:#6E6862;max-width:520px;line-height:1.5">Одинаковы для обоих направлений входа: жизнь плана после «Начать» — дни, сессия, разговор, финал, места в главной и табе.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,390px);gap:30px">
+
+        <!-- C1 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">01 · активный план · таб «План»</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <div style="font-family:Literata,Georgia,serif;font-size:22px">План</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+            </div>
+            <div style="margin:8px 14px 0;background:#2E2620;border-radius:18px;padding:22px;color:#F6F3EC">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B79363">Активный план</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(246,243,236,.7)">2 СЕНТ.</div>
+              </div>
+              <div style="font-family:Literata,Georgia,serif;font-size:28px;line-height:1.18;margin-top:10px">К врачу из-за боли</div>
+              <div style="margin-top:16px;height:1px;background:rgba(246,243,236,.18)"></div>
+              <div style="margin-top:16px;display:flex;align-items:baseline;gap:12px">
+                <div style="font-family:Literata,Georgia,serif;font-size:52px;line-height:1;font-variant-numeric:tabular-nums">50<span style="font-size:26px">%</span></div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;color:rgba(246,243,236,.8);line-height:1.25">готовность<br>к приёму</div>
+              </div>
+              <div style="margin-top:14px;height:4px;border-radius:2px;background:rgba(246,243,236,.18);overflow:hidden"><div style="width:50%;height:4px;background:#B79363"></div></div>
+              <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:12.5px;color:rgba(246,243,236,.66);font-variant-numeric:tabular-nums"><span>Приём через 2 дня</span><span>14/18 в работе · 1/2 разговора</span></div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Ты уже можешь · 3 из 6</div>
+              <div style="margin-top:8px;display:flex;flex-direction:column">
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:baseline;font-size:14.5px"><span style="color:#8C6A3A">✓</span>Сказать, зачем пришёл</div>
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:baseline;font-size:14.5px"><span style="color:#8C6A3A">✓</span>Назвать, где именно болит</div>
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:baseline;font-size:14.5px"><span style="color:#8C6A3A">✓</span>Описать, какая это боль</div>
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:center;justify-content:space-between"><div style="display:flex;gap:11px;align-items:baseline;font-size:14.5px;color:#6E6862"><span style="color:#8A857E">—</span>Сказать, как давно это длится</div><div style="font-size:13.5px;color:#9A4430;flex:0 0 auto">Потренировать</div></div>
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:center;justify-content:space-between"><div style="display:flex;gap:11px;align-items:baseline;font-size:14.5px;color:#6E6862"><span style="color:#8A857E">—</span>Сказать, что усиливает и облегчает</div><div style="font-size:13.5px;color:#9A4430;flex:0 0 auto">Потренировать</div></div>
+                <div style="padding:12px 0;border-bottom:1px solid rgba(46,38,32,.10);display:flex;gap:11px;align-items:center;justify-content:space-between"><div style="display:flex;gap:11px;align-items:baseline;font-size:14.5px;color:#6E6862"><span style="color:#8A857E">—</span>Попросить объяснить проще</div><div style="font-size:13.5px;color:#9A4430;flex:0 0 auto">Потренировать</div></div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Дни · 2 из 3</div>
+              <div style="margin-top:10px;display:flex;flex-direction:column">
+                <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:14px;align-items:flex-start;opacity:.62">
+                  <div style="width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:#2E2620;color:#F6F3EC;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="2.4"><path d="M5 13l4.5 4.5L19 7"></path></svg></div>
+                  <div><div style="font-family:Literata,Georgia,serif;font-size:18px">Начать приём и описать боль</div><div style="font-size:13px;color:#6E6862;margin-top:3px">День 1 пройден · разговор состоялся</div></div>
+                </div>
+                <div style="padding:16px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:14px;align-items:flex-start">
+                  <div style="width:26px;height:26px;flex:0 0 26px;border-radius:50%;border:2px solid #9A4430;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9A4430;font-weight:500">2</div>
+                  <div><div style="font-family:Literata,Georgia,serif;font-size:20px;font-weight:600">Уточнить симптомы и помощь</div><div style="font-size:13.5px;color:#4A443D;margin-top:4px;line-height:1.5">5 слов · 4 фразы · разговор с врачом после</div></div>
+                </div>
+                <div style="padding:16px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:14px;align-items:flex-start">
+                  <div style="width:26px;height:26px;flex:0 0 26px;border-radius:50%;border:1px solid rgba(46,38,32,.22);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">3</div>
+                  <div><div style="font-family:Literata,Georgia,serif;font-size:18px;color:#4A443D">Прогон всего приёма</div><div style="font-size:13px;color:#8A857E;margin-top:3px">Без новых слов · можно открыть раньше</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Продолжить день 2</div>
+            </div>
+            <div style="height:24px"></div>
+            <div style="border-top:1px solid rgba(46,38,32,.12);height:62px;display:flex;align-items:center;justify-content:space-around;background:#F2EEE7;font-size:10.5px;color:#8A857E">
+              <div style="text-align:center">Главная</div><div style="text-align:center">Коллекции</div>
+              <div style="text-align:center;color:#8C6A3A;font-weight:700"><div style="width:30px;height:30px;margin:0 auto 3px;border-radius:50%;border:1.5px solid #8C6A3A"></div>План</div>
+              <div style="text-align:center">Прогресс</div><div style="text-align:center">Профиль</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Пройденный день приглушён, текущий — единственный жирный, будущий открыт, но подписан деликатно. Главное число плана — готовность к приёму; она раскрывается списком умений, где незакрытое сразу ведёт в упражнение. Объём слов (14/18) спустился в служебную строку.</div>
+        </div>
+
+        <!-- C2 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">02 · день 2</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M15 5l-7 7 7 7"></path></svg>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">День 2 из 3</div>
+              <div style="width:18px"></div>
+            </div>
+            <div style="padding:18px 22px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:29px;line-height:1.18">Уточнить симптомы и помощь</div>
+              <div style="margin-top:16px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Ты сможешь</div>
+              <div style="margin-top:8px;font-size:14.5px;line-height:1.7;color:#4A443D">Описать, какая это боль · сказать, что усиливает или облегчает · попросить объяснить проще</div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Фразы дня</div>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+                <div style="border-left:2px solid #B5533C;padding:2px 0 2px 14px"><div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3">It's a sharp pain.</div><div style="font-size:13.5px;color:#6E6862;margin-top:3px">Это острая боль.</div></div>
+                <div style="border-left:2px solid #B5533C;padding:2px 0 2px 14px"><div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3">It gets worse when I bend.</div><div style="font-size:13.5px;color:#6E6862;margin-top:3px">Становится хуже, когда наклоняюсь.</div></div>
+                <div style="border-left:2px solid #B5533C;padding:2px 0 2px 14px"><div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3">It feels better when I rest.</div><div style="font-size:13.5px;color:#6E6862;margin-top:3px">Легче, когда отдыхаю.</div></div>
+                <div style="border-left:2px solid #B5533C;padding:2px 0 2px 14px"><div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3">Could you explain it in simpler words?</div><div style="font-size:13.5px;color:#6E6862;margin-top:3px">Можете объяснить проще?</div></div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Слова в этих фразах</div>
+              <div style="margin-top:6px;display:flex;flex-direction:column">
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px">sharp</span><span style="font-size:14px;color:#6E6862">острый</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">A</span></div>
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px">dull</span><span style="font-size:14px;color:#6E6862">тупой</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">A</span></div>
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px">bend</span><span style="font-size:14px;color:#6E6862">наклоняться</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">A</span></div>
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px">rest</span><span style="font-size:14px;color:#6E6862">отдых</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">A</span></div>
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px">simpler</span><span style="font-size:14px;color:#6E6862">более простой</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">A</span></div>
+                <div style="height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.10)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:Literata,Georgia,serif;font-size:17px;color:#4A443D">back · pain · week</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C6A3A">B · со дня 1</span></div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Тренировать</div>
+            </div>
+            <div style="padding:16px 14px 0">
+              <div style="border:1px solid rgba(46,38,32,.16);border-radius:16px;padding:16px 18px;background:#FCFAF5">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8C6A3A">Разговор</div><div style="font-family:Literata,Georgia,serif;font-size:20px;margin-top:5px">Врач-терапевт</div></div>
+                  <div style="width:52px;height:52px;border-radius:50%;background:#E7E2D7;border:1px solid rgba(46,38,32,.10);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#A8A29A">фото</div>
+                </div>
+                <div style="margin-top:10px;font-size:13.5px;color:#6E6862;line-height:1.55">Откроется после тренировки дня. Три чек-пойнта.</div>
+              </div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Фразы — серифные строки с терракотовой чертой (то, что ты скажешь). Слова — компактный реестр со ступенью A/B справа: видно, что слова дня 1 продолжают жить.</div>
+        </div>
+
+        <!-- C3 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">03 · сессия дня (отличие от обычной)</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="height:24px;padding:0 9px;border-radius:12px;border:1px solid #B79363;color:#8C6A3A;display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">План · день 2</div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;font-variant-numeric:tabular-nums">7/14</div>
+            </div>
+            <div style="padding:8px 22px 0">
+              <div style="height:3px;background:rgba(46,38,32,.10);border-radius:2px;overflow:hidden"><div style="width:50%;height:3px;background:#9A4430"></div></div>
+            </div>
+            <div style="padding:34px 22px 0">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Ступень B · пропуск в фразе</div>
+              </div>
+              <div style="margin-top:20px;font-family:Literata,Georgia,serif;font-size:26px;line-height:1.4">It gets <span style="display:inline-block;min-width:96px;border-bottom:1.5px solid #B5533C;text-align:center;color:#A8A29A">&nbsp;</span> when I bend.</div>
+              <div style="margin-top:12px;font-size:14.5px;color:#6E6862">Становится хуже, когда наклоняюсь.</div>
+            </div>
+            <div style="padding:34px 22px 0;display:flex;flex-direction:column;gap:10px">
+              <div style="min-height:56px;border-radius:14px;border:1px solid rgba(46,38,32,.18);background:#FCFAF5;display:flex;align-items:center;padding:0 18px;font-family:Literata,Georgia,serif;font-size:19px">worse</div>
+              <div style="min-height:56px;border-radius:14px;border:1px solid rgba(46,38,32,.18);background:#FCFAF5;display:flex;align-items:center;padding:0 18px;font-family:Literata,Georgia,serif;font-size:19px">sharp</div>
+              <div style="min-height:56px;border-radius:14px;border:1px solid rgba(46,38,32,.18);background:#FCFAF5;display:flex;align-items:center;padding:0 18px;font-family:Literata,Georgia,serif;font-size:19px">simpler</div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="border-top:1px solid rgba(46,38,32,.12);padding-top:14px;font-size:13px;color:#8A857E;line-height:1.5">Слово <span style="font-family:Literata,Georgia,serif;color:#4A443D">worse</span> идёт со дня 1 — сегодня оно на ступени B.</div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Единственные отличия от обычной сессии: латунная метка плана в шапке, подпись ступени над заданием и строка внизу о том, откуда слово. Механика тренажёров не меняется.</div>
+        </div>
+
+        <!-- C4 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">04 · итог дня</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:54px 22px 0;text-align:center">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">К врачу из-за боли</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:34px;line-height:1.15;margin-top:14px">День 1 пройден</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:17px;color:#4A443D;margin-top:10px">9 фраз и слов в работе</div>
+            </div>
+            <div style="padding:30px 22px 0">
+              <div style="height:1px;background:rgba(46,38,32,.14)"></div>
+              <div style="padding:16px 0;display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:14.5px;color:#4A443D">Ступень A пройдена</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A857E;font-variant-numeric:tabular-nums">5 слов · 4 фразы</div>
+              </div>
+              <div style="height:1px;background:rgba(46,38,32,.14)"></div>
+              <div style="padding:16px 0;display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:14.5px;color:#4A443D">Вернутся на ступени B</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A857E">в следующий день</div>
+              </div>
+              <div style="height:1px;background:rgba(46,38,32,.14)"></div>
+            </div>
+            <div style="padding:26px 14px 0">
+              <div style="background:#2E2620;border-radius:18px;padding:20px 22px;color:#F6F3EC">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div>
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#B79363">Разговор открыт</div>
+                    <div style="font-family:Literata,Georgia,serif;font-size:22px;margin-top:6px">Поговорить с врачом</div>
+                    <div style="font-size:13.5px;color:rgba(246,243,236,.72);margin-top:6px">3 чек-пойнта · ~4 минуты</div>
+                  </div>
+                  <div style="width:48px;height:48px;flex:0 0 48px;border-radius:50%;background:rgba(246,243,236,.14);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg></div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="border-top:1px solid rgba(46,38,32,.12);padding-top:16px;display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:12.5px;color:#8A857E">Дальше</div><div style="font-family:Literata,Georgia,serif;font-size:18px;margin-top:3px">День 2 — Уточнить симптомы</div></div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+              </div>
+            </div>
+            <div style="height:60px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Формулировка «в работе», а не «выучено»; две строки объясняют ступени. Разговор — тёмная плита: главное действие после дня. «Дальше», не «завтра».</div>
+        </div>
+
+        <!-- C5 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">05 · разговор с врачом</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:50%;background:#E7E2D7;border:1px solid rgba(46,38,32,.10)"></div><div style="font-family:Literata,Georgia,serif;font-size:17px">Врач-терапевт</div></div>
+              <div style="width:18px"></div>
+            </div>
+            <div style="padding:14px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:14px;padding:12px 14px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8C6A3A">Чек-пойнты</div>
+                <div style="margin-top:8px;display:flex;flex-direction:column;gap:7px">
+                  <div style="display:flex;align-items:center;gap:9px;font-size:13.5px"><span style="width:15px;height:15px;flex:0 0 15px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="3.4"><path d="M5 13l4.5 4.5L19 7"></path></svg></span>Ясно говорит причину визита</div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600"><span style="width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:2px solid #9A4430"></span>Называет конкретную область спины</div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:#8A857E"><span style="width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:1px solid rgba(46,38,32,.22)"></span>Сообщает срок</div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:20px 22px 0;display:flex;flex-direction:column;gap:16px">
+              <div style="max-width:300px">
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px 16px 16px 4px;padding:14px 16px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:18px;line-height:1.35">Hello. What brings you in today?</div>
+                  <div style="font-size:13px;color:#8A857E;margin-top:5px">Здравствуйте. С чем пришли?</div>
+                </div>
+              </div>
+              <div style="max-width:300px;margin-left:auto">
+                <div style="background:#2E2620;border-radius:16px 16px 4px 16px;padding:14px 16px;color:#F6F3EC">
+                  <div style="font-family:Literata,Georgia,serif;font-size:18px;line-height:1.35">I'm here because my back hurts.</div>
+                </div>
+              </div>
+              <div style="max-width:300px">
+                <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px 16px 16px 4px;padding:14px 16px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:18px;line-height:1.35">Where does it hurt?</div>
+                  <div style="font-size:13px;color:#8A857E;margin-top:5px">Где именно болит?</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding-left:2px">
+                <div style="min-height:38px;padding:0 14px;border-radius:19px;border:1px dashed rgba(183,147,99,.9);color:#8C6A3A;display:flex;align-items:center;font-size:13.5px">Подсказка: это спина?</div>
+                <div style="font-size:12px;color:#8A857E">не засчитает чек-пойнт</div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="border-top:1px solid rgba(46,38,32,.12);padding-top:14px;display:flex;align-items:center;gap:12px">
+                <div style="flex:1;min-height:48px;border-radius:24px;border:1px solid rgba(46,38,32,.18);display:flex;align-items:center;padding:0 16px;font-size:15px;color:#8A857E">Ответить текстом</div>
+                <div style="width:56px;height:56px;flex:0 0 56px;border-radius:50%;background:#9A4430;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FCFAF5" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"></path></svg></div>
+              </div>
+            </div>
+            <div style="height:30px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Чек-лист закреплён сверху и отмечается по ходу — видно, что осталось сказать. Подсказка выдаётся латунью и честно предупреждает, что чек-пойнт не зачтётся.</div>
+        </div>
+
+        <!-- C6 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">06 · итог разговора</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:58px 22px 0;text-align:center">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Разговор с врачом</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:34px;line-height:1.15;margin-top:14px">Ты смог 2 из 3</div>
+            </div>
+            <div style="padding:30px 22px 0;display:flex;flex-direction:column">
+              <div style="padding:15px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:12px;align-items:flex-start">
+                <span style="width:18px;height:18px;flex:0 0 18px;margin-top:2px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="3.2"><path d="M5 13l4.5 4.5L19 7"></path></svg></span>
+                <div><div style="font-size:15px">Ясно сказал причину визита</div><div style="font-family:Literata,Georgia,serif;font-size:14.5px;color:#6E6862;margin-top:3px">«I'm here because my back hurts.»</div></div>
+              </div>
+              <div style="padding:15px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:12px;align-items:flex-start">
+                <span style="width:18px;height:18px;flex:0 0 18px;margin-top:2px;border-radius:50%;background:#2E2620;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F6F3EC" stroke-width="3.2"><path d="M5 13l4.5 4.5L19 7"></path></svg></span>
+                <div><div style="font-size:15px">Назвал область спины</div><div style="font-family:Literata,Georgia,serif;font-size:14.5px;color:#6E6862;margin-top:3px">«It hurts in my lower back.»</div></div>
+              </div>
+              <div style="padding:15px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:12px;align-items:flex-start">
+                <span style="width:18px;height:18px;flex:0 0 18px;margin-top:2px;border-radius:50%;border:1.5px solid #B5533C"></span>
+                <div><div style="font-size:15px">Срок не прозвучал</div><div style="font-size:13.5px;color:#6E6862;margin-top:3px;line-height:1.5">Пригодится фраза: <span style="font-family:Literata,Georgia,serif">It's been like this for a week.</span></div></div>
+              </div>
+            </div>
+            <div style="padding:24px 22px 0;display:flex;flex-direction:column;gap:10px">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Пройти ещё раз</div>
+              <div style="min-height:52px;border-radius:14px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center;font-size:16px">Потренировать срок</div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="border-top:1px solid rgba(46,38,32,.12);padding-top:16px;display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:12.5px;color:#8A857E">Дальше</div><div style="font-family:Literata,Georgia,serif;font-size:18px;margin-top:3px">День 2 — Уточнить симптомы</div></div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg>
+              </div>
+            </div>
+            <div style="height:40px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Каждый зачтённый чек-пойнт подтверждён твоей же репликой — доказательство, а не оценка. Незакрытый превращается в конкретное упражнение.</div>
+        </div>
+
+        <!-- C7 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">07 · финальное испытание · день 3</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="margin:22px 14px 0;background:#2E2620;border-radius:18px;padding:26px 22px;color:#F6F3EC">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B79363">День 3 · без новых слов</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.16;margin-top:12px">Ты прошёл подготовку. Проверим?</div>
+              <div style="margin-top:12px;font-size:14px;line-height:1.6;color:rgba(246,243,236,.78)">Приём целиком: три коротких сцены подряд, шесть чек-пойнтов, без подсказок по умолчанию.</div>
+              <div style="margin-top:20px;min-height:52px;border-radius:14px;background:#F6F3EC;color:#2E2620;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать прогон</div>
+            </div>
+            <div style="padding:24px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Сцены</div>
+              <div style="margin-top:8px;display:flex;flex-direction:column">
+                <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-family:Literata,Georgia,serif;font-size:18px">Начало приёма</div><div style="font-size:13px;color:#6E6862;margin-top:3px">Причина визита · где болит · срок</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">3</div></div>
+                <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-family:Literata,Georgia,serif;font-size:18px">Уточнение симптомов</div><div style="font-size:13px;color:#6E6862;margin-top:3px">Какая боль · что усиливает · что облегчает</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">2</div></div>
+                <div style="padding:14px 0;border-bottom:1px solid rgba(46,38,32,.12);display:flex;justify-content:space-between;align-items:baseline"><div><div style="font-family:Literata,Georgia,serif;font-size:18px">Не понял врача</div><div style="font-size:13px;color:#6E6862;margin-top:3px">Попросить объяснить проще</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">1</div></div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">После прогона</div>
+                <div style="margin-top:8px;font-size:14px;line-height:1.6;color:#4A443D">Итог по ситуациям и список «что ещё потренировать» — фразы, которые не прозвучали.</div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(46,38,32,.12);font-size:14px;line-height:1.6;color:#4A443D">Все 18 слов плана уходят в общее повторение — будут возвращаться в ежедневных занятиях и после приёма.</div>
+              </div>
+            </div>
+            <div style="height:56px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Финал — это не новый тренажёр, а собранный приём: сцены перечислены заранее, чтобы прогон не казался экзаменом наугад.</div>
+        </div>
+
+        <!-- C8 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">08 · главная с активным планом</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:flex-end;justify-content:space-between">
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.06em">ВТОРНИК, 31 АВГУСТА</div><div style="font-family:Literata,Georgia,serif;font-size:24px;margin-top:4px">Доброе утро</div></div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+            </div>
+            <div style="padding:18px 14px 0">
+              <div style="border:1px solid #B79363;border-radius:18px;padding:18px 20px;background:rgba(183,147,99,.07)">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8C6A3A">План · день 2 из 3</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C6A3A">ПРИЁМ ЧЕРЕЗ 2 ДНЯ</div>
+                </div>
+                <div style="font-family:Literata,Georgia,serif;font-size:23px;line-height:1.22;margin-top:8px">К врачу из-за боли</div>
+                <div style="margin-top:12px;display:flex;align-items:baseline;gap:9px">
+                  <div style="font-family:Literata,Georgia,serif;font-size:34px;line-height:1;font-variant-numeric:tabular-nums">50<span style="font-size:19px">%</span></div>
+                  <div style="font-size:14px;color:#4A443D">готовности к приёму · 3 из 6</div>
+                </div>
+                <div style="margin-top:10px;height:4px;border-radius:2px;background:rgba(46,38,32,.12);overflow:hidden"><div style="width:50%;height:4px;background:#8C6A3A"></div></div>
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;font-size:13.5px">
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Зачем пришёл · где болит · какая боль</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#6E6862"><span style="color:#8A857E">—</span>Как давно · что облегчает · просить проще</div>
+                </div>
+                <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-size:14px;color:#4A443D">Уточнить симптомы</div>
+                  <div style="min-height:44px;padding:0 18px;border-radius:12px;background:#8C6A3A;color:#FCFAF5;display:flex;align-items:center;font-size:15px;font-weight:600">Продолжить</div>
+                </div>
+              </div>
+            </div>
+            <div style="margin:14px 14px 0;background:#2E2620;border-radius:18px;padding:22px;color:#F6F3EC">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(246,243,236,.6)">Сегодня</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(246,243,236,.6)">~9 МИН</div></div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px"><div style="font-family:Literata,Georgia,serif;font-size:60px;line-height:1;font-variant-numeric:tabular-nums">24</div><div style="font-family:Literata,Georgia,serif;font-size:20px;color:rgba(246,243,236,.72)">слова</div></div>
+              <div style="margin-top:16px;height:1px;background:rgba(246,243,236,.18)"></div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:rgba(246,243,236,.78)">
+                <div style="display:flex;justify-content:space-between"><span>Повторение</span><span style="font-variant-numeric:tabular-nums">16</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Новые</span><span style="font-variant-numeric:tabular-nums">8</span></div>
+              </div>
+              <div style="margin-top:18px;min-height:52px;border-radius:14px;background:#F6F3EC;color:#2E2620;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать занятие</div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Слово-вызов</div>
+              <div style="margin-top:8px;padding-bottom:16px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12)"><div style="font-family:Literata,Georgia,serif;font-size:24px">tenant</div><div style="font-size:13.5px;color:#9A4430">Проверить</div></div>
+            </div>
+            <div style="height:24px"></div>
+            <div style="border-top:1px solid rgba(46,38,32,.12);height:62px;display:flex;align-items:center;justify-content:space-around;background:#F2EEE7;font-size:10.5px;color:#8A857E">
+              <div style="text-align:center;color:#2E2620;font-weight:700">Главная</div><div style="text-align:center">Коллекции</div>
+              <div style="text-align:center;color:#8C6A3A"><div style="width:30px;height:30px;margin:0 auto 3px;border-radius:50%;border:1.5px solid #8C6A3A"></div>План</div>
+              <div style="text-align:center">Прогресс</div><div style="text-align:center">Профиль</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">План стоит выше плиты «сегодня» и отличается от неё материалом: латунная рамка на бумаге против тёмной плиты. Главное число карточки — готовность к событию, а не пройденные слова.</div>
+        </div>
+
+        <!-- C9 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">09 · главная без плана</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:flex-end;justify-content:space-between">
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.06em">ВТОРНИК, 31 АВГУСТА</div><div style="font-family:Literata,Georgia,serif;font-size:24px;margin-top:4px">Доброе утро</div></div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+            </div>
+            <div style="padding:18px 14px 0">
+              <div style="border:1px solid rgba(46,38,32,.16);border-radius:18px;padding:18px 20px;background:#FCFAF5;display:flex;align-items:center;justify-content:space-between;gap:14px">
+                <div>
+                  <div style="font-family:Literata,Georgia,serif;font-size:20px;line-height:1.25">Есть дата и цель?</div>
+                  <div style="font-size:13.5px;color:#6E6862;margin-top:5px;line-height:1.5">Соберём дни подготовки — от приёма у врача до собеседования.</div>
+                </div>
+                <div style="min-height:44px;padding:0 16px;border-radius:12px;border:1px solid #8C6A3A;color:#8C6A3A;display:flex;align-items:center;font-size:14.5px;font-weight:600;flex:0 0 auto">Составить</div>
+              </div>
+            </div>
+            <div style="margin:14px 14px 0;background:#2E2620;border-radius:18px;padding:22px;color:#F6F3EC">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(246,243,236,.6)">Сегодня</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:rgba(246,243,236,.6)">~9 МИН</div></div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px"><div style="font-family:Literata,Georgia,serif;font-size:60px;line-height:1;font-variant-numeric:tabular-nums">24</div><div style="font-family:Literata,Georgia,serif;font-size:20px;color:rgba(246,243,236,.72)">слова</div></div>
+              <div style="margin-top:16px;height:1px;background:rgba(246,243,236,.18)"></div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:rgba(246,243,236,.78)">
+                <div style="display:flex;justify-content:space-between"><span>Повторение</span><span style="font-variant-numeric:tabular-nums">16</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Новые</span><span style="font-variant-numeric:tabular-nums">8</span></div>
+              </div>
+              <div style="margin-top:18px;min-height:52px;border-radius:14px;background:#F6F3EC;color:#2E2620;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Начать занятие</div>
+            </div>
+            <div style="padding:20px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Слово-вызов</div>
+              <div style="margin-top:8px;padding-bottom:16px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12)"><div style="font-family:Literata,Georgia,serif;font-size:24px">tenant</div><div style="font-size:13.5px;color:#9A4430">Проверить</div></div>
+            </div>
+            <div style="height:24px"></div>
+            <div style="border-top:1px solid rgba(46,38,32,.12);height:62px;display:flex;align-items:center;justify-content:space-around;background:#F2EEE7;font-size:10.5px;color:#8A857E">
+              <div style="text-align:center;color:#2E2620;font-weight:700">Главная</div><div style="text-align:center">Коллекции</div>
+              <div style="text-align:center;color:#8C6A3A"><div style="width:30px;height:30px;margin:0 auto 3px;border-radius:50%;border:1.5px solid #8C6A3A"></div>План</div>
+              <div style="text-align:center">Прогресс</div><div style="text-align:center">Профиль</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Место плана занято приглашением на бумаге — тише активного плана, но на той же позиции: обещание не мигрирует по экрану.</div>
+        </div>
+
+        <!-- C10 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">10 · таб «План» пустой</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;height:44px;display:flex;align-items:center"><div style="font-family:Literata,Georgia,serif;font-size:22px">План</div></div>
+            <div style="padding:40px 26px 0">
+              <div style="font-family:Literata,Georgia,serif;font-size:30px;line-height:1.2">Подготовиться к чему-то конкретному</div>
+              <div style="font-size:14.5px;line-height:1.65;color:#4A443D;margin-top:12px">Коллекции — про темы, которые хочется знать. План — про день, когда придётся говорить: приём, собеседование, подпись договора.</div>
+              <div style="margin-top:26px;display:flex;flex-direction:column;gap:0">
+                <div style="padding:14px 0;border-top:1px solid rgba(46,38,32,.12);display:flex;gap:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;padding-top:3px">01</div><div style="font-size:14.5px;line-height:1.5;color:#4A443D">Говоришь цель и дату</div></div>
+                <div style="padding:14px 0;border-top:1px solid rgba(46,38,32,.12);display:flex;gap:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;padding-top:3px">02</div><div style="font-size:14.5px;line-height:1.5;color:#4A443D">Каждый день — фразы, которые реально скажешь, и слова из них</div></div>
+                <div style="padding:14px 0;border-top:1px solid rgba(46,38,32,.12);border-bottom:1px solid rgba(46,38,32,.12);display:flex;gap:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C6A3A;padding-top:3px">03</div><div style="font-size:14.5px;line-height:1.5;color:#4A443D">В конце — разговор в роли и прогон всей ситуации</div></div>
+              </div>
+              <div style="margin-top:26px;min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Составить план</div>
+            </div>
+            <div style="height:120px"></div>
+            <div style="border-top:1px solid rgba(46,38,32,.12);height:62px;display:flex;align-items:center;justify-content:space-around;background:#F2EEE7;font-size:10.5px;color:#8A857E">
+              <div style="text-align:center">Главная</div><div style="text-align:center">Коллекции</div>
+              <div style="text-align:center;color:#8C6A3A;font-weight:700"><div style="width:30px;height:30px;margin:0 auto 3px;border-radius:50%;border:1.5px solid #8C6A3A"></div>План</div>
+              <div style="text-align:center">Прогресс</div><div style="text-align:center">Профиль</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Пустой таб объясняет разницу коллекции и плана тремя строками — без иллюстрации и без обещаний вроде «выучи язык за неделю».</div>
+        </div>
+
+        <!-- C11 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">11 · таб «План» · завершённый</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;height:44px;display:flex;align-items:center"><div style="font-family:Literata,Georgia,serif;font-size:22px">План</div></div>
+            <div style="padding:14px 22px 0">
+              <div style="border-top:1px solid #B79363;padding-top:16px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8C6A3A">Подготовка завершена</div>
+                <div style="font-family:Literata,Georgia,serif;font-size:28px;line-height:1.18;margin-top:8px">К врачу из-за боли</div>
+                <div style="font-size:14px;color:#4A443D;margin-top:8px;line-height:1.55">На приёме сказал 5 из 6. За три дня: 18 фраз и слов, 2 разговора, прогон приёма пройден.</div>
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:5px;font-size:13.5px">
+                  <div style="display:flex;gap:9px;align-items:baseline"><span style="color:#8C6A3A">✓</span>Причина визита · где болит · как давно · какая боль · что облегчает</div>
+                  <div style="display:flex;gap:9px;align-items:baseline;color:#6E6862"><span style="color:#8A857E">—</span>Попросить объяснить проще — не пригодилось</div>
+                </div>
+                <div style="margin-top:14px;display:flex;gap:16px"><div style="font-size:14px;color:#9A4430">Посмотреть итог</div><div style="font-size:14px;color:#9A4430">Повторить прогон</div></div>
+              </div>
+            </div>
+            <div style="padding:24px 22px 0">
+              <div style="background:#FCFAF5;border:1px solid rgba(46,38,32,.14);border-radius:16px;padding:16px 18px">
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3">18 слов ушли в общее повторение</div>
+                <div style="font-size:13.5px;color:#6E6862;margin-top:6px;line-height:1.55">Они будут появляться в ежедневных занятиях, чтобы не пропасть.</div>
+              </div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Архив</div>
+              <div style="margin-top:8px">
+                <div style="height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12)"><div><div style="font-family:Literata,Georgia,serif;font-size:18px">Аренда квартиры</div><div style="font-size:12.5px;color:#8A857E;margin-top:2px">июль · 4 дня</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg></div>
+                <div style="height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(46,38,32,.12)"><div><div style="font-family:Literata,Georgia,serif;font-size:18px">Собеседование</div><div style="font-size:12.5px;color:#8A857E;margin-top:2px">июнь · 5 дней</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A857E" stroke-width="1.8"><path d="M9 6l6 6-6 6"></path></svg></div>
+              </div>
+            </div>
+            <div style="padding:24px 22px 0">
+              <div style="min-height:52px;border-radius:14px;background:#9A4430;color:#FCFAF5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Составить новый</div>
+            </div>
+            <div style="height:34px"></div>
+            <div style="border-top:1px solid rgba(46,38,32,.12);height:62px;display:flex;align-items:center;justify-content:space-around;background:#F2EEE7;font-size:10.5px;color:#8A857E">
+              <div style="text-align:center">Главная</div><div style="text-align:center">Коллекции</div>
+              <div style="text-align:center;color:#8C6A3A;font-weight:700"><div style="width:30px;height:30px;margin:0 auto 3px;border-radius:50%;border:1.5px solid #8C6A3A"></div>План</div>
+              <div style="text-align:center">Прогресс</div><div style="text-align:center">Профиль</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Завершённый план не исчезает: итог по событию, судьба слов после плана, архив прошлых подготовок. «Составить новый» — внизу, а не поверх результата.</div>
+        </div>
+
+        <!-- C12 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">12 · уведомление · за 2 дня</div>
+          <div style="width:390px;background:#DDD7CB;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07);min-height:560px">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6862">9:41<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:46px 22px 0;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#6E6862;letter-spacing:.06em">ВТОРНИК, 31 АВГУСТА</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:78px;line-height:1;margin-top:6px;font-variant-numeric:tabular-nums">9:41</div>
+            </div>
+            <div style="padding:40px 14px 0">
+              <div style="background:rgba(252,250,245,.92);border:1px solid rgba(46,38,32,.10);border-radius:18px;padding:16px 18px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;align-items:center;gap:9px"><span style="width:18px;height:18px;border-radius:5px;background:#2E2620"></span><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8A857E">Слова</span></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">сейчас</div>
+                </div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3;margin-top:10px">До приёма 2 дня. День 2 ждёт</div>
+                <div style="font-size:13.5px;color:#4A443D;margin-top:5px;line-height:1.5">Готовность 50%. Сегодня — как давно болит и что облегчает.</div>
+              </div>
+            </div>
+            <div style="height:170px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Причина — дата события, не серия дней. В тексте всегда есть готовность и то, чему научит сегодняшний день.</div>
+        </div>
+
+        <!-- C13 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">13 · уведомление · день события</div>
+          <div style="width:390px;background:#DDD7CB;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07);min-height:560px">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6862">8:10<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:46px 22px 0;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#6E6862;letter-spacing:.06em">ЧЕТВЕРГ, 2 СЕНТЯБРЯ</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:78px;line-height:1;margin-top:6px;font-variant-numeric:tabular-nums">8:10</div>
+            </div>
+            <div style="padding:40px 14px 0">
+              <div style="background:rgba(252,250,245,.92);border:1px solid rgba(46,38,32,.10);border-radius:18px;padding:16px 18px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;align-items:center;gap:9px"><span style="width:18px;height:18px;border-radius:5px;background:#2E2620"></span><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8A857E">Слова</span></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">сейчас</div>
+                </div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3;margin-top:10px">Сегодня приём. 6 фраз за 3 минуты</div>
+                <div style="font-size:13.5px;color:#4A443D;margin-top:5px;line-height:1.5">Быстрая репетиция перед выходом — только то, что скажешь врачу.</div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(46,38,32,.10);display:flex;gap:10px">
+                  <div style="min-height:40px;padding:0 14px;border-radius:20px;background:#8C6A3A;color:#FCFAF5;display:flex;align-items:center;font-size:14px;font-weight:600">Повторить</div>
+                  <div style="min-height:40px;padding:0 14px;border-radius:20px;border:1px solid rgba(46,38,32,.18);display:flex;align-items:center;font-size:14px">Позже</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:120px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Единственное уведомление с действиями прямо в баннере: утром в день события важно уложиться в три минуты. Ведёт в кадр 15.</div>
+        </div>
+
+        <!-- C14 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">14 · уведомление · после события</div>
+          <div style="width:390px;background:#DDD7CB;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07);min-height:560px">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6862">19:30<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:46px 22px 0;text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#6E6862;letter-spacing:.06em">ЧЕТВЕРГ, 2 СЕНТЯБРЯ</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:78px;line-height:1;margin-top:6px;font-variant-numeric:tabular-nums">19:30</div>
+            </div>
+            <div style="padding:40px 14px 0">
+              <div style="background:rgba(252,250,245,.92);border:1px solid rgba(46,38,32,.10);border-radius:18px;padding:16px 18px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;align-items:center;gap:9px"><span style="width:18px;height:18px;border-radius:5px;background:#2E2620"></span><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8A857E">Слова</span></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">сейчас</div>
+                </div>
+                <div style="font-family:Literata,Georgia,serif;font-size:19px;line-height:1.3;margin-top:10px">Как прошло? Отметь, что сказал</div>
+                <div style="font-size:13.5px;color:#4A443D;margin-top:5px;line-height:1.5">Шесть умений плана — отметь те, которые пригодились на приёме.</div>
+              </div>
+            </div>
+            <div style="height:170px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Последнее уведомление плана закрывает петлю: отметки превращаются в «на приёме сказал 5 из 6» на итоге плана (кадр 11).</div>
+        </div>
+
+        <!-- C15 -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;letter-spacing:.04em">15 · быстрая репетиция перед событием</div>
+          <div style="width:390px;background:#F6F3EC;border:1px solid rgba(46,38,32,.14);border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(46,38,32,.07)">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;height:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A857E">8:12<span style="letter-spacing:.06em">◾◾◾ ▮</span></div>
+            <div style="padding:16px 22px 0;display:flex;align-items:center;justify-content:space-between;height:44px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6862" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              <div style="height:24px;padding:0 9px;border-radius:12px;border:1px solid #B79363;color:#8C6A3A;display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Репетиция · приём сегодня</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A857E;font-variant-numeric:tabular-nums">2/6</div>
+            </div>
+            <div style="padding:8px 22px 0">
+              <div style="height:3px;background:rgba(46,38,32,.10);border-radius:2px;overflow:hidden"><div style="width:33%;height:3px;background:#8C6A3A"></div></div>
+            </div>
+            <div style="padding:36px 22px 0">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8A857E">Скажи вслух</div>
+              <div style="font-family:Literata,Georgia,serif;font-size:27px;line-height:1.32;margin-top:16px">It's been like this for a week.</div>
+              <div style="font-size:14.5px;color:#6E6862;margin-top:10px">Это длится уже неделю.</div>
+              <div style="margin-top:20px;font-size:13px;color:#8A857E;line-height:1.5">Врач спросит: «How long has it been like this?»</div>
+            </div>
+            <div style="padding:34px 22px 0;display:flex;align-items:center;gap:14px">
+              <div style="width:64px;height:64px;flex:0 0 64px;border-radius:50%;background:#9A4430;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FCFAF5" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"></path></svg></div>
+              <div style="font-size:14px;color:#6E6862;line-height:1.5">Скажи фразу — или пролистай дальше, если она уже звучит сама.</div>
+            </div>
+            <div style="padding:26px 22px 0">
+              <div style="border-top:1px solid rgba(46,38,32,.12);padding-top:14px;display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#8A857E"><span style="color:#8C6A3A">✓</span>I'm here because my back hurts.</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#8A857E"><span style="color:#8C6A3A">✓</span>It hurts in my lower back.</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#8A857E"><span>·</span>Ещё 3 фразы</div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 0">
+              <div style="min-height:52px;border-radius:14px;border:1px solid rgba(46,38,32,.20);display:flex;align-items:center;justify-content:center;font-size:16px">Дальше</div>
+            </div>
+            <div style="height:34px"></div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#6E6862;max-width:390px">Только фразы плана, без выбора вариантов и ввода: за три минуты нужно услышать себя, а не проверить память. Слова отдельно здесь не показываются.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+</body>
+</html>
