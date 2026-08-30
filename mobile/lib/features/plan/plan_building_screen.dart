@@ -58,6 +58,11 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
   DateTime? _startedAt;
   PlanDayStatus _status = PlanDayStatus.pending;
   bool _failed = false;
+
+  /// The server REFUSED rather than took too long — a failed day or an answered error. The two need
+  /// different sentences: «дольше обычного» invites waiting, and here there is nothing to wait for.
+  bool _refused = false;
+
   bool _left = false;
 
   int get _dayIndex => widget.dayIndex ?? widget.plan.focusDayIndex;
@@ -88,7 +93,12 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
       if (status.hasMaterial) {
         _leaveFor(const Duration(milliseconds: 450));
       } else if (status == PlanDayStatus.failed) {
-        setState(() => _failed = true);
+        // The day came back FAILED, which is an answer and not a delay. Waiting longer cannot
+        // change it — and after two claims the server will not try again at all.
+        setState(() {
+          _failed = true;
+          _refused = true;
+        });
         _poll?.cancel();
       } else if (DateTime.now().difference(_startedAt!) > _giveUpAfter) {
         setState(() => _failed = true);
@@ -96,10 +106,22 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      // A 409 means the plan's own spending ceiling says «not this day, not yet» — which is a real
-      // answer and not a failure to retry at. Everything else offline-ish is retried by the timer.
-      if (e is DioException && e.response?.statusCode == 409) {
-        setState(() => _failed = true);
+      // WHICH FAILURES ARE WORTH WAITING THROUGH, and it is a short list.
+      //
+      // A dropped request is: the tunnel blinks, the phone changes network, the server restarts —
+      // the timer tries again in three seconds and the learner sees nothing, which is right.
+      //
+      // Everything the SERVER answers is not. A 409 is the plan's own spending ceiling saying «not
+      // this day, not yet»; a 404 is a day that cannot be built at all; a 422 is a refusal. Polling
+      // through any of them leaves the plate saying «собираю день 1» for four minutes over a
+      // question that was already answered — which is exactly how this screen hangs.
+      final status = e is DioException ? e.response?.statusCode : null;
+      if (status != null && status != 429 && status < 500) {
+        debugPrint('[plan-building] day $_dayIndex: server answered $status');
+        setState(() {
+          _failed = true;
+          _refused = true;
+        });
         _poll?.cancel();
       }
     }
@@ -179,7 +201,7 @@ class _PlanBuildingScreenState extends ConsumerState<PlanBuildingScreen> {
                 const Spacer(),
                 if (_failed) ...[
                   Text(
-                    l.planBuildingFailed,
+                    _refused ? l.planBuildingRefused : l.planBuildingFailed,
                     textAlign: TextAlign.center,
                     style: AppText.translation.copyWith(
                       fontSize: 14,

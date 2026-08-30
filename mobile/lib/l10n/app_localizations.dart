@@ -4047,6 +4047,42 @@ abstract class AppLocalizations {
   /// **'День не собрался с первого раза. Можно попробовать ещё раз.'**
   String get planDayFailed;
 
+  /// День исчерпал две попытки: `PlanDay::MAX_ATTEMPTS`. Кнопка «Собрать день» здесь не сработала бы никогда.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.'**
+  String get planDayExhausted;
+
+  /// Единственное, что может помочь на исчерпанном дне.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собрать план заново'**
+  String get planDayRebuildPlan;
+
+  /// Подтверждение перед отказом от плана с несобираемым днём.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отказаться от этого плана?'**
+  String get planDayRebuildTitle;
+
+  /// Что произойдёт при отказе от плана.
+  ///
+  /// In ru, this message translates to:
+  /// **'План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.'**
+  String get planDayRebuildBody;
+
+  /// Кнопка подтверждения отказа.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отказаться'**
+  String get planDayRebuildConfirm;
+
+  /// Сервер ОТКАЗАЛ, а не задержался: ждать нечего.
+  ///
+  /// In ru, this message translates to:
+  /// **'День не собрался: материал не прошёл проверку. Ждать дальше нечего — план уже создан, его можно открыть.'**
+  String get planBuildingRefused;
+
   /// Кнопка ручной сборки дня.
   ///
   /// In ru, this message translates to:

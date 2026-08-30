@@ -2795,6 +2795,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDayFailed => 'День не собрался с первого раза. Можно попробовать ещё раз.';
 
   @override
+  String get planDayExhausted =>
+      'Этот день не собрался дважды подряд — сервер больше не будет пытаться. Такое случается, когда модель возвращает материал не на том языке. План придётся собрать заново.';
+
+  @override
+  String get planDayRebuildPlan => 'Собрать план заново';
+
+  @override
+  String get planDayRebuildTitle => 'Отказаться от этого плана?';
+
+  @override
+  String get planDayRebuildBody =>
+      'План уйдёт в архив, а его слова — в общее повторение. Собранные дни останутся обычными коллекциями.';
+
+  @override
+  String get planDayRebuildConfirm => 'Отказаться';
+
+  @override
+  String get planBuildingRefused =>
+      'День не собрался: материал не прошёл проверку. Ждать дальше нечего — план уже создан, его можно открыть.';
+
+  @override
   String get planDayBuildNow => 'Собрать день';
 
   @override

@@ -192,6 +192,63 @@ void main() {
     expect(find.text('РАЗГОВОР'), findsOneWidget);
   });
 
+  testWidgets('a day out of attempts does not offer a button that cannot work', (tester) async {
+    // The server claims a day at most twice; after that `PlanDay::claim()` returns false forever,
+    // so «Собрать день» there is a button no number of presses can make work. Found on the owner's
+    // phone: a day failed the validator twice and the screen kept offering to build it.
+    final dead = PlanDayDetail.fromJson({
+      'id': 'd1',
+      'index': 1,
+      'kind': 'intro',
+      'title': 'Представиться и начать разговор',
+      'status': 'failed',
+      'generation_attempts': 2,
+      'fail_reason': 'day.key_not_support_language',
+      'plan_id': '01PLAN',
+      'terms': [],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 1)).overrideWith((ref) async => dead),
+        ],
+        child: _app(PlanDayScreen(plan: _plan(focus: 1), dayIndex: 1)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Собрать день'), findsNothing);
+    expect(find.text('Собрать план заново'), findsOneWidget);
+    expect(find.textContaining('больше не будет пытаться'), findsOneWidget);
+  });
+
+  testWidgets('a day that failed ONCE is still offered a retry', (tester) async {
+    final retryable = PlanDayDetail.fromJson({
+      'id': 'd1',
+      'index': 1,
+      'kind': 'intro',
+      'title': 'Представиться и начать разговор',
+      'status': 'failed',
+      'generation_attempts': 1,
+      'plan_id': '01PLAN',
+      'terms': [],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          planDayProvider((planId: '01PLAN', dayIndex: 1)).overrideWith((ref) async => retryable),
+        ],
+        child: _app(PlanDayScreen(plan: _plan(focus: 1), dayIndex: 1)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Собрать день'), findsOneWidget);
+    expect(find.text('Собрать план заново'), findsNothing);
+  });
+
   testWidgets('the day opened out of turn warns BEFORE the button, not after the session', (
     tester,
   ) async {

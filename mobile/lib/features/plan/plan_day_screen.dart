@@ -169,11 +169,18 @@ class _DayBody extends ConsumerWidget {
   }
 }
 
-/// A day the server has not written yet — «Собрать день N».
+/// A day the server has not written yet — and THREE states, not one.
 ///
-/// The plan generates ONE day at a time and only a couple ahead of the focus (its own spending
-/// ceiling), so a day further out legitimately has a title and nothing else. The button asks for it
-/// by hand, which is exactly what `POST /plans/{id}/days/{n}/generate` is for.
+/// The plan generates one day at a time and only a couple ahead of the focus (its own spending
+/// ceiling), so a day further out legitimately has a title and nothing else: «Собрать день» asks for
+/// it, which is what `POST /plans/{id}/days/{n}/generate` is for.
+///
+/// A day that FAILED is not the same thing, and a day that failed TWICE is a third thing again. The
+/// server claims a day at most twice ({@link PlanDay::MAX_ATTEMPTS}) — «день, не прошедший
+/// валидатор дважды, это то, на что смотрит человек» — and after that `claim()` returns false
+/// forever. Offering «Собрать день» there is a button that cannot work, however many times it is
+/// pressed. So the exhausted day says what actually happened and offers the only thing that CAN
+/// help: building the plan again.
 class _NotWrittenYet extends ConsumerWidget {
   const _NotWrittenYet({required this.plan, required this.day});
 
@@ -183,6 +190,7 @@ class _NotWrittenYet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    final exhausted = day.outOfAttempts;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -195,7 +203,9 @@ class _NotWrittenYet extends ConsumerWidget {
         Text(day.title, style: AppText.collectionNameScreen.copyWith(fontSize: 29, height: 1.18)),
         const SizedBox(height: AppSpacing.s12),
         Text(
-          day.status == PlanDayStatus.failed ? l.planDayFailed : l.planDayNotWritten,
+          exhausted
+              ? l.planDayExhausted
+              : (day.status == PlanDayStatus.failed ? l.planDayFailed : l.planDayNotWritten),
           style: AppText.translation.copyWith(
             fontSize: 14.5,
             height: 1.6,
@@ -203,20 +213,53 @@ class _NotWrittenYet extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.s22),
-        PrimaryButton(
-          label: l.planDayBuildNow,
-          minHeight: 52,
-          onPressed: () {
-            AppHaptics.light();
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => PlanBuildingScreen(plan: plan, dayIndex: day.index),
-              ),
-            );
-          },
-        ),
+        if (exhausted)
+          // The plan is not salvageable a day at a time from here. Abandoning is a decision, so it
+          // is confirmed — and it is the learner's, which is why nothing happens automatically.
+          PrimaryButton(
+            label: l.planDayRebuildPlan,
+            minHeight: 52,
+            onPressed: () => _rebuild(context, ref, l),
+          )
+        else
+          PrimaryButton(
+            label: l.planDayBuildNow,
+            minHeight: 52,
+            onPressed: () {
+              AppHaptics.light();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => PlanBuildingScreen(plan: plan, dayIndex: day.index),
+                ),
+              );
+            },
+          ),
       ],
     );
+  }
+
+  Future<void> _rebuild(BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    AppHaptics.light();
+    final ok = await showCenterAlert(
+      context: context,
+      title: l.planDayRebuildTitle,
+      message: l.planDayRebuildBody,
+      confirmLabel: l.planDayRebuildConfirm,
+      cancelLabel: l.commonCancel,
+    );
+    if (ok != true || !context.mounted) return;
+
+    try {
+      await ref.read(apiClientProvider).abandonPlan(plan.id);
+    } catch (_) {
+      // Offline, or a plan that is already gone. Either way the screens below re-read and say what
+      // is actually true; a thrown error here would be a second sentence about the same fact.
+    }
+    if (!context.mounted) return;
+    ref.invalidate(activePlanProvider);
+    ref.invalidate(planArchiveProvider);
+    // Back to the tab, which is now the empty state with «Составить план» on it.
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }
 

@@ -2669,6 +2669,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDayFailed => 'This day did not build the first time. You can try again.';
 
   @override
+  String get planDayExhausted =>
+      'This day failed to build twice in a row, and the server will not try again. It happens when the model returns material in the wrong language. The plan has to be built again.';
+
+  @override
+  String get planDayRebuildPlan => 'Build the plan again';
+
+  @override
+  String get planDayRebuildTitle => 'Give up on this plan?';
+
+  @override
+  String get planDayRebuildBody =>
+      'The plan goes to the archive and its words into general review. The days that did build stay as ordinary collections.';
+
+  @override
+  String get planDayRebuildConfirm => 'Give up';
+
+  @override
+  String get planBuildingRefused =>
+      'The day did not build: the material failed validation. There is nothing left to wait for — the plan exists and can be opened.';
+
+  @override
   String get planDayBuildNow => 'Build the day';
 
   @override

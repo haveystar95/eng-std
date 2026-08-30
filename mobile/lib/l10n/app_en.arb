@@ -902,6 +902,14 @@
   "planConversationSoon": "The role conversation",
   "planDayNotWritten": "This day has not been built yet. The plan writes one day at a time — you can ask for it now.",
   "planDayFailed": "This day did not build the first time. You can try again.",
+  "planDayExhausted": "This day failed to build twice in a row, and the server will not try again. It happens when the model returns material in the wrong language. The plan has to be built again.",
+  "planDayRebuildPlan": "Build the plan again",
+  "planDayRebuildTitle": "Give up on this plan?",
+  "planDayRebuildBody": "The plan goes to the archive and its words into general review. The days that did build stay as ordinary collections.",
+  "planDayRebuildConfirm": "Give up",
+
+  "planBuildingRefused": "The day did not build: the material failed validation. There is nothing left to wait for — the plan exists and can be opened.",
+
   "planDayBuildNow": "Build the day",
 
   "planDayDone": "Day {index} done",

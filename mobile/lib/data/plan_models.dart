@@ -52,6 +52,13 @@ enum PlanDayStatus {
   bool get isBuilding => this == PlanDayStatus.pending || this == PlanDayStatus.generating;
 }
 
+/// How many times the server will CLAIM a day before it stops — `PlanDay::MAX_ATTEMPTS`.
+///
+/// Mirrored rather than fetched because it is a constant of the domain, and the client needs it for
+/// one question only: is this failure retryable. A day past it is a day the server will never build,
+/// so a screen that still offers «Собрать день» is offering a button that cannot work.
+const int _maxGenerationAttempts = 2;
+
 /// The three stages of the plan's own ladder. Rendered as a brass A / B / C beside a word.
 enum PlanStage {
   a,
@@ -208,6 +215,7 @@ class PlanDay {
     required this.scheduledOn,
     required this.collectionId,
     required this.status,
+    required this.generationAttempts,
     required this.failReason,
     required this.termBudget,
     required this.outcomes,
@@ -223,8 +231,24 @@ class PlanDay {
   final String? scheduledOn;
   final String? collectionId;
   final PlanDayStatus status;
+
+  /// CLAIMS, not failures, and the server's cap is two ({@link PlanDay::MAX_ATTEMPTS}).
+  ///
+  /// The client needs this to tell two states apart that look identical without it: a day that
+  /// failed and WILL be tried again, and a day the server will never claim again. Offering «Собрать
+  /// день» in the second case is a button that cannot work — the same class of bug as a client gate
+  /// looser than the server's.
+  final int generationAttempts;
+
+  /// Why the last attempt failed, in the server's words. Shown to the learner only as a hint of
+  /// what to do next — a validator code is not copy, and it is not printed raw.
   final String? failReason;
+
   final int termBudget;
+
+  /// The server has spent its two claims: this day cannot be built again, ever.
+  bool get outOfAttempts =>
+      status == PlanDayStatus.failed && generationAttempts >= _maxGenerationAttempts;
   final List<String> outcomes, checkpoints, topics;
 
   /// Who the learner will be talking to on this day («Врач-терапевт»). CONV-1 opens it; until then
@@ -247,6 +271,7 @@ class PlanDay {
     scheduledOn: j['scheduled_on'] as String?,
     collectionId: j['collection_id'] as String?,
     status: PlanDayStatus.fromWire(j['status'] as String?),
+    generationAttempts: (j['generation_attempts'] as num?)?.toInt() ?? 0,
     failReason: j['fail_reason'] as String?,
     termBudget: (j['term_budget'] as num?)?.toInt() ?? 0,
     outcomes: _strings(j['outcome']),
