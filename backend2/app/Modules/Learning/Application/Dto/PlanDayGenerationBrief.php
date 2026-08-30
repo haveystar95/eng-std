@@ -14,6 +14,10 @@ final readonly class PlanDayGenerationBrief
 {
     /**
      * @param  list<string>  $checkpoints  what has to be heard on this day, in order
+     * @param  list<string>  $previousCheckpoints  what every OTHER day of this plan already promises
+     *        — the coherence gate's input ({@see \App\Modules\Generation\Domain\Service\PlanCoherenceValidator}).
+     *        Two days promising the same line is not a harmless repetition: the conversation ticks
+     *        checkpoints off, and the same one ticked twice reads as two abilities earned.
      * @param  list<string>  $goalTerms    verbatim in both languages, never translated
      * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
      * @param  list<string>  $constraints
@@ -38,5 +42,6 @@ final readonly class PlanDayGenerationBrief
         public array $constraints,
         public array $goalTerms,
         public array $dayJson,
+        public array $previousCheckpoints = [],
     ) {}
 }

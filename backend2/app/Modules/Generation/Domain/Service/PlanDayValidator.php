@@ -107,6 +107,28 @@ final class PlanDayValidator
 
     public function __construct(private readonly LanguagePurity $purity = new LanguagePurity()) {}
 
+    /**
+     * THE accepted reply-count range for a day of `$total` cards, and the number the server asked
+     * for.
+     *
+     * Public and static because a SECOND gate now judges the same share
+     * ({@see PlanCoherenceValidator}), and two copies of this arithmetic is how one of them ends up
+     * refusing a day the other accepts. The reasoning behind computing in counts rather than in
+     * percentages is at {@see checkLineShare()}.
+     *
+     * @return array{0: int, 1: int, 2: int}  min, max, and the mandated `ceil(0.45 × total)`
+     */
+    public static function lineCountRange(int $total): array
+    {
+        $mandated = (int) ceil(self::MANDATED_LINE_SHARE * $total);
+
+        return [
+            min((int) floor(self::MIN_LINE_SHARE * $total), $mandated),
+            max((int) ceil(self::MAX_LINE_SHARE * $total), $mandated),
+            $mandated,
+        ];
+    }
+
     /** @return list<PlanViolation> empty = the day may be written */
     public function validate(PlanDayCandidate $day): array
     {
@@ -222,9 +244,7 @@ final class PlanDayValidator
             }
         }
 
-        $mandated = (int) ceil(self::MANDATED_LINE_SHARE * $total);
-        $min = min((int) floor(self::MIN_LINE_SHARE * $total), $mandated);
-        $max = max((int) ceil(self::MAX_LINE_SHARE * $total), $mandated);
+        [$min, $max, $mandated] = self::lineCountRange($total);
 
         if ($lines >= $min && $lines <= $max) {
             return [];

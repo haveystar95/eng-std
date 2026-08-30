@@ -249,7 +249,16 @@ it('scopes the day example to the day collection, never to the term at large', f
     expect(DB::table('term_examples')->where('scope_collection_id', $collectionId)->count())->toBeGreaterThan(0);
 });
 
-it('queues day 2 only once day 1 is ready — never a fan-out over the plan', function () {
+/**
+ * A SHORT plan is written whole at the start — and the final day is still never sent to a model.
+ *
+ * The «one day at a time» rule PLAN-1a shipped is now the rule for LONG plans only
+ * ({@see \App\Modules\Learning\Domain\Service\PlanGenerationPolicy}): three teaching days or fewer
+ * and there is no meaningful abandonment window to protect, while making the learner watch a
+ * spinner on day 2 is a real cost. The long-plan half of the split is asserted in PlanSessionTest,
+ * where a day can actually be walked to `done`.
+ */
+it('writes a short plan whole at the start, and never sends the final day to a model', function () {
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru']);
 
@@ -257,8 +266,8 @@ it('queues day 2 only once day 1 is ready — never a fan-out over the plan', fu
     outlinePlan($this, $token, $plan['id']);
     $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
 
-    // The queue is `sync`, so the chain ran to its end inside the request: both teaching days are
-    // written and the final day was never sent to a model at all.
+    // Two teaching days, so the whole plan is eager. The queue is `sync`, so both were written
+    // inside the request.
     $days = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->orderBy('day_index')->get();
 
     expect($days[0]->status)->toBe('ready')

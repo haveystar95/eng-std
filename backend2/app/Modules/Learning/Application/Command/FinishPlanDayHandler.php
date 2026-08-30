@@ -21,7 +21,12 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  * 2. **Its terms are enrolled, strictly** — `enrollment_sources += plan:<id>`. This is the moment
  *    the plan starts holding words, and it happens per DAY rather than at the start of the plan,
  *    because a word cannot be held before it exists.
- * 3. **The next day is queued** — one, after this one, never a fan-out.
+ * The next day is NOT queued here, and that is the change PLAN-1b made. «Ready» means the material
+ * exists; it says nothing about whether the learner will come back, and queueing on it meant a
+ * fourteen-day plan wrote all fourteen days the afternoon it started. The next day is queued when
+ * this one is DONE — walked, its every word through stage A — which happens in the session path
+ * ({@see BuildPlanSessionHandler}) and is governed by {@see PlanGenerationPolicy}. A SHORT plan is
+ * the exception and needs nothing here either: its days were all queued at the start.
  *
  * On FAILURE nothing is enrolled and nothing is queued. A day that failed its first attempt goes
  * back to `pending` and the dispatcher is asked again immediately: that is the one re-run the
@@ -69,7 +74,7 @@ final readonly class FinishPlanDayHandler
                 ($this->enroll)(new EnrollTerm($plan->userId(), TermId::fromString($termId), $source));
             }
 
-            return ['retry' => false, 'next' => $this->nextDayIndex($planId, $command->dayIndex)];
+            return ['retry' => false, 'next' => null];
         });
 
         // Outside the transaction: a worker can pick a job up before the commit lands.
@@ -81,17 +86,5 @@ final readonly class FinishPlanDayHandler
         if ($outcome['next'] !== null) {
             $this->dispatcher->dispatchDay($command->planId, $outcome['next']);
         }
-    }
-
-    /** The next day that still needs writing — the final day never does. */
-    private function nextDayIndex(PlanId $planId, int $after): ?int
-    {
-        foreach ($this->days->listForPlan($planId) as $day) {
-            if ($day->dayIndex() > $after && $day->kind() === PlanDayKind::Intro && ! $day->isReady()) {
-                return $day->dayIndex();
-            }
-        }
-
-        return null;
     }
 }

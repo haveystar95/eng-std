@@ -9,19 +9,20 @@ use App\Modules\Learning\Domain\Exception\PlanAlreadyActive;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
-use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
 /**
  * The moment the plan stops being a document and becomes a mechanism: it starts holding words, and
- * day 1 goes into the queue.
+ * its first day — or, on a short plan, all of them — goes into the queue.
  *
- * ONE day is queued, not all of them. Day 2 is dispatched when day 1 is ready
- * ({@see FinishPlanDayHandler}), for three reasons in the order they bite: day 2 is written with
- * day 1's terms in its KNOWN block and cannot exist before them; a fan-out spends the whole plan's
- * money before the learner has looked at one day; and a plan whose day 1 came back broken should
- * stop rather than produce four more broken days.
+ * WHICH of those is {@see PlanGenerationPolicy}'s decision and not this handler's. Three days or
+ * fewer are written whole, because there is no meaningful abandonment window in a three-day plan
+ * and the alternative is a spinner on day 2; anything longer is written one day at a time, with the
+ * next queued when the previous is DONE. Both halves of that split exist for the same reason: a day
+ * is a paid model call, and the plan's whole budget must not be spent before the learner has looked
+ * at any of it.
  */
 final readonly class StartPlanHandler
 {
@@ -35,7 +36,8 @@ final readonly class StartPlanHandler
 
     public function __invoke(StartPlan $command): void
     {
-        $firstDayIndex = $this->tx->run(function () use ($command): ?int {
+        /** @var list<int> $toQueue */
+        $toQueue = $this->tx->run(function () use ($command): array {
             $plan = $this->plans->findForUpdate($command->planId);
             if ($plan === null || ! $plan->userId()->equals($command->actorId)) {
                 throw PlanNotFound::withId($command->planId->value);
@@ -51,19 +53,19 @@ final readonly class StartPlanHandler
             $plan->start($this->clock->now());
             $this->plans->save($plan);
 
-            foreach ($this->days->listForPlan($plan->id()) as $day) {
-                if ($day->kind() === PlanDayKind::Intro && ! $day->isReady()) {
-                    return $day->dayIndex();
-                }
-            }
+            $computed = $plan->computed();
+            $introDays = is_int($computed['intro_days'] ?? null) ? $computed['intro_days'] : 1;
 
-            return null;
+            return PlanGenerationPolicy::daysToQueueAtStart(
+                $this->days->listForPlan($plan->id()),
+                $introDays,
+            );
         });
 
         // AFTER the transaction: a job dispatched inside one can be picked up by a worker before
         // the commit lands, and then it reads a plan that is still a draft.
-        if ($firstDayIndex !== null) {
-            $this->dispatcher->dispatchDay($command->planId->value, $firstDayIndex);
+        foreach ($toQueue as $dayIndex) {
+            $this->dispatcher->dispatchDay($command->planId->value, $dayIndex);
         }
     }
 }

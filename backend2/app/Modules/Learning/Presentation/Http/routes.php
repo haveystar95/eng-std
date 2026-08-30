@@ -40,6 +40,8 @@ Route::middleware(['throttle:120,1', 'auth:sanctum'])->group(function (): void {
     // focus, so it must be possible to ask for it without recomputing it on the device.
     Route::post('/plans/{planId}/days/{dayIndex}/session', [PlanController::class, 'session']);
     Route::post('/plans/{planId}/session', [PlanController::class, 'session']);
+    // «Собери мне день n». Idempotent and safe to poll — it answers with the day's status.
+    Route::post('/plans/{planId}/days/{dayIndex}/generate', [PlanController::class, 'generateDay']);
     Route::post('/plans/{planId}/outline', [PlanController::class, 'buildOutline']);
     Route::patch('/plans/{planId}/outline', [PlanController::class, 'reschedule']);
     Route::post('/plans/{planId}/start', [PlanController::class, 'start']);

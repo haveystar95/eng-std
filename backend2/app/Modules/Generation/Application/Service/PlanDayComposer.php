@@ -9,7 +9,9 @@ use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
+use App\Modules\Generation\Domain\Service\PlanCoherenceValidator;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
+use App\Modules\Generation\Domain\ValueObject\PlanCoherenceCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
@@ -41,6 +43,14 @@ final readonly class PlanDayComposer
         private PlanPromptSource $prompts,
         private RecordsPlanSpend $ledger,
         private PlanDayValidator $validator = new PlanDayValidator(),
+        /**
+         * The SECOND gate, and the one that only exists because a plan is a sequence: it judges the
+         * day against the rest of the plan rather than against itself
+         * ({@see PlanCoherenceValidator}). It runs inside the same retry, so a day that re-teaches
+         * yesterday is regenerated with that named as the defect — «сделай лучше» buys nothing,
+         * «этот термин уже введён на дне 1» is checkable.
+         */
+        private PlanCoherenceValidator $coherence = new PlanCoherenceValidator(),
     ) {}
 
     /**
@@ -113,7 +123,20 @@ final readonly class PlanDayComposer
             items: $items,
         );
 
-        $violations = $this->validator->validate($candidate);
+        $violations = [
+            ...$this->validator->validate($candidate),
+            // Both gates on the same answer, in one verdict: a day that is internally fine and
+            // re-teaches day 1 must not be accepted by half the machinery and then written.
+            ...$this->coherence->validate(new PlanCoherenceCandidate(
+                supportLang: $brief->supportLang,
+                dayIndex: $brief->dayIndex,
+                items: $items,
+                knownTexts: $known,
+                previousCheckpoints: $brief->previousCheckpoints,
+                dayCheckpoints: $brief->checkpoints,
+                entities: $brief->entities,
+            )),
+        ];
 
         // Written for EVERY attempt, accepted or refused, and before the verdict is acted on. The
         // re-run is a second paid call and shows up as a second row; a day that cost twice reads

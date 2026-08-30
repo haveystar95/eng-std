@@ -322,6 +322,51 @@ it('moves the reported focus as days are passed', function () {
         ->and($plan['next_day_index'])->toBeNull();
 });
 
+// ── when a plan spends money ──────────────────────────────────────────────────────────────────
+
+it('writes only day 1 of a LONG plan at the start, and the next when a day is walked', function () {
+    // Ten introduction days: past the eager threshold, so the plan pays for one day and stops.
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $statuses = fn (): array => DB::table('learning_plan_days')
+        ->where('plan_id', $planId)->orderBy('day_index')->pluck('status', 'day_index')->all();
+
+    $before = $statuses();
+    expect($before[1])->toBe('ready')
+        ->and($before[2])->toBe('pending')
+        ->and(count(array_filter($before, static fn (string $s): bool => $s === 'ready')))->toBe(1);
+
+    // Day 1 walked → day 2 queued. «Done», not «ready»: the evidence that the learner will come
+    // back is that they came back.
+    walkDay($this, $token, $planId, 1);
+    $after = $statuses();
+
+    expect($after[1])->toBe('done')
+        ->and($after[2])->toBe('ready');
+});
+
+it('builds a day on demand, idempotently, and refuses to run more than two ahead', function () {
+    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+
+    $generate = fn (int $n) => $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$planId}/days/{$n}/generate");
+
+    // Two days ahead of the focus (day 1) is what the ceiling allows.
+    expect($generate(2)->assertOk()->json('data.status'))->toBe('ready')
+        ->and($generate(3)->assertOk()->json('data.status'))->toBe('ready')
+        // Calling it again on a day that is already written is not an error and does not pay twice.
+        ->and($generate(2)->assertOk()->json('data.status'))->toBe('ready');
+
+    $attempts = DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)->value('generation_attempts');
+    expect($attempts)->toBe(1);
+
+    // The third is over the ceiling: a 409 with a sentence, so the screen can say why.
+    $generate(4)->assertStatus(409)->assertJsonPath('code', 'plan_day_capped');
+
+    expect(DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 4)->value('status'))
+        ->toBe('pending');
+});
+
 // ── a day opened out of turn ──────────────────────────────────────────────────────────────────
 
 it('gives a day opened ahead of the focus a SOFT session — no stages, no crediting', function () {

@@ -12,6 +12,8 @@ use App\Modules\Learning\Application\Command\CreatePlan;
 use App\Modules\Learning\Application\Command\CreatePlanHandler;
 use App\Modules\Learning\Application\Command\EndPlan;
 use App\Modules\Learning\Application\Command\EndPlanHandler;
+use App\Modules\Learning\Application\Command\RequestPlanDay;
+use App\Modules\Learning\Application\Command\RequestPlanDayHandler;
 use App\Modules\Learning\Application\Command\ReschedulePlan;
 use App\Modules\Learning\Application\Command\ReschedulePlanHandler;
 use App\Modules\Learning\Application\Command\StartPlan;
@@ -61,6 +63,7 @@ final class PlanController
         private readonly EndPlanHandler $end,
         private readonly GetPlanHandler $get,
         private readonly BuildPlanSessionHandler $buildSession,
+        private readonly RequestPlanDayHandler $requestDay,
     ) {}
 
     public function store(CreatePlanRequest $request): JsonResponse
@@ -149,6 +152,23 @@ final class PlanController
         ));
 
         return new JsonResponse(['data' => (new PlanSessionResource($session))->toArray($request)]);
+    }
+
+    /**
+     * «Собери мне день n» — the learner looking ahead of the focus.
+     *
+     * Idempotent and cheap to poll: it answers with the day's STATUS, so the «собираю день n» screen
+     * can call it to start the work and call it again to find out whether it finished.
+     */
+    public function generateDay(Request $request, string $planId, string $dayIndex): JsonResponse
+    {
+        $status = ($this->requestDay)(new RequestPlanDay(
+            actorId: $this->actorId($request),
+            planId: $this->planId($planId)->value,
+            dayIndex: (int) $dayIndex,
+        ));
+
+        return new JsonResponse(['data' => ['day_index' => (int) $dayIndex, 'status' => $status]]);
     }
 
     public function day(Request $request, string $planId, string $dayIndex): JsonResponse

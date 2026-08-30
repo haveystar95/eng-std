@@ -12,6 +12,7 @@ use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
+use App\Modules\Learning\Application\Port\DispatchesPlanDay;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Query\GetDueTerms;
@@ -29,11 +30,13 @@ use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Repository\StudySessionRepository;
 use App\Modules\Learning\Domain\Service\PlanDayOrder;
+use App\Modules\Learning\Domain\Service\PlanGenerationPolicy;
 use App\Modules\Learning\Domain\Service\PlanKnobSupport;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanDayCard;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
+use App\Modules\Learning\Domain\ValueObject\PlanDayStatus;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\PlanKnobs;
 use App\Modules\Learning\Domain\ValueObject\PlanStage;
@@ -101,6 +104,7 @@ final readonly class BuildPlanSessionHandler
         private PlanRepository $plans,
         private PlanDayRepository $days,
         private PlanProgress $progress,
+        private DispatchesPlanDay $dispatcher,
         private PlanModeSettingsReader $planSettings,
         private GetDueTermsHandler $dueTerms,
         private GetPracticeTermsHandler $practiceTerms,
@@ -540,7 +544,7 @@ final readonly class BuildPlanSessionHandler
         $toMark = [];
         foreach ($days as $day) {
             $view = $progress->days[$day->dayIndex()] ?? null;
-            if ($view !== null && $view->passed && $day->status() !== \App\Modules\Learning\Domain\ValueObject\PlanDayStatus::Done) {
+            if ($view !== null && $view->passed && $day->status() !== PlanDayStatus::Done) {
                 $toMark[] = $day;
             }
         }
@@ -554,6 +558,20 @@ final readonly class BuildPlanSessionHandler
                 $this->days->save($day);
             }
         });
+
+        // A day just became DONE, which is the event the generation policy waits for: the next day
+        // is queued now, and only now. Outside the transaction, because a worker can pick a job up
+        // before the commit lands — and after the marking, because the policy reads the statuses
+        // this loop just changed.
+        $fresh = $this->days->listForPlan($toMark[0]->planId());
+        foreach ($toMark as $day) {
+            $next = PlanGenerationPolicy::nextAfterDone($fresh, $day->dayIndex(), $progress->focusDayIndex);
+            if ($next !== null) {
+                $this->dispatcher->dispatchDay($day->planId()->value, $next);
+
+                return;
+            }
+        }
     }
 
     /** @param list<PlanSessionTaskView> $tasks */

@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Command;
 use App\Modules\Learning\Application\Dto\PlanDayGenerationBrief;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
@@ -83,6 +84,11 @@ final readonly class ClaimPlanDayHandler
                 // What the prompt reads as «DAY (from the skeleton)». Built from the COMPUTED day,
                 // not from the outline day: after A1 those can differ (a merged day, a dropped
                 // ability), and the material has to be written for the day that actually exists.
+                // Every OTHER day's checkpoints, for the coherence gate. Read here rather than in
+                // Generation because the plan's days are Learning's rows and the claim already has
+                // them open — and because a second module reading them would need its own opinion
+                // about which day is «this» one.
+                previousCheckpoints: $this->otherCheckpoints($plan->id(), $day->dayIndex()),
                 dayJson: [
                     'index' => $day->dayIndex(),
                     'title' => $day->title(),
@@ -96,5 +102,35 @@ final readonly class ClaimPlanDayHandler
                 ],
             );
         });
+    }
+
+    /**
+     * Every checkpoint of every day of this plan EXCEPT the one being generated.
+     *
+     * The final day is skipped as well as the day itself: its checkpoints are the plan's own,
+     * assembled by the server out of the teaching days, so counting them would make every day
+     * collide with itself through the rehearsal.
+     *
+     * @return list<string>
+     */
+    private function otherCheckpoints(PlanId $planId, int $exceptDayIndex): array
+    {
+        $out = [];
+        foreach ($this->days->listForPlan($planId) as $day) {
+            if ($day->dayIndex() === $exceptDayIndex || $day->kind() === PlanDayKind::Final) {
+                continue;
+            }
+            $brief = $day->roleBrief() ?? [];
+            if (! is_array($brief['checkpoints'] ?? null)) {
+                continue;
+            }
+            foreach ($brief['checkpoints'] as $checkpoint) {
+                if (is_string($checkpoint) && $checkpoint !== '') {
+                    $out[] = $checkpoint;
+                }
+            }
+        }
+
+        return $out;
     }
 }
