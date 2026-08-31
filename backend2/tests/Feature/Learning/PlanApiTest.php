@@ -428,6 +428,11 @@ it('abandoning releases the hold and leaves the words in the pool', function () 
     $collectionId = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 1)->value('collection_id');
     $termId = DB::table('collection_items')->where('collection_id', $collectionId)->value('term_id');
 
+    // ANSWERED ONCE — which is what makes it a word the learner spent time on, and therefore one
+    // the ending keeps. A card they never saw leaves with the plan
+    // ({@see PlanTermReleaser::unenrolUntouched()}, tested in `PlanUnenrolUntouchedTest`).
+    answerTimes($this, $token, $termId, 'x', 1);
+
     $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/plans/{$plan['id']}/abandon")
         ->assertOk()
@@ -529,12 +534,23 @@ it('keeps the plan words out of the ordinary day while the plan is running', fun
         ->json('data');
     expect($session['cards'])->toBe([]);
 
-    // The plan lets go → the same words rejoin the ordinary rotation. «18 слов ушли в общее
-    // повторение» (кадр 11) is this predicate ceasing to match, and nothing else.
+    // One word answered: the ones the learner WORKED ON are what «ушли в общее повторение» is a
+    // promise about. The rest of the day was written and never seen, and leaves with the plan.
+    $answered = DB::table('collection_items')
+        ->whereIn('collection_id', DB::table('learning_plan_days')->where('plan_id', $plan['id'])->whereNotNull('collection_id')->pluck('collection_id'))
+        ->value('term_id');
+    answerTimes($this, $token, (string) $answered, 'x', 1);
+
+    // The plan lets go → the words the learner worked on rejoin the ordinary rotation. «18 слов
+    // ушли в общее повторение» (кадр 11) is this predicate ceasing to match, and nothing else.
     $this->withHeaders($headers)->postJson("/api/v1/plans/{$plan['id']}/abandon")->assertOk();
 
     $after = $this->withHeaders($headers)->getJson('/api/v1/home-plan')->assertOk()->json('data');
-    expect($after['in_work']['total'])->toBe($held);
+
+    // ONE — the word that was answered. The other seventeen were written for days the learner never
+    // opened, and a plan does not leave those behind in the pool.
+    expect($after['in_work']['total'])->toBe(1)
+        ->and($held)->toBeGreaterThan(1);
 });
 
 it('leaves a word the learner saved by hand studiable after the plan lets go', function () {

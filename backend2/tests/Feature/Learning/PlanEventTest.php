@@ -113,6 +113,12 @@ it('closes the plan when the learner says how it went — and lets the words go'
         ->count();
     expect($held)->toBeGreaterThan(0);
 
+    // One word answered: «ушли в общее повторение» is a promise about words the learner worked on.
+    $answered = DB::table('collection_items')
+        ->whereIn('collection_id', DB::table('learning_plan_days')->where('plan_id', $plan['id'])->whereNotNull('collection_id')->pluck('collection_id'))
+        ->value('term_id');
+    answerTimes($this, $token, (string) $answered, 'x', 1);
+
     $after = $this->withHeaders($headers)
         ->postJson("/api/v1/plans/{$plan['id']}/feedback", ['checkpoints' => [0, 2, 2]])
         ->assertOk()
@@ -129,9 +135,11 @@ it('closes the plan when the learner says how it went — and lets the words go'
         ->where('user_id', $user->id)
         ->whereRaw('enrollment_sources @> ?::jsonb', [json_encode(['plan:' . $plan['id']])])
         ->count();
+    // The one that was answered is back in the ordinary day; the ones written for days nobody
+    // opened left the pool with the plan.
     expect($stillHeld)->toBe(0)
         ->and($this->withHeaders($headers)->getJson('/api/v1/home-plan')->json('data.in_work.total'))
-        ->toBe($held);
+        ->toBe(1);
 });
 
 it('tells «asked and used nothing» apart from «never asked»', function () {

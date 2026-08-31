@@ -53,6 +53,11 @@ final readonly class RecordPlanFeedbackHandler
             // active is still holding on purpose, and re-releasing an already-released plan would be
             // a write for nothing.
             if ($wasHolding && $plan->status() === PlanStatus::Completed) {
+                // FIRST, and it reads the marker the release is about to remove: whatever this plan
+                // put in the pool and the learner never once answered leaves with it. A plan
+                // abandoned on day one otherwise leaves fourteen words from a conversation that
+                // never happened, and they come back due for ever.
+                $this->releaser->unenrolUntouched($plan->userId(), $plan->id()->value);
                 $this->releaser->releasePlan($plan->userId(), $plan->id()->value);
             }
         });
