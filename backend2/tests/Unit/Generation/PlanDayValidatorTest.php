@@ -393,6 +393,68 @@ it('does not let a capitalised Latin word through as an abbreviation', function 
         ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
 });
 
+// ── a word the day itself teaches is not a foreign word ───────────────────────────────────────
+
+it('lets a Latin word the day itself teaches stand in a Russian key', function () {
+    // The owner's phone, 31.08: «Онлайн-собеседование разработчика» died twice on `Alex`, `junior`
+    // and `backend` — every one of them a word the model had just put on a card of the same day.
+    // A key that quotes the day's own material is not a key in the wrong language.
+    $items = [
+        planItem([
+            'text' => "Hi, I'm Alex, and I'm a junior developer.",
+            'translation' => 'Привет, я Alex, junior-разработчик.',
+            'example' => "Hi, I'm Alex, and I'm a junior developer from Kyiv.",
+            'example_translation' => 'Привет, я Alex, junior-разработчик из Киева.',
+            'transliteration' => '',
+            'covers_checkpoint' => 1,
+        ]),
+        planItem([
+            'text' => "I'm looking for a backend developer role in IT.",
+            // `backend` is on the OTHER card of the day — the exemption is the day's, not the card's.
+            'translation' => 'Ищу позицию backend-разработчика в IT.',
+            'example' => "I'm looking for a backend developer role in IT this year.",
+            'example_translation' => 'В этом году ищу позицию backend-разработчика в IT.',
+            'transliteration' => '',
+            'covers_checkpoint' => 1,
+        ]),
+    ];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('does not let a lone capital through, even when the day carries it', function () {
+    // One letter is a size, not a word — it is evidence of nothing, and the exemption is built on a
+    // token being evidence that the day teaches it. The single-letter token that IS content carries
+    // a digit and is a code («14A»), which is a different rule and stays.
+    $items = [planItem([
+        'text' => 'Do you have this in size L?',
+        'translation' => 'У вас есть размер L?',
+        'example' => 'Do you have this shirt in size L?',
+        'example_translation' => 'У вас есть эта рубашка в размере L?',
+        'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
+it('does not let the day excuse a key left in English altogether', function () {
+    // The failure mode the exemption would otherwise buy: an `example_translation` that is the
+    // example verbatim would be excused by the very sentence it failed to translate. Most of the
+    // letters are foreign ⇒ the day's vocabulary does not apply, and the key is what it looks like.
+    $items = [planItem([
+        'text' => 'Excuse me, where is seat 14A?',
+        'translation' => 'Извините, где место 14A?',
+        'example' => 'Excuse me, where is seat 14A on this flight?',
+        'example_translation' => 'Excuse me, where is seat 14A on this flight?',
+        'transliteration' => '',
+    ])];
+
+    expect(codes($this->validator->validate(planDay($items))))
+        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+});
+
 it('still needs goal_terms for a mixed-case product name', function () {
     // `Laravel` is not two-to-five capitals, so the shape rule cannot see it. That is what the
     // learner's own list is still for.

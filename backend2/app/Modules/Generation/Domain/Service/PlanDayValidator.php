@@ -43,8 +43,8 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * 6. **A key is never its own term.** A card whose question contains its answer asks nothing.
  * 7. **Transliteration is NORMALISED, then checked against the support alphabet.** See
  *    {@see normalizedTransliteration()} — this is the one rule that repairs rather than rejects.
- * 8. **Keys are written in the support language** — with two exemptions, and they are the whole
- *    subtlety of the rule. See {@see keyIsPure()}.
+ * 8. **Keys are written in the support language** — with the exemptions listed at
+ *    {@see keyIsPure()}, and they are the whole subtlety of the rule.
  * 9. **A description never contains its own term.** Reuses the lookup's own check, so a description
  *    is judged by one rule wherever it is written.
  *
@@ -121,6 +121,24 @@ final class PlanDayValidator
      * meant to catch a key written in the wrong language, and a seat number is not that.
      */
     private const CODE = '/(?<![A-Za-z])(?=[0-9A-Za-z-]*[0-9])(?=[0-9A-Za-z-]*[A-Za-z])[0-9A-Za-z]+(?:-[0-9A-Za-z]+)*(?![A-Za-z])/u';
+
+    /**
+     * ONE Latin word — the unit both halves of the day-vocabulary exemption are measured in
+     * ({@see dayVocabulary()}, {@see keyIsPure()}).
+     *
+     * A run of Latin letters, plus the apostrophe that lives INSIDE an English word («I'm»,
+     * «don't»). A hyphen deliberately does not join: «backend-разработчик» is one Russian word
+     * whose Latin half is `backend`, and the half is what has to be recognised.
+     */
+    private const LATIN_WORD = "/[A-Za-z]+(?:['\u{2019}][A-Za-z]+)*/u";
+
+    /**
+     * The shortest token the day's own vocabulary may excuse. One letter is not a word: it is a
+     * size («размер L»), an initial, or a stray — evidence of nothing, and the whole exemption is
+     * built on a token being EVIDENCE that the day teaches it. A single letter that really is
+     * content carries a digit («14A») and is a {@see CODE}.
+     */
+    private const MIN_VOCABULARY_TOKEN = 2;
 
     public function __construct(private readonly LanguagePurity $purity = new LanguagePurity()) {}
 
@@ -380,6 +398,7 @@ final class PlanDayValidator
     {
         $violations = [];
         $seen = [];
+        $vocabulary = $this->dayVocabulary($items);
 
         foreach ($items as $item) {
             $translation = trim($item->translation);
@@ -405,7 +424,7 @@ final class PlanDayValidator
             $seen[$key] = $item->text;
 
             foreach (['translation' => $translation, 'example_translation' => trim($item->exampleTranslation)] as $field => $value) {
-                if ($value !== '' && ! $this->keyIsPure($day, $item, $value)) {
+                if ($value !== '' && ! $this->keyIsPure($day, $item, $value, $vocabulary)) {
                     $violations[] = new PlanViolation(
                         self::KEY_NOT_SUPPORT_LANGUAGE,
                         "`{$field}` написан не на языке поддержки",
@@ -449,11 +468,30 @@ final class PlanDayValidator
      *    the reason it needs its own rule: the abbreviation shape starts at two letters, and a seat
      *    number carries exactly one. «Извините, где место 14A?» is the only way to say it in
      *    Russian, and the day it was on died twice for being right.
+     * 5. **A WORD THE DAY ITSELF TEACHES.** A Latin token that appears in the `text` or the
+     *    `example` of ANY card of the SAME day is not evidence that the key was written in the
+     *    wrong language — it is the day's own subject matter, quoted where Russian quotes it
+     *    anyway. «Привет, я Alex, junior-разработчик» is how that sentence is written, and the day
+     *    it was on («Онлайн-собеседование разработчика», the owner's phone, 31.08) died twice on
+     *    `Alex`, `junior` and `backend` — words the model had put on the cards one field earlier.
+     *    The list the shape rules cannot see (`Laravel`, `Docker`) is `goal_terms`, and it covers
+     *    only what the learner typed; this covers what the DAY typed, which is the same argument
+     *    one level down.
      *
-     * So both are removed from the value before the alphabet is looked at. What is left has to be
-     * the learner's own language, which is the rule the exemptions exist to keep enforceable.
+     *    Two guards keep it from eating the rule it is an exemption to. The token must be at least
+     *    {@see MIN_VOCABULARY_TOKEN} letters long — one letter is a size, not a word («размер L»
+     *    stays a violation, and a real single-letter token carries a digit and is a code). And the
+     *    key as a WHOLE must still read as the support language: when most of its letters are
+     *    foreign ({@see LanguagePurity::isWrongScript()}) the exemption is off, or an
+     *    `example_translation` left in English would excuse itself with the example it failed to
+     *    translate.
+     *
+     * So all of these are removed from the value before the alphabet is looked at. What is left has
+     * to be the learner's own language, which is the rule the exemptions exist to keep enforceable.
+     *
+     * @param  array<string, true>  $vocabulary  {@see dayVocabulary()} — every Latin word of the day
      */
-    private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value): bool
+    private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value, array $vocabulary): bool
     {
         // The two SHAPE rules first, because they need nothing told to them and hold in any
         // language: a run of 2–5 capital Latin letters is an abbreviation, and a token carrying a
@@ -467,7 +505,47 @@ final class PlanDayValidator
             }
         }
 
+        if (! $this->purity->isWrongScript($day->supportLang, $value)) {
+            $stripped = (string) preg_replace_callback(
+                self::LATIN_WORD,
+                static fn (array $m): string => isset($vocabulary[mb_strtolower($m[0])]) ? ' ' : $m[0],
+                $stripped,
+            );
+        }
+
         return $this->purity->foreignScriptLetters($day->supportLang, $stripped) === [];
+    }
+
+    /**
+     * Every Latin word the day says out loud — its cards' `text` and `example`, which are the two
+     * fields written in the language being learned.
+     *
+     * Case-folded, because a key quotes a word where the sentence puts it and «Backend» at the
+     * start of one is the same word as `backend` in the middle of another. Tokens shorter than
+     * {@see MIN_VOCABULARY_TOKEN} are not collected at all, so a single letter can never match.
+     *
+     * @param  list<PlanDayItem>  $items
+     * @return array<string, true>  lower-cased word => true
+     */
+    private function dayVocabulary(array $items): array
+    {
+        $words = [];
+
+        foreach ($items as $item) {
+            foreach ([$item->text, $item->example] as $source) {
+                if (preg_match_all(self::LATIN_WORD, $source, $matches) === false) {
+                    continue;
+                }
+
+                foreach ($matches[0] as $word) {
+                    if (mb_strlen($word) >= self::MIN_VOCABULARY_TOKEN) {
+                        $words[mb_strtolower($word)] = true;
+                    }
+                }
+            }
+        }
+
+        return $words;
     }
 
     /** Case-folded, punctuation-free, whitespace-collapsed — for comparing two strings as content. */
