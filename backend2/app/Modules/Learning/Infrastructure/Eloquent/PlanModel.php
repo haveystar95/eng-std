@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $started_at
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property array<string, mixed>|null $event_feedback
+ * @property string|null $abandon_reason
  */
 final class PlanModel extends Model
 {

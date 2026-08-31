@@ -74,6 +74,18 @@ final class LearningPlan
          * @var list<int>|null
          */
         private ?array $eventFeedback = null,
+        /**
+         * WHY the plan was abandoned, when it was not the learner who abandoned it.
+         *
+         * Null on «я передумал» — a person tapping «отказаться» has their reason and it is not the
+         * app's business. It carries a value only when something ELSE ends the plan on the owner's
+         * behalf: a prompt version whose skeletons can no longer be read, a run that left a plan
+         * broken. A plan that says «abandoned» and nothing beside it is a plan the owner reopens a
+         * month later and cannot explain.
+         *
+         * Set only by {@see abandon()}, and only forward: the two other endings never touch it.
+         */
+        private ?string $abandonReason = null,
     ) {}
 
     public static function draft(
@@ -115,11 +127,12 @@ final class LearningPlan
         ?DateTimeImmutable $startedAt,
         ?DateTimeImmutable $completedAt,
         ?array $eventFeedback = null,
+        ?string $abandonReason = null,
     ): self {
         return new self(
             $id, $userId, $status, $title, $goalText, $goalRestated, $targetLang, $supportLang,
             $level, $eventDate, $minutesPerDay, $outline, $computed, $startedAt, $completedAt,
-            $eventFeedback,
+            $eventFeedback, $abandonReason,
         );
     }
 
@@ -218,14 +231,20 @@ final class LearningPlan
      * Give up on it. Terminal, and it RELEASES the plan's hold on the pool — see
      * {@see \App\Modules\Learning\Domain\Service\EnrollmentPolicy::release()}. The words stay;
      * only the plan's claim on them goes.
+     *
+     * `$reason` is for the endings the learner did not choose ({@see $abandonReason}); their own
+     * «отказаться» passes nothing. It is a short machine tag («prompt_v0_2_1_run»), not a sentence
+     * to show — the column is 64 characters and what it answers is «which decision killed this»,
+     * not «what happened».
      */
-    public function abandon(): void
+    public function abandon(?string $reason = null): void
     {
         if ($this->status->isTerminal()) {
             throw InvalidPlanTransition::make($this->status, 'отказаться');
         }
 
         $this->status = PlanStatus::Abandoned;
+        $this->abandonReason = $reason;
     }
 
     public function complete(DateTimeImmutable $now): void
@@ -291,6 +310,12 @@ final class LearningPlan
     public function status(): PlanStatus
     {
         return $this->status;
+    }
+
+    /** {@see $abandonReason} — null unless something other than the learner ended this plan. */
+    public function abandonReason(): ?string
+    {
+        return $this->abandonReason;
     }
 
     public function title(): string

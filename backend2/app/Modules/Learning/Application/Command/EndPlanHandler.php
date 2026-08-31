@@ -44,7 +44,7 @@ final readonly class EndPlanHandler
             // «complete» and swallowed every string that was not one of the other two.
             match ($command->action) {
                 PlanEnding::Pause => $plan->pause(),
-                PlanEnding::Abandon => $plan->abandon(),
+                PlanEnding::Abandon => $plan->abandon($command->reason),
                 PlanEnding::Complete => $plan->complete($this->clock->now()),
             };
 

@@ -39,6 +39,7 @@ final class PlanMapper
             startedAt: $row->started_at?->toDateTimeImmutable(),
             completedAt: $row->completed_at?->toDateTimeImmutable(),
             eventFeedback: self::indexes($row->event_feedback),
+            abandonReason: $row->abandon_reason,
         );
     }
 
@@ -79,6 +80,7 @@ final class PlanMapper
             'started_at' => $plan->startedAt(),
             'completed_at' => $plan->completedAt(),
             'event_feedback' => $plan->eventFeedback(),
+            'abandon_reason' => $plan->abandonReason(),
         ];
     }
 

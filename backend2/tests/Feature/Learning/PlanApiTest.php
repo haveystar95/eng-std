@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Learning\Application\Command\EndPlan;
+use App\Modules\Learning\Application\Command\EndPlanHandler;
+use App\Modules\Learning\Domain\ValueObject\PlanEnding;
+use App\Modules\Learning\Domain\ValueObject\PlanId;
+use App\Modules\Shared\Domain\ValueObject\UserId;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -432,12 +437,38 @@ it('abandoning releases the hold and leaves the words in the pool', function () 
 
     // The reason is gone; the enrolment is NOT. The learner spent days on these words.
     expect(json_decode((string) $row->enrollment_sources, true))->toBe([])
-        ->and($row->enrolled_at)->not->toBeNull();
+        ->and($row->enrolled_at)->not->toBeNull()
+        // And `abandon_reason` stays NULL: this ending is the learner's own tap, and «я передумал»
+        // needs no column. The tag is only for the endings nobody chose.
+        ->and(DB::table('learning_plans')->where('id', $plan['id'])->value('abandon_reason'))->toBeNull();
 
     $this->withHeader('Authorization', "Bearer {$token}")
         ->deleteJson("/api/v1/pool/terms/{$termId}")
         ->assertOk()
         ->assertJsonPath('data.changed', true);
+});
+
+it('records WHY when something other than the learner ends the plan', function () {
+    // The path a наряд takes: the domain sets the tag, the mapper stores it, and a plan that says
+    // «abandoned» can still answer «почему» a month later. Before this the column existed and
+    // nothing but a migration's raw UPDATE could write it.
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru']);
+
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+
+    (app(EndPlanHandler::class))(new EndPlan(
+        PlanId::fromString($plan['id']),
+        UserId::fromString($user->id),
+        PlanEnding::Abandon,
+        'prompt_v0_2_1_run',
+    ));
+
+    $row = DB::table('learning_plans')->where('id', $plan['id'])->first();
+
+    expect($row->status)->toBe('abandoned')
+        ->and($row->abandon_reason)->toBe('prompt_v0_2_1_run');
 });
 
 it('serves a day with its register — every word, with the stage it stands on', function () {
