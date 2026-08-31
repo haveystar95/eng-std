@@ -54,5 +54,20 @@ final readonly class TermContentView
         public array $synonyms = [],
         public array $translations = [],
         public ?string $transliterationHint = null,
+        /**
+         * What this expression DOES in the plan day that wrote it: `line`, `word` or `chunk`.
+         *
+         * NULL on every term that never came from a plan — which is most of the store, and is not
+         * the same as «word». The plan's stage ladder reads it to pick a checklist
+         * ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}); everything else
+         * ignores it. Read from the term rather than guessed from `type`, which was the old proxy
+         * and starts lying the moment a connector («deal with», `type: phrasal_verb`) appears.
+         */
+        public ?string $kind = null,
+        /**
+         * The day's line with its slot as `___` — «I worked on ___» — or null on a formula and on
+         * everything that is not from a plan day. What a gap is cut from, in the plan session.
+         */
+        public ?string $frame = null,
     ) {}
 }

@@ -50,65 +50,178 @@ use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
  */
 final class PlanStageLadder
 {
+    /** What a plan card DOES in its day — the third dimension of the checklist below. */
+    public const KIND_LINE = 'line';
+
+    public const KIND_WORD = 'word';
+
+    public const KIND_CHUNK = 'chunk';
+
     /**
-     * The trainers of each stage, in the order they are dealt. The order is fixed and is not
-     * configuration: it is the stage's meaning ({@see PlanStage}) written out.
+     * THE CHECKLISTS, by stage and by what the card IS.
      *
-     * `multiple_choice` appears TWICE in stage A on purpose — forward and reverse recognition are
+     * One config, in Domain, next to the stages it spells out. Until v0.2 there was one ladder for
+     * everything a plan day produced, and it was the WORD's ladder: a spoken line got typing and
+     * dictation, so the learner was asked to type «My back has been hurting for a week.» letter
+     * for letter — a memory test of punctuation, not of the ability the day promised. And a line
+     * has no stage C at all, because stage C is «nothing on the screen, produce it exactly», which
+     * for a sentence is the wrong ask at any level below fluent.
+     *
+     *   line   A  meet it → recognise it → put it together (word bank OR scramble, alternating) →
+     *             read it aloud
+     *          B  fill its own gap → hear it → say it with nothing on the screen
+     *          C  —
+     *   word   A  meet it → recognise it twice → say the word
+     *          B  fill the gap in the day's frame → type it
+     *          C  take it down by ear → tell a right sentence from a wrong one
+     *   chunk  the word's ladder exactly. A connector is a substitution by function, and the only
+     *          difference is where its gap is cut, which is the session's business and not this
+     *          table's.
+     *
+     * `multiple_choice` appears TWICE for a word on purpose — forward and reverse recognition are
      * the same trainer asked in two directions, exactly as the ordinary ladder's rungs 1 and 2 are,
-     * and a word recognised once has been recognised once.
+     * and a word recognised once has been recognised once. A LINE gets one: a sentence recognised
+     * in two directions is the same reading twice, and the assembly step is the second retrieval.
      *
-     * @var array<string, list<ExerciseMode>>
+     * @var array<string, array<string, list<ExerciseMode>>>
      */
     private const STEPS = [
-        PlanStage::A->value => [
-            ExerciseMode::Intro,
-            ExerciseMode::MultipleChoice,
-            ExerciseMode::MultipleChoice,
-            ExerciseMode::WordBank,
-            ExerciseMode::Speaking,
+        self::KIND_LINE => [
+            PlanStage::A->value => [
+                ExerciseMode::Intro,
+                ExerciseMode::MultipleChoice,
+                // WordBank or Scramble — see {@see assemblyModeFor()}. Not a random pick: the pair
+                // decides, once, and keeps its answer for as long as the pair exists.
+                ExerciseMode::WordBank,
+                ExerciseMode::Speaking,
+            ],
+            PlanStage::B->value => [
+                ExerciseMode::Cloze,
+                ExerciseMode::Listening,
+                ExerciseMode::Speaking,
+            ],
+            PlanStage::C->value => [],
         ],
-        PlanStage::B->value => [
-            ExerciseMode::Cloze,
-            ExerciseMode::Scramble,
-            ExerciseMode::Listening,
-            ExerciseMode::Speaking,
-        ],
-        PlanStage::C->value => [
-            ExerciseMode::Typing,
-            ExerciseMode::Dictation,
-            ExerciseMode::PickCorrect,
-            ExerciseMode::Speaking,
+        self::KIND_WORD => [
+            PlanStage::A->value => [
+                ExerciseMode::Intro,
+                ExerciseMode::MultipleChoice,
+                ExerciseMode::MultipleChoice,
+                ExerciseMode::Speaking,
+            ],
+            PlanStage::B->value => [
+                ExerciseMode::Cloze,
+                ExerciseMode::Typing,
+            ],
+            PlanStage::C->value => [
+                ExerciseMode::Dictation,
+                ExerciseMode::PickCorrect,
+            ],
         ],
     ];
+
+    /**
+     * The alternative to the word bank in a LINE's stage A, chosen by the pair rather than by
+     * chance.
+     *
+     * The наряд is explicit that there is NO random choice of exercise anywhere in a plan: variety
+     * comes from alternation, and alternation needs something stable to alternate on. The pair's
+     * own identity is that thing — the same word gives the same trainer today, tomorrow and after a
+     * reinstall, so a checklist step that was closed stays closed. A counter that moved (the number
+     * of answers so far, say) would deal `word_bank` on Monday, `scramble` on Tuesday, and the
+     * stage would never close.
+     */
+    private const ASSEMBLY_ALTERNATIVES = [ExerciseMode::WordBank, ExerciseMode::Scramble];
 
     /** Misses in a row that soften the knobs for the rest of the stage. */
     public const SOFTEN_AFTER_ERRORS = 3;
 
     /**
-     * Every trainer this stage deals, applicable or not — for the admin screen and for the seed of
-     * the plan-scoped knob rows, which need to know the set before any learner exists.
+     * Every trainer this stage deals to a card of this KIND, applicable or not — for the admin
+     * screen and for the seed of the plan-scoped knob rows, which need to know the set before any
+     * learner exists.
      *
      * @return list<ExerciseMode>
      */
-    public static function modesOf(PlanStage $stage): array
+    public static function modesOf(PlanStage $stage, string $kind = self::KIND_WORD, int $pairCounter = 0): array
     {
-        return self::STEPS[$stage->value];
+        $steps = self::STEPS[self::normalizeKind($kind)][$stage->value];
+
+        return array_map(
+            static fn (ExerciseMode $mode): ExerciseMode => $mode === ExerciseMode::WordBank
+                ? self::assemblyModeFor($pairCounter)
+                : $mode,
+            $steps,
+        );
     }
 
     /**
-     * Every trainer any stage deals, each once, in stage order.
+     * WORD BANK OR SCRAMBLE for this pair — the one place a plan varies what it deals, and it
+     * varies by identity, never by chance. See {@see ASSEMBLY_ALTERNATIVES}.
+     */
+    public static function assemblyModeFor(int $pairCounter): ExerciseMode
+    {
+        return self::ASSEMBLY_ALTERNATIVES[abs($pairCounter) % count(self::ASSEMBLY_ALTERNATIVES)];
+    }
+
+    /**
+     * A `chunk` rides the word's ladder, and anything unknown does too.
+     *
+     * Unknown is the ordinary case, not an error: every term written before plans existed has no
+     * `kind`, and a plan that re-uses one has to deal it SOMETHING. The word's ladder is the
+     * conservative answer — it is the longest of the three, so nothing is skipped by accident.
+     */
+    private static function normalizeKind(string $kind): string
+    {
+        return $kind === self::KIND_LINE ? self::KIND_LINE : self::KIND_WORD;
+    }
+
+    /**
+     * The stage after this one FOR THIS KIND, or null at the top.
+     *
+     * A line has no stage C, so B is its last: `finished` — «готовность слова» — is true for a line
+     * one stage earlier than for a word, and that is the whole of the readiness rule
+     * ({@see \App\Modules\Learning\Application\Query\GetPlanHandler::readinessOf()}).
+     */
+    public static function nextStageFor(PlanStage $stage, string $kind): ?PlanStage
+    {
+        $next = $stage->next();
+        if ($next === null) {
+            return null;
+        }
+
+        return self::STEPS[self::normalizeKind($kind)][$next->value] === [] ? null : $next;
+    }
+
+    /** The LAST stage a card of this kind lives on — B for a line, C for everything else. */
+    public static function lastStageFor(string $kind): PlanStage
+    {
+        return self::normalizeKind($kind) === self::KIND_LINE ? PlanStage::B : PlanStage::C;
+    }
+
+    /**
+     * Every trainer any stage deals to any kind, each once, in stage order.
      *
      * @return list<ExerciseMode>
      */
     public static function allModes(): array
     {
         $out = [];
-        foreach (PlanStage::cases() as $stage) {
-            foreach (self::modesOf($stage) as $mode) {
-                if (! in_array($mode, $out, true)) {
-                    $out[] = $mode;
+        foreach ([self::KIND_LINE, self::KIND_WORD] as $kind) {
+            foreach (PlanStage::cases() as $stage) {
+                foreach (self::STEPS[$kind][$stage->value] as $mode) {
+                    if (! in_array($mode, $out, true)) {
+                        $out[] = $mode;
+                    }
                 }
+            }
+        }
+
+        // The assembly alternative is dealt in place of the word bank and is therefore never in the
+        // table above; it is still a trainer a learner will meet, so the seed has to know about it.
+        foreach (self::ASSEMBLY_ALTERNATIVES as $mode) {
+            if (! in_array($mode, $out, true)) {
+                $out[] = $mode;
             }
         }
 
@@ -164,9 +277,18 @@ final class PlanStageLadder
         ExerciseMode $mode,
         int $occurrence,
         bool $recognitionOptions,
+        string $kind = self::KIND_WORD,
     ): int {
         if ($mode === ExerciseMode::Intro) {
             return LearningLadder::STEP_INTRO;
+        }
+
+        // A LINE is graded against ITSELF, at every stage. The dictation rung means «ask for the
+        // example», and a line's example is the turn around it — a different sentence. What the
+        // learner is asked to say is the line, so the rung stays the assembly one and the STAGE
+        // says whether the text is on the screen ({@see PlanStage::speakingForm()}).
+        if (self::normalizeKind($kind) === self::KIND_LINE) {
+            return LearningLadder::STEP_ASSEMBLY;
         }
 
         if ($stage === PlanStage::A) {
@@ -200,14 +322,25 @@ final class PlanStageLadder
      *                                          it is the one step closed by something other than a
      *                                          fact.
      * @param  string  $today                   the learner's local day, `Y-m-d`
+     * @param  string  $kind                     what this card DOES in its day — `line`, `word` or
+     *                                           `chunk`. Picks the checklist; see {@see STEPS}.
+     * @param  int  $pairCounter                 the pair's own stable number, which decides the one
+     *                                           thing a plan varies ({@see assemblyModeFor()})
      */
-    public function standingFor(array $applicable, array $facts, bool $introduced, string $today): PlanTermStanding
-    {
+    public function standingFor(
+        array $applicable,
+        array $facts,
+        bool $introduced,
+        string $today,
+        string $kind = self::KIND_WORD,
+        int $pairCounter = 0,
+    ): PlanTermStanding {
         $stage = PlanStage::first();
         $cursor = 0;
+        $lastStage = self::lastStageFor($kind);
 
         while (true) {
-            $steps = $this->stepsFor($stage, $applicable);
+            $steps = $this->stepsFor($stage, $applicable, $kind, $pairCounter);
             $walk = $this->walk($steps, $facts, $cursor, $introduced && $stage === PlanStage::A);
 
             if (! $walk['complete']) {
@@ -219,10 +352,11 @@ final class PlanStageLadder
                     waitingForNight: false,
                     finished: false,
                     softened: $walk['softened'],
+                    ready: $stage === $lastStage,
                 );
             }
 
-            $next = $stage->next();
+            $next = self::nextStageFor($stage, $kind);
 
             // A stage NOBODY can be dealt — every one of its trainers switched off, or none of them
             // buildable from this term — is passed through rather than waited on. It closed on no
@@ -240,6 +374,7 @@ final class PlanStageLadder
                     waitingForNight: $next !== null,
                     finished: $next === null,
                     softened: $walk['softened'],
+                    ready: $stage === $lastStage,
                 );
             }
 
@@ -254,6 +389,7 @@ final class PlanStageLadder
                     waitingForNight: false,
                     finished: true,
                     softened: false,
+                    ready: true,
                 );
             }
 
@@ -269,10 +405,10 @@ final class PlanStageLadder
      * @param  list<ExerciseMode>  $applicable
      * @return list<ExerciseMode>
      */
-    private function stepsFor(PlanStage $stage, array $applicable): array
+    private function stepsFor(PlanStage $stage, array $applicable, string $kind, int $pairCounter): array
     {
         return array_values(array_filter(
-            self::modesOf($stage),
+            self::modesOf($stage, $kind, $pairCounter),
             static fn (ExerciseMode $mode): bool => in_array($mode, $applicable, true),
         ));
     }

@@ -254,13 +254,17 @@ final readonly class GetPlanHandler
      * READINESS — the whole formula, with the conversation half still worth a literal zero.
      *
      *     0.6 × (чек-пойнты, подтверждённые в разговоре без подсказки / все)
-     *   + 0.4 × (термины на ступени C / все)
+     *   + 0.4 × (термины на ПОСЛЕДНЕЙ своей ступени / все)
      *
      * The first term is ZERO and not an estimate: `plan_conversations` has no writer until CONV-1,
      * so nothing has been confirmed out loud and pretending otherwise would put «70% готов» on a
      * plan whose conversations have never run. The second term is real from PLAN-1b — it counts the
-     * words that have reached the last stage of the plan's own ladder, which is the honest reading
-     * of «термин на ступени C».
+     * cards that have reached the last stage of the plan's own ladder.
+     *
+     * «Last» depends on what the card IS, and that is a v0.2 correction rather than a widening: a
+     * spoken line has no stage C at all, so counting `stage === C` would have held the percentage
+     * down for ever with cards standing on a rung that does not exist for them. A line is ready
+     * after B, a word and a connector after C ({@see PlanTermStanding::$ready}).
      *
      * The number can therefore only GROW as the feature lands. That is the property that makes
      * shipping half a formula safe, and it is the reason the weights are the FINAL ones rather than
@@ -274,13 +278,13 @@ final readonly class GetPlanHandler
             return 0.0;
         }
 
-        $atC = 0;
+        $atLast = 0;
         foreach ($standings as $standing) {
-            if ($standing->stage === PlanStage::C) {
-                $atC++;
+            if ($standing->ready) {
+                $atLast++;
             }
         }
 
-        return round(0.4 * ($atC / count($standings)), 4);
+        return round(0.4 * ($atLast / count($standings)), 4);
     }
 }

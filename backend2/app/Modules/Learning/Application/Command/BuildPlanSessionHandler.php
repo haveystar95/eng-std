@@ -211,7 +211,10 @@ final readonly class BuildPlanSessionHandler
                     continue;
                 }
                 $taken[$termId] = true;
-                $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs)];
+                $specs = [
+                ...$specs,
+                ...$this->specsFor($termId, $standing, $dayOf[$termId] ?? null, 'plan_review', $knobs, $this->kindOf($progress, $termId)),
+            ];
             }
         }
 
@@ -222,7 +225,10 @@ final readonly class BuildPlanSessionHandler
                 continue;
             }
             $taken[$termId] = true;
-            $specs = [...$specs, ...$this->specsFor($termId, $standing, $dayIndex, 'new', $knobs)];
+            $specs = [
+                ...$specs,
+                ...$this->specsFor($termId, $standing, $dayIndex, 'new', $knobs, $this->kindOf($progress, $termId)),
+            ];
         }
 
         // 3. Whatever else is due, if the minutes have room.
@@ -261,6 +267,7 @@ final readonly class BuildPlanSessionHandler
         ?int $dayIndex,
         string $source,
         PlanKnobs $knobs,
+        string $kind = PlanStageLadder::KIND_WORD,
     ): array {
         $specs = [];
         $seen = [];
@@ -288,11 +295,38 @@ final readonly class BuildPlanSessionHandler
                 'day' => $dayIndex,
                 'softened' => $standing->softened,
                 'source' => $source,
-                'step' => PlanStageLadder::ladderStepFor($standing->stage, $mode, $seen[$step['mode']], $recognitionOptions),
+                'step' => PlanStageLadder::ladderStepFor(
+                    $standing->stage,
+                    $mode,
+                    $seen[$step['mode']],
+                    $recognitionOptions,
+                    // A LINE is graded against itself at every stage; a word's speaking card at B
+                    // and C is graded against its example. The rung is what says which.
+                    $kind,
+                ),
             ];
         }
 
         return $specs;
+    }
+
+    /**
+     * What the card at `$termId` DOES in its day, read off the progress the session was built from.
+     *
+     * `word` when the term never came from a plan day — every term written before plans existed has
+     * no `kind`, and the word's ladder is the longest of the three, so nothing is skipped by
+     * treating an unknown as one.
+     */
+    private function kindOf(PlanProgressView $progress, string $termId): string
+    {
+        foreach ($progress->days as $day) {
+            $content = $day->content[$termId] ?? null;
+            if ($content !== null && $content->kind !== null) {
+                return $content->kind;
+            }
+        }
+
+        return PlanStageLadder::KIND_WORD;
     }
 
     // ── the soft session ─────────────────────────────────────────────────────────────────────
@@ -420,7 +454,16 @@ final readonly class BuildPlanSessionHandler
                 fromDayIndex: $spec['day'] === null ? null : (int) $spec['day'],
                 softened: (bool) $spec['softened'],
                 source: (string) $spec['source'],
-                speakingForm: $dealt === ExerciseMode::Speaking ? $stage?->speakingForm() : null,
+                speakingForm: $dealt === ExerciseMode::Speaking
+                    ? $stage?->speakingForm($termContent->kind ?? PlanStageLadder::KIND_WORD)
+                    : null,
+                // WHERE THE GAP IS CUT. The day's own frame when the card has one — «I worked on
+                // ___» — and the example otherwise, which is what every card outside a plan has
+                // always used. A line's example is the turn AROUND it, so cutting a gap there would
+                // blank a word the card never taught.
+                clozeSource: $dealt === ExerciseMode::Cloze
+                    ? ($termContent->frame ?? $termContent->example)
+                    : null,
                 knobsApplied: PlanKnobSupport::appliedTo($dealt),
                 knobsIgnored: PlanKnobSupport::ignoredBy($dealt),
             );
@@ -462,7 +505,11 @@ final readonly class BuildPlanSessionHandler
                 // `is_line` is a fact about the TERM, written when the day was generated. It is read
                 // through the term's shape here because that is what the content reader carries; a
                 // reply is a phrase and a substitution word is a word.
-                isLine: $content->type !== 'word',
+                // What the card DOES in its day, written when the day was generated. It used to be
+                // guessed from `type` («anything that is not one word is a reply»), which was right
+                // until v0.2 put connectors in a day: «deal with» is two words and a substitution.
+                isLine: ($content->kind ?? '') === PlanStageLadder::KIND_LINE
+                    || ($content->kind === null && $content->type !== 'word'),
                 difficultyScore: null,
             );
         }

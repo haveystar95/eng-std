@@ -8,6 +8,7 @@ use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
 use App\Modules\Learning\Domain\Service\PlanStageLadder;
+use App\Modules\Learning\Domain\ValueObject\PlanStage;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Learning\Domain\ValueObject\PlanLevel;
 use App\Modules\Learning\Domain\ValueObject\PlanTermStanding;
@@ -83,11 +84,18 @@ final readonly class PlanStandings
                 continue;
             }
 
+            $kind = $termContent->kind ?? PlanStageLadder::KIND_WORD;
+
             $out[$termId] = $this->ladder->standingFor(
-                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled),
+                applicable: $this->applicableFor($termContent, $openAtLevel, $enabled, $kind, $termId),
                 facts: $facts[$termId] ?? [],
                 introduced: $introduced[$termId] ?? false,
                 today: $today,
+                // What the card DOES in its day picks the checklist; the pair's own number picks
+                // the one thing a plan varies (word bank or scramble). Both are read here rather
+                // than inside the ladder, because Domain has no idea what a term id looks like.
+                kind: $kind,
+                pairCounter: self::pairCounterFor($termId),
             );
         }
 
@@ -104,6 +112,8 @@ final readonly class PlanStandings
         TermContentView $content,
         array $openAtLevel,
         \App\Modules\Learning\Domain\ValueObject\EnabledModes $enabled,
+        string $kind,
+        string $termId,
     ): array {
         // Per CARD and not per session: a plan is one pair, but this is the same gate every other
         // read applies and applying it here keeps one answer to «which trainers exist for this word».
@@ -114,9 +124,33 @@ final readonly class PlanStandings
 
         $playable = $this->assembler->playabilityOf($content);
 
+        // The trainers this KIND is ever dealt, intersected with the level's open list. Without
+        // this the level would keep offering `typing` to a spoken line: the level says what a
+        // learner at this level meets, and the kind says what this card can be asked at all.
+        $forKind = [];
+        foreach (PlanStage::cases() as $stage) {
+            foreach (PlanStageLadder::modesOf($stage, $kind, self::pairCounterFor($termId)) as $mode) {
+                $forKind[$mode->value] = true;
+            }
+        }
+
         return array_values(array_filter(
             $openAtLevel,
-            static fn (ExerciseMode $mode): bool => $forLanguage->has($mode) && $playable->supports($mode),
+            static fn (ExerciseMode $mode): bool => isset($forKind[$mode->value])
+                && $forLanguage->has($mode)
+                && $playable->supports($mode),
         ));
+    }
+
+    /**
+     * The pair's own stable number — the input to the one alternation a plan makes.
+     *
+     * A hash of the term id, and deliberately not anything that MOVES. A counter of answers so far
+     * would deal `word_bank` on Monday and `scramble` on Tuesday, and the stage-A checklist would
+     * never close, because the step that was ticked is not the step being offered.
+     */
+    public static function pairCounterFor(string $termId): int
+    {
+        return (int) (crc32($termId) % 1000);
     }
 }

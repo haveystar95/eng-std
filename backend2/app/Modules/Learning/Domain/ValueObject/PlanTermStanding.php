@@ -30,13 +30,23 @@ final readonly class PlanTermStanding
         public bool $stageComplete,
         /** Closed, but only today — the next stage opens in the session after the night. */
         public bool $waitingForNight,
-        /** Stage C is closed and its night has passed: the word has lived its three stages. */
+        /** The LAST stage is closed and its night has passed: this card has lived its stages. */
         public bool $finished,
         /**
          * Three misses in a row on this stage, so this word — and only this word, and only until the
          * stage ends — is dealt on gentler knobs ({@see PlanKnobs::easier()}).
          */
         public bool $softened,
+        /**
+         * THIS CARD IS ON ITS LAST STAGE — and «last» depends on what the card is.
+         *
+         * A line has no stage C ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}):
+         * «нечего печатать по буквам» is the whole argument, so a line standing on B is as far as a
+         * line goes. A word or a connector reaches its last stage at C. Readiness counts THIS and
+         * not `stage === C`, because under the old rule every line in the plan would have held the
+         * percentage down for ever by standing on a rung that does not exist for it.
+         */
+        public bool $ready = false,
     ) {}
 
     /** Is this word's checklist closed for good? What «готовность слова» means. */
@@ -56,6 +66,7 @@ final readonly class PlanTermStanding
             'waiting_for_night' => $this->waitingForNight,
             'finished' => $this->finished,
             'softened' => $this->softened,
+            'ready' => $this->ready,
         ];
     }
 }

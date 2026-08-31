@@ -174,6 +174,10 @@ final class EloquentTermContentReader implements TermContentReader
                 // told they are wrong by a card that simply pinned «цель».
                 translations: $allTranslations[$id] ?? [],
                 transliterationHint: $transliterations[$id] ?? null,
+                // The two facts a plan day wrote onto the term. Null on everything else, and the
+                // plan ladder is the only reader.
+                kind: $term->kind !== null ? (string) $term->kind : null,
+                frame: $term->frame !== null ? (string) $term->frame : null,
             );
         }
 

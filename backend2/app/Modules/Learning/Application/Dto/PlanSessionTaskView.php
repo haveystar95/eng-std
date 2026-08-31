@@ -38,5 +38,21 @@ final readonly class PlanSessionTaskView
         public ?string $speakingForm,
         public array $knobsApplied,
         public array $knobsIgnored,
+        /**
+         * THE SENTENCE THE GAP IS CUT FROM, on a `cloze` card and nowhere else.
+         *
+         * The day's own frame when the card has one — «I worked on ___», with the slot already
+         * marked — and the card's example otherwise, which is what every cloze outside a plan has
+         * always used. Two reasons it has to be said out loud rather than left to the client:
+         *
+         *   a LINE's example is the turn AROUND it, so a gap cut there would blank a word the card
+         *   never taught;
+         *   a WORD's day-scoped example already IS its frame filled in, so the two agree — and the
+         *   frame says WHERE the hole is instead of leaving the client to find the term in the
+         *   sentence and hope.
+         *
+         * Additive: a client that ignores it keeps cutting the gap the way it does today.
+         */
+        public ?string $clozeSource = null,
     ) {}
 }

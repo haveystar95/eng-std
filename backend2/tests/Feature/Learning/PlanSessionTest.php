@@ -159,7 +159,41 @@ it('deals day 1 as stage A: intro first, then the two recognitions, the word ban
         }
     }
 
-    expect($chain)->toBe(['intro', 'multiple_choice', 'multiple_choice', 'word_bank', 'speaking']);
+    // The chain a card is dealt depends on what it IS. A word is met, recognised twice and said;
+    // a line is met, recognised once, put together and read aloud — and never typed.
+    $kind = DB::table('terms')->where('id', $first)->value('kind');
+
+    expect($chain)->toBe($kind === 'line'
+        ? ['intro', 'multiple_choice', 'word_bank', 'speaking']
+        : ['intro', 'multiple_choice', 'multiple_choice', 'speaking']);
+});
+
+it('deals a line and a word different chains in the same session', function () {
+    [, $token, $planId] = startedPlan($this);
+
+    $session = planSession($this, $token, $planId);
+
+    $kinds = DB::table('terms')->pluck('kind', 'id')->all();
+    $chains = [];
+    foreach ($session['tasks'] as $task) {
+        $termId = $task['card']['term_id'];
+        $chains[$kinds[$termId] ?? 'word'][$termId][] = $task['card']['exercise_mode'];
+    }
+
+    // A LINE is never dealt typing or dictation, at any stage — «нечего печатать по буквам».
+    foreach ($chains['line'] ?? [] as $chain) {
+        expect($chain)->not->toContain('typing')
+            ->and($chain)->not->toContain('dictation')
+            ->and($chain[0])->toBe('intro');
+    }
+
+    // A WORD gets two recognitions and no assembly step.
+    foreach ($chains['word'] ?? [] as $chain) {
+        expect(array_slice($chain, 0, 4))->toBe(['intro', 'multiple_choice', 'multiple_choice', 'speaking']);
+    }
+
+    expect($chains['line'] ?? [])->not->toBeEmpty()
+        ->and($chains['word'] ?? [])->not->toBeEmpty();
 });
 
 it('carries the level’s knobs, and says which of them the card actually honoured', function () {
@@ -246,11 +280,27 @@ it('opens stage B when the planner makes the word due again — the night alone 
     $stageB = array_filter($sameDay['tasks'] ?? [], static fn (array $t): bool => ($t['stage'] ?? null) === 'b');
     expect($stageB)->toBe([]);
 
-    // A night passes, and NOTHING else: the words are on stage B now, but SM-2 has them scheduled
-    // days out, so the session still carries none of them. The plan does not pull a word forward.
+    // A night passes and the words move to stage B — but the PLANNER still decides when each of
+    // them comes back. Whatever the session carries as `plan_review` is a word SM-2 has made due;
+    // the plan never pulls one forward, which is the whole «чем ≠ когда» split.
+    //
+    // (Under v0.1 this step could assert the stronger «nothing at all», because a stage A of five
+    // cards pushed every word past a single night. v0.2's checklists are shorter — a word gets four
+    // cards, a line four — so some of them are legitimately due the next morning. The assertion
+    // moved to the rule rather than to the arithmetic that happened to follow from it.)
     ageHistory($user->id, days: 1);
     $tomorrow = planSession($this, $token, $planId);
-    expect(array_filter($tomorrow['tasks'], static fn (array $t): bool => $t['source'] === 'plan_review'))->toBe([]);
+    $dueNow = DB::table('user_term_progress')
+        ->where('user_id', $user->id)
+        ->where('due_at', '<=', now())
+        ->pluck('term_id')
+        ->all();
+
+    foreach ($tomorrow['tasks'] as $task) {
+        if ($task['source'] === 'plan_review') {
+            expect($task['card']['term_id'])->toBeIn($dueNow);
+        }
+    }
 
     // Now the planner says they are due — and the plan deals them their stage-B checklist FIRST,
     // ahead of the new material, because warming up on what you know comes before meeting what you

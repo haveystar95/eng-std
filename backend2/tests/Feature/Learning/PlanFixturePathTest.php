@@ -1,0 +1,161 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Modules\Generation\Application\Dto\ModelAnswer;
+use App\Modules\Generation\Application\Dto\RenderedPrompt;
+use App\Modules\Generation\Application\Port\ContentModelPort;
+use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
+use App\Modules\Generation\Application\Port\RecordsPlanSpend;
+use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Application\Service\PlanOutlineService;
+use App\Modules\Generation\Domain\ValueObject\ProviderId;
+use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
+use App\Modules\Learning\Application\Port\PlanOutlinePort;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * THE WHOLE PATH, on the material a person actually wrote.
+ *
+ * Every other plan test runs on {@see \App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel},
+ * whose content is nonsense by design — «Day 1 line 3 about thing3» proves the machinery moves and
+ * proves nothing about whether the machinery moves REAL material. This one replays the hand-written
+ * S1 fixtures through the same pipeline: skeleton → schedule → day 1 → collection → session.
+ *
+ * It is the test that would have caught the two v0.1 defects at once. The frame rule, because a
+ * fixture written by a person has frames a person would write; and the pictures, because a real day
+ * has an `image_api_prompt` on every card and this asserts that it survives all the way onto the
+ * term row.
+ */
+beforeEach(function (): void {
+    $model = new class implements ContentModelPort
+    {
+        public function provider(): ProviderId
+        {
+            return ProviderId::OpenAi;
+        }
+
+        public function model(): string
+        {
+            return 'fixture-plan';
+        }
+
+        public function complete(RenderedPrompt $prompt, string $userMessage, array $schema): ModelAnswer
+        {
+            $properties = $schema['properties'] ?? [];
+            $isDay = is_array($properties) && isset($properties['phrases']);
+
+            /** @var array<string, mixed> $payload */
+            $payload = json_decode(
+                (string) file_get_contents(
+                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.2.json' : 's1-outline.v0.2.json'),
+                ),
+                true,
+            );
+
+            return new ModelAnswer(
+                payload: $payload,
+                model: 'fixture-plan',
+                latencyMs: 0,
+                tokensIn: 0,
+                tokensOut: 0,
+                costUsd: '0.000000',
+                raw: '{}',
+            );
+        }
+    };
+
+    $prompts = new PlanPromptLibrary();
+    $ledger = app(RecordsPlanSpend::class);
+
+    app()->instance(PlanOutlinePort::class, new PlanOutlineService($model, $prompts, $ledger));
+    app()->instance(PlanDayComposer::class, new PlanDayComposer(
+        $model,
+        $prompts,
+        $ledger,
+        app(PlanDayDefectReporter::class),
+    ));
+});
+
+it('walks S1 from the skeleton to a ready day 1, and every gate lets it through', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/plans', [
+            'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение',
+            'target_lang' => 'en',
+            'level' => 'basic',
+            'event_date' => now()->addDays(2)->format('Y-m-d'),
+            'minutes_per_day' => 20,
+        ])->assertCreated()->json('data');
+
+    $outlined = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$plan['id']}/outline")->assertOk()->json('data');
+
+    // The скелет: four abilities at four cards each, two teaching days at fourteen cards a day.
+    expect($outlined['computed']['need'])->toBe(16)
+        ->and($outlined['computed']['capacity'])->toBe(14)
+        ->and($outlined['computed']['intro_days'])->toBe(2)
+        ->and($outlined['computed']['fits'])->toBeTrue();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    $day1 = DB::table('learning_plan_days')->where('plan_id', $plan['id'])->where('day_index', 1)->first();
+
+    expect($day1->status)->toBe('ready')
+        ->and($day1->fail_reason)->toBeNull()
+        ->and($day1->collection_id)->not->toBeNull();
+
+    $terms = DB::table('terms as t')
+        ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
+        ->where('ci.collection_id', $day1->collection_id)
+        ->get(['t.id', 't.text', 't.kind', 't.frame', 't.speaker', 't.image_api_prompt']);
+
+    // Eight lines, two connectors, four words — the split the day was asked for, landed.
+    expect($terms)->toHaveCount(14)
+        ->and($terms->where('kind', 'line'))->toHaveCount(8)
+        ->and($terms->where('kind', 'chunk'))->toHaveCount(2)
+        ->and($terms->where('kind', 'word'))->toHaveCount(4)
+        // Two of the eight lines are the doctor's own, quoted from the skeleton.
+        ->and($terms->where('speaker', 'role'))->toHaveCount(2)
+        // …and those two are the formulas, so exactly six lines carry a slot.
+        ->and($terms->where('kind', 'line')->whereNotNull('frame'))->toHaveCount(6)
+        ->and($terms->whereNull('image_api_prompt'))->toHaveCount(0);
+
+    // The frame is the line with a hole in it, and the line is that frame filled.
+    $withFrame = $terms->firstWhere('text', 'It hurts in my lower back.');
+    expect($withFrame->frame)->toBe('It hurts in my ___.');
+});
+
+it('deals the ready day as a session, giving each card the chain its kind earns', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+
+    $plan = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/plans', [
+            'goal_text' => 'Иду к врачу, болит спина, надо объяснить и понять назначение',
+            'target_lang' => 'en',
+            'level' => 'basic',
+            'event_date' => now()->addDays(2)->format('Y-m-d'),
+            'minutes_per_day' => 20,
+        ])->assertCreated()->json('data');
+
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/outline")->assertOk();
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    $session = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson("/api/v1/plans/{$plan['id']}/session")->assertOk()->json('data');
+
+    $kinds = DB::table('terms')->pluck('kind', 'id')->all();
+
+    $modesByKind = [];
+    foreach ($session['tasks'] as $task) {
+        $modesByKind[$kinds[$task['card']['term_id']] ?? 'word'][] = $task['card']['exercise_mode'];
+    }
+
+    expect(array_unique($modesByKind['line'] ?? []))->not->toContain('typing')
+        ->and(array_unique($modesByKind['line'] ?? []))->not->toContain('dictation')
+        ->and($modesByKind['word'] ?? [])->not->toBeEmpty();
+});
