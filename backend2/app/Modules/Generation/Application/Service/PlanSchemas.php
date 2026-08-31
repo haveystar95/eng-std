@@ -79,7 +79,6 @@ final class PlanSchemas
     public static function day(): array
     {
         $common = [
-            'text' => self::string(),
             'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
             'is_line' => ['type' => 'boolean'],
             'translation' => self::string(),
@@ -91,16 +90,22 @@ final class PlanSchemas
             'covers_checkpoint' => ['type' => ['integer', 'null']],
         ];
 
-        // A LINE carries two fields a substitution does not, and the schema is where «only on
-        // phrases» stops being a sentence in the prose. `frame` is the line with its slot as `___`
-        // (or '' for a formula); `speaker` says whose turn it is.
+        // A LINE HAS NO `text`, AND THAT IS THE WHOLE OF v0.3 IN ONE LINE OF SCHEMA.
+        //
+        // The model writes `frame` — the line with its slot as `___`, or no slot at all for a
+        // formula — and `filler`, the day's own word that goes in the hole; the server pastes them
+        // together ({@see PlanDayComposer::items()}). Four live answers in a row came back with
+        // `___` still standing in `text`, and prose could not stop it: a field the model cannot
+        // write is a defect it cannot commit. `speaker` says whose turn it is.
         $line = self::object([
             ...$common,
             'frame' => self::string(),
+            'filler' => self::string(),
             'speaker' => ['type' => 'string', 'enum' => ['learner', 'role']],
         ]);
 
-        $card = self::object($common);
+        // A substitution DOES write its own text — it is a word, not an assembled sentence.
+        $card = self::object(['text' => self::string(), ...$common]);
 
         $knownExample = self::object([
             'example' => self::string(),

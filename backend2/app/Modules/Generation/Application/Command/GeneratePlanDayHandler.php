@@ -241,12 +241,17 @@ final readonly class GeneratePlanDayHandler
             $termId,
             isLine: $item->isLine,
             difficultyScore: $this->scorer->score($brief->targetLang, $item->text),
-            // What the card DOES in this day, the frame it stands in, and whose turn it is. The
-            // session reads the first two: `kind` picks the stage checklist, `frame` is where the
-            // cloze cuts its gap.
+            // What the card DOES in this day, the frame it stands in, what stands in its hole, and
+            // whose turn it is. The session reads the first three: `kind` picks the stage
+            // checklist, `frame` is where the cloze cuts its gap, and `filler` is the string that
+            // gap blanks.
             kind: $item->kind,
-            frame: $item->frame,
+            // A FORMULA STORES NO FRAME. Since v0.3 its `frame` is the whole line — the model
+            // writes one for every line — and a cloze gap cut from a frame with no hole would
+            // blank nothing at all. Downstream «no hole» and «no frame» are the same state.
+            frame: $item->hasSlot() ? $item->frame : '',
             speaker: $item->speaker,
+            filler: $item->hasSlot() ? $item->filler : '',
         );
 
         $this->scopedExamples->write(

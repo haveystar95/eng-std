@@ -31,15 +31,39 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * The day is now three arrays with three exact counts, and the two rules that matter most are new:
  *
  * **The frame.** A line is a frame with a slot — «I worked on ___» — and `text` is that line with
- * a real word of the day in the hole. **Every word and connector of the day fits some frame, and
- * its `example` is that sentence.** That is what turns eight lines and six words into twenty
- * sentences the learner can say instead of eight they memorised, and it is checkable: build the
- * frame into a regular expression, put the term in the slot, and look for it in the example.
+ * a real word of the day in the hole. **Every word of the day fits some frame, and its `example` is
+ * that sentence.** That is what turns eight lines and six words into twenty sentences the learner
+ * can say instead of eight they memorised, and it is checkable: build the frame into a regular
+ * expression, put the term in the slot, and look for it in the example.
  *
  * **The slot lives in `frame` and nowhere else.** v0.2.1's own addition, and it is here because the
- * live day failed on it: four lines of eight came back with `___` still standing in `text`. The
- * frame rule above cannot catch that on its own — «I'm a ___ developer» IS its frame with something
- * in the hole, and the something is the hole. See {@see SLOT_FORBIDDEN_IN}.
+ * live day failed on it: four lines of eight came back with `___` still standing in `text`. See
+ * {@see SLOT_FORBIDDEN_IN}.
+ *
+ * ## What v0.3 changed, after four refusals in a row
+ *
+ * Two of the rules above were RIGHT and unenforceable by asking, so v0.3 stopped asking.
+ *
+ * **The line is assembled, not written.** The model returns `frame` and `filler` and the server
+ * pastes them ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::assemble()}).
+ * «A line that is not its own frame» and «`___` left in `text`» stop being classes of defect and
+ * become impossible constructions. What is checked instead is the pair that produced the line:
+ * a frame carries {@see FRAME_SLOT_COUNT} at most one slot, {@see FILLER_MISMATCH} a filler exactly
+ * when there is a slot to fill, and {@see FILLER_NOT_A_CARD} a filler that is some card of THIS
+ * day, character for character. `day.frame_mismatch` is gone with the defect it named.
+ *
+ * **A connector lives in a frame, not in its hole.** Four answers in a row built the frame AROUND
+ * the connector — «I mainly work with ___» — and that is how the language works, not a mistake.
+ * So a chunk's example must be a frame of this day CONTAINING it anywhere ({@see CHUNK_WITHOUT_FRAME}),
+ * with the extra condition that earns the card its slot: the result may not be a line of the day
+ * repeated. The «in the hole» rule stays for `words` and only for them.
+ *
+ * ## Three things are now WARNED about rather than refused
+ *
+ * The formula cap, the missing question and the missing repair move are counted and reported
+ * ({@see warnings()}) instead of failing the day. They are taste with a number attached: a day
+ * with one formula too many is a slightly worse day, and it is not worth a second paid call. The
+ * counters are what a growing problem looks like — see {@see \App\Modules\Generation\Application\Port\PlanDayDefectReporter}.
  *
  * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
  * character for character, one of the scene's `opening_lines`. The learner is going to hold that
@@ -68,12 +92,17 @@ final class PlanDayValidator
     public const CHECKPOINT_UNCOVERED = 'day.checkpoint_uncovered';
     public const CHECKPOINT_ON_WORD = 'day.checkpoint_on_word';
     public const CHECKPOINT_OUT_OF_RANGE = 'day.checkpoint_out_of_range';
-    public const FRAME_SHARE = 'day.frame_share';
-    public const FRAME_MISMATCH = 'day.frame_mismatch';
+    // `day.frame_share` and `day.frame_mismatch` were here until v0.3. The first became a WARNING
+    // ({@see FORMULA_CAP}); the second named a defect the assembly makes unconstructable — a line
+    // built from its own frame is its own frame, always.
+    public const FRAME_SLOT_COUNT = 'day.frame_slot_count';
+    public const FILLER_MISMATCH = 'day.filler_mismatch';
+    public const FILLER_NOT_A_CARD = 'day.filler_not_a_card';
     public const SLOT_OUTSIDE_FRAME = 'day.slot_outside_frame';
     public const ROLE_LINE_INVENTED = 'day.role_line_invented';
     public const ROLE_LINE_SHARE = 'day.role_line_share';
     public const SUBSTITUTION_WITHOUT_FRAME = 'day.substitution_without_frame';
+    public const CHUNK_WITHOUT_FRAME = 'day.chunk_without_frame';
     public const EXAMPLE_IS_A_TERM = 'day.example_is_a_term';
     public const EXAMPLE_DUPLICATED = 'day.example_duplicated';
     public const EXAMPLE_MISSING = 'day.example_missing';
@@ -83,20 +112,70 @@ final class PlanDayValidator
     public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
     public const IMAGE_PROMPT_MISSING = 'day.image_prompt_missing';
 
+    /** The counters {@see warnings()} raises — named here because the Domain is what names them. */
+    public const FORMULA_CAP = 'plan_day_formula_cap';
+
+    public const NO_QUESTION = 'plan_day_no_question';
+
+    public const NO_REPAIR = 'plan_day_no_repair';
+
+    public const FILLER_MISMATCH_WARNING = 'plan_day_filler_mismatch';
+
+    /**
+     * The one language where «the filler is a card of this day, character for character» is a rule
+     * a correct answer can obey.
+     *
+     * English substitutes bare: «the payment module» goes into «I worked on ___» unchanged. A
+     * language with cases does not — «поясница» is the card and «в пояснице» is what the frame
+     * needs, and a model that inflects correctly would be refused for it while one that pastes the
+     * nominative into a prepositional slot would pass. Until that is decided properly (P2 v0.3.1),
+     * the gate is FATAL for English and a counted WARNING everywhere else
+     * ({@see FILLER_MISMATCH_WARNING}): the defect stays visible without refusing days for being
+     * grammatical.
+     */
+    private const STRICT_FILLER_LANG = 'en';
+
     /**
      * The most lines that may be fixed formulas with no slot — «Nice to meet you».
      *
-     * A THIRD, ROUNDED DOWN, and the rounding is the rule rather than an implementation detail:
-     * 8 lines → 2 formulas, 4 → 1, 14 → 4. v0.2 said «не больше трети» in prose and the model read
-     * it as «около трети», answering 3–4 of 8 twice in a row; v0.2.1 prints the three numbers.
+     * A third, ROUNDED UP since v0.3, and it stopped being fatal at the same time. Both changes
+     * come from the same measurement: on the live «собеседование» day three of the eight lines had
+     * no slot, and all three were right — «Yes, I can hear you clearly», the interlocutor's own
+     * quoted line, and «I'm a PHP developer with three years of experience», which cannot be a
+     * frame because `PHP` is a goal_term and holds its place. Refusing that day cost a second paid
+     * call and would have kept costing one. A day with one formula too many is a slightly worse
+     * day; it is not worth $0.05, so it is counted and reported instead ({@see FORMULA_CAP}).
      */
     private const MAX_FORMULA_SHARE = 1 / 3;
+
+    /**
+     * What a repair move sounds like — the learner saying they did not catch it.
+     *
+     * A LIST AND NOT A RULE, and it lives in config rather than here for the reason every list of
+     * phrases eventually needs: it will be wrong, and being wrong should not be a code change. The
+     * default is the six the live run's «глазами» section asked for by name, under the one target
+     * language a plan has ever run in. Matched on word boundaries inside the normalised line, so
+     * «Could you repeat the question?» matches «repeat» and «repeatedly» does not.
+     *
+     * A language with NO list — or one absent from the map — has the check switched off rather
+     * than failing it: «nobody has written German's list yet» must not read as «every German day
+     * lacks a repair move».
+     *
+     * @var array<string, list<string>>
+     */
+    public const DEFAULT_REPAIR_MARKERS = [
+        'en' => [
+            'repeat', 'say that again', 'slow down', "didn't catch", 'breaking up',
+            'not sure I understood',
+        ],
+        'de' => [],
+    ];
 
     /** The most lines that may be the interlocutor's rather than the learner's own. */
     private const MAX_ROLE_SHARE = 1 / 4;
 
     /** The slot in a frame. */
-    private const SLOT = '___';
+    private const SLOT = PlanDayItem::SLOT;
 
     /**
      * Where the slot is allowed to be, and therefore — everywhere else it is a defect.
@@ -152,9 +231,11 @@ final class PlanDayValidator
      */
     private const MIN_VOCABULARY_TOKEN = 2;
 
+    /** @param array<string, list<string>> $repairMarkers target language => phrases; {@see DEFAULT_REPAIR_MARKERS} */
     public function __construct(
         private readonly LanguagePurity $purity = new LanguagePurity(),
         private readonly SupportLanguageText $supportText = new SupportLanguageText(),
+        private readonly array $repairMarkers = self::DEFAULT_REPAIR_MARKERS,
     ) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
@@ -389,17 +470,23 @@ final class PlanDayValidator
     }
 
     /**
-     * THE FRAMES — the rule the whole of v0.2 turns on.
+     * THE PAIR THAT MAKES A LINE — `frame` and `filler`, judged instead of the sentence they build.
      *
-     * Three things, and each one has a number:
+     * v0.2 checked the OUTPUT: «is this line its own frame with something in the hole». v0.3 builds
+     * the line itself, so that question answers itself and the interesting one moved upstream — is
+     * the pair the server was handed a pair it can paste?
      *
-     *   at most a THIRD of the lines are formulas with no slot. A day of fixed formulas teaches
-     *   sentences the learner can say and nothing they can say NEXT.
-     *   a line with a frame IS that frame with something in the hole. «I worked on ___» and
-     *   «I worked on the payment module» — if they do not line up, one of the two was invented
-     *   after the other and the words of the day have no line to stand in.
-     *   at most a QUARTER of the lines are the interlocutor's, and each one is quoted from the
-     *   skeleton character for character.
+     *   ONE slot at most. Two holes and one filler is a line with a hole left in it, which is the
+     *   defect the assembly was introduced to make impossible; letting the paste fill only the
+     *   first would hide it behind a sentence that reads fine.
+     *   A filler exactly when there is a slot. Both halves fail: a slot with `""` leaves a hole,
+     *   and a filler with no slot is a word the line never asked for.
+     *   The filler is a CARD of this day, character for character. «payment module» when the card
+     *   says «the payment module» is not a near miss: the learner meets the word on a card and in
+     *   a line, and if the two differ they are two words.
+     *
+     * And unchanged from v0.2: at most a QUARTER of the lines are the interlocutor's, and each one
+     * is quoted from the skeleton — its FRAME now, since that is what the model writes.
      *
      * @return list<PlanViolation>
      */
@@ -411,17 +498,53 @@ final class PlanDayValidator
             return $violations;
         }
 
-        $formulas = 0;
+        $cards = [];
+        foreach ($day->items as $item) {
+            if ($item->kind !== PlanDayItem::KIND_LINE) {
+                $cards[$item->text] = true;
+            }
+        }
+
         $roleLines = 0;
         $openings = array_map(static fn (string $l): string => trim($l), $day->openingLines);
 
         foreach ($lines as $line) {
-            if (trim($line->frame) === '') {
-                $formulas++;
-            } elseif (! $this->fillsFrame($line->frame, $line->text)) {
+            $frame = trim($line->frame);
+            $slots = mb_substr_count($frame, self::SLOT);
+
+            if ($slots > 1) {
                 $violations[] = new PlanViolation(
-                    self::FRAME_MISMATCH,
-                    'реплика не является своим каркасом «' . $line->frame . '» с реальным словом в дырке',
+                    self::FRAME_SLOT_COUNT,
+                    "в каркасе «{$frame}» дырок {$slots}, а дырка в каркасе бывает одна — "
+                    . 'подставить в неё можно только одно слово дня',
+                    $line->text,
+                );
+            }
+
+            if ($slots >= 1 && $line->filler === '') {
+                $violations[] = new PlanViolation(
+                    self::FILLER_MISMATCH,
+                    "у каркаса «{$frame}» есть дырка, а `filler` пуст — реплику не из чего собрать",
+                    $line->text,
+                );
+            } elseif ($slots === 0 && $line->filler !== '') {
+                $violations[] = new PlanViolation(
+                    self::FILLER_MISMATCH,
+                    "`filler` «{$line->filler}» есть, а дырки в каркасе «{$frame}» нет — "
+                    . 'ставить его некуда',
+                    $line->text,
+                );
+            } elseif ($line->filler !== ''
+                && ! isset($cards[$line->filler])
+                && self::isStrictFillerLang($day->targetLang)) {
+                // FATAL ONLY IN ENGLISH — see {@see STRICT_FILLER_LANG}. Elsewhere the same
+                // mismatch is a warning ({@see warnings()}), because the honest answer in a
+                // language with cases is an inflected filler and refusing it would be refusing
+                // grammar.
+                $violations[] = new PlanViolation(
+                    self::FILLER_NOT_A_CARD,
+                    "`filler` «{$line->filler}» не совпадает посимвольно ни с одним `text` "
+                    . 'из words или chunks этого дня — в дырке стоит слово, которого день не учит',
                     $line->text,
                 );
             }
@@ -431,28 +554,24 @@ final class PlanDayValidator
             }
 
             $roleLines++;
-            if (! in_array(trim($line->text), $openings, true)) {
+            if (! in_array($frame, $openings, true)) {
                 $violations[] = new PlanViolation(
                     self::ROLE_LINE_INVENTED,
-                    'реплика собеседника сочинена, а должна быть дословно взята из opening_lines сцены',
+                    'реплика собеседника сочинена, а её `frame` должен быть дословно взят из '
+                    . 'opening_lines сцены',
+                    $line->text,
+                );
+            } elseif ($line->filler !== '') {
+                $violations[] = new PlanViolation(
+                    self::ROLE_LINE_INVENTED,
+                    'реплику собеседника цитируют целиком: `filler` у неё пустой, подставлять в '
+                    . 'чужую реплику нечего',
                     $line->text,
                 );
             }
         }
 
         $total = count($lines);
-        // The cap is NAMED in the violation, because the violation is what the retry reads: «не
-        // больше трети» is the rule the first answer already had and disobeyed, «не больше 2» is
-        // a number it can count against.
-        $formulaCap = (int) floor($total * self::MAX_FORMULA_SHARE);
-        if ($formulas > $formulaCap) {
-            $violations[] = new PlanViolation(
-                self::FRAME_SHARE,
-                "реплик без каркаса {$formulas} из {$total}, а формул можно не больше {$formulaCap} "
-                . '— это треть с округлением вниз',
-            );
-        }
-
         if ($roleLines > (int) floor($total * self::MAX_ROLE_SHARE)) {
             $violations[] = new PlanViolation(
                 self::ROLE_LINE_SHARE,
@@ -464,22 +583,180 @@ final class PlanDayValidator
     }
 
     /**
-     * EVERY word and connector stands in some frame of this day, and its example is that sentence.
+     * WHAT IS WRONG WITH THE DAY AND IS NOT WORTH A SECOND PAID CALL.
      *
-     * This is the rule that makes the day combine. Without it the words are a glossary next to the
+     * Three things, all about the SHAPE of the conversation rather than about whether the machine
+     * can run it. Every one of them was a candidate for a fatal gate and every one of them would
+     * have refused a day the owner would have been happy with:
+     *
+     *   too many formulas — measured on the live day and wrong there (see {@see MAX_FORMULA_SHARE});
+     *   no question from the learner — the live day was eight «I…» statements in a row, which reads
+     *   as a questionnaire and not as an interview, and is a real defect the learner feels;
+     *   no repair move — «Sorry, you're breaking up» — which is the moment a remote call actually
+     *   breaks, and a day that trains only statements leaves the learner mute there.
+     *
+     * They are reported and counted rather than refused because the cost of being wrong is not
+     * symmetric: a weak day is caught by reading it, and a refused day is $0.05 and a learner
+     * staring at an error. A counter that climbs is a prompt problem.
+     *
+     * @return list<PlanViolation> empty = nothing to warn about
+     */
+    public function warnings(PlanDayCandidate $day): array
+    {
+        $lines = $this->linesOf($day);
+        if ($lines === []) {
+            return [];
+        }
+
+        $cards = [];
+        foreach ($day->items as $item) {
+            if ($item->kind !== PlanDayItem::KIND_LINE) {
+                $cards[$item->text] = true;
+            }
+        }
+
+        $out = [];
+        $formulas = 0;
+        $question = false;
+        $repair = false;
+        $markers = $this->repairMarkersFor($day->targetLang);
+
+        foreach ($lines as $line) {
+            if (! str_contains($line->frame, self::SLOT)) {
+                $formulas++;
+            }
+
+            // The same mismatch that is fatal in English, counted in every other language until
+            // the inflection question is answered — see {@see STRICT_FILLER_LANG}.
+            if ($line->filler !== ''
+                && ! isset($cards[$line->filler])
+                && ! self::isStrictFillerLang($day->targetLang)) {
+                $out[] = new PlanViolation(
+                    self::FILLER_MISMATCH_WARNING,
+                    "`filler` «{$line->filler}» не совпадает посимвольно ни с одной карточкой дня "
+                    . '— возможно, склонение, а возможно, слово не из этого дня',
+                    $line->text,
+                );
+            }
+
+            // The learner's OWN lines only. The interlocutor asking a question teaches the learner
+            // to recognise one, which is a different ability from asking one.
+            if ($line->speaker !== PlanDayItem::SPEAKER_LEARNER) {
+                continue;
+            }
+            if (str_ends_with(rtrim($line->text), '?')) {
+                $question = true;
+            }
+            if ($markers !== [] && $this->isRepairMove($line->text, $markers)) {
+                $repair = true;
+            }
+        }
+
+        $cap = (int) ceil($day->phraseCount * self::MAX_FORMULA_SHARE);
+        if ($formulas > $cap) {
+            $out[] = new PlanViolation(
+                self::FORMULA_CAP,
+                "реплик без дырки {$formulas} из {$day->phraseCount}, а треть с округлением вверх "
+                . "— это {$cap}",
+            );
+        }
+
+        if (! $question) {
+            $out[] = new PlanViolation(
+                self::NO_QUESTION,
+                'ни одна реплика юзера не заканчивается вопросительным знаком — день учит отвечать '
+                . 'и не учит спрашивать',
+            );
+        }
+
+        // No list for this target language means the question was never asked of it, and an
+        // unasked question has no answer to warn about.
+        if (! $repair && $markers !== []) {
+            $out[] = new PlanViolation(
+                self::NO_REPAIR,
+                'ни одной реплики-починки («Could you repeat…», «Sorry, you`re breaking up») — '
+                . 'на настоящем разговоре ломается ровно это',
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * Does this line ask for a repeat, a slower pace, or say the connection went?
+     *
+     * @param  list<string>  $markers
+     */
+    private function isRepairMove(string $text, array $markers): bool
+    {
+        $line = ' ' . $this->normalize($text) . ' ';
+
+        foreach ($markers as $marker) {
+            $needle = $this->normalize($marker);
+            if ($needle !== '' && str_contains($line, ' ' . $needle . ' ')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * This target language's repair phrases — exact code first, then the bare language.
+     *
+     * @return list<string> empty = the check is off for this language
+     */
+    private function repairMarkersFor(string $targetLang): array
+    {
+        $lang = mb_strtolower(trim($targetLang));
+
+        return $this->repairMarkers[$lang]
+            ?? $this->repairMarkers[mb_substr($lang, 0, 2)]
+            ?? [];
+    }
+
+    /** Is the filler rule fatal in this target language? {@see STRICT_FILLER_LANG} */
+    private static function isStrictFillerLang(string $targetLang): bool
+    {
+        return mb_substr(mb_strtolower(trim($targetLang)), 0, 2) === self::STRICT_FILLER_LANG;
+    }
+
+    /**
+     * EVERY substitution stands in some frame of this day — but a word and a connector stand in
+     * different places, and v0.3 is where that stopped being one rule.
+     *
+     * This is what makes the day combine. Without it the vocabulary is a glossary next to the
      * lines: the learner memorises eight sentences and owns none of them, because nothing ever told
      * them which hole each word goes in.
+     *
+     * **A WORD goes in the HOLE.** Unchanged, and still fatal: `example` is one of this day's
+     * frames with this word in its slot. «the API» → «I mainly work with the API.»
+     *
+     * **A CONNECTOR lives in the frame, wherever the language puts it.** Four live answers in a
+     * row built the frame AROUND the connector — «Right now, I mainly work on ___» beside the chunk
+     * «work on» — and the v0.2 gate called that a defect four times. It is not one: that IS how a
+     * phrasal verb is used, and no wording of the prompt moved it, because the model was right. So
+     * the chunk's example must be a frame of this day CONTAINING it — in the slot or in the fixed
+     * part — and the one thing that would make the card worthless is checked instead: the example
+     * may not be a LINE of the day, word for word. «work on» whose only example is the line it
+     * already stands in teaches that line twice and the connector not at all.
      *
      * @return list<PlanViolation>
      */
     private function checkSubstitutions(PlanDayCandidate $day): array
     {
-        $frames = [];
+        $slotFrames = [];
+        $allFrames = [];
+        $lineTexts = [];
         foreach ($this->linesOf($day) as $line) {
             $frame = trim($line->frame);
-            if ($frame !== '' && str_contains($frame, self::SLOT)) {
-                $frames[] = $frame;
+            if ($frame !== '') {
+                $allFrames[] = $frame;
+                if (str_contains($frame, self::SLOT)) {
+                    $slotFrames[] = $frame;
+                }
             }
+            $lineTexts[$this->normalize($line->text)] = $line->text;
         }
 
         $violations = [];
@@ -488,20 +765,79 @@ final class PlanDayValidator
                 continue;
             }
 
-            foreach ($frames as $frame) {
-                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
+            if ($item->kind === PlanDayItem::KIND_WORD) {
+                foreach ($slotFrames as $frame) {
+                    if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
+                        continue 2;
+                    }
+                }
+
+                $violations[] = new PlanViolation(
+                    self::SUBSTITUTION_WITHOUT_FRAME,
+                    'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
+                    $item->text,
+                );
+
+                continue;
+            }
+
+            $clone = $lineTexts[$this->normalize($item->example)] ?? null;
+            if ($clone !== null) {
+                $violations[] = new PlanViolation(
+                    self::CHUNK_WITHOUT_FRAME,
+                    'пример связки — дословно реплика дня «' . $clone . '»: тот же каркас нужен '
+                    . 'с ДРУГИМ наполнителем, иначе связку учат вместе с уже выученной репликой',
+                    $item->text,
+                );
+
+                continue;
+            }
+
+            foreach ($allFrames as $frame) {
+                if (! $this->exampleIsFrame($frame, $item->example)) {
+                    continue;
+                }
+                if ($this->frameHolds($frame, $item->text)
+                    || $this->exampleUsesFrame($frame, $item->text, $item->example)) {
                     continue 2;
                 }
             }
 
             $violations[] = new PlanViolation(
-                self::SUBSTITUTION_WITHOUT_FRAME,
-                'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
+                self::CHUNK_WITHOUT_FRAME,
+                'ни один каркас дня не содержит эту связку — её пример не собирается ни из чего',
                 $item->text,
             );
         }
 
         return $violations;
+    }
+
+    /** Is `$example` this frame, filled — or the formula itself when the frame has no slot? */
+    private function exampleIsFrame(string $frame, string $example): bool
+    {
+        return str_contains($frame, self::SLOT)
+            ? $this->fillsFrame($frame, $example)
+            : $this->normalize($frame) === $this->normalize($example);
+    }
+
+    /**
+     * Does the frame carry `$term` in its FIXED part — the half that does not move?
+     *
+     * Whole words only: «work» must not be found inside «network». The slot is flattened to a space
+     * first, so a term the frame builds around («I mainly work with ___») is found and a term that
+     * merely spans the hole is not.
+     */
+    private function frameHolds(string $frame, string $term): bool
+    {
+        $needle = $this->normalize($term);
+        if ($needle === '') {
+            return false;
+        }
+
+        $haystack = ' ' . $this->normalize(str_replace(self::SLOT, ' ', $frame)) . ' ';
+
+        return str_contains($haystack, ' ' . $needle . ' ');
     }
 
     /**

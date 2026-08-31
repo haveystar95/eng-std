@@ -142,13 +142,17 @@ final class FakePlanContentModel implements ContentModelPort
     }
 
     /**
-     * A v0.2 DAY: three arrays, frames with a slot, and every word standing in one of them.
+     * A v0.3 DAY: three arrays, and lines that are a FRAME and a FILLER rather than a sentence.
      *
      * The three counts are read back out of the rendered prompt, because that is where the server
      * put them and reading them back is also a check that it did. The frames matter as much as the
-     * counts: the validator now refuses a word whose example is not one of the day's frames with
-     * that word in the hole, so a double that ignored frames would make every feature test a test
-     * of the failure path.
+     * counts: the validator refuses a word whose example is not one of the day's frames with that
+     * word in the hole, so a double that ignored frames would make every feature test a test of
+     * the failure path.
+     *
+     * v0.3 moved the assembly to the server, and this double moved with it — it writes no `text`
+     * on a line at all, and its fillers are the day's own word and connector cards, character for
+     * character, because that is what the gate demands of a real answer.
      *
      * @return array<string, mixed>
      */
@@ -168,20 +172,36 @@ final class FakePlanContentModel implements ContentModelPort
         // not either: a double whose output breaks an invariant tests the invariant, not the code.
         $day = max(1, $this->intAfter($prompt, '"index":'));
 
-        $frame = fn (int $i): string => "Day {$day} line {$i} about ___.";
+        // THE CARDS FIRST, because a line's `filler` has to be one of them, character for
+        // character. Words then connectors, so the first filler is a word whenever the day has
+        // one — a connector standing in the first frame's hole would make its own example a clone
+        // of the line it fills.
+        $cards = [];
+        for ($i = 1; $i <= $words; $i++) {
+            $cards[] = ["day{$day}word{$i}", "день{$day}слово{$i}", 'word'];
+        }
+        for ($i = 1; $i <= $chunks; $i++) {
+            $cards[] = ["day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb'];
+        }
 
         $lines = [];
         for ($i = 1; $i <= $phrases; $i++) {
+            // A day with no substitutions at all has nothing to paste, so its lines are formulas.
+            // That is over the formula cap and the cap is a WARNING since v0.3, which is exactly
+            // the behaviour this double should exercise: the day is written anyway.
+            $filler = $cards === [] ? '' : $cards[($i - 1) % count($cards)][0];
             $lines[] = [
-                'text' => "Day {$day} line {$i} about thing{$i}.",
-                'frame' => $frame($i),
+                'frame' => $cards === []
+                    ? "Day {$day} line {$i}."
+                    : "Day {$day} line {$i} about ___.",
+                'filler' => $filler,
                 'speaker' => 'learner',
                 'type' => 'phrase',
                 'is_line' => true,
                 'translation' => "День {$day}, реплика номер {$i}.",
                 'transliteration' => 'дэй лайн эбаут',
                 'description' => "Somebody says it at moment {$i} of conversation {$day}.",
-                'example' => "Day {$day} line {$i} about thing{$i}, said out loud.",
+                'example' => "Day {$day} line {$i} said out loud, about {$filler}.",
                 'example_translation' => "День {$day}, реплика номер {$i}, сказанная вслух.",
                 'image_api_prompt' => "Two people talking at moment {$i} of a day, close-up.",
                 // Spread over the checkpoints so every one of them is closed.
@@ -189,29 +209,30 @@ final class FakePlanContentModel implements ContentModelPort
             ];
         }
 
-        // Every substitution stands in the FIRST frame of the day, and its example is that
-        // sentence — which is the rule the validator checks and the reason the day combines.
-        $substitution = fn (string $text, string $key, string $type): array => [
+        // EVERY substitution stands in the FIRST frame of the day — a word in its hole, a
+        // connector in its hole with a word after it, so that neither example is a clone of the
+        // line that frame actually assembles into.
+        $substitution = fn (string $text, string $key, string $type, string $tail): array => [
             'text' => $text,
             'type' => $type,
             'is_line' => false,
             'translation' => $key,
             'transliteration' => 'дэй уорд',
             'description' => "A thing you drop into a sentence on day {$day}.",
-            'example' => "Day {$day} line 1 about {$text}.",
-            'example_translation' => "День {$day}, реплика номер 1, про это.",
+            'example' => "Day {$day} line 1 about {$text}{$tail}.",
+            'example_translation' => "День {$day}, реплика номер 1, про «{$key}».",
             'image_api_prompt' => 'A single object on a table, close-up, no text.',
             'covers_checkpoint' => null,
         ];
 
         $substitutions = [];
         for ($i = 1; $i <= $words; $i++) {
-            $substitutions[] = $substitution("day{$day}word{$i}", "день{$day}слово{$i}", 'word');
+            $substitutions[] = $substitution("day{$day}word{$i}", "день{$day}слово{$i}", 'word', ' again');
         }
 
         $connectors = [];
         for ($i = 1; $i <= $chunks; $i++) {
-            $connectors[] = $substitution("day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb');
+            $connectors[] = $substitution("day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb', ' today');
         }
 
         return [

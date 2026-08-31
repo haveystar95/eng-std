@@ -37,7 +37,10 @@ use RuntimeException;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan_day.v0.2.1';
+    public const PROMPT_VERSION = 'plan_day.v0.3';
+
+    /** The slot in a frame, and the one string {@see assemble()} replaces. */
+    private const SLOT = PlanDayItem::SLOT;
 
     public function __construct(
         private ContentModelPort $model,
@@ -172,6 +175,20 @@ final readonly class PlanDayComposer
             )), 0, 500),
         ));
 
+        // WHAT THE DAY GOT AWAY WITH. Only on an ACCEPTED answer: a refused attempt is thrown away
+        // whole, and counting its shape defects would make the counters measure how often the
+        // machine refuses rather than how often a written day is weak.
+        if ($violations === []) {
+            foreach ($this->validator->warnings($candidate) as $warning) {
+                $this->defects->warned(
+                    $brief->planId,
+                    $brief->dayIndex,
+                    $warning->code,
+                    $warning->detail,
+                );
+            }
+        }
+
         // THE HINT IS NORMALISED ON THE WAY IN — the validator's own repair, applied once, so the
         // string that is stored is the string that was judged. A hint that cannot be saved is
         // DROPPED and the card lives; that is the only defect of a day treated this way, and it is
@@ -201,6 +218,7 @@ final readonly class PlanDayComposer
                 example: $item->example,
                 exampleTranslation: $item->exampleTranslation,
                 frame: $item->frame,
+                filler: $item->filler,
                 speaker: $item->speaker,
                 imageApiPrompt: $item->imageApiPrompt,
                 coversCheckpoint: $item->coversCheckpoint,
@@ -231,12 +249,14 @@ final readonly class PlanDayComposer
     }
 
     /**
-     * THE THREE ARRAYS, flattened into one list of cards.
+     * THE THREE ARRAYS, flattened into one list of cards — and the lines ASSEMBLED on the way.
      *
      * The ARRAY decides what a card is, not the flag it carries. `is_line` and the array are
      * required to agree and the validator says so out loud when they do not — but an entry sitting
      * in `chunks` is a connector whatever it says about itself, and reading the flag instead would
      * let one wrong boolean move a card into a different stage ladder.
+     *
+     * A line's `text` is built here, before anything judges it: see {@see assemble()}.
      *
      * @param  array<string, mixed>  $payload
      * @return list<PlanDayItem>
@@ -257,9 +277,11 @@ final readonly class PlanDayComposer
                 $isLine = $kind === PlanDayItem::KIND_LINE;
                 $covers = $card['covers_checkpoint'] ?? null;
                 $speaker = $this->text($card['speaker'] ?? '');
+                $frame = $isLine ? $this->text($card['frame'] ?? '') : '';
+                $filler = $isLine ? $this->text($card['filler'] ?? '') : '';
 
                 $out[] = new PlanDayItem(
-                    text: $this->text($card['text'] ?? ''),
+                    text: $isLine ? self::assemble($frame, $filler) : $this->text($card['text'] ?? ''),
                     type: $this->text($card['type'] ?? 'word'),
                     kind: $kind,
                     isLine: $isLine,
@@ -268,7 +290,8 @@ final readonly class PlanDayComposer
                     description: $this->text($card['description'] ?? ''),
                     example: $this->text($card['example'] ?? ''),
                     exampleTranslation: $this->text($card['example_translation'] ?? ''),
-                    frame: $isLine ? $this->text($card['frame'] ?? '') : '',
+                    frame: $frame,
+                    filler: $filler,
                     speaker: $isLine && $speaker !== '' ? $speaker : null,
                     imageApiPrompt: $this->text($card['image_api_prompt'] ?? ''),
                     coversCheckpoint: $isLine && is_int($covers) ? $covers : null,
@@ -277,6 +300,34 @@ final readonly class PlanDayComposer
         }
 
         return $out;
+    }
+
+    /**
+     * THE LINE THE LEARNER WILL SEE — `frame` with `filler` pasted into its one slot.
+     *
+     * One substitution, and only the first: a frame with two slots is a defect the validator names
+     * ({@see PlanDayValidator::FRAME_SLOT_COUNT}), and pasting into both would hide it behind a
+     * sentence that reads fine. A frame with no slot IS the line — that is what a formula is —
+     * so the formula case is not a special case here, it is what `str_replace` on a string with no
+     * needle already does.
+     *
+     * Nothing else is done to the string. No spacing repair, no capitalisation, no full stop added:
+     * the frame is punctuated as a spoken line and the filler is a card's own `text`, so the paste
+     * is exact by construction, and a paste that reads wrong is a frame or a filler that is wrong.
+     * Repairing it here would mean the sentence the validator judges is not the sentence the model
+     * was told it was writing.
+     *
+     * PUBLIC because this is the formula, and the formula belongs to one place: the fixtures and
+     * the tests build their days through it rather than re-implementing the paste beside it.
+     */
+    public static function assemble(string $frame, string $filler): string
+    {
+        $at = mb_strpos($frame, self::SLOT);
+        if ($at === false) {
+            return $frame;
+        }
+
+        return mb_substr($frame, 0, $at) . $filler . mb_substr($frame, $at + mb_strlen(self::SLOT));
     }
 
     /**

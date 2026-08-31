@@ -56,7 +56,7 @@ beforeEach(function (): void {
             /** @var array<string, mixed> $payload */
             $payload = json_decode(
                 (string) file_get_contents(
-                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.2.json' : 's1-outline.v0.2.json'),
+                    __DIR__ . '/../../Fixtures/plan/' . ($isDay ? 's1-day1.v0.3.json' : 's1-outline.v0.2.json'),
                 ),
                 true,
             );
@@ -119,7 +119,7 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
     $terms = DB::table('terms as t')
         ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
         ->where('ci.collection_id', $day1->collection_id)
-        ->get(['t.id', 't.text', 't.kind', 't.frame', 't.speaker', 't.image_api_prompt']);
+        ->get(['t.id', 't.text', 't.kind', 't.frame', 't.speaker', 't.filler', 't.image_api_prompt']);
 
     // Eight lines, two connectors, four words — the split the day was asked for, landed.
     expect($terms)->toHaveCount(14)
@@ -128,13 +128,17 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
         ->and($terms->where('kind', 'word'))->toHaveCount(4)
         // Two of the eight lines are the doctor's own, quoted from the skeleton.
         ->and($terms->where('speaker', 'role'))->toHaveCount(2)
-        // …and those two are the formulas, so exactly six lines carry a slot.
-        ->and($terms->where('kind', 'line')->whereNotNull('frame'))->toHaveCount(6)
+        // Those two plus the learner's own repair move are the formulas — a frame with no hole is
+        // stored as no frame at all, because a cloze gap cut from it would blank nothing.
+        ->and($terms->where('kind', 'line')->whereNotNull('frame'))->toHaveCount(5)
+        ->and($terms->where('kind', 'line')->whereNull('frame'))->toHaveCount(3)
         ->and($terms->whereNull('image_api_prompt'))->toHaveCount(0);
 
-    // The frame is the line with a hole in it, and the line is that frame filled.
+    // The frame is the line with a hole in it, the filler is what stands in the hole, and the line
+    // is what the SERVER built out of the two — the model never wrote that sentence.
     $withFrame = $terms->firstWhere('text', 'It hurts in my lower back.');
-    expect($withFrame->frame)->toBe('It hurts in my ___.');
+    expect($withFrame->frame)->toBe('It hurts in my ___.')
+        ->and($withFrame->filler)->toBe('lower back');
 });
 
 it('deals the ready day as a session, giving each card the chain its kind earns', function () {

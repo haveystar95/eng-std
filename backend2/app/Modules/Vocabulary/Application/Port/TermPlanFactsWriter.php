@@ -20,6 +20,10 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  * the first ({@see \App\Modules\Learning\Domain\Service\PlanStageLadder}), and the gap of a
  * cloze card is cut from the second. A term re-imported by a later plan day gets the later day's
  * frame, which is correct — the frame belongs to the day being taught.
+ *
+ * `filler` is the third of that set and arrived with v0.3: the string that stands in the frame's
+ * hole, which is what the cloze gap blanks. Stored rather than re-derived from `text` minus
+ * `frame`, because that derivation is right nine times and quietly wrong the tenth.
  */
 interface TermPlanFactsWriter
 {
@@ -30,5 +34,6 @@ interface TermPlanFactsWriter
         ?string $kind = null,
         ?string $frame = null,
         ?string $speaker = null,
+        ?string $filler = null,
     ): void;
 }

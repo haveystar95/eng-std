@@ -38,6 +38,9 @@ final class PlanPromptLibrary implements PlanPromptSource
      * shared constant would have stamped every day of that window with a version it was not
      * written at. v0.2.1 is that split earning its keep — the day prompt was rewritten alone,
      * after the live «собеседование» day failed twice on the frame rules, and P1 did not move.
+     * v0.3 is the same split used a second time, for a bigger reason: after FOUR refusals in a row
+     * the day prompt stopped asking the model to assemble a line at all — it now returns `frame`
+     * and `filler` and the server pastes them together. P1 stayed at v0.2 through both.
      *
      * The v0.1.1 files stay in this directory as history and are not addressed by any constant —
      * a stored plan written on them is read back through its own `outline` JSON, not by
@@ -45,10 +48,10 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const OUTLINE_VERSION = 'plan_outline.v0.2';
 
-    public const DAY_VERSION = 'plan_day.v0.2.1';
+    public const DAY_VERSION = 'plan_day.v0.3';
 
     private const OUTLINE = 'plan_outline.v0.2.md';
-    private const DAY = 'plan_day.v0.2.1.md';
+    private const DAY = 'plan_day.v0.3.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 

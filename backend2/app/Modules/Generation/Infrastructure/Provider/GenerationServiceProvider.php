@@ -163,6 +163,7 @@ final class GenerationServiceProvider extends ServiceProvider
                 prompts: $this->app->make(PlanPromptSource::class),
                 ledger: $this->app->make(RecordsPlanSpend::class),
                 defects: $this->app->make(PlanDayDefectReporter::class),
+                validator: $this->planDayValidator(),
             );
         });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening
@@ -598,6 +599,36 @@ final class GenerationServiceProvider extends ServiceProvider
      * vendor — and the failure it produces if the key is missing names the env var, because «план
      * не собрался» with no reason is the least useful error this feature can produce.
      */
+    /**
+     * The day's gate, holding the one list it is not allowed to own: what a repair move sounds
+     * like, per target language. The rule («every day has one») is Domain; the phrases are content,
+     * and content that will be wrong belongs in config — see `config/generation.php`.
+     *
+     * A language mapped to an EMPTY list is carried through as an empty list, not replaced by the
+     * default: «German's list is not written yet» is a deliberate state and switches the check off
+     * for German.
+     */
+    private function planDayValidator(): \App\Modules\Generation\Domain\Service\PlanDayValidator
+    {
+        $configured = config('generation.plan.day.repair_markers');
+        if (! is_array($configured)) {
+            return new \App\Modules\Generation\Domain\Service\PlanDayValidator();
+        }
+
+        $markers = [];
+        foreach ($configured as $lang => $phrases) {
+            if (! is_string($lang) || ! is_array($phrases)) {
+                continue;
+            }
+            $markers[mb_strtolower($lang)] = array_values(array_filter(
+                $phrases,
+                static fn (mixed $p): bool => is_string($p) && trim($p) !== '',
+            ));
+        }
+
+        return new \App\Modules\Generation\Domain\Service\PlanDayValidator(repairMarkers: $markers);
+    }
+
     private function planModel(): \App\Modules\Generation\Application\Port\ContentModelPort
     {
         if (config('services.generation.driver') === 'fake') {

@@ -17,6 +17,7 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
         ?string $kind = null,
         ?string $frame = null,
         ?string $speaker = null,
+        ?string $filler = null,
     ): void {
         DB::table('terms')
             ->where('id', $termId->value)
@@ -25,8 +26,10 @@ final readonly class EloquentTermPlanFactsWriter implements TermPlanFactsWriter
                 'difficulty_score' => $difficultyScore,
                 'kind' => $kind,
                 // A formula («Nice to meet you») has no slot, and an empty string would read as
-                // «a frame whose hole is at the start» to every regex downstream.
+                // «a frame whose hole is at the start» to every regex downstream. Same for the
+                // filler: «nothing stands in the hole» and «there is no hole» are one state here.
                 'frame' => $frame === '' ? null : $frame,
+                'filler' => $filler === '' ? null : $filler,
                 'speaker' => $speaker,
                 'updated_at' => now(),
             ]);

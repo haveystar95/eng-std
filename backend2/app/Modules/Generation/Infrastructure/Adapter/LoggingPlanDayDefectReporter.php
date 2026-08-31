@@ -45,7 +45,32 @@ final class LoggingPlanDayDefectReporter implements PlanDayDefectReporter
 
     public function droppedTransliterations(): int
     {
-        $value = Cache::get(self::TRANSLITERATION_DROPPED, 0);
+        return $this->count(self::TRANSLITERATION_DROPPED);
+    }
+
+    public function warned(string $planId, int $dayIndex, string $counter, string $detail): void
+    {
+        // Same level as a dropped hint and for the same reason: the learner got a day that is
+        // quietly worse than the one the prompt promised, and nobody but the log will say so.
+        Log::warning('Plan day was written with a shape defect', [
+            'counter' => $counter,
+            'plan_id' => $planId,
+            'day_index' => $dayIndex,
+            'detail' => $detail,
+        ]);
+
+        Cache::add($counter, 0);
+        Cache::increment($counter);
+    }
+
+    public function warnings(string $counter): int
+    {
+        return $this->count($counter);
+    }
+
+    private function count(string $counter): int
+    {
+        $value = Cache::get($counter, 0);
 
         return is_numeric($value) ? (int) $value : 0;
     }
