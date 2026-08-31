@@ -145,12 +145,18 @@ final class PlanSchemas
      * a line without a speaker ({@see PlanDayValidator::KIND_MISMATCH}), and a schema keyword one
      * provider interprets differently is a 400 on a paid path.
      *
-     * ## No `minItems`/`maxItems`, and that is not an oversight
+     * ## No `minItems`/`maxItems`, and it is a CHOICE — the provider would honour them
      *
-     * «Exactly as many entries as cards under BROKEN» is stated in the prompt and CHECKED after the
-     * answer ({@see PlanDayRepairer}), not asked of the schema: OpenAI's `strict` mode does not
-     * apply array-length keywords — it refuses the whole schema for carrying them. See DECISIONS
-     * п. 201; the same is true of the counters P2 would like on its three arrays.
+     * Measured on 31.08 against `gpt-5.4` (DECISIONS п. 201): a strict schema carrying
+     * `minItems: 5, maxItems: 5` is accepted, and the count is ENFORCED — asked in the same breath
+     * for exactly one item, the model returned five. What it returned is the reason this schema
+     * does not use them: the four it did not have anything to say in were filled with garbage.
+     *
+     * A length constraint does not make a model produce N good answers; it makes it produce N
+     * strings. For a repair call that is strictly worse than the honest short answer, which
+     * {@see PlanDayRepairer} catches by counting ({@see PlanDayRepairer::OFF_TARGET}) and refuses
+     * without merging anything. «Exactly as many entries as cards under BROKEN» is therefore stated
+     * in the prompt and checked after the answer, on purpose.
      *
      * @return array<string, mixed>
      */
