@@ -854,3 +854,91 @@ it('knows when a reading hint is mandatory at all', function () {
         ->and($this->validator->scriptsDiffer('ru', 'ro'))->toBeTrue()
         ->and($this->validator->scriptsDiffer('en', 'ro'))->toBeFalse();
 });
+
+// ── the name on a card of its own ─────────────────────────────────────────────────────────────
+
+it('refuses a card whose term is a name out of the skeleton', function () {
+    // The owner's phone, 31.08: «Ivanov», reading «[иванов]», translation «Иванов», example «My
+    // last name is Ivanov, yes.» — a surname dealt as a word to learn. There is nothing in it to
+    // know, and the answer is the question written in the other alphabet.
+    $day = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => 'Ivanov',
+        'translation' => 'фамилия гостя',
+        'transliteration' => 'иванов',
+        'example' => 'My last name is Ivanov, yes.',
+    ]));
+
+    $withEntity = new PlanDayCandidate(
+        supportLang: 'ru', targetLang: 'en', termBudget: $day->termBudget,
+        phraseCount: $day->phraseCount, chunkCount: $day->chunkCount, wordCount: $day->wordCount,
+        checkpointCount: 3, goalTerms: [], openingLines: $day->openingLines, items: $day->items,
+        entityNames: ['Ivanov'],
+    );
+
+    expect(dayCodes($this->validator->validate($withEntity)))->toContain(PlanDayValidator::TERM_IS_A_NAME);
+});
+
+it('refuses a card whose term is one of the learner`s own goal terms', function () {
+    // Spelled verbatim in both languages by construction, so a card of one asks nothing.
+    $day = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => 'Laravel',
+        'translation' => 'фреймворк',
+        'example' => 'It hurts in my Laravel, right here.',
+    ]), goalTerms: ['Laravel']);
+
+    expect(dayCodes($this->validator->validate($day)))->toContain(PlanDayValidator::TERM_IS_A_NAME);
+});
+
+it('lets the name stand in a LINE, which is the whole point of the rule', function () {
+    // «My last name is ___» + «Ivanov» is the sentence worth having. The rule exists so that this
+    // keeps working, not in spite of it.
+    $day = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3);
+    $withEntity = new PlanDayCandidate(
+        supportLang: 'ru', targetLang: 'en', termBudget: $day->termBudget,
+        phraseCount: $day->phraseCount, chunkCount: $day->chunkCount, wordCount: $day->wordCount,
+        checkpointCount: 3, goalTerms: [], openingLines: $day->openingLines, items: $day->items,
+        entityNames: ['доктор Ионеску'],
+    );
+
+    expect($this->validator->validate($withEntity))->toBe([]);
+});
+
+// ── the key that is the term in the other alphabet ────────────────────────────────────────────
+
+it('refuses a key that is the term transliterated', function (string $term, string $key) {
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => $term,
+        'translation' => $key,
+        'example' => "It hurts in my {$term}, right here.",
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KEY_IS_THE_TERM);
+})->with([
+    'the live one' => ['Ivanov', 'Иванов'],
+    'a digraph' => ['Shchukin', 'Щукин'],
+    'the soft sign vanishes' => ['Olga', 'Ольга'],
+]);
+
+it('refuses a key that is the card`s own pronunciation hint', function () {
+    // The cheapest half of the same rule: a translation equal to the reading is not a translation,
+    // whatever the two alphabets happen to do.
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'translation' => 'лоуэр бэк',
+        'transliteration' => 'лоуэр бэк',
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KEY_IS_THE_TERM);
+});
+
+it('leaves an honest translation alone, however close the two words sound', function (string $term, string $key) {
+    $ok = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => $term,
+        'translation' => $key,
+        'example' => "It hurts in my {$term}, right here.",
+    ]));
+
+    expect(dayCodes($this->validator->validate($ok)))->not->toContain(PlanDayValidator::KEY_IS_THE_TERM);
+})->with([
+    'a borrowing that is really translated' => ['manager', 'руководитель'],
+    'nothing alike' => ['passport', 'паспорт документ'],
+]);

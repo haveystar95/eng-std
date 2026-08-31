@@ -188,6 +188,12 @@ final readonly class PlanDayComposer
             goalTerms: $brief->goalTerms,
             openingLines: $brief->openingLines,
             items: $items,
+            // The people and things the skeleton named. They belong in a line's slot, never on a
+            // card of their own ({@see PlanDayValidator::TERM_IS_A_NAME}).
+            entityNames: array_map(
+                static fn (array $entity): string => $entity['name'],
+                $brief->entities,
+            ),
         );
 
         return [

@@ -110,6 +110,20 @@ final class PlanDayValidator
     public const EXAMPLE_DUPLICATED = 'day.example_duplicated';
     public const EXAMPLE_MISSING = 'day.example_missing';
     public const KEY_IS_THE_TERM = 'day.key_is_the_term';
+
+    /**
+     * A CARD WHOSE TERM IS SOMEBODY'S NAME.
+     *
+     * The owner's phone dealt «Ivanov» — reading «[иванов]», translation «Иванов», example «My last
+     * name is Ivanov, yes.» — as a word to learn, in a day about checking into a hotel. A surname is
+     * not vocabulary: there is nothing to know about it, the answer is the question written in the
+     * other alphabet, and the learner is being drilled on their own name.
+     *
+     * Names belong in the FILLER of a line — «My last name is ___» is the sentence worth having, and
+     * the name is what the learner puts in it. So a `words`/`chunks` card whose text is one of the
+     * skeleton's `entities` or `goal_terms` is refused, and the frame that needs it keeps working.
+     */
+    public const TERM_IS_A_NAME = 'day.term_is_a_name';
     public const KEY_DUPLICATED = 'day.key_duplicated';
     public const KEY_NOT_SUPPORT_LANGUAGE = 'day.key_not_support_language';
     public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
@@ -265,6 +279,7 @@ final class PlanDayValidator
         private readonly LanguagePurity $purity = new LanguagePurity(),
         private readonly SupportLanguageText $supportText = new SupportLanguageText(),
         private readonly array $repairMarkers = self::DEFAULT_REPAIR_MARKERS,
+        private readonly TransliteratedSameness $sameness = new TransliteratedSameness(),
     ) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
@@ -281,6 +296,7 @@ final class PlanDayValidator
             ...$this->checkCheckpoints($day),
             ...$this->checkFrames($day),
             ...$this->checkExamples($day->items),
+            ...$this->checkProperNouns($day),
             ...$this->checkKeys($day),
             ...$this->checkPerCard($day),
         ];
@@ -1112,6 +1128,61 @@ final class PlanDayValidator
         return $violations;
     }
 
+    /**
+     * A NAME IS NOT A CARD — {@see TERM_IS_A_NAME}.
+     *
+     * The skeleton names the people and things this conversation is about: «Иванов», the doctor,
+     * the company. Those names go INTO the day's lines, in the slot — «My last name is ___» — and
+     * the learner fills them in. What they must not be is a card of their own: there is nothing to
+     * learn about a surname, its `translation` is the same name in the other alphabet, and the
+     * owner's phone duly dealt «Ivanov» / «Иванов» as a word to study.
+     *
+     * `goal_terms` are the same case for the same reason: they are spelled verbatim in both
+     * languages by construction, so a card whose whole content is one of them asks nothing.
+     *
+     * LINES ARE EXEMPT, and that is the point of the rule rather than an exception to it: the whole
+     * intent is that the name lives inside a spoken turn.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkProperNouns(PlanDayCandidate $day): array
+    {
+        $names = [];
+        foreach ([...$day->entityNames, ...$day->goalTerms] as $name) {
+            $key = $this->normalize($name);
+            if ($key !== '') {
+                $names[$key] = trim($name);
+            }
+        }
+        if ($names === []) {
+            return [];
+        }
+
+        $violations = [];
+        foreach ($day->items as $item) {
+            if ($item->kind === PlanDayItem::KIND_LINE) {
+                continue;
+            }
+
+            $named = $names[$this->normalize($item->text)] ?? null;
+            if ($named === null) {
+                continue;
+            }
+
+            $violations[] = PlanViolation::onCard(
+                self::TERM_IS_A_NAME,
+                $item,
+                'text',
+                'карточка учит имя собственное «' . $named . '» — учить в нём нечего, а его перевод '
+                . 'это оно же в другом алфавите; имя должно стоять в дырке реплики',
+                'this card teaches a proper noun from ENTITIES or GOAL TERMS. A name is not '
+                . 'vocabulary: put it in the slot of a line and teach the line',
+            );
+        }
+
+        return $violations;
+    }
+
     /** @return list<PlanViolation> */
     private function checkKeys(PlanDayCandidate $day): array
     {
@@ -1122,13 +1193,30 @@ final class PlanDayValidator
         foreach ($day->items as $item) {
             $translation = trim($item->translation);
 
-            if ($this->normalize($translation) === $this->normalize($item->text)) {
+            // THE KEY IS THE TERM — character for character, OR written in the other alphabet.
+            //
+            // «Ivanov» glossed «Иванов» is one word and one piece of information: the learner reads
+            // the Latin, says the Cyrillic, and has learned that a name is spelled the way it
+            // sounds. Every gate passed that card, because the two strings differ in every
+            // character ({@see TransliteratedSameness}).
+            //
+            // The reading is checked too, and it is the cheapest half: a `translation` equal to the
+            // card's own pronunciation hint is not a translation by construction, whatever the two
+            // alphabets do.
+            $sameAsTerm = $this->normalize($translation) === $this->normalize($item->text)
+                || $this->sameness->same($translation, $item->text)
+                || ($item->transliteration !== null
+                    && $this->normalize($translation) === $this->normalize($item->transliteration));
+
+            if ($sameAsTerm) {
                 $violations[] = PlanViolation::onCard(
                     self::KEY_IS_THE_TERM,
                     $item,
                     'translation',
-                    'ключ совпадает с термином — карточка спрашивает то, на что уже ответила',
-                    'the `translation` is the term itself, so the card answers its own question',
+                    'ключ совпадает с термином (или это он же в другом алфавите) — карточка '
+                    . 'спрашивает то, на что уже ответила',
+                    'the `translation` is the term itself — the same word, or the same word written '
+                    . 'in the other alphabet — so the card answers its own question',
                 );
             }
 
