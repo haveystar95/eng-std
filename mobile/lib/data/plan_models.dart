@@ -461,15 +461,19 @@ class PlanTermRow {
     required this.stageComplete,
     required this.finished,
     required this.fromDayIndex,
+    this.kind,
   });
 
   final String termId;
   final String text;
   final String? translation;
 
-  /// `word | phrase | idiom | phrasal_verb`. The day screen splits on it: phrases are set in serif
-  /// with a terracotta rule, words are a compact register.
+  /// `word | phrase | idiom | phrasal_verb` — what the expression IS, lexically.
   final String type;
+
+  /// `line | word | chunk` — what it DOES in this day, and null on a term written before plans
+  /// carried the field. This is what the day screen splits on; see [isPhrase].
+  final String? kind;
 
   final PlanStage stage;
   final bool stageComplete, finished;
@@ -478,13 +482,19 @@ class PlanTermRow {
   /// for a word carried in from an earlier day («B · со дня 1»).
   final int fromDayIndex;
 
-  bool get isPhrase => type != 'word';
+  /// Set apart as a spoken line — serif, with a terracotta rule — rather than as a register row.
+  ///
+  /// [kind] decides when the server sent one. The old rule («anything that is not one word is a
+  /// line») survives only as the fallback for terms written before the field existed: it starts
+  /// lying the moment a connector appears, because «deal with» is two words and a substitution.
+  bool get isPhrase => kind == null ? type != 'word' : kind == 'line';
 
   factory PlanTermRow.fromJson(Map<String, dynamic> j) => PlanTermRow(
     termId: (j['id'] as String?) ?? '',
     text: (j['text'] as String?) ?? '',
     translation: j['translation'] as String?,
     type: (j['type'] as String?) ?? 'word',
+    kind: j['kind'] as String?,
     stage: PlanStage.fromWire(j['stage'] as String?),
     stageComplete: j['stage_complete'] == true,
     finished: j['finished'] == true,

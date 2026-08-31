@@ -20,8 +20,17 @@ final readonly class PlanDayTermView
         public string $termId,
         public string $text,
         public ?string $translation,
-        /** `word | phrase | idiom | phrasal_verb` — the screen sets phrases and words differently. */
+        /** `word | phrase | idiom | phrasal_verb` — what the expression IS, lexically. */
         public string $type,
+        /**
+         * `line | word | chunk` — what it DOES in this day, or null on a term that never came from
+         * a plan day of v0.2 or later.
+         *
+         * The day screen sets a spoken LINE differently from a substitution, and until v0.2 it had
+         * to guess that from `type` («anything that is not one word is a line»). The guess starts
+         * lying the moment a connector appears: «deal with» is two words and a substitution.
+         */
+        public ?string $kind,
         /** `a` | `b` | `c`. */
         public string $stage,
         public bool $stageComplete,
@@ -41,6 +50,7 @@ final readonly class PlanDayTermView
             'text' => $this->text,
             'translation' => $this->translation,
             'type' => $this->type,
+            'kind' => $this->kind,
             'stage' => $this->stage,
             'stage_complete' => $this->stageComplete,
             'finished' => $this->finished,

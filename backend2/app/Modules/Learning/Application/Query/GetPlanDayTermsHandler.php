@@ -93,6 +93,7 @@ final readonly class GetPlanDayTermsHandler
                 text: $content->text,
                 translation: $content->translation,
                 type: $content->type,
+                kind: $content->kind,
                 stage: $standing->stage->value,
                 stageComplete: $standing->stageComplete,
                 finished: $standing->finished,

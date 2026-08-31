@@ -2616,11 +2616,22 @@ components:
         text: { type: string }
         translation: { type: [string, 'null'] }
         type: { type: string, enum: [word, phrase, idiom, phrasal_verb] }
+        kind:
+          type: [string, 'null']
+          enum: [line, word, chunk, null]
+          description: >-
+            What the expression DOES in this day, beside `type`, which says what it IS. Null on a
+            term that never came from a plan day of v0.2 or later. The screen sets a spoken LINE
+            apart from a substitution and used to guess that from `type` — a guess that stops
+            working the moment a connector appears, since «deal with» is two words and a
+            substitution.
         stage: { type: string, enum: [a, b, c] }
         stage_complete: { type: boolean }
         finished:
           type: boolean
-          description: All three stages are behind it. A carried term that is finished is not listed.
+          description: >-
+            The LAST stage for this kind is behind it — C for a word or a connector, B for a line,
+            which has no stage C. A carried term that is finished is not listed.
         from_day_index:
           type: integer
           description: >-
