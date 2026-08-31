@@ -46,8 +46,16 @@ final class PlanSessionResource extends JsonResource
             // The level's six, as this session ran on them — including the ones no trainer reads
             // yet, which every task names for itself under `knobs_ignored`.
             'knobs' => $view->knobs,
+            // WHERE THE SEAM FALLS. `tasks` is ordered day-first, so the first `day_task_count`
+            // entries are this plan's own material and the rest are the top-up from the learner's
+            // ordinary queue. A client counts «день пройден» out of THIS number — counting out of
+            // `tasks` is how a day of fourteen was announced as twenty-one.
+            'day_task_count' => $view->dayTaskCount,
             'tasks' => array_map(static fn (PlanSessionTaskView $task): array => [
                 'stage' => $task->stage,
+                // `day` | `review` — the same fact as «`from_day_index` is not null», said once
+                // here so every client does not re-derive it (and get it wrong).
+                'section' => $task->section,
                 'ordinal' => $task->ordinal,
                 'of_steps' => $task->ofSteps,
                 'from_day_index' => $task->fromDayIndex,

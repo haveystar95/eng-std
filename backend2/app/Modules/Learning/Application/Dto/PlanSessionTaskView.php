@@ -15,6 +15,12 @@ namespace App\Modules\Learning\Application\Dto;
  */
 final readonly class PlanSessionTaskView
 {
+    /** This task is the day's own material — it counts towards «день пройден». */
+    public const SECTION_DAY = 'day';
+
+    /** Top-up from the learner's ordinary queue — it does not count towards the day. */
+    public const SECTION_REVIEW = 'review';
+
     /**
      * @param  list<string>  $knobsApplied  the level's knobs this card actually honoured
      * @param  list<string>  $knobsIgnored  knobs configured for this trainer that nothing reads yet
@@ -34,6 +40,20 @@ final readonly class PlanSessionTaskView
         public bool $softened,
         /** `new` | `plan_review` | `other_review` | `soft` — which bucket this task came from. */
         public string $source,
+        /**
+         * WHICH SIDE OF THE SEAM this task is on — {@see SECTION_DAY} or {@see SECTION_REVIEW}.
+         *
+         * The same fact as «`fromDayIndex` is not null», named once on the server instead of being
+         * re-derived by every client. It exists because a client got that derivation wrong in the
+         * one way that matters: the end-of-session screen counted all sixty-three tasks as the day's
+         * and announced «День 1 пройден · 21 фраза и слово» over a day of fourteen, seven of whose
+         * cards belonged to another plan and another language.
+         *
+         * The tasks are ordered day-first, so this never alternates: every {@see SECTION_DAY} task
+         * precedes every {@see SECTION_REVIEW} one, and {@see PlanSessionView::$dayTaskCount} is
+         * where the change happens.
+         */
+        public string $section,
         /** What the speaking card shows at this stage; null on every other trainer. */
         public ?string $speakingForm,
         public array $knobsApplied,

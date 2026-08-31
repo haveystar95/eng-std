@@ -28,5 +28,14 @@ final readonly class PlanSessionView
         public int $focusDayIndex,
         public array $tasks,
         public array $knobs,
+        /**
+         * HOW MANY OF `tasks` ARE THE DAY'S — the seam, as one number.
+         *
+         * `tasks[0 … dayTaskCount - 1]` are this plan's own material and `tasks[dayTaskCount … ]`
+         * are the top-up from the ordinary queue ({@see PlanSessionTaskView::$section}). The order
+         * is guaranteed, so a client draws the divider at this index and counts the day out of this
+         * number rather than out of `count(tasks)`.
+         */
+        public int $dayTaskCount = 0,
     ) {}
 }

@@ -70,8 +70,15 @@ use App\Modules\Vocabulary\Application\Query\TermContentReader;
  *      ({@see PlanDayOrder}) — words before replies below `conversational`, replies before words
  *      above it. Each brings its whole remaining stage-A checklist, because stage A has to close in
  *      ONE sitting or the day does not pass.
- *   3. **other due** — everything else the planner has due today, if the day's minutes have room
- *      left. A plan does not suspend the rest of the learner's vocabulary.
+ *   3. **other due** — everything else the planner has due today **in this plan's language pair**,
+ *      if the day's minutes have room left. A plan does not suspend the rest of the learner's
+ *      vocabulary; it also does not teach French inside an English lesson, which is what the
+ *      unfiltered version did on a live day ({@see inPlanPair()}).
+ *
+ * The order of the three is the CONTRACT, not an implementation detail: everything belonging to the
+ * plan comes first and the top-up follows, so a client can draw the seam between «сегодняшний день»
+ * and «повторение» without guessing. `day_task_count` on the payload says where it falls, and every
+ * task carries its own {@see PlanSessionTaskView::$section}.
  *
  * ## «Когда» is not this handler's business
  *
@@ -158,6 +165,13 @@ final readonly class BuildPlanSessionHandler
             focusDayIndex: $progress->focusDayIndex,
             tasks: $tasks,
             knobs: $knobs->toArray(),
+            // The seam. Counted rather than assumed: `assembleTasks()` drops a task whose card the
+            // assembler refused, so the number of DAY tasks that survived is not the number of day
+            // specs that went in.
+            dayTaskCount: count(array_filter(
+                $tasks,
+                static fn (PlanSessionTaskView $t): bool => $t->section === PlanSessionTaskView::SECTION_DAY,
+            )),
         );
     }
 
@@ -182,12 +196,12 @@ final readonly class BuildPlanSessionHandler
         // Everything the planner says is due, with NO new terms: what is new here is the day's own
         // material, and the daily quota is about the ordinary pool, not about a plan the learner
         // has committed to.
-        $due = ($this->dueTerms)(new GetDueTerms(
+        $due = $this->inPlanPair($plan, ($this->dueTerms)(new GetDueTerms(
             userId: $plan->userId(),
             now: $this->clock->now(),
             sessionSize: self::DUE_CAP,
             newTermsRemaining: 0,
-        ));
+        )), $standings);
 
         /** @var array<string, DueTermView> $views */
         $views = [];
@@ -250,6 +264,70 @@ final readonly class BuildPlanSessionHandler
             $knobs,
             $today->collectionId,
         );
+    }
+
+    /**
+     * THE DUE LIST, NARROWED TO THIS PLAN'S LANGUAGE PAIR.
+     *
+     * Bucket 3 exists so a plan does not suspend the rest of the learner's vocabulary — but «the
+     * rest of the vocabulary» meant, literally, everything the planner had due, in any language the
+     * learner has ever saved a word in. A live day of an `ru→en` plan dealt two FRENCH cards and
+     * five lines out of a different plan: seven of its sixty-three tasks were nothing to do with
+     * the day, and one of them asked «выбери французский эквивалент» inside an English lesson.
+     *
+     * They were not even unlucky. Both French pairs stood at `acquisition: learning` with no
+     * `due_at`, and the due query orders `due_at ASC NULLS FIRST` — so they were at the HEAD of the
+     * queue and would have led every session until answered.
+     *
+     * A term of THIS PLAN is kept whatever its pair resolves to: the plan's own material is dealt by
+     * the plan (`$standings` is every term of every day of it), and a day's word that also sits in
+     * an older folder of another pair must not disappear from its own day because
+     * {@see CollectionPairReader::supportLangByTerm()} picked that older folder.
+     *
+     * Everything else has to match BOTH halves: the term's own language is what the learner would
+     * have to say, and the support language is what the card would ask in.
+     *
+     * @param  list<DueTermView>  $due
+     * @param  array<string, PlanTermStanding>  $standings  every term this plan stands on
+     * @return list<DueTermView>
+     */
+    private function inPlanPair(LearningPlan $plan, array $due, array $standings): array
+    {
+        $foreign = [];
+        foreach ($due as $view) {
+            if (! isset($standings[$view->termId->value])) {
+                $foreign[] = $view->termId->value;
+            }
+        }
+        if ($foreign === []) {
+            return $due;
+        }
+
+        $ids = array_map(static fn (string $id): TermId => TermId::fromString($id), $foreign);
+        $langs = $this->languages->forTerms($plan->userId(), $ids);
+        $content = $this->content->byIds($ids, $langs);
+
+        $target = self::langKey($plan->targetLang()->value);
+        $support = self::langKey($plan->supportLang()->value);
+
+        $keep = [];
+        foreach ($foreign as $termId) {
+            $view = $content[$termId] ?? null;
+            $keep[$termId] = $view !== null
+                && self::langKey($view->lang) === $target
+                && self::langKey($langs->for($termId)) === $support;
+        }
+
+        return array_values(array_filter(
+            $due,
+            static fn (DueTermView $v): bool => $keep[$v->termId->value] ?? true,
+        ));
+    }
+
+    /** Language codes as they compare: «EN» and «en» are one language, «en-GB» is not «en». */
+    private static function langKey(string $lang): string
+    {
+        return mb_strtolower(trim($lang));
     }
 
     /**
@@ -454,6 +532,12 @@ final readonly class BuildPlanSessionHandler
                 fromDayIndex: $spec['day'] === null ? null : (int) $spec['day'],
                 softened: (bool) $spec['softened'],
                 source: (string) $spec['source'],
+                // THE SEAM, named on the server. A task belongs to the day exactly when it came out
+                // of a day of this plan — which is «`day` is not null», the rule the client was
+                // supposed to apply and did not.
+                section: $spec['day'] === null
+                    ? PlanSessionTaskView::SECTION_REVIEW
+                    : PlanSessionTaskView::SECTION_DAY,
                 speakingForm: $dealt === ExerciseMode::Speaking
                     ? $stage?->speakingForm($termContent->kind ?? PlanStageLadder::KIND_WORD)
                     : null,
