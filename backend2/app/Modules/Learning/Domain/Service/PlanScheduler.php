@@ -31,8 +31,10 @@ use DateTimeImmutable;
  *
  * ## The day's budget is CAPACITY, not the sum of what landed on it
  *
- * `need` measures DEMAND — what P1 thinks the abilities cost — and it is what decides how many days
- * there are and what does not fit. What each day then ASKS FOR is `capacity`: the number of cards
+ * `need` measures DEMAND — the sum of what P1 priced every ability at ({@see PlanSkill::$estTerms})
+ * — and it is what decides how many days there are and what does not fit. Since v0.2 those prices
+ * are the MODEL's, one per ability; until v0.2 they were this server's own day budget divided up
+ * and handed back to itself, which is why no plan ever failed to fit. What each day then ASKS FOR is `capacity`: the number of cards
  * that fit in the minutes the learner has, exactly. Those are two different questions and letting
  * the second be answered by the first is what produced days of 10 and 18 terms — a figure P1 chose
  * out of a band, handed to a validator that counts cards, on a day whose length the learner had
@@ -47,7 +49,7 @@ use DateTimeImmutable;
  * ## The arithmetic, in the order it happens
  *
  *   need      Σ of what every ability costs — {@see PlanOutline::skills()}
- *   capacity  how many terms fit in ONE day at this many minutes (the table below)
+ *   capacity  how many terms fit in ONE day at this many minutes ({@see DayCapacity})
  *   max_days  days from today to the event INCLUSIVE
  *
  * The last day teaches nothing: it is practice plus the conversation that runs the whole plan. So
@@ -94,21 +96,6 @@ use DateTimeImmutable;
  */
 final class PlanScheduler
 {
-    /**
-     * Terms per day, by minutes per day. Three measured points and a straight line between them.
-     *
-     * The same three numbers P1 is told about ({@see plan_outline.v0.1.md} «Term budget per
-     * introduction day»), and they have to be the same numbers or the two halves of the plan
-     * disagree about what a day holds: the prompt would write an 18-term day the scheduler thinks
-     * holds 16, and the difference would surface as «не влезает» on a plan nobody changed.
-     *
-     * The prompt states a BAND (40 minutes → 16–18) and this states the number at the bottom of it.
-     * That asymmetry is deliberate and is the one place the two are allowed to differ: the prompt
-     * is being asked to aim, the scheduler is deciding, and a scheduler that assumed the top of
-     * the band would promise room that only exists if the model is generous.
-     */
-    private const CAPACITY_ANCHORS = [10 => 5, 20 => 9, 40 => 16];
-
     /**
      * The most introduction days a plan may have, whatever the calendar offers.
      *
@@ -301,40 +288,15 @@ final class PlanScheduler
     }
 
     /**
-     * How many terms one day holds at this many minutes.
+     * How many terms one day holds at this many minutes — {@see DayCapacity}, and nowhere else.
      *
-     * Piecewise-linear through the three anchors, extended at both ends with the slope of the
-     * nearest segment. A figure between anchors interpolates, which is what the prompt tells the
-     * model to do with the same table — one rule, stated twice, in the two places that must agree.
-     * Never below 1: a day that holds nothing is not a day.
+     * Kept as a method here because callers ask the SCHEDULER this question and the table is an
+     * implementation of the answer, not the answer's address. One table, three readers: this, the
+     * preview (the same `compute()`), and the day brief's three counts.
      */
     public function capacityFor(int $minutesPerDay): int
     {
-        $anchors = self::CAPACITY_ANCHORS;
-        if (isset($anchors[$minutesPerDay])) {
-            return $anchors[$minutesPerDay];
-        }
-
-        $points = [];
-        foreach ($anchors as $minutes => $terms) {
-            $points[] = [$minutes, $terms];
-        }
-
-        // Which segment governs: the one containing the value, else the nearest end's.
-        $last = count($points) - 1;
-        $i = 0;
-        while ($i < $last - 1 && $minutesPerDay > $points[$i + 1][0]) {
-            $i++;
-        }
-
-        [$x0, $y0] = $points[$i];
-        [$x1, $y1] = $points[$i + 1];
-        $span = $x1 - $x0;
-        if ($span === 0) {
-            return max(1, $y0);   // two anchors at the same minute count: unreachable, not divided by
-        }
-
-        return max(1, (int) round($y0 + ($minutesPerDay - $x0) * (($y1 - $y0) / $span)));
+        return DayCapacity::forMinutes($minutesPerDay);
     }
 
     /**
@@ -434,12 +396,11 @@ final class PlanScheduler
         ?array $finalCheckpoints,
         int $budget,
     ): ComputedDay {
-        $sources = [];
+        $sceneIndexes = [];
         foreach ($skills as $skill) {
-            $sources[$skill->sceneIndex] = true;
+            $sceneIndexes[$skill->sceneIndex] = true;
         }
-        $sourceIndex = count($sources) === 1 ? (int) array_key_first($sources) : null;
-        $sourceScene = $sourceIndex !== null ? $outline->scene($sourceIndex) : null;
+        $sourceIndex = count($sceneIndexes) === 1 ? (int) array_key_first($sceneIndexes) : null;
 
         $checkpoints = [];
         foreach ($skills as $skill) {
@@ -460,33 +421,106 @@ final class PlanScheduler
             }
         }
 
-        // The role belongs to the day's MAIN ability — the first one. A merged day has one
-        // conversation, not two, and the person the learner talks to is the one the day opens with.
-        $role = $this->roleFor($skills, $outline);
-
         return new ComputedDay(
             index: $index,
             kind: $kind,
-            title: $sourceScene?->title !== null && $sourceScene->title !== ''
-                ? $sourceScene->title
-                : ($skills[0]->outcome ?? 'День плана'),
+            title: $this->titleFor($skills, $outline),
             scheduledOn: $scheduledOn,
             termBudget: $budget,
             skills: $skills,
             checkpoints: $finalCheckpoints ?? $checkpoints,
-            role: $role,
+            // The FIRST scene's interlocutor, for the readers that want one person: the rehearsal
+            // screen and the plan screen. The day brief reads `scenes` instead and gets all of them.
+            role: $this->roleFor($skills, $outline),
             topics: $topics,
             sourceSceneIndex: $sourceIndex,
+            scenes: $this->scenesFor($skills, $outline),
         );
     }
 
     /**
-     * The person the day's conversation is with — the interlocutor of the day's FIRST scene.
+     * THE DAY'S NAME — the scene it came from, or both scenes joined.
      *
-     * A day that merged two short scenes has two of them on paper and one conversation in practice,
-     * and the one the day opens with is the honest choice. The role no longer carries checkpoints
-     * (they belong to the abilities since v0.2), so this is a straight lookup and not the rebuild
-     * it used to be.
+     * A day is a slice of the plan and not a lesson with a theme, so its title is the step it
+     * gets you: «Записаться и дойти до кабинета». One scene, one title. TWO scenes merged into one
+     * day get «A · B», because the alternative — naming the day after its first ability — hides
+     * half of what the learner is about to do, and they are looking at this line to decide whether
+     * to open the day at all.
+     *
+     * A scene SPLIT across two days gives both of them the same title, and that is correct: they
+     * are two sittings of one situation, and numbering them «часть 1 / часть 2» would be inventing
+     * a distinction the plan does not make.
+     *
+     * @param list<PlanSkill> $skills
+     */
+    private function titleFor(array $skills, PlanOutline $outline): string
+    {
+        $titles = [];
+        foreach ($skills as $skill) {
+            $title = $outline->scene($skill->sceneIndex)->title ?? '';
+            if ($title !== '' && ! in_array($title, $titles, true)) {
+                $titles[] = $title;
+            }
+        }
+
+        if ($titles !== []) {
+            return implode(' · ', $titles);
+        }
+
+        return $skills[0]->outcome ?? 'День плана';
+    }
+
+    /**
+     * The day's SCENES, as P2 reads them — with the checkpoints numbered 1..N straight through.
+     *
+     * One entry per scene that has abilities HERE, carrying only those abilities. That is what
+     * makes a scene split across two days honest: day 1 shows the interlocutor and the two moves
+     * that landed on it, day 2 shows the same person and the rest, and neither day is handed
+     * checkpoints its own material was never asked to cover.
+     *
+     * The numbering runs over the day, not over the scene: the validator checks that every index
+     * 1..N is closed by some line, and «N» is a property of the day.
+     *
+     * @param  list<PlanSkill>  $skills
+     * @return list<array{title: string, role: array{name: string, opening_lines: list<array{text: string, translation: string}>, if_silent: string}|null, skills: list<array{outcome: string, checkpoint_index: int, topics: list<string>}>}>
+     */
+    private function scenesFor(array $skills, PlanOutline $outline): array
+    {
+        $scenes = [];
+        $order = [];
+        $checkpointIndex = 0;
+
+        foreach ($skills as $skill) {
+            $checkpointIndex++;
+            $sceneIndex = $skill->sceneIndex;
+
+            if (! isset($scenes[$sceneIndex])) {
+                $scene = $outline->scene($sceneIndex);
+                $role = $scene?->role;
+                $scenes[$sceneIndex] = [
+                    'title' => $scene->title ?? '',
+                    'role' => $role === null ? null : [
+                        'name' => $role->name,
+                        'opening_lines' => $role->openingLines,
+                        'if_silent' => $role->ifSilent,
+                    ],
+                    'skills' => [],
+                ];
+                $order[] = $sceneIndex;
+            }
+
+            $scenes[$sceneIndex]['skills'][] = [
+                'outcome' => $skill->outcome,
+                'checkpoint_index' => $checkpointIndex,
+                'topics' => $skill->topics,
+            ];
+        }
+
+        return array_map(static fn (int $i): array => $scenes[$i], $order);
+    }
+
+    /**
+     * The person the day's conversation is with — the interlocutor of the day's FIRST scene.
      *
      * @param list<PlanSkill> $skills
      */

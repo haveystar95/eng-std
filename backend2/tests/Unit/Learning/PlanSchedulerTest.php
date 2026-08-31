@@ -10,31 +10,37 @@ use App\Modules\Learning\Domain\ValueObject\PlanOutline;
 /**
  * A1 — the days are counted by the SERVER.
  *
- * Every scenario below is the same three inputs (an outline, the minutes, the calendar) and one
- * question: how many teaching days are there, what goes in them, and did everything fit. The five
- * named scenarios are the ones the наряд asks for; the numbers in each `expect` are written out in
- * the test name so a failure says which arithmetic broke, not just that something did.
+ * Every scenario below is the same three inputs (a skeleton, the minutes, the calendar) and one
+ * question: how many teaching days are there, what goes in them, and did everything fit. The
+ * numbers in each `expect` are written out in the test name so a failure says which arithmetic
+ * broke, not just that something did.
+ *
+ * ## What v0.2 changed here, and why the numbers all moved
+ *
+ * Two things at once. The capacity table went from 5 / 9 / 16 to **7 / 14 / 24** — a v0.2 day is
+ * frames with a slot and the words that fill them, so twenty minutes carries more cards than
+ * twenty minutes of memorised replies did. And `est_terms` is now the MODEL's price per ability
+ * instead of the server's own day budget divided up and handed back to itself, which is why
+ * «не влезает» can happen at all: under v0.1 the sum being compared was the server's own input.
  */
 beforeEach(fn () => $this->scheduler = new PlanScheduler());
 
 /**
- * An outline shaped like P1's answer.
+ * A skeleton written as `[scene title, what the scene costs, [ability, …]]`.
  *
- * Scenes are still written here as `[title, budget, [outcome, …]]` — the shape the наряд's
- * scenarios are stated in — and the budget is shared out over the abilities exactly as P1 v0.1 did
- * it internally, so every expectation below keeps measuring the arithmetic it was written for. What
- * changed with v0.2 is where the price COMES FROM: the model now writes `est_terms` per ability and
- * is not told about days at all. This helper is the last place the old division survives, and it
- * survives as a convenience for writing scenarios, not as a rule.
+ * The cost is shared over the scene's abilities the way any whole number divides — remainder to
+ * the first ones — so a scene of 14 over two abilities is 7 + 7 and one of 9 over two is 5 + 4.
+ * That keeps a scenario readable as «this situation is worth about a day» while every ability
+ * still carries its own price, which is what the scheduler actually reads.
  */
-function outline(array $days): PlanOutline
+function outline(array $scenes): PlanOutline
 {
     $raw = ['title' => 'План', 'goal_restated' => 'Цель', 'entities' => [], 'constraints' => [],
         'goal_terms' => [], 'scenes' => []];
 
-    foreach ($days as $i => [$title, $budget, $outcomes]) {
-        $base = intdiv($budget, count($outcomes));
-        $remainder = $budget % count($outcomes);
+    foreach ($scenes as $i => [$title, $cost, $outcomes]) {
+        $base = intdiv($cost, count($outcomes));
+        $remainder = $cost % count($outcomes);
 
         $skills = [];
         foreach ($outcomes as $n => $outcome) {
@@ -60,6 +66,15 @@ function outline(array $days): PlanOutline
     return PlanOutline::fromArray($raw);
 }
 
+/** One of the three hand-written v0.2 skeletons the plan is designed around. */
+function fixtureOutline(string $name): PlanOutline
+{
+    /** @var array<mixed> $raw */
+    $raw = json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/' . $name), true);
+
+    return PlanOutline::fromArray($raw);
+}
+
 function day(string $ymd): DateTimeImmutable
 {
     return new DateTimeImmutable($ymd . ' 00:00:00');
@@ -67,37 +82,116 @@ function day(string $ymd): DateTimeImmutable
 
 // ── capacity table ────────────────────────────────────────────────────────────────────────────
 
-it('reads the capacity table the prompt is told: 10 → 5, 20 → 9, 40 → 16', function () {
-    expect($this->scheduler->capacityFor(10))->toBe(5)
-        ->and($this->scheduler->capacityFor(20))->toBe(9)
-        ->and($this->scheduler->capacityFor(40))->toBe(16);
+it('reads the one capacity table there is: 10 → 7, 20 → 14, 40 → 24', function () {
+    expect($this->scheduler->capacityFor(10))->toBe(7)
+        ->and($this->scheduler->capacityFor(20))->toBe(14)
+        ->and($this->scheduler->capacityFor(40))->toBe(24);
 });
 
 it('interpolates a figure between the anchors instead of refusing it', function () {
-    // 30 minutes sits mid-segment: 9 + 10 × 0.35 = 12.5 → 13.
-    expect($this->scheduler->capacityFor(30))->toBe(13)
-        ->and($this->scheduler->capacityFor(15))->toBe(7);   // 5 + 5 × 0.4 = 7
+    // 30 minutes sits mid-segment: 14 + 10 × 0.5 = 19. 15 minutes: 7 + 5 × 0.7 = 10.5 → 11.
+    expect($this->scheduler->capacityFor(30))->toBe(19)
+        ->and($this->scheduler->capacityFor(15))->toBe(11);
 });
 
 it('never lets a day hold nothing', function () {
     expect($this->scheduler->capacityFor(1))->toBeGreaterThanOrEqual(1);
 });
 
-// ── scenario 1: событие сегодня ───────────────────────────────────────────────────────────────
+// ── the наряд's scenarios, on the real skeletons ──────────────────────────────────────────────
 
-it('S3 «сегодня везу кота» — event today: one day does both jobs, need 9 ≤ capacity 9, fits', function () {
+it('S1 «врач через 30 дней, 20 мин»: TWO days of teaching, not twenty-nine', function () {
+    // THE test this whole rewrite exists for. Under v0.1 the model was told it had 30 days, wrote
+    // 29 of them, and the server «computed» that it needed 29 — its own instruction, read back.
+    // The skeleton now prices four abilities at 4 cards each; sixteen cards at fourteen a day is
+    // two days, and the remaining month is the learner's to review in.
     $plan = $this->scheduler->compute(
-        outline([['Открыть визит и понять назначение', 9, ['объяснить, зачем пришёл', 'понять назначение и повторить своими словами']]]),
+        fixtureOutline('s1-outline.v0.2.json'),
         minutesPerDay: 20,
-        eventDate: day('2026-08-30'),
-        today: day('2026-08-30'),
+        eventDate: day('2026-09-29'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->need)->toBe(16)
+        ->and($plan->capacity)->toBe(14)
+        ->and($plan->introDays)->toBe(2)
+        ->and($plan->fits)->toBeTrue()
+        ->and($plan->dropped)->toBe([])
+        ->and($plan->restDays)->toBe(27);
+});
+
+it('S1 «врач через 3 дня»: still two days of teaching, and it still fits', function () {
+    $plan = $this->scheduler->compute(
+        fixtureOutline('s1-outline.v0.2.json'),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-02'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->maxDays)->toBe(3)
+        ->and($plan->introDays)->toBe(2)
+        ->and($plan->fits)->toBeTrue()
+        ->and($plan->step)->toBe(1)
+        ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
+        ->toBe(['2026-08-31', '2026-09-01', '2026-09-02']);
+});
+
+it('S2 «собеседование через 2 дня, 40 мин»: the deadline is too short and the TAIL is cut', function () {
+    // Two days means exactly one teaching day: 24 cards for a goal that asks for 30. The abilities
+    // are taken in P1's order until the room runs out, so what the learner loses is the last thing
+    // the plan would have taught, not the cheapest.
+    $plan = $this->scheduler->compute(
+        fixtureOutline('s2-outline.v0.2.json'),
+        minutesPerDay: 40,
+        eventDate: day('2026-09-01'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->capacity)->toBe(24)
+        ->and($plan->need)->toBe(30)
+        ->and($plan->introDays)->toBe(1)
+        ->and($plan->fits)->toBeFalse()
+        ->and($plan->dropReason)->toBe('deadline')
+        ->and($plan->dropped)->toHaveCount(1)
+        // The «срок мал» card is built from these outcomes, so it says what was lost in the
+        // learner's own words rather than «одно умение».
+        ->and($plan->dropped[0]->outcome)
+        ->toBe('понять уточняющий вопрос и переспросить своими словами, если не уверен');
+});
+
+it('S2 A7 says the same thing mid-plan: tight, and here is what is at risk', function () {
+    $check = $this->scheduler->recheck(
+        remainingIntroDays: $this->scheduler->compute(
+            fixtureOutline('s2-outline.v0.2.json'),
+            minutesPerDay: 40,
+            eventDate: day('2026-09-10'),
+            today: day('2026-08-31'),
+        )->days,
+        minutesPerDay: 40,
+        eventDate: day('2026-09-01'),
+        today: day('2026-08-31'),
+    );
+
+    // The same arithmetic as `compute()` above, asked mid-plan: one teaching day left, 24 cards of
+    // room, 30 of demand. Nothing is CUT here — A7 reports, and the decision is the learner's.
+    expect($check->deadlineTight)->toBeTrue()
+        ->and($check->needRemaining)->toBe(30)
+        ->and($check->introDaysRemaining)->toBe(1)
+        ->and($check->atRisk)->toHaveCount(1);
+});
+
+it('S3 «сегодня везу кота»: one day does both jobs and everything is in it', function () {
+    $plan = $this->scheduler->compute(
+        fixtureOutline('s3-outline.v0.2.json'),
+        minutesPerDay: 20,
+        eventDate: day('2026-08-31'),
+        today: day('2026-08-31'),
     );
 
     expect($plan->maxDays)->toBe(1)
-        ->and($plan->capacity)->toBe(9)
-        ->and($plan->need)->toBe(9)
+        ->and($plan->need)->toBe(12)
+        ->and($plan->capacity)->toBe(14)
         ->and($plan->introDays)->toBe(1)
-        ->and($plan->restDays)->toBe(0)
         ->and($plan->fits)->toBeTrue()
         ->and($plan->finalSameDay)->toBeTrue()
         ->and($plan->dropped)->toBe([])
@@ -105,14 +199,33 @@ it('S3 «сегодня везу кота» — event today: one day does both j
         // INTRO: the day teaches, and `kind` is what decides whether it gets material at all.
         // That it is also the last day is said by `finalSameDay`.
         ->and($plan->days[0]->kind)->toBe(PlanDayKind::Intro)
-        ->and($plan->days[0]->checkpoints)->toHaveCount(2)
-        ->and($plan->days[0]->termBudget)->toBe(9)
-        ->and($plan->days[0]->scheduledOn->format('Y-m-d'))->toBe('2026-08-30');
+        ->and($plan->days[0]->skills)->toHaveCount(3)
+        ->and($plan->days[0]->checkpoints)->toHaveCount(3)
+        ->and($plan->days[0]->termBudget)->toBe(14);
 });
 
+it('caps a plan at 14 teaching days when the demand is 250 cards, whatever the calendar offers', function () {
+    // A year of room and fifty abilities at five cards each. The calendar is NOT what ran out, so
+    // «перенеси дату» is the wrong advice and `drop_reason` says so.
+    $plan = $this->scheduler->compute(
+        collections(50, 5),
+        minutesPerDay: 20,
+        eventDate: day('2027-08-31'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->need)->toBe(250)
+        ->and($plan->introDays)->toBe(PlanScheduler::MAX_INTRO_DAYS)
+        ->and($plan->introDays)->toBe(14)
+        ->and($plan->fits)->toBeFalse()
+        ->and($plan->dropReason)->toBe('cap');
+});
+
+// ── the same-day plan ─────────────────────────────────────────────────────────────────────────
+
 it('compresses a same-day plan instead of dropping half of it, and says it did not fit', function () {
-    // Two abilities' worth of an 18-term day, one day to do it in: everything is kept and `fits`
-    // is the honest «нет». Dropping would mean dropping in favour of a day that does not exist.
+    // Three abilities' worth of an 18-card demand, one day to do it in: everything is kept and
+    // `fits` is the honest «нет». Dropping would mean dropping in favour of a day that does not exist.
     $plan = $this->scheduler->compute(
         outline([['Всё сразу', 18, ['представиться', 'ответить на технические вопросы', 'вести разговор удалённо']]]),
         minutesPerDay: 20,
@@ -121,45 +234,15 @@ it('compresses a same-day plan instead of dropping half of it, and says it did n
     );
 
     expect($plan->need)->toBe(18)
-        ->and($plan->capacity)->toBe(9)
+        ->and($plan->capacity)->toBe(14)
         ->and($plan->fits)->toBeFalse()
         ->and($plan->dropped)->toBe([])
         ->and($plan->days[0]->skills)->toHaveCount(3);
 });
 
-// ── scenario 2: 2 дня / 40 минут / собеседование — не влезает ─────────────────────────────────
+// ── dropping ──────────────────────────────────────────────────────────────────────────────────
 
-it('S2 «собеседование», 2 дня / 40 мин: need 18 > room 16, does not fit and names what is dropped', function () {
-    // P1 is told the exact figure (40 minutes → 16) and this outline came back at 18 anyway —
-    // which is the whole reason the server does the arithmetic rather than trusting it. 2 days
-    // means exactly ONE teaching day, so the demand does not fit and the plan says so.
-    $plan = $this->scheduler->compute(
-        outline([['Пройти основные этапы интервью', 18, [
-            'представиться и рассказать про опыт',
-            'ответить на технические вопросы про проект',
-            'вести разговор в удалённом формате',
-        ]]]),
-        minutesPerDay: 40,
-        eventDate: day('2026-09-01'),
-        today: day('2026-08-31'),
-    );
-
-    expect($plan->maxDays)->toBe(2)
-        ->and($plan->capacity)->toBe(16)
-        ->and($plan->need)->toBe(18)          // 6 + 6 + 6
-        ->and($plan->introDays)->toBe(1)
-        ->and($plan->fits)->toBeFalse()
-        ->and($plan->dropped)->toHaveCount(1)
-        ->and($plan->dropped[0]->outcome)->toBe('вести разговор в удалённом формате')
-        // What is KEPT still fills the one teaching day; the final day is separate.
-        ->and($plan->days)->toHaveCount(2)
-        // The day ASKS FOR a full day's cards — capacity — even though the two abilities that
-        // survived only account for 12. Demand decides what fits; the minutes decide the day.
-        ->and($plan->days[0]->termBudget)->toBe(16)
-        ->and($plan->days[1]->kind)->toBe(PlanDayKind::Final);
-});
-
-it('drops from the END, because P1 writes days in dependency order', function () {
+it('drops from the END, because P1 writes scenes and abilities in dependency order', function () {
     $plan = $this->scheduler->compute(
         outline([
             ['Основа', 9, ['поздороваться']],
@@ -171,44 +254,16 @@ it('drops from the END, because P1 writes days in dependency order', function ()
         today: day('2026-08-31'),
     );
 
-    // Room = 9 × 1 = 9; the first ability costs 9 and fills it.
+    // Room = 14 × 1 = 14; the first ability costs 9 and the second would take it to 18.
     expect($plan->fits)->toBeFalse()
         ->and(array_map(fn ($s) => $s->outcome, $plan->dropped))->toBe(['уточнить', 'возразить']);
 });
 
-// ── scenario 3: 3 дня / 20 минут / врач ───────────────────────────────────────────────────────
-
-it('S1 «врач», 3 дня / 20 мин: need 18 = room 18, two teaching days back to back, fits', function () {
+it('gives the final day every checkpoint of the plan, in order, and no collection budget', function () {
     $plan = $this->scheduler->compute(
         outline([
-            ['Начать приём и описать боль', 9, ['начать приём', 'сказать, где именно болит и как давно']],
-            ['Уточнить симптомы и помощь', 9, ['ответить на уточняющие вопросы', 'понять назначение и повторить своими словами']],
-        ]),
-        minutesPerDay: 20,
-        eventDate: day('2026-09-02'),
-        today: day('2026-08-31'),
-    );
-
-    expect($plan->maxDays)->toBe(3)
-        ->and($plan->capacity)->toBe(9)
-        ->and($plan->need)->toBe(18)
-        ->and($plan->introDays)->toBe(2)
-        ->and($plan->restDays)->toBe(0)
-        ->and($plan->fits)->toBeTrue()
-        ->and($plan->step)->toBe(1)
-        ->and($plan->days)->toHaveCount(3)
-        ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
-        ->toBe(['2026-08-31', '2026-09-01', '2026-09-02'])
-        ->and($plan->days[0]->title)->toBe('Начать приём и описать боль')
-        ->and($plan->days[0]->termBudget)->toBe(9)
-        ->and($plan->days[1]->termBudget)->toBe(9);
-});
-
-it('gives the final day every checkpoint of the plan, in day order, and no collection budget', function () {
-    $plan = $this->scheduler->compute(
-        outline([
-            ['День 1', 9, ['A', 'B']],
-            ['День 2', 9, ['C', 'D']],
+            ['Сцена 1', 14, ['A', 'B']],
+            ['Сцена 2', 14, ['C', 'D']],
         ]),
         minutesPerDay: 20,
         eventDate: day('2026-09-02'),
@@ -224,14 +279,14 @@ it('gives the final day every checkpoint of the plan, in day order, and no colle
         ->and($final->checkpoints)->toBe(['слышно: A', 'слышно: B', 'слышно: C', 'слышно: D']);
 });
 
-// ── scenario 4: 7 дней ────────────────────────────────────────────────────────────────────────
+// ── the calendar and the step ─────────────────────────────────────────────────────────────────
 
-it('7 дней / 20 мин, need 27: three teaching days, three free — every other day', function () {
+it('7 дней / 20 мин, need 27: two teaching days and four free, spread three apart', function () {
     $plan = $this->scheduler->compute(
         outline([
-            ['День 1', 9, ['A', 'B']],
-            ['День 2', 9, ['C', 'D']],
-            ['День 3', 9, ['E', 'F']],
+            ['Сцена 1', 9, ['A', 'B']],
+            ['Сцена 2', 9, ['C', 'D']],
+            ['Сцена 3', 9, ['E', 'F']],
         ]),
         minutesPerDay: 20,
         eventDate: day('2026-09-06'),
@@ -240,18 +295,18 @@ it('7 дней / 20 мин, need 27: three teaching days, three free — every o
 
     expect($plan->maxDays)->toBe(7)
         ->and($plan->need)->toBe(27)
-        ->and($plan->introDays)->toBe(3)
-        ->and($plan->restDays)->toBe(3)          // 6 teaching slots − 3 used
+        ->and($plan->introDays)->toBe(2)
+        ->and($plan->restDays)->toBe(4)
         ->and($plan->fits)->toBeTrue()
-        ->and($plan->step)->toBe(2)
+        ->and($plan->step)->toBe(3)
         ->and(array_map(fn ($d) => $d->scheduledOn->format('Y-m-d'), $plan->days))
-        ->toBe(['2026-08-31', '2026-09-02', '2026-09-04', '2026-09-06']);
+        ->toBe(['2026-08-31', '2026-09-03', '2026-09-06']);
 });
 
 it('runs teaching days back to back when the slack is smaller than the teaching', function () {
     // 5 days → 4 teaching slots, 3 used, 1 spare: 1 < 3, so no room to breathe.
     $plan = $this->scheduler->compute(
-        outline([['День 1', 9, ['A', 'B']], ['День 2', 9, ['C', 'D']], ['День 3', 9, ['E', 'F']]]),
+        outline([['Сцена 1', 14, ['A', 'B']], ['Сцена 2', 14, ['C', 'D']], ['Сцена 3', 14, ['E', 'F']]]),
         minutesPerDay: 20,
         eventDate: day('2026-09-04'),
         today: day('2026-08-31'),
@@ -264,14 +319,12 @@ it('runs teaching days back to back when the slack is smaller than the teaching'
         ->toBe(['2026-08-31', '2026-09-01', '2026-09-02', '2026-09-04']);
 });
 
-// ── scenario 5: 30 дней ───────────────────────────────────────────────────────────────────────
-
-it('30 дней / 40 мин, need 48: three teaching days spread out, 26 days of slack, everything fits', function () {
+it('30 дней / 40 мин, need 72: three teaching days spread out, 26 days of slack, everything fits', function () {
     $plan = $this->scheduler->compute(
         outline([
-            ['День 1', 16, ['A', 'B']],
-            ['День 2', 16, ['C', 'D']],
-            ['День 3', 16, ['E', 'F']],
+            ['Сцена 1', 24, ['A', 'B']],
+            ['Сцена 2', 24, ['C', 'D']],
+            ['Сцена 3', 24, ['E', 'F']],
         ]),
         minutesPerDay: 40,
         eventDate: day('2026-09-29'),
@@ -279,8 +332,8 @@ it('30 дней / 40 мин, need 48: three teaching days spread out, 26 days of
     );
 
     expect($plan->maxDays)->toBe(30)
-        ->and($plan->capacity)->toBe(16)
-        ->and($plan->need)->toBe(48)
+        ->and($plan->capacity)->toBe(24)
+        ->and($plan->need)->toBe(72)
         ->and($plan->introDays)->toBe(3)
         ->and($plan->restDays)->toBe(26)
         ->and($plan->fits)->toBeTrue()
@@ -294,11 +347,9 @@ it('30 дней / 40 мин, need 48: three teaching days spread out, 26 days of
         ->toBe(['2026-08-31', '2026-09-03', '2026-09-06', '2026-09-29']);
 });
 
-// ── the calendar ──────────────────────────────────────────────────────────────────────────────
-
 it('refuses a past event date instead of clamping it to today', function () {
     $this->scheduler->compute(
-        outline([['День 1', 9, ['A']]]),
+        outline([['Сцена', 9, ['A']]]),
         minutesPerDay: 20,
         eventDate: day('2026-08-29'),
         today: day('2026-08-31'),
@@ -307,7 +358,7 @@ it('refuses a past event date instead of clamping it to today', function () {
 
 it('ignores the time of day on both ends', function () {
     $plan = $this->scheduler->compute(
-        outline([['День 1', 9, ['A']]]),
+        outline([['Сцена', 9, ['A']]]),
         minutesPerDay: 20,
         eventDate: new DateTimeImmutable('2026-09-01 03:00:00'),
         today: new DateTimeImmutable('2026-08-31 23:30:00'),
@@ -318,47 +369,55 @@ it('ignores the time of day on both ends', function () {
 
 // ── packing ───────────────────────────────────────────────────────────────────────────────────
 
-it('shares a day budget over its abilities without inflating the total', function () {
-    // 16 over three abilities is 6 + 5 + 5, not 6 + 6 + 6. Rounding each one up would say the day
-    // needs 18 and would report a plan that fits as one that does not.
-    $skills = outline([['День', 16, ['A', 'B', 'C']]])->skills();
-
-    expect(array_map(fn ($s) => $s->estTerms, $skills))->toBe([6, 5, 5])
-        ->and(array_sum(array_map(fn ($s) => $s->estTerms, $skills)))->toBe(16);
-});
-
-it('packs by cumulative position, so three 5-term abilities make two days and not three', function () {
+it('packs by cumulative position, so three 5-card abilities make two days and not three', function () {
     $plan = $this->scheduler->compute(
-        outline([['День', 15, ['A', 'B', 'C']]]),   // 5 + 5 + 5
-        minutesPerDay: 20,                          // capacity 9
+        outline([['Сцена', 15, ['A', 'B', 'C']]]),   // 5 + 5 + 5
+        minutesPerDay: 20,                           // capacity 14
         eventDate: day('2026-09-02'),
         today: day('2026-08-31'),
     );
 
     expect($plan->introDays)->toBe(2)
         ->and($plan->days[0]->skills)->toHaveCount(2)
-        // Two abilities worth 10 landed here and the day still asks for exactly 9 — the number of
-        // cards that fit in 20 minutes. The overflow is in the DEMAND, which is what `fits` is
-        // about; it is not something the day is allowed to buy its way out of.
-        ->and($plan->days[0]->termBudget)->toBe(9)
+        // Ten cards' worth of abilities landed here and the day still asks for exactly 14 — the
+        // number of cards that fit in 20 minutes. The budget is the learner's minutes, not an
+        // arithmetic leftover.
+        ->and($plan->days[0]->termBudget)->toBe(14)
         ->and($plan->days[1]->skills)->toHaveCount(1)
-        ->and($plan->days[1]->termBudget)->toBe(9);
+        ->and($plan->days[1]->termBudget)->toBe(14);
 });
 
-it('names a merged day after its main ability, since no outline day title covers it', function () {
+it('never leaves a teaching day with nothing on it', function () {
+    // Two abilities over two days: the packer would put both on day 1 by cumulative position and
+    // leave day 2 empty, which is a day the learner opens onto nothing.
+    $plan = $this->scheduler->compute(
+        outline([['Сцена 1', 5, ['A']], ['Сцена 2', 5, ['B']]]),
+        minutesPerDay: 10,               // capacity 7 — need 10, so two days by ceil
+        eventDate: day('2026-09-02'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->introDays)->toBe(2)
+        ->and($plan->days[0]->skills)->toHaveCount(1)
+        ->and($plan->days[1]->skills)->toHaveCount(1);
+});
+
+it('names a day after the scene it came from, and a merged day after both', function () {
     $plan = $this->scheduler->compute(
         outline([['Первый', 4, ['A']], ['Второй', 4, ['B']]]),
-        minutesPerDay: 20,                          // capacity 9 — both abilities land on one day
+        minutesPerDay: 20,                          // capacity 14 — both abilities land on one day
         eventDate: day('2026-09-01'),
         today: day('2026-08-31'),
     );
 
     expect($plan->introDays)->toBe(1)
         ->and($plan->days[0]->sourceSceneIndex)->toBeNull()
-        ->and($plan->days[0]->title)->toBe('A');
+        // «A · B» and not «A»: the learner reads this line to decide whether to open the day, and
+        // naming it after the first ability hides half of what the day does.
+        ->and($plan->days[0]->title)->toBe('Первый · Второй');
 });
 
-it('gives a merged day ONE conversation — the one its first ability came from', function () {
+it('gives a merged day ONE conversation on the day screen, and BOTH scenes in the brief', function () {
     $plan = $this->scheduler->compute(
         outline([['Первый', 4, ['A']], ['Второй', 4, ['B']]]),
         minutesPerDay: 20,
@@ -370,34 +429,79 @@ it('gives a merged day ONE conversation — the one its first ability came from'
         // …and the checkpoints are the DAY's own, in its own order. They moved off the role with
         // v0.2 — a checkpoint belongs to the ability it proves, so a scene with no interlocutor
         // stopped being a scene whose promises nothing checks.
-        ->and($plan->days[0]->checkpoints)->toBe(['слышно: A', 'слышно: B']);
+        ->and($plan->days[0]->checkpoints)->toBe(['слышно: A', 'слышно: B'])
+        // The brief keeps them apart, because they ARE two conversations with two people.
+        ->and($plan->days[0]->scenes)->toHaveCount(2)
+        ->and($plan->days[0]->scenes[1]['role']['name'])->toBe('собеседник 2');
 });
 
-it('computes the day phrase/word split as ceil(0.45 × budget)', function () {
+it('numbers the day`s checkpoints 1..N straight through, in ability order', function () {
     $plan = $this->scheduler->compute(
-        outline([['День', 9, ['A', 'B']]]),
+        outline([['Первый', 4, ['A']], ['Второй', 8, ['B', 'C']]]),
         minutesPerDay: 20,
         eventDate: day('2026-09-01'),
         today: day('2026-08-31'),
     );
 
-    expect($plan->days[0]->phraseCount())->toBe(5)
-        ->and($plan->days[0]->wordCount())->toBe(4);
+    $json = $plan->days[0]->dayJson();
+
+    expect(array_keys($json))->toBe(['index', 'title', 'scenes', 'checkpoints'])
+        ->and($json['checkpoints'])->toBe(['слышно: A', 'слышно: B', 'слышно: C'])
+        ->and($json['scenes'][0]['skills'][0]['checkpoint_index'])->toBe(1)
+        ->and($json['scenes'][1]['skills'][0]['checkpoint_index'])->toBe(2)
+        ->and($json['scenes'][1]['skills'][1]['checkpoint_index'])->toBe(3);
+});
+
+it('splits one scene across two days and gives each day only its own abilities', function () {
+    $plan = $this->scheduler->compute(
+        outline([['Длинная сцена', 20, ['A', 'B', 'C', 'D']]]),   // 5 each, capacity 14
+        minutesPerDay: 20,
+        eventDate: day('2026-09-02'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->introDays)->toBe(2)
+        // Both days carry the same scene, with the same person — and each one only the abilities
+        // that landed on it. Numbering them «часть 1 / часть 2» would invent a distinction the
+        // plan does not make.
+        ->and($plan->days[0]->title)->toBe('Длинная сцена')
+        ->and($plan->days[1]->title)->toBe('Длинная сцена')
+        ->and($plan->days[0]->scenes)->toHaveCount(1)
+        ->and($plan->days[1]->scenes)->toHaveCount(1)
+        ->and($plan->days[0]->scenes[0]['skills'])->toHaveCount(3)
+        ->and($plan->days[1]->scenes[0]['skills'])->toHaveCount(1)
+        // …and each day numbers its OWN checkpoints from 1, because «N» is a property of the day.
+        ->and($plan->days[1]->scenes[0]['skills'][0]['checkpoint_index'])->toBe(1);
+});
+
+it('asks every teaching day for exactly capacity, whatever landed on it', function () {
+    // The day's LENGTH is the learner's choice of minutes, not an arithmetic leftover. A day that
+    // asked for the sum of its abilities would be a different length on Tuesday than on Monday for
+    // no reason the learner chose — and would hand the validator a card count P1 picked.
+    $plan = $this->scheduler->compute(
+        outline([['Сцена 1', 14, ['A', 'B']], ['Сцена 2', 4, ['C']]]),
+        minutesPerDay: 20,
+        eventDate: day('2026-09-02'),
+        today: day('2026-08-31'),
+    );
+
+    expect($plan->capacity)->toBe(14)
+        ->and(array_map(fn ($d) => $d->termBudget, $plan->days))->toBe([14, 14, 0]);
 });
 
 // ── A7 ────────────────────────────────────────────────────────────────────────────────────────
 
 it('A7 flags a tight deadline and names what is at risk, without cutting anything', function () {
     $plan = $this->scheduler->compute(
-        outline([['День 1', 9, ['A', 'B']], ['День 2', 9, ['C', 'D']], ['День 3', 9, ['E', 'F']]]),
+        outline([['Сцена 1', 9, ['A', 'B']], ['Сцена 2', 9, ['C', 'D']], ['Сцена 3', 9, ['E', 'F']]]),
         minutesPerDay: 20,
         eventDate: day('2026-09-06'),
         today: day('2026-08-31'),
     );
 
-    // Four days later, nothing done, event unchanged: two days left, one of them the final one.
+    // Five days later, nothing done, event unchanged: two days left, one of them the final one.
     $check = $this->scheduler->recheck(
-        remainingIntroDays: array_slice($plan->days, 0, 3),
+        remainingIntroDays: $plan->days,
         minutesPerDay: 20,
         eventDate: day('2026-09-06'),
         today: day('2026-09-05'),
@@ -406,14 +510,14 @@ it('A7 flags a tight deadline and names what is at risk, without cutting anythin
     expect($check->daysRemaining)->toBe(2)
         ->and($check->introDaysRemaining)->toBe(1)
         ->and($check->needRemaining)->toBe(27)
-        ->and($check->capacity)->toBe(9)
+        ->and($check->capacity)->toBe(14)
         ->and($check->deadlineTight)->toBeTrue()
-        ->and(array_map(fn ($s) => $s->outcome, $check->atRisk))->toBe(['C', 'D', 'E', 'F']);
+        ->and(array_map(fn ($s) => $s->outcome, $check->atRisk))->toBe(['D', 'E', 'F']);
 });
 
 it('A7 says nothing is tight while the plan is on schedule', function () {
     $plan = $this->scheduler->compute(
-        outline([['День 1', 9, ['A', 'B']], ['День 2', 9, ['C', 'D']]]),
+        outline([['Сцена 1', 14, ['A', 'B']], ['Сцена 2', 14, ['C', 'D']]]),
         minutesPerDay: 20,
         eventDate: day('2026-09-06'),
         today: day('2026-08-31'),
@@ -430,40 +534,20 @@ it('A7 says nothing is tight while the plan is on schedule', function () {
         ->and($check->atRisk)->toBe([]);
 });
 
-it('asks every teaching day for exactly capacity, whatever landed on it', function () {
-    // The day's LENGTH is the learner's choice of minutes, not an arithmetic leftover. A day that
-    // asked for the sum of its abilities would be a different length on Tuesday than on Monday for
-    // no reason the learner chose — and would hand the validator a card count P1 picked.
-    $plan = $this->scheduler->compute(
-        outline([['День 1', 9, ['A', 'B']], ['День 2', 4, ['C']]]),
-        minutesPerDay: 20,
-        eventDate: day('2026-09-02'),
-        today: day('2026-08-31'),
-    );
-
-    expect($plan->capacity)->toBe(9)
-        ->and(array_map(fn ($d) => $d->termBudget, $plan->days))->toBe([9, 9, 0])
-        // …and the phrase/word split follows the budget, so the model is handed 5 + 4 both days.
-        ->and($plan->days[0]->phraseCount())->toBe(5)
-        ->and($plan->days[1]->phraseCount())->toBe(5);
-});
-
 // ── the step and the cap (PLAN-1b Ч.1) ────────────────────────────────────────────────────────
 
-/** `$n` introduction days' worth of demand: one ability per day, priced at a full day each. */
-function collections(int $n, int $budget = 9): PlanOutline
+/** `$n` introduction days' worth of demand: one ability per scene, priced at a full day each. */
+function collections(int $n, int $cost = 14): PlanOutline
 {
-    $days = [];
+    $scenes = [];
     for ($i = 1; $i <= $n; $i++) {
-        $days[] = ['Коллекция ' . $i, $budget, ['умение ' . $i]];
+        $scenes[] = ['Коллекция ' . $i, $cost, ['умение ' . $i]];
     }
 
-    return outline($days);
+    return outline($scenes);
 }
 
 it('30 дней / 10 коллекций: step 3 — the teaching is spread, not stacked into the first week', function () {
-    // 30 teaching days over 10 introduction days is 3, which is also the ceiling. The old
-    // two-valued spacing would have said «через день» and finished the plan on day 20.
     $plan = $this->scheduler->compute(
         collections(10),
         minutesPerDay: 20,
@@ -501,8 +585,6 @@ it('5 дней / 4 коллекции: step 1 — no room to spread, so the days
 });
 
 it('7 дней / 2 коллекции: step 3 — the ceiling holds even though the room would allow more', function () {
-    // 7 teaching days over 2 introduction days is 3 exactly; had it been 8 the clamp would say 3
-    // as well, and the two spare days go to review rather than to a longer wait.
     $plan = $this->scheduler->compute(
         collections(2),
         minutesPerDay: 20,
@@ -518,8 +600,6 @@ it('7 дней / 2 коллекции: step 3 — the ceiling holds even though 
 });
 
 it('caps a 40-collection plan at 14 introduction days and drops the rest as `cap`', function () {
-    // A year of calendar and demand for forty days of teaching. The calendar is not the binding
-    // constraint here, so «перенеси дату» is the wrong advice and `drop_reason` says so.
     $plan = $this->scheduler->compute(
         collections(40),
         minutesPerDay: 20,
@@ -527,8 +607,7 @@ it('caps a 40-collection plan at 14 introduction days and drops the rest as `cap
         today: day('2026-08-31'),
     );
 
-    expect($plan->need)->toBe(360)
-        ->and($plan->introDays)->toBe(PlanScheduler::MAX_INTRO_DAYS)
+    expect($plan->need)->toBe(560)
         ->and($plan->introDays)->toBe(14)
         ->and($plan->fits)->toBeFalse()
         ->and($plan->dropReason)->toBe('cap')
@@ -569,6 +648,6 @@ it('A7 re-checks against the cap as well as against the calendar', function () {
     );
 
     expect($check->introDaysRemaining)->toBe(14)
-        ->and($check->needRemaining)->toBe(126)
+        ->and($check->needRemaining)->toBe(196)
         ->and($check->deadlineTight)->toBeFalse();
 });

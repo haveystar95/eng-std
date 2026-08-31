@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Service\PlanDaysFromComputed;
+use App\Modules\Learning\Application\Service\PlanSkillsFromComputed;
 use App\Modules\Learning\Domain\Exception\InvalidPlanOutline;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
+use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Service\PlanScheduler;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
@@ -31,8 +33,10 @@ final readonly class ReschedulePlanHandler
     public function __construct(
         private PlanRepository $plans,
         private PlanDayRepository $days,
+        private PlanSkillRepository $skills,
         private PlanScheduler $scheduler,
         private PlanDaysFromComputed $daysFromComputed,
+        private PlanSkillsFromComputed $skillsFromComputed,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -75,6 +79,9 @@ final readonly class ReschedulePlanHandler
             }
             $plan->reschedule($computed->toArray(), $minutes, $eventDate);
             $this->plans->save($plan);
+            // A7 rewrites BOTH: the abilities get their new `day_index` and their new verdict about
+            // whether the deadline still holds them, and the days are rebuilt from that.
+            $this->skills->replaceAll($plan->id(), $this->skillsFromComputed->build($outline, $computed));
             $this->days->replaceAll($plan->id(), $this->daysFromComputed->build($plan->id(), $computed));
         });
     }

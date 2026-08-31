@@ -61,7 +61,10 @@ final readonly class ClaimPlanDayHandler
             )) : [];
 
             $budget = is_int($brief['term_budget'] ?? null) ? $brief['term_budget'] : 0;
-            $phrases = is_int($brief['phrase_count'] ?? null) ? $brief['phrase_count'] : (int) ceil(0.45 * $budget);
+            // The day's split between lines and substitutions, computed HERE from the budget and
+            // no longer frozen into the day row when the plan was scheduled. A day generated a
+            // week after the plan was made has to be asked for the split its budget implies today.
+            $phrases = (int) ceil(0.45 * $budget);
 
             return new PlanDayGenerationBrief(
                 planId: $plan->id()->value,
@@ -89,21 +92,20 @@ final readonly class ClaimPlanDayHandler
                 // them open — and because a second module reading them would need its own opinion
                 // about which day is «this» one.
                 previousCheckpoints: $this->otherCheckpoints($plan->id(), $day->dayIndex()),
+                // THE DAY AS THE PROMPT READS IT — four keys, assembled by the scheduler when the
+                // plan was made ({@see ComputedDay::dayJson()}) and read back out of the day's own
+                // snapshot. The checkpoints stand on the DAY and no longer inside the role: they
+                // moved with v0.2, because a checkpoint belongs to the ability it proves, and a
+                // day json that hid them under the interlocutor gave a scene with nobody to talk
+                // to nothing to close.
+                //
+                // `term_budget` is deliberately not in here: it is a placeholder of its own,
+                // because it is a fact about the learner's minutes rather than about the skeleton.
                 dayJson: [
                     'index' => $day->dayIndex(),
                     'title' => $day->title(),
-                    'term_budget' => $budget,
-                    'outcome' => array_map(
-                        static fn (array $s): mixed => $s['outcome'] ?? '',
-                        $day->skills(),
-                    ),
-                    'role' => $brief['role'] ?? null,
-                    // The checkpoints stand on the DAY and no longer inside the role. They moved
-                    // with v0.2 — a checkpoint belongs to the ability it proves — and a day json
-                    // that hid them under the interlocutor gave a scene with no interlocutor no
-                    // checkpoints to close.
+                    'scenes' => is_array($brief['scenes'] ?? null) ? $brief['scenes'] : [],
                     'checkpoints' => $checkpoints,
-                    'topics' => $brief['topics'] ?? [],
                 ],
             );
         });

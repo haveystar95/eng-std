@@ -8,8 +8,10 @@ use App\Modules\Learning\Application\Port\LearnerProfileReader;
 use App\Modules\Learning\Application\Dto\PlanOutlineBrief;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
 use App\Modules\Learning\Application\Service\PlanDaysFromComputed;
+use App\Modules\Learning\Application\Service\PlanSkillsFromComputed;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
+use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Service\PlanScheduler;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
@@ -42,10 +44,12 @@ final readonly class BuildPlanOutlineHandler
     public function __construct(
         private PlanRepository $plans,
         private PlanDayRepository $days,
+        private PlanSkillRepository $skills,
         private PlanOutlinePort $outlines,
         private LearnerProfileReader $profiles,
         private PlanScheduler $scheduler,
         private PlanDaysFromComputed $daysFromComputed,
+        private PlanSkillsFromComputed $skillsFromComputed,
         private TransactionManager $tx,
         private Clock $clock,
     ) {}
@@ -85,6 +89,10 @@ final readonly class BuildPlanOutlineHandler
         $this->tx->run(function () use ($plan, $answer, $outline, $computed): void {
             $plan->applyOutline($answer->payload, $computed->toArray(), $outline);
             $this->plans->save($plan);
+            // The abilities first, then the days: the rows are the source and the days are what
+            // the scheduler made of them today. Both are rewritten together, inside one
+            // transaction, so no reader ever sees an ability on a day that no longer exists.
+            $this->skills->replaceAll($plan->id(), $this->skillsFromComputed->build($outline, $computed));
             $this->days->replaceAll($plan->id(), $this->daysFromComputed->build($plan->id(), $computed));
         });
     }

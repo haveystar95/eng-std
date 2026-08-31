@@ -64,11 +64,17 @@ final class PlanDaysFromComputed
     }
 
     /**
-     * The interlocutor, the checkpoints and the day's topics in one blob.
+     * The interlocutor, the checkpoints, the day's scenes and its topics in one blob.
      *
      * The checkpoints live HERE and not only on the role, because the final day has checkpoints
      * and no role at all — every checkpoint of the plan, assembled by the server. One field the
      * conversation can read on either kind of day.
+     *
+     * `phrase_count` and `word_count` are GONE from this snapshot. They were the day's split
+     * between lines and substitutions, frozen at scheduling time from a formula that has since
+     * become three numbers; freezing them meant a day generated a week later would be asked for a
+     * split nobody could re-derive. The counts are computed where they are used, from the day's
+     * budget, which is the only input they ever had.
      *
      * @return array<string, mixed>|null
      */
@@ -82,8 +88,11 @@ final class PlanDaysFromComputed
             'checkpoints' => $day->checkpoints,
             'topics' => $day->topics,
             'term_budget' => $day->termBudget,
-            'phrase_count' => $day->phraseCount(),
-            'word_count' => $day->wordCount(),
+            // The day AS P2 READS IT, computed once by the scheduler and stored beside the day it
+            // describes. Two short scenes merged into one day are two entries here, and a scene
+            // split over two days appears in both with only the abilities that landed there —
+            // neither of which the single `role` below can say.
+            'scenes' => $day->scenes,
             'role' => $day->role === null ? null : [
                 'name' => $day->role->name,
                 'opening_lines' => $day->role->openingLines,

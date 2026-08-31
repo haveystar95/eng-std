@@ -107,7 +107,7 @@ it('builds the skeleton and lays the days on the calendar itself', function () {
 
     // Three days to the event → two teaching days and a final one; the final day is on the event.
     expect($plan['computed']['max_days'])->toBe(3)
-        ->and($plan['computed']['capacity'])->toBe(9)
+        ->and($plan['computed']['capacity'])->toBe(14)
         ->and($plan['days'])->toHaveCount(3)
         ->and($plan['days'][2]['kind'])->toBe('final')
         ->and($plan['days'][2]['collection_id'])->toBeNull()
@@ -147,7 +147,7 @@ it('recomputes the calendar with no model call when the minutes change', functio
     // The model's answer is untouched; only the arithmetic moved.
     expect(DB::table('learning_plans')->where('id', $plan['id'])->value('outline'))->toBe($outlineBefore)
         ->and($after['minutes_per_day'])->toBe(40)
-        ->and($after['computed']['capacity'])->toBe(16)
+        ->and($after['computed']['capacity'])->toBe(24)
         ->and($after['computed']['capacity'])->not->toBe($outlined['computed']['capacity']);
 });
 
@@ -168,6 +168,47 @@ it('drops a day and re-indexes the rest, editing the stored outline with it', fu
         // The stored outline moved too — otherwise the next reschedule would bring the day back.
         ->and(count(json_decode((string) DB::table('learning_plans')->where('id', $plan['id'])->value('outline'), true)['scenes']))
         ->toBe($introBefore - 1);
+});
+
+it('writes the abilities as rows, with the day each one landed on', function () {
+    // `plan_skills` is the SOURCE and the days are what the scheduler made of it today. A row per
+    // ability, in P1's order, carrying the scheduler's two verdicts: which day, and dropped or not.
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+
+    $rows = DB::table('plan_skills')->where('plan_id', $plan['id'])->orderBy('position')->get();
+
+    expect($rows)->toHaveCount(4)                               // 2 scenes × 2 abilities
+        ->and($rows->pluck('position')->all())->toBe([0, 1, 2, 3])
+        ->and($rows->pluck('scene_index')->all())->toBe([1, 1, 2, 2])
+        ->and($rows->pluck('dropped')->unique()->all())->toBe([false])
+        // Every ability is scheduled onto some day, and the days it names exist.
+        ->and($rows->pluck('day_index')->filter()->count())->toBe(4)
+        ->and(json_decode((string) $rows[0]->role, true)['name'])->toBe('собеседник')
+        ->and(json_decode((string) $rows[0]->topics, true))->toBe(['область 1']);
+});
+
+it('rewrites the abilities when the calendar is recomputed, keeping them the source of the days', function () {
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+    $plan = createPlan($this, $token, ['minutes_per_day' => 40]);
+    outlinePlan($this, $token, $plan['id']);
+
+    $daysBefore = DB::table('plan_skills')->where('plan_id', $plan['id'])->pluck('day_index')->unique()->count();
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->patchJson("/api/v1/plans/{$plan['id']}/outline", ['minutes_per_day' => 10])
+        ->assertOk();
+
+    $rows = DB::table('plan_skills')->where('plan_id', $plan['id'])->orderBy('position')->get();
+    $daysAfter = $rows->pluck('day_index')->unique()->count();
+
+    // Fewer minutes, smaller days, the same abilities spread over more of them — and not one row
+    // duplicated: A7 REPLACES the set rather than adding to it.
+    expect($rows)->toHaveCount(4)
+        ->and($daysAfter)->toBeGreaterThan($daysBefore);
 });
 
 it('refuses a PATCH that changes nothing', function () {
@@ -206,7 +247,7 @@ it('starts the plan, writes day 1 as a real collection and enrols its terms stri
 
     // A real collection with real terms — every trainer works on it without knowing plans exist.
     $termIds = DB::table('collection_items')->where('collection_id', $day1->collection_id)->pluck('term_id');
-    expect($termIds)->toHaveCount(9);
+    expect($termIds)->toHaveCount(14);
 
     // Strictly enrolled, with the plan named as the reason.
     $sources = DB::table('user_term_progress')
@@ -214,7 +255,7 @@ it('starts the plan, writes day 1 as a real collection and enrols its terms stri
         ->whereIn('term_id', $termIds)
         ->pluck('enrollment_sources');
 
-    expect($sources)->toHaveCount(9);
+    expect($sources)->toHaveCount(14);
     foreach ($sources as $raw) {
         expect(json_decode((string) $raw, true))->toBe(['plan:' . $plan['id']]);
     }
@@ -234,9 +275,9 @@ it('writes the two plan facts onto the terms — is_line and a difficulty score'
         ->where('ci.collection_id', $collectionId)
         ->get(['t.is_line', 't.difficulty_score']);
 
-    // 9 terms → ceil(0.45 × 9) = 5 replies.
-    expect($terms->where('is_line', true))->toHaveCount(5)
-        ->and($terms->where('is_line', false))->toHaveCount(4)
+    // 14 terms → ceil(0.45 × 14) = 7 replies.
+    expect($terms->where('is_line', true))->toHaveCount(7)
+        ->and($terms->where('is_line', false))->toHaveCount(7)
         ->and($terms->whereNull('difficulty_score'))->toHaveCount(0);
 });
 
@@ -535,7 +576,7 @@ it('leaves a ledger row for every paid call the plan made', function () {
         ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.1.1'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
-        ->and($rows[1]->size)->toBe(9);
+        ->and($rows[1]->size)->toBe(14);
 });
 
 it('fails the day loudly when the ledger will not take the row', function () {

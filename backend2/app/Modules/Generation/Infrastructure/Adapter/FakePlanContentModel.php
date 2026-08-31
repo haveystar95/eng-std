@@ -46,6 +46,9 @@ final class FakePlanContentModel implements ContentModelPort
 
     public const FAKE_EST_TERMS = 4;
 
+    /** The top of the range P1 is allowed to price an ability at — what a marked goal uses. */
+    public const FAKE_EST_TERMS_MAX = 8;
+
     public function provider(): ProviderId
     {
         return ProviderId::OpenAi;
@@ -90,9 +93,12 @@ final class FakePlanContentModel implements ContentModelPort
     private function outline(string $prompt): array
     {
         $goal = $this->after($prompt, 'GOAL:');
-        $sceneCount = preg_match(self::SCENES_MARKER, $goal, $m) === 1
-            ? max(1, min(5, (int) $m[1]))
-            : self::FAKE_SCENES;
+        $marked = preg_match(self::SCENES_MARKER, $goal, $m) === 1;
+        $sceneCount = $marked ? max(1, min(5, (int) $m[1])) : self::FAKE_SCENES;
+        // A goal big enough to need five scenes has abilities at the top of the range too. Without
+        // this, «больше сцен» would not buy more DAYS — the days come from the sum of the prices,
+        // and five cheap scenes still fit in three days.
+        $estTerms = $marked ? self::FAKE_EST_TERMS_MAX : self::FAKE_EST_TERMS;
         // The marker is a TEST directive, not content, so it never reaches the skeleton — the
         // outline gate refuses a Latin word on the screen the learner reads, and it is right to.
         $goal = trim((string) preg_replace(self::SCENES_MARKER, '', $goal));
@@ -107,7 +113,7 @@ final class FakePlanContentModel implements ContentModelPort
                     // looking for it. Two doubles that disagree about the shape of a plan produce
                     // a day whose checkpoints nothing closes.
                     'checkpoint' => "слышно, как он говорит вещь {$scene}.{$skill}",
-                    'est_terms' => self::FAKE_EST_TERMS,
+                    'est_terms' => $estTerms,
                     'topics' => ["область {$scene}"],
                 ];
             }

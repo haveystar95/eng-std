@@ -36,11 +36,13 @@ use App\Modules\Learning\Application\Port\ModeFallbackReporter;
 use App\Modules\Learning\Infrastructure\Adapter\LoggingModeFallbackReporter;
 use App\Modules\Learning\Application\Port\PlanTermReleaser;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
+use App\Modules\Learning\Domain\Repository\PlanSkillRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentEnabledModesReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Port\PlanStandingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanDayRepository;
+use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanSkillRepository;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanModeSettingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanStandingsReader;
 use App\Modules\Learning\Infrastructure\Eloquent\EloquentPlanRepository;
@@ -121,6 +123,7 @@ final class LearningServiceProvider extends ServiceProvider
         // the model catalogue they are made of. Everything below is Learning's own.
         $this->app->bind(PlanRepository::class, EloquentPlanRepository::class);
         $this->app->bind(PlanDayRepository::class, EloquentPlanDayRepository::class);
+        $this->app->bind(PlanSkillRepository::class, EloquentPlanSkillRepository::class);
         $this->app->bind(PlanTermReleaser::class, EloquentPlanTermReleaser::class);
         // Singleton for the same reason the global reader is one: a per-request memo over one query.
         // A DIFFERENT instance from that reader even though it is the same table — the two read
