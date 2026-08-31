@@ -119,4 +119,6 @@ class _Envelope implements PlanSessionEnvelope {
   bool isDayTaskAt(int i) => i < dayCards;
   @override
   int get dayTaskCount => dayCards;
+  @override
+  ({String kind, String title})? originAt(int i) => null;
 }

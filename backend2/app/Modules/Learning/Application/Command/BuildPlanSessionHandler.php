@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Learning\Application\Command;
 
+use App\Modules\Collections\Application\Port\CollectionPairReader;
 use App\Modules\Collections\Application\Port\UserCollectionTermsReader;
 use App\Modules\Learning\Application\Dto\DueTermView;
 use App\Modules\Learning\Application\Dto\PlanDayProgressView;
@@ -12,6 +13,7 @@ use App\Modules\Learning\Application\Dto\PlanSessionTaskView;
 use App\Modules\Learning\Application\Dto\PlanSessionView;
 use App\Modules\Learning\Application\Port\EnabledModesReader;
 use App\Modules\Learning\Application\Port\HomePlanReader;
+use App\Modules\Learning\Application\Port\PlanDayCollectionTitles;
 use App\Modules\Learning\Application\Port\ModeAdmissionReader;
 use App\Modules\Learning\Application\Port\PlanModeSettingsReader;
 use App\Modules\Learning\Application\Query\GetDueTerms;
@@ -118,6 +120,8 @@ final readonly class BuildPlanSessionHandler
         private UserCollectionTermsReader $collectionTerms,
         private TermContentReader $content,
         private CardLanguageResolver $languages,
+        private CollectionPairReader $collectionsByTerm,
+        private PlanDayCollectionTitles $planTitles,
         private StudyCardAssembler $assembler,
         private EnabledModesReader $enabledModes,
         private ModeAdmissionReader $admission,
@@ -343,6 +347,43 @@ final readonly class BuildPlanSessionHandler
         ));
     }
 
+    /**
+     * «Отпуск в Италии» — the shelf each of these terms came off, named the way a person names it.
+     *
+     * A card of the top-up is a word the learner met somewhere else. Dropped into the middle of a
+     * plan's lesson with nothing said about it, it reads as part of today — and on the day that
+     * started all this, «Привет, я Алекс, и я работаю бэкенд-разработчиком» turned up in a lesson
+     * about a holiday and the learner did not recognise their own word.
+     *
+     * A collection that IS a plan's day answers as the PLAN: «день 1 плана Отпуск в Италии» is a
+     * folder the learner never made and whose name they would not recognise either.
+     *
+     * @param  list<string>  $termIds
+     * @return array<string, array{kind: string, title: string}>
+     */
+    private function originsFor(LearningPlan $plan, array $termIds): array
+    {
+        if ($termIds === []) {
+            return [];
+        }
+
+        $collections = $this->collectionsByTerm->collectionByTerm($plan->userId(), $termIds);
+        $planTitles = $this->planTitles->titlesByDayCollection(array_values(array_unique(array_map(
+            static fn (array $c): string => $c['id'],
+            $collections,
+        ))));
+
+        $out = [];
+        foreach ($collections as $termId => $collection) {
+            $planTitle = $planTitles[$collection['id']] ?? null;
+            $out[$termId] = $planTitle !== null
+                ? ['kind' => PlanSessionTaskView::ORIGIN_PLAN, 'title' => $planTitle]
+                : ['kind' => PlanSessionTaskView::ORIGIN_COLLECTION, 'title' => $collection['title']];
+        }
+
+        return $out;
+    }
+
     /** Language codes as they compare: «EN» and «en» are one language, «en-GB» is not «en». */
     private static function langKey(string $lang): string
     {
@@ -509,6 +550,13 @@ final readonly class BuildPlanSessionHandler
             ];
         }
 
+        // WHERE EACH REVIEW CARD CAME FROM. Resolved once for the whole session and only for the
+        // top-up: the day's own cards are the day and need no label.
+        $origins = $this->originsFor($plan, array_values(array_unique(array_map(
+            static fn (array $spec): string => (string) $spec['term_id'],
+            array_filter($specs, static fn (array $spec): bool => $spec['day'] === null),
+        ))));
+
         $tasks = [];
         foreach ($specs as $index => $spec) {
             /** @var string $termId */
@@ -557,6 +605,7 @@ final readonly class BuildPlanSessionHandler
                 section: $spec['day'] === null
                     ? PlanSessionTaskView::SECTION_REVIEW
                     : PlanSessionTaskView::SECTION_DAY,
+                origin: $spec['day'] === null ? ($origins[$termId] ?? null) : null,
                 speakingForm: $dealt === ExerciseMode::Speaking
                     ? $stage?->speakingForm($termContent->kind ?? PlanStageLadder::KIND_WORD)
                     : null,

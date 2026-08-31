@@ -247,3 +247,54 @@ it('offers a word no line as a wrong answer, whatever the session is carrying', 
 
     expect($seen)->toBeGreaterThan(0);   // guard: the session really did deal option cards
 });
+
+// ── where a review card says it came from ─────────────────────────────────────────────────────
+
+it('names the shelf a review card came off, and says nothing about the day`s own', function () {
+    // «Привет, я Алекс…» dropped into a lesson about a holiday with nothing said about it read as
+    // part of today, and the learner did not recognise their own word.
+    [$user, $token, $planId] = startedPlan($this);
+
+    $termId = duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
+    DB::table('collections')
+        ->whereIn('id', DB::table('collection_items')->where('term_id', $termId)->pluck('collection_id'))
+        ->update(['title' => 'Аэропорт']);
+
+    $session = planSession($this, $token, $planId);
+
+    foreach ($session['tasks'] as $task) {
+        if ($task['card']['term_id'] === $termId) {
+            expect($task['origin'])->toBe(['kind' => 'collection', 'title' => 'Аэропорт']);
+        }
+        if ($task['section'] === PlanSessionTaskView::SECTION_DAY) {
+            // The day needs no label: it IS today.
+            expect($task['origin'])->toBeNull();
+        }
+    }
+});
+
+it('names the PLAN, not the day`s folder, for a word out of another plan', function () {
+    // A plan day owns a collection titled after the DAY — «Заселиться в отель · Поесть в кафе» —
+    // and that is a folder the learner never made and would not recognise months later. What they
+    // recognise is the plan.
+    [$user, $token, $planId] = startedPlan($this);
+
+    $termId = duePoolTerm($user, 'en', 'ru', 'boarding pass', 'посадочный талон');
+    $collectionId = DB::table('collection_items')->where('term_id', $termId)->value('collection_id');
+    DB::table('collections')->where('id', $collectionId)->update(['title' => 'День 1 — приезд']);
+
+    // That collection is a day of ANOTHER plan of this learner's.
+    $otherPlan = DB::table('learning_plans')->where('id', '<>', $planId)->where('user_id', $user->id)->value('id')
+        ?? DB::table('learning_plans')->where('id', $planId)->value('id');
+    DB::table('learning_plan_days')->where('plan_id', $planId)->where('day_index', 2)
+        ->update(['collection_id' => $collectionId]);
+    DB::table('learning_plans')->where('id', $otherPlan)->update(['title' => 'Поездка в Рим']);
+
+    $session = planSession($this, $token, $planId);
+
+    foreach ($session['tasks'] as $task) {
+        if ($task['card']['term_id'] === $termId) {
+            expect($task['origin'])->toBe(['kind' => 'plan', 'title' => 'Поездка в Рим']);
+        }
+    }
+});

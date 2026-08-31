@@ -627,6 +627,10 @@ abstract interface class PlanSessionEnvelope {
 
   /// How many of the session's cards are the day's own — the index the top-up starts at.
   int get dayTaskCount;
+
+  /// «Отпуск в Италии» — where the review card at [i] came from, or null when it is the day's own
+  /// material (which needs no explanation) or the server did not say.
+  ({String kind, String title})? originAt(int i);
 }
 
 class Profile {

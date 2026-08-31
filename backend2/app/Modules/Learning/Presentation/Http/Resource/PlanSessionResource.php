@@ -56,6 +56,10 @@ final class PlanSessionResource extends JsonResource
                 // `day` | `review` — the same fact as «`from_day_index` is not null», said once
                 // here so every client does not re-derive it (and get it wrong).
                 'section' => $task->section,
+                // «Отпуск в Италии» — where a REVIEW card came from, so the learner is not handed
+                // a word out of nowhere in the middle of a plan's lesson. Null on the day's own
+                // cards, which need no explanation.
+                'origin' => $task->origin,
                 'ordinal' => $task->ordinal,
                 'of_steps' => $task->ofSteps,
                 'from_day_index' => $task->fromDayIndex,

@@ -56,6 +56,33 @@ final class EloquentCollectionPairReader implements CollectionPairReader
         return $out;
     }
 
+    public function collectionByTerm(UserId $userId, array $termIds): array
+    {
+        if ($termIds === []) {
+            return [];
+        }
+
+        $rows = $this->accessible(
+            DB::table('collection_items as ci')->join('collections as c', 'c.id', '=', 'ci.collection_id'),
+            $userId,
+        )
+            ->whereIn('ci.term_id', $termIds)
+            ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
+            ->orderBy('c.id')
+            ->get(['ci.term_id', 'c.id as collection_id', 'c.title']);
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(string) $row->term_id] ??= [
+                'id' => (string) $row->collection_id,
+                'title' => (string) $row->title,
+            ];
+        }
+
+        return $out;
+    }
+
     /**
      * The same access rule as {@see EloquentUserCollectionTermsReader::accessible()} — owned ∪
      * actively subscribed — stated again here rather than shared, because the two readers are in

@@ -558,6 +558,7 @@ class PlanSessionTask {
     required this.softened,
     required this.card,
     this.section = sectionDay,
+    this.origin,
   });
 
   /// This task is the day's own material — it counts towards «день пройден».
@@ -581,6 +582,11 @@ class PlanSessionTask {
   /// [sectionDay] or [sectionReview] — which side of the seam this task is on.
   final String section;
 
+  /// Where a REVIEW card came from — «Отпуск в Италии». Null on the day's own material, which is
+  /// today and needs no explanation. `kind` is `plan` or `collection`; the sentence is written
+  /// here, because the wording is the client's and there are two languages of it.
+  final PlanTaskOrigin? origin;
+
   bool get isDay => section != sectionReview;
 
   factory PlanSessionTask.fromJson(Map<String, dynamic> j) {
@@ -597,7 +603,28 @@ class PlanSessionTask {
       // field existed. `from_day_index: null` — decoded as 0 above — is a term of no day of this
       // plan, which is exactly what the top-up is.
       section: (j['section'] as String?) ?? (fromDay > 0 ? sectionDay : sectionReview),
+      origin: PlanTaskOrigin.fromJson(j['origin'] as Map<String, dynamic>?),
     );
+  }
+}
+
+/// Where a review card came from, as the server names it.
+class PlanTaskOrigin {
+  const PlanTaskOrigin({required this.kind, required this.title});
+
+  /// `plan` — another plan of this learner's; `collection` — an ordinary folder.
+  final String kind;
+
+  /// «Отпуск в Италии» — the plan's name, or the folder's.
+  final String title;
+
+  bool get isPlan => kind == 'plan';
+
+  static PlanTaskOrigin? fromJson(Map<String, dynamic>? j) {
+    final title = (j?['title'] as String?)?.trim();
+    if (title == null || title.isEmpty) return null;
+
+    return PlanTaskOrigin(kind: (j?['kind'] as String?) ?? 'collection', title: title);
   }
 }
 
@@ -654,6 +681,14 @@ class PlanSession implements PlanSessionEnvelope {
 
   @override
   int get dayTaskCount => dayTasks.length;
+
+  @override
+  ({String kind, String title})? originAt(int i) {
+    if (i < 0 || i >= tasks.length) return null;
+    final origin = tasks[i].origin;
+
+    return origin == null ? null : (kind: origin.kind, title: origin.title);
+  }
 
   @override
   int? carriedFromAt(int i) {

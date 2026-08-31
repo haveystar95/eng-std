@@ -665,6 +665,22 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                               _SectionSeam(label: l.planReviewSection),
                               const SizedBox(height: 18),
                             ],
+                            // «Из плана: Отпуск в Италии» — said on EVERY review card, not only
+                            // the first: the seam scrolls away and the question «почему мне это
+                            // показывают» arrives on card nine, not on card one.
+                            if (plan.originAt(_playing) case final origin?) ...[
+                              Text(
+                                (origin.kind == 'plan'
+                                        ? l.planReviewFromPlan(origin.title)
+                                        : l.planReviewFromCollection(origin.title))
+                                    .toUpperCase(),
+                                style: AppText.blockLabel.copyWith(
+                                  letterSpacing: 1.32,
+                                  color: AppColors.tertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
                             card,
                             // «Слово worse идёт со дня 1 — сегодня оно на ступени B.» Drawn only
                             // for a word carried in from an EARLIER day, because for today's own

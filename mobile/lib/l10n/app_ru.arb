@@ -2085,6 +2085,14 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "planReviewSection": "Повторение",
+  "planReviewFromPlan": "Из плана: {title}",
+  "@planReviewFromPlan": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "planReviewFromCollection": "Из коллекции: {title}",
+  "@planReviewFromCollection": {
+    "placeholders": { "title": { "type": "String" } }
+  },
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },
   "planStageBReturns": "Вернутся на ступени B",

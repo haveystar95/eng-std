@@ -25,6 +25,7 @@ void main() {
     'softened': false,
     'source': fromDayIndex == null ? 'other_review' : 'new',
     'section': ?section,
+    if (section == 'review') 'origin': {'kind': 'plan', 'title': 'Собеседование'},
     'knobs_applied': <String>[],
     'knobs_ignored': <String>[],
     'card': {
@@ -115,6 +116,32 @@ void main() {
       });
 
       expect(session.dayTaskCount, session.tasks.length);
+    });
+  });
+
+  group('origin', () {
+    test('reads where a review card came from, and leaves the day`s own unlabelled', () {
+      final session = PlanSession.fromJson({
+        'session_id': '01SESSION',
+        'plan_id': '01PLAN',
+        'day_index': 1,
+        'strict': true,
+        'day_task_count': 1,
+        'tasks': [
+          task(termId: 'd1', fromDayIndex: 1, section: 'day'),
+          task(termId: 'r1', section: 'review'),
+        ],
+      });
+
+      expect(session.originAt(0), isNull);
+      expect(session.originAt(1), (kind: 'plan', title: 'Собеседование'));
+      expect(session.tasks[1].origin!.isPlan, isTrue);
+    });
+
+    test('treats a blank title as no origin at all', () {
+      // A label with nothing in it is worse than none: it draws a caption that says nothing.
+      expect(PlanTaskOrigin.fromJson(const {'kind': 'plan', 'title': '  '}), isNull);
+      expect(PlanTaskOrigin.fromJson(null), isNull);
     });
   });
 }

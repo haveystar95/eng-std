@@ -4137,6 +4137,18 @@ abstract class AppLocalizations {
   /// **'Повторение'**
   String get planReviewSection;
 
+  /// No description provided for @planReviewFromPlan.
+  ///
+  /// In ru, this message translates to:
+  /// **'Из плана: {title}'**
+  String planReviewFromPlan(String title);
+
+  /// No description provided for @planReviewFromCollection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Из коллекции: {title}'**
+  String planReviewFromCollection(String title);
+
   /// Строка итога дня.
   ///
   /// In ru, this message translates to:

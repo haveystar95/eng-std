@@ -21,6 +21,12 @@ final readonly class PlanSessionTaskView
     /** Top-up from the learner's ordinary queue — it does not count towards the day. */
     public const SECTION_REVIEW = 'review';
 
+    /** {@see $origin} — the card came out of another plan of this learner's. */
+    public const ORIGIN_PLAN = 'plan';
+
+    /** {@see $origin} — the card came out of an ordinary collection. */
+    public const ORIGIN_COLLECTION = 'collection';
+
     /**
      * @param  list<string>  $knobsApplied  the level's knobs this card actually honoured
      * @param  list<string>  $knobsIgnored  knobs configured for this trainer that nothing reads yet
@@ -74,5 +80,20 @@ final readonly class PlanSessionTaskView
          * Additive: a client that ignores it keeps cutting the gap the way it does today.
          */
         public ?string $clozeSource = null,
+        /**
+         * WHERE A REVIEW CARD CAME FROM — «Отпуск в Италии» — or null on the day's own material.
+         *
+         * A card of the top-up is a word the learner met somewhere else, and dropped into the
+         * middle of a plan's lesson with no explanation it reads as part of today. It was: the day
+         * that started this said «Привет, я Алекс, и я работаю бэкенд-разработчиком» in a lesson
+         * about a holiday, and the learner did not recognise their own word.
+         *
+         * `kind` says which sentence to build — `plan` is «из плана: …», `collection` is a folder —
+         * and the client writes it, because the wording is the client's and there are two
+         * languages of it.
+         *
+         * @var array{kind: string, title: string}|null
+         */
+        public ?array $origin = null,
     ) {}
 }

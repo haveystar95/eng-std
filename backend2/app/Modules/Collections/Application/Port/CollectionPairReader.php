@@ -47,4 +47,18 @@ interface CollectionPairReader
      * @return array<string, string>  term id => support language code
      */
     public function supportLangByTerm(UserId $userId, array $termIds): array;
+
+    /**
+     * WHICH SHELF each of these terms came off — its id and its name.
+     *
+     * The same term, the same tie-break and the same access rule as {@see supportLangByTerm()}:
+     * one question about a term's collection, answered one way. What it is FOR is different — the
+     * caller wants to tell the learner «повторение · Отпуск в Италии» rather than drop an
+     * unexplained card into the middle of a plan's lesson — so it returns what a person reads
+     * instead of a language code.
+     *
+     * @param  list<string>  $termIds
+     * @return array<string, array{id: string, title: string}>  term id => its collection
+     */
+    public function collectionByTerm(UserId $userId, array $termIds): array;
 }
