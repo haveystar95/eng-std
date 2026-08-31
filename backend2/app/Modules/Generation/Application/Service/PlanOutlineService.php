@@ -55,8 +55,6 @@ final readonly class PlanOutlineService implements PlanOutlinePort
             'support_lang' => LanguageName::of($brief->supportLang),
             'target_lang' => LanguageName::of($brief->targetLang),
             'level' => $brief->level,
-            'days' => (string) $brief->days,
-            'minutes_per_day' => (string) $brief->minutesPerDay,
         ]);
 
         // The DATA block is already inside the prompt (P1 ends with one), so the user message
@@ -71,7 +69,7 @@ final readonly class PlanOutlineService implements PlanOutlinePort
             throw PlanOutlineRefused::unavailable($e->getMessage());
         }
 
-        $violations = $this->validator->validate($answer->payload);
+        $violations = $this->validator->validate($answer->payload, $brief->supportLang);
 
         // THE LEDGER ROW IS WRITTEN BEFORE THE VERDICT, and that ordering is the point: a refused
         // answer cost exactly as much as an accepted one. PLAN-1a's own run refused an outline for
@@ -84,7 +82,7 @@ final readonly class PlanOutlineService implements PlanOutlinePort
             subject: $brief->goalText,
             supportLang: $brief->supportLang,
             targetLang: $brief->targetLang,
-            promptVersion: $this->prompts->version(),
+            promptVersion: $this->prompts->outlineVersion(),
             model: $answer->model,
             tokensIn: $answer->tokensIn,
             tokensOut: $answer->tokensOut,
@@ -109,7 +107,7 @@ final readonly class PlanOutlineService implements PlanOutlinePort
             tokensOut: $answer->tokensOut,
             costUsd: $answer->costUsd,
             latencyMs: $answer->latencyMs,
-            promptVersion: $this->prompts->version(),
+            promptVersion: $this->prompts->outlineVersion(),
         );
     }
 }

@@ -148,7 +148,7 @@ final readonly class PlanDayComposer
             subject: 'день ' . $brief->dayIndex . ' — ' . $brief->dayTitle,
             supportLang: $brief->supportLang,
             targetLang: $brief->targetLang,
-            promptVersion: $this->prompts->version(),
+            promptVersion: $this->prompts->dayVersion(),
             model: $answer->model,
             tokensIn: $answer->tokensIn,
             tokensOut: $answer->tokensOut,
@@ -178,7 +178,7 @@ final readonly class PlanDayComposer
             knownExamples: $this->knownExamples($answer->payload, $known),
             dayDescription: null,
             model: $answer->model,
-            promptVersion: $this->prompts->version(),
+            promptVersion: $this->prompts->dayVersion(),
             costUsd: $answer->costUsd,
         );
 

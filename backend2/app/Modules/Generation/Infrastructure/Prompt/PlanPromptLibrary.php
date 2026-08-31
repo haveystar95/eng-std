@@ -32,30 +32,47 @@ use RuntimeException;
  */
 final class PlanPromptLibrary implements PlanPromptSource
 {
-    public const VERSION = 'plan.v0.1.1';
+    /**
+     * The two prompts are versioned SEPARATELY, because they are revised separately: v0.2 took the
+     * days out of the skeleton in one наряд step and the day's three arrays in the next, and a
+     * shared constant would have stamped every day of that window with a version it was not
+     * written at.
+     *
+     * The v0.1.1 files stay in this directory as history and are not addressed by any constant —
+     * a stored plan written on them is read back through its own `outline` JSON, not by
+     * re-rendering the prompt, so nothing needs to load them again.
+     */
+    public const OUTLINE_VERSION = 'plan_outline.v0.2';
 
-    private const OUTLINE = 'plan_outline.v0.1.1.md';
+    public const DAY_VERSION = 'plan_day.v0.1.1';
+
+    private const OUTLINE = 'plan_outline.v0.2.md';
     private const DAY = 'plan_day.v0.1.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
     public function outline(array $placeholders): RenderedPrompt
     {
-        return $this->render(self::OUTLINE, $placeholders);
+        return $this->render(self::OUTLINE, self::OUTLINE_VERSION, $placeholders);
     }
 
     public function day(array $placeholders): RenderedPrompt
     {
-        return $this->render(self::DAY, $placeholders);
+        return $this->render(self::DAY, self::DAY_VERSION, $placeholders);
     }
 
-    public function version(): string
+    public function outlineVersion(): string
     {
-        return self::VERSION;
+        return self::OUTLINE_VERSION;
+    }
+
+    public function dayVersion(): string
+    {
+        return self::DAY_VERSION;
     }
 
     /** @param array<string, string> $placeholders */
-    private function render(string $file, array $placeholders): RenderedPrompt
+    private function render(string $file, string $version, array $placeholders): RenderedPrompt
     {
         $template = $this->body($this->read($this->directory . '/' . $file));
 
@@ -67,7 +84,7 @@ final class PlanPromptLibrary implements PlanPromptSource
 
         // `Terms` because a plan prompt asks for a list of terms and the enum has no case for a
         // plan; the shape is carried so the DTO stays one type, and nothing switches on it here.
-        return new RenderedPrompt($text, self::VERSION, PromptShape::Terms, hash('sha256', $text));
+        return new RenderedPrompt($text, $version, PromptShape::Terms, hash('sha256', $text));
     }
 
     /** Everything after the first `---` rule: the header above it is for readers, not for models. */

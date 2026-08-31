@@ -186,13 +186,14 @@ final readonly class GetPlanHandler
     private function computedDayOf(PlanDay $day): ComputedDay
     {
         $skills = [];
-        foreach ($day->skills() as $skill) {
-            $outcome = is_string($skill['outcome'] ?? null) ? $skill['outcome'] : '';
+        foreach ($day->skills() as $position => $skill) {
             $skills[] = new PlanSkill(
-                outcome: $outcome,
+                outcome: is_string($skill['outcome'] ?? null) ? $skill['outcome'] : '',
+                checkpoint: is_string($skill['checkpoint'] ?? null) ? $skill['checkpoint'] : '',
                 estTerms: is_int($skill['est_terms'] ?? null) ? $skill['est_terms'] : 1,
-                checkpoint: is_string($skill['checkpoint'] ?? null) ? $skill['checkpoint'] : null,
-                sourceDayIndex: is_int($skill['source_day_index'] ?? null) ? $skill['source_day_index'] : $day->dayIndex(),
+                sceneIndex: is_int($skill['scene_index'] ?? null) ? $skill['scene_index'] : $day->dayIndex(),
+                skillIndex: (int) $position,
+                position: is_int($skill['position'] ?? null) ? $skill['position'] : (int) $position,
             );
         }
 
@@ -206,7 +207,7 @@ final readonly class GetPlanHandler
             checkpoints: [],
             role: null,
             topics: [],
-            sourceDayIndex: null,
+            sourceSceneIndex: null,
         );
     }
 

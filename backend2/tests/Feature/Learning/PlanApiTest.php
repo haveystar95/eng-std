@@ -166,7 +166,7 @@ it('drops a day and re-indexes the rest, editing the stored outline with it', fu
 
     expect($after['computed']['intro_days'])->toBeLessThan($introBefore)
         // The stored outline moved too — otherwise the next reschedule would bring the day back.
-        ->and(count(json_decode((string) DB::table('learning_plans')->where('id', $plan['id'])->value('outline'), true)['days']))
+        ->and(count(json_decode((string) DB::table('learning_plans')->where('id', $plan['id'])->value('outline'), true)['scenes']))
         ->toBe($introBefore - 1);
 });
 
@@ -530,7 +530,9 @@ it('leaves a ledger row for every paid call the plan made', function () {
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('purpose')->unique()->all())->toBe(['plan'])
         ->and($rows->pluck('user_id')->unique()->all())->toBe([$user->id])
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan.v0.1.1'])
+        // Two versions and not one: P1 moved to v0.2 while P2 was still on v0.1.1, and the ledger
+        // says which prompt each call actually used rather than stamping both with one number.
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.1.1'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
         ->and($rows[1]->size)->toBe(9);

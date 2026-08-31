@@ -22,6 +22,30 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
  */
 final class FakePlanContentModel implements ContentModelPort
 {
+    /**
+     * The shape of every fake skeleton: two scenes, two abilities each, four terms apiece.
+     *
+     * Named constants and not literals because the scheduling tests read them back — «need is
+     * 16» is a fact about this double, and a test that hard-codes 16 while the double says
+     * something else is a test measuring nothing.
+     */
+    public const FAKE_SCENES = 2;
+
+    /**
+     * How a test asks for a BIGGER skeleton: `[scenes:5]` anywhere in the goal text.
+     *
+     * The fake cannot infer the size of a plan from anything else any more — P1 v0.2 is not told
+     * the days or the minutes, so the only input it has is the goal. A test that needs a long plan
+     * (more introduction days than {@see \App\Modules\Learning\Domain\Service\PlanGenerationPolicy::EAGER_INTRO_DAYS})
+     * needs a goal that is honestly bigger, and this is how it says so out loud instead of moving
+     * the event date and hoping.
+     */
+    private const SCENES_MARKER = '/\[scenes:(\d)\]/';
+
+    public const FAKE_SKILLS_PER_SCENE = 2;
+
+    public const FAKE_EST_TERMS = 4;
+
     public function provider(): ProviderId
     {
         return ProviderId::OpenAi;
@@ -48,43 +72,67 @@ final class FakePlanContentModel implements ContentModelPort
         );
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * A v0.2 SKELETON: scenes with priced abilities, and not one number about the calendar.
+     *
+     * It no longer reads `DAYS:` or `MINUTES PER DAY:` out of the prompt, because P1 v0.2 is not
+     * told either — that is the whole change. What it does read is the goal, so a test that asks
+     * for two different plans gets two different titles and the coherence gate has something to
+     * work with.
+     *
+     * The prices are what make the arithmetic testable: four scenes-worth of abilities at 4 terms
+     * each is a `need` of 16, which the scheduler turns into a day count from the learner's
+     * minutes. A fake that priced everything at 1 would make every plan one day long and every
+     * scheduling test vacuous.
+     *
+     * @return array<string, mixed>
+     */
     private function outline(string $prompt): array
     {
-        $days = max(1, $this->intAfter($prompt, 'DAYS:'));
-        $minutes = max(1, $this->intAfter($prompt, 'MINUTES PER DAY:'));
-        // The same table the prompt and the scheduler use — a fake that invented its own
-        // budget would let a scheduler/validator disagreement through every test.
-        $budget = $minutes >= 40 ? 16 : ($minutes <= 10 ? 5 : 9);
+        $goal = $this->after($prompt, 'GOAL:');
+        $sceneCount = preg_match(self::SCENES_MARKER, $goal, $m) === 1
+            ? max(1, min(5, (int) $m[1]))
+            : self::FAKE_SCENES;
+        // The marker is a TEST directive, not content, so it never reaches the skeleton — the
+        // outline gate refuses a Latin word on the screen the learner reads, and it is right to.
+        $goal = trim((string) preg_replace(self::SCENES_MARKER, '', $goal));
 
-        $introDays = max(1, $days - 1);
-        $out = [];
-        for ($i = 1; $i <= $introDays; $i++) {
-            $out[] = [
-                'index' => $i,
-                'title' => "День {$i} — сделать шаг",
-                'term_budget' => $budget,
-                'outcome' => ["сказать вещь {$i}", "спросить вещь {$i}"],
-                'topics' => ["область {$i}"],
+        $scenes = [];
+        for ($scene = 1; $scene <= $sceneCount; $scene++) {
+            $skills = [];
+            for ($skill = 1; $skill <= self::FAKE_SKILLS_PER_SCENE; $skill++) {
+                $skills[] = [
+                    'outcome' => "сказать вещь {$scene}.{$skill}",
+                    // The wording matters to the fake DAY below, which counts checkpoints by
+                    // looking for it. Two doubles that disagree about the shape of a plan produce
+                    // a day whose checkpoints nothing closes.
+                    'checkpoint' => "слышно, как он говорит вещь {$scene}.{$skill}",
+                    'est_terms' => self::FAKE_EST_TERMS,
+                    'topics' => ["область {$scene}"],
+                ];
+            }
+
+            $scenes[] = [
+                'title' => "Сцена {$scene} — сделать шаг",
                 'role' => [
                     'name' => 'собеседник',
-                    'opening_lines' => [['text' => 'Hello?', 'translation' => 'Здравствуйте?']],
-                    'checkpoints' => ["слышно, как он говорит вещь {$i}", "слышно, как он спрашивает вещь {$i}"],
+                    'opening_lines' => [
+                        ['text' => 'Hello?', 'translation' => 'Здравствуйте?'],
+                        ['text' => 'And then?', 'translation' => 'А дальше?'],
+                    ],
                     'if_silent' => 'переспрашивает проще',
                 ],
+                'skills' => $skills,
             ];
         }
 
         return [
-            'title' => 'Тестовый план',
+            'title' => $goal === '' ? 'Тестовый план' : mb_substr('План: ' . $goal, 0, 60),
             'goal_restated' => 'Цель, пересказанная одной строкой',
             'entities' => [],
             'constraints' => [],
             'goal_terms' => [],
-            'single_day' => $days === 1,
-            'days' => $out,
-            'final_day' => ['index' => $days, 'same_day' => $days === 1, 'title' => 'Прогон перед событием'],
-            'estimated_terms' => $introDays * $budget,
+            'scenes' => $scenes,
         ];
     }
 
@@ -142,6 +190,20 @@ final class FakePlanContentModel implements ContentModelPort
             'words' => $substitutions,
             'known' => [],
         ];
+    }
+
+    /** The rest of the line after `$marker`, trimmed. */
+    private function after(string $text, string $marker): string
+    {
+        $at = strpos($text, $marker);
+        if ($at === false) {
+            return '';
+        }
+
+        $tail = substr($text, $at + strlen($marker));
+        $line = strtok($tail, "\n");
+
+        return $line === false ? '' : trim($line);
     }
 
     /** The first integer after `$marker` (and after `$then`, when given). */

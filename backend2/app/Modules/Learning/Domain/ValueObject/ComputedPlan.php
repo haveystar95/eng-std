@@ -74,8 +74,10 @@ final readonly class ComputedPlan
             'dropped_skills' => array_map(
                 static fn (PlanSkill $s): array => [
                     'outcome' => $s->outcome,
+                    'checkpoint' => $s->checkpoint,
                     'est_terms' => $s->estTerms,
-                    'source_day_index' => $s->sourceDayIndex,
+                    'scene_index' => $s->sceneIndex,
+                    'position' => $s->position,
                 ],
                 $this->dropped,
             ),
@@ -91,7 +93,7 @@ final readonly class ComputedPlan
                     'outcome' => $d->outcomes(),
                     'checkpoints' => $d->checkpoints,
                     'topics' => $d->topics,
-                    'source_day_index' => $d->sourceDayIndex,
+                    'source_scene_index' => $d->sourceSceneIndex,
                 ],
                 $this->days,
             ),

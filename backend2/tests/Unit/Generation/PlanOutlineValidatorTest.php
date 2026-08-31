@@ -20,153 +20,173 @@ function outlineCodes(array $violations): array
     return array_values(array_unique(array_map(static fn (PlanViolation $v): string => $v->code, $violations)));
 }
 
-it('passes the three real outlines the sandbox produced', function (string $fixture) {
-    expect($this->validator->validate(outlineFixture($fixture)))->toBe([]);
+/** One scene, one ability, everything valid — the base every negative case below breaks once. */
+function outlineWith(array $overrides = [], array $skillOverrides = []): array
+{
+    $skill = [
+        'outcome' => 'сказать, где именно болит',
+        'checkpoint' => 'называет конкретное место, и врачу не приходится переспрашивать',
+        'est_terms' => 4,
+        'topics' => ['части тела и где болит'],
+        ...$skillOverrides,
+    ];
+
+    return [
+        'title' => 'К врачу из-за спины',
+        'goal_restated' => 'Иду к врачу с болью в спине.',
+        'entities' => [],
+        'constraints' => [],
+        'goal_terms' => [],
+        'scenes' => [[
+            'title' => 'Описать боль',
+            'role' => [
+                'name' => 'врач-терапевт',
+                'opening_lines' => [
+                    ['text' => 'Where does it hurt?', 'translation' => 'Где болит?'],
+                    ['text' => 'Since when?', 'translation' => 'С каких пор?'],
+                ],
+                'if_silent' => 'показывает пальцем и спрашивает проще',
+            ],
+            'skills' => [$skill, $skill, $skill],
+        ]],
+        ...$overrides,
+    ];
+}
+
+it('passes the three v0.2 skeletons the plan is designed around', function (string $fixture) {
+    expect($this->validator->validate(outlineFixture($fixture), 'ru'))->toBe([]);
 })->with([
-    's1-outline.v0.json',
-    's2-outline.v0.1.json',
-    's3-outline.v0.1.json',
+    's1-outline.v0.2.json',
+    's2-outline.v0.2.json',
+    's3-outline.v0.2.json',
 ]);
 
-it('reads a v0 outline without complaining about the field v0.1 dropped', function () {
-    // S1 still carries `final_day.checkpoints`, which v0.1 removed because the server assembles
-    // that list now. A stored outline written months ago must keep opening.
-    $raw = outlineFixture('s1-outline.v0.json');
-
-    expect($raw['final_day'])->toHaveKey('checkpoints')
-        ->and($this->validator->validate($raw))->toBe([]);
+it('refuses a skeleton with nothing to schedule', function () {
+    expect(outlineCodes($this->validator->validate(['scenes' => []])))
+        ->toContain(PlanOutlineValidator::NO_SCENES);
 });
 
-it('refuses an outline with nothing to schedule', function () {
-    expect(outlineCodes($this->validator->validate(['days' => [], 'final_day' => ['title' => 'Прогон']])))
-        ->toContain(PlanOutlineValidator::NO_DAYS);
+it('refuses an ability with no checkpoint — a promise nothing can prove', function () {
+    $raw = outlineWith(skillOverrides: ['checkpoint' => '']);
+
+    expect(outlineCodes($this->validator->validate($raw)))
+        ->toContain(PlanOutlineValidator::CHECKPOINT_MISSING);
 });
 
-it('refuses a day that promises nothing', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'days' => [
-        ['index' => 1, 'title' => 'День', 'term_budget' => 9, 'outcome' => [], 'role' => null],
-    ]];
+it('refuses a checkpoint that is the promise said again with the punctuation moved', function () {
+    $raw = outlineWith(skillOverrides: ['checkpoint' => 'Сказать где именно болит!']);
 
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::DAY_WITHOUT_OUTCOME);
+    expect(outlineCodes($this->validator->validate($raw)))
+        ->toContain(PlanOutlineValidator::CHECKPOINT_ECHOES_OUTCOME);
 });
 
-it('accepts a day with no interlocutor at all', function () {
+it('refuses a price outside 3–8, in both directions', function (mixed $est) {
+    $violations = $this->validator->validate(outlineWith(skillOverrides: ['est_terms' => $est]));
+
+    expect(outlineCodes($violations))->toContain(PlanOutlineValidator::EST_TERMS);
+})->with([9, 2, 0, 'много', null]);
+
+it('accepts both ends of the price range', function (int $est) {
+    expect($this->validator->validate(outlineWith(skillOverrides: ['est_terms' => $est])))->toBe([]);
+})->with([3, 8]);
+
+it('refuses a scene whose interlocutor says nothing the learner must recognise', function () {
+    // P2 quotes `opening_lines` verbatim as the lines the day has to teach. A role with one line
+    // is a conversation with nothing to answer.
+    $raw = outlineWith();
+    $raw['scenes'][0]['role']['opening_lines'] = [['text' => 'Hello?', 'translation' => 'Здравствуйте?']];
+
+    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::OPENING_LINES);
+});
+
+it('accepts a scene with no interlocutor at all', function () {
     // Reading forms alone has nobody to talk to, and the prompt says inventing «сотрудник, который
-    // просто рядом» is worse than admitting it. Such a day simply has no checkpoints of its own.
-    $raw = ['final_day' => ['title' => 'Прогон'], 'days' => [
-        ['index' => 1, 'title' => 'Прочитать бланки', 'term_budget' => 9, 'outcome' => ['прочитать бланк'], 'role' => null],
-    ]];
+    // просто рядом» is worse than admitting it. Its checkpoints are still tested in the rehearsal.
+    $raw = outlineWith();
+    $raw['scenes'][0]['role'] = null;
 
     expect($this->validator->validate($raw))->toBe([]);
 });
 
-it('refuses a conversation with the wrong number of checkpoints', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'days' => [[
-        'index' => 1, 'title' => 'День', 'term_budget' => 9,
-        'outcome' => ['сказать А', 'сказать Б'],
-        'role' => ['name' => 'врач', 'opening_lines' => [], 'checkpoints' => ['слышно А'], 'if_silent' => 'переспросит'],
-    ]]];
+it('refuses «и» joining two actions in one promise', function () {
+    $raw = outlineWith(skillOverrides: [
+        'outcome' => 'объяснить, что болит, и попросить направление',
+        'checkpoint' => 'называет место боли, и врач выписывает направление',
+    ]);
 
     expect(outlineCodes($this->validator->validate($raw)))
-        ->toContain(PlanOutlineValidator::CHECKPOINT_COUNT)
-        ->toContain(PlanOutlineValidator::CHECKPOINT_MISMATCH);
+        ->toContain(PlanOutlineValidator::OUTCOME_TWO_ACTIONS);
 });
 
-it('refuses a checkpoint that is the promise said again with the punctuation moved', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'days' => [[
-        'index' => 1, 'title' => 'День', 'term_budget' => 9,
-        'outcome' => ['сказать, где именно болит', 'понять назначение и повторить своими словами'],
-        'role' => ['name' => 'врач', 'opening_lines' => [],
-            'checkpoints' => ['Сказать где именно болит!', 'повторяет назначение своими словами, и врач подтверждает'],
-            'if_silent' => 'переспросит'],
-    ]]];
+it('leaves the one «и» that belongs alone — a comprehension ability must say it back', function () {
+    // The prompt's own exemption: understanding cannot be observed, so «понять…» always ends
+    // «…и повторить своими словами». A gate that refused it would refuse the rule being obeyed.
+    $raw = outlineWith(skillOverrides: [
+        'outcome' => 'понять, что назначил врач, и повторить своими словами',
+        'checkpoint' => 'повторяет назначение, и врач подтверждает',
+    ]);
 
-    $violations = $this->validator->validate($raw);
-
-    expect(outlineCodes($violations))->toBe([PlanOutlineValidator::CHECKPOINT_ECHOES_OUTCOME])
-        ->and($violations[0]->detail)->toContain('чек-пойнт 0');
+    expect($this->validator->validate($raw))->toBe([]);
 });
 
-it('refuses a day with no term budget', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'days' => [
-        ['index' => 1, 'title' => 'День', 'outcome' => ['сказать А'], 'role' => null],
-    ]];
+it('leaves «и» between two objects of one action alone', function () {
+    $raw = outlineWith(skillOverrides: ['outcome' => 'назвать время и место приёма']);
 
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::BUDGET_MISSING);
+    expect($this->validator->validate($raw))->toBe([]);
 });
 
-it('refuses an outline with no final day', function () {
-    $raw = ['days' => [['index' => 1, 'title' => 'День', 'term_budget' => 9, 'outcome' => ['А'], 'role' => null]]];
+it('refuses a word of the language being learned on the screen the learner reads first', function (string $field, mixed $value) {
+    $raw = $field === 'topics'
+        ? outlineWith(skillOverrides: ['topics' => [$value]])
+        : ($field === 'outcome' || $field === 'checkpoint'
+            ? outlineWith(skillOverrides: [$field => $value])
+            : outlineWith([$field => $value]));
 
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::NO_FINAL_DAY);
+    expect(outlineCodes($this->validator->validate($raw, 'ru')))
+        ->toContain(PlanOutlineValidator::TARGET_LANGUAGE);
+})->with([
+    ['title', 'Plan for the doctor'],
+    ['goal_restated', 'Иду к врачу и говорю where it hurts.'],
+    ['topics', 'past simple'],
+    ['outcome', 'сказать where it hurts'],
+    ['checkpoint', 'называет lower back'],
+]);
+
+it('leaves the learner`s own Latin words alone — goal_terms, abbreviations and codes', function (string $outcome, array $goalTerms) {
+    $raw = outlineWith(['goal_terms' => $goalTerms], ['outcome' => $outcome]);
+
+    expect($this->validator->validate($raw, 'ru'))->toBe([]);
+})->with([
+    ['рассказать про свой опыт с Laravel', ['Laravel']],
+    ['назвать, что делал с API', []],
+    ['назвать место 14A', []],
+]);
+
+it('refuses more than five scenes — past that a plan is a course', function () {
+    $raw = outlineWith();
+    $scene = $raw['scenes'][0];
+    $raw['scenes'] = array_fill(0, 6, $scene);
+
+    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::SCENE_COUNT);
 });
+
+it('refuses a plan with fewer than three abilities or more than twelve', function (int $perScene, int $scenes) {
+    $raw = outlineWith();
+    $skill = $raw['scenes'][0]['skills'][0];
+    $raw['scenes'][0]['skills'] = array_fill(0, $perScene, $skill);
+    $raw['scenes'] = array_fill(0, $scenes, $raw['scenes'][0]);
+
+    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::SKILL_COUNT);
+})->with([[2, 1], [7, 2]]);
 
 it('refuses a binding list that came back as a string', function () {
     // The failure that would otherwise reach the day prompt as the literal characters of a JSON
     // array, and be read by the model as content.
-    $raw = ['final_day' => ['title' => 'Прогон'], 'goal_terms' => 'PHP, API',
-        'days' => [['index' => 1, 'title' => 'День', 'term_budget' => 9, 'outcome' => ['А'], 'role' => null]]];
-
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::NOT_A_LIST);
+    expect(outlineCodes($this->validator->validate(outlineWith(['goal_terms' => 'PHP, API']))))
+        ->toContain(PlanOutlineValidator::NOT_A_LIST);
 });
 
 it('accepts binding lists that are simply empty', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'entities' => [], 'constraints' => [], 'goal_terms' => [],
-        'days' => [['index' => 1, 'title' => 'День', 'term_budget' => 9, 'outcome' => ['А'], 'role' => null]]];
-
-    expect($this->validator->validate($raw))->toBe([]);
-});
-
-it('lets a ONE-DAY plan carry up to five checkpoints — it is the whole goal', function () {
-    // The S3 scenario, live: «сегодня везу кота в ветклинику, прививка и странный кашель» has four
-    // parts, the prompt says a short plan compresses rather than drops, and the model honestly
-    // wrote four abilities with four checkpoints. The 2–3 band is a shape rule for an ordinary
-    // day; on a single-day plan it was measuring the length of the GOAL.
-    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
-        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
-        'outcome' => ['объяснить визит', 'описать кашель', 'понять назначение и повторить своими словами', 'спросить, когда вернуться'],
-        'role' => ['name' => 'ветеринар', 'opening_lines' => [],
-            'checkpoints' => ['слышно причину визита', 'слышно описание кашля', 'повторяет назначение', 'спрашивает про повтор'],
-            'if_silent' => 'предложит выбор'],
-    ]]];
-
-    expect($this->validator->validate($raw))->toBe([]);
-});
-
-it('still holds the floor of two, however short the plan', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
-        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
-        'outcome' => ['объяснить визит'],
-        'role' => ['name' => 'ветеринар', 'opening_lines' => [], 'checkpoints' => ['слышно причину'], 'if_silent' => 'предложит выбор'],
-    ]]];
-
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT);
-});
-
-it('still refuses four checkpoints on a multi-day plan, where the band means what it says', function () {
-    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => false, 'days' => [
-        ['index' => 1, 'title' => 'День 1', 'term_budget' => 9,
-            'outcome' => ['A', 'B', 'C', 'D'],
-            'role' => ['name' => 'врач', 'opening_lines' => [], 'checkpoints' => ['a', 'b', 'c', 'd'], 'if_silent' => 'переспросит']],
-        ['index' => 2, 'title' => 'День 2', 'term_budget' => 9, 'outcome' => ['E', 'F'],
-            'role' => ['name' => 'врач', 'opening_lines' => [], 'checkpoints' => ['e', 'f'], 'if_silent' => 'переспросит']],
-    ]];
-
-    expect(outlineCodes($this->validator->validate($raw)))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT);
-});
-
-it('stops a one-day plan at five, because a conversation past that cannot be judged', function () {
-    $outcomes = ['A', 'B', 'C', 'D', 'E', 'F'];
-    $raw = ['final_day' => ['title' => 'Прогон'], 'single_day' => true, 'days' => [[
-        'index' => 1, 'title' => 'Весь визит', 'term_budget' => 9,
-        'outcome' => $outcomes,
-        'role' => ['name' => 'ветеринар', 'opening_lines' => [],
-            'checkpoints' => array_map(static fn (string $o): string => 'слышно ' . $o, $outcomes),
-            'if_silent' => 'предложит выбор'],
-    ]]];
-
-    $violations = $this->validator->validate($raw);
-
-    expect(outlineCodes($violations))->toContain(PlanOutlineValidator::CHECKPOINT_COUNT)
-        ->and($violations[0]->detail)->toContain('2–5');
+    expect($this->validator->validate(outlineWith(['entities' => [], 'constraints' => [], 'goal_terms' => []])))
+        ->toBe([]);
 });

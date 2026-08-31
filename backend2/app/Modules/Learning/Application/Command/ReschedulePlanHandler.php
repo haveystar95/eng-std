@@ -11,7 +11,8 @@ use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\Service\PlanScheduler;
 use App\Modules\Learning\Domain\ValueObject\PlanOutline;
-use App\Modules\Learning\Domain\ValueObject\PlanOutlineDay;
+use App\Modules\Learning\Domain\ValueObject\PlanScene;
+use App\Modules\Learning\Domain\ValueObject\PlanSkill;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 use DateTimeImmutable;
@@ -57,7 +58,13 @@ final readonly class ReschedulePlanHandler
             ? new DateTimeImmutable($command->eventDate . ' 00:00:00')
             : $plan->eventDate();
 
-        $computed = $this->scheduler->compute($outline, $minutes, $eventDate, $this->clock->now()->setTime(0, 0, 0));
+        $computed = $this->scheduler->compute(
+            $outline,
+            $minutes,
+            $eventDate,
+            $this->clock->now()->setTime(0, 0, 0),
+            $plan->supportLang()->value,
+        );
 
         $this->tx->run(function () use ($plan, $computed, $minutes, $eventDate, $outline, $command): void {
             // Dropping a day edits the model's answer, so the stored outline moves with it —
@@ -72,26 +79,48 @@ final readonly class ReschedulePlanHandler
         });
     }
 
-    /** The outline minus one day, re-indexed so the remaining days stay 1..N and contiguous. */
-    private function without(PlanOutline $outline, int $dayIndex): PlanOutline
+    /**
+     * The outline minus one SCENE, re-indexed so the remaining scenes stay 1..N and contiguous.
+     *
+     * The command still calls it a «day» because that is what the learner taps, and until v0.2 the
+     * two were the same thing: P1 answered in days and the scheduler kept them. Now a day is
+     * assembled from scenes and a scene is what can actually be removed — dropping «HR-звонок»
+     * removes an ability the plan promised, which is a decision, whereas dropping «day 2» would
+     * remove whatever the packer happened to put there this morning.
+     */
+    private function without(PlanOutline $outline, int $sceneIndex): PlanOutline
     {
         $kept = [];
-        foreach ($outline->days as $day) {
-            if ($day->index === $dayIndex) {
+        $position = 0;
+        foreach ($outline->scenes as $scene) {
+            if ($scene->index === $sceneIndex) {
                 continue;
             }
-            $kept[] = new PlanOutlineDay(
-                index: count($kept) + 1,
-                title: $day->title,
-                termBudget: $day->termBudget,
-                outcome: $day->outcome,
-                role: $day->role,
-                topics: $day->topics,
+
+            $index = count($kept) + 1;
+            $skills = [];
+            foreach ($scene->skills as $skill) {
+                $skills[] = new PlanSkill(
+                    outcome: $skill->outcome,
+                    checkpoint: $skill->checkpoint,
+                    estTerms: $skill->estTerms,
+                    sceneIndex: $index,
+                    skillIndex: count($skills),
+                    position: $position++,
+                    topics: $skill->topics,
+                );
+            }
+
+            $kept[] = new PlanScene(
+                index: $index,
+                title: $scene->title,
+                role: $scene->role,
+                skills: $skills,
             );
         }
 
         if ($kept === []) {
-            throw InvalidPlanOutline::because(['нельзя убрать последний день знакомства — от плана ничего не останется']);
+            throw InvalidPlanOutline::because(['нельзя убрать последнюю сцену — от плана ничего не останется']);
         }
 
         return new PlanOutline(
@@ -100,15 +129,14 @@ final readonly class ReschedulePlanHandler
             entities: $outline->entities,
             constraints: $outline->constraints,
             goalTerms: $outline->goalTerms,
-            days: $kept,
-            finalDayTitle: $outline->finalDayTitle,
+            scenes: $kept,
         );
     }
 
     /**
      * The edited outline, back in the model's own JSON shape.
      *
-     * Only the `days` array is rewritten; everything else is carried over from what the model
+     * Only the `scenes` array is rewritten; everything else is carried over from what the model
      * actually said, so the stored outline stays as close to «one model answer» as an edit allows.
      *
      * @param  array<string, mixed>  $original
@@ -116,23 +144,29 @@ final readonly class ReschedulePlanHandler
      */
     private function toArray(PlanOutline $outline, array $original): array
     {
-        $days = [];
-        foreach ($outline->days as $day) {
-            $days[] = [
-                'index' => $day->index,
-                'title' => $day->title,
-                'term_budget' => $day->termBudget,
-                'outcome' => $day->outcome,
-                'topics' => $day->topics,
-                'role' => $day->role === null ? null : [
-                    'name' => $day->role->name,
-                    'opening_lines' => $day->role->openingLines,
-                    'checkpoints' => $day->role->checkpoints,
-                    'if_silent' => $day->role->ifSilent,
+        $scenes = [];
+        foreach ($outline->scenes as $scene) {
+            $skills = [];
+            foreach ($scene->skills as $skill) {
+                $skills[] = [
+                    'outcome' => $skill->outcome,
+                    'checkpoint' => $skill->checkpoint,
+                    'est_terms' => $skill->estTerms,
+                    'topics' => $skill->topics,
+                ];
+            }
+
+            $scenes[] = [
+                'title' => $scene->title,
+                'role' => $scene->role === null ? null : [
+                    'name' => $scene->role->name,
+                    'opening_lines' => $scene->role->openingLines,
+                    'if_silent' => $scene->role->ifSilent,
                 ],
+                'skills' => $skills,
             ];
         }
 
-        return [...$original, 'days' => $days];
+        return [...$original, 'scenes' => $scenes];
     }
 }

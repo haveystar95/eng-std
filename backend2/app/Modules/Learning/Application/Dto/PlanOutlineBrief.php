@@ -7,8 +7,11 @@ namespace App\Modules\Learning\Application\Dto;
 /**
  * Everything P1 is told, in primitives.
  *
- * `days` is here and is the SERVER's number — days from today to the event, inclusive. The model is
- * handed the count and asked to fill it; it is never asked to work it out. See
+ * Neither `days` nor `minutes_per_day` is here any more, and their absence is the point of v0.2.
+ * P1 used to be handed the day count and asked to fill it, which made the server's later
+ * arithmetic a measurement of its own input — «иду к врачу через 30 дней» came back as
+ * twenty-nine days of teaching and no gate could see it. The model is now asked only what it is
+ * good at, and every number that touches the calendar is computed from the answer by
  * {@see \App\Modules\Learning\Domain\Service\PlanScheduler}.
  */
 final readonly class PlanOutlineBrief
@@ -23,7 +26,5 @@ final readonly class PlanOutlineBrief
         public string $supportLang,
         public string $targetLang,
         public string $level,
-        public int $days,
-        public int $minutesPerDay,
     ) {}
 }

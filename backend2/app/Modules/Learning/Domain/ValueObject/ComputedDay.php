@@ -25,8 +25,8 @@ final readonly class ComputedDay
         public array $checkpoints,
         public ?PlanRole $role,
         public array $topics,
-        /** Which outline day this day's material came from, or null when it merges several. */
-        public ?int $sourceDayIndex,
+        /** Which SCENE this day's material came from, or null when it merges several. */
+        public ?int $sourceSceneIndex,
     ) {}
 
     /** @return list<string> */

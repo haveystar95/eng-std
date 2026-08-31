@@ -98,6 +98,11 @@ final readonly class ClaimPlanDayHandler
                         $day->skills(),
                     ),
                     'role' => $brief['role'] ?? null,
+                    // The checkpoints stand on the DAY and no longer inside the role. They moved
+                    // with v0.2 — a checkpoint belongs to the ability it proves — and a day json
+                    // that hid them under the interlocutor gave a scene with no interlocutor no
+                    // checkpoints to close.
+                    'checkpoints' => $checkpoints,
                     'topics' => $brief['topics'] ?? [],
                 ],
             );

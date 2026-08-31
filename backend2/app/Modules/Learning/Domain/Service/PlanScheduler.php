@@ -135,6 +135,7 @@ final class PlanScheduler
         int $minutesPerDay,
         DateTimeImmutable $eventDate,
         DateTimeImmutable $today,
+        string $supportLang = 'ru',
     ): ComputedPlan {
         $event = $this->midnight($eventDate);
         $start = $this->midnight($today);
@@ -218,14 +219,14 @@ final class PlanScheduler
         $days[] = new ComputedDay(
             index: $introDays + 1,
             kind: PlanDayKind::Final,
-            title: $outline->finalDayTitle !== '' ? $outline->finalDayTitle : 'Прогон перед событием',
+            title: self::finalDayTitle($supportLang),
             scheduledOn: $event,
             termBudget: 0,
             skills: [],
             checkpoints: $this->checkpointsOf($days),
             role: null,
             topics: [],
-            sourceDayIndex: null,
+            sourceSceneIndex: null,
         );
 
         return new ComputedPlan(
@@ -435,25 +436,24 @@ final class PlanScheduler
     ): ComputedDay {
         $sources = [];
         foreach ($skills as $skill) {
-            $sources[$skill->sourceDayIndex] = true;
+            $sources[$skill->sceneIndex] = true;
         }
         $sourceIndex = count($sources) === 1 ? (int) array_key_first($sources) : null;
-        $sourceDay = $sourceIndex !== null ? $outline->day($sourceIndex) : null;
+        $sourceScene = $sourceIndex !== null ? $outline->scene($sourceIndex) : null;
 
         $checkpoints = [];
         foreach ($skills as $skill) {
-            if ($skill->checkpoint !== null && $skill->checkpoint !== '') {
+            if ($skill->checkpoint !== '') {
                 $checkpoints[] = $skill->checkpoint;
             }
         }
 
+        // The areas come off the SKILLS that landed here, not off their scenes: a scene split
+        // across two days would otherwise hand both days the whole scene's topics, and the day
+        // brief would ask for substitution words the day has no line to put them in.
         $topics = [];
         foreach ($skills as $skill) {
-            $day = $outline->day($skill->sourceDayIndex);
-            if ($day === null) {
-                continue;
-            }
-            foreach ($day->topics as $topic) {
+            foreach ($skill->topics as $topic) {
                 if (! in_array($topic, $topics, true)) {
                     $topics[] = $topic;
                 }
@@ -467,8 +467,8 @@ final class PlanScheduler
         return new ComputedDay(
             index: $index,
             kind: $kind,
-            title: $sourceDay?->title !== null && $sourceDay->title !== ''
-                ? $sourceDay->title
+            title: $sourceScene?->title !== null && $sourceScene->title !== ''
+                ? $sourceScene->title
                 : ($skills[0]->outcome ?? 'День плана'),
             scheduledOn: $scheduledOn,
             termBudget: $budget,
@@ -476,38 +476,44 @@ final class PlanScheduler
             checkpoints: $finalCheckpoints ?? $checkpoints,
             role: $role,
             topics: $topics,
-            sourceDayIndex: $sourceIndex,
+            sourceSceneIndex: $sourceIndex,
         );
     }
 
-    /** @param list<PlanSkill> $skills */
+    /**
+     * The person the day's conversation is with — the interlocutor of the day's FIRST scene.
+     *
+     * A day that merged two short scenes has two of them on paper and one conversation in practice,
+     * and the one the day opens with is the honest choice. The role no longer carries checkpoints
+     * (they belong to the abilities since v0.2), so this is a straight lookup and not the rebuild
+     * it used to be.
+     *
+     * @param list<PlanSkill> $skills
+     */
     private function roleFor(array $skills, PlanOutline $outline): ?PlanRole
     {
         if ($skills === []) {
             return null;
         }
 
-        $sourceRole = $outline->day($skills[0]->sourceDayIndex)?->role;
-        if ($sourceRole === null) {
-            return null;
-        }
+        return $outline->scene($skills[0]->sceneIndex)?->role;
+    }
 
-        // The checkpoints on the role must be THIS day's, in THIS day's order — the model wrote
-        // them against its own day, and a merged day would otherwise hand the generator a
-        // checkpoint list that its own material was never asked to cover.
-        $checkpoints = [];
-        foreach ($skills as $skill) {
-            if ($skill->checkpoint !== null && $skill->checkpoint !== '') {
-                $checkpoints[] = $skill->checkpoint;
-            }
-        }
-
-        return new PlanRole(
-            name: $sourceRole->name,
-            openingLines: $sourceRole->openingLines,
-            checkpoints: $checkpoints,
-            ifSilent: $sourceRole->ifSilent,
-        );
+    /**
+     * The rehearsal day's NAME, in the learner's own language.
+     *
+     * A constant and no longer a model field. P1 v0.2 has no `final_day` at all: the day that
+     * introduces nothing is entirely the server's, its checkpoint list is assembled from the
+     * abilities ({@see PlanOutline::finalCheckpoints()}), and a title is the last thing worth
+     * paying a model for. Unknown support languages get the English one rather than a Russian
+     * sentence they cannot read.
+     */
+    public static function finalDayTitle(string $supportLang): string
+    {
+        return match (mb_strtolower(substr($supportLang, 0, 2))) {
+            'ru' => 'Прогон перед событием',
+            default => 'Rehearsal before the event',
+        };
     }
 
     /**

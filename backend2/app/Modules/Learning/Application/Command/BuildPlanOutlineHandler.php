@@ -25,13 +25,12 @@ use App\Modules\Shared\Domain\ValueObject\LanguageCode;
  * Same rule the collection generator follows and for the same reason: a ten-second vendor call
  * inside an open transaction holds a row lock for ten seconds. Only the writes are transactional.
  *
- * ## The number of days is the SERVER's, and it is computed before the call
+ * ## The days are the SERVER's, and the model is not told about them at all
  *
- * P1 is TOLD how many days it has. It is never asked to count them — see
- * {@see PlanScheduler}. So the arithmetic runs twice around the model: once to decide what to ask
- * for, and once over the answer to decide what the days actually are. The second run can disagree
- * with the first (the model may write a day at the top of its budget band), and that disagreement
- * is the «не влезает» the learner is shown before they commit.
+ * P1 v0.2 answers in scenes and priced abilities and never sees the calendar. The arithmetic runs
+ * ONCE, over the answer ({@see PlanScheduler}), and what it produces — how many days, what does
+ * not fit before the deadline — is the «срок мал» the learner is shown before they commit. Until
+ * v0.2 it ran twice, and the first run was what the second one measured.
  *
  * ## The support language comes from the ACCOUNT, always
  *
@@ -65,9 +64,6 @@ final readonly class BuildPlanOutlineHandler
         // account has any say; `start` freezes it.
         $plan->refreshSupportLang(new LanguageCode($this->profiles->nativeLangFor($plan->userId())));
 
-        // How many days there ARE, before anyone asks the model to fill them.
-        $days = $this->daysUntil($today, $plan->eventDate());
-
         $answer = $this->outlines->outlineFor(new PlanOutlineBrief(
             planId: $plan->id()->value,
             userId: $plan->userId()->value,
@@ -75,8 +71,6 @@ final readonly class BuildPlanOutlineHandler
             supportLang: $plan->supportLang()->value,
             targetLang: $plan->targetLang()->value,
             level: $plan->level()->value,
-            days: $days,
-            minutesPerDay: $plan->minutesPerDay(),
         ));
 
         $outline = PlanOutline::fromArray($answer->payload);
@@ -85,6 +79,7 @@ final readonly class BuildPlanOutlineHandler
             $plan->minutesPerDay(),
             $plan->eventDate(),
             $today,
+            $plan->supportLang()->value,
         );
 
         $this->tx->run(function () use ($plan, $answer, $outline, $computed): void {
@@ -92,12 +87,5 @@ final readonly class BuildPlanOutlineHandler
             $this->plans->save($plan);
             $this->days->replaceAll($plan->id(), $this->daysFromComputed->build($plan->id(), $computed));
         });
-    }
-
-    private function daysUntil(\DateTimeImmutable $today, \DateTimeImmutable $eventDate): int
-    {
-        $diff = $today->diff($eventDate->setTime(0, 0, 0));
-
-        return max(1, (int) $diff->days + 1);
     }
 }

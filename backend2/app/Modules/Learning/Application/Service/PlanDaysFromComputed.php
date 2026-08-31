@@ -56,7 +56,8 @@ final class PlanDaysFromComputed
                 'outcome' => $s->outcome,
                 'est_terms' => $s->estTerms,
                 'checkpoint' => $s->checkpoint,
-                'source_day_index' => $s->sourceDayIndex,
+                'scene_index' => $s->sceneIndex,
+                'position' => $s->position,
             ],
             $day->skills,
         );
@@ -86,7 +87,6 @@ final class PlanDaysFromComputed
             'role' => $day->role === null ? null : [
                 'name' => $day->role->name,
                 'opening_lines' => $day->role->openingLines,
-                'checkpoints' => $day->role->checkpoints,
                 'if_silent' => $day->role->ifSilent,
             ],
         ];

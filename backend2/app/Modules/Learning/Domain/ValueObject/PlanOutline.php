@@ -10,12 +10,24 @@ use App\Modules\Learning\Domain\Exception\InvalidPlanOutline;
  * P1's answer, typed.
  *
  * Built from the decoded JSON exactly once, at the boundary, so nothing downstream ever does
- * `$outline['days'][0]['role']['checkpoints'][1] ?? null`. The three lists the whole plan is bound
- * by — `entities`, `constraints`, `goal_terms` — travel with it into every day's generation and are
- * facts about the learner's situation, not suggestions.
+ * `$outline['scenes'][0]['skills'][1]['checkpoint'] ?? null`. The three lists the whole plan is
+ * bound by — `entities`, `constraints`, `goal_terms` — travel with it into every day's generation
+ * and are facts about the learner's situation, not suggestions.
  *
- * The CONTENT judgement (are there enough checkpoints, does each one match an outcome, is the
- * coverage honest) is not made here: it is made once, by
+ * ## v0.2: scenes and priced skills, and no days at all
+ *
+ * The model no longer answers in days and is no longer told how many there are. It answers in
+ * SCENES, each holding ordered SKILLS, each skill priced by the model in `est_terms`. Everything
+ * about the calendar — how many days, which skill lands on which, what does not fit — is computed
+ * from this by {@see \App\Modules\Learning\Domain\Service\PlanScheduler}.
+ *
+ * There is also no `final_day` any more, and its absence is the same fix one step further: v0 asked
+ * the model for the final day's checkpoints and the list drifted from the days it was copying; v0.1
+ * kept asking for its title. The title is now a constant in the plan's support language and the
+ * checkpoints are {@see finalCheckpoints()} — so nothing about the rehearsal is a model opinion.
+ *
+ * The CONTENT judgement (are there scenes at all, does every skill have one checkpoint, is
+ * `est_terms` in range) is not made here: it is made once, by
  * {@see \App\Modules\Generation\Domain\Service\PlanOutlineValidator}, on the model's raw answer
  * before it is ever stored. This type is the STRUCTURAL parse and it refuses only what it cannot
  * represent — which is what makes it safe to re-read a stored outline written months ago.
@@ -26,7 +38,7 @@ final readonly class PlanOutline
      * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
      * @param  list<string>  $constraints
      * @param  list<string>  $goalTerms
-     * @param  list<PlanOutlineDay>  $days
+     * @param  list<PlanScene>  $scenes
      */
     public function __construct(
         public string $title,
@@ -34,8 +46,7 @@ final readonly class PlanOutline
         public array $entities,
         public array $constraints,
         public array $goalTerms,
-        public array $days,
-        public string $finalDayTitle,
+        public array $scenes,
     ) {}
 
     /**
@@ -49,43 +60,63 @@ final readonly class PlanOutline
     {
         $violations = [];
 
-        $days = [];
-        $rawDays = is_array($raw['days'] ?? null) ? $raw['days'] : [];
-        foreach ($rawDays as $rawDay) {
-            if (! is_array($rawDay)) {
-                $violations[] = 'день каркаса — не объект';
+        $scenes = [];
+        $position = 0;
+        $rawScenes = is_array($raw['scenes'] ?? null) ? $raw['scenes'] : [];
+        foreach ($rawScenes as $rawScene) {
+            if (! is_array($rawScene)) {
+                $violations[] = 'сцена каркаса — не объект';
 
                 continue;
             }
 
-            $outcome = self::stringList($rawDay['outcome'] ?? null);
-            if ($outcome === []) {
-                $violations[] = 'день без единого умения (`outcome`)';
+            $sceneIndex = count($scenes) + 1;
+            $skills = [];
+            $rawSkills = is_array($rawScene['skills'] ?? null) ? $rawScene['skills'] : [];
+            foreach ($rawSkills as $rawSkill) {
+                if (! is_array($rawSkill)) {
+                    continue;
+                }
+                $outcome = self::text($rawSkill['outcome'] ?? '');
+                if ($outcome === '') {
+                    continue;
+                }
+
+                $skills[] = new PlanSkill(
+                    outcome: $outcome,
+                    checkpoint: self::text($rawSkill['checkpoint'] ?? ''),
+                    // A skill whose price did not survive the round trip is worth ONE term rather
+                    // than nothing: an ability the scheduler thinks is free is worse than one it
+                    // underprices, because free abilities never make a plan «не влезает».
+                    estTerms: max(1, (int) self::scalar($rawSkill['est_terms'] ?? 0)),
+                    sceneIndex: $sceneIndex,
+                    skillIndex: count($skills),
+                    position: $position++,
+                    topics: self::stringList($rawSkill['topics'] ?? null),
+                );
+            }
+
+            if ($skills === []) {
+                $violations[] = 'сцена без единого умения';
 
                 continue;
             }
 
-            $days[] = new PlanOutlineDay(
-                index: (int) self::scalar($rawDay['index'] ?? count($days) + 1),
-                title: self::text($rawDay['title'] ?? ''),
-                // A day whose budget did not survive is priced at one term per ability rather than
-                // at zero: an ability the scheduler thinks is free is worse than one it overprices.
-                termBudget: max(count($outcome), (int) self::scalar($rawDay['term_budget'] ?? 0)),
-                outcome: $outcome,
-                role: self::role($rawDay['role'] ?? null),
-                topics: self::stringList($rawDay['topics'] ?? null),
+            $scenes[] = new PlanScene(
+                index: $sceneIndex,
+                title: self::text($rawScene['title'] ?? ''),
+                role: self::role($rawScene['role'] ?? null),
+                skills: $skills,
             );
         }
 
-        if ($days === []) {
-            $violations[] = 'в каркасе нет ни одного дня знакомства';
+        if ($scenes === []) {
+            $violations[] = 'в каркасе нет ни одной сцены';
         }
 
         if ($violations !== []) {
             throw InvalidPlanOutline::because($violations);
         }
-
-        $finalDay = is_array($raw['final_day'] ?? null) ? $raw['final_day'] : [];
 
         return new self(
             title: self::text($raw['title'] ?? ''),
@@ -93,23 +124,22 @@ final readonly class PlanOutline
             entities: self::entities($raw['entities'] ?? null),
             constraints: self::stringList($raw['constraints'] ?? null),
             goalTerms: self::stringList($raw['goal_terms'] ?? null),
-            days: $days,
-            finalDayTitle: self::text($finalDay['title'] ?? ''),
+            scenes: $scenes,
         );
     }
 
     /**
-     * Every ability of the whole plan, in P1's own order: day 1's abilities, then day 2's, and so
-     * on. The order is load-bearing — it is a DEPENDENCY order (day 2 may lean on day 1 and never
-     * the other way round), so when a plan does not fit, the scheduler drops from the END.
+     * Every ability of the whole plan, in P1's own order: scene 1's abilities, then scene 2's, and
+     * so on. The order is load-bearing — the prompt writes scenes and skills by dependency and by
+     * likelihood, so when a plan does not fit, the scheduler drops from the END.
      *
      * @return list<PlanSkill>
      */
     public function skills(): array
     {
         $out = [];
-        foreach ($this->days as $day) {
-            foreach ($day->skills() as $skill) {
+        foreach ($this->scenes as $scene) {
+            foreach ($scene->skills as $skill) {
                 $out[] = $skill;
             }
         }
@@ -117,11 +147,11 @@ final readonly class PlanOutline
         return $out;
     }
 
-    public function day(int $index): ?PlanOutlineDay
+    public function scene(int $index): ?PlanScene
     {
-        foreach ($this->days as $day) {
-            if ($day->index === $index) {
-                return $day;
+        foreach ($this->scenes as $scene) {
+            if ($scene->index === $index) {
+                return $scene;
             }
         }
 
@@ -129,23 +159,24 @@ final readonly class PlanOutline
     }
 
     /**
-     * The FINAL day's checkpoint list: every checkpoint of every day, in day order.
+     * The FINAL day's checkpoint list: every checkpoint of the plan, in P1's order.
      *
      * Assembled here and never asked of the model. v0 asked, and the answer drifted from the days
      * it was supposed to be a copy of — promising the learner an exam harder than the plan they
      * took (docs/research/plan-sandbox-2026-08-29.md §7.7).
+     *
+     * Unlike v0.1 this now includes the checkpoints of scenes with NO interlocutor: the checkpoints
+     * used to hang off the role, so a scene without one silently contributed nothing to the
+     * rehearsal. An ability nobody watches is still an ability the plan promised.
      *
      * @return list<string>
      */
     public function finalCheckpoints(): array
     {
         $out = [];
-        foreach ($this->days as $day) {
-            if ($day->role === null) {
-                continue;
-            }
-            foreach ($day->role->checkpoints as $checkpoint) {
-                $out[] = $checkpoint;
+        foreach ($this->skills() as $skill) {
+            if ($skill->checkpoint !== '') {
+                $out[] = $skill->checkpoint;
             }
         }
 
@@ -173,7 +204,6 @@ final readonly class PlanOutline
         return new PlanRole(
             name: self::text($raw['name'] ?? ''),
             openingLines: $lines,
-            checkpoints: self::stringList($raw['checkpoints'] ?? null),
             ifSilent: self::text($raw['if_silent'] ?? ''),
         );
     }

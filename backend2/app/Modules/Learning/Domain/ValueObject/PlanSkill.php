@@ -8,28 +8,41 @@ namespace App\Modules\Learning\Domain\ValueObject;
  * ONE ability the plan promises — «ты сможешь: сказать, где именно болит» — with the checkpoint
  * that proves it and the price of teaching it.
  *
- * The unit the SERVER schedules with, and the reason it exists as a type at all. The model answers
- * in DAYS, already split; the server has to be able to re-split them, because the learner may
- * change the minutes or the plan may meet a nearer deadline than the outline was written for, and
- * a re-split needs something smaller than a day to move around. An ability is that thing: it is
- * what the learner is buying, it is what the conversation checks, and it does not divide further.
+ * The unit the SERVER schedules with, and since v0.2 the unit the model PRICES. That is the whole
+ * difference between this type today and the one PLAN-1a shipped. It used to be an artefact of
+ * division: P1 priced a DAY, and `estTerms` was that day's budget shared out over its outcome
+ * lines — so the sum of the prices was, necessarily, the budget the server had handed the model one
+ * call earlier. Every judgement built on that sum was a judgement about the server's own input.
  *
- * `estTerms` is the day's `term_budget` shared out over the day's outcome lines — the only per-
- * ability number that exists anywhere, because P1 prices a DAY and not an ability. Shared out with
- * the remainder spread over the first lines rather than by rounding each one up: rounding up three
- * abilities out of a 16-term day says the day needs 18, which is an artefact of division and not a
- * fact about the plan. See {@see PlanOutlineDay::skills()}.
+ * Now P1 answers with `est_terms` per skill, 3–8, and the sum is a fact about the goal instead of
+ * an echo. {@see \App\Modules\Learning\Domain\Service\PlanScheduler} is the only thing that reads
+ * it, and it reads it to decide how many days there are — which is the question the old shape could
+ * not be asked.
  */
 final readonly class PlanSkill
 {
+    /** @param list<string> $topics */
     public function __construct(
         /** The ability, in the learner's own language, as P1 wrote it. */
         public string $outcome,
-        /** How many terms this ability costs. Always ≥ 1. */
+        /** What must be HEARD for it to count. Exactly one per skill — never null since v0.2. */
+        public string $checkpoint,
+        /** How many new cards this ability costs, as the model priced it. 3–8; always ≥ 1. */
         public int $estTerms,
-        /** What must be heard for it to count, or null when the day has no interlocutor. */
-        public ?string $checkpoint,
-        /** Which outline day it came from — the source of its role, its topics and its title. */
-        public int $sourceDayIndex,
+        /** Which scene it belongs to — the source of its role, its title and its conversation. */
+        public int $sceneIndex,
+        /** Where it sits inside its scene, 0-based. */
+        public int $skillIndex,
+        /**
+         * P1's order across the whole plan, 0-based — and therefore the PRIORITY.
+         *
+         * The prompt states it plainly: scenes and skills are ordered by dependency and by
+         * likelihood, and the server cuts from the tail. So this is the sequence the scheduler
+         * truncates, and it is carried on the skill rather than recomputed from position in an
+         * array, because a dropped skill has to keep saying where it stood.
+         */
+        public int $position,
+        /** The AREAS this skill's substitution words come from — never words. */
+        public array $topics = [],
     ) {}
 }

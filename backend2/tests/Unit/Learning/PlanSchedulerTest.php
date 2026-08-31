@@ -18,28 +18,42 @@ use App\Modules\Learning\Domain\ValueObject\PlanOutline;
 beforeEach(fn () => $this->scheduler = new PlanScheduler());
 
 /**
- * An outline shaped like P1's answer. Days are given as [title, term_budget, [outcome, …]] and
- * every day gets a role with one checkpoint per outcome, because that is what P1 is required to
- * produce and what the scheduler carries into the day.
+ * An outline shaped like P1's answer.
+ *
+ * Scenes are still written here as `[title, budget, [outcome, …]]` — the shape the наряд's
+ * scenarios are stated in — and the budget is shared out over the abilities exactly as P1 v0.1 did
+ * it internally, so every expectation below keeps measuring the arithmetic it was written for. What
+ * changed with v0.2 is where the price COMES FROM: the model now writes `est_terms` per ability and
+ * is not told about days at all. This helper is the last place the old division survives, and it
+ * survives as a convenience for writing scenarios, not as a rule.
  */
-function outline(array $days, string $finalTitle = 'Прогон'): PlanOutline
+function outline(array $days): PlanOutline
 {
     $raw = ['title' => 'План', 'goal_restated' => 'Цель', 'entities' => [], 'constraints' => [],
-        'goal_terms' => [], 'recommended_days' => null, 'final_day' => ['title' => $finalTitle], 'days' => []];
+        'goal_terms' => [], 'scenes' => []];
 
     foreach ($days as $i => [$title, $budget, $outcomes]) {
-        $raw['days'][] = [
-            'index' => $i + 1,
+        $base = intdiv($budget, count($outcomes));
+        $remainder = $budget % count($outcomes);
+
+        $skills = [];
+        foreach ($outcomes as $n => $outcome) {
+            $skills[] = [
+                'outcome' => $outcome,
+                'checkpoint' => 'слышно: ' . $outcome,
+                'est_terms' => max(1, $base + ($n < $remainder ? 1 : 0)),
+                'topics' => ['тема ' . ($i + 1)],
+            ];
+        }
+
+        $raw['scenes'][] = [
             'title' => $title,
-            'term_budget' => $budget,
-            'outcome' => $outcomes,
-            'topics' => ['тема ' . ($i + 1)],
             'role' => [
                 'name' => 'собеседник ' . ($i + 1),
                 'opening_lines' => [['text' => 'Hello?', 'translation' => 'Здравствуйте?']],
-                'checkpoints' => array_map(static fn (string $o): string => 'слышно: ' . $o, $outcomes),
                 'if_silent' => 'переспрашивает проще',
             ],
+            'skills' => $skills,
         ];
     }
 
@@ -340,7 +354,7 @@ it('names a merged day after its main ability, since no outline day title covers
     );
 
     expect($plan->introDays)->toBe(1)
-        ->and($plan->days[0]->sourceDayIndex)->toBeNull()
+        ->and($plan->days[0]->sourceSceneIndex)->toBeNull()
         ->and($plan->days[0]->title)->toBe('A');
 });
 
@@ -353,8 +367,10 @@ it('gives a merged day ONE conversation — the one its first ability came from'
     );
 
     expect($plan->days[0]->role?->name)->toBe('собеседник 1')
-        // …but the checkpoints are the merged day's own, in its own order.
-        ->and($plan->days[0]->role?->checkpoints)->toBe(['слышно: A', 'слышно: B']);
+        // …and the checkpoints are the DAY's own, in its own order. They moved off the role with
+        // v0.2 — a checkpoint belongs to the ability it proves, so a scene with no interlocutor
+        // stopped being a scene whose promises nothing checks.
+        ->and($plan->days[0]->checkpoints)->toBe(['слышно: A', 'слышно: B']);
 });
 
 it('computes the day phrase/word split as ceil(0.45 × budget)', function () {

@@ -345,8 +345,13 @@ it('writes a short plan whole, but strictly one day at a time', function () {
 });
 
 it('writes only day 1 of a LONG plan at the start, and the next when a day is walked', function () {
-    // Ten introduction days: past the eager threshold, so the plan pays for one day and stops.
-    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+    // A goal big enough for five introduction days, and ten calendar days to teach them in: past
+    // the eager threshold, so the plan pays for one day and stops. The SIZE has to come from the
+    // goal now — P1 v0.2 is not told the calendar, so a later event date no longer buys more days.
+    [, $token, $planId] = startedPlan($this, [
+        'goal_text' => 'Большая цель [scenes:5]',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
 
     $statuses = fn (): array => DB::table('learning_plan_days')
         ->where('plan_id', $planId)->orderBy('day_index')->pluck('status', 'day_index')->all();
@@ -366,7 +371,10 @@ it('writes only day 1 of a LONG plan at the start, and the next when a day is wa
 });
 
 it('builds a day on demand, idempotently, and refuses to run more than two ahead', function () {
-    [, $token, $planId] = startedPlan($this, ['event_date' => now()->addDays(10)->format('Y-m-d')]);
+    [, $token, $planId] = startedPlan($this, [
+        'goal_text' => 'Большая цель [scenes:5]',
+        'event_date' => now()->addDays(10)->format('Y-m-d'),
+    ]);
 
     $generate = fn (int $n) => $this->withHeader('Authorization', "Bearer {$token}")
         ->postJson("/api/v1/plans/{$planId}/days/{$n}/generate");
