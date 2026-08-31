@@ -4119,6 +4119,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} фраза и слово в работе} few{{count} фразы и слова в работе} many{{count} фраз и слов в работе} other{{count} фраз и слов в работе}}'**
   String planDayInWork(int count);
 
+  /// No description provided for @planReviewRow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение'**
+  String get planReviewRow;
+
+  /// No description provided for @planReviewCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}'**
+  String planReviewCount(int count);
+
+  /// No description provided for @planReviewSection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторение'**
+  String get planReviewSection;
+
   /// Строка итога дня.
   ///
   /// In ru, this message translates to:

@@ -657,6 +657,14 @@ class _SessionShellState extends ConsumerState<_SessionShell> {
                               ),
                               const SizedBox(height: 18),
                             ],
+                            // THE SEAM. The day ends here and the top-up from the learner's own
+                            // queue begins — different material, and it must not read as more of
+                            // today's. Drawn once, on the first card past the day, because a label
+                            // over every review card would be noise.
+                            if (_playing == plan.dayTaskCount && plan.dayTaskCount > 0) ...[
+                              _SectionSeam(label: l.planReviewSection),
+                              const SizedBox(height: 18),
+                            ],
                             card,
                             // «Слово worse идёт со дня 1 — сегодня оно на ступени B.» Drawn only
                             // for a word carried in from an EARLIER day, because for today's own
@@ -1382,4 +1390,29 @@ class _CenteredMessage extends StatelessWidget {
       ],
     );
   }
+}
+
+/// «— ПОВТОРЕНИЕ —»: the line between the plan day and what the ordinary queue added to the sitting.
+///
+/// A rule with a word in it rather than a header: the cards after it are played exactly the same
+/// way, so the seam has to be visible without claiming to be a new screen.
+class _SectionSeam extends StatelessWidget {
+  const _SectionSeam({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+        child: Text(
+          label.toUpperCase(),
+          style: AppText.blockLabel.copyWith(letterSpacing: 1.32, color: AppColors.tertiary),
+        ),
+      ),
+      const Expanded(child: Divider(height: 1, thickness: 1, color: AppColors.dividerFaint)),
+    ],
+  );
 }

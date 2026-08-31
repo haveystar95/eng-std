@@ -2720,6 +2720,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get planReviewRow => 'Revision';
+
+  @override
+  String planReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '$count word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planReviewSection => 'Revision';
+
+  @override
   String get planStageAClosed => 'Stage A closed';
 
   @override

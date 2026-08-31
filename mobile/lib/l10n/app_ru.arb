@@ -2079,6 +2079,12 @@
     "description": "Итог дня: «в работе», а не «выучено».",
     "placeholders": { "count": { "type": "int" } }
   },
+  "planReviewRow": "Повторение",
+  "planReviewCount": "{count, plural, one{{count} слово} few{{count} слова} many{{count} слов} other{{count} слова}}",
+  "@planReviewCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "planReviewSection": "Повторение",
   "planStageAClosed": "Ступень A пройдена",
   "@planStageAClosed": { "description": "Строка итога дня." },
   "planStageBReturns": "Вернутся на ступени B",

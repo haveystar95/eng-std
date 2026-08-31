@@ -557,7 +557,14 @@ class PlanSessionTask {
     required this.fromDayIndex,
     required this.softened,
     required this.card,
+    this.section = sectionDay,
   });
+
+  /// This task is the day's own material — it counts towards «день пройден».
+  static const sectionDay = 'day';
+
+  /// Top-up from the learner's ordinary queue — worth playing, not part of the day.
+  static const sectionReview = 'review';
 
   final PlanStage stage;
 
@@ -571,14 +578,27 @@ class PlanSessionTask {
 
   final SessionCard card;
 
-  factory PlanSessionTask.fromJson(Map<String, dynamic> j) => PlanSessionTask(
-    stage: PlanStage.fromWire(j['stage'] as String?),
-    ordinal: (j['ordinal'] as num?)?.toInt() ?? 1,
-    ofSteps: (j['of_steps'] as num?)?.toInt() ?? 1,
-    fromDayIndex: (j['from_day_index'] as num?)?.toInt() ?? 0,
-    softened: j['softened'] == true,
-    card: SessionCard.fromJson((j['card'] as Map<String, dynamic>?) ?? const {}),
-  );
+  /// [sectionDay] or [sectionReview] — which side of the seam this task is on.
+  final String section;
+
+  bool get isDay => section != sectionReview;
+
+  factory PlanSessionTask.fromJson(Map<String, dynamic> j) {
+    final fromDay = (j['from_day_index'] as num?)?.toInt() ?? 0;
+
+    return PlanSessionTask(
+      stage: PlanStage.fromWire(j['stage'] as String?),
+      ordinal: (j['ordinal'] as num?)?.toInt() ?? 1,
+      ofSteps: (j['of_steps'] as num?)?.toInt() ?? 1,
+      fromDayIndex: fromDay,
+      softened: j['softened'] == true,
+      card: SessionCard.fromJson((j['card'] as Map<String, dynamic>?) ?? const {}),
+      // The server names it; the fallback is the rule it names, for a payload written before the
+      // field existed. `from_day_index: null` — decoded as 0 above — is a term of no day of this
+      // plan, which is exactly what the top-up is.
+      section: (j['section'] as String?) ?? (fromDay > 0 ? sectionDay : sectionReview),
+    );
+  }
 }
 
 /// A whole plan session — `POST /plans/{id}/days/{n}/session`.
@@ -594,6 +614,9 @@ class PlanSession implements PlanSessionEnvelope {
     required this.strict,
     required this.tasks,
   });
+
+  /// Every task that belongs to the day, in order — `tasks` minus the top-up.
+  List<PlanSessionTask> get dayTasks => tasks.where((t) => t.isDay).toList(growable: false);
 
   final String sessionId;
   @override
@@ -625,6 +648,12 @@ class PlanSession implements PlanSessionEnvelope {
 
     return (ordinal: task.ordinal, of: task.ofSteps);
   }
+
+  @override
+  bool isDayTaskAt(int i) => i >= 0 && i < tasks.length && tasks[i].isDay;
+
+  @override
+  int get dayTaskCount => dayTasks.length;
 
   @override
   int? carriedFromAt(int i) {

@@ -98,6 +98,12 @@ SessionCard _card(String id, String type) => SessionCard.fromJson({
 
 /// A plan session envelope with no carried words — enough for the summary's arithmetic.
 class _Envelope implements PlanSessionEnvelope {
+  const _Envelope({this.dayCards = 1 << 30});
+
+  /// How many of the cards are the DAY's — everything before this index. The default is «all of
+  /// them», which is what a session with nothing else due looks like.
+  final int dayCards;
+
   @override
   String get planId => '01PLAN';
   @override
@@ -110,6 +116,10 @@ class _Envelope implements PlanSessionEnvelope {
   ({int ordinal, int of})? stepAt(int i) => (ordinal: 1, of: 3);
   @override
   int? carriedFromAt(int i) => null;
+  @override
+  bool isDayTaskAt(int i) => i < dayCards;
+  @override
+  int get dayTaskCount => dayCards;
 }
 
 void main() {
@@ -289,7 +299,7 @@ void main() {
         overrides: [planProvider('01PLAN').overrideWith((ref) async => _plan())],
         child: _app(
           PlanDaySummary(
-            envelope: _Envelope(),
+            envelope: const _Envelope(),
             // Five cards, three distinct terms: one word arrives as several cards inside a stage
             // and the summary must not count the questions.
             cards: [
@@ -310,5 +320,44 @@ void main() {
     expect(find.text('3 фразы и слова в работе'), findsOneWidget);
     expect(find.text('Ступень A пройдена'), findsOneWidget);
     expect(find.textContaining('выучен'), findsNothing);
+
+    // Nothing else was due, so there is no revision row to draw.
+    expect(find.text('Повторение'), findsNothing);
+  });
+
+  testWidgets('the summary counts the day apart from what the queue added to the sitting', (
+    tester,
+  ) async {
+    // The live complaint, in one screen: a day of THREE terms topped up with two the ordinary
+    // queue had due. Counting them together announced a day that was twice the size it was — and on
+    // the account it happened to, two of the extras were French inside an English plan.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [planProvider('01PLAN').overrideWith((ref) async => _plan())],
+        child: _app(
+          PlanDaySummary(
+            envelope: const _Envelope(dayCards: 4),
+            cards: [
+              _card('t1', 'phrase'),
+              _card('t1', 'phrase'),
+              _card('t2', 'word'),
+              _card('t3', 'word'),
+              // Past the seam: the top-up.
+              _card('r1', 'phrase'),
+              _card('r2', 'word'),
+            ],
+            onDone: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // THREE, not five: the headline is the day.
+    expect(find.text('3 фразы и слова в работе'), findsOneWidget);
+
+    // …and the revision is said, on its own row, in its own words.
+    expect(find.text('Повторение'), findsOneWidget);
+    expect(find.text('2 слова'), findsOneWidget);
   });
 }

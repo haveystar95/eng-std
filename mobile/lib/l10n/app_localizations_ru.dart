@@ -2848,6 +2848,25 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get planReviewRow => 'Повторение';
+
+  @override
+  String planReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слова',
+      many: '$count слов',
+      few: '$count слова',
+      one: '$count слово',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planReviewSection => 'Повторение';
+
+  @override
   String get planStageAClosed => 'Ступень A пройдена';
 
   @override

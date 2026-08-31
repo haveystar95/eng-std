@@ -613,6 +613,20 @@ abstract interface class PlanSessionEnvelope {
   /// The day the card's word was introduced on, when that is EARLIER than the day being studied.
   /// Null for the day's own words, so the «слово со дня K» line is drawn only when it says something.
   int? carriedFromAt(int i);
+
+  /// Is the card at [i] the DAY's own material, rather than the top-up from the ordinary queue?
+  ///
+  /// A plan session deals its day and then tops the sitting up with whatever else the learner has
+  /// due. Both are worth playing and only the first is the DAY: counting them together is how a day
+  /// of fourteen cards was announced as «День 1 пройден · 21 фраза и слово», seven of them from
+  /// another plan and another language.
+  ///
+  /// The server says it per task (`section`) and says where the seam falls ([dayTaskCount]); this
+  /// asks it per card, because the screen holds cards.
+  bool isDayTaskAt(int i);
+
+  /// How many of the session's cards are the day's own — the index the top-up starts at.
+  int get dayTaskCount;
 }
 
 class Profile {

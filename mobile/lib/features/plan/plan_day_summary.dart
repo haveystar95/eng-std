@@ -44,9 +44,24 @@ class PlanDaySummary extends ConsumerWidget {
 
     // Distinct TERMS, not cards: one word arrives as three cards inside a stage, and «9 фраз и слов»
     // must be nine things and not twenty-seven questions.
+    //
+    // And the DAY's terms apart from the top-up. A plan session deals the day and then tops the
+    // sitting up from the learner's ordinary queue; both were counted as the day here, so a day of
+    // fourteen was announced as «21 фраза и слово» — seven of them out of another plan and, on the
+    // account this was found on, another language. The seam is the server's answer now
+    // ([PlanSessionEnvelope.isDayTaskAt]), not this screen's guess.
     final byTerm = <String, SessionCard>{};
-    for (final card in cards) {
-      byTerm.putIfAbsent(card.termId, () => card);
+    final reviewTerms = <String>{};
+    for (var i = 0; i < cards.length; i++) {
+      final card = cards[i];
+      if (envelope.isDayTaskAt(i)) {
+        byTerm.putIfAbsent(card.termId, () => card);
+      } else if (!byTerm.containsKey(card.termId)) {
+        // A term the day never introduced. Counted once, and never as the day's — a word that is
+        // BOTH (dealt for its day and due again) belongs to the day, which is why the check reads
+        // the day map first.
+        reviewTerms.add(card.termId);
+      }
     }
     final phrases = byTerm.values.where((c) => c.type != 'word').length;
     final words = byTerm.length - phrases;
@@ -97,6 +112,15 @@ class PlanDaySummary extends ConsumerWidget {
             const Divider(height: 1, thickness: 1, color: AppColors.hairline),
             _SummaryRow(label: l.planStageBReturns, value: l.planStageBWhen),
             const Divider(height: 1, thickness: 1, color: AppColors.hairline),
+            // The top-up, said out loud and on its own line. It was worth playing and it is not the
+            // day: folding it into the count above is what made the day look bigger than it was.
+            if (reviewTerms.isNotEmpty) ...[
+              _SummaryRow(
+                label: l.planReviewRow,
+                value: l.planReviewCount(reviewTerms.length),
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.hairline),
+            ],
           ],
           const SizedBox(height: AppSpacing.s26),
           // The conversation is the day's main act and it is not built (CONV-1). A dark plate that
