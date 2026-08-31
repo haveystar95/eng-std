@@ -8,6 +8,7 @@ use App\Modules\Learning\Domain\ValueObject\EnabledModes;
 use App\Modules\Learning\Domain\ValueObject\ExerciseMode;
 use App\Modules\Shared\Domain\ValueObject\Ulid;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -51,6 +52,53 @@ it('deals the intro as the first card of a never-seen word, and asks nothing on 
         ->and($cards[0]['answer'])->toBe('apple')
         ->and($cards[0]['options'])->toBeNull()
         ->and($cards[0]['chips'])->toBeNull();
+});
+
+it('shows the reading on the intro card and on no other, in an ordinary collection too', function () {
+    // The plan is not a special case: the reading rides the same card in the same field whether the
+    // hint was written by P2 or by the станок. What makes the intro card the right place is that it
+    // SHOWS the word — every other rung asks for it, and printing how it sounds prints the answer.
+    [$user, $token] = learner();
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    seedWordFor($user, 'bank', 'банк');
+    DB::table('term_transliterations')->insert([
+        'id' => (string) Ulid::generate(), 'term_id' => $apple, 'text' => 'эпл', 'lang' => 'ru',
+        'source' => 'auto', 'generator_version' => 'v15', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    enableIntro();
+
+    $all = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')->assertOk()->json('data.cards');
+
+    $cards = array_values(array_filter($all, static fn (array $c): bool => $c['term_id'] === $apple));
+
+    expect($cards[0]['exercise_mode'])->toBe('intro')
+        ->and($cards[0]['transliteration'])->toBe('эпл')
+        // Every card after it asks the word, and none of them carries the hint.
+        ->and(array_unique(array_column(array_slice($cards, 1), 'transliteration')))->toBe([null]);
+});
+
+it('never shows the reading on a card the learner has to type', function () {
+    // The card that asks for the spelling is the one card where a hint in the learner's own letters
+    // is a transcription of the answer. Same term, same hint, one rung up: null.
+    [$user, $token] = learner();
+    $apple = seedWordFor($user, 'apple', 'яблоко');
+    DB::table('term_transliterations')->insert([
+        'id' => (string) Ulid::generate(), 'term_id' => $apple, 'text' => 'эпл', 'lang' => 'ru',
+        'source' => 'auto', 'generator_version' => 'v15', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    app(EnabledModesWriter::class)->setGlobalDefault(new EnabledModes([ExerciseMode::Typing]));
+
+    $cards = $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/study/sessions')->assertOk()->json('data.cards');
+
+    $typing = array_values(array_filter(
+        $cards,
+        static fn (array $c): bool => $c['term_id'] === $apple && $c['exercise_mode'] === 'typing',
+    ));
+
+    expect($typing)->not->toBeEmpty()
+        ->and($typing[0]['transliteration'])->toBeNull();
 });
 
 it('records an intro as an exposure, never as a review', function () {

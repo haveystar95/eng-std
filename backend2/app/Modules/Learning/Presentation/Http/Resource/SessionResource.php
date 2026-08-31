@@ -24,6 +24,11 @@ final class SessionResource extends JsonResource
                 'prompt' => $card->prompt,
                 'answer' => $card->answer,
                 'transcription' => $card->transcription,
+                // ADDITIVE. How the term reads in the learner's own letters, on the INTRO card and
+                // nowhere else — the one card that shows the word instead of asking for it. Beside
+                // `transcription` and never instead of it: that one is IPA, this one is a hint in
+                // an alphabet the learner already reads.
+                'transliteration' => $card->transliteration,
                 'example' => $card->example,
                 'example_translation' => $card->exampleTranslation,
                 'options' => $card->options,

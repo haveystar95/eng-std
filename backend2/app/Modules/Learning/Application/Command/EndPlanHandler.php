@@ -7,6 +7,7 @@ namespace App\Modules\Learning\Application\Command;
 use App\Modules\Learning\Application\Port\PlanTermReleaser;
 use App\Modules\Learning\Domain\Exception\PlanNotFound;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
+use App\Modules\Learning\Domain\ValueObject\PlanEnding;
 use App\Modules\Shared\Domain\Service\Clock;
 use App\Modules\Shared\Domain\Service\TransactionManager;
 
@@ -39,15 +40,17 @@ final readonly class EndPlanHandler
                 throw PlanNotFound::withId($command->planId->value);
             }
 
+            // EXHAUSTIVE, with no `default` arm — the arm that used to be here quietly meant
+            // «complete» and swallowed every string that was not one of the other two.
             match ($command->action) {
-                EndPlan::PAUSE => $plan->pause(),
-                EndPlan::ABANDON => $plan->abandon(),
-                default => $plan->complete($this->clock->now()),
+                PlanEnding::Pause => $plan->pause(),
+                PlanEnding::Abandon => $plan->abandon(),
+                PlanEnding::Complete => $plan->complete($this->clock->now()),
             };
 
             $this->plans->save($plan);
 
-            if ($command->action !== EndPlan::PAUSE) {
+            if (! $command->action->keepsHold()) {
                 $this->releaser->releasePlan($plan->userId(), $plan->id()->value);
             }
         });

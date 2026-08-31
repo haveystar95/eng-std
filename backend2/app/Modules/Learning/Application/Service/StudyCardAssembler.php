@@ -482,7 +482,7 @@ final readonly class StudyCardAssembler
     }
 
     /**
-     * Rung 0. The word is SHOWN: term, transcription, translation, example. Nothing is asked, so
+     * Rung 0. The word is SHOWN: term, transcription, the READING, translation, example. Nothing is asked, so
      * there is no answer to check and no accepted variants to send — the client's only job is to
      * display it and report that it did, which becomes a `term_exposures` row.
      *
@@ -504,6 +504,10 @@ final readonly class StudyCardAssembler
             chips: null,
             acceptedVariants: [],
             ladderStep: LearningLadder::STEP_INTRO,
+            // The reading, on the one card that SHOWS the word. Same field for a plan day and for
+            // an ordinary collection — the plan writes it with P2, the станок with READ, and by the
+            // time it is here it is one column on one term.
+            transliteration: $content->transliterationHint,
         );
     }
 

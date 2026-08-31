@@ -32,6 +32,7 @@ use App\Modules\Learning\Application\Query\GetPlanRehearsal;
 use App\Modules\Learning\Application\Query\GetPlanRehearsalHandler;
 use App\Modules\Learning\Application\Query\ListPlans;
 use App\Modules\Learning\Application\Query\ListPlansHandler;
+use App\Modules\Learning\Domain\ValueObject\PlanEnding;
 use App\Modules\Learning\Domain\ValueObject\PlanId;
 use App\Modules\Learning\Domain\ValueObject\StudySessionId;
 use App\Modules\Learning\Presentation\Http\Request\CreatePlanRequest;
@@ -125,12 +126,12 @@ final class PlanController
 
     public function pause(Request $request, string $planId): JsonResponse
     {
-        return $this->finish($request, $planId, EndPlan::PAUSE);
+        return $this->finish($request, $planId, PlanEnding::Pause);
     }
 
     public function abandon(Request $request, string $planId): JsonResponse
     {
-        return $this->finish($request, $planId, EndPlan::ABANDON);
+        return $this->finish($request, $planId, PlanEnding::Abandon);
     }
 
     /**
@@ -258,7 +259,7 @@ final class PlanController
         throw new NotFoundHttpException();
     }
 
-    private function finish(Request $request, string $planId, string $action): JsonResponse
+    private function finish(Request $request, string $planId, PlanEnding $action): JsonResponse
     {
         ($this->end)(new EndPlan($this->planId($planId), $this->actorId($request), $action));
 

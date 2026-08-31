@@ -2968,6 +2968,16 @@ components:
             translation without any translation entering an answer key.
           items: { type: string }
         transcription: { type: string, nullable: true }
+        transliteration:
+          type: string
+          nullable: true
+          description: >
+            ADDITIVE. How the term READS, spelled in the letters of the learner's own language
+            («комо эстас»). Present on the `intro` card only — the one card that shows the word
+            instead of asking for it — and null on every other mode, including when the term has no
+            hint at all. Beside `transcription` and never instead of it: that one is IPA, one per
+            term in a notation the learner has to have been taught; this one is per language pair,
+            in an alphabet they already read.
         example: { type: string, nullable: true }
         example_translation: { type: string, nullable: true }
         options:

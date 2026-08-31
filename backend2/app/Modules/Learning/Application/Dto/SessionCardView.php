@@ -54,5 +54,19 @@ final readonly class SessionCardView
         public ?array $optionFeedback = null,
         public ?int $ladderStep = null,
         public ?array $optionIds = null,
+        /**
+         * How the term READS, spelled in the letters of the learner's own language — «комо эстас».
+         * Present on the INTRO card and nowhere else, and null there too when the term has no hint.
+         *
+         * The intro card is the one card that shows the word instead of asking for it, so it is the
+         * one card where a pronunciation hint is an answer to a question the learner is actually
+         * asking. On every other rung the word is what is being retrieved, and printing how it
+         * sounds beside it is printing the answer.
+         *
+         * Not `$transcription`, which is IPA: one notation per term, and one the learner has to
+         * have been taught. This is per PAIR, in an alphabet they already read
+         * ({@see \App\Modules\Vocabulary\Application\Dto\TermContentView::$transliterationHint}).
+         */
+        public ?string $transliteration = null,
     ) {}
 }

@@ -12,7 +12,15 @@ use App\Modules\Generation\Application\Service\PlanOutlineService;
 use App\Modules\Generation\Domain\ValueObject\ProviderId;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+
+// This file writes users, plans, terms AND — since it switches the dark trainers on — a global
+// settings row. Without the rollback those rows outlive the file and the next test measures them:
+// `learning_mode_settings` left `intro` on turned every «two new words → four cards» assertion in
+// StudyApiTest into six. Every other plan file already did this; this one only got away with it
+// because it had never written anything global.
+uses(RefreshDatabase::class);
 
 /**
  * THE WHOLE PATH, on the material a person actually wrote.
@@ -130,6 +138,10 @@ it('walks S1 from the skeleton to a ready day 1, and every gate lets it through'
 });
 
 it('deals the ready day as a session, giving each card the chain its kind earns', function () {
+    // `intro` and `speaking` ship dark — the release rule, not this test's subject. Thrown here so
+    // the chain below is the full stage-A ladder and not a narrower one.
+    DB::table('learning_mode_settings')->where('scope', 'global')->whereNull('user_id')->update(['enabled' => true]);
+
     [$user, $token] = learner();
     profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
 
@@ -158,4 +170,20 @@ it('deals the ready day as a session, giving each card the chain its kind earns'
     expect(array_unique($modesByKind['line'] ?? []))->not->toContain('typing')
         ->and(array_unique($modesByKind['line'] ?? []))->not->toContain('dictation')
         ->and($modesByKind['word'] ?? [])->not->toBeEmpty();
+
+    // THE READING, on the card that shows the word. The day's own hints («ит хётс ин май лоуэр
+    // бэк») travelled from P2 through `term_transliterations` to the intro card, and stop there:
+    // on any card that ASKS for the word, printing how it sounds prints the answer.
+    $intro = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['exercise_mode'] === 'intro',
+    ));
+    $asked = array_values(array_filter(
+        $session['tasks'],
+        static fn (array $t): bool => $t['card']['exercise_mode'] !== 'intro',
+    ));
+
+    expect($intro)->not->toBeEmpty()
+        ->and(array_column(array_column($intro, 'card'), 'transliteration'))->not->toContain(null)
+        ->and(array_unique(array_column(array_column($asked, 'card'), 'transliteration')))->toBe([null]);
 });
