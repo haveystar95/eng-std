@@ -220,6 +220,7 @@ final readonly class PlanDayComposer
                 speaker: $item->speaker,
                 imageApiPrompt: $item->imageApiPrompt,
                 coversCheckpoint: $item->coversCheckpoint,
+                index: $item->index,
             );
         }
 
@@ -273,7 +274,14 @@ final readonly class PlanDayComposer
             'chunks' => PlanDayItem::KIND_CHUNK,
         ] as $key => $kind) {
             $cards = is_array($payload[$key] ?? null) ? $payload[$key] : [];
+            // THE POSITION AS THE MODEL WROTE IT, and not as the flattened list happens to number
+            // it: a violation says «`phrases[3]`» and P2R puts a fixed card back at `phrases[3]`.
+            // A card that was not an array is skipped and still consumes its index — dropping it
+            // silently would shift every card after it, and the repair call would edit its
+            // neighbour.
+            $index = -1;
             foreach ($cards as $card) {
+                $index++;
                 if (! is_array($card)) {
                     continue;
                 }
@@ -298,6 +306,7 @@ final readonly class PlanDayComposer
                     speaker: $isLine && $speaker !== '' ? $speaker : null,
                     imageApiPrompt: $this->text($card['image_api_prompt'] ?? ''),
                     coversCheckpoint: $isLine && is_int($covers) ? $covers : null,
+                    index: $index,
                 );
             }
         }

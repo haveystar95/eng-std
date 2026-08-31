@@ -78,7 +78,33 @@ final readonly class PlanDayItem
         public string $imageApiPrompt = '',
         /** 1-based checkpoint this line closes; always null on a substitution. */
         public ?int $coversCheckpoint = null,
+        /**
+         * WHERE THIS CARD STANDS in the array the model wrote it in — 0-based, as written.
+         *
+         * The other half of an address ({@see arrayName()}), and the reason it is on the card and
+         * not computed by whoever needs it: a violation names a card by `(array, index)` and P2R
+         * puts a fixed card back at that same `(array, index)`. Two places deriving the same
+         * position independently is how a repair call edits the card next to the broken one.
+         */
+        public int $index = 0,
     ) {}
+
+    /**
+     * Which of the answer's three arrays this card came out of — `phrases` | `words` | `chunks`.
+     *
+     * Derived from {@see $kind} rather than stored beside it, because the two cannot be allowed to
+     * disagree: the array is what DECIDED the kind on the way in
+     * ({@see \App\Modules\Generation\Application\Service\PlanDayComposer::items()}), so a second
+     * field would only ever be a chance for them to drift.
+     */
+    public function arrayName(): string
+    {
+        return match ($this->kind) {
+            self::KIND_LINE => 'phrases',
+            self::KIND_WORD => 'words',
+            default => 'chunks',
+        };
+    }
 
     /**
      * Is there a hole in this card's frame?

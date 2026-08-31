@@ -56,7 +56,9 @@ function itemsOf(array $day): array
         'words' => PlanDayItem::KIND_WORD,
         'chunks' => PlanDayItem::KIND_CHUNK,
     ] as $key => $kind) {
-        foreach ($day[$key] ?? [] as $card) {
+        // The index is the card's position in the ARRAY it was written in, not in this flattened
+        // list — that is the half of an address P2R merges by.
+        foreach (array_values($day[$key] ?? []) as $index => $card) {
             $isLine = $kind === PlanDayItem::KIND_LINE;
             $frame = $isLine ? ($card['frame'] ?? '') : '';
             $filler = $isLine ? ($card['filler'] ?? '') : '';
@@ -75,6 +77,7 @@ function itemsOf(array $day): array
                 speaker: $isLine ? ($card['speaker'] ?? null) : null,
                 imageApiPrompt: $card['image_api_prompt'] ?? '',
                 coversCheckpoint: $isLine ? ($card['covers_checkpoint'] ?? null) : null,
+                index: $index,
             );
         }
     }
@@ -213,6 +216,9 @@ function withCard(int $at, array $overrides): callable
             coversCheckpoint: array_key_exists('coversCheckpoint', $overrides)
                 ? $overrides['coversCheckpoint']
                 : $item->coversCheckpoint,
+            // The address survives the override: a test that broke a card and lost its position
+            // would assert against `phrases[0]` whatever it edited.
+            index: $item->index,
         );
 
         return $items;
@@ -327,15 +333,19 @@ it('refuses an interlocutor line the skeleton never promised', function () {
     expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::ROLE_LINE_INVENTED);
 });
 
-it('refuses a day where more than a quarter of the lines belong to the interlocutor', function () {
-    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(7, [
+it('only WARNS about a day where more than a quarter of the lines belong to the interlocutor', function () {
+    // The ceiling joined its own floor ({@see PlanDayValidator::NO_ROLE_LINE}) in v0.3.1: it is a
+    // proportion of the answer, no one card is to blame for it, and refusing a day over its shape
+    // costs a paid call. Counted instead.
+    $off = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(7, [
         'frame' => 'How long has it been like this?',   // verbatim from the skeleton, but one too many
         'filler' => '',
         'speaker' => PlanDayItem::SPEAKER_ROLE,
         'coversCheckpoint' => null,
     ]));
 
-    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::ROLE_LINE_SHARE);
+    expect($this->validator->validate($off))->toBe([])
+        ->and(dayCodes($this->validator->warnings($off)))->toContain(PlanDayValidator::ROLE_LINE_SHARE);
 });
 
 // ── the slot, which belongs to `frame` alone ──────────────────────────────────────────────────
@@ -375,30 +385,39 @@ it('never fails a day over a slot in the reading hint — the hint is dropped, n
 
 // ── the substitutions ─────────────────────────────────────────────────────────────────────────
 
-it('refuses a word that stands in no frame of the day', function () {
+it('WARNS about a word that stands in no frame of the day, and writes the day', function () {
     // The rule the whole of v0.2 turns on: a word whose example is not one of the day's frames with
-    // that word in the slot is a glossary entry sitting next to the conversation.
-    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+    // that word in the slot is a glossary entry sitting next to the conversation. Still the rule —
+    // and no longer a refusal. It was the LAST fatal gate between a live day and `ready`, three
+    // attempts in a row, always over one word of fourteen cards
+    // (`docs/research/plan-v0.3-run.md`). One card is an address now, not a second paid day.
+    $off = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
         'text' => 'physiotherapy',
         'translation' => 'физиотерапия',
         'example' => 'Physiotherapy usually helps with this.',
     ]));
 
-    expect(dayCodes($this->validator->validate($broken)))
-        ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
+    // Not `toBe([])`: this word is also a line's filler, so renaming it breaks the filler gate as
+    // well. What is under test is that the word-in-a-frame rule is no longer among the fatal ones.
+    expect(dayCodes($this->validator->validate($off)))
+        ->not->toContain(PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME)
+        ->and(dayCodes($this->validator->warnings($off)))
+        ->toContain(PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME);
 });
 
-it('refuses a WORD that sits in the FIXED part of a frame instead of its hole', function () {
-    // Still fatal for words, and still the right rule for them: the learner never substitutes
-    // anything, they memorise one more sentence. In the slot, or not at all.
-    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+it('WARNS about a word that sits in the FIXED part of a frame instead of its hole', function () {
+    // The rule for a word is unchanged and still narrower than the one for a connector: in the
+    // slot, or nowhere. Only its price changed.
+    $off = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
         'text' => 'appointment',
         'translation' => 'приём у врача',
         'example' => 'I have an appointment at eleven, not at ten.',
     ]));
 
-    expect(dayCodes($this->validator->validate($broken)))
-        ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
+    expect(dayCodes($this->validator->validate($off)))
+        ->not->toContain(PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME)
+        ->and(dayCodes($this->validator->warnings($off)))
+        ->toContain(PlanDayValidator::SUBSTITUTION_OUTSIDE_FRAME);
 });
 
 /**
@@ -738,6 +757,96 @@ it('repairs a hint that only picked up sentence punctuation', function () {
 it('refuses to repair a hint written in the wrong alphabet, so the caller can drop it', function () {
     expect($this->validator->transliterationFor('ru', 'ай уоз риспонсибл фо зэ API'))->toBeNull()
         ->and($this->validator->transliterationFor('ru', ''))->toBeNull();
+});
+
+// ── the address: where the defect is, and nothing the model wrote ─────────────────────────────
+
+it('addresses a card violation by array, index and field', function () {
+    // «phrases[1].translation» — the whole of what a repair call is given to work with. The index
+    // is the card's position in the array the model wrote it in, which is what P2R merges by.
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(1, [
+        'translation' => 'У меня приём в ___.',
+    ]));
+
+    $slot = array_values(array_filter(
+        $this->validator->validate($broken),
+        static fn (PlanViolation $v): bool => $v->code === PlanDayValidator::SLOT_OUTSIDE_FRAME,
+    ))[0];
+
+    expect($slot->isAddressed())->toBeTrue()
+        ->and($slot->array)->toBe('phrases')
+        ->and($slot->index)->toBe(1)
+        ->and($slot->field)->toBe('translation')
+        ->and($slot->reason)->not->toBe('')
+        ->and($slot->address())->toBe(
+            'phrases[1].translation — day.slot_outside_frame: `translation` carries a `___` — the '
+            . 'slot lives in `frame` and nowhere else; this field is about the FULL assembled line',
+        );
+});
+
+it('quotes NOTHING the model wrote in the address, however loudly the detail does', function () {
+    // The finding that cost $0.05 and this whole наряд: a retry told «day.example_is_a_term
+    // [Right now, I am a backend developer.]» answered WITH that sentence
+    // (`docs/research/plan-v0.3-run.md`, второй заход). The prose still carries the card, because a
+    // person reads `fail_reason`; the address may not, because a model reads that.
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(9, [
+        'example' => "I'm here because of back pain.",
+    ]));
+
+    $clone = array_values(array_filter(
+        $this->validator->validate($broken),
+        static fn (PlanViolation $v): bool => $v->code === PlanDayValidator::EXAMPLE_IS_A_TERM,
+    ))[0];
+
+    expect($clone->address())->toBe(
+        'words[1].example — day.example_is_a_term: the `example` is, word for word, a card of this '
+        . 'day rather than a sentence containing one',
+    )
+        ->and($clone->address())->not->toContain('back pain')
+        // …and the OTHER card, the one it clones, is not named either — that is the sentence the
+        // model would have copied back.
+        ->and($clone->address())->not->toContain("I'm here")
+        // The Russian prose is the human's, and it names both.
+        ->and((string) $clone)->toContain('back pain');
+});
+
+it('leaves a violation about the ANSWER unaddressed, because no card is to blame for it', function () {
+    // A count, an uncovered checkpoint, a proportion: nothing a repair call could be pointed at, so
+    // these are what send a day back WHOLE ({@see PlanDayRepairer}).
+    $day = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3);
+    $short = new PlanDayCandidate(
+        supportLang: 'ru', targetLang: 'en', termBudget: 14, phraseCount: 9,
+        chunkCount: $day->chunkCount, wordCount: $day->wordCount, checkpointCount: 3,
+        goalTerms: [], openingLines: $day->openingLines, items: $day->items,
+    );
+
+    $count = array_values(array_filter(
+        $this->validator->validate($short),
+        static fn (PlanViolation $v): bool => $v->code === PlanDayValidator::ARRAY_COUNT,
+    ))[0];
+
+    expect($count->isAddressed())->toBeFalse()
+        ->and($count->array)->toBeNull()
+        ->and($count->index)->toBeNull()
+        ->and($count->address())->toStartWith('day — day.array_count: ');
+});
+
+it('gives every fatal violation of a broken day an English reason', function () {
+    // A reason is what a repair call reads instead of the card it must not see. A fatal violation
+    // with an empty one would reach P2R as a bare code, and «day.kind_mismatch» alone does not say
+    // what to change.
+    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        $items = withCard(1, ['imageApiPrompt' => '', 'translation' => 'У меня приём в ___.'])($items);
+
+        return withCard(9, ['speaker' => PlanDayItem::SPEAKER_LEARNER])($items);
+    });
+
+    $violations = $this->validator->validate($broken);
+
+    expect($violations)->not->toBe([]);
+    foreach ($violations as $violation) {
+        expect($violation->reason)->not->toBe('');
+    }
 });
 
 it('knows when a reading hint is mandatory at all', function () {

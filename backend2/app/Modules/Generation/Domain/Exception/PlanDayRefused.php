@@ -18,13 +18,23 @@ use RuntimeException;
  * previous answer, and half a sentence about the eighteenth violation is not that.
  *
  * So the violations travel as data all the way from the gate to the day row
- * ({@see \App\Modules\Learning\Domain\Entity\PlanDay::markFailed()}), where they accumulate across
- * attempts and are quoted into the next call. The message is still built, because a human still
- * reads `fail_reason`.
+ * ({@see \App\Modules\Learning\Domain\Entity\PlanDay::markFailed()}), where the next attempt reads
+ * them. The message is still built, because a human still reads `fail_reason`.
+ *
+ * ## The two forms are not interchangeable, and v0.3.1 is where that got teeth
+ *
+ * `$violations` is the ADDRESS form — «`phrases[3].translation` — day.slot_outside_frame: …» — and
+ * carries nothing the model wrote. The MESSAGE is the Russian prose, card texts and all, and it
+ * goes to `fail_reason` for the plan screen and nowhere near a prompt.
+ *
+ * That split is the whole finding of the v0.3 run's second pass: a retry handed the previous
+ * answer's sentences, each labelled with what was wrong with it, returned those sentences
+ * (`docs/research/plan-v0.3-run.md`). A detailed account of a wrong answer works as a template.
+ * So what travels to the next call is where to look, never what was there.
  */
 final class PlanDayRefused extends RuntimeException
 {
-    /** @param list<string> $violations */
+    /** @param list<string> $violations the ADDRESS form — {@see PlanViolation::address()} */
     private function __construct(string $message, public readonly array $violations)
     {
         parent::__construct($message);
@@ -33,8 +43,9 @@ final class PlanDayRefused extends RuntimeException
     /** @param list<PlanViolation> $violations */
     public static function invalid(array $violations): self
     {
-        $lines = array_map(static fn (PlanViolation $v): string => (string) $v, $violations);
+        $prose = array_map(static fn (PlanViolation $v): string => (string) $v, $violations);
+        $addresses = array_map(static fn (PlanViolation $v): string => $v->address(), $violations);
 
-        return new self('День не прошёл валидатор: ' . implode('; ', $lines), $lines);
+        return new self('День не прошёл валидатор: ' . implode('; ', $prose), $addresses);
     }
 }

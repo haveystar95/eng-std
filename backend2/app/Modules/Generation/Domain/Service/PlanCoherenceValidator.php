@@ -121,11 +121,14 @@ final class PlanCoherenceValidator
                 continue;
             }
 
-            $violations[] = new PlanViolation(
+            $violations[] = PlanViolation::onCard(
                 self::TERM_REPEATED,
+                $item,
+                'text',
                 'этот термин уже введён на более раннем дне плана — для него нужен только новый '
                 . 'пример в блоке KNOWN, а не карточка заново',
-                $item->text,
+                'this term was already introduced on an earlier day of the plan; it needs a fresh '
+                . 'example in KNOWN, not a card of its own',
             );
         }
 
@@ -151,9 +154,13 @@ final class PlanCoherenceValidator
                 continue;
             }
             if (isset($seen[$key])) {
-                $violations[] = new PlanViolation(
+                // NO ADDRESS, and that is the right answer rather than a gap: a checkpoint the
+                // skeleton promises twice is not something any one card did, so there is no card a
+                // repair call could be pointed at. The day goes back whole.
+                $violations[] = PlanViolation::onAnswer(
                     self::CHECKPOINT_DUPLICATED,
                     'этот чек-пойнт уже обещает другой день плана: «' . $checkpoint . '»',
+                    'another day of this plan already promises this checkpoint',
                 );
             }
             $seen[$key] = true;
@@ -184,8 +191,8 @@ final class PlanCoherenceValidator
 
         $violations = [];
         foreach ($day->items as $item) {
-            foreach ([$item->translation, $item->exampleTranslation] as $text) {
-                $violations = [...$violations, ...$this->checkSentence($day, $item, (string) $text)];
+            foreach (['translation' => $item->translation, 'example_translation' => $item->exampleTranslation] as $field => $text) {
+                $violations = [...$violations, ...$this->checkSentence($day, $item, $field, (string) $text)];
             }
         }
 
@@ -195,9 +202,11 @@ final class PlanCoherenceValidator
     /**
      * One key or one example gloss, checked against every entity it names.
      *
+     * @param  string  $field  which of the card's two glosses this is — the address a repair call
+     *                         is pointed at
      * @return list<PlanViolation>
      */
-    private function checkSentence(PlanCoherenceCandidate $day, PlanDayItem $item, string $text): array
+    private function checkSentence(PlanCoherenceCandidate $day, PlanDayItem $item, string $field, string $text): array
     {
         $normalized = $this->normalize($text);
         if ($normalized === '') {
@@ -218,11 +227,14 @@ final class PlanCoherenceValidator
                     continue;
                 }
 
-                $violations[] = new PlanViolation(
+                $violations[] = PlanViolation::onCard(
                     self::ENTITY_DISAGREEMENT,
+                    $item,
+                    $field,
                     'перевод говорит про «' . $entity['name'] . '» словом «' . $hit[0]
                     . '», а каркас объявил его ' . $value,
-                    $item->text,
+                    "`{$field}` contradicts the gender or number the skeleton declared for an "
+                    . 'entity it names',
                 );
             }
         }
