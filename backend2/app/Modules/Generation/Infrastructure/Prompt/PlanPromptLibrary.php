@@ -57,13 +57,25 @@ final class PlanPromptLibrary implements PlanPromptSource
      * writes a conversation out of a skeleton; P2R is handed a day that is already mostly accepted
      * and a short list of cards that failed a check, and returns those cards. Versioned separately
      * for the reason the other two are: it will move when the gates move, and P2 will not move
-     * with it.
+     * with it — and v0.2 is that split earning its keep on the second live day, with P1 and P2
+     * untouched.
+     *
+     * **v0.2: a line is `frame` + `filler` TOGETHER.** v0.1 said a fixed card keeps its frame
+     * unless the violation is in the frame — and the first live failure was exactly a broken
+     * `filler` under a frame that no card of the day fits: «What time is ___?» with the day's own
+     * chunk being «have breakfast» and not «breakfast». With the frame frozen there was no legal
+     * move, so the answer took the letter of the rule and shipped «What time is two nights?»
+     * (`docs/research/plan-v0.3.1-run.md`, «Отпуск в Италии»). Now the LINE is repaired, not the
+     * field: the frame may be rewritten around a card that belongs in it. Plus one sentence saying
+     * out loud that an `example` is a NEW sentence and DAY TERMS is a clone-check list rather than
+     * the only vocabulary allowed — the same answer had swapped a word into an example to avoid a
+     * clone and produced «I'll have pasta and two nights.»
      */
-    public const REPAIR_VERSION = 'plan_day_repair.v0.1';
+    public const REPAIR_VERSION = 'plan_day_repair.v0.2';
 
     private const OUTLINE = 'plan_outline.v0.2.md';
     private const DAY = 'plan_day.v0.3.md';
-    private const REPAIR = 'plan_day_repair.v0.1.md';
+    private const REPAIR = 'plan_day_repair.v0.2.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 
