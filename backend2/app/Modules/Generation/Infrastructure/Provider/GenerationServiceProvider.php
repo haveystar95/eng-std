@@ -82,6 +82,7 @@ use App\Modules\Generation\Infrastructure\Adapter\OpenAiTranslationRepairer;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiEnrichmentPacker;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiExampleRegenerator;
 use App\Modules\Generation\Infrastructure\Adapter\OpenAiTermEnricher;
+use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
@@ -90,6 +91,7 @@ use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedEnrichmentDispatcher;
 use App\Modules\Generation\Infrastructure\Adapter\QueuedPlanDayDispatcher;
 use App\Modules\Generation\Infrastructure\Eloquent\EloquentPlanSpendLedger;
+use App\Modules\Generation\Infrastructure\Adapter\LoggingPlanDayDefectReporter;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use App\Modules\Learning\Application\Port\DispatchesPlanDay;
 use App\Modules\Learning\Application\Port\PlanOutlinePort;
@@ -152,11 +154,15 @@ final class GenerationServiceProvider extends ServiceProvider
             );
         });
 
+        // The one defect of a plan day that is repaired instead of refused has to be visible.
+        $this->app->bind(PlanDayDefectReporter::class, LoggingPlanDayDefectReporter::class);
+
         $this->app->bind(PlanDayComposer::class, function (): PlanDayComposer {
             return new PlanDayComposer(
                 model: $this->planModel(),
                 prompts: $this->app->make(PlanPromptSource::class),
                 ledger: $this->app->make(RecordsPlanSpend::class),
+                defects: $this->app->make(PlanDayDefectReporter::class),
             );
         });
         // The admin sandbox's own registry. A SECOND catalogue beside the one above, not a widening

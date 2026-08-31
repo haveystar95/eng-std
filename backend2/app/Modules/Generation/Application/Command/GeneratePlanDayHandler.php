@@ -10,6 +10,7 @@ use App\Modules\Collections\Application\Command\CreateGeneratedCollection;
 use App\Modules\Collections\Application\Command\CreateGeneratedCollectionHandler;
 use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
+use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
@@ -59,7 +60,7 @@ use Throwable;
  *    fails goes back for exactly one re-run.
  * 5. **Write**, in one transaction: the collection, the terms, the day-scoped examples.
  * 6. **Finish** — the day is ready, its terms are strictly enrolled, the next day is queued.
- * 7. **Chain the станок**, fire-and-forget, exactly as a finished generation does.
+ * 7. **Chain the станок and the pictures**, fire-and-forget, exactly as a finished generation does.
  *
  * Every failure from step 3 onward is reported through {@see FinishPlanDay} rather than thrown, so
  * the attempt is recorded against the day and the reason survives. A thrown exception would let the
@@ -81,6 +82,7 @@ final readonly class GeneratePlanDayHandler
         private TermDescriptionWriter $descriptions,
         private TermTransliterationWriter $transliterations,
         private DispatchesExampleRepair $repairExamples,
+        private DispatchesImageAttachment $attachImages,
         private DifficultyScorer $scorer,
         private TransactionManager $tx,
     ) {}
@@ -144,6 +146,13 @@ final readonly class GeneratePlanDayHandler
             $draft->ownerId,
             BuildTermEnrichmentsHandler::VERSION,
         );
+
+        // THE PICTURES. Same call a finished collection generation makes, and it was missing here:
+        // PLAN-1a wired the enrichment chain and not this one, so every day of every plan the owner
+        // ran came out with no illustration at all and nothing said so. Fire-and-forget, after the
+        // day is already usable, exactly like the chain above — a day must not fail because a
+        // photo did not arrive.
+        $this->attachImages->dispatch($collectionId);
     }
 
     /**
@@ -182,6 +191,12 @@ final readonly class GeneratePlanDayHandler
                 cefr: null,
                 promptVersion: $draft->promptVersion,
                 generationModel: $draft->model,
+                // THE PICTURE. A plan day used to import its terms without one, so
+                // `AttachCollectionImagesHandler` found nothing to search on even when it ran —
+                // and it never ran, because nothing dispatched it for a plan. Both halves of that
+                // defect are fixed here and in `__invoke()`; a card of a plan is a card, and a
+                // card without a picture is a worse card for no reason anyone chose.
+                imageApiPrompt: $item->imageApiPrompt !== '' ? $item->imageApiPrompt : null,
             ));
 
             ($this->addTerm)(new AddTermToCollection($collectionId, $termId, $draft->ownerId));
@@ -226,6 +241,12 @@ final readonly class GeneratePlanDayHandler
             $termId,
             isLine: $item->isLine,
             difficultyScore: $this->scorer->score($brief->targetLang, $item->text),
+            // What the card DOES in this day, the frame it stands in, and whose turn it is. The
+            // session reads the first two: `kind` picks the stage checklist, `frame` is where the
+            // cloze cuts its gap.
+            kind: $item->kind,
+            frame: $item->frame,
+            speaker: $item->speaker,
         );
 
         $this->scopedExamples->write(

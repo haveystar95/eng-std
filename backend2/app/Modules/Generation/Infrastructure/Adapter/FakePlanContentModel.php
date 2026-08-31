@@ -14,11 +14,10 @@ use App\Modules\Generation\Domain\ValueObject\ProviderId;
  * answers that PASS the validators.
  *
  * A fake that returned obviously-broken material would make every feature test a test of the
- * failure path. So this one obeys the numbers it is given (exactly `phrase_count` replies and
- * `word_count` substitutions, every checkpoint closed by a reply, no example equal to any term, no
- * two keys the same) and produces nonsense CONTENT, which is what a fake is for. The counts are
- * read out of the rendered prompt, because that is where the server put them and reading them back
- * is also a check that it did.
+ * failure path. So this one obeys the numbers it is given (exactly `phrase_count` lines,
+ * `word_count` words and `chunk_count` connectors, every checkpoint closed by a line, every
+ * substitution standing in one of the day's frames, no example equal to any term, no two keys the
+ * same) and produces nonsense CONTENT, which is what a fake is for.
  */
 final class FakePlanContentModel implements ContentModelPort
 {
@@ -142,11 +141,22 @@ final class FakePlanContentModel implements ContentModelPort
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * A v0.2 DAY: three arrays, frames with a slot, and every word standing in one of them.
+     *
+     * The three counts are read back out of the rendered prompt, because that is where the server
+     * put them and reading them back is also a check that it did. The frames matter as much as the
+     * counts: the validator now refuses a word whose example is not one of the day's frames with
+     * that word in the hole, so a double that ignored frames would make every feature test a test
+     * of the failure path.
+     *
+     * @return array<string, mixed>
+     */
     private function day(string $prompt): array
     {
         $phrases = max(1, $this->intAfter($prompt, 'TERM BUDGET:', '('));
-        $words = max(0, $this->intAfter($prompt, 'phrases +'));
+        $words = max(0, $this->intAfter($prompt, 'lines +'));
+        $chunks = max(0, $this->intAfter($prompt, 'words +'));
         $checkpoints = max(1, substr_count($prompt, 'слышно, как'));
         // WHICH DAY this is, read out of the day JSON the server put in the prompt.
         //
@@ -158,35 +168,50 @@ final class FakePlanContentModel implements ContentModelPort
         // not either: a double whose output breaks an invariant tests the invariant, not the code.
         $day = max(1, $this->intAfter($prompt, '"index":'));
 
+        $frame = fn (int $i): string => "Day {$day} line {$i} about ___.";
+
         $lines = [];
         for ($i = 1; $i <= $phrases; $i++) {
             $lines[] = [
-                'text' => "Day {$day} reply number {$i}.",
+                'text' => "Day {$day} line {$i} about thing{$i}.",
+                'frame' => $frame($i),
+                'speaker' => 'learner',
                 'type' => 'phrase',
                 'is_line' => true,
                 'translation' => "День {$day}, реплика номер {$i}.",
-                'transliteration' => 'дэй риплай намбер',
+                'transliteration' => 'дэй лайн эбаут',
                 'description' => "Somebody says it at moment {$i} of conversation {$day}.",
-                'example' => "Day {$day} reply number {$i}, said out loud.",
+                'example' => "Day {$day} line {$i} about thing{$i}, said out loud.",
                 'example_translation' => "День {$day}, реплика номер {$i}, сказанная вслух.",
+                'image_api_prompt' => "Two people talking at moment {$i} of a day, close-up.",
                 // Spread over the checkpoints so every one of them is closed.
                 'covers_checkpoint' => (($i - 1) % $checkpoints) + 1,
             ];
         }
 
+        // Every substitution stands in the FIRST frame of the day, and its example is that
+        // sentence — which is the rule the validator checks and the reason the day combines.
+        $substitution = fn (string $text, string $key, string $type): array => [
+            'text' => $text,
+            'type' => $type,
+            'is_line' => false,
+            'translation' => $key,
+            'transliteration' => 'дэй уорд',
+            'description' => "A thing you drop into a sentence on day {$day}.",
+            'example' => "Day {$day} line 1 about {$text}.",
+            'example_translation' => "День {$day}, реплика номер 1, про это.",
+            'image_api_prompt' => 'A single object on a table, close-up, no text.',
+            'covers_checkpoint' => null,
+        ];
+
         $substitutions = [];
         for ($i = 1; $i <= $words; $i++) {
-            $substitutions[] = [
-                'text' => "day{$day}word{$i}",
-                'type' => 'word',
-                'is_line' => false,
-                'translation' => "день{$day}слово{$i}",
-                'transliteration' => 'дэй уорд',
-                'description' => "A thing you drop into a sentence on day {$day}, number {$i}.",
-                'example' => "I used day{$day}word{$i} in a sentence.",
-                'example_translation' => "Я употребил день{$day}слово{$i} в предложении.",
-                'covers_checkpoint' => null,
-            ];
+            $substitutions[] = $substitution("day{$day}word{$i}", "день{$day}слово{$i}", 'word');
+        }
+
+        $connectors = [];
+        for ($i = 1; $i <= $chunks; $i++) {
+            $connectors[] = $substitution("day{$day} chunk {$i}", "день{$day} связка {$i}", 'phrasal_verb');
         }
 
         return [
@@ -194,6 +219,7 @@ final class FakePlanContentModel implements ContentModelPort
             'day_title' => "Тестовый день {$day}",
             'phrases' => $lines,
             'words' => $substitutions,
+            'chunks' => $connectors,
             'known' => [],
         ];
     }

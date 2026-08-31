@@ -31,16 +31,17 @@ use App\Modules\Generation\Domain\ValueObject\PlanViolation;
  * 2. **Two days do not promise the same checkpoint.** A duplicate is not a harmless repetition: the
  *    conversation ticks checkpoints off, and the same line ticked twice reads as two abilities.
  * 3. **The skeleton's ENTITIES are respected.** Minimal and deterministic — see {@see checkEntities()}.
- * 4. **The reply share is the one {@see PlanDayValidator} enforces.** Stated here as well because
- *    this validator is the one that runs on a REGENERATED day, and a day that came back from a
- *    coherence retry with a vocabulary list is still a broken day.
+ * The reply share used to be a fourth rule here, restating {@see PlanDayValidator}'s band so that
+ * a regenerated day could not come back as a vocabulary list. v0.2 removed the band: the server
+ * hands the model three EXACT counts and the day validator counts against them, on every attempt,
+ * including the re-run. A second copy of an exact count is not a safety net — it is a second place
+ * to forget to update.
  */
 final class PlanCoherenceValidator
 {
     public const TERM_REPEATED = 'plan.term_repeated';
     public const CHECKPOINT_DUPLICATED = 'plan.checkpoint_duplicated';
     public const ENTITY_DISAGREEMENT = 'plan.entity_disagreement';
-    public const LINE_SHARE = 'plan.line_share';
 
     /**
      * The agreement markers, per grammatical value — words that CONTRADICT it.
@@ -94,7 +95,6 @@ final class PlanCoherenceValidator
             ...$this->checkNewTerms($day),
             ...$this->checkCheckpoints($day),
             ...$this->checkEntities($day),
-            ...$this->checkLineShare($day),
         ];
     }
 
@@ -253,36 +253,6 @@ final class PlanCoherenceValidator
         }
 
         return false;
-    }
-
-    /**
-     * Rule 4 — the same reply share the day validator enforces, stated over the same range.
-     *
-     * @return list<PlanViolation>
-     */
-    private function checkLineShare(PlanCoherenceCandidate $day): array
-    {
-        $total = count($day->items);
-        if ($total === 0) {
-            return [];
-        }
-
-        $lines = 0;
-        foreach ($day->items as $item) {
-            if ($item->isLine) {
-                $lines++;
-            }
-        }
-
-        [$min, $max] = PlanDayValidator::lineCountRange($total);
-        if ($lines >= $min && $lines <= $max) {
-            return [];
-        }
-
-        return [new PlanViolation(
-            self::LINE_SHARE,
-            "реплик {$lines} из {$total}, а день плана просит {$min}–{$max}",
-        )];
     }
 
     /** Case-folded, punctuation-free, whitespace-collapsed — the same normalisation as the day gate. */

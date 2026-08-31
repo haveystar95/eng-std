@@ -17,12 +17,37 @@ beforeEach(fn () => $this->gate = new PlanCoherenceValidator());
 
 function line(string $text, string $translation = 'перевод', string $exampleTranslation = 'перевод примера'): PlanDayItem
 {
-    return new PlanDayItem($text, 'phrase', true, $translation, null, '', $text . ' out loud', $exampleTranslation, 1);
+    return new PlanDayItem(
+        text: $text,
+        type: 'phrase',
+        kind: PlanDayItem::KIND_LINE,
+        isLine: true,
+        translation: $translation,
+        transliteration: null,
+        description: '',
+        example: $text . ' out loud',
+        exampleTranslation: $exampleTranslation,
+        frame: $text,
+        speaker: PlanDayItem::SPEAKER_LEARNER,
+        imageApiPrompt: 'a picture',
+        coversCheckpoint: 1,
+    );
 }
 
 function word(string $text, string $translation = 'слово', string $exampleTranslation = 'перевод примера'): PlanDayItem
 {
-    return new PlanDayItem($text, 'word', false, $translation, null, '', 'I used ' . $text . '.', $exampleTranslation, null);
+    return new PlanDayItem(
+        text: $text,
+        type: 'word',
+        kind: PlanDayItem::KIND_WORD,
+        isLine: false,
+        translation: $translation,
+        transliteration: null,
+        description: '',
+        example: 'I used ' . $text . '.',
+        exampleTranslation: $exampleTranslation,
+        imageApiPrompt: 'a picture',
+    );
 }
 
 /** @param list<PlanDayItem> $items */
@@ -146,20 +171,14 @@ it('does not apply Russian agreement markers to a plan written in another langua
     expect($this->gate->validate($day))->toBe([]);
 });
 
-// ── rule 4: the reply share, shared with the day gate ─────────────────────────────────────────
+// ── the reply share used to be rule 4, and is gone ────────────────────────────────────────────
 
-it('refuses a regenerated day that came back as a vocabulary list', function () {
-    $day = coherence([line('a'), word('b'), word('c'), word('d'), word('e'), word('f'), word('g'), word('h'), word('i')]);
-
-    expect(coherenceCodes($this->gate->validate($day)))->toContain(PlanCoherenceValidator::LINE_SHARE);
-});
-
-it('accepts the reply share the day validator accepts — one range, two gates', function () {
-    // 9 cards, 5 replies: exactly `ceil(0.45 × 9)`, which is what the server asked the model for.
-    $day = coherence([
-        line('a'), line('b'), line('c'), line('d'), line('e'),
-        word('f'), word('g'), word('h'), word('i'),
-    ]);
+it('says nothing about the reply share — the day gate counts against three exact numbers', function () {
+    // v0.1 restated the day validator's 35–55% band here so a REGENERATED day could not come back
+    // as a vocabulary list. v0.2 hands the model three exact counts and the day gate counts against
+    // them on every attempt, including the re-run. A second copy of an exact number is not a safety
+    // net, it is a second place to forget to update.
+    $day = coherence([line('a'), word('b'), word('c'), word('d'), word('e'), word('f')]);
 
     expect($this->gate->validate($day))->toBe([]);
 });

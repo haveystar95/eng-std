@@ -197,7 +197,12 @@ function fakePlanModel(): void
     $ledger = app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class);
 
     $outlines = new \App\Modules\Generation\Application\Service\PlanOutlineService($model, $prompts, $ledger);
-    $days = new \App\Modules\Generation\Application\Service\PlanDayComposer($model, $prompts, $ledger);
+    $days = new \App\Modules\Generation\Application\Service\PlanDayComposer(
+        $model,
+        $prompts,
+        $ledger,
+        app(\App\Modules\Generation\Application\Port\PlanDayDefectReporter::class),
+    );
 
     app()->instance(\App\Modules\Learning\Application\Port\PlanOutlinePort::class, $outlines);
     app()->instance(\App\Modules\Generation\Application\Service\PlanDayComposer::class, $days);

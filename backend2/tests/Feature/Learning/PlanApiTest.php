@@ -6,6 +6,8 @@ use App\Modules\Generation\Application\Service\PlanDayComposer;
 use App\Modules\Generation\Infrastructure\Adapter\FakePlanContentModel;
 use App\Modules\Generation\Infrastructure\Prompt\PlanPromptLibrary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Modules\Generation\Infrastructure\Job\AttachImagesJob;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
@@ -273,12 +275,46 @@ it('writes the two plan facts onto the terms — is_line and a difficulty score'
     $terms = DB::table('collection_items as ci')
         ->join('terms as t', 't.id', '=', 'ci.term_id')
         ->where('ci.collection_id', $collectionId)
-        ->get(['t.is_line', 't.difficulty_score']);
+        ->get(['t.is_line', 't.difficulty_score', 't.kind', 't.frame', 't.speaker', 't.image_api_prompt']);
 
-    // 14 terms → ceil(0.45 × 14) = 7 replies.
-    expect($terms->where('is_line', true))->toHaveCount(7)
-        ->and($terms->where('is_line', false))->toHaveCount(7)
+    // 14 cards → 8 lines + 2 connectors + 4 words, the three numbers DayCapacity::split() gives.
+    expect($terms->where('is_line', true))->toHaveCount(8)
+        ->and($terms->where('is_line', false))->toHaveCount(6)
+        ->and($terms->where('kind', 'line'))->toHaveCount(8)
+        ->and($terms->where('kind', 'chunk'))->toHaveCount(2)
+        ->and($terms->where('kind', 'word'))->toHaveCount(4)
+        // Every line stands in a frame and knows whose turn it is; a substitution has neither.
+        ->and($terms->where('kind', 'line')->whereNull('frame'))->toHaveCount(0)
+        ->and($terms->where('kind', 'line')->where('speaker', 'learner'))->toHaveCount(8)
+        ->and($terms->where('kind', 'word')->whereNotNull('speaker'))->toHaveCount(0)
         ->and($terms->whereNull('difficulty_score'))->toHaveCount(0);
+});
+
+it('gives every card of a plan day a picture to search for, and queues the search', function () {
+    // The PLAN-1a defect, both halves. `ImportTerm` was called without `image_api_prompt`, so the
+    // image handler had nothing to search on — and nothing dispatched it for a plan anyway, so it
+    // never ran. Every day of every plan the owner made came out with no illustration at all, and
+    // nothing said so.
+    Bus::fake([AttachImagesJob::class]);
+
+    [$user, $token] = learner();
+    profileFor($user, ['native_language' => 'ru', 'target_language' => 'en']);
+    $plan = createPlan($this, $token);
+    outlinePlan($this, $token, $plan['id']);
+    $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/plans/{$plan['id']}/start")->assertOk();
+
+    $collectionId = DB::table('learning_plan_days')
+        ->where('plan_id', $plan['id'])->where('day_index', 1)->value('collection_id');
+
+    $prompts = DB::table('terms as t')
+        ->join('collection_items as ci', 'ci.term_id', '=', 't.id')
+        ->where('ci.collection_id', $collectionId)
+        ->pluck('t.image_api_prompt');
+
+    expect($prompts)->toHaveCount(14)
+        ->and($prompts->filter(static fn (?string $p): bool => $p === null || trim($p) === ''))->toHaveCount(0);
+
+    Bus::assertDispatched(AttachImagesJob::class);
 });
 
 it('scopes the day example to the day collection, never to the term at large', function () {
@@ -571,9 +607,10 @@ it('leaves a ledger row for every paid call the plan made', function () {
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('purpose')->unique()->all())->toBe(['plan'])
         ->and($rows->pluck('user_id')->unique()->all())->toBe([$user->id])
-        // Two versions and not one: P1 moved to v0.2 while P2 was still on v0.1.1, and the ledger
-        // says which prompt each call actually used rather than stamping both with one number.
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.1.1'])
+        // Two versions and not one: the ledger says which prompt each call actually used rather
+        // than stamping both with a single number that would be wrong for one of them the moment
+        // they are revised apart.
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.2'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
         ->and($rows[1]->size)->toBe(14);
@@ -600,7 +637,10 @@ it('fails the day loudly when the ledger will not take the row', function () {
     $model = new FakePlanContentModel();
     $prompts = new PlanPromptLibrary();
     app()->instance(PlanDayComposer::class, new PlanDayComposer(
-        $model, $prompts, app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class),
+        $model,
+        $prompts,
+        app(\App\Modules\Generation\Application\Port\RecordsPlanSpend::class),
+        app(\App\Modules\Generation\Application\Port\PlanDayDefectReporter::class),
     ));
 
     // The queue is sync under test, so the job runs inside the request; without the HTTP kernel's

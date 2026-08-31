@@ -78,7 +78,7 @@ final class PlanSchemas
     /** @return array<string, mixed> */
     public static function day(): array
     {
-        $card = self::object([
+        $common = [
             'text' => self::string(),
             'type' => ['type' => 'string', 'enum' => ['word', 'phrase', 'idiom', 'phrasal_verb']],
             'is_line' => ['type' => 'boolean'],
@@ -87,8 +87,20 @@ final class PlanSchemas
             'description' => self::string(),
             'example' => self::string(),
             'example_translation' => self::string(),
+            'image_api_prompt' => self::string(),
             'covers_checkpoint' => ['type' => ['integer', 'null']],
+        ];
+
+        // A LINE carries two fields a substitution does not, and the schema is where «only on
+        // phrases» stops being a sentence in the prose. `frame` is the line with its slot as `___`
+        // (or '' for a formula); `speaker` says whose turn it is.
+        $line = self::object([
+            ...$common,
+            'frame' => self::string(),
+            'speaker' => ['type' => 'string', 'enum' => ['learner', 'role']],
         ]);
+
+        $card = self::object($common);
 
         $knownExample = self::object([
             'example' => self::string(),
@@ -103,8 +115,9 @@ final class PlanSchemas
         return self::object([
             'day_index' => self::integer(),
             'day_title' => self::string(),
-            'phrases' => self::arrayOf($card),
+            'phrases' => self::arrayOf($line),
             'words' => self::arrayOf($card),
+            'chunks' => self::arrayOf($card),
             'known' => self::arrayOf($known),
         ]);
     }

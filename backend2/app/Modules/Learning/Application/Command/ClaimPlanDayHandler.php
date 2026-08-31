@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Command;
 
 use App\Modules\Learning\Application\Dto\PlanDayGenerationBrief;
+use App\Modules\Learning\Domain\Service\DayCapacity;
 use App\Modules\Learning\Domain\Repository\PlanDayRepository;
 use App\Modules\Learning\Domain\Repository\PlanRepository;
 use App\Modules\Learning\Domain\ValueObject\PlanDayKind;
@@ -61,10 +62,17 @@ final readonly class ClaimPlanDayHandler
             )) : [];
 
             $budget = is_int($brief['term_budget'] ?? null) ? $brief['term_budget'] : 0;
-            // The day's split between lines and substitutions, computed HERE from the budget and
-            // no longer frozen into the day row when the plan was scheduled. A day generated a
-            // week after the plan was made has to be asked for the split its budget implies today.
-            $phrases = (int) ceil(0.45 * $budget);
+            // THE THREE NUMBERS, computed here from the budget and no longer frozen into the day
+            // row when the plan was scheduled: a day generated a week after the plan was made has
+            // to be asked for the split its budget implies today. One function, next to the
+            // capacity table it is a function of ({@see DayCapacity::split()}).
+            $split = DayCapacity::split($budget);
+
+            /** @var list<array{title?: mixed, role?: mixed, skills?: mixed}> $scenes */
+            $scenes = is_array($brief['scenes'] ?? null) ? array_values(array_filter(
+                $brief['scenes'],
+                static fn (mixed $s): bool => is_array($s),
+            )) : [];
 
             return new PlanDayGenerationBrief(
                 planId: $plan->id()->value,
@@ -78,8 +86,9 @@ final readonly class ClaimPlanDayHandler
                 targetLang: $plan->targetLang()->value,
                 level: $plan->level()->value,
                 termBudget: $budget,
-                phraseCount: $phrases,
-                wordCount: $budget - $phrases,
+                phraseCount: $split['phrases'],
+                chunkCount: $split['chunks'],
+                wordCount: $split['words'],
                 checkpoints: $checkpoints,
                 entities: $outline->entities,
                 constraints: $outline->constraints,
@@ -104,11 +113,40 @@ final readonly class ClaimPlanDayHandler
                 dayJson: [
                     'index' => $day->dayIndex(),
                     'title' => $day->title(),
-                    'scenes' => is_array($brief['scenes'] ?? null) ? $brief['scenes'] : [],
+                    'scenes' => $scenes,
                     'checkpoints' => $checkpoints,
                 ],
+                // The interlocutors' own lines, flattened out of the scenes. P2 may quote them
+                // verbatim as the lines the learner must recognise, and the validator refuses one
+                // that was invented instead — so the gate and the prompt read the same list.
+                openingLines: $this->openingLinesOf($scenes),
             );
         });
+    }
+
+    /**
+     * What every interlocutor of this day says, in scene order.
+     *
+     * @param  list<array{title?: mixed, role?: mixed, skills?: mixed}>  $scenes
+     * @return list<string>
+     */
+    private function openingLinesOf(array $scenes): array
+    {
+        $out = [];
+        foreach ($scenes as $scene) {
+            $role = $scene['role'] ?? null;
+            if (! is_array($role) || ! is_array($role['opening_lines'] ?? null)) {
+                continue;
+            }
+            foreach ($role['opening_lines'] as $line) {
+                $text = is_array($line) ? ($line['text'] ?? null) : null;
+                if (is_string($text) && trim($text) !== '') {
+                    $out[] = trim($text);
+                }
+            }
+        }
+
+        return $out;
     }
 
     /**

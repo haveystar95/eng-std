@@ -2535,8 +2535,10 @@ components:
           items: { type: string }
           description: >-
             Latin-alphabet names the learner typed themselves (`PHP`, `API`, `Laravel`). Verbatim
-            in BOTH languages everywhere; never translated, never transliterated, never a card of
-            their own.
+            in BOTH languages everywhere; never translated, never a card of their own. The ONE
+            field where they change form is the reading hint, where they are written as they are
+            spoken (`API` → «эй-пи-ай») — that field exists for a learner who cannot read the Latin
+            letters yet, so leaving them untouched there would defeat it.
         computed:
           type: [object, 'null']
           additionalProperties: true

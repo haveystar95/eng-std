@@ -8,6 +8,7 @@ use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Dto\PlanSpend;
 use App\Modules\Generation\Application\Port\ContentModelPort;
 use App\Modules\Generation\Application\Port\PlanPromptSource;
+use App\Modules\Generation\Application\Port\PlanDayDefectReporter;
 use App\Modules\Generation\Application\Port\RecordsPlanSpend;
 use App\Modules\Generation\Domain\Service\PlanCoherenceValidator;
 use App\Modules\Generation\Domain\Service\PlanDayValidator;
@@ -36,12 +37,17 @@ use RuntimeException;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan.v0.1.1';
+    public const PROMPT_VERSION = 'plan_day.v0.2';
 
     public function __construct(
         private ContentModelPort $model,
         private PlanPromptSource $prompts,
         private RecordsPlanSpend $ledger,
+        /**
+         * Where a DROPPED reading hint goes. The one defect that is repaired instead of refused,
+         * so the one that has to be visible — see {@see PlanDayDefectReporter}.
+         */
+        private PlanDayDefectReporter $defects,
         private PlanDayValidator $validator = new PlanDayValidator(),
         /**
          * The SECOND gate, and the one that only exists because a plan is a sequence: it judges the
@@ -97,6 +103,7 @@ final readonly class PlanDayComposer
             'level' => $brief->level,
             'term_budget' => (string) $brief->termBudget,
             'phrase_count' => (string) $brief->phraseCount,
+            'chunk_count' => (string) $brief->chunkCount,
             'word_count' => (string) $brief->wordCount,
             'entities' => $this->formatEntities($brief->entities),
             'constraints' => $this->formatList($brief->constraints),
@@ -118,8 +125,12 @@ final readonly class PlanDayComposer
             supportLang: $brief->supportLang,
             targetLang: $brief->targetLang,
             termBudget: $brief->termBudget,
+            phraseCount: $brief->phraseCount,
+            chunkCount: $brief->chunkCount,
+            wordCount: $brief->wordCount,
             checkpointCount: count($brief->checkpoints),
             goalTerms: $brief->goalTerms,
+            openingLines: $brief->openingLines,
             items: $items,
         );
 
@@ -161,14 +172,38 @@ final readonly class PlanDayComposer
             )), 0, 500),
         ));
 
-        // The hint is NORMALISED on the way in — the validator's own repair, applied once, so the
-        // string that is stored is the string that was judged.
+        // THE HINT IS NORMALISED ON THE WAY IN — the validator's own repair, applied once, so the
+        // string that is stored is the string that was judged. A hint that cannot be saved is
+        // DROPPED and the card lives; that is the only defect of a day treated this way, and it is
+        // reported and counted so it stays visible as the last measure it is.
+        $mandatory = $this->validator->scriptsDiffer($brief->supportLang, $brief->targetLang);
         $normalized = [];
         foreach ($items as $item) {
+            $hint = $this->validator->transliterationFor($brief->supportLang, $item->transliteration);
+            if ($hint === null && $mandatory) {
+                $this->defects->transliterationDropped(
+                    $brief->planId,
+                    $brief->dayIndex,
+                    $item->text,
+                    $item->transliteration,
+                    trim((string) $item->transliteration) === '' ? 'missing' : 'unusable',
+                );
+            }
+
             $normalized[] = new PlanDayItem(
-                $item->text, $item->type, $item->isLine, $item->translation,
-                $this->validator->normalizedTransliteration($brief->supportLang, $item->transliteration),
-                $item->description, $item->example, $item->exampleTranslation, $item->coversCheckpoint,
+                text: $item->text,
+                type: $item->type,
+                kind: $item->kind,
+                isLine: $item->isLine,
+                translation: $item->translation,
+                transliteration: $hint,
+                description: $item->description,
+                example: $item->example,
+                exampleTranslation: $item->exampleTranslation,
+                frame: $item->frame,
+                speaker: $item->speaker,
+                imageApiPrompt: $item->imageApiPrompt,
+                coversCheckpoint: $item->coversCheckpoint,
             );
         }
 
@@ -196,31 +231,46 @@ final readonly class PlanDayComposer
     }
 
     /**
+     * THE THREE ARRAYS, flattened into one list of cards.
+     *
+     * The ARRAY decides what a card is, not the flag it carries. `is_line` and the array are
+     * required to agree and the validator says so out loud when they do not — but an entry sitting
+     * in `chunks` is a connector whatever it says about itself, and reading the flag instead would
+     * let one wrong boolean move a card into a different stage ladder.
+     *
      * @param  array<string, mixed>  $payload
      * @return list<PlanDayItem>
      */
     private function items(array $payload): array
     {
         $out = [];
-        foreach (['phrases' => true, 'words' => false] as $key => $isLine) {
+        foreach ([
+            'phrases' => PlanDayItem::KIND_LINE,
+            'words' => PlanDayItem::KIND_WORD,
+            'chunks' => PlanDayItem::KIND_CHUNK,
+        ] as $key => $kind) {
             $cards = is_array($payload[$key] ?? null) ? $payload[$key] : [];
             foreach ($cards as $card) {
                 if (! is_array($card)) {
                     continue;
                 }
+                $isLine = $kind === PlanDayItem::KIND_LINE;
                 $covers = $card['covers_checkpoint'] ?? null;
+                $speaker = $this->text($card['speaker'] ?? '');
+
                 $out[] = new PlanDayItem(
                     text: $this->text($card['text'] ?? ''),
                     type: $this->text($card['type'] ?? 'word'),
-                    // The ARRAY decides, not the flag. They are required to agree, and where they
-                    // do not the array is the fact — an entry sitting in `words` is a substitution
-                    // whatever it says about itself.
+                    kind: $kind,
                     isLine: $isLine,
                     translation: $this->text($card['translation'] ?? ''),
                     transliteration: $this->text($card['transliteration'] ?? ''),
                     description: $this->text($card['description'] ?? ''),
                     example: $this->text($card['example'] ?? ''),
                     exampleTranslation: $this->text($card['example_translation'] ?? ''),
+                    frame: $isLine ? $this->text($card['frame'] ?? '') : '',
+                    speaker: $isLine && $speaker !== '' ? $speaker : null,
+                    imageApiPrompt: $this->text($card['image_api_prompt'] ?? ''),
                     coversCheckpoint: $isLine && is_int($covers) ? $covers : null,
                 );
             }

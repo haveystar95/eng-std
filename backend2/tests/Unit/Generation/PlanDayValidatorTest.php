@@ -7,464 +7,360 @@ use App\Modules\Generation\Domain\ValueObject\PlanDayCandidate;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Generation\Domain\ValueObject\PlanViolation;
 
+/**
+ * The gate that decides whether a paid day is written or paid for again.
+ *
+ * The positive cases run on the hand-written v0.2 days in `tests/Fixtures/plan`, not on synthetic
+ * material, and that is the point: a gate which refuses a good day costs more than one which lets
+ * a weak day through — the second is caught by reading, the first burns money on regenerations and
+ * then gets switched off. The negatives are one per rule, each breaking exactly one thing.
+ */
 beforeEach(fn () => $this->validator = new PlanDayValidator());
 
-/** Load one of the four real model answers from tests/Fixtures/plan. */
-function planFixture(string $name, string $supportLang, string $targetLang, int $checkpoints, array $goalTerms = []): PlanDayCandidate
+/** @return array<string, mixed> */
+function dayFixture(string $name): array
 {
+    /** @var array<string, mixed> $raw */
     $raw = json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/' . $name), true);
 
-    $items = [];
-    foreach ([...$raw['phrases'], ...$raw['words']] as $card) {
-        $items[] = new PlanDayItem(
-            text: $card['text'],
-            type: $card['type'],
-            isLine: $card['is_line'],
-            translation: $card['translation'],
-            transliteration: $card['transliteration'],
-            description: $card['description'],
-            example: $card['example'],
-            exampleTranslation: $card['example_translation'],
-            coversCheckpoint: $card['covers_checkpoint'],
-        );
+    return $raw;
+}
+
+/** The opening lines of every scene of a day, as the claim handler flattens them. */
+function openingLinesOf(string $outlineFixture): array
+{
+    /** @var array<string, mixed> $raw */
+    $raw = json_decode((string) file_get_contents(__DIR__ . '/../../Fixtures/plan/' . $outlineFixture), true);
+
+    $out = [];
+    foreach ($raw['scenes'] as $scene) {
+        foreach ($scene['role']['opening_lines'] ?? [] as $line) {
+            $out[] = $line['text'];
+        }
+    }
+
+    return $out;
+}
+
+/** The three arrays of a fixture, flattened exactly as {@see PlanDayComposer::items()} flattens them. */
+function itemsOf(array $day): array
+{
+    $out = [];
+    foreach ([
+        'phrases' => PlanDayItem::KIND_LINE,
+        'words' => PlanDayItem::KIND_WORD,
+        'chunks' => PlanDayItem::KIND_CHUNK,
+    ] as $key => $kind) {
+        foreach ($day[$key] ?? [] as $card) {
+            $isLine = $kind === PlanDayItem::KIND_LINE;
+            $out[] = new PlanDayItem(
+                text: $card['text'],
+                type: $card['type'],
+                kind: $kind,
+                isLine: $isLine,
+                translation: $card['translation'],
+                transliteration: $card['transliteration'] ?? '',
+                description: $card['description'],
+                example: $card['example'],
+                exampleTranslation: $card['example_translation'],
+                frame: $isLine ? ($card['frame'] ?? '') : '',
+                speaker: $isLine ? ($card['speaker'] ?? null) : null,
+                imageApiPrompt: $card['image_api_prompt'] ?? '',
+                coversCheckpoint: $isLine ? ($card['covers_checkpoint'] ?? null) : null,
+            );
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * A candidate built from a fixture, with one card replaced or one number moved.
+ *
+ * @param  callable(list<PlanDayItem>): list<PlanDayItem>|null  $mutate
+ */
+function candidate(
+    string $dayFixture,
+    string $outlineFixture,
+    int $checkpoints,
+    ?callable $mutate = null,
+    string $supportLang = 'ru',
+    string $targetLang = 'en',
+    array $goalTerms = [],
+): PlanDayCandidate {
+    $items = itemsOf(dayFixture($dayFixture));
+    $items = $mutate === null ? $items : $mutate($items);
+
+    $counted = ['line' => 0, 'word' => 0, 'chunk' => 0];
+    foreach ($items as $item) {
+        $counted[$item->kind] = ($counted[$item->kind] ?? 0) + 1;
     }
 
     return new PlanDayCandidate(
         supportLang: $supportLang,
         targetLang: $targetLang,
         termBudget: count($items),
+        phraseCount: $counted['line'],
+        chunkCount: $counted['chunk'],
+        wordCount: $counted['word'],
         checkpointCount: $checkpoints,
         goalTerms: $goalTerms,
+        openingLines: openingLinesOf($outlineFixture),
         items: $items,
     );
 }
 
-function codes(array $violations): array
+function dayCodes(array $violations): array
 {
     return array_values(array_unique(array_map(static fn (PlanViolation $v): string => $v->code, $violations)));
 }
 
-function planItem(array $overrides = []): PlanDayItem
+/** Replace the item at `$at` with a copy carrying `$overrides`. */
+function withCard(int $at, array $overrides): callable
 {
-    $d = [
-        'text' => 'my back hurts', 'type' => 'phrase', 'is_line' => true,
-        'translation' => 'спина болит', 'transliteration' => 'май бэк хёртс',
-        'description' => 'You say this when something aches.',
-        'example' => 'My back hurts in the morning.', 'example_translation' => 'Спина болит по утрам.',
-        'covers_checkpoint' => 1,
-    ];
-    $d = [...$d, ...$overrides];
+    return static function (array $items) use ($at, $overrides): array {
+        $item = $items[$at];
+        $items[$at] = new PlanDayItem(
+            text: $overrides['text'] ?? $item->text,
+            type: $overrides['type'] ?? $item->type,
+            kind: $overrides['kind'] ?? $item->kind,
+            isLine: $overrides['isLine'] ?? $item->isLine,
+            translation: $overrides['translation'] ?? $item->translation,
+            transliteration: $overrides['transliteration'] ?? $item->transliteration,
+            description: $overrides['description'] ?? $item->description,
+            example: $overrides['example'] ?? $item->example,
+            exampleTranslation: $overrides['exampleTranslation'] ?? $item->exampleTranslation,
+            frame: $overrides['frame'] ?? $item->frame,
+            speaker: array_key_exists('speaker', $overrides) ? $overrides['speaker'] : $item->speaker,
+            imageApiPrompt: $overrides['imageApiPrompt'] ?? $item->imageApiPrompt,
+            coversCheckpoint: array_key_exists('coversCheckpoint', $overrides)
+                ? $overrides['coversCheckpoint']
+                : $item->coversCheckpoint,
+        );
 
-    return new PlanDayItem(
-        $d['text'], $d['type'], $d['is_line'], $d['translation'], $d['transliteration'],
-        $d['description'], $d['example'], $d['example_translation'], $d['covers_checkpoint'],
-    );
+        return $items;
+    };
 }
 
-function planDay(array $items, int $checkpoints = 1, array $goalTerms = [], string $support = 'ru'): PlanDayCandidate
-{
-    return new PlanDayCandidate($support, 'en', count($items), $checkpoints, $goalTerms, $items);
-}
+// ── the positives ─────────────────────────────────────────────────────────────────────────────
 
-// ── the four real days ────────────────────────────────────────────────────────────────────────
+it('passes the hand-written v0.2 days', function (string $day, string $outline, int $checkpoints) {
+    expect($this->validator->validate(candidate($day, $outline, $checkpoints)))->toBe([]);
+})->with([
+    ['s1-day1.v0.2.json', 's1-outline.v0.2.json', 3],
+    ['s2-day1.v0.2.json', 's2-outline.v0.2.json', 3],
+    ['s3-day1.v0.2.json', 's3-outline.v0.2.json', 3],
+]);
 
-it('passes S1 day 1 — «Начать приём и описать боль», ru→en, 9 terms, 3 checkpoints', function () {
-    $violations = $this->validator->validate(planFixture('s1-day1.v0.1.json', 'ru', 'en', 3));
-
-    expect($violations)->toBe([]);
+it('passes the Romanian day too, where the reading hint is what the learner reads by', function () {
+    expect($this->validator->validate(
+        candidate('s3-day1.v0.2.json', 's3-outline.v0.2.json', 3, supportLang: 'ru', targetLang: 'ro'),
+    ))->toBe([]);
 });
 
-it('passes S1 day 2 — «Уточнить симптомы и помощь», ru→en, 9 terms, 3 checkpoints', function () {
-    $violations = $this->validator->validate(planFixture('s1-day2.v0.1.json', 'ru', 'en', 3));
+// ── the three numbers ─────────────────────────────────────────────────────────────────────────
 
-    expect($violations)->toBe([]);
-});
-
-it('passes S2 day 1 — «Пройти основные этапы интервью», ru→en, 16 terms, PHP/API as goal terms', function () {
-    // The five fields the live purity gate used to flag are the ones carrying `PHP`, `API` and
-    // `QA` in a Russian key — which is the only correct way to write them (§7.3). The exemption
-    // is what makes this day pass, and without it this test is the proof it would not.
-    $violations = $this->validator->validate(
-        planFixture('s2-day1.v0.1.json', 'ru', 'en', 3, ['PHP', 'API', 'QA']),
+it('refuses a day that is one card off the count it was asked for', function () {
+    $day = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3);
+    $short = new PlanDayCandidate(
+        supportLang: $day->supportLang,
+        targetLang: $day->targetLang,
+        termBudget: 14,
+        phraseCount: 9,          // the day has 8
+        chunkCount: $day->chunkCount,
+        wordCount: $day->wordCount,
+        checkpointCount: 3,
+        goalTerms: [],
+        openingLines: $day->openingLines,
+        items: $day->items,
     );
 
-    expect($violations)->toBe([]);
+    expect(dayCodes($this->validator->validate($short)))->toContain(PlanDayValidator::ARRAY_COUNT);
 });
 
-it('passes S3 — «Открыть визит и понять назначение», ru→ro, 9 terms', function () {
-    $violations = $this->validator->validate(planFixture('s3-day1.v0.1.json', 'ru', 'ro', 3));
+// ── the frames ────────────────────────────────────────────────────────────────────────────────
 
-    expect($violations)->toBe([]);
+it('refuses a line that is not its own frame with a word in the hole', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(1, [
+        'text' => 'I will be there in the morning.',   // nothing to do with «I have an appointment at ___»
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::FRAME_MISMATCH);
 });
 
-it('passes S2 even with no goal_terms at all — its Latin is abbreviations', function () {
-    // The day's whole Latin vocabulary is `PHP`, `API` and `QA`: two-to-five capitals, exempt by
-    // SHAPE. Which is the point of the shape rule — `QA` was never in `goal_terms` because the
-    // learner never typed it, and under the earlier, narrower rule this day's keys were violations
-    // for being spelled the only correct way.
-    $violations = $this->validator->validate(planFixture('s2-day1.v0.1.json', 'ru', 'en', 3));
+it('accepts a line whose frame is filled with a longer phrase', function () {
+    $ok = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(1, [
+        'text' => 'I have an appointment at half past nine in the morning.',
+    ]));
 
-    expect($violations)->toBe([]);
+    expect($this->validator->validate($ok))->toBe([]);
 });
 
-// ── rule 1: the reply share ───────────────────────────────────────────────────────────────────
+it('refuses a day that is more than a third fixed formulas', function () {
+    // Three of eight lines with no slot: the day teaches sentences the learner can say and nothing
+    // they can say next.
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        return withCard(2, ['frame' => ''])($items);
+    });
 
-it('accepts the ceil(0.45 × budget) split at an odd budget, where it lands at 55.6%', function () {
-    // 9 terms → the server asks for 5 replies. 5/9 = 55.6%, above the canon band of 40–50% and
-    // inside this gate's 35–55. A gate that fired on our own instruction would be the wrong gate.
-    $items = [];
-    for ($i = 1; $i <= 5; $i++) {
-        $items[] = planItem(['text' => "line {$i}", 'translation' => "реплика {$i}", 'example' => "Line {$i} happens.", 'covers_checkpoint' => 1]);
-    }
-    for ($i = 1; $i <= 4; $i++) {
-        $items[] = planItem(['text' => "word{$i}", 'type' => 'word', 'is_line' => false, 'translation' => "слово {$i}", 'example' => "A word{$i} appears.", 'covers_checkpoint' => null]);
-    }
-
-    expect($this->validator->validate(planDay($items)))->toBe([]);
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::FRAME_SHARE);
 });
 
-it('refuses a day that is a vocabulary list with an event date attached', function () {
-    // The v0 failure: 5 replies of 16 — 31.3%.
-    $items = [planItem(['text' => 'a line', 'translation' => 'реплика', 'example' => 'A line happens.'])];
-    for ($i = 1; $i <= 9; $i++) {
-        $items[] = planItem(['text' => "word{$i}", 'type' => 'word', 'is_line' => false, 'translation' => "слово {$i}", 'example' => "A word{$i} appears.", 'covers_checkpoint' => null]);
-    }
+it('refuses an interlocutor line the skeleton never promised', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(0, [
+        'text' => 'Have you been here before?',   // plausible, and not in `opening_lines`
+    ]));
 
-    expect(codes($this->validator->validate(planDay($items))))->toBe([PlanDayValidator::LINE_SHARE]);
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::ROLE_LINE_INVENTED);
 });
 
-// ── rule 2/3: checkpoints ─────────────────────────────────────────────────────────────────────
+it('refuses a day where more than a quarter of the lines belong to the interlocutor', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(7, [
+        'text' => 'How long has it been like this?',   // verbatim from the skeleton, but one too many
+        'frame' => '',
+        'speaker' => PlanDayItem::SPEAKER_ROLE,
+        'coversCheckpoint' => null,
+    ]));
 
-it('refuses a day whose checkpoint no reply can tick — the one failure it cannot ship', function () {
-    $items = [
-        planItem(['text' => 'line one', 'translation' => 'первая', 'example' => 'Line one happens.', 'covers_checkpoint' => 1]),
-        planItem(['text' => 'word', 'type' => 'word', 'is_line' => false, 'translation' => 'слово', 'example' => 'A word appears.', 'covers_checkpoint' => null]),
-    ];
-
-    $violations = $this->validator->validate(planDay($items, checkpoints: 2));
-
-    expect(codes($violations))->toContain(PlanDayValidator::CHECKPOINT_UNCOVERED)
-        ->and($violations[array_search(PlanDayValidator::CHECKPOINT_UNCOVERED, array_map(fn ($v) => $v->code, $violations), true)]->detail)
-        ->toContain('чек-пойнт 2');
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::ROLE_LINE_SHARE);
 });
 
-it('refuses a substitution that claims to close a checkpoint', function () {
-    $items = [
-        planItem(['text' => 'line one', 'translation' => 'первая', 'example' => 'Line one happens.', 'covers_checkpoint' => 1]),
-        planItem(['text' => 'word', 'type' => 'word', 'is_line' => false, 'translation' => 'слово', 'example' => 'A word appears.', 'covers_checkpoint' => 1]),
-    ];
+// ── the substitutions ─────────────────────────────────────────────────────────────────────────
 
-    expect(codes($this->validator->validate(planDay($items))))->toContain(PlanDayValidator::CHECKPOINT_ON_WORD);
+it('refuses a word that stands in no frame of the day', function () {
+    // The rule the whole of v0.2 turns on: a word whose example is not one of the day's frames with
+    // that word in the slot is a glossary entry sitting next to the conversation.
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => 'physiotherapy',
+        'translation' => 'физиотерапия',
+        'example' => 'Physiotherapy usually helps with this.',
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))
+        ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
 });
 
-it('refuses a checkpoint index the day does not have', function () {
-    $items = [planItem(['covers_checkpoint' => 7])];
+// ── the kinds ─────────────────────────────────────────────────────────────────────────────────
 
-    expect(codes($this->validator->validate(planDay($items))))
-        ->toContain(PlanDayValidator::CHECKPOINT_OUT_OF_RANGE);
+it('refuses a line with no speaker', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(1, ['speaker' => null]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KIND_MISMATCH);
 });
 
-// ── rule 4/5: examples ────────────────────────────────────────────────────────────────────────
+it('refuses a connector that claims to be a single word', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(12, ['type' => 'word']));
 
-it('refuses an example that is another card text verbatim — the clone v0 lost', function () {
-    $items = [
-        planItem(['text' => "It's been like this for a week.", 'translation' => 'Так уже неделю.', 'example' => "It's been like this for a week, and it still hurts."]),
-        planItem(['text' => 'week', 'type' => 'word', 'is_line' => false, 'translation' => 'неделя',
-            'example' => "It's been like this for a week.", 'covers_checkpoint' => null]),
-    ];
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KIND_MISMATCH);
+});
 
-    expect(codes($this->validator->validate(planDay($items))))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
+// ── the checkpoints ───────────────────────────────────────────────────────────────────────────
+
+it('refuses a day with a checkpoint no line closes', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        // Checkpoint 2 is closed by exactly one line; move it and nothing closes it.
+        return withCard(4, ['coversCheckpoint' => 1])($items);
+    });
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::CHECKPOINT_UNCOVERED);
+});
+
+it('refuses a substitution marked as closing a checkpoint', function () {
+    // A checkpoint is a thing that must be SAID; marking a noun as closing one says the learner can
+    // tick it by knowing vocabulary, and they cannot.
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        $item = $items[8];
+        $items[8] = new PlanDayItem(
+            text: $item->text, type: $item->type, kind: $item->kind, isLine: false,
+            translation: $item->translation, transliteration: $item->transliteration,
+            description: $item->description, example: $item->example,
+            exampleTranslation: $item->exampleTranslation, frame: '', speaker: null,
+            imageApiPrompt: $item->imageApiPrompt, coversCheckpoint: 3,
+        );
+
+        return $items;
+    });
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::CHECKPOINT_ON_WORD);
+});
+
+// ── the pictures ──────────────────────────────────────────────────────────────────────────────
+
+it('refuses a card with nothing to draw', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(3, ['imageApiPrompt' => '']));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
+});
+
+// ── examples and keys, unchanged since v0.1 ───────────────────────────────────────────────────
+
+it('refuses an example that is another card`s line, word for word', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(9, [
+        'example' => 'I have an appointment at ten.',
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM);
 });
 
 it('refuses two cards sharing one example', function () {
-    $items = [
-        planItem(['text' => 'pain', 'type' => 'word', 'is_line' => false, 'translation' => 'боль', 'example' => 'The pain is in my lower back.', 'covers_checkpoint' => null]),
-        planItem(['text' => 'lower back', 'type' => 'phrase', 'is_line' => false, 'translation' => 'поясница', 'example' => 'The pain is in my lower back.', 'covers_checkpoint' => null]),
-        planItem(['text' => 'a line', 'translation' => 'реплика', 'example' => 'A line happens.']),
-    ];
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(9, [
+        'example' => 'It hurts in my lower back most of the day.',
+    ]));
 
-    expect(codes($this->validator->validate(planDay($items))))->toContain(PlanDayValidator::EXAMPLE_DUPLICATED);
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::EXAMPLE_DUPLICATED);
 });
 
-it('refuses an empty example', function () {
-    expect(codes($this->validator->validate(planDay([planItem(['example' => '  '])]))))
-        ->toContain(PlanDayValidator::EXAMPLE_MISSING);
+it('refuses two cards sharing one key', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(9, [
+        'translation' => 'поясница',
+    ]));
+
+    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KEY_DUPLICATED);
 });
 
-// ── rule 6: keys ──────────────────────────────────────────────────────────────────────────────
+it('refuses a key written in the language being learned', function () {
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'translation' => 'the lower part of the back',
+    ]));
 
-it('refuses a key that is its own term', function () {
-    $items = [planItem(['text' => 'Zoom', 'translation' => 'Zoom'])];
-
-    expect(codes($this->validator->validate(planDay($items))))->toContain(PlanDayValidator::KEY_IS_THE_TERM);
-});
-
-it('refuses two cards asking the same question', function () {
-    $items = [
-        planItem(['text' => 'line one', 'translation' => 'спина болит', 'example' => 'Line one happens.']),
-        planItem(['text' => 'line two', 'translation' => 'Спина болит!', 'example' => 'Line two happens.']),
-    ];
-
-    expect(codes($this->validator->validate(planDay($items))))->toContain(PlanDayValidator::KEY_DUPLICATED);
-});
-
-// ── rule 7: the transliteration, repaired rather than thrown away ─────────────────────────────
-
-it('strips the punctuation a reply hint picks up by reflex instead of losing the hint', function () {
-    // The live gate refuses this outright (§7.2) and 5 of 16 hints died on one day for it.
-    expect($this->validator->normalizedTransliteration('ru', 'куд ю клэрифай уич проджект ю мин?'))
-        ->toBe('куд ю клэрифай уич проджект ю мин')
-        ->and($this->validator->normalizedTransliteration('ru', 'тушеште де трей зиле, де кытева орь пе зи'))
-        ->toBe('тушеште де трей зиле де кытева орь пе зи');
-});
-
-it('keeps the marks a spoken word really carries', function () {
-    expect($this->validator->normalizedTransliteration('ru', 'чек-ин'))->toBe('чек-ин');
-});
-
-it('still refuses a hint with a letter from another alphabet, however clean the punctuation', function () {
-    // «комо estás» is unreadable for exactly the reader the field exists for, and no amount of
-    // stripping makes it readable.
-    expect($this->validator->normalizedTransliteration('ru', 'комо estás'))->toBeNull()
-        // The lookalike case: Armenian «ի» inside a Russian hint. Matches by eye, fails by letter.
-        ->and($this->validator->normalizedTransliteration('ru', 'ինтёрнэл'))->toBeNull();
-});
-
-it('refuses a hint that annotates instead of transliterating', function () {
-    expect($this->validator->normalizedTransliteration('ru', 'бэк [bæk]'))->toBeNull()
-        ->and($this->validator->normalizedTransliteration('ru', 'уик 2'))->toBeNull();
-});
-
-it('reports a broken hint as a violation of the day, not as a silent drop', function () {
-    $items = [planItem(['transliteration' => 'my back hurts'])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->toContain(PlanDayValidator::TRANSLITERATION_ALPHABET);
-});
-
-// ── rule 8: purity, with its two exemptions ───────────────────────────────────────────────────
-
-it('lets a goal term stand in Latin inside a Russian key', function () {
-    $items = [planItem([
-        'text' => 'I was responsible for the API.',
-        'translation' => 'Я отвечал за разработку API.',
-        'example' => 'I was responsible for the API and its documentation.',
-        'example_translation' => 'Я отвечал за API и его документацию.',
-        'transliteration' => '',
-    ])];
-
-    // The line-share rule fires on a one-card day; the purity rule is what this test is about.
-    expect(codes($this->validator->validate(planDay($items, goalTerms: ['API']))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('lets a card quote its OWN term in the key when the term is Latin', function () {
-    $items = [planItem([
-        'text' => 'backend', 'type' => 'word', 'is_line' => false, 'covers_checkpoint' => null,
-        'translation' => 'бэкенд (backend)',
-        'example' => 'I moved to backend work two years ago.',
-        'example_translation' => 'Я перешёл в бэкенд два года назад.',
-        'transliteration' => 'бэкенд',
-    ])];
-
-    // The line-share rule fires (no replies at all) — the purity rule does not, and that is what
-    // this test is about.
-    expect(codes($this->validator->validate(planDay($items, checkpoints: 0))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('still refuses a key that is simply in the wrong language', function () {
-    $items = [planItem([
-        'translation' => 'My back has been hurting for a week.',
-        'example_translation' => 'Спина болит уже неделю.',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
+    expect(dayCodes($this->validator->validate($broken)))
         ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
 });
 
-// ── rule 9 + 10 ───────────────────────────────────────────────────────────────────────────────
+it('leaves an abbreviation, a code and a goal term alone in a key', function (string $translation, array $goalTerms) {
+    $ok = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'translation' => $translation,
+    ]), goalTerms: $goalTerms);
 
-it('refuses a description that hands over its own term', function () {
-    $items = [planItem([
-        'text' => 'bank', 'type' => 'word', 'is_line' => false, 'covers_checkpoint' => null,
-        'translation' => 'банк', 'transliteration' => 'бэнк',
-        'description' => 'A bank is a place where you keep money.',
-        'example' => 'I need to go to the bank today.', 'example_translation' => 'Мне нужно в банк сегодня.',
-    ])];
+    expect($this->validator->validate($ok))->toBe([]);
+})->with([
+    ['снимок MRI поясницы', []],
+    ['место 14A в очереди', []],
+    ['поясница по Laravel-методике', ['Laravel']],
+]);
 
-    expect(codes($this->validator->validate(planDay($items, checkpoints: 0))))
-        ->toContain(PlanDayValidator::DESCRIPTION_GIVES_AWAY);
+// ── the reading hint: repaired, never fatal ───────────────────────────────────────────────────
+
+it('never fails a day over a reading hint, however broken it is', function (?string $hint) {
+    $day = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(2, [
+        'transliteration' => $hint,
+    ]));
+
+    expect($this->validator->validate($day))->toBe([]);
+})->with(['', 'my name is denis', 'мaй нэйм', null]);
+
+it('repairs a hint that only picked up sentence punctuation', function () {
+    expect($this->validator->transliterationFor('ru', 'куд ю клэрифай уич проджект ю мин?'))
+        ->toBe('куд ю клэрифай уич проджект ю мин');
 });
 
-it('refuses a day that came back short of the budget it was asked for', function () {
-    $day = new PlanDayCandidate('ru', 'en', termBudget: 9, checkpointCount: 1, goalTerms: [], items: [planItem()]);
-
-    expect(codes($this->validator->validate($day)))->toContain(PlanDayValidator::TERM_COUNT);
+it('refuses to repair a hint written in the wrong alphabet, so the caller can drop it', function () {
+    expect($this->validator->transliterationFor('ru', 'ай уоз риспонсибл фо зэ API'))->toBeNull()
+        ->and($this->validator->transliterationFor('ru', ''))->toBeNull();
 });
 
-it('says nothing about an empty day beyond the count, rather than throwing', function () {
-    $day = new PlanDayCandidate('ru', 'en', termBudget: 9, checkpointCount: 3, goalTerms: [], items: []);
-
-    expect(codes($this->validator->validate($day)))->toBe([PlanDayValidator::TERM_COUNT]);
-});
-
-// ── abbreviations are allowed by SHAPE, with no list to keep ──────────────────────────────────
-
-it('lets an abbreviation stand in Latin inside a Russian key, without being told about it', function () {
-    // `QA` was never in `goal_terms` — the learner did not type it. The model produced it anyway,
-    // correctly: «работаю с QA-инженерами» is the only way a Russian speaker writes that. Under a
-    // rule that only knew the learner's own words, that key was a violation for being right.
-    $items = [planItem([
-        'text' => 'I usually work closely with QA engineers.',
-        'translation' => 'Обычно я тесно работаю с QA-инженерами.',
-        'example' => 'In a remote team, I work closely with QA to clarify issues quickly.',
-        'example_translation' => 'В удалённой команде я тесно работаю с QA, чтобы быстро уточнять проблемы.',
-        'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('accepts two-to-five letters and nothing longer', function () {
-    $key = function (string $russian): array {
-        return codes($this->validator->validate(planDay([planItem([
-            'text' => 'a line', 'translation' => $russian, 'example' => 'A line happens.',
-            'example_translation' => 'Реплика случается.', 'transliteration' => '',
-        ])])));
-    };
-
-    // Two through five: an abbreviation.
-    expect($key('Работаю с QA каждый день'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and($key('Отвечал за API и PHP'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and($key('Пишу на HTML и REST'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        // Six is not an abbreviation any more — past five the run stops looking like one.
-        ->and($key('Строка ABCDEFG внутри'))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-// ── codes are allowed by SHAPE too, and for the reason the abbreviation rule could not cover ────
-
-it('lets a seat number stand in a Russian key — a digit-carrying token is not a language', function () {
-    // Bought on the owner's phone: a travel plan died twice on `14A`. «Извините, где место 14A?» is
-    // the only way to say it, the seat letter is not English, and the abbreviation rule starts at
-    // TWO capitals — a seat carries one.
-    $items = [planItem([
-        'text' => 'Excuse me, where is seat 14A?',
-        'translation' => 'Извините, где место 14A?',
-        'example' => 'Excuse me, where is seat 14A?',
-        'example_translation' => 'Извините, где место 14A?',
-        'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('reads a code by its digit, whichever side the letters are on', function () {
-    $key = function (string $russian): array {
-        return codes($this->validator->validate(planDay([planItem([
-            'text' => 'a line', 'translation' => $russian, 'example' => 'A line happens.',
-            'example_translation' => 'Реплика случается.', 'transliteration' => '',
-        ])])));
-    };
-
-    expect($key('Место 14A у окна'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and($key('Летим на A320 утром'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and($key('Принимаю витамин B12'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and($key('Выход B2, посадка в семь'))->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        // A digit somewhere in the sentence does NOT excuse a Latin word elsewhere in it: the rule
-        // is about one token, not about the line it sits in.
-        ->and($key('Место 14A и слово hello'))->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('does not let a capitalised Latin word through as an abbreviation', function () {
-    // One capital letter is a word, not an abbreviation. This is the case the shape rule must not
-    // swallow, or the whole purity check stops meaning anything.
-    $items = [planItem([
-        'text' => 'a line',
-        'translation' => 'Я сказал Hello вместо здравствуйте',
-        'example' => 'A line happens.',
-        'example_translation' => 'Реплика случается.',
-        'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-// ── a word the day itself teaches is not a foreign word ───────────────────────────────────────
-
-it('lets a Latin word the day itself teaches stand in a Russian key', function () {
-    // The owner's phone, 31.08: «Онлайн-собеседование разработчика» died twice on `Alex`, `junior`
-    // and `backend` — every one of them a word the model had just put on a card of the same day.
-    // A key that quotes the day's own material is not a key in the wrong language.
-    $items = [
-        planItem([
-            'text' => "Hi, I'm Alex, and I'm a junior developer.",
-            'translation' => 'Привет, я Alex, junior-разработчик.',
-            'example' => "Hi, I'm Alex, and I'm a junior developer from Kyiv.",
-            'example_translation' => 'Привет, я Alex, junior-разработчик из Киева.',
-            'transliteration' => '',
-            'covers_checkpoint' => 1,
-        ]),
-        planItem([
-            'text' => "I'm looking for a backend developer role in IT.",
-            // `backend` is on the OTHER card of the day — the exemption is the day's, not the card's.
-            'translation' => 'Ищу позицию backend-разработчика в IT.',
-            'example' => "I'm looking for a backend developer role in IT this year.",
-            'example_translation' => 'В этом году ищу позицию backend-разработчика в IT.',
-            'transliteration' => '',
-            'covers_checkpoint' => 1,
-        ]),
-    ];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('does not let a lone capital through, even when the day carries it', function () {
-    // One letter is a size, not a word — it is evidence of nothing, and the exemption is built on a
-    // token being evidence that the day teaches it. The single-letter token that IS content carries
-    // a digit and is a code («14A»), which is a different rule and stays.
-    $items = [planItem([
-        'text' => 'Do you have this in size L?',
-        'translation' => 'У вас есть размер L?',
-        'example' => 'Do you have this shirt in size L?',
-        'example_translation' => 'У вас есть эта рубашка в размере L?',
-        'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('does not let the day excuse a key left in English altogether', function () {
-    // The failure mode the exemption would otherwise buy: an `example_translation` that is the
-    // example verbatim would be excused by the very sentence it failed to translate. Most of the
-    // letters are foreign ⇒ the day's vocabulary does not apply, and the key is what it looks like.
-    $items = [planItem([
-        'text' => 'Excuse me, where is seat 14A?',
-        'translation' => 'Извините, где место 14A?',
-        'example' => 'Excuse me, where is seat 14A on this flight?',
-        'example_translation' => 'Excuse me, where is seat 14A on this flight?',
-        'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items))))
-        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
-});
-
-it('still needs goal_terms for a mixed-case product name', function () {
-    // `Laravel` is not two-to-five capitals, so the shape rule cannot see it. That is what the
-    // learner's own list is still for.
-    $items = fn (): array => [planItem([
-        'text' => 'a line', 'translation' => 'Я работал с Laravel', 'example' => 'A line happens.',
-        'example_translation' => 'Реплика случается.', 'transliteration' => '',
-    ])];
-
-    expect(codes($this->validator->validate(planDay($items()))))
-        ->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE)
-        ->and(codes($this->validator->validate(planDay($items(), goalTerms: ['Laravel']))))
-        ->not->toContain(PlanDayValidator::KEY_NOT_SUPPORT_LANGUAGE);
+it('knows when a reading hint is mandatory at all', function () {
+    expect($this->validator->scriptsDiffer('ru', 'en'))->toBeTrue()
+        ->and($this->validator->scriptsDiffer('ru', 'ro'))->toBeTrue()
+        ->and($this->validator->scriptsDiffer('en', 'ro'))->toBeFalse();
 });

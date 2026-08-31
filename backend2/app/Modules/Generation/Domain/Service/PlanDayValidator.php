@@ -18,7 +18,7 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * are checked by the prompt and by a person reading them, and that has been an acceptable trade
  * for a collection, where a weak card is a weak card. It is not an acceptable trade for a plan.
  * A plan is a mechanism: the day promises abilities, the conversation at the end of the day ticks
- * them off, and if no reply in the day's material can tick a checkpoint then the day cannot be
+ * them off, and if no line in the day's material can tick a checkpoint then the day cannot be
  * passed and the learner finds out at the conversation. That is a MECHANICAL failure, and
  * mechanical failures are what deterministic code is for (docs/research/plan-sandbox-2026-08-29.md
  * §8, вопрос 2).
@@ -26,64 +26,77 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * So the rules below are the ones where being wrong breaks the machine, not the ones where being
  * wrong makes a card less pretty. Taste stays with the prompt.
  *
- * ## The nine rules, and what each one is protecting
+ * ## What v0.2 added, and what it took away
  *
- * 1. **Reply share, 35–55%, and never narrower than the number the server itself asked for.** The
- *    day is a conversation. Under a third replies and it is a vocabulary list with an event date
- *    attached — which is exactly what v0 produced at 31.3% on a 16-term day. See
- *    {@see checkLineShare()} for why the band is expressed in COUNTS.
- * 2. **Every checkpoint closed by at least one REPLY.** The one failure this class cannot let
- *    through.
- * 3. **`covers_checkpoint` only on a reply.** A checkpoint is a thing that must be SAID; a noun
- *    marked as closing one claims the learner can tick it by knowing vocabulary.
- * 4. **No example is the `text` of ANY card of the day.** v0 read the ban as «not its own text» and
- *    filled word cards with other cards' replies verbatim — the learner met the same sentence four
- *    times. A clone is scrap, not a near miss.
- * 5. **No two cards share an example.** Two cards, two sentences.
- * 6. **A key is never its own term.** A card whose question contains its answer asks nothing.
- * 7. **Transliteration is NORMALISED, then checked against the support alphabet.** See
- *    {@see normalizedTransliteration()} — this is the one rule that repairs rather than rejects.
- * 8. **Keys are written in the support language** — with the exemptions listed at
- *    {@see keyIsPure()}, and they are the whole subtlety of the rule.
- * 9. **A description never contains its own term.** Reuses the lookup's own check, so a description
- *    is judged by one rule wherever it is written.
+ * The day is now three arrays with three exact counts, and the two rules that matter most are new:
  *
- * Plus a tenth that is not a canon rule and is here because the budget is a promise the scheduler
- * made: **the day has the number of cards it was asked for**. A day that came back with three of
- * nine terms is broken in a way no other rule notices.
+ * **The frame.** A line is a frame with a slot — «I worked on ___» — and `text` is that line with
+ * a real word of the day in the hole. **Every word and connector of the day fits some frame, and
+ * its `example` is that sentence.** That is what turns eight lines and six words into twenty
+ * sentences the learner can say instead of eight they memorised, and it is checkable: build the
+ * frame into a regular expression, put the term in the slot, and look for it in the example.
+ *
+ * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
+ * character for character, one of the scene's `opening_lines`. The learner is going to hold that
+ * conversation; a line the skeleton never promised is a line they meet unprepared.
+ *
+ * And the BAND is gone. v0.1 accepted 35–55% replies and forced the server's own `ceil(0.45 ×
+ * budget)` inside that range, which meant two numbers had to be kept in step by hand. The server
+ * now hands the model three exact counts ({@see \App\Modules\Learning\Domain\Service\DayCapacity::split()})
+ * and this counts against them. A day one card off is not a generous day; it is a day the learner
+ * did not ask for.
+ *
+ * ## The one check that repairs instead of refusing
+ *
+ * TRANSLITERATION. It is not judged here at all any more — {@see transliterationFor()} returns the
+ * repaired hint or null, and the caller drops the field, logs it and counts it
+ * ({@see \App\Modules\Generation\Application\Port\PlanDayDefectReporter}). Under v0.1 a stray
+ * comma in one hint failed the whole day and bought a second paid generation whose second answer
+ * failed the same way. A pronunciation hint is the one field a card can live without: it is the
+ * LAST measure, it is visible in the log, and it is not the norm.
  */
 final class PlanDayValidator
 {
-    public const LINE_SHARE = 'day.line_share';
+    public const ARRAY_COUNT = 'day.array_count';
+    public const TERM_COUNT = 'day.term_count';
+    public const KIND_MISMATCH = 'day.kind_mismatch';
     public const CHECKPOINT_UNCOVERED = 'day.checkpoint_uncovered';
     public const CHECKPOINT_ON_WORD = 'day.checkpoint_on_word';
     public const CHECKPOINT_OUT_OF_RANGE = 'day.checkpoint_out_of_range';
+    public const FRAME_SHARE = 'day.frame_share';
+    public const FRAME_MISMATCH = 'day.frame_mismatch';
+    public const ROLE_LINE_INVENTED = 'day.role_line_invented';
+    public const ROLE_LINE_SHARE = 'day.role_line_share';
+    public const SUBSTITUTION_WITHOUT_FRAME = 'day.substitution_without_frame';
     public const EXAMPLE_IS_A_TERM = 'day.example_is_a_term';
     public const EXAMPLE_DUPLICATED = 'day.example_duplicated';
     public const EXAMPLE_MISSING = 'day.example_missing';
     public const KEY_IS_THE_TERM = 'day.key_is_the_term';
     public const KEY_DUPLICATED = 'day.key_duplicated';
     public const KEY_NOT_SUPPORT_LANGUAGE = 'day.key_not_support_language';
-    public const TRANSLITERATION_ALPHABET = 'day.transliteration_alphabet';
     public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
-    public const TERM_COUNT = 'day.term_count';
+    public const IMAGE_PROMPT_MISSING = 'day.image_prompt_missing';
 
-    /** The share of the day that must be spoken turns. See {@see checkLineShare()}. */
-    public const MIN_LINE_SHARE = 0.35;
-    public const MAX_LINE_SHARE = 0.55;
+    /** The most lines that may be fixed formulas with no slot — «Nice to meet you». */
+    private const MAX_FORMULA_SHARE = 1 / 3;
+
+    /** The most lines that may be the interlocutor's rather than the learner's own. */
+    private const MAX_ROLE_SHARE = 1 / 4;
+
+    /** The slot in a frame. */
+    private const SLOT = '___';
 
     /**
-     * The share the SERVER hands the model as a hard number — {@see
-     * \App\Modules\Learning\Domain\ValueObject\ComputedDay::phraseCount()} computes
-     * `ceil(0.45 × budget)` and the prompt is told that figure, not a band.
+     * What the slot becomes while a frame is being turned into a regular expression.
      *
-     * Named here so this gate can never contradict it. The two must agree by construction, not by
-     * two people keeping two numbers in step.
+     * A private-use codepoint and NOT the obvious `\0`, which `trim()` strips by default — a frame
+     * whose slot sits at the end came out of {@see normalize()} with no slot at all, and every line
+     * of every day was «not its own frame». One character, one silent gate, twenty minutes.
      */
-    private const MANDATED_LINE_SHARE = 0.45;
+    private const SLOT_MARK = "\u{E000}";
 
     /**
-     * Sentence punctuation a transliteration picks up by reflex from the reply it transcribes.
+     * Sentence punctuation a transliteration picks up by reflex from the line it transcribes.
      * Stripped, not rejected: the field is a pronunciation hint, and a full stop at the end of one
      * is a typographic accident, not a broken hint.
      */
@@ -95,36 +108,8 @@ final class PlanDayValidator
     private const HINT_MARKS = [' ', '-', '\'', '’', '‑'];
 
     /**
-     * An abbreviation: two to five capital Latin letters in a row, not glued to a longer Latin
-     * word on either side. `API`, `PHP`, `QA`, `HTML`. See {@see keyIsPure()}.
-     *
-     * The boundaries are what keep it from eating a name: `(?<![A-Za-z])` and `(?![A-Za-z])` mean
-     * the run has to stand on its own, so «BBC» is exempt and the «Sha» of a mixed-case word is
-     * not. A trailing hyphenated tail is allowed through with it — «QA-инженерами» is one word in
-     * Russian and its Latin half is the abbreviation.
-     */
-    private const ABBREVIATION = '/(?<![A-Za-z])[A-Z]{2,5}(?![A-Za-z])/u';
-
-    /**
-     * A CODE: a token that mixes digits and Latin letters — `14A`, `A320`, `B2`, `H1N1`, `PCR-2`.
-     *
-     * Decided by shape, exactly like {@see ABBREVIATION} above and for the same reason: a run
-     * containing a digit is not a word in any alphabet, so it cannot be evidence that a Russian
-     * sentence was written in English. «Извините, где место 14A?» is the only correct way to say it,
-     * and the `A` is a seat letter, not a language.
-     *
-     * The single-letter case is precisely why the abbreviation rule could not cover this: it starts
-     * at two letters, because one capital on its own is just a capitalised word. Bolted onto a
-     * number it stops being a word at all.
-     *
-     * Bought on the owner's phone, twice in one night: a travel plan died on `14A`. The check is
-     * meant to catch a key written in the wrong language, and a seat number is not that.
-     */
-    private const CODE = '/(?<![A-Za-z])(?=[0-9A-Za-z-]*[0-9])(?=[0-9A-Za-z-]*[A-Za-z])[0-9A-Za-z]+(?:-[0-9A-Za-z]+)*(?![A-Za-z])/u';
-
-    /**
-     * ONE Latin word — the unit both halves of the day-vocabulary exemption are measured in
-     * ({@see dayVocabulary()}, {@see keyIsPure()}).
+     * ONE Latin word — the unit the day-vocabulary exemption is measured in ({@see dayVocabulary()},
+     * {@see keyIsPure()}).
      *
      * A run of Latin letters, plus the apostrophe that lives INSIDE an English word («I'm»,
      * «don't»). A hyphen deliberately does not join: «backend-разработчик» is one Russian word
@@ -135,97 +120,51 @@ final class PlanDayValidator
     /**
      * The shortest token the day's own vocabulary may excuse. One letter is not a word: it is a
      * size («размер L»), an initial, or a stray — evidence of nothing, and the whole exemption is
-     * built on a token being EVIDENCE that the day teaches it. A single letter that really is
-     * content carries a digit («14A») and is a {@see CODE}.
+     * built on a token being EVIDENCE that the day teaches it.
      */
     private const MIN_VOCABULARY_TOKEN = 2;
 
-    public function __construct(private readonly LanguagePurity $purity = new LanguagePurity()) {}
-
-    /**
-     * THE accepted reply-count range for a day of `$total` cards, and the number the server asked
-     * for.
-     *
-     * Public and static because a SECOND gate now judges the same share
-     * ({@see PlanCoherenceValidator}), and two copies of this arithmetic is how one of them ends up
-     * refusing a day the other accepts. The reasoning behind computing in counts rather than in
-     * percentages is at {@see checkLineShare()}.
-     *
-     * @return array{0: int, 1: int, 2: int}  min, max, and the mandated `ceil(0.45 × total)`
-     */
-    public static function lineCountRange(int $total): array
-    {
-        $mandated = (int) ceil(self::MANDATED_LINE_SHARE * $total);
-
-        return [
-            min((int) floor(self::MIN_LINE_SHARE * $total), $mandated),
-            max((int) ceil(self::MAX_LINE_SHARE * $total), $mandated),
-            $mandated,
-        ];
-    }
+    public function __construct(
+        private readonly LanguagePurity $purity = new LanguagePurity(),
+        private readonly SupportLanguageText $supportText = new SupportLanguageText(),
+    ) {}
 
     /** @return list<PlanViolation> empty = the day may be written */
     public function validate(PlanDayCandidate $day): array
     {
-        $violations = [];
-        $items = $day->items;
-
-        if (count($items) !== $day->termBudget) {
-            $violations[] = new PlanViolation(
-                self::TERM_COUNT,
-                'карточек ' . count($items) . ', а день просил ' . $day->termBudget,
-            );
-        }
-
-        if ($items === []) {
+        $violations = $this->checkCounts($day);
+        if ($day->items === []) {
             return $violations;
         }
 
-        $violations = [...$violations, ...$this->checkLineShare($day, $items)];
-        $violations = [...$violations, ...$this->checkCheckpoints($day, $items)];
-        $violations = [...$violations, ...$this->checkExamples($items)];
-        $violations = [...$violations, ...$this->checkKeys($day, $items)];
-
-        foreach ($items as $item) {
-            $hint = trim((string) $item->transliteration);
-            if ($hint !== '' && $this->normalizedTransliteration($day->supportLang, $hint) === null) {
-                $violations[] = new PlanViolation(
-                    self::TRANSLITERATION_ALPHABET,
-                    'транслитерация написана не буквами языка поддержки',
-                    $item->text,
-                );
-            }
-
-            if ($item->description !== '' && DescriptionSelfReference::givesAway($item->description, $item->text)) {
-                $violations[] = new PlanViolation(
-                    self::DESCRIPTION_GIVES_AWAY,
-                    'описание называет собственный термин — карточка спрашивает то, на что уже ответила',
-                    $item->text,
-                );
-            }
-        }
-
-        return $violations;
+        return [
+            ...$violations,
+            ...$this->checkKinds($day),
+            ...$this->checkCheckpoints($day),
+            ...$this->checkFrames($day),
+            ...$this->checkSubstitutions($day),
+            ...$this->checkExamples($day->items),
+            ...$this->checkKeys($day),
+            ...$this->checkPerCard($day),
+        ];
     }
 
     /**
-     * The hint, repaired.
+     * THE HINT, REPAIRED — or null when it cannot be saved.
      *
-     * The ONE rule that fixes instead of failing, and the reason is measured: the live gate
+     * The one rule that fixes instead of failing, and the reason is measured: the live gate
      * ({@see EnrichmentValidator::transliterationFor()}) allows a hint only a space, a hyphen and
-     * an apostrophe, which is the right rule for a WORD. A reply is a sentence and carries a full
+     * an apostrophe, which is the right rule for a WORD. A line is a sentence and carries a full
      * stop and a comma by definition, so on plan material that gate fired as a lottery — 5 hints of
      * 16 thrown away on one day, 0 on another that happened not to end in a full stop
-     * (docs/research/plan-sandbox-2026-08-29.md §7.2). Throwing away a correct pronunciation hint
-     * because of a comma is losing content over typography.
+     * (docs/research/plan-sandbox-2026-08-29.md §7.2).
      *
      * So: strip sentence punctuation, then apply the alphabet rule unchanged. A hint with a Latin
      * letter in a Russian field is still refused — that one defeats the field for exactly the
-     * reader it exists for, and no amount of stripping makes it readable.
-     *
-     * Returns the cleaned hint, or null when it cannot be saved.
+     * reader it exists for, and no amount of stripping makes it readable. Refused means the FIELD
+     * is dropped, never the day: see the class docblock.
      */
-    public function normalizedTransliteration(string $supportLang, ?string $raw): ?string
+    public function transliterationFor(string $supportLang, ?string $raw): ?string
     {
         $text = trim((string) $raw);
         if ($text === '') {
@@ -249,65 +188,144 @@ final class PlanDayValidator
     }
 
     /**
-     * @param  list<PlanDayItem>  $items
-     * @return list<PlanViolation>
+     * Do the two languages use different scripts — i.e. is a reading hint MANDATORY on this day?
+     *
+     * Cyrillic support with a Latin target means every term, always. When both share a script the
+     * hint is optional and its absence is not a defect worth a line in the log.
      */
-    /**
-     * Rule 1, and the reason it counts cards instead of comparing percentages.
-     *
-     * The canon says 35–55% replies. The server says `ceil(0.45 × budget)` and hands the model that
-     * exact number. On an ODD budget the two disagree: 9 terms → 5 replies → 55.6%, which is
-     * outside a band written as a percentage. The real S3 day is exactly that shape and it is a
-     * good day — the sandbox passed it into design.
-     *
-     * A gate that refuses a day for obeying our own instruction is not a strict gate, it is a
-     * broken one: it would send a correct day back for a second paid generation, and the second
-     * answer would fail the same way. So the accepted range is computed in COUNTS and the mandated
-     * number is forced inside it. The percentage band is what the range is derived FROM, not what
-     * is compared.
-     *
-     * @param  list<PlanDayItem>  $items
-     * @return list<PlanViolation>
-     */
-    private function checkLineShare(PlanDayCandidate $day, array $items): array
+    public function scriptsDiffer(string $supportLang, string $targetLang): bool
     {
-        $total = count($items);
-        $lines = 0;
-        foreach ($items as $item) {
-            if ($item->isLine) {
-                $lines++;
-            }
-        }
-
-        [$min, $max, $mandated] = self::lineCountRange($total);
-
-        if ($lines >= $min && $lines <= $max) {
-            return [];
-        }
-
-        return [new PlanViolation(
-            self::LINE_SHARE,
-            'реплик ' . $lines . ' из ' . $total . ' — ' . round($lines / $total * 100, 1)
-            . "%, а надо {$min}–{$max} (35–55%, но не уже числа, которое сервер сам заказал: {$mandated})",
-        )];
+        return self::scriptOf($supportLang) !== self::scriptOf($targetLang);
     }
 
     /**
-     * @param  list<PlanDayItem>  $items
+     * Which alphabet a language is written in — enough of them to answer «does this pair need a
+     * reading hint», and no more. Anything unlisted is treated as Latin, which is the right guess
+     * for a European language and the harmless one: it only ever means «no hint is mandatory».
+     */
+    private static function scriptOf(string $lang): string
+    {
+        return match (mb_strtolower(substr(trim($lang), 0, 2))) {
+            'ru', 'uk', 'be', 'bg', 'sr', 'mk' => 'cyrillic',
+            'el' => 'greek',
+            'he' => 'hebrew',
+            'ar', 'fa' => 'arabic',
+            'ka' => 'georgian',
+            'hy' => 'armenian',
+            'zh', 'ja', 'ko' => 'cjk',
+            'th' => 'thai',
+            default => 'latin',
+        };
+    }
+
+    /**
+     * THE THREE NUMBERS, and the sum. A day one card off is rejected whole.
+     *
      * @return list<PlanViolation>
      */
-    private function checkCheckpoints(PlanDayCandidate $day, array $items): array
+    private function checkCounts(PlanDayCandidate $day): array
+    {
+        $violations = [];
+
+        $counted = [
+            PlanDayItem::KIND_LINE => 0,
+            PlanDayItem::KIND_WORD => 0,
+            PlanDayItem::KIND_CHUNK => 0,
+        ];
+        foreach ($day->items as $item) {
+            if (isset($counted[$item->kind])) {
+                $counted[$item->kind]++;
+            }
+        }
+
+        $expected = [
+            PlanDayItem::KIND_LINE => $day->phraseCount,
+            PlanDayItem::KIND_WORD => $day->wordCount,
+            PlanDayItem::KIND_CHUNK => $day->chunkCount,
+        ];
+
+        foreach ($expected as $kind => $want) {
+            if ($counted[$kind] !== $want) {
+                $violations[] = new PlanViolation(
+                    self::ARRAY_COUNT,
+                    "«{$kind}»: {$counted[$kind]}, а день просил {$want}",
+                );
+            }
+        }
+
+        if (count($day->items) !== $day->termBudget) {
+            $violations[] = new PlanViolation(
+                self::TERM_COUNT,
+                'карточек ' . count($day->items) . ', а день просил ' . $day->termBudget,
+            );
+        }
+
+        return $violations;
+    }
+
+    /**
+     * The four fields that describe what a card IS have to agree with each other.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkKinds(PlanDayCandidate $day): array
+    {
+        $violations = [];
+
+        foreach ($day->items as $item) {
+            $isLine = $item->kind === PlanDayItem::KIND_LINE;
+
+            if ($item->isLine !== $isLine) {
+                $violations[] = new PlanViolation(
+                    self::KIND_MISMATCH,
+                    "`is_line` говорит одно, а «{$item->kind}» — другое",
+                    $item->text,
+                );
+            }
+
+            if ($isLine && ! in_array($item->speaker, [PlanDayItem::SPEAKER_LEARNER, PlanDayItem::SPEAKER_ROLE], true)) {
+                $violations[] = new PlanViolation(
+                    self::KIND_MISMATCH,
+                    'у реплики нет говорящего — непонятно, произносит её юзер или собеседник',
+                    $item->text,
+                );
+            }
+
+            if (! $isLine && $item->speaker !== null) {
+                $violations[] = new PlanViolation(
+                    self::KIND_MISMATCH,
+                    'у подстановки есть говорящий, хотя её никто не произносит целиком',
+                    $item->text,
+                );
+            }
+
+            // A connector is a phrasal verb or a fixed collocation. `word` is the one lexical type
+            // it cannot be: a one-word term joins nothing.
+            if ($item->kind === PlanDayItem::KIND_CHUNK && $item->type === 'word') {
+                $violations[] = new PlanViolation(
+                    self::KIND_MISMATCH,
+                    'связка объявлена как одно слово — связка соединяет, а одно слово не соединяет ничего',
+                    $item->text,
+                );
+            }
+        }
+
+        return $violations;
+    }
+
+    /** @return list<PlanViolation> */
+    private function checkCheckpoints(PlanDayCandidate $day): array
     {
         $violations = [];
         $closed = [];
 
-        foreach ($items as $item) {
+        foreach ($day->items as $item) {
             $covers = $item->coversCheckpoint;
             if ($covers === null) {
                 continue;
             }
 
-            if (! $item->isLine) {
+            if ($item->kind !== PlanDayItem::KIND_LINE) {
                 $violations[] = new PlanViolation(
                     self::CHECKPOINT_ON_WORD,
                     "подстановка помечена как закрывающая чек-пойнт {$covers}; чек-пойнт закрывается репликой",
@@ -340,6 +358,161 @@ final class PlanDayValidator
         }
 
         return $violations;
+    }
+
+    /**
+     * THE FRAMES — the rule the whole of v0.2 turns on.
+     *
+     * Three things, and each one has a number:
+     *
+     *   at most a THIRD of the lines are formulas with no slot. A day of fixed formulas teaches
+     *   sentences the learner can say and nothing they can say NEXT.
+     *   a line with a frame IS that frame with something in the hole. «I worked on ___» and
+     *   «I worked on the payment module» — if they do not line up, one of the two was invented
+     *   after the other and the words of the day have no line to stand in.
+     *   at most a QUARTER of the lines are the interlocutor's, and each one is quoted from the
+     *   skeleton character for character.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkFrames(PlanDayCandidate $day): array
+    {
+        $violations = [];
+        $lines = $this->linesOf($day);
+        if ($lines === []) {
+            return $violations;
+        }
+
+        $formulas = 0;
+        $roleLines = 0;
+        $openings = array_map(static fn (string $l): string => trim($l), $day->openingLines);
+
+        foreach ($lines as $line) {
+            if (trim($line->frame) === '') {
+                $formulas++;
+            } elseif (! $this->fillsFrame($line->frame, $line->text)) {
+                $violations[] = new PlanViolation(
+                    self::FRAME_MISMATCH,
+                    'реплика не является своим каркасом «' . $line->frame . '» с реальным словом в дырке',
+                    $line->text,
+                );
+            }
+
+            if ($line->speaker !== PlanDayItem::SPEAKER_ROLE) {
+                continue;
+            }
+
+            $roleLines++;
+            if (! in_array(trim($line->text), $openings, true)) {
+                $violations[] = new PlanViolation(
+                    self::ROLE_LINE_INVENTED,
+                    'реплика собеседника сочинена, а должна быть дословно взята из opening_lines сцены',
+                    $line->text,
+                );
+            }
+        }
+
+        $total = count($lines);
+        if ($formulas > (int) floor($total * self::MAX_FORMULA_SHARE)) {
+            $violations[] = new PlanViolation(
+                self::FRAME_SHARE,
+                "реплик без каркаса {$formulas} из {$total}, а формул должно быть не больше трети",
+            );
+        }
+
+        if ($roleLines > (int) floor($total * self::MAX_ROLE_SHARE)) {
+            $violations[] = new PlanViolation(
+                self::ROLE_LINE_SHARE,
+                "реплик собеседника {$roleLines} из {$total}, а их должно быть не больше четверти",
+            );
+        }
+
+        return $violations;
+    }
+
+    /**
+     * EVERY word and connector stands in some frame of this day, and its example is that sentence.
+     *
+     * This is the rule that makes the day combine. Without it the words are a glossary next to the
+     * lines: the learner memorises eight sentences and owns none of them, because nothing ever told
+     * them which hole each word goes in.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkSubstitutions(PlanDayCandidate $day): array
+    {
+        $frames = [];
+        foreach ($this->linesOf($day) as $line) {
+            $frame = trim($line->frame);
+            if ($frame !== '' && str_contains($frame, self::SLOT)) {
+                $frames[] = $frame;
+            }
+        }
+
+        $violations = [];
+        foreach ($day->items as $item) {
+            if ($item->kind === PlanDayItem::KIND_LINE) {
+                continue;
+            }
+
+            foreach ($frames as $frame) {
+                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
+                    continue 2;
+                }
+            }
+
+            $violations[] = new PlanViolation(
+                self::SUBSTITUTION_WITHOUT_FRAME,
+                'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
+                $item->text,
+            );
+        }
+
+        return $violations;
+    }
+
+    /**
+     * Is `$text` the frame with SOMETHING in its slot?
+     *
+     * Compared on content and not on characters: case folded, punctuation flattened to spaces,
+     * whitespace collapsed. A line that differs from its frame by a full stop is the same line.
+     */
+    private function fillsFrame(string $frame, string $text): bool
+    {
+        $pattern = $this->framePattern($frame, '.+');
+
+        return $pattern !== null && preg_match('/^' . $pattern . '$/u', $this->normalize($text)) === 1;
+    }
+
+    /** Does `$example` contain this frame with `$term` in the slot? */
+    private function exampleUsesFrame(string $frame, string $term, string $example): bool
+    {
+        $pattern = $this->framePattern($frame, preg_quote($this->normalize($term), '/'));
+
+        return $pattern !== null && preg_match('/' . $pattern . '/u', $this->normalize($example)) === 1;
+    }
+
+    /**
+     * The frame as a regular expression, with `$slot` where the hole is.
+     *
+     * Null when the frame has no slot: a formula matches nothing and excuses nothing.
+     */
+    private function framePattern(string $frame, string $slot): ?string
+    {
+        $normalized = $this->normalize(str_replace(self::SLOT, self::SLOT_MARK, $frame));
+        if (! str_contains($normalized, self::SLOT_MARK)) {
+            return null;
+        }
+
+        $parts = array_map(
+            static fn (string $part): string => preg_quote(trim($part), '/'),
+            explode(self::SLOT_MARK, $normalized),
+        );
+
+        // The slot's own neighbours lose their spaces to normalisation, so the parts are re-joined
+        // with «optional whitespace» rather than glued: «worked on» + term must still match
+        // «worked on the payment module».
+        return implode('\s*' . $slot . '\s*', $parts);
     }
 
     /**
@@ -390,17 +563,14 @@ final class PlanDayValidator
         return $violations;
     }
 
-    /**
-     * @param  list<PlanDayItem>  $items
-     * @return list<PlanViolation>
-     */
-    private function checkKeys(PlanDayCandidate $day, array $items): array
+    /** @return list<PlanViolation> */
+    private function checkKeys(PlanDayCandidate $day): array
     {
         $violations = [];
         $seen = [];
-        $vocabulary = $this->dayVocabulary($items);
+        $vocabulary = $this->dayVocabulary($day->items);
 
-        foreach ($items as $item) {
+        foreach ($day->items as $item) {
             $translation = trim($item->translation);
 
             if ($this->normalize($translation) === $this->normalize($item->text)) {
@@ -438,72 +608,67 @@ final class PlanDayValidator
     }
 
     /**
+     * The per-card rules that need no comparison with the rest of the day.
+     *
+     * @return list<PlanViolation>
+     */
+    private function checkPerCard(PlanDayCandidate $day): array
+    {
+        $violations = [];
+
+        foreach ($day->items as $item) {
+            if ($item->description !== '' && DescriptionSelfReference::givesAway($item->description, $item->text)) {
+                $violations[] = new PlanViolation(
+                    self::DESCRIPTION_GIVES_AWAY,
+                    'описание называет собственный термин — карточка спрашивает то, на что уже ответила',
+                    $item->text,
+                );
+            }
+
+            // A term with nothing to draw is a term with no picture, and the day's collection is
+            // the only place the plan gets one: the core generator's image query never runs over
+            // plan material. Empty here means the card is illustrated by nothing, for ever.
+            if (trim($item->imageApiPrompt) === '') {
+                $violations[] = new PlanViolation(
+                    self::IMAGE_PROMPT_MISSING,
+                    'нет описания картинки — карточка останется без иллюстрации навсегда',
+                    $item->text,
+                );
+            }
+        }
+
+        return $violations;
+    }
+
+    /**
      * Is this key written in the learner's own language?
      *
      * The plain rule — «ни одной буквы чужого алфавита в переводе» — is right for ordinary content
-     * and WRONG for a plan, in two specific ways that are not exceptions to the product but the
-     * product itself:
+     * and WRONG for a plan, in ways that are not exceptions to the product but the product itself.
+     * The shape rules (an abbreviation, a code) and the learner's own `goal_terms` live in
+     * {@see SupportLanguageText}; two more live here because they are about THIS card and THIS day:
      *
-     * 1. **An ABBREVIATION — two to five capital Latin letters in a row.** `API`, `PHP`, `QA`,
-     *    `HTML`, `REST`. Always allowed, in every key, with no list to maintain and no model asked
-     *    for an opinion: the SHAPE is the rule, and it is decidable by looking. That matters
-     *    because the `goal_terms` exemption below only covers what the learner typed, and the S2
-     *    day produced `QA` on its own — correctly, in «работаю с QA-инженерами», a word no Russian
-     *    speaker writes any other way. Under the narrower rule that day's key was a violation for
-     *    being right.
-     *
-     *    Two is the floor because one capital letter is just a capitalised word. Five is the
-     *    ceiling because past it the run stops looking like an abbreviation and starts looking
-     *    like a sentence shouted in the wrong alphabet, which is the thing the check exists to
-     *    catch.
-     * 2. **`goal_terms`.** The learner typed `Laravel`, `Docker`, `Zoom` themselves, and those are
-     *    how their own field is spelled in Russian — mixed-case names the shape rule above cannot
-     *    see. The gate used to flag five fields of one day for containing the only correct
-     *    spelling (§7.3), and resolving that in the prompt is not possible — the prompt is right
-     *    and the gate was right, so the resolution belongs in code, here.
-     * 3. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд»
-     *    is fine, but a key that must quote the term to be unambiguous is not a key in the wrong
+     * 1. **A term that is itself in the other alphabet.** A card for `backend` glossed «бэкенд» is
+     *    fine, and a key that must quote the term to be unambiguous is not a key in the wrong
      *    language.
-     * 4. **A CODE — a token mixing digits and Latin letters.** `14A`, `A320`, `B2`. Shape again, and
-     *    the reason it needs its own rule: the abbreviation shape starts at two letters, and a seat
-     *    number carries exactly one. «Извините, где место 14A?» is the only way to say it in
-     *    Russian, and the day it was on died twice for being right.
-     * 5. **A WORD THE DAY ITSELF TEACHES.** A Latin token that appears in the `text` or the
+     * 2. **A WORD THE DAY ITSELF TEACHES.** A Latin token that appears in the `text` or the
      *    `example` of ANY card of the SAME day is not evidence that the key was written in the
      *    wrong language — it is the day's own subject matter, quoted where Russian quotes it
      *    anyway. «Привет, я Alex, junior-разработчик» is how that sentence is written, and the day
      *    it was on («Онлайн-собеседование разработчика», the owner's phone, 31.08) died twice on
      *    `Alex`, `junior` and `backend` — words the model had put on the cards one field earlier.
-     *    The list the shape rules cannot see (`Laravel`, `Docker`) is `goal_terms`, and it covers
-     *    only what the learner typed; this covers what the DAY typed, which is the same argument
-     *    one level down.
      *
      *    Two guards keep it from eating the rule it is an exemption to. The token must be at least
-     *    {@see MIN_VOCABULARY_TOKEN} letters long — one letter is a size, not a word («размер L»
-     *    stays a violation, and a real single-letter token carries a digit and is a code). And the
-     *    key as a WHOLE must still read as the support language: when most of its letters are
-     *    foreign ({@see LanguagePurity::isWrongScript()}) the exemption is off, or an
-     *    `example_translation` left in English would excuse itself with the example it failed to
-     *    translate.
-     *
-     * So all of these are removed from the value before the alphabet is looked at. What is left has
-     * to be the learner's own language, which is the rule the exemptions exist to keep enforceable.
+     *    {@see MIN_VOCABULARY_TOKEN} letters long — one letter is a size, not a word. And the key
+     *    as a WHOLE must still read as the support language: when most of its letters are foreign
+     *    ({@see LanguagePurity::isWrongScript()}) the exemption is off, or an `example_translation`
+     *    left in English would excuse itself with the example it failed to translate.
      *
      * @param  array<string, true>  $vocabulary  {@see dayVocabulary()} — every Latin word of the day
      */
     private function keyIsPure(PlanDayCandidate $day, PlanDayItem $item, string $value, array $vocabulary): bool
     {
-        // The two SHAPE rules first, because they need nothing told to them and hold in any
-        // language: a run of 2–5 capital Latin letters is an abbreviation, and a token carrying a
-        // digit is a code. Neither is evidence that a key was written in the wrong language.
-        $stripped = (string) preg_replace([self::ABBREVIATION, self::CODE], ' ', $value);
-
-        foreach ([...$day->goalTerms, $item->text] as $token) {
-            $token = trim($token);
-            if ($token !== '') {
-                $stripped = str_ireplace($token, ' ', $stripped);
-            }
-        }
+        $stripped = $this->supportText->strip($value, [...$day->goalTerms, $item->text]);
 
         if (! $this->purity->isWrongScript($day->supportLang, $value)) {
             $stripped = (string) preg_replace_callback(
@@ -519,10 +684,6 @@ final class PlanDayValidator
     /**
      * Every Latin word the day says out loud — its cards' `text` and `example`, which are the two
      * fields written in the language being learned.
-     *
-     * Case-folded, because a key quotes a word where the sentence puts it and «Backend» at the
-     * start of one is the same word as `backend` in the middle of another. Tokens shorter than
-     * {@see MIN_VOCABULARY_TOKEN} are not collected at all, so a single letter can never match.
      *
      * @param  list<PlanDayItem>  $items
      * @return array<string, true>  lower-cased word => true
@@ -548,11 +709,20 @@ final class PlanDayValidator
         return $words;
     }
 
+    /** @return list<PlanDayItem> */
+    private function linesOf(PlanDayCandidate $day): array
+    {
+        return array_values(array_filter(
+            $day->items,
+            static fn (PlanDayItem $i): bool => $i->kind === PlanDayItem::KIND_LINE,
+        ));
+    }
+
     /** Case-folded, punctuation-free, whitespace-collapsed — for comparing two strings as content. */
     private function normalize(string $value): string
     {
         $lower = mb_strtolower(trim($value));
-        $stripped = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $lower) ?? '';
+        $stripped = preg_replace('/[^\p{L}\p{N}\x{E000}]+/u', ' ', $lower) ?? '';
 
         return trim((string) preg_replace('/\s+/u', ' ', $stripped));
     }

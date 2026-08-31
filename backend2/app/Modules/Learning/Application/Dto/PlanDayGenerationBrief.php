@@ -21,6 +21,9 @@ final readonly class PlanDayGenerationBrief
      * @param  list<string>  $goalTerms    verbatim in both languages, never translated
      * @param  list<array{name: string, gender: string, number: string, note: string}>  $entities
      * @param  list<string>  $constraints
+     * @param  list<string>  $openingLines  what the day's interlocutors actually say, verbatim
+     *        from the skeleton — the lines P2 may quote as the ones the learner must recognise, and
+     *        the list the validator checks a `speaker: role` line against.
      * @param  array<string, mixed>  $dayJson  the day as the prompt reads it
      */
     public function __construct(
@@ -36,12 +39,14 @@ final readonly class PlanDayGenerationBrief
         public string $level,
         public int $termBudget,
         public int $phraseCount,
+        public int $chunkCount,
         public int $wordCount,
         public array $checkpoints,
         public array $entities,
         public array $constraints,
         public array $goalTerms,
         public array $dayJson,
+        public array $openingLines = [],
         public array $previousCheckpoints = [],
     ) {}
 }
