@@ -108,8 +108,17 @@ void main() {
 /// The hint is for READING a word, never for producing one. A trainer that showed it would be
 /// handing the learner the answer to the card it is asking — so the exercise surfaces are held to
 /// «not one mention», the same way the theme guard holds hex codes out of `lib/features/`.
+///
+/// ONE file is exempt, and the exemption is the rule restated rather than a hole in it: the intro
+/// card SHOWS the word instead of asking for it (rung 0 — nothing is graded, nothing is typed), so
+/// there is no answer for the hint to give away. The server sends `transliteration` on that card
+/// and on no other. Everything else in these three directories asks the learner to produce the
+/// word, and every one of them still fails this test on a single mention.
 void _trainersNeverShowTheReading() {
-  test('no exercise surface so much as mentions the reading hint', () {
+  /// The intro card — rung 0, the one trainer surface that asks for nothing.
+  const shows = 'lib/features/training/session/intro_card.dart';
+
+  test('no exercise surface but the intro card so much as mentions the reading hint', () {
     final offenders = <String>[];
     for (final dir in [
       'lib/features/training',
@@ -118,6 +127,7 @@ void _trainersNeverShowTheReading() {
     ]) {
       for (final entity in Directory(dir).listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        if (entity.path.endsWith(shows)) continue;
         final src = entity.readAsStringSync().toLowerCase();
         if (src.contains('transliteration')) offenders.add(entity.path);
       }
@@ -127,9 +137,15 @@ void _trainersNeverShowTheReading() {
       offenders,
       isEmpty,
       reason:
-          'The pronunciation hint belongs to the word card and the translator, and to nothing '
-          'that asks the learner to type, assemble or say the word:\n${offenders.join('\n')}',
+          'The pronunciation hint belongs to the word card, the translator and the intro card, and '
+          'to nothing that asks the learner to type, assemble or say the word:\n'
+          '${offenders.join('\n')}',
     );
+  });
+
+  test('and the intro card, which is exempt, actually draws it', () {
+    // Otherwise the exemption above would quietly outlive the feature it was granted for.
+    expect(File(shows).readAsStringSync(), contains('card.transliteration'));
   });
 }
 

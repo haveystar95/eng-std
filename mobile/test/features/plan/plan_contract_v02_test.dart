@@ -82,5 +82,58 @@ void main() {
       expect(task.ofSteps, 2);
       expect(task.card.termId, 't1');
     });
+
+    test('reads the reading v0.2.1 put on the intro card', () {
+      // The one field v0.2.1 added to the wire, and the client DOES draw it — so unlike
+      // `cloze_source` above, this one has to be read rather than merely survived. It rides on the
+      // ordinary card body, which means the plan and an ordinary collection get it by the same
+      // path: the plan session renders its cards through the same `SessionCard`.
+      final task = PlanSessionTask.fromJson(const {
+        'stage': 'a',
+        'ordinal': 1,
+        'of_steps': 4,
+        'from_day_index': 1,
+        'softened': false,
+        'source': 'new',
+        'knobs_applied': <String>[],
+        'knobs_ignored': <String>[],
+        'card': {
+          'term_id': 't1',
+          'exercise_mode': 'intro',
+          'type': 'phrase',
+          'answer': 'It hurts in my lower back.',
+          'transcription': 'ɪt hɜːts ɪn maɪ ˈləʊə bæk',
+          'transliteration': 'ит хётс ин май лоуэр бэк',
+        },
+      });
+
+      expect(task.card.transliteration, 'ит хётс ин май лоуэр бэк');
+      // Beside the IPA, never instead of it — two different products in two different notations.
+      expect(task.card.transcription, 'ɪt hɜːts ɪn maɪ ˈləʊə bæk');
+    });
+
+    test('a card that carries no reading reads as null, not as the empty string', () {
+      // Every mode except `intro`, and every term that simply has no hint. The card draws nothing;
+      // the distinction matters because '' would render as «[]».
+      final task = PlanSessionTask.fromJson(const {
+        'stage': 'b',
+        'ordinal': 1,
+        'of_steps': 2,
+        'from_day_index': 1,
+        'softened': false,
+        'source': 'new',
+        'knobs_applied': <String>[],
+        'knobs_ignored': <String>[],
+        'card': {
+          'term_id': 't1',
+          'exercise_mode': 'cloze',
+          'type': 'phrase',
+          'answer': 'lower back',
+          'transliteration': null,
+        },
+      });
+
+      expect(task.card.transliteration, isNull);
+    });
   });
 }

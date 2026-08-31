@@ -115,7 +115,11 @@ final appSettingsProvider = AsyncNotifierProvider<AppSettingsController, AppSett
 /// default the learner's own language implies.
 ///
 /// One provider, read by every surface that draws the hint, so the card and the translator can
-/// never disagree — and so the trainers, which read it nowhere, stay obviously out of it.
+/// never disagree.
+///
+/// Of the trainers, exactly ONE reads it: the intro card, which shows the word instead of asking
+/// for it. Everything that asks stays out — a reading beside a word the learner is being asked to
+/// produce is the answer printed out, and no setting should be able to turn that on.
 final transliterationEnabledProvider = Provider<bool>((ref) {
   final decided = ref.watch(appSettingsProvider).value?.transliteration;
   if (decided != null) return decided;

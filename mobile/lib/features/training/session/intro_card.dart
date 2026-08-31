@@ -8,6 +8,7 @@ import 'package:eng_std/theme/theme.dart';
 import 'package:eng_std/ui/ui.dart';
 import 'package:eng_std/l10n/app_localizations.dart';
 
+import '../../../data/app_settings.dart';
 import '../../../data/local/cached_image_provider.dart';
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
@@ -236,6 +237,7 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
     final card = widget.card;
     final example = card.example;
     final variants = card.acceptedVariants;
+    final showReading = ref.watch(transliterationEnabledProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -256,6 +258,16 @@ class _SessionIntroCardState extends ConsumerState<SessionIntroCard> {
               if ((card.transcription ?? '').isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text('/${card.transcription}/', style: AppText.transcription),
+              ],
+              // ЧТЕНИЕ, в квадратных скобках и на ступень тише транскрипции — тот же набор, что на
+              // карточке слова и в результате поиска, потому что это одна и та же подсказка, а не
+              // новый элемент интро. Под тем же переключателем «Подсказка произношения»: читатель,
+              // выключивший её в словаре, не просил включить её в тренировке.
+              // Приходит только на интро (см. [SessionCard.transliteration]); на карточке, которая
+              // СПРАШИВАЕТ слово, это был бы напечатанный ответ.
+              if (showReading && (card.transliteration ?? '').isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text('[${card.transliteration}]', style: AppText.transliteration),
               ],
               const SizedBox(height: AppSpacing.s4),
               Text(card.prompt ?? '', style: AppTextExercise.introTranslation),

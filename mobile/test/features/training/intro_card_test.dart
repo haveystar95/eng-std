@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:eng_std/data/app_settings.dart';
 import 'package:eng_std/data/models.dart';
 import 'package:eng_std/features/training/session/intro_card.dart';
 import 'package:eng_std/features/training/session/session_exercise.dart';
@@ -58,16 +59,25 @@ void main() {
   });
 
   group('the rendered card', () {
-    SessionCard card({required String term, required String example}) => SessionCard(
+    SessionCard card({
+      required String term,
+      required String example,
+      String? transliteration,
+    }) => SessionCard(
       termId: 't1',
       mode: ExerciseMode.intro,
       type: 'phrase',
       prompt: 'у меня температура',
       answer: term,
       example: example,
+      transliteration: transliteration,
     );
 
-    Widget host(SessionCard c) => ProviderScope(
+    Widget host(SessionCard c, {bool? readingEnabled}) => ProviderScope(
+      overrides: [
+        if (readingEnabled != null)
+          transliterationEnabledProvider.overrideWithValue(readingEnabled),
+      ],
       child: MaterialApp(
         locale: const Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -129,6 +139,53 @@ void main() {
             .where((t) => t.contains('tell me about yourself')),
         contains(example),
       );
+    });
+
+    testWidgets('the reading is drawn under the word, in brackets, when it arrives', (
+      tester,
+    ) async {
+      // The server sends `transliteration` on the intro card and on no other, so this is the whole
+      // of the client's job: draw it where the word card draws it, in the paper-dictionary square
+      // brackets (the slashes belong to IPA).
+      const example = 'I have a fever and feel very weak.';
+      await tester.pumpWidget(
+        host(
+          card(term: 'I have a fever.', example: example, transliteration: 'ай хэв э фивэ'),
+          readingEnabled: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('[ай хэв э фивэ]'), findsOneWidget);
+      final reading = tester.getTopLeft(find.text('[ай хэв э фивэ]')).dy;
+      final term = tester.getTopLeft(find.text('I have a fever.')).dy;
+      expect(term, lessThan(reading), reason: 'it is a hint UNDER the word, not a second heading');
+    });
+
+    testWidgets('a card without the field draws nothing at all', (tester) async {
+      // The ordinary case: most pairs have no hint, and a same-alphabet pair never gets one.
+      const example = 'I have a fever and feel very weak.';
+      await tester.pumpWidget(
+        host(card(term: 'I have a fever.', example: example), readingEnabled: true),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.textContaining('['), findsNothing);
+    });
+
+    testWidgets('«Подсказка произношения» off means off here too', (tester) async {
+      // Same switch as the word card and the search result. Someone who turned the hint off in the
+      // dictionary did not ask for it back inside a session.
+      const example = 'I have a fever and feel very weak.';
+      await tester.pumpWidget(
+        host(
+          card(term: 'I have a fever.', example: example, transliteration: 'ай хэв э фивэ'),
+          readingEnabled: false,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('[ай хэв э фивэ]'), findsNothing);
     });
 
     testWidgets('the «новое слово» badge sits BELOW the term and the example', (tester) async {

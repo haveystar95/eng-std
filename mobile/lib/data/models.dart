@@ -407,6 +407,16 @@ class SessionCard {
   final String? prompt; // the cue, in the user's language
   final String answer; // the correct target-language answer
   final String? transcription;
+
+  /// How the term READS in the letters of the support language («knife» → «найф»). Beside
+  /// [transcription] (IPA), never instead of it — the same pairing the word card draws.
+  ///
+  /// Sent on the INTRO card and nowhere else, and that is the contract rather than an oversight:
+  /// the intro is the one card that SHOWS the word instead of asking for it, and on any rung that
+  /// asks, a pronunciation hint beside the word is the answer printed out. Null is ordinary — most
+  /// pairs have no hint, and a pair whose two alphabets are the same never gets one.
+  final String? transliteration;
+
   final String? example;
   final String? exampleTranslation;
   final List<String>? options; // multiple_choice — answer + distractors, shuffled
@@ -512,6 +522,7 @@ class SessionCard {
     this.prompt,
     required this.answer,
     this.transcription,
+    this.transliteration,
     this.example,
     this.exampleTranslation,
     this.options,
@@ -531,6 +542,7 @@ class SessionCard {
     prompt: j['prompt'] as String?,
     answer: (j['answer'] as String?) ?? '',
     transcription: j['transcription'] as String?,
+    transliteration: j['transliteration'] as String?,
     example: j['example'] as String?,
     exampleTranslation: j['example_translation'] as String?,
     options: (j['options'] as List?)?.map((e) => e as String).toList(),
