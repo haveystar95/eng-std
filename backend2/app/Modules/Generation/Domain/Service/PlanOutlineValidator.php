@@ -292,9 +292,10 @@ final class PlanOutlineValidator
      * повторить своими словами», because understanding cannot be observed and saying it back is
      * the only evidence there is. That «и» is the rule being obeyed, not broken.
      *
-     * Written this crudely on purpose. The outline gets no second attempt, so a gate that fires on
-     * a correct answer costs the learner the whole plan — and a cleverer parser is a gate that
-     * fires more often, not less.
+     * Written this crudely on purpose. Since v0.2.1 the outline gets ONE re-run with this verdict
+     * quoted into it, and no more — so a gate that fires on a correct answer costs the learner two
+     * paid calls and then the whole plan, and a cleverer parser is a gate that fires more often,
+     * not less.
      *
      * @return list<PlanViolation>
      */

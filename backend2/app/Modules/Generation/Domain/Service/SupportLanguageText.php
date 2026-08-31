@@ -25,8 +25,8 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  *
  * Extracted from the day validator so the SKELETON can be judged by the same rule. Two copies of
  * this arithmetic is how one gate ends up refusing what the other accepts — and the outline gate is
- * the more dangerous of the two, because the outline gets no retry: a false positive there is a
- * learner staring at «не получилось» after a paid call.
+ * the more dangerous of the two, because the outline gets ONE re-run and no more (v0.2.1): a false
+ * positive there is a learner staring at «не получилось» after two paid calls.
  */
 final class SupportLanguageText
 {
