@@ -36,6 +36,11 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  * sentences the learner can say instead of eight they memorised, and it is checkable: build the
  * frame into a regular expression, put the term in the slot, and look for it in the example.
  *
+ * **The slot lives in `frame` and nowhere else.** v0.2.1's own addition, and it is here because the
+ * live day failed on it: four lines of eight came back with `___` still standing in `text`. The
+ * frame rule above cannot catch that on its own — «I'm a ___ developer» IS its frame with something
+ * in the hole, and the something is the hole. See {@see SLOT_FORBIDDEN_IN}.
+ *
  * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
  * character for character, one of the scene's `opening_lines`. The learner is going to hold that
  * conversation; a line the skeleton never promised is a line they meet unprepared.
@@ -65,6 +70,7 @@ final class PlanDayValidator
     public const CHECKPOINT_OUT_OF_RANGE = 'day.checkpoint_out_of_range';
     public const FRAME_SHARE = 'day.frame_share';
     public const FRAME_MISMATCH = 'day.frame_mismatch';
+    public const SLOT_OUTSIDE_FRAME = 'day.slot_outside_frame';
     public const ROLE_LINE_INVENTED = 'day.role_line_invented';
     public const ROLE_LINE_SHARE = 'day.role_line_share';
     public const SUBSTITUTION_WITHOUT_FRAME = 'day.substitution_without_frame';
@@ -77,7 +83,13 @@ final class PlanDayValidator
     public const DESCRIPTION_GIVES_AWAY = 'day.description_gives_away';
     public const IMAGE_PROMPT_MISSING = 'day.image_prompt_missing';
 
-    /** The most lines that may be fixed formulas with no slot — «Nice to meet you». */
+    /**
+     * The most lines that may be fixed formulas with no slot — «Nice to meet you».
+     *
+     * A THIRD, ROUNDED DOWN, and the rounding is the rule rather than an implementation detail:
+     * 8 lines → 2 formulas, 4 → 1, 14 → 4. v0.2 said «не больше трети» in prose and the model read
+     * it as «около трети», answering 3–4 of 8 twice in a row; v0.2.1 prints the three numbers.
+     */
     private const MAX_FORMULA_SHARE = 1 / 3;
 
     /** The most lines that may be the interlocutor's rather than the learner's own. */
@@ -85,6 +97,22 @@ final class PlanDayValidator
 
     /** The slot in a frame. */
     private const SLOT = '___';
+
+    /**
+     * Where the slot is allowed to be, and therefore — everywhere else it is a defect.
+     *
+     * The live «собеседование» day left `___` in the `text` of four lines of eight: not a line with
+     * a hole for the learner to fill, a line the learner cannot say at all. v0.2.1 says it in one
+     * sentence («`___` never appears in `text`, in `example`, or in any field other than `frame`»)
+     * and this is the same sentence, counted.
+     *
+     * `transliteration` is NOT on this list, and that is not an oversight: the reading hint is the
+     * one field of a day that is repaired or dropped and never fails it (реестр решений, п. 189).
+     * A hint with a slot in it is dropped like any other unusable hint.
+     */
+    private const SLOT_FORBIDDEN_IN = [
+        'text', 'translation', 'description', 'example', 'example_translation', 'image_api_prompt',
+    ];
 
     /**
      * What the slot becomes while a frame is being turned into a regular expression.
@@ -413,10 +441,15 @@ final class PlanDayValidator
         }
 
         $total = count($lines);
-        if ($formulas > (int) floor($total * self::MAX_FORMULA_SHARE)) {
+        // The cap is NAMED in the violation, because the violation is what the retry reads: «не
+        // больше трети» is the rule the first answer already had and disobeyed, «не больше 2» is
+        // a number it can count against.
+        $formulaCap = (int) floor($total * self::MAX_FORMULA_SHARE);
+        if ($formulas > $formulaCap) {
             $violations[] = new PlanViolation(
                 self::FRAME_SHARE,
-                "реплик без каркаса {$formulas} из {$total}, а формул должно быть не больше трети",
+                "реплик без каркаса {$formulas} из {$total}, а формул можно не больше {$formulaCap} "
+                . '— это треть с округлением вниз',
             );
         }
 
@@ -617,6 +650,15 @@ final class PlanDayValidator
         $violations = [];
 
         foreach ($day->items as $item) {
+            foreach ($this->slotBearingFields($item) as $field) {
+                $violations[] = new PlanViolation(
+                    self::SLOT_OUTSIDE_FRAME,
+                    "`{$field}` содержит «" . self::SLOT . '» — дырка живёт только в `frame`, '
+                    . 'а поле с дыркой юзеру не произнести',
+                    $item->text,
+                );
+            }
+
             if ($item->description !== '' && DescriptionSelfReference::givesAway($item->description, $item->text)) {
                 $violations[] = new PlanViolation(
                     self::DESCRIPTION_GIVES_AWAY,
@@ -638,6 +680,32 @@ final class PlanDayValidator
         }
 
         return $violations;
+    }
+
+    /**
+     * Which of this card's fields carry a slot they have no business carrying.
+     *
+     * @return list<string> field names, in the order {@see SLOT_FORBIDDEN_IN} lists them
+     */
+    private function slotBearingFields(PlanDayItem $item): array
+    {
+        $values = [
+            'text' => $item->text,
+            'translation' => $item->translation,
+            'description' => $item->description,
+            'example' => $item->example,
+            'example_translation' => $item->exampleTranslation,
+            'image_api_prompt' => $item->imageApiPrompt,
+        ];
+
+        $found = [];
+        foreach (self::SLOT_FORBIDDEN_IN as $field) {
+            if (str_contains($values[$field], self::SLOT)) {
+                $found[] = $field;
+            }
+        }
+
+        return $found;
     }
 
     /**

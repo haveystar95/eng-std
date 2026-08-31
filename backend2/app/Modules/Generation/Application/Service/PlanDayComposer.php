@@ -37,7 +37,7 @@ use RuntimeException;
  */
 final readonly class PlanDayComposer
 {
-    public const PROMPT_VERSION = 'plan_day.v0.2';
+    public const PROMPT_VERSION = 'plan_day.v0.2.1';
 
     public function __construct(
         private ContentModelPort $model,

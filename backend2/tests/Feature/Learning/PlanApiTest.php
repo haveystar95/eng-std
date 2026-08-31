@@ -610,7 +610,7 @@ it('leaves a ledger row for every paid call the plan made', function () {
         // Two versions and not one: the ledger says which prompt each call actually used rather
         // than stamping both with a single number that would be wrong for one of them the moment
         // they are revised apart.
-        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.2'])
+        ->and($rows->pluck('prompt_version')->unique()->all())->toBe(['plan_outline.v0.2', 'plan_day.v0.2.1'])
         ->and($rows[0]->prompt)->toStartWith('outline:')
         ->and($rows[1]->prompt)->toStartWith('day:')
         ->and($rows[1]->size)->toBe(14);

@@ -36,8 +36,8 @@ final class PlanPromptLibrary implements PlanPromptSource
      * The two prompts are versioned SEPARATELY, because they are revised separately: v0.2 took the
      * days out of the skeleton in one наряд step and the day's three arrays in the next, and a
      * shared constant would have stamped every day of that window with a version it was not
-     * written at. They happen to be in step again now; the split is what makes the next step
-     * cheap.
+     * written at. v0.2.1 is that split earning its keep — the day prompt was rewritten alone,
+     * after the live «собеседование» day failed twice on the frame rules, and P1 did not move.
      *
      * The v0.1.1 files stay in this directory as history and are not addressed by any constant —
      * a stored plan written on them is read back through its own `outline` JSON, not by
@@ -45,10 +45,10 @@ final class PlanPromptLibrary implements PlanPromptSource
      */
     public const OUTLINE_VERSION = 'plan_outline.v0.2';
 
-    public const DAY_VERSION = 'plan_day.v0.2';
+    public const DAY_VERSION = 'plan_day.v0.2.1';
 
     private const OUTLINE = 'plan_outline.v0.2.md';
-    private const DAY = 'plan_day.v0.2.md';
+    private const DAY = 'plan_day.v0.2.1.md';
 
     public function __construct(private readonly string $directory = __DIR__) {}
 

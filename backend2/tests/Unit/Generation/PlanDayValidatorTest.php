@@ -110,6 +110,49 @@ function candidate(
     );
 }
 
+/**
+ * A day of `$lines` lines and nothing else, `$formulas` of them without a frame.
+ *
+ * The one place synthetic material is right: this asks what the ARITHMETIC of the formula cap is,
+ * and a hand-written day has one line count, not three. Everything else about it is deliberately
+ * clean, so the only verdict that can move is the one under test.
+ */
+function syntheticDay(int $lines, int $formulas): PlanDayCandidate
+{
+    $items = [];
+    for ($i = 1; $i <= $lines; $i++) {
+        $formula = $i <= $formulas;
+        $items[] = new PlanDayItem(
+            text: $formula ? "Thank you very much, {$i}." : "I need help number {$i} today.",
+            type: 'phrase',
+            kind: PlanDayItem::KIND_LINE,
+            isLine: true,
+            translation: "реплика {$i}",
+            transliteration: null,
+            description: '',
+            example: $formula ? "Thank you very much, {$i}, really." : "I need help number {$i} today, please.",
+            exampleTranslation: "пример {$i}",
+            frame: $formula ? '' : 'I need ___ today.',
+            speaker: PlanDayItem::SPEAKER_LEARNER,
+            imageApiPrompt: "a person asking for help, scene {$i}",
+            coversCheckpoint: null,
+        );
+    }
+
+    return new PlanDayCandidate(
+        supportLang: 'ru',
+        targetLang: 'en',
+        termBudget: $lines,
+        phraseCount: $lines,
+        chunkCount: 0,
+        wordCount: 0,
+        checkpointCount: 0,
+        goalTerms: [],
+        openingLines: [],
+        items: $items,
+    );
+}
+
 function dayCodes(array $violations): array
 {
     return array_values(array_unique(array_map(static fn (PlanViolation $v): string => $v->code, $violations)));
@@ -196,6 +239,20 @@ it('accepts a line whose frame is filled with a longer phrase', function () {
     expect($this->validator->validate($ok))->toBe([]);
 });
 
+it('counts the formula cap as a third rounded down, and says the number out loud', function (int $lines, int $cap) {
+    // The cap the prompt prints (8 → 2, 4 → 1, 14 → 4) and the cap the gate applies are the same
+    // number, or the day is refused for obeying its instructions. `$cap` formulas pass; one more
+    // does not.
+    $day = fn (int $formulas): PlanDayCandidate => syntheticDay($lines, $formulas);
+
+    expect(dayCodes($this->validator->validate($day($cap))))->not->toContain(PlanDayValidator::FRAME_SHARE)
+        ->and(dayCodes($this->validator->validate($day($cap + 1))))->toContain(PlanDayValidator::FRAME_SHARE);
+})->with([
+    [8, 2],
+    [4, 1],
+    [14, 4],
+]);
+
 it('refuses a day that is more than a third fixed formulas', function () {
     // Three of eight lines with no slot: the day teaches sentences the learner can say and nothing
     // they can say next.
@@ -225,6 +282,41 @@ it('refuses a day where more than a quarter of the lines belong to the interlocu
     expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::ROLE_LINE_SHARE);
 });
 
+// ── the slot, which belongs to `frame` alone ──────────────────────────────────────────────────
+
+it('refuses a card that left the slot in a field the learner has to say', function (array $overrides, string $field) {
+    // The live «собеседование» day, twice: `___` still standing in `text`. The frame check cannot
+    // see it — «I'm a ___ developer» IS its frame with something in the hole — so this is its own
+    // rule, and it names the field so the retry knows which one to fix.
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(1, $overrides));
+    $violations = $this->validator->validate($broken);
+
+    expect(dayCodes($violations))->toContain(PlanDayValidator::SLOT_OUTSIDE_FRAME)
+        ->and(implode(' ', array_map(static fn (PlanViolation $v): string => (string) $v, $violations)))
+        ->toContain("`{$field}`");
+})->with([
+    [['text' => "I'm a ___ developer with three years of experience.", 'frame' => "I'm a ___ developer with three years of experience."], 'text'],
+    [['example' => 'I have an appointment at ___, with doctor Ionescu.'], 'example'],
+    [['translation' => 'У меня приём в ___.'], 'translation'],
+    [['exampleTranslation' => 'У меня приём в ___, к доктору Ионеску.'], 'example_translation'],
+]);
+
+it('keeps the slot legal in `frame` itself, which is the whole point of the field', function () {
+    // Guard against the obvious over-reach: if the rule ever read `frame` too, every day would fail.
+    expect($this->validator->validate(candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3)))->toBe([]);
+});
+
+it('never fails a day over a slot in the reading hint — the hint is dropped, not the day', function () {
+    // Реестр решений, п. 189: transliteration is repaired or dropped, never fatal. A slot in it is
+    // just another unusable hint.
+    $day = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, withCard(1, [
+        'transliteration' => 'ай хэв эн эпойнтмент эт ___',
+    ]));
+
+    expect($this->validator->validate($day))->toBe([])
+        ->and($this->validator->transliterationFor('ru', 'ай хэв эн эпойнтмент эт ___'))->toBeNull();
+});
+
 // ── the substitutions ─────────────────────────────────────────────────────────────────────────
 
 it('refuses a word that stands in no frame of the day', function () {
@@ -235,6 +327,29 @@ it('refuses a word that stands in no frame of the day', function () {
         'translation' => 'физиотерапия',
         'example' => 'Physiotherapy usually helps with this.',
     ]));
+
+    expect(dayCodes($this->validator->validate($broken)))
+        ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
+});
+
+it('refuses a word that sits in the FIXED part of a frame instead of its hole', function () {
+    // The live «собеседование» failure, reproduced: the frame is «I mainly work with ___», the
+    // chunk of the day is «work with», and the two look related. They are not — the learner never
+    // substitutes anything, they memorise one more sentence. In the slot, or not at all.
+    $broken = candidate('s1-day1.v0.2.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        $items = withCard(3, [
+            'frame' => 'I mainly work with ___.',
+            'text' => 'I mainly work with back pain.',
+            'example' => 'I mainly work with back pain, most days.',
+        ])($items);
+
+        return withCard(12, [
+            'text' => 'work with',
+            'translation' => 'работать с',
+            'example' => 'I mainly work with support tickets.',
+            'exampleTranslation' => 'В основном я работаю с обращениями.',
+        ])($items);
+    });
 
     expect(dayCodes($this->validator->validate($broken)))
         ->toContain(PlanDayValidator::SUBSTITUTION_WITHOUT_FRAME);
