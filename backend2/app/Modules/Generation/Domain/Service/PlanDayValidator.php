@@ -1200,13 +1200,15 @@ final class PlanDayValidator
             // sounds. Every gate passed that card, because the two strings differ in every
             // character ({@see TransliteratedSameness}).
             //
-            // The reading is checked too, and it is the cheapest half: a `translation` equal to the
-            // card's own pronunciation hint is not a translation by construction, whatever the two
-            // alphabets do.
+            // THE READING IS DELIBERATELY NOT COMPARED, and that was measured rather than reasoned
+            // about. «passport» is glossed «паспорт», which is both the correct Russian word and,
+            // by accident of the borrowing, its own pronunciation hint — and a check on «is the
+            // translation the reading» refused it on the owner's own live day. A borrowing that is
+            // genuinely translated is not the defect; a NAME is, and the skeleton above catches
+            // the name without touching the borrowing («паспорт» → `pasport`, «passport» →
+            // `passport`, two different words; «Иванов» → `ivanov` → «Ivanov», one).
             $sameAsTerm = $this->normalize($translation) === $this->normalize($item->text)
-                || $this->sameness->same($translation, $item->text)
-                || ($item->transliteration !== null
-                    && $this->normalize($translation) === $this->normalize($item->transliteration));
+                || $this->sameness->same($translation, $item->text);
 
             if ($sameAsTerm) {
                 $violations[] = PlanViolation::onCard(

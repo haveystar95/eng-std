@@ -919,15 +919,20 @@ it('refuses a key that is the term transliterated', function (string $term, stri
     'the soft sign vanishes' => ['Olga', 'Ольга'],
 ]);
 
-it('refuses a key that is the card`s own pronunciation hint', function () {
-    // The cheapest half of the same rule: a translation equal to the reading is not a translation,
-    // whatever the two alphabets happen to do.
-    $broken = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
-        'translation' => 'лоуэр бэк',
-        'transliteration' => 'лоуэр бэк',
+it('leaves a borrowing alone even when its translation IS its reading', function () {
+    // Measured on the owner's own live day: «passport» is glossed «паспорт», which is both the
+    // correct Russian word and — by accident of the borrowing — its own pronunciation hint. A
+    // check on «is the key the reading» refused that card. The name it was meant to catch is
+    // caught by the skeleton instead: «паспорт» → `pasport` and «passport` → `passport` are two
+    // words, while «Иванов» → `ivanov` and «Ivanov» are one.
+    $ok = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, withCard(8, [
+        'text' => 'passport',
+        'translation' => 'паспорт',
+        'transliteration' => 'паспорт',
+        'example' => 'It hurts in my passport, right here.',
     ]));
 
-    expect(dayCodes($this->validator->validate($broken)))->toContain(PlanDayValidator::KEY_IS_THE_TERM);
+    expect(dayCodes($this->validator->validate($ok)))->not->toContain(PlanDayValidator::KEY_IS_THE_TERM);
 });
 
 it('leaves an honest translation alone, however close the two words sound', function (string $term, string $key) {
