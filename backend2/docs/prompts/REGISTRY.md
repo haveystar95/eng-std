@@ -34,14 +34,28 @@
 | **REPAIR-TR** | `repair_translation.v1.md` · `OpenAiTranslationRepairer` | `v1` (`services.generation.repair_prompt_version`) | `RepairContentLanguageHandler` (консольный `content:repair-language`) | ремонт полей, где язык уехал (суржик, чужой алфавит) | поле + объявленный язык | починенный перевод | `gpt-4o-mini` | ~$0.0003 | `LanguagePurity` |
 | **DIALOG** | `practice_dialog.v1…v3.md` + `PracticeDialogInstructions` · `OpenAiRealtimeTokenMinter`, `GeminiLiveTokenMinter` | `v3` (`PRACTICE_PROMPT_VERSION`) | `StartPracticeDialogHandler` | «Разговорная практика» (премиум), `POST /practice/dialogs` | урок: коллекция, целевые слова, уровень | не JSON — `instructions` realtime-сессии (голос) | `gpt-realtime-2.1-mini` / `gemini-3.1-flash-live-preview` | ~$0.10–0.30 за диалог (аудио) | нет схемы; покрытие считает `DialogCoverage` постфактум |
 | **RECAP** | инлайн-инструкция в `OpenAiDialogSummarizer` (не файл) | — | `FinishPracticeDialogHandler` | конец разговорной практики | транскрипт диалога | короткий разбор для юзера | `gpt-4o-mini` (`OPENAI_SUMMARY_MODEL`) | ~$0.0005 | нет |
-| **P1** | `Prompt/plan_outline.v0.1.1.md` · `PlanOutlineService` | `v0.1.1` | `BuildPlanOutlineHandler` (`POST /plans/{id}/outline`) | юзер собирает Learning Plan | цель, дата события, пара языков, уровень, минуты/день, число дней (**считает сервер**) | каркас плана: `title`, `goal_restated`, `entities[]`, `constraints[]`, `goal_terms[]`, `days[]` (умения, роль, чек-пойнты, темы, бюджет), `final_day` | `gpt-5.4` | ~$0.021 | **`PlanOutlineValidator`** (`Generation/Domain`) |
-| **P2** | `Prompt/plan_day.v0.1.1.md` · `PlanDayComposer` | `v0.1.1` | `GeneratePlanDayHandler` (`GeneratePlanDayJob`) | день плана переходит `pending → generating` | день каркаса + `entities`/`constraints`/`goal_terms` + известные термины юзера + бюджет (`term_budget`/`phrases`/`words` — **точные числа сервера**) | `phrases[]` (реплики, `is_line: true`) + `words[]` (подстановки) + `known[]` (только примеры) | `gpt-5.4` | ~$0.035 (9 терминов) / ~$0.050 (16) | **`PlanDayValidator`** (`Generation/Domain`) |
+| **P1** | `Prompt/plan_outline.v0.2.md` · `PlanOutlineService` | `plan_outline.v0.2` | `BuildPlanOutlineHandler` (`POST /plans/{id}/outline`) | юзер собирает Learning Plan | **только** цель, пара языков, уровень. Ни дней, ни минут — календарь модель не видит | каркас: `title`, `goal_restated`, `entities[]`, `constraints[]`, `goal_terms[]`, `scenes[]` (роль + `opening_lines`, умения с `outcome`/`checkpoint`/`est_terms` 3–8/`topics`). Ни `days`, ни `final_day`, ни `estimated_terms` | `gpt-5.4` | ~$0.021 | **`PlanOutlineValidator`** (`Generation/Domain`) |
+| **P2** | `Prompt/plan_day.v0.2.md` · `PlanDayComposer` | `plan_day.v0.2` | `GeneratePlanDayHandler` (`GeneratePlanDayJob`) | день плана переходит `pending → generating` | `day_json` (сцены дня с ролью и умениями, чек-пойнты 1..N) + `entities`/`constraints`/`goal_terms` + известные термины + **три точных числа** `phrase_count`/`chunk_count`/`word_count` | `phrases[]` (реплики: `frame`, `speaker`, `covers_checkpoint`) + `words[]` + `chunks[]` + `known[]`; `image_api_prompt` на каждой карточке | `gpt-5.4` | ~$0.05 (14 карточек) / ~$0.08 (24) | **`PlanDayValidator`** (`Generation/Domain`) |
+
+### Три числа и таблица вместимости — одно место на всё
+
+Сколько карточек в дне и как они делятся, решает **`Learning/Domain/Service/DayCapacity`**, и
+больше нигде этих чисел нет:
+
+- `forMinutes()` — вместимость дня: 10 → **7**, 20 → **14**, 40 → **24**, между точками прямая.
+  Читают планировщик (`PlanScheduler::capacityFor`), превью (тот же `compute()`) и брифинг дня.
+- `split()` — три числа для P2: `phrases = ceil(0.55 × cap)`, `chunks = max(1, floor(0.15 × cap))`,
+  `words` — остаток. 14 → 8/2/4, 7 → 4/1/2, 24 → 14/3/7. Против них считает `PlanDayValidator`.
+
+До v0.2 таблица жила в трёх местах (константа планировщика, литерал в фейке, таблица в теле
+промпта) и расходилась НАМЕРЕННО — промпт целился в полосу, планировщик брал её низ. Щедрый день
+приходил и объявлялся «не влезает» на плане, который никто не менял.
 
 ### Не промпты, но платные внешние вызовы
 
 | id | класс | кто вызывает | когда | цена | заметка |
 |---|---|---|---|---|---|
-| **IMG** | `PexelsImageSearch` | `AttachImagesJob` | после каждой готовой коллекции | бесплатно (200 req/ч) | **своего промпта нет**: поисковый запрос `image_api_prompt` производит CORE. Меняется CORE — меняются картинки. |
+| **IMG** | `PexelsImageSearch` | `AttachImagesJob` | после каждой готовой коллекции **и после каждого готового дня плана** | бесплатно (200 req/ч) | **своего промпта нет**: поисковый запрос `image_api_prompt` производит CORE, а для дня плана — P2. До v0.2 у дней плана не было ни того, ни другого: `ImportTerm` звали без запроса, и задачу никто не ставил, поэтому иллюстраций у планов не было вообще. |
 | **DEEPL** | `DeepLTranslator` | `InstantTranslateHandler` | мгновенная подсказка в поиске | по символам, бюджет `TranslationMonthlyBudget` | не модель, детерминированный переводчик |
 | **PLAYGROUND** | `PlaygroundCall` | `POST /admin/api/playground/generate` | админка, ручной эксперимент | по факту | текст промпта **набирает человек** — версии нет по определению; поэтому и строки с версией нет |
 
@@ -51,6 +65,7 @@
 
 | версия | что изменилось | причина |
 |---|---|---|
+| `v0.2` (31.08) | **P1**: дни и минуты убраны из промпта, ответ — сцены с умениями и `est_terms` у каждого; `final_day` убран целиком. **P2**: три массива (`phrases`/`words`/`chunks`) с тремя точными числами, `frame` («I worked on ___») и `speaker` у реплик, `image_api_prompt` у каждой карточки, чтение обязательно при разных письменностях | **замкнутый круг.** v0.1.1 передавал `{{days}}`, резал план ровно на `days − 1` и возвращал `estimated_terms`, которое сервер потом «считал» — то же число, которое сам и отдал. Ни кап 14, ни «срок мал» не срабатывали никогда: «врач через 30 дней» давал 29 дней знакомства. Плюс живые прогоны: 4 длинных реплики и 3 слова не комбинируются, у дней плана не было ни одной картинки, а одна запятая в чтении роняла день целиком |
 | `v0.1.1` (30.08) | из P1 убран `recommended_days`; бюджет дня из полосы (8–10 / 16–18) стал точным числом (5 / 9 / 16), P2 получает его как заданное; потолок чек-пойнтов однодневного плана — 5 | **код, а не вкус.** `recommended_days` не проверял никто, а его критерий проходился укрупнением умения. Бюджет: длину дня выбирает юзер минутами, `PlanScheduler` считает из них ёмкость, а `PlanDayValidator` считает карточки против неё — полоса в промпте означала, что три числа расходятся по построению |
 | `v0.1` (29.08) | `entities` / `constraints` / `goal_terms`; `phrases[]` отдельно от `words[]`; `type` + `is_line` вместо `kind`; `final_day.checkpoints` собирает сервер | ресёрч песочницы, `docs/research/plan-sandbox-2026-08-29.md` |
 
@@ -73,7 +88,7 @@
 - **валидатор** — **детерминированный** код, который судит ответ. «нет» в этой колонке значит, что
   ответ принимается на слово; это допустимо (RECAP — текст для человека), но должно быть видно.
 - **цена ≈** — один вызов при типичном входе. Умножать на число терминов/дней самому: план на 3 дня
-  по 20 минут — это P1 + 2×P2 ≈ **$0.09**, и это до обогащения.
+  по 20 минут — это P1 + 2×P2 ≈ **$0.12**, и это до обогащения.
 
 ## Что реестр НЕ отвечает
 
