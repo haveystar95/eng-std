@@ -120,6 +120,10 @@ final readonly class ClaimPlanDayHandler
                 // verbatim as the lines the learner must recognise, and the validator refuses one
                 // that was invented instead — so the gate and the prompt read the same list.
                 openingLines: $this->openingLinesOf($scenes),
+                // WHAT EVERY PREVIOUS ANSWER FOR THIS DAY GOT WRONG, cumulatively. Read here
+                // because the claim is what has the day row open, and handed over as strings so
+                // Generation is not asked to reconstruct Learning's rows.
+                previousViolations: $day->pastViolations(),
             );
         });
     }

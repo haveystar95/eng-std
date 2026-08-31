@@ -16,13 +16,26 @@ use DateTimeImmutable;
  * One day of a plan, and the small state machine that keeps a paid model call from being made
  * twice.
  *
- * ## Two attempts, then stop
+ * ## Two attempts, then stop — and since v0.3 that is also two PAID CALLS
  *
  * `generationAttempts` counts CLAIMS, not failures, and the cap is two. The reason it is a stored
  * counter and not a queue `tries` setting: the queue retries a job that CRASHED, which is a
  * different event from a day whose material came back and did not pass the validator. The second
  * costs the same money as the first and will keep costing it, so it stops after one re-run and says
  * why in `failReason`. A day that failed twice is a thing a person looks at.
+ *
+ * Until v0.3 this counter did not mean what it says. `PlanDayComposer` made its own second call
+ * inside one claim, so two claims were FOUR paid calls — a live day spent $0.197 on a budget that
+ * was written for two (`docs/research/plan-v0.2.1-run.md`). The composer's inner retry is gone;
+ * one claim is one call, and this number is the money.
+ *
+ * ## What every failed attempt leaves behind
+ *
+ * {@see pastViolations()} — every check every previous answer failed, accumulated rather than
+ * replaced. It goes into the next attempt's prompt as data. The reason it accumulates is measured:
+ * an answer told only what the LAST answer got wrong fixes exactly that and breaks something it
+ * had right before, and the live run watched that happen twice in a row. `failReason` stays what
+ * it was — a sentence for the person reading the plan screen, truncated to what a column holds.
  *
  * ## Idempotent by (plan, day)
  *
@@ -50,6 +63,8 @@ final class PlanDay
         private PlanDayStatus $status,
         private int $generationAttempts,
         private ?string $failReason,
+        /** @var list<string> every check every previous answer failed, oldest first */
+        private array $pastViolations = [],
     ) {}
 
     /**
@@ -76,6 +91,7 @@ final class PlanDay
     /**
      * @param  list<array<string, mixed>>  $skills
      * @param  array<string, mixed>|null  $roleBrief
+     * @param  list<string>  $pastViolations
      */
     public static function reconstitute(
         PlanDayId $id,
@@ -91,10 +107,11 @@ final class PlanDay
         PlanDayStatus $status,
         int $generationAttempts,
         ?string $failReason,
+        array $pastViolations = [],
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
-            $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason,
+            $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $pastViolations,
         );
     }
 
@@ -131,6 +148,10 @@ final class PlanDay
         $this->collectionId = $collectionId;
         $this->status = PlanDayStatus::Ready;
         $this->failReason = null;
+        // The history existed to tell the NEXT attempt what to avoid, and there is no next
+        // attempt. Keeping it would make a written day carry a list of things wrong with a day
+        // that no longer exists.
+        $this->pastViolations = [];
     }
 
     /**
@@ -139,13 +160,26 @@ final class PlanDay
      * Back to `pending` while there is an attempt left, so the next dispatch picks it up; `failed`
      * once both are spent, with the reason kept. The reason is trimmed to what a column and a human
      * can use — a stack trace in this field is a field nobody reads.
+     *
+     * The violations ACCUMULATE across attempts, deduplicated: the next attempt is told everything
+     * that has ever been wrong with this day, not just what broke last. See the class docblock for
+     * why that distinction cost two paid calls to learn.
+     *
+     * @param  list<string>  $violations  the verdict as data, one line per check
      */
-    public function markFailed(string $reason): void
+    public function markFailed(string $reason, array $violations = []): void
     {
         $this->failReason = mb_substr(trim($reason), 0, 500);
         $this->status = $this->generationAttempts >= self::MAX_ATTEMPTS
             ? PlanDayStatus::Failed
             : PlanDayStatus::Pending;
+
+        foreach ($violations as $violation) {
+            $violation = trim($violation);
+            if ($violation !== '' && ! in_array($violation, $this->pastViolations, true)) {
+                $this->pastViolations[] = $violation;
+            }
+        }
     }
 
     public function markDone(): void
@@ -223,5 +257,15 @@ final class PlanDay
     public function failReason(): ?string
     {
         return $this->failReason;
+    }
+
+    /**
+     * Every check every previous answer for this day failed, oldest first.
+     *
+     * @return list<string>
+     */
+    public function pastViolations(): array
+    {
+        return $this->pastViolations;
     }
 }

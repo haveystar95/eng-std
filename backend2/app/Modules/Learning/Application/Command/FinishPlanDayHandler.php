@@ -34,6 +34,10 @@ use App\Modules\Shared\Domain\ValueObject\TermId;
  * back to `pending` and the dispatcher is asked again immediately: that is the one re-run the
  * budget allows. After the second it is `failed`, the reason is stored, and the plan stops — a
  * silent third attempt is how a broken prompt spends a plan's whole budget on one day.
+ *
+ * Since v0.3 that re-run is the ONLY one there is. `PlanDayComposer` used to make a second call of
+ * its own inside a single claim, so this «one re-run» was really the third and fourth paid calls,
+ * and a live day cost $0.197 against a budget written for two ({@see \App\Modules\Learning\Domain\Entity\PlanDay}).
  */
 final readonly class FinishPlanDayHandler
 {
@@ -57,7 +61,12 @@ final readonly class FinishPlanDayHandler
             }
 
             if ($command->failReason !== null || $command->collectionId === null) {
-                $day->markFailed($command->failReason ?? 'день вернулся без коллекции');
+                // The verdict lands twice: as prose in `fail_reason` for the plan screen, and as a
+                // list that ACCUMULATES across attempts for the next prompt to read.
+                $day->markFailed(
+                    $command->failReason ?? 'день вернулся без коллекции',
+                    $command->failViolations,
+                );
                 $this->days->save($day);
 
                 // Back to `pending` means an attempt is left; the queue is asked again rather than

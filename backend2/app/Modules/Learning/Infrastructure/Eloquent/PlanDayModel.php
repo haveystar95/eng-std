@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property int $generation_attempts
  * @property string|null $fail_reason
+ * @property list<string>|null $generation_violations
  */
 final class PlanDayModel extends Model
 {
@@ -34,6 +35,7 @@ final class PlanDayModel extends Model
     protected $casts = [
         'skills' => 'array',
         'role_brief' => 'array',
+        'generation_violations' => 'array',
         'day_index' => 'int',
         'generation_attempts' => 'int',
     ];

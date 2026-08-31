@@ -12,6 +12,7 @@ use App\Modules\Generation\Application\Dto\PlanDayDraft;
 use App\Modules\Generation\Application\Port\DispatchesExampleRepair;
 use App\Modules\Generation\Application\Port\DispatchesImageAttachment;
 use App\Modules\Generation\Application\Service\PlanDayComposer;
+use App\Modules\Generation\Domain\Exception\PlanDayRefused;
 use App\Modules\Generation\Domain\Exception\PlanSpendNotRecorded;
 use App\Modules\Generation\Domain\ValueObject\PlanDayItem;
 use App\Modules\Learning\Application\Command\ClaimPlanDay;
@@ -111,6 +112,11 @@ final readonly class GeneratePlanDayHandler
                 dayIndex: $brief->dayIndex,
                 collectionId: null,
                 failReason: $e->getMessage(),
+                // A REFUSED answer hands its verdict over as data so the next attempt can be told
+                // all of it — `fail_reason` is prose and is cut at 500 characters, and the live day
+                // that made this necessary produced eighteen violations in one answer. A vendor
+                // failure has no verdict and carries nothing.
+                failViolations: $e instanceof PlanDayRefused ? $e->violations : [],
             ));
 
             return;
