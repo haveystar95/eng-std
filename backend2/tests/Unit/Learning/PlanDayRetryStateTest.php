@@ -30,18 +30,43 @@ function planDay(PlanDayStatus $status, int $attempts, array $violations = []): 
         status: $status,
         generationAttempts: $attempts,
         failReason: 'что-то не то',
-        pastViolations: $violations,
+        lastViolations: $violations,
     );
 }
 
-it('accumulates the violations of every attempt, without duplicates', function () {
+it('keeps the LAST attempt`s violations and drops the older ones', function () {
     $day = planDay(PlanDayStatus::Generating, 1);
 
     $day->markFailed('первая', ['day.a: раз', 'day.b: два']);
-    $day->markFailed('вторая', ['day.b: два', 'day.c: три']);
+    $day->markFailed('вторая', ['day.b: два', 'day.c: три', 'day.c: три']);
 
-    // The whole point: an answer told only what the LAST one broke re-breaks what it had fixed.
-    expect($day->pastViolations())->toBe(['day.a: раз', 'day.b: два', 'day.c: три']);
+    // Accumulation was the previous наряд's own conclusion, and the live run refuted it: the third
+    // call, handed a growing list of quoted defects, returned the quoted cards
+    // (`docs/research/plan-v0.3-run.md`, второй заход). Deduplicated within the attempt, replaced
+    // between attempts.
+    expect($day->lastViolations())->toBe(['day.b: два', 'day.c: три']);
+});
+
+it('charges the repair call to the day`s budget, so a repaired-and-still-broken day is spent', function () {
+    // `generationAttempts` is the MONEY (п. 199, первая половина). A run that spent a day call AND
+    // a P2R call spent two, and there is no third answer to buy — the day is `failed`, not
+    // `pending` with an attempt that does not exist.
+    $day = planDay(PlanDayStatus::Generating, 1);
+
+    $day->markFailed('день и починка', ['day.a: раз'], paidCalls: 2);
+
+    expect($day->generationAttempts())->toBe(2)
+        ->and($day->status())->toBe(PlanDayStatus::Failed)
+        ->and($day->claim())->toBeFalse();
+});
+
+it('leaves an ordinary failed run one attempt, exactly as before', function () {
+    $day = planDay(PlanDayStatus::Generating, 1);
+
+    $day->markFailed('только день', ['day.a: раз']);
+
+    expect($day->generationAttempts())->toBe(1)
+        ->and($day->status())->toBe(PlanDayStatus::Pending);
 });
 
 it('clears the history when the day is finally written', function () {
@@ -50,7 +75,7 @@ it('clears the history when the day is finally written', function () {
     $day->markReady(CollectionId::fromString(Ulid::generate()));
 
     // A list of things wrong with a day that no longer exists is noise.
-    expect($day->pastViolations())->toBe([])
+    expect($day->lastViolations())->toBe([])
         ->and($day->failReason())->toBeNull();
 });
 
@@ -64,7 +89,7 @@ it('gives a spent day exactly one attempt back, and keeps what it learned', func
     expect($day->claim())->toBeTrue()
         ->and($day->generationAttempts())->toBe(PlanDay::MAX_ATTEMPTS)
         // ONE attempt, not a fresh budget: the next failure is terminal again.
-        ->and($day->pastViolations())->toBe(['day.a: раз']);
+        ->and($day->lastViolations())->toBe(['day.a: раз']);
 
     $day->markFailed('и снова', []);
     expect($day->status())->toBe(PlanDayStatus::Failed)

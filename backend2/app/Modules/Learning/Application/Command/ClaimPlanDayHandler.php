@@ -123,7 +123,7 @@ final readonly class ClaimPlanDayHandler
                 // WHAT EVERY PREVIOUS ANSWER FOR THIS DAY GOT WRONG, cumulatively. Read here
                 // because the claim is what has the day row open, and handed over as strings so
                 // Generation is not asked to reconstruct Learning's rows.
-                previousViolations: $day->pastViolations(),
+                previousViolations: $day->lastViolations(),
             );
         });
     }

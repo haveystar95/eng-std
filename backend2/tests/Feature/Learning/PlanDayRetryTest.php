@@ -20,21 +20,46 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 /**
- * TWO ATTEMPTS MEANS TWO PAID CALLS, and the second one knows everything the first got wrong.
+ * TWO ATTEMPTS MEANS TWO PAID CALLS, and the second one is told WHERE the first broke.
  *
- * Both halves of this were false until v0.3, and both were measured rather than reasoned about
- * (`docs/research/plan-v0.2.1-run.md`):
+ * `PlanDayComposer` used to make a second call INSIDE one claim, on top of the second claim
+ * `FinishPlanDayHandler` schedules. One day was four paid calls, all four inside 55 seconds,
+ * against a наряд budget written for two (`docs/research/plan-v0.2.1-run.md`). That is fixed and
+ * measured here: one claim, one call, at most two claims.
  *
- * 1. `PlanDayComposer` made a second call INSIDE one claim, on top of the second claim
- *    `FinishPlanDayHandler` schedules. One day was four paid calls, all four inside 55 seconds,
- *    against a наряд budget written for two.
- * 2. Each retry was told only what the LAST answer failed. The second answer fixed those four
- *    defects and introduced five new ones; the fourth answer did the same thing again. A model
- *    told what is wrong fixes it — and re-breaks what it fixed the run before, unless it is told
- *    that too.
- *
- * So: one claim, one call, at most two claims, and the violations ACCUMULATE on the day row.
+ * What the second call is TOLD changed again in v0.3.1, and against the previous наряд's own
+ * conclusion. The retry used to carry every attempt's violations, each quoting the card it was
+ * about — and the third live call answered with those quoted cards, defects and all
+ * (`docs/research/plan-v0.3-run.md`, второй заход). A worked example of a wrong answer is an
+ * example first. So the retry now carries the LAST attempt's violations as ADDRESSES, and this
+ * test asserts the message contains nothing the model wrote.
  */
+/**
+ * Every string of substance the model wrote in a day answer — the three card arrays, flattened.
+ *
+ * Short values are dropped on purpose: `learner`, `phrase`, `word` are the schema's own vocabulary
+ * and appear in any prompt about a day, so asserting their absence would assert nothing and fail
+ * for the wrong reason.
+ *
+ * @param  array<string, mixed>  $answer
+ * @return list<string>
+ */
+function answerStrings(array $answer): array
+{
+    $out = [];
+    foreach (['phrases', 'words', 'chunks'] as $array) {
+        foreach ($answer[$array] ?? [] as $card) {
+            foreach ($card as $value) {
+                if (is_string($value) && mb_strlen($value) >= 12) {
+                    $out[] = $value;
+                }
+            }
+        }
+    }
+
+    return $out;
+}
+
 beforeEach(function (): void {
     /** @var array<string, mixed> $day */
     $day = json_decode(
@@ -53,6 +78,8 @@ beforeEach(function (): void {
 
     $withStrayFiller = $day;
     $withStrayFiller['phrases'][1]['filler'] = 'ten past nine';   // no card of this day says that
+
+    $this->firstAnswer = $withoutPicture;
 
     $this->model = new class([$withoutPicture, $withStrayFiller]) implements ContentModelPort
     {
@@ -144,21 +171,37 @@ it('spends exactly two calls on a day that fails twice, and tells the second one
         ->and($row->collection_id)->toBeNull();
 
     // The first call carries the day and nothing else; the second carries the first answer's
-    // verdict, as data.
-    expect($this->model->dayMessages[0])->not->toContain('PREVIOUS ATTEMPT')
-        ->and($this->model->dayMessages[1])->toContain('EVERY PREVIOUS ATTEMPT AT THIS DAY FAILED')
+    // verdict — as ADDRESSES.
+    expect($this->model->dayMessages[0])->not->toContain('PREVIOUS ANSWER')
+        ->and($this->model->dayMessages[1])->toContain('THE PREVIOUS ANSWER TO THIS DAY FAILED')
         ->and($this->model->dayMessages[1])->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
+        // The address, in full: which array, which card, which field.
+        ->and($this->model->dayMessages[1])->toContain('words[0].image_api_prompt')
         // Still the same request with one more block, not a different request.
         ->and($this->model->dayMessages[1])->toContain('"index": 1');
 
-    // BOTH verdicts survive on the row, accumulated rather than replaced — that is what a THIRD
-    // attempt would have been told, and what a person reading the row can see now.
+    // NOT ONE LINE OF THE PREVIOUS ANSWER. This is the whole point of the address form, and the
+    // one thing a reading of the message cannot be trusted to check by eye: every string the first
+    // answer wrote, long enough not to collide with ordinary English, must be absent from the
+    // block that reports on it.
+    $block = mb_substr(
+        $this->model->dayMessages[1],
+        (int) mb_strpos($this->model->dayMessages[1], 'THE PREVIOUS ANSWER TO THIS DAY FAILED'),
+    );
+
+    foreach (answerStrings($this->firstAnswer) as $written) {
+        expect($block)->not->toContain($written);
+    }
+
+    // ONLY THE LAST VERDICT survives on the row. It accumulated for one наряд; the live run showed
+    // that a growing list of quoted defects is a growing example to copy (п. 199, вторая половина,
+    // отменена).
     /** @var list<string> $violations */
     $violations = json_decode((string) $row->generation_violations, true);
     $joined = implode(' ', $violations);
 
-    expect($joined)->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING)
-        ->and($joined)->toContain(PlanDayValidator::FILLER_NOT_A_CARD);
+    expect($joined)->toContain(PlanDayValidator::FILLER_NOT_A_CARD)
+        ->and($joined)->not->toContain(PlanDayValidator::IMAGE_PROMPT_MISSING);
 
     // TWO ROWS IN THE LEDGER for the day, both refused, each carrying its own reason. A day that
     // cost twice reads as two rows rather than as one that mysteriously cost double.

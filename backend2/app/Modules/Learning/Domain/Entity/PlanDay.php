@@ -29,13 +29,22 @@ use DateTimeImmutable;
  * was written for two (`docs/research/plan-v0.2.1-run.md`). The composer's inner retry is gone;
  * one claim is one call, and this number is the money.
  *
- * ## What every failed attempt leaves behind
+ * ## What a failed attempt leaves behind — the LAST verdict, and only as addresses
  *
- * {@see pastViolations()} — every check every previous answer failed, accumulated rather than
- * replaced. It goes into the next attempt's prompt as data. The reason it accumulates is measured:
- * an answer told only what the LAST answer got wrong fixes exactly that and breaks something it
- * had right before, and the live run watched that happen twice in a row. `failReason` stays what
+ * {@see lastViolations()} — what the previous answer failed, as `phrases[3].translation — code:
+ * reason` and nothing else. It goes into the next attempt's prompt as data. `failReason` stays what
  * it was — a sentence for the person reading the plan screen, truncated to what a column holds.
+ *
+ * It ACCUMULATED across attempts for one commit, and the live run refuted that (п. 199, вторая
+ * половина, отменена 31.08). The hypothesis was sound and its first test looked like a triumph: the
+ * second answer, told all twelve of the first answer's defects, fixed all twelve. The third answer
+ * was told thirteen — and the list quoted the FIRST attempt's sentences, so the third answer
+ * returned those sentences, complete with the defects attempt two had already fixed
+ * (`docs/research/plan-v0.3-run.md`, второй заход).
+ *
+ * What was wrong was never the accumulation as such; it was that the list carried the model's own
+ * text back to it. Both halves are dealt with here and in {@see PlanViolation::address()}: the list
+ * is the LAST attempt's, and it carries addresses rather than sentences.
  *
  * ## Idempotent by (plan, day)
  *
@@ -63,8 +72,8 @@ final class PlanDay
         private PlanDayStatus $status,
         private int $generationAttempts,
         private ?string $failReason,
-        /** @var list<string> every check every previous answer failed, oldest first */
-        private array $pastViolations = [],
+        /** @var list<string> what the LAST answer failed, as addresses — {@see markFailed()} */
+        private array $lastViolations = [],
     ) {}
 
     /**
@@ -91,7 +100,7 @@ final class PlanDay
     /**
      * @param  list<array<string, mixed>>  $skills
      * @param  array<string, mixed>|null  $roleBrief
-     * @param  list<string>  $pastViolations
+     * @param  list<string>  $lastViolations
      */
     public static function reconstitute(
         PlanDayId $id,
@@ -107,11 +116,11 @@ final class PlanDay
         PlanDayStatus $status,
         int $generationAttempts,
         ?string $failReason,
-        array $pastViolations = [],
+        array $lastViolations = [],
     ): self {
         return new self(
             $id, $planId, $dayIndex, $kind, $collectionId, $title, $outcomeText, $skills,
-            $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $pastViolations,
+            $roleBrief, $scheduledOn, $status, $generationAttempts, $failReason, $lastViolations,
         );
     }
 
@@ -151,7 +160,7 @@ final class PlanDay
         // The history existed to tell the NEXT attempt what to avoid, and there is no next
         // attempt. Keeping it would make a written day carry a list of things wrong with a day
         // that no longer exists.
-        $this->pastViolations = [];
+        $this->lastViolations = [];
     }
 
     /**
@@ -161,25 +170,35 @@ final class PlanDay
      * once both are spent, with the reason kept. The reason is trimmed to what a column and a human
      * can use — a stack trace in this field is a field nobody reads.
      *
-     * The violations ACCUMULATE across attempts, deduplicated: the next attempt is told everything
-     * that has ever been wrong with this day, not just what broke last. See the class docblock for
-     * why that distinction cost two paid calls to learn.
+     * The violations REPLACE what was there, deduplicated within the attempt: the next call is told
+     * what the last answer did, not everything this day has ever done. See the class docblock for
+     * the run that cost $0.05 to establish which of the two is right.
      *
-     * @param  list<string>  $violations  the verdict as data, one line per check
+     * `$paidCalls` is how many model calls this run actually made — one for an ordinary day, two
+     * when the answer was nearly right and a repair call was spent on it
+     * ({@see \App\Modules\Generation\Application\Service\PlanDayRepairer}). The counter is the
+     * MONEY (п. 199, первая половина), so the second call is charged here rather than staying
+     * invisible: a day that spent a repair has spent its budget, and there is no third answer to
+     * buy with it.
+     *
+     * @param  list<string>  $violations  the verdict as ADDRESSES, one line per check
      */
-    public function markFailed(string $reason, array $violations = []): void
+    public function markFailed(string $reason, array $violations = [], int $paidCalls = 1): void
     {
         $this->failReason = mb_substr(trim($reason), 0, 500);
+        $this->generationAttempts += max(0, $paidCalls - 1);
         $this->status = $this->generationAttempts >= self::MAX_ATTEMPTS
             ? PlanDayStatus::Failed
             : PlanDayStatus::Pending;
 
+        $kept = [];
         foreach ($violations as $violation) {
             $violation = trim($violation);
-            if ($violation !== '' && ! in_array($violation, $this->pastViolations, true)) {
-                $this->pastViolations[] = $violation;
+            if ($violation !== '' && ! in_array($violation, $kept, true)) {
+                $kept[] = $violation;
             }
         }
+        $this->lastViolations = $kept;
     }
 
     public function markDone(): void
@@ -196,8 +215,9 @@ final class PlanDay
      * was never about — the GATES changed after the day was refused, so the answer that failed
      * would pass now, and the alternative is a raw `UPDATE` against the owner's database.
      *
-     * `pastViolations` are deliberately kept: the point of the re-run is that the next answer is
-     * told everything the previous two got wrong.
+     * `lastViolations` are deliberately kept: the point of the re-run is that the next answer is
+     * told where the last one broke. Kept and not extended — they are addresses now, and the day
+     * they describe is the one the re-run is about to replace.
      *
      * @throws InvalidPlanTransition when the day is not actually spent — a `ready` day reopened
      *                               would throw its collection away, and a `pending` one needs
@@ -287,12 +307,12 @@ final class PlanDay
     }
 
     /**
-     * Every check every previous answer for this day failed, oldest first.
+     * What the LAST answer for this day failed, as addresses — nothing that answer wrote.
      *
      * @return list<string>
      */
-    public function pastViolations(): array
+    public function lastViolations(): array
     {
-        return $this->pastViolations;
+        return $this->lastViolations;
     }
 }

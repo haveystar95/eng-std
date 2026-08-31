@@ -103,7 +103,7 @@ final class PlanMapper
             status: PlanDayStatus::from($row->status),
             generationAttempts: $row->generation_attempts,
             failReason: $row->fail_reason,
-            pastViolations: is_array($row->generation_violations)
+            lastViolations: is_array($row->generation_violations)
                 ? array_values(array_filter($row->generation_violations, 'is_string'))
                 : [],
         );
@@ -127,7 +127,7 @@ final class PlanMapper
             'fail_reason' => $day->failReason(),
             // Null and not `[]` when there is nothing: «this day has never been refused» and «this
             // day was refused for no reasons» should not look the same in the table.
-            'generation_violations' => $day->pastViolations() === [] ? null : $day->pastViolations(),
+            'generation_violations' => $day->lastViolations() === [] ? null : $day->lastViolations(),
         ];
     }
 }

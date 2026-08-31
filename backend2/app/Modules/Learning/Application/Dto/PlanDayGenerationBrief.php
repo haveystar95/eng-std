@@ -25,11 +25,12 @@ final readonly class PlanDayGenerationBrief
      *        from the skeleton — the lines P2 may quote as the ones the learner must recognise, and
      *        the list the validator checks a `speaker: role` line against.
      * @param  array<string, mixed>  $dayJson  the day as the prompt reads it
-     * @param  list<string>  $previousViolations  every check EVERY previous answer for this day
-     *        failed, accumulated on the day row. Empty on a first run. Cumulative and not «the
-     *        last attempt's», because a model told only the last thing that broke fixes it and
-     *        re-breaks what it fixed the run before — measured, twice, on the live «собеседование»
-     *        day (`docs/research/plan-v0.2.1-run.md`).
+     * @param  list<string>  $previousViolations  where the LAST answer for this day broke, as
+     *        addresses — «`phrases[3].translation — day.slot_outside_frame: …`». Empty on a first
+     *        run. It carried every attempt's violations, each quoting its card, until the third
+     *        live call returned those quoted cards verbatim
+     *        (`docs/research/plan-v0.3-run.md`, второй заход): a worked example of a wrong answer
+     *        is an example first and a prohibition second.
      */
     public function __construct(
         public string $planId,
