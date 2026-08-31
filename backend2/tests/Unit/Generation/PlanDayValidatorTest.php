@@ -445,31 +445,36 @@ it('lets a connector`s example add a detail, exactly as a word`s may', function 
     ))->toBe([]);
 });
 
-it('still wants the WHOLE frame in a connector`s example, tail included', function () {
+it('still wants the WHOLE frame in a connector`s example, tail included — and says so in a warning', function () {
     // Containment is of the frame, not of its beginning: an example that drops the frame's fixed
-    // tail is not that frame with a detail added, it is a different sentence.
-    $broken = connectorInTheFixedPart(
+    // tail is not that frame with a detail added, it is a different sentence. Said, not refused.
+    $off = connectorInTheFixedPart(
         'I mainly work with ___ every day.',
         'I mainly work with Laravel, mostly.',
     );
 
-    expect(dayCodes($this->validator->validate($broken)))
-        ->toContain(PlanDayValidator::CHUNK_WITHOUT_FRAME);
+    expect($this->validator->validate($off))->toBe([])
+        ->and(dayCodes($this->validator->warnings($off)))
+        ->toContain(PlanDayValidator::CHUNK_OUTSIDE_FRAME);
 });
 
-it('refuses a connector whose example is a line of the day, word for word', function () {
-    // The half of the connector rule that still bites: «work on» whose only example is the line it
-    // already stands in teaches that line twice and the connector not at all.
+it('still refuses a connector whose example is a line of the day — through the clone gate', function () {
+    // «work on» whose only example is the line it already stands in teaches that line twice and the
+    // connector not at all. This one stays FATAL, and not because of the connector rule: an example
+    // that is any card's text word for word is `day.example_is_a_term`, which never moved. The
+    // connector warning names it too, so the log says which of the two problems it is.
     $broken = candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, withCard(12, [
         'example' => 'I deal with the payment module every day.',
     ]));
 
     expect(dayCodes($this->validator->validate($broken)))
-        ->toContain(PlanDayValidator::CHUNK_WITHOUT_FRAME);
+        ->toContain(PlanDayValidator::EXAMPLE_IS_A_TERM)
+        ->and(dayCodes($this->validator->warnings($broken)))
+        ->toContain(PlanDayValidator::CHUNK_OUTSIDE_FRAME);
 });
 
-it('refuses a connector no frame of the day contains at all', function () {
-    $broken = candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, withCard(12, [
+it('WARNS about a connector no frame of the day contains at all', function () {
+    $off = candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, withCard(12, [
         'text' => 'roll out',
         'translation' => 'выкатывать',
         'transliteration' => 'роул аут',
@@ -477,8 +482,81 @@ it('refuses a connector no frame of the day contains at all', function () {
         'exampleTranslation' => 'Мы выкатываем изменения по четвергам.',
     ]));
 
-    expect(dayCodes($this->validator->validate($broken)))
-        ->toContain(PlanDayValidator::CHUNK_WITHOUT_FRAME);
+    expect($this->validator->validate($off))->toBe([])
+        ->and(dayCodes($this->validator->warnings($off)))
+        ->toContain(PlanDayValidator::CHUNK_OUTSIDE_FRAME);
+});
+
+it('warns about the live sentence that cost a whole day — one dropped «Sorry,»', function () {
+    // `docs/research/plan-v0.3-run.md`: frame «Sorry, the connection is ___», connector «breaking
+    // up», example «The connection is breaking up again on my side.» — this day's situation, not a
+    // clone of the line, arrived at by fixing the clone the previous attempt had. It was refused
+    // for the missing «Sorry,». Now it is written, and the log says what it cost.
+    $off = candidate('s2-day1.v0.3.json', 's2-outline.v0.2.json', 3, static function (array $items): array {
+        $items = withCard(2, [
+            'frame' => 'Sorry, the connection is ___.',
+            'filler' => 'unstable',
+        ])($items);
+
+        return withCard(12, [
+            'text' => 'breaking up',
+            'translation' => 'прерывается',
+            'transliteration' => 'брейкин ап',
+            'description' => 'When a call keeps cutting out and words go missing.',
+            'example' => 'The connection is breaking up again on my side.',
+            'exampleTranslation' => 'Связь снова прерывается с моей стороны.',
+        ])($items);
+    });
+
+    expect($this->validator->validate($off))->toBe([])
+        ->and(dayCodes($this->validator->warnings($off)))
+        ->toContain(PlanDayValidator::CHUNK_OUTSIDE_FRAME);
+});
+
+it('warns when the interlocutor never says a word, though the scene has lines to quote', function () {
+    // The live v0.3 day: eight lines, all the learner's, while the skeleton's scene had three
+    // `opening_lines` nobody quoted — and the day's first line answered a question that was not in
+    // it. The CEILING on role lines has always been a quarter; this is the floor.
+    $silent = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3, static function (array $items): array {
+        $items = withCard(0, ['speaker' => PlanDayItem::SPEAKER_LEARNER])($items);
+
+        return withCard(5, ['speaker' => PlanDayItem::SPEAKER_LEARNER])($items);
+    });
+
+    expect($this->validator->validate($silent))->toBe([])
+        ->and(dayCodes($this->validator->warnings($silent)))->toContain(PlanDayValidator::NO_ROLE_LINE);
+});
+
+it('says nothing about a silent interlocutor when the day has nobody to talk to', function () {
+    // A scene of reading forms alone has no role and no `opening_lines`. «Nobody spoke» is not a
+    // defect when there is nobody.
+    $day = candidate('s1-day1.v0.3.json', 's1-outline.v0.2.json', 3);
+    $nobody = new PlanDayCandidate(
+        supportLang: $day->supportLang,
+        targetLang: $day->targetLang,
+        termBudget: $day->termBudget,
+        phraseCount: $day->phraseCount,
+        chunkCount: $day->chunkCount,
+        wordCount: $day->wordCount,
+        checkpointCount: 3,
+        goalTerms: [],
+        openingLines: [],
+        items: array_map(
+            static fn (PlanDayItem $i): PlanDayItem => $i->kind === PlanDayItem::KIND_LINE
+                ? new PlanDayItem(
+                    text: $i->text, type: $i->type, kind: $i->kind, isLine: true,
+                    translation: $i->translation, transliteration: $i->transliteration,
+                    description: $i->description, example: $i->example,
+                    exampleTranslation: $i->exampleTranslation, frame: $i->frame, filler: $i->filler,
+                    speaker: PlanDayItem::SPEAKER_LEARNER, imageApiPrompt: $i->imageApiPrompt,
+                    coversCheckpoint: $i->coversCheckpoint,
+                )
+                : $i,
+            $day->items,
+        ),
+    );
+
+    expect(dayCodes($this->validator->warnings($nobody)))->not->toContain(PlanDayValidator::NO_ROLE_LINE);
 });
 
 // ── the warnings: counted, never fatal ────────────────────────────────────────────────────────

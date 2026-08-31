@@ -187,6 +187,33 @@ final class PlanDay
         $this->status = PlanDayStatus::Done;
     }
 
+    /**
+     * GIVE A SPENT DAY ONE ATTEMPT BACK — an operator action, never a code path.
+     *
+     * Nothing in the pipeline calls this and nothing should: the two-attempt cap exists precisely
+     * so that a broken prompt cannot spend a plan's budget on one day, and a handler that could
+     * quietly reopen a day would be that cap with a hole in it. It exists for the one case the cap
+     * was never about — the GATES changed after the day was refused, so the answer that failed
+     * would pass now, and the alternative is a raw `UPDATE` against the owner's database.
+     *
+     * `pastViolations` are deliberately kept: the point of the re-run is that the next answer is
+     * told everything the previous two got wrong.
+     *
+     * @throws InvalidPlanTransition when the day is not actually spent — a `ready` day reopened
+     *                               would throw its collection away, and a `pending` one needs
+     *                               nothing.
+     */
+    public function reopenForRetry(): void
+    {
+        if ($this->status !== PlanDayStatus::Failed) {
+            throw InvalidPlanTransition::forDay($this->status, 'вернуть дню попытку');
+        }
+
+        $this->status = PlanDayStatus::Pending;
+        $this->generationAttempts = self::MAX_ATTEMPTS - 1;
+        $this->failReason = null;
+    }
+
     public function isReady(): bool
     {
         return $this->status === PlanDayStatus::Ready || $this->status === PlanDayStatus::Done;

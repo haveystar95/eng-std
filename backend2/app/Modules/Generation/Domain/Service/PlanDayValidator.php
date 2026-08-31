@@ -54,18 +54,22 @@ use App\Modules\Shared\Domain\Service\LanguagePurity;
  *
  * **A connector lives in a frame, not in its hole.** Four answers in a row built the frame AROUND
  * the connector — «I mainly work with ___» — and that is how the language works, not a mistake.
- * So a chunk's example must CONTAIN a frame of this day that carries it anywhere
- * ({@see CHUNK_WITHOUT_FRAME}) — containment, on exactly the terms a word's example is judged by,
+ * So a chunk's example should CONTAIN a frame of this day that carries it anywhere
+ * ({@see CHUNK_OUTSIDE_FRAME}) — containment, on exactly the terms a word's example is judged by,
  * so «I mainly work with Laravel, mostly.» is a legitimate example and not a near miss. The extra
  * condition is what earns the card its slot: the sentence may not be a line of the day repeated.
- * The «in the hole» rule stays for `words` and only for them.
+ * The «in the hole» rule stays for `words`, and stays FATAL for them and only for them.
  *
- * ## Three things are now WARNED about rather than refused
+ * ## What is WARNED about rather than refused
  *
- * The formula cap, the missing question and the missing repair move are counted and reported
- * ({@see warnings()}) instead of failing the day. They are taste with a number attached: a day
- * with one formula too many is a slightly worse day, and it is not worth a second paid call. The
- * counters are what a growing problem looks like — see {@see \App\Modules\Generation\Application\Port\PlanDefectReporter}.
+ * The formula cap, the missing question, the missing repair move, the silent interlocutor and the
+ * connector standing outside every frame are counted and reported ({@see warnings()}) instead of
+ * failing the day. They are taste with a number attached: a day with one formula too many is a
+ * slightly worse day, and it is not worth a second paid call. Every one of them earned its way
+ * onto this list by refusing a day that was fine — most recently the connector rule, which threw
+ * away a whole live day because one example dropped the «Sorry,» from the front of its frame. The
+ * counters are what a growing problem looks like — see
+ * {@see \App\Modules\Generation\Application\Port\PlanDefectReporter}.
  *
  * **The interlocutor's lines are quoted, not invented.** A line marked `speaker: role` has to be,
  * character for character, one of the scene's `opening_lines`. The learner is going to hold that
@@ -104,7 +108,6 @@ final class PlanDayValidator
     public const ROLE_LINE_INVENTED = 'day.role_line_invented';
     public const ROLE_LINE_SHARE = 'day.role_line_share';
     public const SUBSTITUTION_WITHOUT_FRAME = 'day.substitution_without_frame';
-    public const CHUNK_WITHOUT_FRAME = 'day.chunk_without_frame';
     public const EXAMPLE_IS_A_TERM = 'day.example_is_a_term';
     public const EXAMPLE_DUPLICATED = 'day.example_duplicated';
     public const EXAMPLE_MISSING = 'day.example_missing';
@@ -122,6 +125,10 @@ final class PlanDayValidator
     public const NO_REPAIR = 'plan_day_no_repair';
 
     public const FILLER_MISMATCH_WARNING = 'plan_day_filler_mismatch';
+
+    public const CHUNK_OUTSIDE_FRAME = 'plan_day_chunk_outside_frame';
+
+    public const NO_ROLE_LINE = 'plan_day_no_role_line';
 
     /**
      * The one language where «the filler is a card of this day, character for character» is a rule
@@ -617,10 +624,11 @@ final class PlanDayValidator
             }
         }
 
-        $out = [];
+        $out = $this->chunksOutsideFrames($day);
         $formulas = 0;
         $question = false;
         $repair = false;
+        $roleLines = 0;
         $markers = $this->repairMarkersFor($day->targetLang);
 
         foreach ($lines as $line) {
@@ -639,6 +647,10 @@ final class PlanDayValidator
                     . '— возможно, склонение, а возможно, слово не из этого дня',
                     $line->text,
                 );
+            }
+
+            if ($line->speaker === PlanDayItem::SPEAKER_ROLE) {
+                $roleLines++;
             }
 
             // The learner's OWN lines only. The interlocutor asking a question teaches the learner
@@ -668,6 +680,23 @@ final class PlanDayValidator
                 self::NO_QUESTION,
                 'ни одна реплика юзера не заканчивается вопросительным знаком — день учит отвечать '
                 . 'и не учит спрашивать',
+            );
+        }
+
+        // THE FLOOR UNDER THE INTERLOCUTOR. {@see ROLE_LINE_SHARE} has always held the ceiling —
+        // no more than a quarter of the lines are the role's — and nothing held the floor, so a
+        // day of eight lines with the interlocutor silent throughout passed. The live v0.3 day was
+        // exactly that: the skeleton gave its scene three `opening_lines` and the day quoted none,
+        // while its first line answered a question that was nowhere in the day. The learner drills
+        // answers to lines they have never heard.
+        //
+        // Only where there IS somebody to hear: `openingLines` is empty when no scene of this day
+        // has a role, and a scene of reading forms alone is a legitimate day with nobody in it.
+        if ($roleLines === 0 && $day->openingLines !== []) {
+            $out[] = new PlanViolation(
+                self::NO_ROLE_LINE,
+                'ни одной реплики собеседника: у сцены есть opening_lines, но день не процитировал '
+                . 'ни одной — юзер учит ответы на то, чего не слышал',
             );
         }
 
@@ -747,46 +776,62 @@ final class PlanDayValidator
      */
     private function checkSubstitutions(PlanDayCandidate $day): array
     {
-        $slotFrames = [];
-        $allFrames = [];
-        $lineTexts = [];
-        foreach ($this->linesOf($day) as $line) {
-            $frame = trim($line->frame);
-            if ($frame !== '') {
-                $allFrames[] = $frame;
-                if (str_contains($frame, self::SLOT)) {
-                    $slotFrames[] = $frame;
-                }
-            }
-            $lineTexts[$this->normalize($line->text)] = $line->text;
-        }
+        [, $slotFrames] = $this->framesOf($day);
 
         $violations = [];
         foreach ($day->items as $item) {
-            if ($item->kind === PlanDayItem::KIND_LINE) {
+            if ($item->kind !== PlanDayItem::KIND_WORD) {
                 continue;
             }
 
-            if ($item->kind === PlanDayItem::KIND_WORD) {
-                foreach ($slotFrames as $frame) {
-                    if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
-                        continue 2;
-                    }
+            foreach ($slotFrames as $frame) {
+                if ($this->exampleUsesFrame($frame, $item->text, $item->example)) {
+                    continue 2;
                 }
+            }
 
-                $violations[] = new PlanViolation(
-                    self::SUBSTITUTION_WITHOUT_FRAME,
-                    'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
-                    $item->text,
-                );
+            $violations[] = new PlanViolation(
+                self::SUBSTITUTION_WITHOUT_FRAME,
+                'ни один каркас дня не принимает это слово в дырку — его пример не собирается ни из чего',
+                $item->text,
+            );
+        }
 
+        return $violations;
+    }
+
+    /**
+     * THE CONNECTORS, counted rather than refused — {@see CHUNK_OUTSIDE_FRAME}.
+     *
+     * Fatal for one commit, and the live day measured what that costs. The model wrote «The
+     * connection is breaking up again on my side.» for the chunk «breaking up», against the day's
+     * own frame «Sorry, the connection is ___» — a sentence from this day's situation, not a clone
+     * of the line, arrived at by FIXING the clone the previous attempt had. What it dropped on the
+     * way was the leading «Sorry,», and the whole-frame rule refused the day for it
+     * (`docs/research/plan-v0.3-run.md`). One word of politeness is not a broken day.
+     *
+     * The rule itself is unchanged and still worth saying: a connector's example should be a frame
+     * of this day carrying it, with a filler that is not the line's own. It is now said in the log.
+     *
+     * Judged against ALL the day's frames, not only the ones with a hole: a connector may live in
+     * a frame's fixed part, which is the whole point of the rule since v0.3.
+     *
+     * @return list<PlanViolation>
+     */
+    private function chunksOutsideFrames(PlanDayCandidate $day): array
+    {
+        [$allFrames, , $lineTexts] = $this->framesOf($day);
+        $out = [];
+
+        foreach ($day->items as $item) {
+            if ($item->kind !== PlanDayItem::KIND_CHUNK) {
                 continue;
             }
 
             $clone = $lineTexts[$this->normalize($item->example)] ?? null;
             if ($clone !== null) {
-                $violations[] = new PlanViolation(
-                    self::CHUNK_WITHOUT_FRAME,
+                $out[] = new PlanViolation(
+                    self::CHUNK_OUTSIDE_FRAME,
                     'пример связки — дословно реплика дня «' . $clone . '»: тот же каркас нужен '
                     . 'с ДРУГИМ наполнителем, иначе связку учат вместе с уже выученной репликой',
                     $item->text,
@@ -808,14 +853,40 @@ final class PlanDayValidator
                 }
             }
 
-            $violations[] = new PlanViolation(
-                self::CHUNK_WITHOUT_FRAME,
-                'ни один каркас дня не содержит эту связку — её пример не собирается ни из чего',
+            $out[] = new PlanViolation(
+                self::CHUNK_OUTSIDE_FRAME,
+                'ни один каркас дня не содержит эту связку целиком — её пример не собирается '
+                . 'из каркасов этого дня',
                 $item->text,
             );
         }
 
-        return $violations;
+        return $out;
+    }
+
+    /**
+     * The three lists every frame rule is judged against, gathered once.
+     *
+     * @return array{0: list<string>, 1: list<string>, 2: array<string, string>}
+     */
+    private function framesOf(PlanDayCandidate $day): array
+    {
+        $slotFrames = [];
+        $allFrames = [];
+        $lineTexts = [];
+
+        foreach ($this->linesOf($day) as $line) {
+            $frame = trim($line->frame);
+            if ($frame !== '') {
+                $allFrames[] = $frame;
+                if (str_contains($frame, self::SLOT)) {
+                    $slotFrames[] = $frame;
+                }
+            }
+            $lineTexts[$this->normalize($line->text)] = $line->text;
+        }
+
+        return [$allFrames, $slotFrames, $lineTexts];
     }
 
     /**
