@@ -47,6 +47,18 @@ final class EloquentDueTermsReader implements DueTermsReader
             // NULLS FIRST is the whole ordering: it puts the unfinished and the freshly graduated
             // ahead of anything merely due, then soonest first among the rest.
             ->orderByRaw('due_at ASC NULLS FIRST')
+            // AND INSIDE THE NULL BLOCK, OLDEST FIRST. Every never-scheduled pair shares one sort
+            // key, so without this the block is ordered by `term_id` — a ULID, which is «whichever
+            // arrived first» only by accident of how the id was minted, and is otherwise arbitrary.
+            // A word saved by hand months ago and never opened therefore led every session, ahead
+            // of everything, until it was answered: two French words did exactly that to a Russian
+            // learner, and were still doing it inside an English plan's lessons.
+            //
+            // `created_at` and not a written `due_at`: enrolment does not touch the schedule
+            // ({@see \App\Modules\Learning\Domain\Entity\TermProgress}), and «ступень 0 ничего
+            // не планирует» is a rule of the ladder, not an accident. The queue can order the block
+            // without either of them being violated.
+            ->orderBy('created_at')
             ->orderBy('term_id')
             ->limit($limit)
             ->get(self::COLUMNS);
